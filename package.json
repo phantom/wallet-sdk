@@ -4,7 +4,7 @@
   "packageManager": "yarn@4.2.2",
   "scripts": {
     "build": "yarn workspaces foreach --all run build",
-    "release": "yarn build && yarn changeset version"
+    "release": "yarn build && yarn changeset publish"
   },
   "workspaces": [
     "packages/*"
