@@ -1,0 +1,10 @@
+{
+  "name": "@phantom/sdk-monorepo",
+  "packageManager": "yarn@4.2.2",
+  "packages": [
+    "packages/*"
+  ],
+  "dependencies": {
+    "@changesets/cli": "^2.27.8"
+  }
+}
