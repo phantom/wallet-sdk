@@ -1,10 +1,16 @@
 {
   "name": "@phantom/sdk-monorepo",
+  "private": true,
   "packageManager": "yarn@4.2.2",
-  "packages": [
+  "scripts": {
+    "build": "yarn workspaces foreach --all run build",
+    "release": "yarn build && yarn changeset version"
+  },
+  "workspaces": [
     "packages/*"
   ],
   "dependencies": {
-    "@changesets/cli": "^2.27.8"
+    "@changesets/cli": "^2.27.8",
+    "typescript": "^5.6.2"
   }
 }

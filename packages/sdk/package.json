@@ -1,0 +1,20 @@
+{
+  "name": "@phantom/wallet-sdk",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    }
+  },
+  "packageManager": "yarn@4.2.2",
+  "scripts": {
+    "build": "tsc --build"
+  },
+  "packages": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "typescript": "^5.6.2"
+  }
+}

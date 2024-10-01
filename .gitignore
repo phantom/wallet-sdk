@@ -11,3 +11,5 @@
 
 #!.yarn/cache
 .pnp.*
+
+dist
