@@ -1,5 +1,5 @@
 {
-  "name": "@phantom/wallet-sdk",
+  "name": "@phantom/wallet-sdk-v2",
   "version": "0.0.3",
   "type": "module",
   "exports": {
