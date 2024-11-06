@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es2016",
+    "target": "ESNext",
     "module": "ES2022",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -8,6 +8,9 @@
     "skipLibCheck": true,
     "declaration": true,
     "outDir": "dist"
+    
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }

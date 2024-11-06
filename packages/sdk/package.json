@@ -7,6 +7,8 @@
       "import": "./dist/index.js"
     }
   },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "packageManager": "yarn@4.2.2",
   "scripts": {
     "build": "tsc --build"
