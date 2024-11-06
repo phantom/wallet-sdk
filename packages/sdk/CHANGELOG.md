@@ -1,5 +1,11 @@
 # @phantom/wallet-sdk
 
+## 0.0.4
+
+### Patch Changes
+
+- b9703a8: made some change
+
 ## 0.0.3
 
 ### Patch Changes
