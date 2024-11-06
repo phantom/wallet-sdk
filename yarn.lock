@@ -312,9 +312,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/wallet-sdk-v2@workspace:packages/sdk":
+"@phantom/wallet-sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
-  resolution: "@phantom/wallet-sdk-v2@workspace:packages/sdk"
+  resolution: "@phantom/wallet-sdk@workspace:packages/sdk"
   dependencies:
     typescript: "npm:^5.6.2"
   languageName: unknown
