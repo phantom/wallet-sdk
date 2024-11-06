@@ -1,5 +1,11 @@
 # @phantom/wallet-sdk
 
+## 0.0.5
+
+### Patch Changes
+
+- 7a4fe7b: Update package.json
+
 ## 0.0.4
 
 ### Patch Changes
