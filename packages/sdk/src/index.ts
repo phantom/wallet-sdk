@@ -1,4 +1,4 @@
-import { SDK_URL } from "./constants";
+import { SDK_URL } from "./constants.js";
 
 export function createPhantom() {
   const container = document.head || document.documentElement;
