@@ -1,5 +1,12 @@
 # @phantom/wallet-sdk
 
+## 0.0.6
+
+### Patch Changes
+
+- 1cd1cc0: remove type:module
+- 1cd1cc0: add .js
+
 ## 0.0.5
 
 ### Patch Changes
