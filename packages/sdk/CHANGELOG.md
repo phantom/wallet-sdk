@@ -1,5 +1,11 @@
 # @phantom/wallet-sdk
 
+## 0.0.7
+
+### Patch Changes
+
+- 3d33130: Add zindex argument
+
 ## 0.0.6
 
 ### Patch Changes
