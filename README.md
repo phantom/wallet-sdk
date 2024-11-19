@@ -6,10 +6,11 @@ In addition to powering wallet creation, Phantom Embedded also comes with a buil
 
 ## Features
 
-- Self custodial wallets via Sign in with Google and 4-digit pin (no seed phrases)
+- Create self custodial wallets without leaving application
+- Onboard via Sign in with Google and 4-digit pin (no seed phrases)
+- Wallets automatically sync with Phantom's mobile and extension apps
 - Sign transactions and message on Solana (more chains coming soon)
 - View, send, and receive tokens on Solana, Ethereum, Bitcoin, Base, and Polygon
-- Automatic syncing of wallets with Phantom's mobile and extension apps
 - Pricing: **FREE**
 
 ## Quickstart
@@ -34,6 +35,18 @@ const App = () => {
 ```
 
 3. [Integrate Phantom](https://docs.phantom.app/solana/integrating-phantom) as you would normally. Whenever a user interacts with Phantom (e.g. `window.phantom.connect()`), the Phantom Embedded wallet will automatically initialize if the user does not have Phantom already installed.
+
+## Configuration
+
+The following optional parameters can be passed as `createPhantom({options..})` to customize the Phantom Embedded wallet experience.
+
+| Parameter                     | Type    | Description                                                                                                             |
+| ----------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `hideLauncherBeforeOnboarded` | boolean | If `true`, the Phantom Embedded UI will be hidden until the user engages with Phantom.                                  |
+| `colorScheme`                 | string  | The background color of the Phantom Embedded iframe. Can be `"light"`, `"dark"`, or `"normal"`. Defaults to `"normal"`. |
+| `zIndex`                      | string  | The z-index of the Phantom Embedded UI. Defaults to `"10_000"`.                                                         |
+| `paddingBottom`               | string  | The number of pixels between the Phantom Embedded UI and the right edge of the web. Defaults to `"0"`. application.     |
+| `paddingRight`                | string  | The number of pixels between the Phantom Embedded UI and the bottom edge of the web. Defaults to `"0"`. application.    |
 
 ## See It In Action
 
@@ -68,12 +81,6 @@ Phantom Embedded is in active development and will be prioritizing features requ
 
 </details>
 <details>
-  <summary>How much does this cost?</summary>
-
-    It's free!
-
-</details>
-<details>
   <summary>I can't see the embedded wallet on my website. What's wrong?</summary>
 
     The most common cause is that you are using a browser with the Phantom extension installed. If the Phantom extension is detected, we will not inject the embedded wallet.
@@ -82,14 +89,9 @@ Phantom Embedded is in active development and will be prioritizing features requ
 
 </details>
 <details>
-  <summary>How do I change the z-index of the embedded wallet?</summary>
+  <summary>How much does this cost?</summary>
 
-    The embedded wallet iframe injects with a z-index of 10,000. You can pass a custom zIndex to `createPhantom` like so:
-
-
-    ```
-    createPhantom({zIndex: 10_000});
-    ```
+    It's free!
 
 </details>
 
