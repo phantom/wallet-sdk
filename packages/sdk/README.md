@@ -27,8 +27,8 @@ yarn | npm | pnpm add @phantom/wallet-sdk
 import { createPhantom } from "@phantom/wallet-sdk"
 
 const opts: CreatePhantomConfig = {
-    zIndex?: 10_000,
-    hideLauncherBeforeOnboarded?: true,
+  zIndex: 10_000,
+  hideLauncherBeforeOnboarded: true,
 }
 
 const App = () => {
