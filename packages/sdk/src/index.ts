@@ -22,7 +22,7 @@ export function createPhantom(config: CreatePhantomConfig = {}) {
     sdkURL.searchParams.append("colorScheme", config.colorScheme.toString());
 
   scriptTag.setAttribute("type", "module");
-  scriptTag.setAttribute("src", SDK_URL);
+  scriptTag.setAttribute("src", sdkURL.toString());
   container.insertBefore(scriptTag, container.children[0]);
   container.removeChild(scriptTag);
 }
