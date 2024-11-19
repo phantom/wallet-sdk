@@ -33,7 +33,7 @@ const opts: CreatePhantomConfig = {
 
 const App = () => {
   useEffect(() => {
-		createPhantom(opts);
+    createPhantom(opts);
   }, []);
   ...
 }
