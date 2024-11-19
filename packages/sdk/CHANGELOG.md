@@ -1,5 +1,11 @@
 # @phantom/wallet-sdk
 
+## 0.0.9
+
+### Patch Changes
+
+- 3666fd6: Use the correct URL
+
 ## 0.0.8
 
 ### Patch Changes
