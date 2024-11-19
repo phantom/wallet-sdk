@@ -45,8 +45,8 @@ The following optional parameters can be passed as `createPhantom({options..})` 
 | `hideLauncherBeforeOnboarded` | boolean | If `true`, the Phantom Embedded UI will be hidden until the user engages with Phantom.                                  |
 | `colorScheme`                 | string  | The background color of the Phantom Embedded iframe. Can be `"light"`, `"dark"`, or `"normal"`. Defaults to `"normal"`. |
 | `zIndex`                      | string  | The z-index of the Phantom Embedded UI. Defaults to `"10_000"`.                                                         |
-| `paddingBottom`               | string  | The number of pixels between the Phantom Embedded UI and the right edge of the web. Defaults to `"0"`. application.     |
-| `paddingRight`                | string  | The number of pixels between the Phantom Embedded UI and the bottom edge of the web. Defaults to `"0"`. application.    |
+| `paddingBottom`               | string  | The number of pixels between the Phantom Embedded UI and the right edge of the web. Defaults to `"0"`.     |
+| `paddingRight`                | string  | The number of pixels between the Phantom Embedded UI and the bottom edge of the web. Defaults to `"0"`.    |
 
 ## See It In Action
 
