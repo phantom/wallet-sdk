@@ -1,5 +1,11 @@
 # @phantom/wallet-sdk
 
+## 0.0.10
+
+### Patch Changes
+
+- e6422b1: Add paddingBottom and paddingRight configuration options
+
 ## 0.0.9
 
 ### Patch Changes
