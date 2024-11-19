@@ -6,9 +6,9 @@ In addition to powering wallet creation, Phantom Embedded also comes with a buil
 
 ## Features
 
-- Create self custodial wallets without leaving application
-- Onboard via Sign in with Google and 4-digit pin (no seed phrases)
-- Wallets automatically sync with Phantom's mobile and extension apps
+- Create self custodial wallets without leaving your application
+- Onboard users via Sign in with Google and a 4-digit pin (no seed phrases)
+- Sync embedded wallets with Phantom's mobile and extension apps
 - Sign transactions and message on Solana (more chains coming soon)
 - View, send, and receive tokens on Solana, Ethereum, Bitcoin, Base, and Polygon
 - Pricing: **FREE**
@@ -23,30 +23,35 @@ yarn | npm | pnpm add @phantom/wallet-sdk
 
 2. Load the Phantom Embedded wallet in your web application
 
-```jsx
+```tsx
 import { createPhantom } from "@phantom/wallet-sdk"
+
+const opts: CreatePhantomConfig = {
+  zIndex: 10_000,
+  hideLauncherBeforeOnboarded: true,
+}
 
 const App = () => {
   useEffect(() => {
-    createPhantom();
+    createPhantom(opts);
   }, []);
   ...
 }
 ```
 
-3. [Integrate Phantom](https://docs.phantom.app/solana/integrating-phantom) as you would normally. Whenever a user interacts with Phantom (e.g. `window.phantom.connect()`), the Phantom Embedded wallet will automatically initialize if the user does not have Phantom already installed.
+3. [Integrate Phantom](https://docs.phantom.app/solana/integrating-phantom) as you would normally. Whenever a user interacts with Phantom (e.g. `window.phantom.solana.connect()`), the Phantom Embedded wallet will automatically initialize if the user does not have Phantom already installed.
 
 ## Configuration
 
-The following optional parameters can be passed as `createPhantom({options..})` to customize the Phantom Embedded wallet experience.
+The following optional parameters can be passed as `createPhantom({options...})` to customize the Phantom Embedded wallet experience.
 
 | Parameter                     | Type    | Description                                                                                                             |
 | ----------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `hideLauncherBeforeOnboarded` | boolean | If `true`, the Phantom Embedded UI will be hidden until the user engages with Phantom.                                  |
-| `colorScheme`                 | string  | The background color of the Phantom Embedded iframe. Can be `"light"`, `"dark"`, or `"normal"`. Defaults to `"normal"`. |
-| `zIndex`                      | string  | The z-index of the Phantom Embedded UI. Defaults to `"10_000"`.                                                         |
-| `paddingBottom`               | string  | The number of pixels between the Phantom Embedded UI and the right edge of the web. Defaults to `"0"`.     |
-| `paddingRight`                | string  | The number of pixels between the Phantom Embedded UI and the bottom edge of the web. Defaults to `"0"`.    |
+| `hideLauncherBeforeOnboarded` | boolean | If `true`, the Phantom Embedded UI will be hidden until the user engages with Phantom. Defaults to `false`.             |
+| `colorScheme`                 | string  | The background color of the Phantom Embedded iframe, which should be configured to match your site's theme. Can be `"light"`, `"dark"`, or `"normal"`. Defaults to `"normal"`. |
+| `zIndex`                      | number  | The z-index of the Phantom Embedded UI. Defaults to `10_000`.                                                         |
+| `paddingBottom`               | number  | The number of pixels between the Phantom Embedded UI and the right edge of the web. Defaults to `0`.      |
+| `paddingRight`                | number  | The number of pixels between the Phantom Embedded UI and the bottom edge of the web. Defaults to `0`.    |
 
 ## See It In Action
 
