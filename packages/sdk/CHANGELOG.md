@@ -1,5 +1,11 @@
 # @phantom/wallet-sdk
 
+## 0.0.8
+
+### Patch Changes
+
+- f8db03f: Add more settings and documentation to the SDK
+
 ## 0.0.7
 
 ### Patch Changes
