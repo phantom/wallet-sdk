@@ -4,6 +4,8 @@ export type CreatePhantomConfig = Partial<{
   zIndex: number;
   hideLauncherBeforeOnboarded: boolean;
   colorScheme: string;
+  paddingBottom: number;
+  paddingRight: number;
 }>;
 
 export function createPhantom(config: CreatePhantomConfig = {}) {
@@ -20,6 +22,13 @@ export function createPhantom(config: CreatePhantomConfig = {}) {
     );
   if (config.colorScheme)
     sdkURL.searchParams.append("colorScheme", config.colorScheme.toString());
+  if (config.paddingBottom)
+    sdkURL.searchParams.append(
+      "paddingBottom",
+      config.paddingBottom.toString(),
+    );
+  if (config.paddingRight)
+    sdkURL.searchParams.append("paddingRight", config.paddingRight.toString());
 
   scriptTag.setAttribute("type", "module");
   scriptTag.setAttribute("src", sdkURL.toString());
