@@ -1,5 +1,11 @@
 # @phantom/wallet-sdk
 
+## 0.0.11
+
+### Patch Changes
+
+- 4a5002c: Add parameters for wallet positioning on all 4 corners
+
 ## 0.0.10
 
 ### Patch Changes
