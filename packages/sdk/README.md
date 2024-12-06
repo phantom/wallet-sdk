@@ -1,8 +1,12 @@
 # Phantom Embedded Wallet SDK
 
-Phantom Embedded enables you to seamlessly onboard users to your application, without requiring them to have previously installed a wallet. With Phantom Embedded, users can create a self custodial wallet with just their Google account and a 4-digit pin. Once created, this wallet will automatically sync with [Phantom](https://phantom.app)'s mobile and extension apps without the user needing to know their seed phrase or manage any private keys.
+Phantom Embedded enables you to seamlessly onboard users to your application, without requiring them to have previously
+installed a wallet. With Phantom Embedded, users can create a self custodial wallet with just their Google account and a
+4-digit pin. Once created, this wallet will automatically sync with [Phantom](https://phantom.app)'s mobile and
+extension apps without the user needing to know their seed phrase or manage any private keys.
 
-In addition to powering wallet creation, Phantom Embedded also comes with a built-in UI for users to view and manage their holdings. This UI serves as a trusted interface for users to sign messages and transactions on your app.
+In addition to powering wallet creation, Phantom Embedded also comes with a built-in UI for users to view and manage
+their holdings. This UI serves as a trusted interface for users to sign messages and transactions on your app.
 
 ## Features
 
@@ -24,44 +28,52 @@ yarn | npm | pnpm add @phantom/wallet-sdk
 2. Load the Phantom Embedded wallet in your web application
 
 ```tsx
-import { createPhantom } from "@phantom/wallet-sdk"
+import {createPhantom} from "@phantom/wallet-sdk"
 
 const opts: CreatePhantomConfig = {
-  zIndex: 10_000,
-  hideLauncherBeforeOnboarded: true,
+    zIndex: 10_000,
+    hideLauncherBeforeOnboarded: true,
 }
 
 const App = () => {
-  useEffect(() => {
-    createPhantom(opts);
-  }, []);
-  ...
+    useEffect(() => {
+        createPhantom(opts);
+    }, []);
+...
 }
 ```
 
-3. [Integrate Phantom](https://docs.phantom.app/solana/integrating-phantom) as you would normally. Whenever a user interacts with Phantom (e.g. `window.phantom.solana.connect()`), the Phantom Embedded wallet will automatically initialize if the user does not have Phantom already installed.
+3. [Integrate Phantom](https://docs.phantom.app/solana/integrating-phantom) as you would normally. Whenever a user
+   interacts with Phantom (e.g. `window.phantom.solana.connect()`), the Phantom Embedded wallet will automatically
+   initialize if the user does not have Phantom already installed.
 
 ## Configuration
 
-The following optional parameters can be passed as `createPhantom({options...})` to customize the Phantom Embedded wallet experience.
+The following optional parameters can be passed as `createPhantom({options...})` to customize the Phantom Embedded
+wallet experience.
 
-| Parameter                     | Type    | Description                                                                                                             |
-| ----------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `hideLauncherBeforeOnboarded` | boolean | If `true`, the Phantom Embedded UI will be hidden until the user engages with Phantom. Defaults to `false`.             |
+| Parameter                     | Type    | Description                                                                                                                                                                    |
+| ----------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `hideLauncherBeforeOnboarded` | boolean | If `true`, the Phantom Embedded UI will be hidden until the user engages with Phantom. Defaults to `false`.                                                                    |
 | `colorScheme`                 | string  | The background color of the Phantom Embedded iframe, which should be configured to match your site's theme. Can be `"light"`, `"dark"`, or `"normal"`. Defaults to `"normal"`. |
-| `zIndex`                      | number  | The z-index of the Phantom Embedded UI. Defaults to `10_000`.                                                         |
-| `paddingBottom`               | number  | The number of pixels between the Phantom Embedded UI and the right edge of the web. Defaults to `0`.      |
-| `paddingRight`                | number  | The number of pixels between the Phantom Embedded UI and the bottom edge of the web. Defaults to `0`.    |
+| `zIndex`                      | number  | The z-index of the Phantom Embedded UI. Defaults to `10_000`.                                                                                                                  |
+| `paddingBottom`               | number  | The number of pixels between the Phantom Embedded UI and the right edge of the web. Defaults to `0`.                                                                           |
+| `paddingRight`                | number  | The number of pixels between the Phantom Embedded UI and the bottom edge of the web. Defaults to `0`.                                                                          |
+| `paddingTop`                  | number  | The number of pixels between the Phantom Embedded UI and the top edge of the web. Defaults to `0`.                                                                             |
+| `paddingLeft`                 | number  | The number of pixels between the Phantom Embedded UI and the left edge of the web. Defaults to `0`.                                                                            |
+| `position`                    | enum    | The corner of the app where the Phantom wallet will be displayed. Can be `"bottom-right"`, `"bottom-left"`, `"top-right"`, `"top-left"`. Defaults to "bottom-left".            |
 
 ## See It In Action
 
 Try out Phantom Embedded via our demo app: https://sandbox.phantom.dev/sol-embedded-sandbox
 
-> Note: Phantom Embedded will not initialize if it detects that the user already has the Phantom extension installed, or if the user is accessing the page from within the Phantom mobile app.
+> Note: Phantom Embedded will not initialize if it detects that the user already has the Phantom extension installed, or
+> if the user is accessing the page from within the Phantom mobile app.
 
 ## Give Feedback
 
-Phantom Embedded is in active development and will be prioritizing features requested by early adopters. If you are interested in working with us, please email us at `developers@phantom.app` or message `@brianfriel` on Telegram.
+Phantom Embedded is in active development and will be prioritizing features requested by early adopters. If you are
+interested in working with us, please email us at `developers@phantom.app` or message `@brianfriel` on Telegram.
 
 ## Frequently Asked Questions
 
@@ -102,6 +114,10 @@ Phantom Embedded is in active development and will be prioritizing features requ
 
 ## Disclaimers
 
-We are providing early access to beta software for testing purposes only. Embedded wallet should be used in a non-production environment only. Phantom will not be liable for any losses or damages suffered by you or your end users if you push the early access version of embedded wallets to a production environment.
+We are providing early access to beta software for testing purposes only. Embedded wallet should be used in a
+non-production environment only. Phantom will not be liable for any losses or damages suffered by you or your end users
+if you push the early access version of embedded wallets to a production environment.
 
-All suggestions, enhancement requests, recommendations or other feedback provided by you relating to the embedded wallet will be the sole and exclusive property of Phantom and by using the early access version of embedded wallets and providing feedback to Phantom you agree to assign any rights in that feedback to Phantom.
+All suggestions, enhancement requests, recommendations or other feedback provided by you relating to the embedded wallet
+will be the sole and exclusive property of Phantom and by using the early access version of embedded wallets and
+providing feedback to Phantom you agree to assign any rights in that feedback to Phantom.
