@@ -12,5 +12,9 @@
 #!.yarn/cache
 .pnp.*
 
-dist
+**/*/dist
+**/*/coverage
 /.idea/
+node_modules
+*.cjs
+*.mjs
