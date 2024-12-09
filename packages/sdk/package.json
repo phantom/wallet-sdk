@@ -1,15 +1,19 @@
 {
   "name": "@phantom/wallet-sdk",
   "version": "0.0.10",
-  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "default": "./dist/index.js"
     }
   },
   "packageManager": "yarn@4.2.2",
   "scripts": {
-    "build": "tsc --build"
+    "build": "tsc --project tsconfig.cjs.json && tsc --project tsconfig.esm.json"
   },
   "packages": [
     "packages/*"
