@@ -16,13 +16,14 @@ export type CreatePhantomConfig = Partial<{
   paddingTop: number
   paddingLeft: number
   position: Position
+  sdkURL: string
 }>
 
 export function createPhantom (config: CreatePhantomConfig = {}): void {
   const container = document.head ?? document.documentElement
   const scriptTag = document.createElement('script')
 
-  const sdkURL = new URL(SDK_URL)
+  const sdkURL = new URL(config.sdkURL ?? SDK_URL)
   if ('zIndex' in config && config.zIndex != null) {
     sdkURL.searchParams.append('zIndex', config.zIndex.toString())
   }
@@ -60,3 +61,4 @@ export function createPhantom (config: CreatePhantomConfig = {}): void {
   container.insertBefore(scriptTag, container.children[0])
   container.removeChild(scriptTag)
 }
+
