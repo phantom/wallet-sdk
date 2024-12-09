@@ -13,12 +13,14 @@
   },
   "packageManager": "yarn@4.2.2",
   "scripts": {
-    "build": "tsc --project tsconfig.cjs.json && tsc --project tsconfig.esm.json"
+    "build": "tsc --project tsconfig.cjs.json && tsc --project tsconfig.esm.json",
+    "lint": "ts-standard --project tsconfig.esm.json"
   },
   "packages": [
     "packages/*"
   ],
   "devDependencies": {
+    "ts-standard": "*",
     "typescript": "^5.6.2"
   }
 }
