@@ -1,5 +1,12 @@
 # @phantom/wallet-sdk
 
+## 0.0.12
+
+### Patch Changes
+
+- a916f97: Add SDK override URL parameter
+- c369d69: Makes sure types are maximally compatible and add a linter
+
 ## 0.0.11
 
 ### Patch Changes
