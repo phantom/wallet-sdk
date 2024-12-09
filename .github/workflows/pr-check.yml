@@ -1,0 +1,35 @@
+name: PR Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test-and-lint:
+    name: Test and Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+
+      - name: Install Dependencies
+        run: yarn
+
+      - name: Run Tests and Coverage
+        run: |
+          yarn test
+          yarn test:coverage
+
+      - name: Check Formatting
+        run: |
+          # Run format check on all workspaces
+          yarn workspaces foreach --all run format --check 
