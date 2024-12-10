@@ -15,3 +15,4 @@
 dist
 /.idea/
 /packages/sdk/package.tgz
+node_modules

@@ -7,10 +7,7 @@
     "declaration": true,
     "declarationMap": true,
     "esModuleInterop": false, // This is a viral option, do not enable https://www.semver-ts.org/#module-interop
-    "lib": [
-      "es2020",
-      "dom"
-    ],
+    "lib": ["es2020", "dom"],
     "module": "esnext",
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": true,

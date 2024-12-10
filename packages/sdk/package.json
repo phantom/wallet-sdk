@@ -17,13 +17,16 @@
     "build:esm": "mkdir -p dist/esm && tsc -p tsconfig.json && echo '{\"type\":\"module\"}' > dist/esm/package.json",
     "build:cjs": "mkdir -p dist/cjs && tsc -p tsconfig.cjs.json && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
     "lint": "ts-standard --project tsconfig.json",
+    "test": "vitest",
     "arethetypeswrong": "yarn build && yarn pack && yarn dlx @arethetypeswrong/cli package.tgz"
   },
   "packages": [
     "packages/*"
   ],
   "devDependencies": {
+    "jsdom": "^25.0.1",
     "ts-standard": "*",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.8"
   }
 }
