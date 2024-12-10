@@ -53,7 +53,7 @@ The following optional parameters can be passed as `createPhantom({options...})`
 wallet experience.
 
 | Parameter                     | Type    | Description                                                                                                                                                                    |
-|-------------------------------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ----------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `hideLauncherBeforeOnboarded` | boolean | If `true`, the Phantom Embedded UI will be hidden until the user engages with Phantom. Defaults to `false`.                                                                    |
 | `colorScheme`                 | string  | The background color of the Phantom Embedded iframe, which should be configured to match your site's theme. Can be `"light"`, `"dark"`, or `"normal"`. Defaults to `"normal"`. |
 | `zIndex`                      | number  | The z-index of the Phantom Embedded UI. Defaults to `10_000`.                                                                                                                  |
@@ -67,18 +67,18 @@ wallet experience.
 
 The createPhantom method will return an object that allows you to control the embedded wallet after initialization.
 
-| Property | Type       | Description                                                                                         |
-|----------|------------|-----------------------------------------------------------------------------------------------------|
-| `show`   | () => void | Shows the embedded wallet. You only need to call this if you have called `hide`.                    |
+| Property | Type       | Description                                                                                          |
+| -------- | ---------- | ---------------------------------------------------------------------------------------------------- |
+| `show`   | () => void | Shows the embedded wallet. You only need to call this if you have called `hide`.                     |
 | `hide`   | () => void | Hides the embedded wallet. The embedded wallet will now be invisible to users until you call `show`. |
 
 ```tsx
-import {createPhantom} from "@phantom/wallet-sdk"
+import { createPhantom } from "@phantom/wallet-sdk";
 
 const opts: CreatePhantomConfig = {
-    zIndex: 10_000,
-    hideLauncherBeforeOnboarded: true,
-}
+  zIndex: 10_000,
+  hideLauncherBeforeOnboarded: true,
+};
 const phantom = createPhantom(opts);
 
 // To hide the embedded wallet

@@ -1,4 +1,8 @@
-import { PHANTOM_IFRAME_ID, PHANTOM_INITIALIZED_EVENT_NAME, SDK_URL } from './constants.js'
+import {
+  PHANTOM_IFRAME_ID,
+  PHANTOM_INITIALIZED_EVENT_NAME,
+  SDK_URL
+} from './constants.js'
 
 export enum Position {
   bottomRight = 'bottom-right',
@@ -24,7 +28,9 @@ export interface Phantom {
   hide: () => void
 }
 
-export async function createPhantom (config: CreatePhantomConfig = {}): Promise<Phantom> {
+export async function createPhantom (
+  config: CreatePhantomConfig = {}
+): Promise<Phantom> {
   const container = document.head ?? document.documentElement
   const scriptTag = document.createElement('script')
 
@@ -32,7 +38,10 @@ export async function createPhantom (config: CreatePhantomConfig = {}): Promise<
   if ('zIndex' in config && config.zIndex != null) {
     sdkURL.searchParams.append('zIndex', config.zIndex.toString())
   }
-  if ('hideLauncherBeforeOnboarded' in config && config.hideLauncherBeforeOnboarded != null) {
+  if (
+    'hideLauncherBeforeOnboarded' in config &&
+    config.hideLauncherBeforeOnboarded != null
+  ) {
     sdkURL.searchParams.append(
       'hideLauncherBeforeOnboarded',
       config.hideLauncherBeforeOnboarded.toString()
@@ -67,18 +76,21 @@ export async function createPhantom (config: CreatePhantomConfig = {}): Promise<
   container.removeChild(scriptTag)
 
   return await new Promise<Phantom>((resolve, _reject) => {
-    window.addEventListener(PHANTOM_INITIALIZED_EVENT_NAME, function handleInit () {
-      resolve({
-        hide: () => {
-          const iframe = document.getElementById(PHANTOM_IFRAME_ID)
-          if (iframe != null) iframe.style.display = 'none'
-        },
-        show: () => {
-          const iframe = document.getElementById(PHANTOM_IFRAME_ID)
-          if (iframe != null) iframe.style.display = 'block'
-        }
-      })
-      window.removeEventListener(PHANTOM_INITIALIZED_EVENT_NAME, handleInit)
-    })
+    window.addEventListener(
+      PHANTOM_INITIALIZED_EVENT_NAME,
+      function handleInit () {
+        resolve({
+          hide: () => {
+            const iframe = document.getElementById(PHANTOM_IFRAME_ID)
+            if (iframe != null) iframe.style.display = 'none'
+          },
+          show: () => {
+            const iframe = document.getElementById(PHANTOM_IFRAME_ID)
+            if (iframe != null) iframe.style.display = 'block'
+          }
+        })
+        window.removeEventListener(PHANTOM_INITIALIZED_EVENT_NAME, handleInit)
+      }
+    )
   })
 }
