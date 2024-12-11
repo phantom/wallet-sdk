@@ -63,6 +63,31 @@ wallet experience.
 | `paddingLeft`                 | number  | The number of pixels between the Phantom Embedded UI and the left edge of the web. Defaults to `0`.                                                                            |
 | `position`                    | enum    | The corner of the app where the Phantom wallet will be displayed. Can be `"bottom-right"`, `"bottom-left"`, `"top-right"`, `"top-left"`. Defaults to "bottom-left".            |
 
+## Controlling the wallet after initialization
+
+The createPhantom method will return an object that allows you to control the embedded wallet after initialization.
+
+| Property | Type       | Description                                                                                          |
+| -------- | ---------- | ---------------------------------------------------------------------------------------------------- |
+| `show`   | () => void | Shows the embedded wallet. You only need to call this if you have called `hide`.                     |
+| `hide`   | () => void | Hides the embedded wallet. The embedded wallet will now be invisible to users until you call `show`. |
+
+```tsx
+import { createPhantom } from "@phantom/wallet-sdk";
+
+const opts: CreatePhantomConfig = {
+  zIndex: 10_000,
+  hideLauncherBeforeOnboarded: true,
+};
+const phantom = createPhantom(opts);
+
+// To hide the embedded wallet
+phantom.hide();
+
+// To show the embedded wallet
+phantom.show();
+```
+
 ## See It In Action
 
 Try out Phantom Embedded via our demo app: https://sandbox.phantom.dev/sol-embedded-sandbox
