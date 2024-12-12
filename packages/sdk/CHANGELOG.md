@@ -1,5 +1,11 @@
 # @phantom/wallet-sdk
 
+## 0.0.13
+
+### Patch Changes
+
+- 72b3dd3: Add methods for showing and hiding the embedded wallet
+
 ## 0.0.12
 
 ### Patch Changes
