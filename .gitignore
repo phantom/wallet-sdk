@@ -12,7 +12,8 @@
 #!.yarn/cache
 .pnp.*
 
-dist
+**/*/dist
+**/*/coverage
 /.idea/
 /packages/sdk/package.tgz
 node_modules
