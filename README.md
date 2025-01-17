@@ -17,6 +17,14 @@ their holdings. This UI serves as a trusted interface for users to sign messages
 - View, send, and receive tokens on Solana, Ethereum, Bitcoin, Base, and Polygon
 - Pricing: **FREE**
 
+## Prerequisites
+
+Before you begin, ensure you have:
+- Node.js 16 or higher installed
+- A modern web browser
+- Basic understanding of Web3 development
+- (Optional) A Google account for testing wallet creation
+
 ## Quickstart
 
 1. Install the Phantom Embedded SDK
@@ -137,6 +145,29 @@ interested in working with us, please email us at `developers@phantom.app` or me
 
 </details>
 
+## Troubleshooting
+
+Common issues and their solutions:
+
+1. **Wallet not appearing**
+   - Check if Phantom extension is installed and disabled
+   - Verify z-index configuration
+   - Ensure proper initialization
+
+2. **Connection issues**
+   - Check console for error messages
+   - Verify network connectivity
+   - Ensure proper configuration parameters
+
+3. **Styling conflicts**
+   - Adjust z-index
+   - Check CSS isolation
+   - Verify position parameters
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
 ## Disclaimers
 
 We are providing early access to beta software for testing purposes only. Embedded wallet should be used in a
@@ -146,3 +177,43 @@ if you push the early access version of embedded wallets to a production environ
 All suggestions, enhancement requests, recommendations or other feedback provided by you relating to the embedded wallet
 will be the sole and exclusive property of Phantom and by using the early access version of embedded wallets and
 providing feedback to Phantom you agree to assign any rights in that feedback to Phantom.
+
+## Examples
+
+### Basic Connection
+```tsx
+import { createPhantom } from "@phantom/wallet-sdk";
+
+const App = () => {
+  const connectWallet = async () => {
+    try {
+      const connection = await window.phantom.solana.connect();
+      console.log("Connected with:", connection.publicKey.toString());
+    } catch (err) {
+      console.error("Connection failed:", err);
+    }
+  };
+
+  return <button onClick={connectWallet}>Connect Phantom</button>;
+};
+```
+
+### Transaction Signing
+```tsx
+import { createPhantom } from "@phantom/wallet-sdk";
+import { Transaction } from "@solana/web3.js";
+
+const App = () => {
+  const signTransaction = async () => {
+    const transaction = new Transaction();
+    // Add your transaction instructions here
+    
+    try {
+      const signedTx = await window.phantom.solana.signTransaction(transaction);
+      console.log("Transaction signed:", signedTx);
+    } catch (err) {
+      console.error("Signing failed:", err);
+    }
+  };
+};
+```
