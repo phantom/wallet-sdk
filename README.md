@@ -1,148 +1,182 @@
-# Phantom Embedded Wallet SDK
+# 🟣 Phantom Embedded Wallet SDK  
 
-Phantom Embedded enables you to seamlessly onboard users to your application, without requiring them to have previously
-installed a wallet. With Phantom Embedded, users can create a self custodial wallet with just their Google account and a
-4-digit pin. Once created, this wallet will automatically sync with [Phantom](https://phantom.app)'s mobile and
-extension apps without the user needing to know their seed phrase or manage any private keys.
+**Seamlessly onboard users to your app with a self-custodial wallet linked to their Google account & PIN.**  
+With **Phantom Embedded**, users can create a wallet **without needing a seed phrase or private key management**.  
 
-In addition to powering wallet creation, Phantom Embedded also comes with a built-in UI for users to view and manage
-their holdings. This UI serves as a trusted interface for users to sign messages and transactions on your app.
+<div align="center">
 
-## Features
+[![GitHub Repo stars](https://img.shields.io/github/stars/phantom/wallet-sdk?logo=github&color=yellow)](https://github.com/phantom/wallet-sdk/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/phantom/wallet-sdk?logo=github&color=blue)](https://github.com/phantom/wallet-sdk/network/members)
+[![GitHub last commit](https://img.shields.io/github/last-commit/phantom/wallet-sdk?logo=git)](https://github.com/phantom/wallet-sdk/commits/main)
+[![License](https://img.shields.io/github/license/phantom/wallet-sdk?logo=open-source-initiative)](https://github.com/phantom/wallet-sdk/blob/main/LICENSE)
+[![Discord](https://img.shields.io/discord/924442927399313448?logo=discord&color=5865F2)](https://discord.gg/phantom)
+[![Twitter Follow](https://img.shields.io/twitter/follow/phantom?style=flat&logo=twitter)](https://x.com/phantom)
 
-- Create self custodial wallets without leaving your application
-- Onboard users via Sign in with Google and a 4-digit pin (no seed phrases)
-- Sync embedded wallets with Phantom's mobile and extension apps
-- Sign transactions and message on Solana (more chains coming soon)
-- View, send, and receive tokens on Solana, Ethereum, Bitcoin, Base, and Polygon
-- Pricing: **FREE**
+</div>
 
-## Quickstart
+---
 
-1. Install the Phantom Embedded SDK
+## 🚀 **Features**
+✅ **Self-custodial wallets** – no seed phrases required.  
+✅ **Onboard users via Google login & a 4-digit PIN**.  
+✅ **Embedded wallet syncs with Phantom mobile & extension apps**.  
+✅ **Supports signing transactions & messages on Solana** *(more chains coming soon)*.  
+✅ **Multi-chain support** – Solana, Ethereum, Bitcoin, Base, Polygon.  
+✅ **Built-in UI for wallet management**.  
+✅ **Completely free to use!**  
 
-```bash
-yarn | npm | pnpm add @phantom/wallet-sdk
+---
+
+## ⚡ **Quickstart**  
+
+### 1️⃣ **Install Phantom Embedded SDK**  
+
+```bash  
+yarn add @phantom/wallet-sdk  
 ```
 
-2. Load the Phantom Embedded wallet in your web application
+or  
 
-```tsx
-import {createPhantom} from "@phantom/wallet-sdk"
+```bash  
+npm install @phantom/wallet-sdk  
+```
+or  
+
+```bash  
+pnpm add @phantom/wallet-sdk  
+```
+
+---
+
+### 2️⃣ **Load Phantom Embedded Wallet in Your Web App**  
+
+```bash  
+import { createPhantom } from "@phantom/wallet-sdk";
 
 const opts: CreatePhantomConfig = {
     zIndex: 10_000,
     hideLauncherBeforeOnboarded: true,
-}
+};
 
 const App = () => {
     useEffect(() => {
         createPhantom(opts);
     }, []);
-...
-}
+};
+```
+---
+
+### 3️⃣ **Integrate Phantom as Usual**  
+
+Once `Phantom Embedded` is set up, users **automatically onboard** when interacting with Phantom:  
+
+```bash
+window.phantom.solana.connect();  
 ```
 
-3. [Integrate Phantom](https://docs.phantom.app/solana/integrating-phantom) as you would normally. Whenever a user
-   interacts with Phantom (e.g. `window.phantom.solana.connect()`), the Phantom Embedded wallet will automatically
-   initialize if the user does not have Phantom already installed.
+If **Phantom is not installed**, the **embedded wallet initializes automatically**.  
+For a full guide, check the **[Phantom Docs](https://docs.phantom.app/solana/integrating-phantom)**.
 
-## Configuration
+---
 
-The following optional parameters can be passed as `createPhantom({options...})` to customize the Phantom Embedded
-wallet experience.
+## ⚙️ **Configuration Options**  
 
-| Parameter                     | Type    | Description                                                                                                                                                                    |
-| ----------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `hideLauncherBeforeOnboarded` | boolean | If `true`, the Phantom Embedded UI will be hidden until the user engages with Phantom. Defaults to `false`.                                                                    |
-| `colorScheme`                 | string  | The background color of the Phantom Embedded iframe, which should be configured to match your site's theme. Can be `"light"`, `"dark"`, or `"normal"`. Defaults to `"normal"`. |
-| `zIndex`                      | number  | The z-index of the Phantom Embedded UI. Defaults to `10_000`.                                                                                                                  |
-| `paddingBottom`               | number  | The number of pixels between the Phantom Embedded UI and the right edge of the web. Defaults to `0`.                                                                           |
-| `paddingRight`                | number  | The number of pixels between the Phantom Embedded UI and the bottom edge of the web. Defaults to `0`.                                                                          |
-| `paddingTop`                  | number  | The number of pixels between the Phantom Embedded UI and the top edge of the web. Defaults to `0`.                                                                             |
-| `paddingLeft`                 | number  | The number of pixels between the Phantom Embedded UI and the left edge of the web. Defaults to `0`.                                                                            |
-| `position`                    | enum    | The corner of the app where the Phantom wallet will be displayed. Can be `"bottom-right"`, `"bottom-left"`, `"top-right"`, `"top-left"`. Defaults to "bottom-left".            |
+Customize the Phantom Embedded wallet using the following **optional parameters**:  
 
-## Controlling the wallet after initialization
+| Parameter                     | Type    | Description |
+| ----------------------------- | ------- | -------------------------------------------------------------------------- |
+| `hideLauncherBeforeOnboarded` | boolean | Hides the UI until the user interacts with Phantom. Defaults to `false`. |
+| `colorScheme`                 | string  | UI theme: `"light"`, `"dark"`, or `"normal"`. Defaults to `"normal"`. |
+| `zIndex`                      | number  | Controls the wallet UI stacking order. Defaults to `10_000`. |
+| `paddingBottom`               | number  | Adjusts UI spacing from the bottom. Defaults to `0`. |
+| `paddingRight`                | number  | Adjusts UI spacing from the right. Defaults to `0`. |
+| `paddingTop`                  | number  | Adjusts UI spacing from the top. Defaults to `0`. |
+| `paddingLeft`                 | number  | Adjusts UI spacing from the left. Defaults to `0`. |
+| `position`                    | enum    | Wallet UI placement: `"bottom-right"`, `"bottom-left"`, `"top-right"`, `"top-left"`. Defaults to `"bottom-left"`. |
 
-The createPhantom method will return an object that allows you to control the embedded wallet after initialization.
+---
 
-| Property | Type       | Description                                                                                          |
-| -------- | ---------- | ---------------------------------------------------------------------------------------------------- |
-| `show`   | () => void | Shows the embedded wallet. You only need to call this if you have called `hide`.                     |
-| `hide`   | () => void | Hides the embedded wallet. The embedded wallet will now be invisible to users until you call `show`. |
+## 🔧 **Controlling the Wallet After Initialization**  
 
-```tsx
+The `createPhantom` method returns an object for controlling the wallet UI:  
+
+| Method | Description |
+| ------- | ----------- |
+| `show()`  | Displays the Phantom Embedded wallet. |
+| `hide()`  | Hides the wallet UI until `show()` is called. |
+
+```bash  
 import { createPhantom } from "@phantom/wallet-sdk";
 
-const opts: CreatePhantomConfig = {
-  zIndex: 10_000,
-  hideLauncherBeforeOnboarded: true,
-};
-const phantom = createPhantom(opts);
+const phantom = createPhantom({ hideLauncherBeforeOnboarded: true });
 
-// To hide the embedded wallet
+// Hide wallet UI
 phantom.hide();
 
-// To show the embedded wallet
+// Show wallet UI
 phantom.show();
 ```
+---
 
-## See It In Action
+## 🎬 **See It In Action**  
 
-Try out Phantom Embedded via our demo app: https://sandbox.phantom.dev/sol-embedded-sandbox
+Try **Phantom Embedded** via our **[demo app](https://sandbox.phantom.dev/sol-embedded-sandbox)**.
 
-> Note: Phantom Embedded will not initialize if it detects that the user already has the Phantom extension installed, or
-> if the user is accessing the page from within the Phantom mobile app.
+📌 **Note:**  
+- The embedded wallet **will NOT initialize** if Phantom Extension is detected.  
+- On **Phantom mobile**, the native wallet will be used instead.
 
-## Give Feedback
+---
 
-Phantom Embedded is in active development and will be prioritizing features requested by early adopters. If you are
-interested in working with us, please email us at `developers@phantom.app` or message `@brianfriel` on Telegram.
-
-## Frequently Asked Questions
+## 💡 **Frequently Asked Questions**  
 
 <details>
   <summary>How does the embedded wallet work with the Phantom extension?</summary>
-
-    If the Phantom extension is detected, we will not inject the embedded wallet. Phantom users can continue using their extension like normal.
-
+  If the Phantom extension is detected, we will **not inject the embedded wallet**. Users will continue using the extension normally.
 </details>
+
 <details>
   <summary>What does `createPhantom()` do?</summary>
-
-    The Phantom embedded wallet lives inside an iframe. The `createPhantom` function loads and attaches the iframe to your website.
-
+  It loads the **Phantom Embedded wallet inside an iframe** and attaches it to your site.
 </details>
+
 <details>
   <summary>How do I interact with the embedded wallet?</summary>
-
-    Once `createPhantom` has been called, `window.phantom.solana` and a compliant wallet-standard provider will also be available in the global scope of your website. This means that most of your existing code for interacting with Solana wallets should work out of the box.
-
-    Once a user has onboarded to the embedded wallet, they should be able to click your “connect wallet” button, which gives your website access to their Solana address. After that, signing messages and transactions should just work as normal.
-
+  Once initialized, `window.phantom.solana` will be available globally.  
+  Most **existing Solana wallet integration code** will work **without modification**.
 </details>
+
 <details>
   <summary>I can't see the embedded wallet on my website. What's wrong?</summary>
-
-    The most common cause is that you are using a browser with the Phantom extension installed. If the Phantom extension is detected, we will not inject the embedded wallet.
-
-    You can temporarily disable the Phantom extension by going to `chrome://extensions` and toggling Phantom off.
-
+  - If Phantom Extension is installed, the **embedded wallet will NOT load**.  
+  - Disable the extension via `chrome://extensions` to test Phantom Embedded.
 </details>
+
 <details>
   <summary>How much does this cost?</summary>
-
-    It's free!
-
+  It's **free**!
 </details>
 
-## Disclaimers
+---
 
-We are providing early access to beta software for testing purposes only. Embedded wallet should be used in a
-non-production environment only. Phantom will not be liable for any losses or damages suffered by you or your end users
-if you push the early access version of embedded wallets to a production environment.
+## ⚠️ **Disclaimers**  
 
-All suggestions, enhancement requests, recommendations or other feedback provided by you relating to the embedded wallet
-will be the sole and exclusive property of Phantom and by using the early access version of embedded wallets and
-providing feedback to Phantom you agree to assign any rights in that feedback to Phantom.
+🚨 **Phantom Embedded is in BETA.**  
+It should **NOT** be used in production yet.  
+
+- **Use in test environments only.**  
+- Phantom is **not liable for any losses** if deployed in production.  
+- All **feedback & feature requests** are welcome!  
+
+---
+
+## 💬 **Join the Community**  
+<p align="left">
+  <a href="https://discord.gg/phantom">
+    <img src="https://img.shields.io/badge/Discord-5865F2?logo=discord&logoColor=white&style=for-the-badge" alt="Discord">
+  </a>
+  <a href="https://x.com/phantom">
+    <img src="https://img.shields.io/badge/Twitter-000000?logo=x&logoColor=white&style=for-the-badge" alt="Twitter (X)">
+  </a>
+</p>
+
