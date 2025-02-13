@@ -37,7 +37,7 @@ const opts: CreatePhantomConfig = {
 
 const App = () => {
     useEffect(() => {
-        createPhantom(opts);
+       const phantom = createPhantom(opts);
     }, []);
 ...
 }
@@ -52,16 +52,17 @@ const App = () => {
 The following optional parameters can be passed as `createPhantom({options...})` to customize the Phantom Embedded
 wallet experience.
 
-| Parameter                     | Type    | Description                                                                                                                                                                    |
-| ----------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `hideLauncherBeforeOnboarded` | boolean | If `true`, the Phantom Embedded UI will be hidden until the user engages with Phantom. Defaults to `false`.                                                                    |
-| `colorScheme`                 | string  | The background color of the Phantom Embedded iframe, which should be configured to match your site's theme. Can be `"light"`, `"dark"`, or `"normal"`. Defaults to `"normal"`. |
-| `zIndex`                      | number  | The z-index of the Phantom Embedded UI. Defaults to `10_000`.                                                                                                                  |
-| `paddingBottom`               | number  | The number of pixels between the Phantom Embedded UI and the right edge of the web. Defaults to `0`.                                                                           |
-| `paddingRight`                | number  | The number of pixels between the Phantom Embedded UI and the bottom edge of the web. Defaults to `0`.                                                                          |
-| `paddingTop`                  | number  | The number of pixels between the Phantom Embedded UI and the top edge of the web. Defaults to `0`.                                                                             |
-| `paddingLeft`                 | number  | The number of pixels between the Phantom Embedded UI and the left edge of the web. Defaults to `0`.                                                                            |
-| `position`                    | enum    | The corner of the app where the Phantom wallet will be displayed. Can be `"bottom-right"`, `"bottom-left"`, `"top-right"`, `"top-left"`. Defaults to "bottom-left".            |
+| Parameter                     | Type    | Description                                                                                                                                                                                 |
+| ----------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `hideLauncherBeforeOnboarded` | boolean | If `true`, the Phantom Embedded UI will be hidden until the user engages with Phantom. Defaults to `false`.                                                                                 |
+| `colorScheme`                 | string  | The background color of the Phantom Embedded iframe, which should be configured to match your site's theme. Can be `"light"`, `"dark"`, or `"normal"`. Defaults to `"normal"`.              |
+| `zIndex`                      | number  | The z-index of the Phantom Embedded UI. Defaults to `10_000`.                                                                                                                               |
+| `paddingBottom`               | number  | The number of pixels between the Phantom Embedded UI and the right edge of the web. Defaults to `0`.                                                                                        |
+| `paddingRight`                | number  | The number of pixels between the Phantom Embedded UI and the bottom edge of the web. Defaults to `0`.                                                                                       |
+| `paddingTop`                  | number  | The number of pixels between the Phantom Embedded UI and the top edge of the web. Defaults to `0`.                                                                                          |
+| `paddingLeft`                 | number  | The number of pixels between the Phantom Embedded UI and the left edge of the web. Defaults to `0`.                                                                                         |
+| `position`                    | enum    | The corner of the app where the Phantom wallet will be displayed. Can be `"bottom-right"`, `"bottom-left"`, `"top-right"`, `"top-left"`. Defaults to "bottom-left".                         |
+| `element`                     | string  | The ID of an HTML element where the wallet will be attached into. The wallet will be opened by default and rendered without the icon. The `position`, and `padding` otpions will be ignored |
 
 ## Controlling the wallet after initialization
 
@@ -86,6 +87,47 @@ phantom.hide();
 
 // To show the embedded wallet
 phantom.show();
+
+// To navigate to the swapper
+phantom.swap({
+  buyTokenNetworkId: "solana:101",
+  sellTokenNetworkId: "solana:101",
+  buyTokenAddress: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+  sellTokenAddress: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+  sellAmount: "100000000",
+});
+
+// To open the onramp screen
+phantom.buy({
+  tokenNetworkId: "solana:101",
+  tokenAddress: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+  amount: "100", // USD
+});
+```
+
+## Doing transactions with the embedded wallet
+
+The embedded wallet will listen to standard wallet provider events, so you can use it as you would any other wallet. For example, to connect to the wallet:
+
+```tsx
+import { createPhantom } from "@phantom/wallet-sdk";
+
+const opts: CreatePhantomConfig = {
+  zIndex: 10_000,
+  hideLauncherBeforeOnboarded: true,
+};
+
+const phantom = createPhantom(opts);
+
+// Connect to the wallet (solana)
+const handleConnect = () => {
+  window.solana.connect();
+};
+
+// Connect to the wallet (evm)
+const handleConnect = () => {
+  window.ethereum.request({ method: "eth_requestAccounts" });
+};
 ```
 
 ## See It In Action
