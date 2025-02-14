@@ -90,18 +90,20 @@ phantom.show();
 
 // To navigate to the swapper
 phantom.swap({
-  buyTokenNetworkId: "solana:101",
-  sellTokenNetworkId: "solana:101",
-  buyTokenAddress: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-  sellTokenAddress: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-  sellAmount: "100000000",
+  buy: "solana:101:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // Caip19 token address https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-19.md
+  sell: "solana:101:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // Caip19 token address
+  amount: "100000000", // Amount to sell
+});
+
+// To select only the token to swap to
+phantom.swap({
+  buy: "solana:101:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // Caip19 token address
 });
 
 // To open the onramp screen
 phantom.buy({
-  tokenNetworkId: "solana:101",
-  tokenAddress: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-  amount: "100", // USD
+  amount: 100, // USD amount in number (optional)
+  buy: "solana:101:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // Caip19 token address
 });
 ```
 
@@ -201,14 +203,17 @@ We use Changesets for versioning and GitHub Actions for publishing. The process 
 5. The pull request should contain your code changes and the new changeset file(s).
 
 6. Once the pull request is merged to the main branch, the CI/CD pipeline (GitHub Actions) will automatically:
+
    - Create a new "Version Packages" pull request that includes version bumps and changelog updates
 
 7. Review the "Version Packages" pull request:
+
    - Check that the version bumps and changelog entries are correct
    - Make any necessary adjustments
    - Approve the pull request
 
 8. Merge the "Version Packages" pull request:
+
    - This triggers the publish workflow
 
 9. The publish workflow will automatically:
