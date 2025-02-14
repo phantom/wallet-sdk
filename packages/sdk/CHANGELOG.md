@@ -1,5 +1,11 @@
 # @phantom/wallet-sdk
 
+## 0.0.16
+
+### Patch Changes
+
+- 48672cd: Expose phantom app type
+
 ## 0.0.15
 
 ### Patch Changes
