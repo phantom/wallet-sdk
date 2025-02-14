@@ -1,5 +1,11 @@
 # @phantom/wallet-sdk
 
+## 0.0.15
+
+### Patch Changes
+
+- c8942de: Update phanton interface
+
 ## 0.0.14
 
 ### Patch Changes
