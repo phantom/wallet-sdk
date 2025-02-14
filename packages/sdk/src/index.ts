@@ -31,18 +31,16 @@ export interface Phantom {
   swap: (options: { buy: string; sell?: string; amount?: string }) => void;
 }
 
+export interface PhantomApp {
+  buy: (options: { buy: string; amount?: number }) => void;
+  swap: (options: { buy: string; sell?: string; amount?: string }) => void;
+}
+
 // Define window.phantom.app type
 declare global {
   interface Window {
     phantom: {
-      app: {
-        buy: (options: { buy: string; amount?: number }) => void;
-        swap: (options: {
-          buy: string;
-          sell?: string;
-          amount?: string;
-        }) => void;
-      };
+      app: PhantomApp;
     };
   }
 }
