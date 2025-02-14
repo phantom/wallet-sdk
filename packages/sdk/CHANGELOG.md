@@ -1,5 +1,13 @@
 # @phantom/wallet-sdk
 
+## 0.0.14
+
+### Patch Changes
+
+- 9b5606b: yarn version updated
+- 24c8e06: New release
+- 1437f57: Add new element parameter to the SDK.
+
 ## 0.0.13
 
 ### Patch Changes
