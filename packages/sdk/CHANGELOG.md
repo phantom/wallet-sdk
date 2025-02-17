@@ -1,5 +1,11 @@
 # @phantom/wallet-sdk
 
+## 0.0.17
+
+### Patch Changes
+
+- 4f1e8c1: Add namespace to initialization
+
 ## 0.0.16
 
 ### Patch Changes
