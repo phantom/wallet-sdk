@@ -63,6 +63,7 @@ wallet experience.
 | `paddingLeft`                 | number  | The number of pixels between the Phantom Embedded UI and the left edge of the web. Defaults to `0`.                                                                                         |
 | `position`                    | enum    | The corner of the app where the Phantom wallet will be displayed. Can be `"bottom-right"`, `"bottom-left"`, `"top-right"`, `"top-left"`. Defaults to "bottom-left".                         |
 | `element`                     | string  | The ID of an HTML element where the wallet will be attached into. The wallet will be opened by default and rendered without the icon. The `position`, and `padding` otpions will be ignored |
+| `namespace`                   | string  | Allows to inject the wallet into another namespace. Defaults to `"phantom"`.                                                                                                                |
 
 ## Controlling the wallet after initialization
 
@@ -72,6 +73,8 @@ The createPhantom method will return an object that allows you to control the em
 | -------- | ---------- | ---------------------------------------------------------------------------------------------------- |
 | `show`   | () => void | Shows the embedded wallet. You only need to call this if you have called `hide`.                     |
 | `hide`   | () => void | Hides the embedded wallet. The embedded wallet will now be invisible to users until you call `show`. |
+| `swap`   | () => void | Opens the swap screen.                                                                               |
+| `buy`    | () => void | Opens the buy screen.                                                                                |
 
 ```tsx
 import { createPhantom } from "@phantom/wallet-sdk";
@@ -123,12 +126,14 @@ const phantom = createPhantom(opts);
 
 // Connect to the wallet (solana)
 const handleConnect = () => {
-  window.solana.connect();
+  // Or window[namespace].solana.connect()
+  window.phantom.solana.connect();
 };
 
 // Connect to the wallet (evm)
 const handleConnect = () => {
-  window.ethereum.request({ method: "eth_requestAccounts" });
+  // Or window[namespace].ethereum.request({ method: "eth_requestAccounts" });
+  window.phantom.ethereum.request({ method: "eth_requestAccounts" });
 };
 ```
 

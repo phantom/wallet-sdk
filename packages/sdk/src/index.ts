@@ -22,6 +22,7 @@ export type CreatePhantomConfig = Partial<{
   position: Position;
   sdkURL: string;
   element: string;
+  namespace: string;
 }>;
 
 export interface Phantom {
@@ -34,15 +35,6 @@ export interface Phantom {
 export interface PhantomApp {
   buy: (options: { buy: string; amount?: number }) => void;
   swap: (options: { buy: string; sell?: string; amount?: string }) => void;
-}
-
-// Define window.phantom.app type
-declare global {
-  interface Window {
-    phantom: {
-      app: PhantomApp;
-    };
-  }
 }
 
 export async function createPhantom(
@@ -90,6 +82,12 @@ export async function createPhantom(
     sdkURL.searchParams.append("element", config.element.toString());
   }
 
+  let namespace = "phantom";
+  if ("namespace" in config && config.namespace != null) {
+    namespace = config.namespace;
+    sdkURL.searchParams.append("namespace", namespace);
+  }
+
   scriptTag.setAttribute("type", "module");
   scriptTag.setAttribute("src", sdkURL.toString());
   container.insertBefore(scriptTag, container.children[0]);
@@ -109,14 +107,14 @@ export async function createPhantom(
             if (iframe != null) iframe.style.display = "block";
           },
           swap: (options) => {
-            window.phantom.app.swap({
+            (window as any)[namespace].app.swap({
               buy: options.buy,
               sell: options.sell,
               amount: options.amount,
             });
           },
           buy: (options) => {
-            window.phantom.app.buy({
+            (window as any)[namespace].app.buy({
               buy: options.buy,
               amount: options.amount,
             });
