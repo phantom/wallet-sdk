@@ -37,7 +37,7 @@ const opts: CreatePhantomConfig = {
 
 const App = () => {
     useEffect(() => {
-        createPhantom(opts);
+       const phantom = createPhantom(opts);
     }, []);
 ...
 }
@@ -52,16 +52,18 @@ const App = () => {
 The following optional parameters can be passed as `createPhantom({options...})` to customize the Phantom Embedded
 wallet experience.
 
-| Parameter                     | Type    | Description                                                                                                                                                                    |
-| ----------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `hideLauncherBeforeOnboarded` | boolean | If `true`, the Phantom Embedded UI will be hidden until the user engages with Phantom. Defaults to `false`.                                                                    |
-| `colorScheme`                 | string  | The background color of the Phantom Embedded iframe, which should be configured to match your site's theme. Can be `"light"`, `"dark"`, or `"normal"`. Defaults to `"normal"`. |
-| `zIndex`                      | number  | The z-index of the Phantom Embedded UI. Defaults to `10_000`.                                                                                                                  |
-| `paddingBottom`               | number  | The number of pixels between the Phantom Embedded UI and the right edge of the web. Defaults to `0`.                                                                           |
-| `paddingRight`                | number  | The number of pixels between the Phantom Embedded UI and the bottom edge of the web. Defaults to `0`.                                                                          |
-| `paddingTop`                  | number  | The number of pixels between the Phantom Embedded UI and the top edge of the web. Defaults to `0`.                                                                             |
-| `paddingLeft`                 | number  | The number of pixels between the Phantom Embedded UI and the left edge of the web. Defaults to `0`.                                                                            |
-| `position`                    | enum    | The corner of the app where the Phantom wallet will be displayed. Can be `"bottom-right"`, `"bottom-left"`, `"top-right"`, `"top-left"`. Defaults to "bottom-left".            |
+| Parameter                     | Type    | Description                                                                                                                                                                                 |
+| ----------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `hideLauncherBeforeOnboarded` | boolean | If `true`, the Phantom Embedded UI will be hidden until the user engages with Phantom. Defaults to `false`.                                                                                 |
+| `colorScheme`                 | string  | The background color of the Phantom Embedded iframe, which should be configured to match your site's theme. Can be `"light"`, `"dark"`, or `"normal"`. Defaults to `"normal"`.              |
+| `zIndex`                      | number  | The z-index of the Phantom Embedded UI. Defaults to `10_000`.                                                                                                                               |
+| `paddingBottom`               | number  | The number of pixels between the Phantom Embedded UI and the right edge of the web. Defaults to `0`.                                                                                        |
+| `paddingRight`                | number  | The number of pixels between the Phantom Embedded UI and the bottom edge of the web. Defaults to `0`.                                                                                       |
+| `paddingTop`                  | number  | The number of pixels between the Phantom Embedded UI and the top edge of the web. Defaults to `0`.                                                                                          |
+| `paddingLeft`                 | number  | The number of pixels between the Phantom Embedded UI and the left edge of the web. Defaults to `0`.                                                                                         |
+| `position`                    | enum    | The corner of the app where the Phantom wallet will be displayed. Can be `"bottom-right"`, `"bottom-left"`, `"top-right"`, `"top-left"`. Defaults to "bottom-left".                         |
+| `element`                     | string  | The ID of an HTML element where the wallet will be attached into. The wallet will be opened by default and rendered without the icon. The `position`, and `padding` otpions will be ignored |
+| `namespace`                   | string  | Allows to inject the wallet into another namespace. Defaults to `"phantom"`.                                                                                                                |
 
 ## Controlling the wallet after initialization
 
@@ -71,6 +73,8 @@ The createPhantom method will return an object that allows you to control the em
 | -------- | ---------- | ---------------------------------------------------------------------------------------------------- |
 | `show`   | () => void | Shows the embedded wallet. You only need to call this if you have called `hide`.                     |
 | `hide`   | () => void | Hides the embedded wallet. The embedded wallet will now be invisible to users until you call `show`. |
+| `swap`   | () => void | Opens the swap screen.                                                                               |
+| `buy`    | () => void | Opens the buy screen.                                                                                |
 
 ```tsx
 import { createPhantom } from "@phantom/wallet-sdk";
@@ -86,6 +90,51 @@ phantom.hide();
 
 // To show the embedded wallet
 phantom.show();
+
+// To navigate to the swapper
+phantom.swap({
+  buy: "solana:101:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // Caip19 token address https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-19.md
+  sell: "solana:101:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // Caip19 token address
+  amount: "100000000", // Amount to sell
+});
+
+// To select only the token to swap to
+phantom.swap({
+  buy: "solana:101:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // Caip19 token address
+});
+
+// To open the onramp screen
+phantom.buy({
+  amount: 100, // USD amount in number (optional)
+  buy: "solana:101:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // Caip19 token address
+});
+```
+
+## Doing transactions with the embedded wallet
+
+The embedded wallet will listen to standard wallet provider events, so you can use it as you would any other wallet. For example, to connect to the wallet:
+
+```tsx
+import { createPhantom } from "@phantom/wallet-sdk";
+
+const opts: CreatePhantomConfig = {
+  zIndex: 10_000,
+  hideLauncherBeforeOnboarded: true,
+};
+
+const phantom = createPhantom(opts);
+
+// Connect to the wallet (solana)
+const handleConnect = () => {
+  // Or window[namespace].solana.connect()
+  window.phantom.solana.connect();
+};
+
+// Connect to the wallet (evm)
+const handleConnect = () => {
+  // Or window[namespace].ethereum.request({ method: "eth_requestAccounts" });
+  window.phantom.ethereum.request({ method: "eth_requestAccounts" });
+};
 ```
 
 ## See It In Action
@@ -136,6 +185,45 @@ interested in working with us, please email us at `developers@phantom.app` or me
     It's free!
 
 </details>
+
+### Versioning and Publishing Packages
+
+We use Changesets for versioning and GitHub Actions for publishing. The process is as follows:
+
+1. After making changes, create a changeset locally:
+
+   ```
+   yarn changeset
+   ```
+
+2. Follow the prompts to describe your changes and select the appropriate version bump.
+3. Commit the generated changeset file along with your code changes.
+
+4. Push your changes and open a pull request:
+
+   ```
+   git push
+   ```
+
+5. The pull request should contain your code changes and the new changeset file(s).
+
+6. Once the pull request is merged to the main branch, the CI/CD pipeline (GitHub Actions) will automatically:
+
+   - Create a new "Version Packages" pull request that includes version bumps and changelog updates
+
+7. Review the "Version Packages" pull request:
+
+   - Check that the version bumps and changelog entries are correct
+   - Make any necessary adjustments
+   - Approve the pull request
+
+8. Merge the "Version Packages" pull request:
+
+   - This triggers the publish workflow
+
+9. The publish workflow will automatically:
+   - Publish the updated packages to our npm registry
+   - Push the new version tags to the repository
 
 ## Disclaimers
 
