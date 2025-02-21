@@ -26,11 +26,13 @@ export interface Phantom {
   hide: () => void;
   buy: (options: { amount?: number; buy: string }) => void;
   swap: (options: { buy: string; sell?: string; amount?: string }) => void;
+  navigate: ({ route }: { route: string }) => void;
 }
 
 export interface PhantomApp {
   buy: (options: { buy: string; amount?: number }) => void;
   swap: (options: { buy: string; sell?: string; amount?: string }) => void;
+  navigate: ({ route }: { route: string }) => void;
 }
 
 export async function createPhantom(
@@ -94,6 +96,9 @@ export async function createPhantom(
       PHANTOM_INITIALIZED_EVENT_NAME,
       function handleInit() {
         resolve({
+          navigate: ({ route }) => {
+            (window as any)[namespace].app.navigate({ route });
+          },
           hide: () => {
             const iframe = document.getElementById(`${namespace}-wallet`);
             if (iframe != null) iframe.style.display = "none";
