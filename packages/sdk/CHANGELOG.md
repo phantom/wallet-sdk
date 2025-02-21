@@ -1,5 +1,11 @@
 # @phantom/wallet-sdk
 
+## 0.0.18
+
+### Patch Changes
+
+- c1e24c7: Make iframe ID dynamic
+
 ## 0.0.17
 
 ### Patch Changes
