@@ -1,8 +1,4 @@
-import {
-  PHANTOM_IFRAME_ID,
-  PHANTOM_INITIALIZED_EVENT_NAME,
-  SDK_URL,
-} from "./constants.js";
+import { PHANTOM_INITIALIZED_EVENT_NAME, SDK_URL } from "./constants.js";
 
 export enum Position {
   bottomRight = "bottom-right",
@@ -99,11 +95,11 @@ export async function createPhantom(
       function handleInit() {
         resolve({
           hide: () => {
-            const iframe = document.getElementById(PHANTOM_IFRAME_ID);
+            const iframe = document.getElementById(`${namespace}-wallet`);
             if (iframe != null) iframe.style.display = "none";
           },
           show: () => {
-            const iframe = document.getElementById(PHANTOM_IFRAME_ID);
+            const iframe = document.getElementById(`${namespace}-wallet`);
             if (iframe != null) iframe.style.display = "block";
           },
           swap: (options) => {
