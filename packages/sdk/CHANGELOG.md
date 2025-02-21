@@ -1,5 +1,12 @@
 # @phantom/wallet-sdk
 
+## 0.0.19
+
+### Patch Changes
+
+- eff34d7: Navigate method
+- d83c398: Navigate method
+
 ## 0.0.18
 
 ### Patch Changes
