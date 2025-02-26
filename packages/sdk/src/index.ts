@@ -86,6 +86,9 @@ export async function createPhantom(
     sdkURL.searchParams.append("namespace", namespace);
   }
 
+  // Append a timestamp parameter to get a fresh copy of the SDK
+  sdkURL.searchParams.append("ts", Date.now().toString());
+
   scriptTag.setAttribute("type", "module");
   scriptTag.setAttribute("src", sdkURL.toString());
   container.insertBefore(scriptTag, container.children[0]);
