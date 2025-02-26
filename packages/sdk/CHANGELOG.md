@@ -1,5 +1,12 @@
 # @phantom/wallet-sdk
 
+## 0.0.20
+
+### Patch Changes
+
+- 2fc3b8e: Add params in navigate method
+- a77f581: Add params in navigate method
+
 ## 0.0.19
 
 ### Patch Changes
