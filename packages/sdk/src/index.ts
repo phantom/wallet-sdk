@@ -26,13 +26,13 @@ export interface Phantom {
   hide: () => void;
   buy: (options: { amount?: number; buy: string }) => void;
   swap: (options: { buy: string; sell?: string; amount?: string }) => void;
-  navigate: ({ route, params }: { route: string; params: any }) => void;
+  navigate: ({ route, params }: { route: string; params?: any }) => void;
 }
 
 export interface PhantomApp {
   buy: (options: { buy: string; amount?: number }) => void;
   swap: (options: { buy: string; sell?: string; amount?: string }) => void;
-  navigate: ({ route, params }: { route: string; params: any }) => void;
+  navigate: ({ route, params }: { route: string; params?: any }) => void;
 }
 
 export async function createPhantom(
