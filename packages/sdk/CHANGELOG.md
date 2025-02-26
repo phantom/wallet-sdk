@@ -1,5 +1,11 @@
 # @phantom/wallet-sdk
 
+## 0.0.21
+
+### Patch Changes
+
+- 1091f81: Timestamp appended to url
+
 ## 0.0.20
 
 ### Patch Changes
