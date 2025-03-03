@@ -27,6 +27,11 @@ export interface Phantom {
   buy: (options: { amount?: number; buy: string }) => void;
   swap: (options: { buy: string; sell?: string; amount?: string }) => void;
   navigate: ({ route, params }: { route: string; params?: any }) => void;
+  solana?: any;
+  ethereum?: any;
+  sui?: any;
+  btc?: any;
+  app: PhantomApp;
 }
 
 export interface PhantomApp {
@@ -98,9 +103,11 @@ export async function createPhantom(
     window.addEventListener(
       PHANTOM_INITIALIZED_EVENT_NAME,
       function handleInit() {
+        const phantomInstance = (window as any)[namespace];
+
         resolve({
           navigate: ({ route, params }) => {
-            (window as any)[namespace].app.navigate({ route, params });
+            phantomInstance.app.navigate({ route, params });
           },
           hide: () => {
             const iframe = document.getElementById(`${namespace}-wallet`);
@@ -111,18 +118,23 @@ export async function createPhantom(
             if (iframe != null) iframe.style.display = "block";
           },
           swap: (options) => {
-            (window as any)[namespace].app.swap({
+            phantomInstance.app.swap({
               buy: options.buy,
               sell: options.sell,
               amount: options.amount,
             });
           },
           buy: (options) => {
-            (window as any)[namespace].app.buy({
+            phantomInstance.app.buy({
               buy: options.buy,
               amount: options.amount,
             });
           },
+          solana: phantomInstance.solana,
+          ethereum: phantomInstance.ethereum,
+          sui: phantomInstance.sui,
+          btc: phantomInstance.btc,
+          app: phantomInstance.app,
         });
         window.removeEventListener(PHANTOM_INITIALIZED_EVENT_NAME, handleInit);
       }

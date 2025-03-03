@@ -5,7 +5,9 @@
   "scripts": {
     "build": "yarn workspaces foreach --all run build",
     "lint": "yarn workspaces foreach --all run lint",
-    "release": "yarn build && yarn changeset publish"
+    "release": "yarn build && yarn changeset publish",
+    "start:demo": "cd packages/demo-app && yarn dev",
+    "build:demo": "cd packages/demo-app && yarn build"
   },
   "workspaces": [
     "packages/*"
