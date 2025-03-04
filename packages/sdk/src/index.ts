@@ -30,7 +30,7 @@ export interface Phantom {
   solana?: any;
   ethereum?: any;
   sui?: any;
-  btc?: any;
+  bitcoin?: any;
   app: PhantomApp;
 }
 
@@ -133,7 +133,7 @@ export async function createPhantom(
           solana: phantomInstance.solana,
           ethereum: phantomInstance.ethereum,
           sui: phantomInstance.sui,
-          btc: phantomInstance.btc,
+          bitcoin: phantomInstance.bitcoin,
           app: phantomInstance.app,
         });
         window.removeEventListener(PHANTOM_INITIALIZED_EVENT_NAME, handleInit);

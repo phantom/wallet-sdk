@@ -1,236 +1,268 @@
-# Phantom Embedded Wallet SDK
+# @phantom/sdk
 
-Phantom Embedded enables you to seamlessly onboard users to your application, without requiring them to have previously
-installed a wallet. With Phantom Embedded, users can create a self custodial wallet with just their Google account and a
-4-digit pin. Once created, this wallet will automatically sync with [Phantom](https://phantom.app)'s mobile and
-extension apps without the user needing to know their seed phrase or manage any private keys.
+The Phantom Wallet SDK allows you to integrate Phantom's wallet functionality directly into your web application.
 
-In addition to powering wallet creation, Phantom Embedded also comes with a built-in UI for users to view and manage
-their holdings. This UI serves as a trusted interface for users to sign messages and transactions on your app.
-
-## Features
-
-- Create self custodial wallets without leaving your application
-- Onboard users via Sign in with Google and a 4-digit pin (no seed phrases)
-- Sync embedded wallets with Phantom's mobile and extension apps
-- Sign transactions and message on Solana (more chains coming soon)
-- View, send, and receive tokens on Solana, Ethereum, Bitcoin, Base, and Polygon
-- Pricing: **FREE**
-
-## Quickstart
-
-1. Install the Phantom Embedded SDK
+## Installation
 
 ```bash
-yarn | npm | pnpm add @phantom/wallet-sdk
+# Using npm
+npm install @phantom/sdk
+
+# Using yarn
+yarn add @phantom/sdk
+
+# Using pnpm
+pnpm add @phantom/sdk
 ```
 
-2. Load the Phantom Embedded wallet in your web application
+## Usage Modes
 
-```tsx
-import {createPhantom} from "@phantom/wallet-sdk"
+The SDK supports two primary integration modes:
 
-const opts: CreatePhantomConfig = {
-    zIndex: 10_000,
-    hideLauncherBeforeOnboarded: true,
-}
+### 1. Popup Mode (Default)
 
-const App = () => {
-    useEffect(() => {
-       const phantom = createPhantom(opts);
-    }, []);
-...
-}
-```
+In this mode, the Phantom wallet appears as a floating widget on your page in one of the predefined positions (bottom-right, bottom-left, top-right, top-left). This is the simplest integration method.
 
-3. [Integrate Phantom](https://docs.phantom.app/solana/integrating-phantom) as you would normally. Whenever a user
-   interacts with Phantom (e.g. `window.phantom.solana.connect()`), the Phantom Embedded wallet will automatically
-   initialize if the user does not have Phantom already installed.
+```typescript
+import { createPhantom, Position } from "@phantom/sdk";
 
-## Configuration
+// Initialize the Phantom wallet as a popup
+const phantom = await createPhantom({
+  position: Position.bottomRight, // Choose from bottomRight, bottomLeft, topRight, topLeft
+  hideLauncherBeforeOnboarded: false,
+  namespace: "my-app",
+});
 
-The following optional parameters can be passed as `createPhantom({options...})` to customize the Phantom Embedded
-wallet experience.
-
-| Parameter                     | Type    | Description                                                                                                                                                                                 |
-| ----------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `hideLauncherBeforeOnboarded` | boolean | If `true`, the Phantom Embedded UI will be hidden until the user engages with Phantom. Defaults to `false`.                                                                                 |
-| `colorScheme`                 | string  | The background color of the Phantom Embedded iframe, which should be configured to match your site's theme. Can be `"light"`, `"dark"`, or `"normal"`. Defaults to `"normal"`.              |
-| `zIndex`                      | number  | The z-index of the Phantom Embedded UI. Defaults to `10_000`.                                                                                                                               |
-| `paddingBottom`               | number  | The number of pixels between the Phantom Embedded UI and the right edge of the web. Defaults to `0`.                                                                                        |
-| `paddingRight`                | number  | The number of pixels between the Phantom Embedded UI and the bottom edge of the web. Defaults to `0`.                                                                                       |
-| `paddingTop`                  | number  | The number of pixels between the Phantom Embedded UI and the top edge of the web. Defaults to `0`.                                                                                          |
-| `paddingLeft`                 | number  | The number of pixels between the Phantom Embedded UI and the left edge of the web. Defaults to `0`.                                                                                         |
-| `position`                    | enum    | The corner of the app where the Phantom wallet will be displayed. Can be `"bottom-right"`, `"bottom-left"`, `"top-right"`, `"top-left"`. Defaults to "bottom-left".                         |
-| `element`                     | string  | The ID of an HTML element where the wallet will be attached into. The wallet will be opened by default and rendered without the icon. The `position`, and `padding` otpions will be ignored |
-| `namespace`                   | string  | Allows to inject the wallet into another namespace. Defaults to `"phantom"`.                                                                                                                |
-
-## Controlling the wallet after initialization
-
-The createPhantom method will return an object that allows you to control the embedded wallet after initialization.
-
-| Property | Type       | Description                                                                                          |
-| -------- | ---------- | ---------------------------------------------------------------------------------------------------- |
-| `show`   | () => void | Shows the embedded wallet. You only need to call this if you have called `hide`.                     |
-| `hide`   | () => void | Hides the embedded wallet. The embedded wallet will now be invisible to users until you call `show`. |
-| `swap`   | () => void | Opens the swap screen.                                                                               |
-| `buy`    | () => void | Opens the buy screen.                                                                                |
-
-```tsx
-import { createPhantom } from "@phantom/wallet-sdk";
-
-const opts: CreatePhantomConfig = {
-  zIndex: 10_000,
-  hideLauncherBeforeOnboarded: true,
-};
-const phantom = createPhantom(opts);
-
-// To hide the embedded wallet
-phantom.hide();
-
-// To show the embedded wallet
+// Show the wallet UI
 phantom.show();
+```
 
-// To navigate to the swapper
-phantom.swap({
-  buy: "solana:101:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // Caip19 token address https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-19.md
-  sell: "solana:101:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // Caip19 token address
-  amount: "100000000", // Amount to sell
+### 2. Element Mode (Custom Container)
+
+In this mode, the Phantom wallet renders inside a specific HTML element that you provide. This gives you complete control over the wallet's positioning and layout within your application.
+
+```typescript
+import { createPhantom } from "@phantom/sdk";
+
+// Make sure the container element exists in your DOM
+// <div id="wallet-container" style="width: 400px; height: 600px;"></div>
+
+// Initialize the Phantom wallet inside your container
+const phantom = await createPhantom({
+  element: "wallet-container", // ID of the container element
+  namespace: "my-app",
 });
 
-// To select only the token to swap to
-phantom.swap({
-  buy: "solana:101:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // Caip19 token address
+// The wallet will automatically show in the container
+// You can still use show/hide methods
+phantom.show();
+```
+
+## Window Integration Behavior
+
+### Default Behavior (No Namespace)
+
+When you initialize the SDK without specifying a namespace:
+
+```typescript
+const phantom = await createPhantom();
+```
+
+The SDK behaves as follows:
+
+1. If the Phantom browser extension is already installed, the SDK will **not** initialize a new embedded wallet to avoid conflicts. Your dApp will continue to use the extension.
+
+2. If no extension is detected, the SDK will:
+   - Attach the wallet instance to `window.phantom`
+   - Expose blockchain RPC providers to their standard window objects:
+     - `window.solana` for Solana
+     - `window.ethereum` for Ethereum
+     - And other blockchain providers
+
+This means that existing dApps built for the Phantom extension can work with the embedded wallet without code changes - the same window objects they already use will be populated by the SDK.
+
+### Custom Namespace Behavior
+
+When you specify a custom namespace:
+
+```typescript
+const phantom = await createPhantom({ namespace: "myCustomWallet" });
+```
+
+The SDK will:
+
+1. Initialize even if the Phantom extension is installed (allowing both to coexist)
+2. Attach the wallet instance to `window.myCustomWallet` instead of `window.phantom`
+3. Not automatically expose providers to standard window objects to avoid conflicts with the extension
+
+In this case, you must use the returned object for all interactions:
+
+```typescript
+// Connect to Solana using your namespaced instance
+const publicKey = await phantom.solana.connect();
+```
+
+### Usage with Existing dApps
+
+For existing dApps that detect and use standard provider patterns:
+
+1. **Extension Installed**: The dApp will use the extension as normal
+2. **No Extension, Default Namespace**: The dApp will use the embedded wallet through the standard window objects
+3. **Custom Namespace**: You'll need to modify your dApp code to use the custom instance
+
+## Configuration Options
+
+The `createPhantom` function accepts the following configuration options:
+
+```typescript
+export type CreatePhantomConfig = Partial<{
+  zIndex: number; // Set the z-index of the wallet UI
+  hideLauncherBeforeOnboarded: boolean; // Hide the launcher for new users
+  colorScheme: string; // Light or dark mode
+  paddingBottom: number; // Padding from bottom of screen
+  paddingRight: number; // Padding from right of screen
+  paddingTop: number; // Padding from top of screen
+  paddingLeft: number; // Padding from left of screen
+  position: Position; // Position on screen (bottomRight, bottomLeft, topRight, topLeft)
+  sdkURL: string; // Custom SDK URL
+  element: string; // ID of element to render wallet in (for custom positioning)
+  namespace: string; // Namespace for the wallet instance
+}>;
+```
+
+**Note**: When using Element Mode, the `position` setting is ignored since the wallet will render inside your specified container element.
+
+## Phantom Interface
+
+The `createPhantom` function returns a `Phantom` interface with the following methods and properties:
+
+```typescript
+export interface Phantom {
+  // UI Controls
+  show: () => void; // Show the wallet UI
+  hide: () => void; // Hide the wallet UI
+
+  // Wallet Actions
+  buy: (options: { amount?: number; buy: string }) => void; // Buy tokens
+  swap: (options: { buy: string; sell?: string; amount?: string }) => void; // Swap tokens
+  navigate: ({ route, params }: { route: string; params?: any }) => void; // Navigate within wallet
+
+  // Blockchain RPC Interfaces
+  solana?: any; // Solana RPC interface
+  ethereum?: any; // Ethereum RPC interface
+  sui?: any; // Sui RPC interface
+  bitcoin?: any; // Bitcoin RPC interface
+
+  // App Interface
+  app: PhantomApp; // Phantom app interface
+}
+```
+
+## Blockchain RPC Interfaces
+
+The SDK exposes blockchain-specific RPC interfaces through the Phantom instance:
+
+### Solana
+
+```typescript
+// Connect to wallet
+const publicKey = await phantom.solana.connect();
+
+// Sign a message
+const message = new TextEncoder().encode("Hello, Solana!");
+const signature = await phantom.solana.signMessage(message);
+
+// Send a transaction
+const transaction = new Transaction();
+// ... add instructions ...
+const signature = await phantom.solana.signAndSendTransaction(transaction);
+```
+
+For detailed examples, see [Solana documentation](https://docs.phantom.com/solana/sending-a-transaction).
+
+### Ethereum, Base & Polygon
+
+```typescript
+// Connect to wallet
+const accounts = await phantom.ethereum.request({
+  method: "eth_requestAccounts",
 });
 
-// To open the onramp screen
-phantom.buy({
-  amount: 100, // USD amount in number (optional)
-  buy: "solana:101:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // Caip19 token address
+// Sign a message
+const from = accounts[0];
+const message = "Hello, Ethereum!";
+const signature = await phantom.ethereum.request({
+  method: "personal_sign",
+  params: [message, from],
+});
+
+// Send a transaction
+const txHash = await phantom.ethereum.request({
+  method: "eth_sendTransaction",
+  params: [
+    {
+      from,
+      to: "0x...",
+      value: "0x...",
+      // other tx params
+    },
+  ],
 });
 ```
 
-## Doing transactions with the embedded wallet
+For detailed examples, see [Ethereum documentation](https://docs.phantom.com/ethereum-monad-testnet-base-and-polygon/sending-a-transaction).
 
-The embedded wallet will listen to standard wallet provider events, so you can use it as you would any other wallet. For example, to connect to the wallet:
+### Sui
 
-```tsx
-import { createPhantom } from "@phantom/wallet-sdk";
+```typescript
+// Connect to wallet
+const accounts = await phantom.sui.connect();
 
-const opts: CreatePhantomConfig = {
-  zIndex: 10_000,
-  hideLauncherBeforeOnboarded: true,
-};
-
-const phantom = createPhantom(opts);
-
-// Connect to the wallet (solana)
-const handleConnect = () => {
-  // Or window[namespace].solana.connect()
-  window.phantom.solana.connect();
-};
-
-// Connect to the wallet (evm)
-const handleConnect = () => {
-  // Or window[namespace].ethereum.request({ method: "eth_requestAccounts" });
-  window.phantom.ethereum.request({ method: "eth_requestAccounts" });
-};
+// Sign a transaction
+// ... create transaction ...
+const signedTx = await phantom.sui.signTransaction(tx);
 ```
 
-## See It In Action
+For detailed examples, see [Sui documentation](https://docs.phantom.com/sui-beta/sending-a-transaction).
 
-Try out Phantom Embedded via our demo app: https://sandbox.phantom.dev/sol-embedded-sandbox
+### Bitcoin
 
-> Note: Phantom Embedded will not initialize if it detects that the user already has the Phantom extension installed, or
-> if the user is accessing the page from within the Phantom mobile app.
+```typescript
+// Connect to wallet
+const accounts = await phantom.bitcoin.connect();
 
-## Give Feedback
+// Sign a PSBT
+// ... create PSBT ...
+const signedPsbt = await phantom.bitcoin.signPsbt(psbt);
+```
 
-Phantom Embedded is in active development and will be prioritizing features requested by early adopters. If you are
-interested in working with us, please email us at `developers@phantom.app` or message `@brianfriel` on Telegram.
+For detailed examples, see [Bitcoin documentation](https://docs.phantom.com/bitcoin/sending-a-transaction).
 
-## Frequently Asked Questions
+## Wallet Actions
 
-<details>
-  <summary>How does the embedded wallet work with the Phantom extension?</summary>
+### Buy Tokens
 
-    If the Phantom extension is detected, we will not inject the embedded wallet. Phantom users can continue using their extension like normal.
+```typescript
+// Buy SOL with default amount
+phantom.buy({ buy: "solana:101/nativeToken:501" });
 
-</details>
-<details>
-  <summary>What does `createPhantom()` do?</summary>
+// Buy SOL with specific amount
+phantom.buy({ buy: "solana:101/nativeToken:501", amount: 10 });
+```
 
-    The Phantom embedded wallet lives inside an iframe. The `createPhantom` function loads and attaches the iframe to your website.
+### Swap Tokens
 
-</details>
-<details>
-  <summary>How do I interact with the embedded wallet?</summary>
+```typescript
+// Swap SOL to USDC
+phantom.swap({
+  sell: "solana:101/nativeToken:501",
+  buy: "solana:101/address:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+});
 
-    Once `createPhantom` has been called, `window.phantom.solana` and a compliant wallet-standard provider will also be available in the global scope of your website. This means that most of your existing code for interacting with Solana wallets should work out of the box.
-
-    Once a user has onboarded to the embedded wallet, they should be able to click your “connect wallet” button, which gives your website access to their Solana address. After that, signing messages and transactions should just work as normal.
-
-</details>
-<details>
-  <summary>I can't see the embedded wallet on my website. What's wrong?</summary>
-
-    The most common cause is that you are using a browser with the Phantom extension installed. If the Phantom extension is detected, we will not inject the embedded wallet.
-
-    You can temporarily disable the Phantom extension by going to `chrome://extensions` and toggling Phantom off.
-
-</details>
-<details>
-  <summary>How much does this cost?</summary>
-
-    It's free!
-
-</details>
-
-### Versioning and Publishing Packages
-
-We use Changesets for versioning and GitHub Actions for publishing. The process is as follows:
-
-1. After making changes, create a changeset locally:
-
-   ```
-   yarn changeset
-   ```
-
-2. Follow the prompts to describe your changes and select the appropriate version bump.
-3. Commit the generated changeset file along with your code changes.
-
-4. Push your changes and open a pull request:
-
-   ```
-   git push
-   ```
-
-5. The pull request should contain your code changes and the new changeset file(s).
-
-6. Once the pull request is merged to the main branch, the CI/CD pipeline (GitHub Actions) will automatically:
-
-   - Create a new "Version Packages" pull request that includes version bumps and changelog updates
-
-7. Review the "Version Packages" pull request:
-
-   - Check that the version bumps and changelog entries are correct
-   - Make any necessary adjustments
-   - Approve the pull request
-
-8. Merge the "Version Packages" pull request:
-
-   - This triggers the publish workflow
-
-9. The publish workflow will automatically:
-   - Publish the updated packages to our npm registry
-   - Push the new version tags to the repository
-
-## Disclaimers
-
-We are providing early access to beta software for testing purposes only. Embedded wallet should be used in a
-non-production environment only. Phantom will not be liable for any losses or damages suffered by you or your end users
-if you push the early access version of embedded wallets to a production environment.
-
-All suggestions, enhancement requests, recommendations or other feedback provided by you relating to the embedded wallet
-will be the sole and exclusive property of Phantom and by using the early access version of embedded wallets and
-providing feedback to Phantom you agree to assign any rights in that feedback to Phantom.
+// Swap SOL to USDC with specific amount
+phantom.swap({
+  sell: "solana:101/nativeToken:501",
+  buy: "solana:101/address:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+  amount: "1000000000",
+});
+```
