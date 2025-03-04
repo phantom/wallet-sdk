@@ -18,7 +18,7 @@ export const ElementConfigScreen: React.FC<ElementConfigScreenProps> = ({
   children,
 }) => {
   const codeSnippet = `
-import { createPhantom } from "@phantom/sdk";
+import { createPhantom } from "@phantom/wallet-sdk";
 
 // Element-based configuration
 const phantom = await createPhantom({

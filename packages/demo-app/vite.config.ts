@@ -12,10 +12,10 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@phantom/sdk": path.resolve(__dirname, "../sdk/src/index.ts"),
+      "@phantom/wallet-sdk": path.resolve(__dirname, "../sdk/src/index.ts"),
     },
   },
   optimizeDeps: {
-    include: ["@phantom/sdk"],
+    include: ["@phantom/wallet-sdk"],
   },
 });

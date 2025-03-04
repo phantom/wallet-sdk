@@ -17,7 +17,7 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@phantom/sdk": ["../sdk/src/index.ts"]
+      "@phantom/wallet-sdk": ["../sdk/src/index.ts"]
     }
   },
   "include": ["src"],

@@ -15,7 +15,7 @@ export const NormalConfigScreen: React.FC<NormalConfigScreenProps> = ({
   onBack,
 }) => {
   const codeSnippet = `
-import { createPhantom, Position } from "@phantom/sdk";
+import { createPhantom, Position } from "@phantom/wallet-sdk";
 
 // Normal configuration (bottom right)
 const phantom = await createPhantom({

@@ -8,7 +8,7 @@ The Phantom Wallet SDK allows you to integrate Phantom's wallet functionality di
 
 ## Packages
 
-- **@phantom/sdk**: The core SDK that provides the Phantom wallet integration.
+- **@phantom/wallet-sdk**: The core SDK that provides the Phantom wallet integration.
 - **@phantom/demo-app**: A React-based demo app that demonstrates how to use the SDK.
 
 ## Getting Started
@@ -17,19 +17,19 @@ The Phantom Wallet SDK allows you to integrate Phantom's wallet functionality di
 
 ```bash
 # Using npm
-npm install @phantom/sdk
+npm install @phantom/wallet-sdk
 
 # Using yarn
-yarn add @phantom/sdk
+yarn add @phantom/wallet-sdk
 
 # Using pnpm
-pnpm add @phantom/sdk
+pnpm add @phantom/wallet-sdk
 ```
 
 ### Basic Usage
 
 ```typescript
-import { createPhantom, Position } from "@phantom/sdk";
+import { createPhantom, Position } from "@phantom/wallet-sdk";
 
 // Create a wallet instance
 const phantom = await createPhantom({
