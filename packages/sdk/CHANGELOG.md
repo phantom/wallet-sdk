@@ -1,5 +1,11 @@
 # @phantom/wallet-sdk
 
+## 0.0.23
+
+### Patch Changes
+
+- 3bb4874: Fixed naming
+
 ## 0.1.1
 
 ### Patch Changes
