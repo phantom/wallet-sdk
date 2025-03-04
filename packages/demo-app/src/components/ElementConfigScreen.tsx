@@ -1,12 +1,10 @@
 import React from "react";
 import { Phantom } from "../../../sdk/src/index";
-import SyntaxHighlighter from "react-syntax-highlighter";
+import { Prism, SyntaxHighlighterProps } from "react-syntax-highlighter";
+
 import { docco } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import { WalletControls } from "./WalletControls";
-
-const SOL_CAIP19 = "solana:101/nativeToken:501";
-const USDC_CAIP19 =
-  "solana:101/address:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+const SyntaxHighlighter = Prism as any as React.FC<SyntaxHighlighterProps>;
 
 interface ElementConfigScreenProps {
   phantom: Phantom | null;
