@@ -127,12 +127,9 @@ interested in working with us, please email us at `developers@phantom.app` or me
     It's free!
 
 </details>
+
 ## Disclaimers
 
-We are providing early access to beta software for testing purposes only. Embedded wallet should be used in a
-non-production environment only. Phantom will not be liable for any losses or damages suffered by you or your end users
-if you push the early access version of embedded wallets to a production environment.
+The embedded wallet is a beta version, and Phantom will not be liable for any losses or damages suffered by you or your end users.
 
-All suggestions, enhancement requests, recommendations or other feedback provided by you relating to the embedded wallet
-will be the sole and exclusive property of Phantom and by using the early access version of embedded wallets and
-providing feedback to Phantom you agree to assign any rights in that feedback to Phantom.
+Any suggestions, enhancement requests, recommendations, or other feedback provided by you regarding the embedded wallet will be the exclusive property of Phantom. By using this beta version and providing feedback, you agree to assign any rights in that feedback to Phantom.
