@@ -1,6 +1,6 @@
 {
-  "name": "@phantom/sdk",
-  "version": "0.1.1",
+  "name": "@phantom/wallet-sdk",
+  "version": "0.0.22",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",

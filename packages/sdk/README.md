@@ -1,4 +1,4 @@
-# @phantom/sdk
+# @phantom/wallet-sdk
 
 The Phantom Wallet SDK allows you to integrate Phantom's wallet functionality directly into your web application.
 
@@ -6,13 +6,13 @@ The Phantom Wallet SDK allows you to integrate Phantom's wallet functionality di
 
 ```bash
 # Using npm
-npm install @phantom/sdk
+npm install @phantom/wallet-sdk
 
 # Using yarn
-yarn add @phantom/sdk
+yarn add @phantom/wallet-sdk
 
 # Using pnpm
-pnpm add @phantom/sdk
+pnpm add @phantom/wallet-sdk
 ```
 
 ## Usage Modes
@@ -24,7 +24,7 @@ The SDK supports two primary integration modes:
 In this mode, the Phantom wallet appears as a floating widget on your page in one of the predefined positions (bottom-right, bottom-left, top-right, top-left). This is the simplest integration method.
 
 ```typescript
-import { createPhantom, Position } from "@phantom/sdk";
+import { createPhantom, Position } from "@phantom/wallet-sdk";
 
 // Initialize the Phantom wallet as a popup
 const phantom = await createPhantom({
@@ -42,7 +42,7 @@ phantom.show();
 In this mode, the Phantom wallet renders inside a specific HTML element that you provide. This gives you complete control over the wallet's positioning and layout within your application.
 
 ```typescript
-import { createPhantom } from "@phantom/sdk";
+import { createPhantom } from "@phantom/wallet-sdk";
 
 // Make sure the container element exists in your DOM
 // <div id="wallet-container" style="width: 400px; height: 600px;"></div>
