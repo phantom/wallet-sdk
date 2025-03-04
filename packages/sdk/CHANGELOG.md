@@ -1,5 +1,11 @@
 # @phantom/wallet-sdk
 
+## 0.1.1
+
+### Patch Changes
+
+- 83747e2: Updated documentation and exposed phantom.ethereum, phantom.solana interfaces
+
 ## 0.0.21
 
 ### Patch Changes
