@@ -65,7 +65,7 @@ phantom.swap({
 The SDK provides access to Phantom's blockchain-specific RPC interfaces:
 
 - `phantom.solana` - Solana RPC interface
-- `phantom.ethereum` - Ethereum, Base, and Polygon RPC interface
+- `phantom.ethereum` - Ethereum, Base, Polygon and Monad Testnet RPC interface
 - `phantom.sui` - Sui RPC interface
 - `phantom.bitcoin` - Bitcoin RPC interface
 
