@@ -6,7 +6,7 @@ export const WalletContainer: React.FC = React.memo(() => {
       id="wallet-container"
       style={{
         width: "400px",
-        height: "747px",
+        height: "747px", // Updated height
         margin: "20px auto",
         border: "1px dashed #ccc",
         position: "relative",
