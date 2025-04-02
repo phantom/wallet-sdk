@@ -41,6 +41,7 @@ const phantom = await createPhantom({
         className="back-button"
         onClick={() => {
           phantom?.hide();
+          window.location.reload();
           onBack();
         }}
       >
