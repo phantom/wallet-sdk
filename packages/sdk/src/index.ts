@@ -43,9 +43,15 @@ export interface PhantomApp {
 export async function createPhantom(
   config: CreatePhantomConfig = {}
 ): Promise<Phantom> {
+
+  // specify the container to insert the script tag into
   const container = document.head ?? document.documentElement;
+  
+  //Creating a script tag
   const scriptTag = document.createElement("script");
 
+  // adding search params to the sdkURL
+  // to allow for custom configuration of the SDK
   const sdkURL = new URL(config.sdkURL ?? SDK_URL);
   if ("zIndex" in config && config.zIndex != null) {
     sdkURL.searchParams.append("zIndex", config.zIndex.toString());
@@ -94,9 +100,15 @@ export async function createPhantom(
   // Append a timestamp parameter to get a fresh copy of the SDK
   sdkURL.searchParams.append("ts", Date.now().toString());
 
+
+ // Setting attributes for the script tag to specify it as a module and set the SDK URL
   scriptTag.setAttribute("type", "module");
   scriptTag.setAttribute("src", sdkURL.toString());
+
+  //Inserting the script tag into the container
   container.insertBefore(scriptTag, container.children[0]);
+  
+  // Removing the script tag from the DOM after it has been executed to clean up
   container.removeChild(scriptTag);
 
   return await new Promise<Phantom>((resolve, _reject) => {
