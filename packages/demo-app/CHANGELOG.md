@@ -1,5 +1,12 @@
 # @phantom/demo-app
 
+## 0.0.6
+
+### Patch Changes
+
+- Updated dependencies [62af539]
+  - @phantom/wallet-sdk@0.1.1
+
 ## 0.0.5
 
 ### Patch Changes
