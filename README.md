@@ -60,6 +60,22 @@ phantom.swap({
 }); // Swap SOL to USDC
 ```
 
+### Skip Injection Mode
+
+If you want to avoid injecting providers into the global window object, you can use the `skipInjection` option:
+
+```typescript
+// Create a wallet instance with skipInjection enabled
+const phantom = await createPhantom({
+  skipInjection: true,
+});
+
+// All providers are available through the phantom instance only
+const solanaPublicKey = await phantom.solana.connect();
+```
+
+This is useful when you want to avoid any global namespace pollution and prefer to access all functionality through the returned Phantom instance.
+
 ## Blockchain RPC Interfaces
 
 The SDK provides access to Phantom's blockchain-specific RPC interfaces:
@@ -108,9 +124,11 @@ interested in working with us, please email us at `developers@phantom.app` or me
 
     Once `createPhantom` has been called, `window.phantom.solana` and a compliant wallet-standard provider will also be available in the global scope of your website. This means that most of your existing code for interacting with Solana wallets should work out of the box.
 
-    Once a user has onboarded to the embedded wallet, they should be able to click your “connect wallet” button, which gives your website access to their Solana address. After that, signing messages and transactions should just work as normal.
+    Once a user has onboarded to the embedded wallet, they should be able to click your "connect wallet" button, which gives your website access to their Solana address. After that, signing messages and transactions should just work as normal.
 
     If you use a namespace, you will need to invoke the functions through the `window[namespace]` object, or directly through the returned Phantom instance.
+
+    If you use `skipInjection: true`, all providers will only be available through the returned Phantom instance.
 
 </details>
 <details>

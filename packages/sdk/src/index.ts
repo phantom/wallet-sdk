@@ -19,6 +19,7 @@ export type CreatePhantomConfig = Partial<{
   sdkURL: string;
   element: string;
   namespace: string;
+  skipInjection: boolean;
 }>;
 
 export interface Phantom {
@@ -84,6 +85,12 @@ export async function createPhantom(
   if ("element" in config && config.element != null) {
     sdkURL.searchParams.append("element", config.element.toString());
   }
+  if ("skipInjection" in config && config.skipInjection != null) {
+    sdkURL.searchParams.append(
+      "skipInjection",
+      config.skipInjection.toString()
+    );
+  }
 
   let namespace = "phantom";
   if ("namespace" in config && config.namespace != null) {
@@ -102,12 +109,21 @@ export async function createPhantom(
   return await new Promise<Phantom>((resolve, _reject) => {
     window.addEventListener(
       PHANTOM_INITIALIZED_EVENT_NAME,
-      function handleInit() {
-        const phantomInstance = (window as any)[namespace];
+      function handleInit(event: Event) {
+        const customEvent = event as CustomEvent<{
+          providers: {
+            solana: any;
+            ethereum: any;
+            sui: any;
+            bitcoin: any;
+            app: any;
+          };
+        }>;
+        const providers = customEvent.detail?.providers || {};
 
         resolve({
           navigate: ({ route, params }) => {
-            phantomInstance.app.navigate({ route, params });
+            providers.app.navigate({ route, params });
           },
           hide: () => {
             const iframe = document.getElementById(`${namespace}-wallet`);
@@ -118,23 +134,23 @@ export async function createPhantom(
             if (iframe != null) iframe.style.display = "block";
           },
           swap: (options) => {
-            phantomInstance.app.swap({
+            providers.app.swap({
               buy: options.buy,
               sell: options.sell,
               amount: options.amount,
             });
           },
           buy: (options) => {
-            phantomInstance.app.buy({
+            providers.app.buy({
               buy: options.buy,
               amount: options.amount,
             });
           },
-          solana: phantomInstance.solana,
-          ethereum: phantomInstance.ethereum,
-          sui: phantomInstance.sui,
-          bitcoin: phantomInstance.bitcoin,
-          app: phantomInstance.app,
+          solana: providers.solana,
+          ethereum: providers.ethereum,
+          sui: providers.sui,
+          bitcoin: providers.bitcoin,
+          app: providers.app,
         });
         window.removeEventListener(PHANTOM_INITIALIZED_EVENT_NAME, handleInit);
       }
