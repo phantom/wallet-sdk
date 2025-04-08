@@ -102,13 +102,21 @@ In this case, you must use the returned object for all interactions:
 const publicKey = await phantom.solana.connect();
 ```
 
-### Usage with Existing dApps
+### Skip Injection Behavior
 
-For existing dApps that detect and use standard provider patterns:
+When you set `skipInjection` to `true`:
 
-1. **Extension Installed**: The dApp will use the extension as normal
-2. **No Extension, Default Namespace**: The dApp will use the embedded wallet through the standard window objects
-3. **Custom Namespace**: You'll need to modify your dApp code to use the custom instance
+```typescript
+const phantom = await createPhantom({ skipInjection: true });
+```
+
+The SDK will:
+
+1. Not inject any providers into the window object, even if no extension is detected
+2. Return all providers through the Phantom instance only
+3. Work with the new event structure that passes providers directly in the event detail
+
+This is useful when you want to avoid any global namespace pollution and prefer to access all functionality through the returned Phantom instance.
 
 ## Configuration Options
 
@@ -127,6 +135,7 @@ export type CreatePhantomConfig = Partial<{
   sdkURL: string; // Custom SDK URL
   element: string; // ID of element to render wallet in (for custom positioning)
   namespace: string; // Namespace for the wallet instance
+  skipInjection: boolean; // Skip injecting providers into the window object
 }>;
 ```
 
