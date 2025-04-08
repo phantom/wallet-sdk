@@ -1,5 +1,11 @@
 # @phantom/wallet-sdk
 
+## 0.1.1
+
+### Patch Changes
+
+- 62af539: Add UUID
+
 ## 0.1.0
 
 ### Minor Changes
