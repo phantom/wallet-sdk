@@ -1,5 +1,11 @@
 # @phantom/wallet-sdk
 
+## 0.1.0
+
+### Minor Changes
+
+- 57d5678: Added skip injection parameter
+
 ## 0.0.23
 
 ### Patch Changes
