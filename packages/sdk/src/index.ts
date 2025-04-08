@@ -98,6 +98,9 @@ export async function createPhantom(
     sdkURL.searchParams.append("namespace", namespace);
   }
 
+  const uuid = getRandomUUID();
+  sdkURL.searchParams.append("uuid", uuid);
+
   // Append a timestamp parameter to get a fresh copy of the SDK
   sdkURL.searchParams.append("ts", Date.now().toString());
 
@@ -106,54 +109,62 @@ export async function createPhantom(
   container.insertBefore(scriptTag, container.children[0]);
   container.removeChild(scriptTag);
 
-  return await new Promise<Phantom>((resolve, _reject) => {
-    window.addEventListener(
-      PHANTOM_INITIALIZED_EVENT_NAME,
-      function handleInit(event: Event) {
-        const customEvent = event as CustomEvent<{
-          providers: {
-            solana: any;
-            ethereum: any;
-            sui: any;
-            bitcoin: any;
-            app: any;
-          };
-        }>;
-        const providers = customEvent.detail?.providers || {};
+  const eventName = `${PHANTOM_INITIALIZED_EVENT_NAME}#${uuid}`;
 
-        resolve({
-          navigate: ({ route, params }) => {
-            providers.app.navigate({ route, params });
-          },
-          hide: () => {
-            const iframe = document.getElementById(`${namespace}-wallet`);
-            if (iframe != null) iframe.style.display = "none";
-          },
-          show: () => {
-            const iframe = document.getElementById(`${namespace}-wallet`);
-            if (iframe != null) iframe.style.display = "block";
-          },
-          swap: (options) => {
-            providers.app.swap({
-              buy: options.buy,
-              sell: options.sell,
-              amount: options.amount,
-            });
-          },
-          buy: (options) => {
-            providers.app.buy({
-              buy: options.buy,
-              amount: options.amount,
-            });
-          },
-          solana: providers.solana,
-          ethereum: providers.ethereum,
-          sui: providers.sui,
-          bitcoin: providers.bitcoin,
-          app: providers.app,
-        });
-        window.removeEventListener(PHANTOM_INITIALIZED_EVENT_NAME, handleInit);
-      }
-    );
+  return await new Promise<Phantom>((resolve, _reject) => {
+    window.addEventListener(eventName, function handleInit(event: Event) {
+      const customEvent = event as CustomEvent<{
+        providers: {
+          solana: any;
+          ethereum: any;
+          sui: any;
+          bitcoin: any;
+          app: any;
+        };
+      }>;
+      const providers = customEvent.detail?.providers || {};
+
+      resolve({
+        navigate: ({ route, params }) => {
+          providers.app.navigate({ route, params });
+        },
+        hide: () => {
+          const iframe = document.getElementById(`${namespace}-wallet`);
+          if (iframe != null) iframe.style.display = "none";
+        },
+        show: () => {
+          const iframe = document.getElementById(`${namespace}-wallet`);
+          if (iframe != null) iframe.style.display = "block";
+        },
+        swap: (options) => {
+          providers.app.swap({
+            buy: options.buy,
+            sell: options.sell,
+            amount: options.amount,
+          });
+        },
+        buy: (options) => {
+          providers.app.buy({
+            buy: options.buy,
+            amount: options.amount,
+          });
+        },
+        solana: providers.solana,
+        ethereum: providers.ethereum,
+        sui: providers.sui,
+        bitcoin: providers.bitcoin,
+        app: providers.app,
+      });
+
+      window.removeEventListener(eventName, handleInit);
+    });
+  });
+}
+
+function getRandomUUID() {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    var r = (Math.random() * 16) | 0,
+      v = c == "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
   });
 }
