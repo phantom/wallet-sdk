@@ -102,6 +102,14 @@ In this case, you must use the returned object for all interactions:
 const publicKey = await phantom.solana.connect();
 ```
 
+### Usage with Existing dApps
+
+For existing dApps that detect and use standard provider patterns:
+
+1. **Extension Installed**: The dApp will use the extension as normal
+2. **No Extension, Default Namespace**: The dApp will use the embedded wallet through the standard window objects
+3. **Custom Namespace**: You'll need to modify your dApp code to use the custom instance
+
 ### Skip Injection Behavior
 
 When you set `skipInjection` to `true`:
