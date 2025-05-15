@@ -1,5 +1,11 @@
 # @phantom/wallet-sdk
 
+## 0.1.2
+
+### Patch Changes
+
+- 827ad86: Changed type of the amount to string
+
 ## 0.1.1
 
 ### Patch Changes
