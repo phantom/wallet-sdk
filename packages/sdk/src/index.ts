@@ -25,7 +25,7 @@ export type CreatePhantomConfig = Partial<{
 export interface Phantom {
   show: () => void;
   hide: () => void;
-  buy: (options: { amount?: number; buy: string }) => void;
+  buy: (options: { amount?: string; buy: string }) => void;
   swap: (options: { buy: string; sell?: string; amount?: string }) => void;
   navigate: ({ route, params }: { route: string; params?: any }) => void;
   solana?: any;
@@ -36,7 +36,7 @@ export interface Phantom {
 }
 
 export interface PhantomApp {
-  buy: (options: { buy: string; amount?: number }) => void;
+  buy: (options: { buy: string; amount?: string }) => void;
   swap: (options: { buy: string; sell?: string; amount?: string }) => void;
   navigate: ({ route, params }: { route: string; params?: any }) => void;
 }
