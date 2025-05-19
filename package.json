@@ -6,8 +6,8 @@
     "build": "yarn workspaces foreach --all run build",
     "lint": "yarn workspaces foreach --all run lint",
     "release": "yarn build && yarn changeset publish",
-    "start:demo": "cd packages/browser-embedded-demo-app && yarn dev",
-    "build:demo": "cd packages/browser-embedded-demo-app && yarn build"
+    "start:demo": "cd packages/browser-embedded-sdk-demo-app && yarn dev",
+    "build:demo": "cd packages/browser-embedded-sdk-demo-app && yarn build"
   },
   "workspaces": [
     "packages/*"

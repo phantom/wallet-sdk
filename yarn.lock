@@ -979,9 +979,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@phantom/browser-embedded-demo-app@workspace:packages/browser-embedded-demo-app":
+"@phantom/browser-embedded-sdk-demo-app@workspace:packages/browser-embedded-sdk-demo-app":
   version: 0.0.0-use.local
-  resolution: "@phantom/browser-embedded-demo-app@workspace:packages/browser-embedded-demo-app"
+  resolution: "@phantom/browser-embedded-sdk-demo-app@workspace:packages/browser-embedded-sdk-demo-app"
   dependencies:
     "@phantom/wallet-sdk": "workspace:*"
     "@types/react": "npm:^18.2.15"

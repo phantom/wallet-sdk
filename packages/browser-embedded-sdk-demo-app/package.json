@@ -1,5 +1,5 @@
 {
-  "name": "@phantom/browser-embedded-demo-app",
+  "name": "@phantom/browser-embedded-sdk-demo-app",
   "private": true,
   "version": "0.0.7",
   "type": "module",
