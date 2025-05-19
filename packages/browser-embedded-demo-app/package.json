@@ -1,12 +1,12 @@
 {
-  "name": "@phantom/demo-app",
+  "name": "@phantom/browser-embedded-demo-app",
   "private": true,
   "version": "0.0.7",
   "type": "module",
   "scripts": {
-    "predev": "cd ../sdk && yarn build",
+    "predev": "cd ../browser-embdedded-sdk && yarn build",
     "dev": "vite --port 5174",
-    "prebuild": "cd ../sdk && yarn build",
+    "prebuild": "cd ../browser-embdedded-sdk && yarn build",
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"

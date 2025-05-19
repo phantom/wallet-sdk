@@ -979,9 +979,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@phantom/demo-app@workspace:packages/demo-app":
+"@phantom/browser-embedded-demo-app@workspace:packages/browser-embedded-demo-app":
   version: 0.0.0-use.local
-  resolution: "@phantom/demo-app@workspace:packages/demo-app"
+  resolution: "@phantom/browser-embedded-demo-app@workspace:packages/browser-embedded-demo-app"
   dependencies:
     "@phantom/wallet-sdk": "workspace:*"
     "@types/react": "npm:^18.2.15"
@@ -1001,6 +1001,24 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@phantom/browser-sdk@workspace:packages/browser-sdk":
+  version: 0.0.0-use.local
+  resolution: "@phantom/browser-sdk@workspace:packages/browser-sdk"
+  dependencies:
+    tsup: "npm:^6.7.0"
+    typescript: "npm:^5.0.4"
+  languageName: unknown
+  linkType: soft
+
+"@phantom/react-sdk@workspace:packages/react-sdk":
+  version: 0.0.0-use.local
+  resolution: "@phantom/react-sdk@workspace:packages/react-sdk"
+  dependencies:
+    tsup: "npm:^6.7.0"
+    typescript: "npm:^5.0.4"
+  languageName: unknown
+  linkType: soft
+
 "@phantom/sdk-monorepo@workspace:.":
   version: 0.0.0-use.local
   resolution: "@phantom/sdk-monorepo@workspace:."
@@ -1009,9 +1027,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/wallet-sdk@workspace:*, @phantom/wallet-sdk@workspace:packages/sdk":
+"@phantom/wallet-sdk@workspace:*, @phantom/wallet-sdk@workspace:packages/browser-embedded-sdk":
   version: 0.0.0-use.local
-  resolution: "@phantom/wallet-sdk@workspace:packages/sdk"
+  resolution: "@phantom/wallet-sdk@workspace:packages/browser-embedded-sdk"
   dependencies:
     tsup: "npm:^6.7.0"
     typescript: "npm:^5.0.4"
