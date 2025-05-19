@@ -9,6 +9,11 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./solana": {
+      "import": "./dist/solana/index.mjs",
+      "require": "./dist/solana/index.js",
+      "types": "./dist/solana/index.d.ts"
     }
   },
   "files": [
@@ -16,8 +21,8 @@
   ],
   "license": "MIT",
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "build": "rm -rf dist && tsup src/index.ts src/solana/index.ts --format cjs,esm --dts",
+    "dev": "rm -rf dist && tsup src/index.ts src/solana/index.ts --format cjs,esm --dts --watch",
     "lint": "tsc"
   },
   "devDependencies": {

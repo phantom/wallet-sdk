@@ -1001,7 +1001,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/browser-sdk@workspace:packages/browser-sdk":
+"@phantom/browser-sdk@workspace:^, @phantom/browser-sdk@workspace:packages/browser-sdk":
   version: 0.0.0-use.local
   resolution: "@phantom/browser-sdk@workspace:packages/browser-sdk"
   dependencies:
@@ -1014,6 +1014,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/react-sdk@workspace:packages/react-sdk"
   dependencies:
+    "@phantom/browser-sdk": "workspace:^"
     tsup: "npm:^6.7.0"
     typescript: "npm:^5.0.4"
   languageName: unknown

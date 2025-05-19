@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "outDir": "dist/esm",
+    "allowSyntheticDefaultImports": false,
+    "allowUnreachableCode": false,
+    "checkJs": false,
+    "declaration": true,
+    "declarationMap": true,
+    "esModuleInterop": false, // This is a viral option, do not enable https://www.semver-ts.org/#module-interop
+    "lib": ["es2020", "dom"],
+    "module": "esnext",
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUncheckedIndexedAccess": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "es2020"
+  },
+  "exclude": ["node_modules", "**/*.test.ts"]
+}
