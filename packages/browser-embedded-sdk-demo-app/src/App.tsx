@@ -6,9 +6,7 @@ function App() {
     <div className="App">
       <header className="App-header">
         <h1>Phantom Wallet SDK Demo</h1>
-        <p>
-          This app demonstrates how to integrate with the Phantom Wallet SDK
-        </p>
+        <p>This app demonstrates how to integrate with the Phantom Wallet SDK</p>
       </header>
       <main>
         <PhantomWallet />

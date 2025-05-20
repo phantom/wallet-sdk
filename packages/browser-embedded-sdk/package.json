@@ -18,9 +18,10 @@
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-    "lint": "tsc"
+    "lint": "tsc --noEmit && eslint"
   },
   "devDependencies": {
+    "eslint": "8.53.0",
     "tsup": "^6.7.0",
     "typescript": "^5.0.4"
   }

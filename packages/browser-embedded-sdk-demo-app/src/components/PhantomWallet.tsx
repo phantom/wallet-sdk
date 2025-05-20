@@ -8,8 +8,7 @@ import { WalletContainer } from "./WalletContainer";
 type WalletScreen = "navigation" | "normal" | "element";
 
 export function PhantomWallet() {
-  const [currentScreen, setCurrentScreen] =
-    useState<WalletScreen>("navigation");
+  const [currentScreen, setCurrentScreen] = useState<WalletScreen>("navigation");
   const [normalPhantom, setNormalPhantom] = useState<Phantom | null>(null);
   const [elementPhantom, setElementPhantom] = useState<Phantom | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -84,19 +83,11 @@ export function PhantomWallet() {
         />
       )}
 
-      {currentScreen === "normal" && (
-        <NormalConfigScreen
-          phantom={normalPhantom}
-          onBack={handleNavigateBack}
-        />
-      )}
+      {currentScreen === "normal" && <NormalConfigScreen phantom={normalPhantom} onBack={handleNavigateBack} />}
 
       {currentScreen === "element" && (
         <>
-          <ElementConfigScreen
-            phantom={elementPhantom}
-            onBack={handleNavigateBack}
-          >
+          <ElementConfigScreen phantom={elementPhantom} onBack={handleNavigateBack}>
             <WalletContainer />
           </ElementConfigScreen>
         </>

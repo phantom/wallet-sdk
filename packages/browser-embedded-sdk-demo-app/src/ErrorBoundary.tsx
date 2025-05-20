@@ -38,10 +38,7 @@ class ErrorBoundary extends Component<Props, State> {
             <summary>Error details</summary>
             {this.state.error && this.state.error.toString()}
           </details>
-          <button
-            style={{ marginTop: "10px", padding: "5px 10px" }}
-            onClick={() => window.location.reload()}
-          >
+          <button style={{ marginTop: "10px", padding: "5px 10px" }} onClick={() => window.location.reload()}>
             Try again
           </button>
         </div>

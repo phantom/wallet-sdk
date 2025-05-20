@@ -10,10 +10,7 @@ interface NormalConfigScreenProps {
   onBack: () => void;
 }
 
-export const NormalConfigScreen: React.FC<NormalConfigScreenProps> = ({
-  phantom,
-  onBack,
-}) => {
+export const NormalConfigScreen: React.FC<NormalConfigScreenProps> = ({ phantom, onBack }) => {
   const codeSnippet = `
 import { createPhantom, Position } from "@phantom/wallet-sdk";
 

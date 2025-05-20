@@ -8,14 +8,13 @@ const rootElement = document.getElementById("root");
 
 if (!rootElement) {
   console.error("Failed to find the root element");
-  document.body.innerHTML =
-    '<div style="color: red; padding: 20px;">Failed to find the root element!</div>';
+  document.body.innerHTML = '<div style="color: red; padding: 20px;">Failed to find the root element!</div>';
 } else {
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
       <ErrorBoundary>
         <App />
       </ErrorBoundary>
-    </React.StrictMode>
+    </React.StrictMode>,
   );
 }

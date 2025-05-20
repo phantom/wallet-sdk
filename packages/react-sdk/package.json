@@ -23,17 +23,18 @@
   "scripts": {
     "build": "rm -rf dist && tsup src/index.ts src/solana/index.ts --format cjs,esm --dts",
     "dev": "rm -rf dist && tsup src/index.ts src/solana/index.ts --format cjs,esm --dts --watch",
-    "lint": "tsc"
-  },
-  "devDependencies": {
-    "tsup": "^6.7.0",
-    "typescript": "^5.0.4",
-    "react": "^19.1.0"
-  },
-  "peerDependencies": {
-    "react": ">=18.0.0"
+    "lint": "tsc --noEmit && eslint"
   },
   "dependencies": {
     "@phantom/browser-sdk": "workspace:^"
+  },
+  "devDependencies": {
+    "eslint": "8.53.0",
+    "react": "^19.1.0",
+    "tsup": "^6.7.0",
+    "typescript": "^5.0.4"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
   }
 }

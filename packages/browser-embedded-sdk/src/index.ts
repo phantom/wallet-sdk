@@ -41,9 +41,7 @@ export interface PhantomApp {
   navigate: ({ route, params }: { route: string; params?: any }) => void;
 }
 
-export async function createPhantom(
-  config: CreatePhantomConfig = {}
-): Promise<Phantom> {
+export async function createPhantom(config: CreatePhantomConfig = {}): Promise<Phantom> {
   const container = document.head ?? document.documentElement;
   const scriptTag = document.createElement("script");
 
@@ -51,23 +49,14 @@ export async function createPhantom(
   if ("zIndex" in config && config.zIndex != null) {
     sdkURL.searchParams.append("zIndex", config.zIndex.toString());
   }
-  if (
-    "hideLauncherBeforeOnboarded" in config &&
-    config.hideLauncherBeforeOnboarded != null
-  ) {
-    sdkURL.searchParams.append(
-      "hideLauncherBeforeOnboarded",
-      config.hideLauncherBeforeOnboarded.toString()
-    );
+  if ("hideLauncherBeforeOnboarded" in config && config.hideLauncherBeforeOnboarded != null) {
+    sdkURL.searchParams.append("hideLauncherBeforeOnboarded", config.hideLauncherBeforeOnboarded.toString());
   }
   if ("colorScheme" in config && config.colorScheme != null) {
     sdkURL.searchParams.append("colorScheme", config.colorScheme.toString());
   }
   if ("paddingBottom" in config && config.paddingBottom != null) {
-    sdkURL.searchParams.append(
-      "paddingBottom",
-      config.paddingBottom.toString()
-    );
+    sdkURL.searchParams.append("paddingBottom", config.paddingBottom.toString());
   }
   if ("paddingRight" in config && config.paddingRight != null) {
     sdkURL.searchParams.append("paddingRight", config.paddingRight.toString());
@@ -86,10 +75,7 @@ export async function createPhantom(
     sdkURL.searchParams.append("element", config.element.toString());
   }
   if ("skipInjection" in config && config.skipInjection != null) {
-    sdkURL.searchParams.append(
-      "skipInjection",
-      config.skipInjection.toString()
-    );
+    sdkURL.searchParams.append("skipInjection", config.skipInjection.toString());
   }
 
   let namespace = "phantom";
@@ -136,14 +122,14 @@ export async function createPhantom(
           const iframe = document.getElementById(`${namespace}-wallet`);
           if (iframe != null) iframe.style.display = "block";
         },
-        swap: (options) => {
+        swap: options => {
           providers.app.swap({
             buy: options.buy,
             sell: options.sell,
             amount: options.amount,
           });
         },
-        buy: (options) => {
+        buy: options => {
           providers.app.buy({
             buy: options.buy,
             amount: options.amount,

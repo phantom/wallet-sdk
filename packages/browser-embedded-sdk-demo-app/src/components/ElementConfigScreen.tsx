@@ -1,5 +1,5 @@
 import React from "react";
-import { Phantom } from "../../../sdk/src/index";
+import { Phantom } from "../../../browser-embedded-sdk/src/index";
 import { Prism, SyntaxHighlighterProps } from "react-syntax-highlighter";
 
 import { docco } from "react-syntax-highlighter/dist/esm/styles/hljs";
@@ -12,11 +12,7 @@ interface ElementConfigScreenProps {
   children: React.ReactNode;
 }
 
-export const ElementConfigScreen: React.FC<ElementConfigScreenProps> = ({
-  phantom,
-  onBack,
-  children,
-}) => {
+export const ElementConfigScreen: React.FC<ElementConfigScreenProps> = ({ phantom, onBack, children }) => {
   const codeSnippet = `
 import { createPhantom } from "@phantom/wallet-sdk";
 
