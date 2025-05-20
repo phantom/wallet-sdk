@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "jsx": "react-jsx",
     "outDir": "dist/esm",
     "allowSyntheticDefaultImports": false,
     "allowUnreachableCode": false,
