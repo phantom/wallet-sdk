@@ -20,9 +20,9 @@ overrides?.push({
 module.exports = defineConfig({
   ...rootConfig,
   root: true,
-  parserOptions: {
+  parserOptions: { 
     tsconfigRootDir: __dirname,
-    project: "./tsconfig.eslint.json",
+    project: "./tsconfig.json",
   },
 
   overrides,

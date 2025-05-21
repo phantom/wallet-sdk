@@ -16,7 +16,7 @@ module.exports = defineConfig({
   root: true,
   parserOptions: {
     tsconfigRootDir: __dirname,
-    project: "./tsconfig.eslint.json",
+    project: "./tsconfig.json",
   },
 
   overrides,

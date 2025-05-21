@@ -9,7 +9,7 @@ module.exports = defineConfig({
   parser: "@typescript-eslint/parser",
   parserOptions: {
     tsconfigRootDir: __dirname,
-    project: "./tsconfig.eslint.json",
+    project: "./tsconfig.json",
   },
   plugins: ["@typescript-eslint", "check-file", "import", "react-hooks", "security"],
   settings: {

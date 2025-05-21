@@ -23,7 +23,7 @@
   "scripts": {
     "build": "rm -rf dist && tsup src/index.ts src/solana/index.ts --format cjs,esm --dts",
     "dev": "rm -rf dist && tsup src/index.ts src/solana/index.ts --format cjs,esm --dts --watch",
-    "lint": "tsc --noEmit && eslint"
+    "lint": "tsc --noEmit && eslint --cache . --ext .ts,.tsx"
   },
   "devDependencies": {
     "eslint": "8.53.0",
