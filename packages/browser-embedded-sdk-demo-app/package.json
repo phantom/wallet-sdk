@@ -6,7 +6,7 @@
   "scripts": {
     "predev": "cd ../browser-embedded-sdk && yarn build",
     "dev": "vite --port 5174",
-    "prebuild": "cd ../browser-embdedded-sdk && yarn build",
+    "prebuild": "cd ../browser-embedded-sdk && yarn build",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
