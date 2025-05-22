@@ -1,0 +1,28 @@
+{
+  "name": "@phantom/wallet-sdk",
+  "version": "0.1.2",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "lint": "tsc --noEmit && eslint --cache . --ext .ts,.tsx"
+  },
+  "devDependencies": {
+    "eslint": "8.53.0",
+    "tsup": "^6.7.0",
+    "typescript": "^5.0.4"
+  }
+}

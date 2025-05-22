@@ -1,0 +1,6 @@
+# General
+.yarn/
+dist/
+node_modules/
+.changeset/
+.github/

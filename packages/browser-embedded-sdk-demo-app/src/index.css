@@ -1,0 +1,109 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: light dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.wallet-demo {
+  padding: 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #646cff;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+  color: white;
+}
+
+button:hover {
+  border-color: #646cff;
+}
+
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+.config-button {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  width: 200px;
+  height: 100px;
+  justify-content: center;
+  align-items: center;
+  border: 2px solid #646cff;
+  font-size: 1.1em;
+  color: white;
+}
+
+.config-button small {
+  font-size: 0.7em;
+  margin-top: 0.5rem;
+  color: #888;
+}
+
+.config-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.code-snippet {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 1rem 0;
+  text-align: left;
+  padding: 1rem;
+}
+
+.wallet-controls {
+  margin: 1rem 0;
+  padding: 1rem;
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  color: white;
+}
+
+.back-button {
+  margin-top: 2rem;
+  align-self: center;
+}
+
+.loading {
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background-color: #2d4263;
+  border-radius: 4px;
+  color: white;
+}
+
+.error {
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background-color: #ff6b6b;
+  border-radius: 4px;
+  color: white;
+}

@@ -16,3 +16,6 @@ dist
 /.idea/
 /packages/sdk/package.tgz
 node_modules
+**/.DS_Store
+.eslintcache
+**/.eslintcache
