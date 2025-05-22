@@ -1,1 +1,1 @@
-export { PhantomProvider } from "./PhantomProvider";
+export { PhantomProvider, usePhantom } from "./PhantomContext";
