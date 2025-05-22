@@ -4,7 +4,7 @@
   "version": "0.0.7",
   "type": "module",
   "scripts": {
-    "predev": "cd ../browser-embdedded-sdk && yarn build",
+    "predev": "cd ../browser-embedded-sdk && yarn build",
     "dev": "vite --port 5174",
     "prebuild": "cd ../browser-embdedded-sdk && yarn build",
     "build": "tsc && vite build",
