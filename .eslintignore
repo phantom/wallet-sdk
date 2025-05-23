@@ -1,6 +1,12 @@
 node_modules
 .eslintrc.js
+**/jest.config.js
+sharedJestConfig.js
 dist/
 **/dist/
 **/node_modules/
 /**/node_modules/*
+**/__fixtures__
+**/__tests__
+**/*.spec.ts
+**/*.test.ts
