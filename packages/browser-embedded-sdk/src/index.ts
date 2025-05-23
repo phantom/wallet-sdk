@@ -1,4 +1,5 @@
-import { PHANTOM_INITIALIZED_EVENT_NAME, SDK_URL } from "./constants.js";
+import { PHANTOM_INITIALIZED_EVENT_NAME, SDK_URL } from "./constants";
+import { getRandomUUID } from "./helpers";
 
 export enum Position {
   bottomRight = "bottom-right",
@@ -144,14 +145,5 @@ export async function createPhantom(config: CreatePhantomConfig = {}): Promise<P
 
       window.removeEventListener(eventName, handleInit);
     });
-  });
-}
-
-function getRandomUUID() {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-    // eslint-disable-next-line
-    var r = (Math.random() * 16) | 0,
-      v = c == "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
   });
 }

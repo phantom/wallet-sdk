@@ -2,7 +2,7 @@ import type { ChainPlugin } from "../index";
 import { getProvider } from "./getProvider";
 
 export type Solana = {
-  getProvider: () => Promise<unknown>;
+  getProvider: () => NonNullable<unknown> | null;
 };
 
 const solana: Solana = {

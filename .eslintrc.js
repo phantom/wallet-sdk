@@ -100,5 +100,4 @@ module.exports = defineConfig({
       },
     ],
   },
-  ignorePatterns: ["node_modules/", "**/node_modules", "**/node_modules/*"],
 });
