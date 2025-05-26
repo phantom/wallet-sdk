@@ -1,8 +1,8 @@
-import React from "react";
-import { Phantom } from "../../../sdk/src/index";
+import * as React from "react";
+import type { Phantom } from "../../../browser-embedded-sdk/src/index";
 import { docco } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import { WalletControls } from "./WalletControls";
-import { Prism, SyntaxHighlighterProps } from "react-syntax-highlighter";
+import { Prism, type SyntaxHighlighterProps } from "react-syntax-highlighter";
 const SyntaxHighlighter = Prism as any as React.FC<SyntaxHighlighterProps>;
 
 interface NormalConfigScreenProps {

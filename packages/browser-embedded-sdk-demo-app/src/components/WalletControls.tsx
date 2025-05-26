@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Phantom } from "../../../sdk/src/index";
+import * as React from "react";
+import type { Phantom } from "../../../browser-embedded-sdk/src/index";
 
 // Define these constants once, to be used across the application
 export const SOL_CAIP19 = "solana:101/nativeToken:501";
@@ -10,7 +10,7 @@ interface WalletControlsProps {
 }
 
 export const WalletControls: React.FC<WalletControlsProps> = ({ phantom }) => {
-  const [publicKey, setPublicKey] = useState<string | null>(null);
+  const [publicKey, setPublicKey] = React.useState<string | null>(null);
 
   return (
     <div className="wallet-controls">
@@ -32,6 +32,7 @@ export const WalletControls: React.FC<WalletControlsProps> = ({ phantom }) => {
           onClick={async () => {
             const encodedMessage = new TextEncoder().encode("Hello, world!");
             const signature = await phantom?.solana.signMessage(encodedMessage);
+            // eslint-disable-next-line no-console
             console.log(signature);
           }}
         >
