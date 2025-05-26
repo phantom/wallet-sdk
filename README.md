@@ -12,6 +12,7 @@ This monorepo contains the Phantom Wallet SDKs and demo applications that demons
 ## Getting Started
 
 For detailed documentation and usage examples, please refer to each package's README file:
+
 - [@phantom/wallet-sdk documentation](./packages/browser-embedded-sdk/README.md)
 
 ## Development
@@ -19,9 +20,6 @@ For detailed documentation and usage examples, please refer to each package's RE
 ```bash
 # Install dependencies
 yarn install
-
-# Start the demo app
-yarn start:demo
 
 # Build all packages
 yarn build

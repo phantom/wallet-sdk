@@ -8,12 +8,10 @@
     "format:check": "prettier . --check",
     "lint": "yarn workspaces foreach -Avpi run lint",
     "release": "yarn build && yarn changeset publish",
-    "start:demo": "cd packages/browser-embedded-sdk-demo-app && yarn dev",
-    "build:demo": "cd packages/browser-embedded-sdk-demo-app && yarn build",
     "test": "jest"
   },
   "workspaces": [
-    "packages/*"
+    "packages/**/*"
   ],
   "devDependencies": {
     "@changesets/cli": "^2.27.8",
