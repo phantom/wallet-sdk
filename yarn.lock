@@ -1653,9 +1653,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@phantom/browser-embedded-sdk-demo-app@workspace:packages/browser-embedded-sdk-demo-app":
+"@phantom/browser-embedded-sdk-demo-app@workspace:packages/demo/browser-embedded-sdk-demo-app":
   version: 0.0.0-use.local
-  resolution: "@phantom/browser-embedded-sdk-demo-app@workspace:packages/browser-embedded-sdk-demo-app"
+  resolution: "@phantom/browser-embedded-sdk-demo-app@workspace:packages/demo/browser-embedded-sdk-demo-app"
   dependencies:
     "@phantom/wallet-sdk": "workspace:*"
     "@types/react": "npm:^18.2.15"
@@ -1670,7 +1670,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/browser-sdk@workspace:^, @phantom/browser-sdk@workspace:packages/browser-sdk":
+"@phantom/browser-sdk-demo-app@workspace:packages/demo/browser-sdk-demo-app":
+  version: 0.0.0-use.local
+  resolution: "@phantom/browser-sdk-demo-app@workspace:packages/demo/browser-sdk-demo-app"
+  dependencies:
+    "@phantom/browser-sdk": "workspace:*"
+    typescript: "npm:^5.0.2"
+    vite: "npm:^4.4.5"
+  languageName: unknown
+  linkType: soft
+
+"@phantom/browser-sdk@workspace:*, @phantom/browser-sdk@workspace:^, @phantom/browser-sdk@workspace:packages/browser-sdk":
   version: 0.0.0-use.local
   resolution: "@phantom/browser-sdk@workspace:packages/browser-sdk"
   dependencies:
