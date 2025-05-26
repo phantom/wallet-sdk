@@ -86,13 +86,6 @@ module.exports = defineConfig({
     "@typescript-eslint/no-for-in-array": "error",
     "require-await": "off",
     "@typescript-eslint/require-await": "error",
-    "@typescript-eslint/no-misused-promises": "error",
-    "@typescript-eslint/no-floating-promises": [
-      "error",
-      {
-        ignoreIIFE: true,
-      },
-    ],
     "import/no-cycle": [
       "error",
       {

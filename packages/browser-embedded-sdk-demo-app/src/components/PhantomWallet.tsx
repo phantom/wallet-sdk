@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { createPhantom, Phantom, Position } from "../../../sdk/src/index";
+import * as React from "react";
+import { createPhantom, type Phantom, Position } from "../../../browser-embedded-sdk/src/index";
 import { NavigationScreen } from "./NavigationScreen";
 import { NormalConfigScreen } from "./NormalConfigScreen";
 import { ElementConfigScreen } from "./ElementConfigScreen";
@@ -8,13 +8,13 @@ import { WalletContainer } from "./WalletContainer";
 type WalletScreen = "navigation" | "normal" | "element";
 
 export function PhantomWallet() {
-  const [currentScreen, setCurrentScreen] = useState<WalletScreen>("navigation");
-  const [normalPhantom, setNormalPhantom] = useState<Phantom | null>(null);
-  const [elementPhantom, setElementPhantom] = useState<Phantom | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [currentScreen, setCurrentScreen] = React.useState<WalletScreen>("navigation");
+  const [normalPhantom, setNormalPhantom] = React.useState<Phantom | null>(null);
+  const [elementPhantom, setElementPhantom] = React.useState<Phantom | null>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     // Cleanup function for when component unmounts
     return () => {
       // Hide any wallets when navigating away
