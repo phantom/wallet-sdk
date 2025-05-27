@@ -1,6 +1,7 @@
 import { getProvider as defaultGetProvider } from "./getProvider";
 import type { PhantomSolanaProvider, SolanaOperationOptions } from "./types";
 import type { Transaction, VersionedTransaction } from "@solana/web3.js";
+import { connect } from "./connect";
 
 /**
  * Signs all transactions using the Phantom provider.
@@ -19,11 +20,17 @@ export async function signAllTransactions(
   if (!provider) {
     throw new Error("Phantom provider not found.");
   }
+
+  if (!provider.isConnected) {
+    await connect({ getProvider: getProviderFn });
+  }
+
   if (!provider.signAllTransactions) {
     throw new Error("The connected provider does not support signAllTransactions.");
   }
+
   if (!provider.isConnected) {
-    throw new Error("Provider is not connected.");
+    throw new Error("Provider is not connected even after attempting to connect.");
   }
   return provider.signAllTransactions(transactions);
 }

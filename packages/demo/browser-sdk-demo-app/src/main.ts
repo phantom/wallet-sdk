@@ -34,8 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
           } else {
             alert("Connected, but public key was not retrieved.");
           }
-          if (signMessageBtn) signMessageBtn.disabled = false;
-          if (signTransactionBtn) signTransactionBtn.disabled = false;
+
           if (disconnectBtn) disconnectBtn.disabled = false;
         } catch (error) {
           console.error("Error connecting to Phantom:", error);
@@ -45,6 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (signMessageBtn) {
+      signMessageBtn.disabled = false;
       signMessageBtn.onclick = async () => {
         try {
           if (!phantomInstance.solana.getProvider() || !userPublicKey) {
@@ -63,6 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (signTransactionBtn) {
+      signTransactionBtn.disabled = false;
       signTransactionBtn.onclick = async () => {
         try {
           const provider = phantomInstance.solana.getProvider();
@@ -71,9 +72,11 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
 
-          const connection = new Connection("https://api.devnet.solana.com");
+          const connection = new Connection("https://api.mainnet-beta.solana.com");
 
-          const transaction = new Transaction().add(
+          const transaction = new Transaction({
+            recentBlockhash: (await connection.getLatestBlockhash()).blockhash,
+          }).add(
             SystemProgram.transfer({
               fromPubkey: new PublicKey(userPublicKey),
               toPubkey: new PublicKey(userPublicKey),
@@ -95,7 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
       disconnectBtn.onclick = async () => {
         try {
           await phantomInstance.solana.disconnect();
-          userPublicKey = null;
+          userPublicKey = undefined;
           alert("Disconnected from Phantom.");
           if (connectBtn) connectBtn.disabled = false;
           if (signMessageBtn) signMessageBtn.disabled = true;

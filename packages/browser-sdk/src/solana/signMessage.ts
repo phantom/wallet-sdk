@@ -1,6 +1,7 @@
 import { getProvider as defaultGetProvider } from "./getProvider";
 import type { PhantomSolanaProvider, DisplayEncoding, SolanaOperationOptions } from "./types";
 import type { PublicKey } from "@solana/web3.js";
+import { connect } from "./connect";
 
 /**
  * Signs a message using the Phantom provider.
@@ -21,11 +22,17 @@ export async function signMessage(
   if (!provider) {
     throw new Error("Phantom provider not found.");
   }
+
+  if (!provider.isConnected) {
+    await connect({ getProvider: getProviderFn });
+  }
+
   if (!provider.signMessage) {
     throw new Error("The connected provider does not support signMessage.");
   }
+
   if (!provider.isConnected) {
-    throw new Error("Provider is not connected.");
+    throw new Error("Provider is not connected even after attempting to connect.");
   }
   return provider.signMessage(message, display);
 }
