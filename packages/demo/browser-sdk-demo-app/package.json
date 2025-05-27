@@ -4,8 +4,8 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "predev": "cd ../../browser-sdk && yarn build",
-    "dev": "vite --port 5175",
+    "predev": "cd ../../browser-sdk && yarn build:watch",
+    "dev": "concurrently \"yarn predev\" \"vite --port 5175\"",
     "prebuild": "cd ../../browser-sdk && yarn build",
     "build": "tsc && vite build",
     "preview": "vite preview"
@@ -16,6 +16,7 @@
     "typescript": "^5.0.4"
   },
   "devDependencies": {
+    "concurrently": "^9.1.2",
     "vite": "^4.4.5"
   }
 }
