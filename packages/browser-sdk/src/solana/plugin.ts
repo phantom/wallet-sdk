@@ -4,9 +4,15 @@ import { signMessage } from "./signMessage";
 import { signIn } from "./signIn";
 import { signAndSendTransaction } from "./signAndSendTransaction";
 import type { PhantomSolanaProvider } from "./types";
+import { connect } from "./connect";
+import { disconnect } from "./disconnect";
 
 export type Solana = {
   getProvider: () => PhantomSolanaProvider | null;
+
+  connect: () => Promise<void>;
+  disconnect: () => Promise<void>;
+
   signMessage: typeof signMessage;
   signIn: typeof signIn;
   signAndSendTransaction: typeof signAndSendTransaction;
@@ -14,6 +20,8 @@ export type Solana = {
 
 const solana: Solana = {
   getProvider,
+  connect,
+  disconnect,
   signMessage,
   signIn,
   signAndSendTransaction,
