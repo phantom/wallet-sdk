@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "@phantom/browser-sdk": "workspace:*",
-    "typescript": "^5.0.2"
+    "@solana/web3.js": "^1.98.2",
+    "typescript": "^5.0.4"
   },
   "devDependencies": {
     "vite": "^4.4.5"
