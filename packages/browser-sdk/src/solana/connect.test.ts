@@ -41,6 +41,14 @@ describe("connect", () => {
     expect(publicKey).toBeDefined();
     expect(provider.connect).not.toHaveBeenCalled();
   });
+  it("should throw error when connect fails", async () => {
+    const provider = getProvider();
+    provider.isConnected = false;
+    (provider.connect as jest.Mock).mockImplementation(async () => {
+      throw new Error("Failed to connect");
+    });
+    await expect(connect()).rejects.toThrow("Failed to connect to Phantom.");
+  });
   it("should throw error when provider is not properly injected", async () => {
     (getProvider as jest.Mock).mockReturnValue(null);
     await expect(connect()).rejects.toThrow("Phantom provider not found.");
