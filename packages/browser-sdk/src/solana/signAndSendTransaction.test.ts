@@ -49,7 +49,7 @@ describe("signAndSendTransaction", () => {
 
     expect(customMockGetProvider).toHaveBeenCalledTimes(1);
     expect(mockDefaultGetProvider).not.toHaveBeenCalled();
-    expect(customProvider.signAndSendTransaction).toHaveBeenCalledWith(mockVersionedTransaction, undefined);
+    expect(customProvider.signAndSendTransaction).toHaveBeenCalledWith(mockVersionedTransaction);
     expect(result).toEqual(expectedResult);
   });
 
