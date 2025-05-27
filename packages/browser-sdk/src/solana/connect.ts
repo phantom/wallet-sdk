@@ -13,7 +13,6 @@ export async function connect() {
   // first try eager connecting without prompting user
   try {
     const eagerConnectResult = await provider.connect({ onlyIfTrusted: true });
-
     if (eagerConnectResult.publicKey) {
       return eagerConnectResult.publicKey.toString();
     }
@@ -23,7 +22,6 @@ export async function connect() {
 
   // if not connected, prompt user to connect prominently
   const connectResult = await provider.connect({ onlyIfTrusted: false });
-
   if (connectResult.publicKey) {
     return connectResult.publicKey.toString();
   }

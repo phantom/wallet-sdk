@@ -1,6 +1,6 @@
 import { createPhantom } from "@phantom/browser-sdk";
 import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
-import { Connection, SystemProgram, Transaction, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { Connection, SystemProgram, Transaction, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log("Document loaded, attempting to create Phantom instance...");
@@ -13,8 +13,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const connectBtn = document.getElementById("connectBtn") as HTMLButtonElement;
     const signMessageBtn = document.getElementById("signMessageBtn") as HTMLButtonElement;
     const signTransactionBtn = document.getElementById("signTransactionBtn") as HTMLButtonElement;
+    const disconnectBtn = document.getElementById("disconnectBtn") as HTMLButtonElement;
 
-    let userPublicKey: PublicKey | null = null;
+    let userPublicKey: string | null = null;
 
     if (connectBtn) {
       connectBtn.disabled = false;
@@ -26,9 +27,8 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Phantom wallet not found. Please install Phantom.");
             return;
           }
-          const signInResult = await phantomInstance.solana.signIn();
-          console.log("Sign In Result:", signInResult);
-          userPublicKey = signInResult.publicKey;
+          const connectResult = await phantomInstance.solana.connect();
+          userPublicKey = connectResult;
           if (userPublicKey) {
             alert(`Connected: ${userPublicKey.toString()}`);
           } else {
@@ -36,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
           if (signMessageBtn) signMessageBtn.disabled = false;
           if (signTransactionBtn) signTransactionBtn.disabled = false;
+          if (disconnectBtn) disconnectBtn.disabled = false;
         } catch (error) {
           console.error("Error connecting to Phantom:", error);
           alert(`Error connecting: ${(error as Error).message || error}`);
@@ -74,13 +75,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
           const transaction = new Transaction().add(
             SystemProgram.transfer({
-              fromPubkey: userPublicKey,
-              toPubkey: userPublicKey,
+              fromPubkey: new PublicKey(userPublicKey),
+              toPubkey: new PublicKey(userPublicKey),
               lamports: 0.001 * LAMPORTS_PER_SOL,
             }),
           );
 
-          const signature = await phantomInstance.solana.signAndSendTransaction(transaction, connection);
+          const signature = await phantomInstance.solana.signAndSendTransaction(transaction);
           console.log("Transaction Signature:", signature);
           alert(`Transaction sent with signature: ${signature.signature}`);
         } catch (error) {
@@ -89,10 +90,25 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       };
     }
+
+    if (disconnectBtn) {
+      disconnectBtn.onclick = async () => {
+        try {
+          await phantomInstance.solana.disconnect();
+          userPublicKey = null;
+          alert("Disconnected from Phantom.");
+          if (connectBtn) connectBtn.disabled = false;
+          if (signMessageBtn) signMessageBtn.disabled = true;
+          if (signTransactionBtn) signTransactionBtn.disabled = true;
+          if (disconnectBtn) disconnectBtn.disabled = true;
+        } catch (error) {
+          console.error("Error disconnecting from Phantom:", error);
+          alert(`Error disconnecting: ${(error as Error).message || error}`);
+        }
+      };
+    }
   } catch (error) {
     console.error("Error creating Phantom instance:", error);
     alert(`Error initializing Phantom: ${(error as Error).message || error}`);
   }
 });
-
-// Button event listeners will be added here later

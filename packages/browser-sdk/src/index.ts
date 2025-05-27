@@ -1,3 +1,5 @@
+import { Solana } from "./solana/plugin";
+
 export type ChainPlugin<T> = {
   name: string;
   create: () => T;
@@ -8,7 +10,9 @@ export type CreatePhantomConfig = {
 };
 
 // Base interface that plugins will extend via declaration merging
-export interface Phantom {}
+export interface Phantom {
+  solana: Solana;
+}
 
 /**
  * Creates a Phantom instance with the provided chain plugins.
