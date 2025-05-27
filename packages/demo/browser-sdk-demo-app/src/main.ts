@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const signTransactionBtn = document.getElementById("signTransactionBtn") as HTMLButtonElement;
     const disconnectBtn = document.getElementById("disconnectBtn") as HTMLButtonElement;
 
-    let userPublicKey: string | null = null;
+    let userPublicKey: string | undefined;
 
     if (connectBtn) {
       connectBtn.disabled = false;
