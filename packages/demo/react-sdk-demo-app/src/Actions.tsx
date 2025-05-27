@@ -24,6 +24,7 @@ export function Actions() {
 
   const onDisconnect = async () => {
     await disconnect();
+    setPublicKey(null);
     alert("Disconnected from Phantom");
   };
 

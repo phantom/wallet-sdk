@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { createPhantom } from "@phantom/browser-sdk";
 import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
-import { Connection, SystemProgram, Transaction, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { SystemProgram, Transaction, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log("Document loaded, attempting to create Phantom instance...");
@@ -65,9 +65,6 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Please connect your wallet first.");
             return;
           }
-
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const connection = new Connection("https://api.devnet.solana.com");
 
           const transaction = new Transaction().add(
             SystemProgram.transfer({
