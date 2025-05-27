@@ -12,7 +12,6 @@ import type { SendOptions, Transaction, VersionedTransaction } from "@solana/web
 export async function signAndSendTransaction(
   transaction: Transaction | VersionedTransaction,
   // The SendOptions are specific to this function, so they are separate from SolanaOperationOptions
-  solanaSendOptions?: SendOptions,
   operationOptions?: SolanaOperationOptions,
 ): Promise<{ signature: string; publicKey?: string }> {
   const getProviderFn = operationOptions?.getProvider || defaultGetProvider;
@@ -27,5 +26,5 @@ export async function signAndSendTransaction(
   if (!provider.isConnected) {
     throw new Error("Provider is not connected.");
   }
-  return provider.signAndSendTransaction(transaction, solanaSendOptions);
+  return provider.signAndSendTransaction(transaction);
 }

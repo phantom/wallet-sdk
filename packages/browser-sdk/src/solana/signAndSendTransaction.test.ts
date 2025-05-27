@@ -1,7 +1,7 @@
 import { signAndSendTransaction } from "./signAndSendTransaction";
 import { getProvider as defaultGetProvider } from "./getProvider";
 import type { PhantomSolanaProvider, SolanaOperationOptions } from "./types";
-import type { Transaction, VersionedTransaction, SendOptions } from "@solana/web3.js";
+import type { Transaction, VersionedTransaction } from "@solana/web3.js";
 
 jest.mock("./getProvider", () => ({
   getProvider: jest.fn(),
@@ -16,7 +16,6 @@ const mockVersionedTransaction = {} as VersionedTransaction; // Simplified mock
 describe("signAndSendTransaction", () => {
   let mockProvider: Partial<PhantomSolanaProvider>;
   let customMockGetProvider: jest.MockedFunction<() => PhantomSolanaProvider | null>;
-  const sendOptions: SendOptions = { skipPreflight: true };
 
   beforeEach(() => {
     mockDefaultGetProvider.mockReset();
@@ -32,11 +31,11 @@ describe("signAndSendTransaction", () => {
     const expectedResult = { signature: "mockSig", publicKey: "mockKey" };
     (mockProvider.signAndSendTransaction as jest.Mock).mockResolvedValue(expectedResult);
 
-    const result = await signAndSendTransaction(mockTransaction, sendOptions);
+    const result = await signAndSendTransaction(mockTransaction);
 
     expect(mockDefaultGetProvider).toHaveBeenCalledTimes(1);
     expect(customMockGetProvider).not.toHaveBeenCalled();
-    expect(mockProvider.signAndSendTransaction).toHaveBeenCalledWith(mockTransaction, sendOptions);
+    expect(mockProvider.signAndSendTransaction).toHaveBeenCalledWith(mockTransaction);
     expect(result).toEqual(expectedResult);
   });
 
@@ -46,7 +45,7 @@ describe("signAndSendTransaction", () => {
     customMockGetProvider.mockReturnValue(customProvider as PhantomSolanaProvider);
 
     const operationOptions: SolanaOperationOptions = { getProvider: customMockGetProvider };
-    const result = await signAndSendTransaction(mockVersionedTransaction, undefined, operationOptions);
+    const result = await signAndSendTransaction(mockVersionedTransaction, operationOptions);
 
     expect(customMockGetProvider).toHaveBeenCalledTimes(1);
     expect(mockDefaultGetProvider).not.toHaveBeenCalled();
@@ -56,26 +55,26 @@ describe("signAndSendTransaction", () => {
 
   it("should throw error if provider not found (default getProvider)", async () => {
     mockDefaultGetProvider.mockReturnValue(null);
-    await expect(signAndSendTransaction(mockTransaction, sendOptions)).rejects.toThrow("Phantom provider not found.");
+    await expect(signAndSendTransaction(mockTransaction)).rejects.toThrow("Phantom provider not found.");
   });
 
   it("should throw error if provider not found (custom getProvider)", async () => {
     customMockGetProvider.mockReturnValue(null);
     const operationOptions: SolanaOperationOptions = { getProvider: customMockGetProvider };
-    await expect(signAndSendTransaction(mockTransaction, sendOptions, operationOptions)).rejects.toThrow(
+    await expect(signAndSendTransaction(mockTransaction, operationOptions)).rejects.toThrow(
       "Phantom provider not found.",
     );
   });
 
   it("should throw error if provider does not support method", async () => {
     mockDefaultGetProvider.mockReturnValue({ isConnected: true } as PhantomSolanaProvider);
-    await expect(signAndSendTransaction(mockTransaction, sendOptions)).rejects.toThrow(
+    await expect(signAndSendTransaction(mockTransaction)).rejects.toThrow(
       "The connected provider does not support signAndSendTransaction.",
     );
   });
 
   it("should throw error if provider is not connected", async () => {
     mockDefaultGetProvider.mockReturnValue({ ...mockProvider, isConnected: false } as PhantomSolanaProvider);
-    await expect(signAndSendTransaction(mockTransaction, sendOptions)).rejects.toThrow("Provider is not connected.");
+    await expect(signAndSendTransaction(mockTransaction)).rejects.toThrow("Provider is not connected.");
   });
 });
