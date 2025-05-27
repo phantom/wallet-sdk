@@ -1,6 +1,6 @@
 import { getProvider as defaultGetProvider } from "./getProvider";
 import type { PhantomSolanaProvider, SolanaOperationOptions } from "./types";
-import type { SendOptions, Transaction, VersionedTransaction } from "@solana/web3.js";
+import type { Transaction, VersionedTransaction } from "@solana/web3.js";
 
 /**
  * Signs and sends a transaction using the Phantom provider.
