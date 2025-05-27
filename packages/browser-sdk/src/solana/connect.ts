@@ -22,10 +22,14 @@ export async function connect() {
   }
 
   // if not connected, prompt user to connect prominently
-  const connectResult = await provider.connect({ onlyIfTrusted: false });
+  try {
+    const connectResult = await provider.connect({ onlyIfTrusted: false });
 
-  if (connectResult.publicKey) {
-    return connectResult.publicKey.toString();
+    if (connectResult.publicKey) {
+      return connectResult.publicKey.toString();
+    }
+  } catch (error) {
+    // Silently fail eager connect attempt
   }
 
   throw new Error("Failed to connect to Phantom.");
