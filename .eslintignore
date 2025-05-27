@@ -10,3 +10,4 @@ dist/
 **/__tests__
 **/*.spec.ts
 **/*.test.ts
+**/vite.config.ts

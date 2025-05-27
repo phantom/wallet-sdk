@@ -1,0 +1,38 @@
+#app {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.controls {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column; /* Stack buttons vertically for now */
+  gap: 0.5rem; /* Space between buttons */
+}
+
+.controls button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #5a67d8; /* A nice blue */
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.controls button:disabled {
+  background-color: #a0aec0; /* Gray out when disabled */
+  cursor: not-allowed;
+}
+
+.controls button:hover:not(:disabled) {
+  background-color: #434190;
+}
+
+/* Basic layout for buttons on the right - will need more work */
+/* For now, let's just imagine a sidebar or a section for them */
+/* We will adjust this later as the app grows */ 
