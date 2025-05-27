@@ -10,8 +10,8 @@ import { disconnect } from "./disconnect";
 export type Solana = {
   getProvider: () => PhantomSolanaProvider | null;
 
-  connect: () => Promise<void>;
-  disconnect: () => Promise<void>;
+  connect: typeof connect;
+  disconnect: typeof disconnect;
 
   signMessage: typeof signMessage;
   signIn: typeof signIn;

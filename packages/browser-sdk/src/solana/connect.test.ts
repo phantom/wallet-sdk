@@ -7,10 +7,10 @@ jest.mock("./getProvider", () => ({
       if (onlyIfTrusted) {
         throw new Error("Not trusted");
       }
-      return { publicKey: {} };
+      return { publicKey: { toString: () => "123" } };
     }),
     isConnected: false,
-    publicKey: {},
+    publicKey: { toString: () => "123" },
   }),
 }));
 
@@ -29,7 +29,7 @@ describe("connect", () => {
 
   it("should perform eager connect when app is already trusted", async () => {
     const provider = getProvider();
-    (provider.connect as jest.Mock).mockResolvedValueOnce({ publicKey: {} });
+    (provider.connect as jest.Mock).mockImplementation(async () => ({ publicKey: { toString: () => "123" } }));
     const publicKey = await connect();
     expect(publicKey).toBeDefined();
   });
