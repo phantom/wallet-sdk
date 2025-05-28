@@ -1,6 +1,7 @@
+/* eslint-disable no-console */
 import { createPhantom } from "@phantom/browser-sdk";
 import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
-import { Connection, SystemProgram, Transaction, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { SystemProgram, Transaction, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log("Document loaded, attempting to create Phantom instance...");
@@ -15,22 +16,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const signTransactionBtn = document.getElementById("signTransactionBtn") as HTMLButtonElement;
     const disconnectBtn = document.getElementById("disconnectBtn") as HTMLButtonElement;
 
-    let userPublicKey: string | undefined;
+    let userPublicKey: string | null = null;
 
     if (connectBtn) {
       connectBtn.disabled = false;
       connectBtn.onclick = async () => {
         try {
-          const provider = phantomInstance.solana.getProvider();
-          if (!provider) {
-            console.error("Phantom wallet not found.");
-            alert("Phantom wallet not found. Please install Phantom.");
-            return;
-          }
           const connectResult = await phantomInstance.solana.connect();
-          userPublicKey = connectResult;
+          userPublicKey = connectResult ?? null;
           if (userPublicKey) {
-            alert(`Connected: ${userPublicKey.toString()}`);
+            alert(`Connected: ${userPublicKey}`);
           } else {
             alert("Connected, but public key was not retrieved.");
           }
@@ -70,8 +65,6 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Please connect your wallet first.");
             return;
           }
-
-          const connection = new Connection("https://api.devnet.solana.com");
 
           const transaction = new Transaction().add(
             SystemProgram.transfer({
