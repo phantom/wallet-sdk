@@ -1535,6 +1535,23 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@phantom/react-sdk-demo-app@workspace:packages/demo/react-sdk-demo-app":
+  version: 0.0.0-use.local
+  resolution: "@phantom/react-sdk-demo-app@workspace:packages/demo/react-sdk-demo-app"
+  dependencies:
+    "@phantom/browser-sdk": "workspace:*"
+    "@phantom/react-sdk": "workspace:*"
+    "@types/react": "npm:^19.1.2"
+    "@types/react-dom": "npm:^19.1.2"
+    "@vitejs/plugin-react": "npm:^4.4.1"
+    globals: "npm:^16.0.0"
+    react: "npm:^19.1.0"
+    react-dom: "npm:^19.1.0"
+    typescript: "npm:~5.8.3"
+    vite: "npm:^6.3.5"
+  languageName: unknown
+  linkType: soft
+
 "@phantom/react-sdk@workspace:*, @phantom/react-sdk@workspace:packages/react-sdk":
   version: 0.0.0-use.local
   resolution: "@phantom/react-sdk@workspace:packages/react-sdk"
@@ -7203,23 +7220,6 @@ __metadata:
   checksum: 10c0/002cba940384c9930008c0bce26cac97a9d5682bc623112c2268ba0c155127d9c178a9a5cc2212d560088d60dfd503edd808669a25f9b377f316a32361d0b23c
   languageName: node
   linkType: hard
-
-"react-sdk-demo-app@workspace:packages/demo/react-sdk-demo-app":
-  version: 0.0.0-use.local
-  resolution: "react-sdk-demo-app@workspace:packages/demo/react-sdk-demo-app"
-  dependencies:
-    "@phantom/browser-sdk": "workspace:*"
-    "@phantom/react-sdk": "workspace:*"
-    "@types/react": "npm:^19.1.2"
-    "@types/react-dom": "npm:^19.1.2"
-    "@vitejs/plugin-react": "npm:^4.4.1"
-    globals: "npm:^16.0.0"
-    react: "npm:^19.1.0"
-    react-dom: "npm:^19.1.0"
-    typescript: "npm:~5.8.3"
-    vite: "npm:^6.3.5"
-  languageName: unknown
-  linkType: soft
 
 "react-syntax-highlighter@npm:^15.5.0":
   version: 15.6.1

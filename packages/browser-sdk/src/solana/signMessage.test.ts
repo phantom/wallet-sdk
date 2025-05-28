@@ -1,6 +1,6 @@
 import { signMessage } from "./signMessage";
 import { getProvider as defaultGetProvider } from "./getProvider";
-import type { PhantomSolanaProvider, DisplayEncoding, SolanaOperationOptions } from "./types";
+import type { PhantomSolanaProvider, DisplayEncoding } from "./types";
 import type { PublicKey } from "@solana/web3.js";
 import { connect } from "./connect";
 
@@ -19,11 +19,9 @@ const mockPublicKey = { toBase58: () => "mockPublicKey" } as unknown as PublicKe
 
 describe("signMessage", () => {
   let mockProvider: Partial<PhantomSolanaProvider>;
-  let customMockGetProvider: jest.MockedFunction<() => PhantomSolanaProvider | null>;
 
   beforeEach(() => {
     mockDefaultGetProvider.mockReset();
-    customMockGetProvider = jest.fn();
     mockConnect.mockReset();
     mockProvider = {
       signMessage: jest.fn(),
@@ -39,43 +37,17 @@ describe("signMessage", () => {
     const expectedResult = { signature: expectedSignature, publicKey: mockPublicKey };
     (mockProvider.signMessage as jest.Mock).mockResolvedValue(expectedResult);
 
-    const result = await signMessage(message, display); // No options passed
+    const result = await signMessage(message, display);
 
     expect(mockDefaultGetProvider).toHaveBeenCalledTimes(1);
-    expect(customMockGetProvider).not.toHaveBeenCalled();
     expect(mockProvider.signMessage).toHaveBeenCalledWith(message, display);
     expect(result).toEqual(expectedResult);
   });
 
-  it("should use custom getProvider from options and call provider.signMessage", async () => {
-    const message = new Uint8Array([1, 2, 3]);
-    const display: DisplayEncoding = "hex";
-    const expectedSignature = new Uint8Array([7, 8, 9]);
-    const expectedResult = { signature: expectedSignature, publicKey: mockPublicKey };
-
-    const customProviderInstance = { ...mockProvider, signMessage: jest.fn().mockResolvedValue(expectedResult) };
-    customMockGetProvider.mockReturnValue(customProviderInstance as PhantomSolanaProvider);
-
-    const options: SolanaOperationOptions = { getProvider: customMockGetProvider };
-    const result = await signMessage(message, display, options);
-
-    expect(customMockGetProvider).toHaveBeenCalledTimes(1);
-    expect(mockDefaultGetProvider).not.toHaveBeenCalled();
-    expect(customProviderInstance.signMessage).toHaveBeenCalledWith(message, display);
-    expect(result).toEqual(expectedResult);
-  });
-
-  it("should throw an error if provider is not found (default getProvider)", async () => {
+  it("should throw an error if provider is not found", async () => {
     mockDefaultGetProvider.mockReturnValue(null);
     const message = new Uint8Array([1, 2, 3]);
     await expect(signMessage(message)).rejects.toThrow("Phantom provider not found.");
-  });
-
-  it("should throw an error if provider is not found (custom getProvider)", async () => {
-    customMockGetProvider.mockReturnValue(null);
-    const message = new Uint8Array([1, 2, 3]);
-    const options: SolanaOperationOptions = { getProvider: customMockGetProvider };
-    await expect(signMessage(message, "utf8", options)).rejects.toThrow("Phantom provider not found.");
   });
 
   it("should throw an error if provider does not support signMessage", async () => {
@@ -92,10 +64,8 @@ describe("signMessage", () => {
 
     mockProvider.isConnected = false;
 
-    mockConnect.mockImplementation(optionsPassedToConnect => {
-      const providerFromGetProvider = (
-        optionsPassedToConnect?.getProvider || defaultGetProvider
-      )() as PhantomSolanaProvider | null;
+    mockConnect.mockImplementation(async () => {
+      const providerFromGetProvider = defaultGetProvider() as PhantomSolanaProvider | null;
       if (providerFromGetProvider) {
         providerFromGetProvider.isConnected = true;
       }
@@ -106,9 +76,9 @@ describe("signMessage", () => {
 
     const result = await signMessage(message, display);
 
-    expect(mockDefaultGetProvider).toHaveBeenCalledTimes(1);
+    expect(mockDefaultGetProvider).toHaveBeenCalledTimes(2);
     expect(mockConnect).toHaveBeenCalledTimes(1);
-    expect(mockConnect).toHaveBeenCalledWith({ getProvider: defaultGetProvider });
+    expect(mockConnect).toHaveBeenCalledWith();
     expect(mockProvider.isConnected).toBe(true);
     expect(mockProvider.signMessage).toHaveBeenCalledWith(message, display);
     expect(result).toEqual(expectedResult);
@@ -129,10 +99,8 @@ describe("signMessage", () => {
     const message = new Uint8Array([1, 2, 3]);
     mockProvider.isConnected = false;
 
-    mockConnect.mockImplementation(optionsPassedToConnect => {
-      const providerFromGetProvider = (
-        optionsPassedToConnect?.getProvider || defaultGetProvider
-      )() as PhantomSolanaProvider | null;
+    mockConnect.mockImplementation(async () => {
+      const providerFromGetProvider = defaultGetProvider() as PhantomSolanaProvider | null;
       if (providerFromGetProvider) {
         providerFromGetProvider.isConnected = false;
       }

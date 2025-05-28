@@ -1,6 +1,6 @@
 import { connect } from "./connect";
 import { getProvider as defaultGetProvider } from "./getProvider";
-import type { PhantomSolanaProvider, SolanaOperationOptions } from "./types";
+import type { PhantomSolanaProvider } from "./types";
 
 jest.mock("./getProvider", () => ({
   getProvider: jest.fn(),
@@ -10,12 +10,10 @@ const mockDefaultGetProvider = defaultGetProvider as jest.MockedFunction<() => P
 
 describe("connect", () => {
   let mockProvider: Partial<PhantomSolanaProvider>;
-  let customMockGetProvider: jest.MockedFunction<() => PhantomSolanaProvider | null>;
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockDefaultGetProvider.mockReset();
-    customMockGetProvider = jest.fn();
     mockProvider = {
       connect: jest.fn().mockImplementation(({ onlyIfTrusted }) => {
         if (onlyIfTrusted) {
@@ -28,25 +26,11 @@ describe("connect", () => {
     };
     mockDefaultGetProvider.mockReturnValue(mockProvider as PhantomSolanaProvider);
   });
-  it("should perform regular non-eager connect when app is not trusted using default getProvider", async () => {
+  it("should perform regular non-eager connect when app is not trusted", async () => {
     const publicKey = await connect();
 
     expect(mockDefaultGetProvider).toHaveBeenCalledTimes(1);
-    expect(customMockGetProvider).not.toHaveBeenCalled();
     expect(mockProvider.connect).toHaveBeenCalledTimes(2);
-    expect(publicKey).toBeDefined();
-  });
-
-  it("should perform regular non-eager connect when app is not trusted using custom getProvider", async () => {
-    const customProvider = { ...mockProvider };
-    customMockGetProvider.mockReturnValue(customProvider as PhantomSolanaProvider);
-    const operationOptions: SolanaOperationOptions = { getProvider: customMockGetProvider };
-
-    const publicKey = await connect(operationOptions);
-
-    expect(customMockGetProvider).toHaveBeenCalledTimes(1);
-    expect(mockDefaultGetProvider).not.toHaveBeenCalled();
-    expect(customProvider.connect).toHaveBeenCalledTimes(2);
     expect(publicKey).toBeDefined();
   });
 
@@ -74,17 +58,9 @@ describe("connect", () => {
     await expect(connect()).rejects.toThrow("Failed to connect to Phantom.");
     expect(mockDefaultGetProvider).toHaveBeenCalledTimes(1);
   });
-  it("should throw error when provider is not properly injected (default getProvider)", async () => {
+  it("should throw error when provider is not properly injected", async () => {
     mockDefaultGetProvider.mockReturnValue(null);
     await expect(connect()).rejects.toThrow("Phantom provider not found.");
     expect(mockDefaultGetProvider).toHaveBeenCalledTimes(1);
-  });
-
-  it("should throw error when provider is not properly injected (custom getProvider)", async () => {
-    customMockGetProvider.mockReturnValue(null);
-    const operationOptions: SolanaOperationOptions = { getProvider: customMockGetProvider };
-    await expect(connect(operationOptions)).rejects.toThrow("Phantom provider not found.");
-    expect(customMockGetProvider).toHaveBeenCalledTimes(1);
-    expect(mockDefaultGetProvider).not.toHaveBeenCalled();
   });
 });

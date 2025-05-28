@@ -1,9 +1,7 @@
-import { getProvider as defaultGetProvider } from "./getProvider";
-import type { SolanaOperationOptions } from "./types";
+import { getProvider } from "./getProvider";
 
-export async function disconnect(operationOptions?: SolanaOperationOptions) {
-  const getProviderFn = operationOptions?.getProvider || defaultGetProvider;
-  const provider = getProviderFn();
+export async function disconnect() {
+  const provider = getProvider();
   if (!provider) {
     throw new Error("Phantom provider not found.");
   }
