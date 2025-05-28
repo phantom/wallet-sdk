@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { createPhantom } from "@phantom/browser-sdk";
 import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
-import { SystemProgram, Transaction, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { SystemProgram, Transaction, LAMPORTS_PER_SOL, PublicKey, Connection } from "@solana/web3.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log("Document loaded, attempting to create Phantom instance...");
@@ -29,8 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
           } else {
             alert("Connected, but public key was not retrieved.");
           }
-          if (signMessageBtn) signMessageBtn.disabled = false;
-          if (signTransactionBtn) signTransactionBtn.disabled = false;
+
           if (disconnectBtn) disconnectBtn.disabled = false;
         } catch (error) {
           console.error("Error connecting to Phantom:", error);
@@ -40,6 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (signMessageBtn) {
+      signMessageBtn.disabled = false;
       signMessageBtn.onclick = async () => {
         try {
           if (!phantomInstance.solana.getProvider() || !userPublicKey) {
@@ -58,6 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (signTransactionBtn) {
+      signTransactionBtn.disabled = false;
       signTransactionBtn.onclick = async () => {
         try {
           const provider = phantomInstance.solana.getProvider();
@@ -66,7 +67,11 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
 
-          const transaction = new Transaction().add(
+          const connection = new Connection("https://api.mainnet-beta.solana.com");
+
+          const transaction = new Transaction({
+            recentBlockhash: (await connection.getLatestBlockhash()).blockhash,
+          }).add(
             SystemProgram.transfer({
               fromPubkey: new PublicKey(userPublicKey),
               toPubkey: new PublicKey(userPublicKey),
