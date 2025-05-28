@@ -3,11 +3,10 @@ import { getProvider } from "./getProvider";
 import { signMessage } from "./signMessage";
 import { signIn } from "./signIn";
 import { signAndSendTransaction } from "./signAndSendTransaction";
-import type { PhantomSolanaProvider } from "./types";
+import type { PhantomSolanaProvider, PhantomEventType } from "./types";
 import { connect } from "./connect";
 import { disconnect } from "./disconnect";
-import { onConnect } from "./onConnect";
-import { onDisconnect } from "./onDisconnect";
+import { addEventListener, removeEventListener, type PhantomEventCallback } from "./eventListeners";
 
 export type Solana = {
   getProvider: () => PhantomSolanaProvider | null;
@@ -19,8 +18,8 @@ export type Solana = {
   signIn: typeof signIn;
   signAndSendTransaction: typeof signAndSendTransaction;
 
-  onConnect: typeof onConnect;
-  onDisconnect: typeof onDisconnect;
+  addEventListener: (event: PhantomEventType, callback: PhantomEventCallback) => () => void;
+  removeEventListener: (event: PhantomEventType, callback: PhantomEventCallback) => void;
 };
 
 const solana: Solana = {
@@ -30,8 +29,8 @@ const solana: Solana = {
   signMessage,
   signIn,
   signAndSendTransaction,
-  onConnect,
-  onDisconnect,
+  addEventListener,
+  removeEventListener,
 };
 
 export function createSolanaPlugin(): ChainPlugin<Solana> {

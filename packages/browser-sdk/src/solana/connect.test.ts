@@ -1,6 +1,6 @@
 import { connect } from "./connect";
 import { getProvider } from "./getProvider";
-import { onConnect, clearAllConnectCallbacks } from "./onConnect";
+import { addEventListener, clearAllEventListeners } from "./eventListeners";
 
 jest.mock("./getProvider", () => ({
   getProvider: jest.fn().mockReturnValue({
@@ -15,41 +15,41 @@ jest.mock("./getProvider", () => ({
   }),
 }));
 
-// We will spy on triggerConnectCallbacks rather than fully mocking it
+// We will spy on triggerEvent rather than fully mocking it
 // to ensure the actual callback logic is tested.
-const onConnectModule = jest.requireActual("./onConnect");
-const triggerConnectCallbacksSpy = jest.spyOn(onConnectModule, "triggerConnectCallbacks");
+const eventListenersModule = jest.requireActual("./eventListeners");
+const triggerEventSpy = jest.spyOn(eventListenersModule, "triggerEvent");
 
 describe("connect", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    clearAllConnectCallbacks();
-    triggerConnectCallbacksSpy.mockClear();
+    clearAllEventListeners();
+    triggerEventSpy.mockClear();
   });
   it("should perform regular non-eager connect when app is not trusted", async () => {
     const provider = getProvider();
     const mockCallback = jest.fn();
-    onConnect(mockCallback);
+    addEventListener("connect", mockCallback);
 
     const publicKey = await connect();
 
     expect(provider.connect).toHaveBeenCalledTimes(2);
     expect(publicKey).toBeDefined();
-    expect(triggerConnectCallbacksSpy).toHaveBeenCalledWith(publicKey);
+    expect(triggerEventSpy).toHaveBeenCalledWith("connect", publicKey);
     expect(mockCallback).toHaveBeenCalledWith(publicKey);
   });
 
   it("should perform eager connect when app is already trusted", async () => {
     const provider = getProvider();
     const mockCallback = jest.fn();
-    onConnect(mockCallback);
+    addEventListener("connect", mockCallback);
     // Ensure this mock resolves with a string to match what connect() returns
     (provider.connect as jest.Mock).mockImplementation(async () =>
       Promise.resolve({ publicKey: { toString: () => "123" } }),
     );
     const publicKey = await connect();
     expect(publicKey).toBeDefined();
-    expect(triggerConnectCallbacksSpy).toHaveBeenCalledWith(publicKey);
+    expect(triggerEventSpy).toHaveBeenCalledWith("connect", publicKey);
     expect(mockCallback).toHaveBeenCalledWith(publicKey);
   });
 
@@ -59,7 +59,7 @@ describe("connect", () => {
     const publicKey = await connect();
     expect(publicKey).toBeDefined();
     expect(provider.connect).not.toHaveBeenCalled();
-    expect(triggerConnectCallbacksSpy).not.toHaveBeenCalled();
+    expect(triggerEventSpy).not.toHaveBeenCalled();
   });
   it("should throw error when connect fails", async () => {
     const provider = getProvider();
@@ -69,11 +69,11 @@ describe("connect", () => {
       throw new Error("Failed to connect");
     });
     await expect(connect()).rejects.toThrow("Failed to connect to Phantom.");
-    expect(triggerConnectCallbacksSpy).not.toHaveBeenCalled();
+    expect(triggerEventSpy).not.toHaveBeenCalled();
   });
   it("should throw error when provider is not properly injected", async () => {
     (getProvider as jest.Mock).mockReturnValue(null);
     await expect(connect()).rejects.toThrow("Phantom provider not found.");
-    expect(triggerConnectCallbacksSpy).not.toHaveBeenCalled();
+    expect(triggerEventSpy).not.toHaveBeenCalled();
   });
 });

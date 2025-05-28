@@ -1,5 +1,5 @@
 import { getProvider } from "./getProvider";
-import { triggerConnectCallbacks } from "./onConnect";
+import { triggerEvent } from "./eventListeners";
 
 export async function connect() {
   const provider = getProvider();
@@ -16,7 +16,7 @@ export async function connect() {
     const eagerConnectResult = await provider.connect({ onlyIfTrusted: true });
     if (eagerConnectResult.publicKey) {
       const publicKeyStr = eagerConnectResult.publicKey.toString();
-      triggerConnectCallbacks(publicKeyStr);
+      triggerEvent("connect", publicKeyStr);
       return publicKeyStr;
     }
   } catch (error) {
@@ -29,7 +29,7 @@ export async function connect() {
 
     if (connectResult.publicKey) {
       const publicKeyStr = connectResult.publicKey.toString();
-      triggerConnectCallbacks(publicKeyStr);
+      triggerEvent("connect", publicKeyStr);
       return publicKeyStr;
     }
   } catch (error) {

@@ -17,6 +17,8 @@ export type SolanaSignInData = {
 
 export type DisplayEncoding = "utf8" | "hex";
 
+export type PhantomEventType = "connect" | "disconnect" | "accountChanged";
+
 export interface PhantomSolanaProvider {
   isPhantom: boolean;
   publicKey: PublicKey | null;
