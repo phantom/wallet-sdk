@@ -21,13 +21,13 @@ describe("useConnect", () => {
       wrapper: ({ children }) => <PhantomProvider config={{}}>{children}</PhantomProvider>,
     });
 
-    await expect(result.current()).rejects.toThrow("Phantom solana plugin not found.");
+    await expect(result.current.connect()).rejects.toThrow("Phantom solana plugin not found.");
   });
 
   it("should throw error when phantom provider is not available", async () => {
     const { result } = renderHook(() => useConnect(), sharedConfig);
 
-    await expect(result.current()).rejects.toThrow("Phantom provider not found.");
+    await expect(result.current.connect()).rejects.toThrow("Phantom provider not found.");
   });
 
   it("should successfully connect when phantom.solana is available", async () => {
@@ -40,9 +40,37 @@ describe("useConnect", () => {
 
     const { result } = renderHook(() => useConnect(), sharedConfig);
 
-    await result.current();
+    await result.current.connect();
 
     // @ts-expect-error - window.phantom is not typed
     expect(window.phantom.solana.connect).toHaveBeenCalled();
+  });
+
+  it("should automatically connect when autoConnect is true", async () => {
+    // @ts-expect-error - window.phantom is not typed
+    window.phantom = {
+      solana: {
+        connect: jest.fn().mockResolvedValue({ publicKey: { toString: () => "123" } }),
+      },
+    };
+
+    renderHook(() => useConnect({ autoConnect: true }), sharedConfig);
+
+    // @ts-expect-error - window.phantom is not typed
+    expect(window.phantom.solana.connect).toHaveBeenCalled();
+  });
+
+  it("should not automatically connect when autoConnect is false", async () => {
+    // @ts-expect-error - window.phantom is not typed
+    window.phantom = {
+      solana: {
+        connect: jest.fn().mockResolvedValue({ publicKey: { toString: () => "123" } }),
+      },
+    };
+
+    renderHook(() => useConnect({ autoConnect: false }), sharedConfig);
+
+    // @ts-expect-error - window.phantom is not typed
+    expect(window.phantom.solana.connect).not.toHaveBeenCalled();
   });
 });
