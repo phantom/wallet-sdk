@@ -4,9 +4,9 @@
   "version": "0.0.7",
   "type": "module",
   "scripts": {
-    "predev": "cd ../browser-embedded-sdk && yarn build",
+    "predev": "cd ../../browser-embedded-sdk && yarn build",
     "dev": "vite --port 5174",
-    "prebuild": "cd ../browser-embedded-sdk && yarn build",
+    "prebuild": "cd ../../browser-embedded-sdk && yarn build",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
@@ -22,6 +22,6 @@
     "@types/react-syntax-highlighter": "^15.5.7",
     "@vitejs/plugin-react": "^4.0.3",
     "typescript": "^5.0.2",
-    "vite": "^4.4.5"
+    "vite": "^6.3.5"
   }
 }
