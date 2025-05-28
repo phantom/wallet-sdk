@@ -6,6 +6,8 @@ import { signAndSendTransaction } from "./signAndSendTransaction";
 import type { PhantomSolanaProvider } from "./types";
 import { connect } from "./connect";
 import { disconnect } from "./disconnect";
+import { onConnect } from "./onConnect";
+import { onDisconnect } from "./onDisconnect";
 
 export type Solana = {
   getProvider: () => PhantomSolanaProvider | null;
@@ -16,6 +18,9 @@ export type Solana = {
   signMessage: typeof signMessage;
   signIn: typeof signIn;
   signAndSendTransaction: typeof signAndSendTransaction;
+
+  onConnect: typeof onConnect;
+  onDisconnect: typeof onDisconnect;
 };
 
 const solana: Solana = {
@@ -25,6 +30,8 @@ const solana: Solana = {
   signMessage,
   signIn,
   signAndSendTransaction,
+  onConnect,
+  onDisconnect,
 };
 
 export function createSolanaPlugin(): ChainPlugin<Solana> {

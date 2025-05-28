@@ -104,4 +104,50 @@ Once the `phantom.solana` object is initialized, you can access the following me
 - `signAndSendTransaction(transaction: Transaction, connection?: Connection, options?: SendOptions): Promise<TransactionSignature>`
   - Prompts the user to sign and then sends the transaction. (Requires `@solana/web3.js` for `Transaction` object)
 
+### Event Handling
+
+The SDK also allows you to listen for `connect` and `disconnect` events:
+
+- `onConnect(callback: (publicKey: string) => void): () => void`
+
+  - Registers a callback that will be invoked when the wallet successfully connects. The callback receives the public key (as a string) of the connected account.
+  - Returns a function that, when called, will unregister the callback.
+  - Multiple callbacks can be registered for the `connect` event.
+
+  **Example:**
+
+  ```typescript
+  const phantom = createPhantom({ chainPlugins: [createSolanaPlugin()] });
+
+  const handleConnect = (publicKey: string) => {
+    console.log(`Wallet connected with public key: ${publicKey}`);
+  };
+
+  const clearConnectListener = phantom.solana.onConnect(handleConnect);
+
+  // To stop listening for this specific connect event:
+  // clearConnectListener();
+  ```
+
+- `onDisconnect(callback: () => void): () => void`
+
+  - Registers a callback that will be invoked when the wallet disconnects.
+  - Returns a function that, when called, will unregister the callback.
+  - Multiple callbacks can be registered for the `disconnect` event.
+
+  **Example:**
+
+  ```typescript
+  const phantom = createPhantom({ chainPlugins: [createSolanaPlugin()] });
+
+  const handleDisconnect = () => {
+    console.log("Wallet disconnected");
+  };
+
+  const clearDisconnectListener = phantom.solana.onDisconnect(handleDisconnect);
+
+  // To stop listening for this specific disconnect event:
+  // clearDisconnectListener();
+  ```
+
 Please refer to the Phantom documentation and the `@solana/web3.js` library for more details on constructing transactions and interacting with the Solana blockchain.

@@ -1,4 +1,5 @@
 import { getProvider } from "./getProvider";
+import { triggerConnectCallbacks } from "./onConnect";
 
 export async function connect() {
   const provider = getProvider();
@@ -14,7 +15,9 @@ export async function connect() {
   try {
     const eagerConnectResult = await provider.connect({ onlyIfTrusted: true });
     if (eagerConnectResult.publicKey) {
-      return eagerConnectResult.publicKey.toString();
+      const publicKeyStr = eagerConnectResult.publicKey.toString();
+      triggerConnectCallbacks(publicKeyStr);
+      return publicKeyStr;
     }
   } catch (error) {
     // Silently fail eager connect attempt
@@ -25,7 +28,9 @@ export async function connect() {
     const connectResult = await provider.connect({ onlyIfTrusted: false });
 
     if (connectResult.publicKey) {
-      return connectResult.publicKey.toString();
+      const publicKeyStr = connectResult.publicKey.toString();
+      triggerConnectCallbacks(publicKeyStr);
+      return publicKeyStr;
     }
   } catch (error) {
     // Silently fail eager connect attempt
