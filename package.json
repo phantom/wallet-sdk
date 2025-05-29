@@ -3,7 +3,7 @@
   "private": true,
   "packageManager": "yarn@4.2.2",
   "scripts": {
-    "build": "yarn workspaces foreach --all run build",
+    "build": "yarn workspaces foreach --all --topological-dev run build",
     "format:fix": "prettier . --write",
     "format:check": "prettier . --check",
     "lint": "yarn workspaces foreach -Avpi run lint",
