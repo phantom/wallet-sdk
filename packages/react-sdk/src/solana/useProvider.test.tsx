@@ -19,7 +19,7 @@ describe("useProvider", () => {
     jest.useRealTimers();
   });
 
-  it("should return loading status when phantom is not ready", async () => {
+  it("should return loading status when phantom is not ready", () => {
     const { result } = renderHook(() => useProvider(), sharedConfig);
 
     expect(result.current).toEqual({

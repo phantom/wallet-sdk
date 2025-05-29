@@ -3,6 +3,9 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "outDir": "dist/esm",
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "types": ["node", "jest"],
+    "lib": ["dom", "esnext"],
+    "isolatedModules": true
   }
 }
