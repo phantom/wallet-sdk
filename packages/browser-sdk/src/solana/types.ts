@@ -38,7 +38,8 @@ export interface PhantomSolanaProvider {
     transactions: (Transaction | VersionedTransaction)[],
   ) => Promise<(Transaction | VersionedTransaction)[]>;
   signTransaction: (transaction: Transaction | VersionedTransaction) => Promise<Transaction | VersionedTransaction>;
-  // Add other methods like 'on', 'request' if needed for full provider interaction
+  on: (event: 'connect' | 'disconnect' | 'accountChanged', handler: (publicKey?: PublicKey) => void) => void;
+  off: (event: 'connect' | 'disconnect' | 'accountChanged', handler: (publicKey?: PublicKey) => void) => void;
 }
 
 export interface SolanaOperationOptions {

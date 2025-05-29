@@ -1,5 +1,6 @@
 import type { Solana } from "./plugin";
 export { createSolanaPlugin } from "./plugin";
+export type { PhantomSolanaProvider } from "./types";
 
 declare module "../index" {
   interface Phantom {

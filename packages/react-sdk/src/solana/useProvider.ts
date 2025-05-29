@@ -1,3 +1,4 @@
+import type { PhantomSolanaProvider } from "@phantom/browser-sdk/solana";
 import * as React from "react";
 import { usePhantom } from "../PhantomContext";
 
@@ -6,7 +7,7 @@ const BASE_DELAY = 100;
 
 type ProviderState =
   | { status: "loading"; provider: null }
-  | { status: "success"; provider: NonNullable<unknown> }
+  | { status: "success"; provider: PhantomSolanaProvider }
   | { status: "error"; provider: null };
 
 /**
