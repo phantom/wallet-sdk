@@ -97,6 +97,8 @@ Once the `phantom.solana` object is initialized, you can access the following me
   - Connects to the Phantom wallet. Optionally, `onlyIfTrusted` can be set to true to only connect if the dApp is already trusted.
 - `disconnect(): Promise<void>`
   - Disconnects from the Phantom wallet.
+- `getAccount(): { status: "connected" | "disconnected"; publicKey: string | null }`
+  - Gets the current connected account state. When account is connected returns a public key, when it's not returns it as null.
 - `signIn(): Promise<SignInResult>`
   - Initiates a sign-in request to the wallet.
 - `signMessage(message: Uint8Array | string, display?: 'utf8' | 'hex'): Promise<SignedMessage>`

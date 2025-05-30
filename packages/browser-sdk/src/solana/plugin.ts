@@ -7,12 +7,15 @@ import type { PhantomSolanaProvider, PhantomEventType } from "./types";
 import { connect } from "./connect";
 import { disconnect } from "./disconnect";
 import { addEventListener, removeEventListener, type PhantomEventCallback } from "./eventListeners";
+import { getAccount } from "./getAccount";
 
 export type Solana = {
   getProvider: () => PhantomSolanaProvider | null;
 
   connect: typeof connect;
   disconnect: typeof disconnect;
+
+  getAccount: typeof getAccount;
 
   signMessage: typeof signMessage;
   signIn: typeof signIn;
@@ -26,6 +29,7 @@ const solana: Solana = {
   getProvider,
   connect,
   disconnect,
+  getAccount,
   signMessage,
   signIn,
   signAndSendTransaction,
