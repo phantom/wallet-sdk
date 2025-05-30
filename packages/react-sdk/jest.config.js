@@ -10,18 +10,7 @@ const config = {
     // Ensure this path matches what's in sharedJestConfig or is appropriate
     "^.+\\.(ts|tsx)$": [
       "ts-jest",
-      {
-        // Point to the tsconfig.json within this package
-        tsconfig: "tsconfig.json", 
-        // Ensure Babel processing is definitely on and uses the root babel.config.js
-        babelConfig: {
-          presets: [
-            ["@babel/preset-env", { targets: { node: "current" } }],
-            ["@babel/preset-react", { "runtime": "automatic" }],
-            "@babel/preset-typescript",
-          ],
-        },
-      },
+      
     ],
   },
 };
