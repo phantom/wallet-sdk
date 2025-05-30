@@ -1,4 +1,3 @@
-const sharedConfig = require("./sharedJestConfig.js");
 
 /** @type {import('jest').Config} */
 const config = {

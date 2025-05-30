@@ -9,8 +9,7 @@ const config = {
   transform: {
     // Ensure this path matches what's in sharedJestConfig or is appropriate
     "^.+\\.(ts|tsx)$": [
-      "ts-jest",
-      
+      "ts-jest"
     ],
   },
 };
