@@ -1,9 +1,8 @@
-import * as React from "react";
 import "./Actions.css";
-import { useConnect, useDisconnect } from "@phantom/react-sdk/solana";
+import { useAccount, useConnect, useDisconnect } from "@phantom/react-sdk/solana";
 
 export function Actions() {
-  const [publicKey, setPublicKey] = React.useState<string | null>(null);
+  const { publicKey, status } = useAccount();
   const { connect } = useConnect();
   const { disconnect } = useDisconnect();
 
@@ -11,7 +10,6 @@ export function Actions() {
     try {
       const connectResult = await connect();
       if (connectResult) {
-        setPublicKey(connectResult);
         alert(`Connected to Phantom with public key: ${connectResult}`);
       } else {
         alert("Connected, but public key was not retrieved.");
@@ -24,13 +22,20 @@ export function Actions() {
 
   const onDisconnect = async () => {
     await disconnect();
-    setPublicKey(null);
     alert("Disconnected from Phantom");
   };
 
   return (
     <div id="app">
       <h1>Phantom React SDK Demo</h1>
+      <div className="account-info">
+        <p>
+          <strong>Account Public Key:</strong> {publicKey}
+        </p>
+        <p>
+          <strong>Account Status:</strong> {status}
+        </p>
+      </div>
       <div className="controls">
         <button id="connectBtn" onClick={onConnect}>
           Connect
