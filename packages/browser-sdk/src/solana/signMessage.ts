@@ -1,6 +1,5 @@
 import { getProvider } from "./getProvider";
 import type { PhantomSolanaProvider, DisplayEncoding } from "./types";
-import type { PublicKey } from "@solana/web3.js";
 import { connect } from "./connect";
 
 /**
@@ -13,7 +12,7 @@ import { connect } from "./connect";
 export async function signMessage(
   message: Uint8Array,
   display?: DisplayEncoding,
-): Promise<{ signature: Uint8Array; publicKey: PublicKey }> {
+): Promise<{ signature: Uint8Array; publicKey: string }> {
   const provider = getProvider() as PhantomSolanaProvider | null;
 
   if (!provider) {
@@ -31,5 +30,9 @@ export async function signMessage(
   if (!provider.isConnected) {
     throw new Error("Provider is not connected even after attempting to connect.");
   }
-  return provider.signMessage(message, display);
+  const result = await provider.signMessage(message, display);
+  return {
+    signature: result.signature,
+    publicKey: result.publicKey.toString(),
+  };
 }

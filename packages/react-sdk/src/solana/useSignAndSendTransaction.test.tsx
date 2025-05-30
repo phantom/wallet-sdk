@@ -1,0 +1,171 @@
+import * as React from "react";
+import { renderHook, act } from "@testing-library/react";
+import { useSignAndSendTransaction } from "./useSignAndSendTransaction";
+import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
+import { PhantomProvider } from "../PhantomContext";
+import type { Transaction, VersionedTransaction, PublicKey } from "@solana/web3.js";
+
+const sharedConfig = {
+  wrapper: ({ children }: { children: React.ReactNode }) => (
+    <PhantomProvider config={{ chainPlugins: [createSolanaPlugin()] }}>{children}</PhantomProvider>
+  ),
+};
+
+const mockTransaction = {} as Transaction; // Using a simple mock for Transaction
+const mockVersionedTransaction = {} as VersionedTransaction; // Using a simple mock for VersionedTransaction
+const mockSignatureString = "mockTransactionSignature";
+const mockPublicKeyString = "mockPublicKey";
+const actualMockPublicKeyObject = {
+  toString: () => mockPublicKeyString,
+  toBase58: () => mockPublicKeyString,
+} as unknown as PublicKey;
+
+describe("useSignAndSendTransaction", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // @ts-expect-error - window.phantom is not typed
+    delete window.phantom;
+  });
+
+  it("should throw error when solana chain plugin is not properly configured", async () => {
+    const { result } = renderHook(() => useSignAndSendTransaction(), {
+      wrapper: ({ children }) => <PhantomProvider config={{}}>{children}</PhantomProvider>,
+    });
+    await act(async () => {
+      await expect(result.current.signAndSendTransaction(mockTransaction)).rejects.toThrow(
+        "Phantom Solana provider not available.",
+      );
+    });
+  });
+
+  it("should throw error when phantom provider is not available (window.phantom is undefined)", async () => {
+    const { result } = renderHook(() => useSignAndSendTransaction(), sharedConfig);
+    await act(async () => {
+      // Expecting SDK error
+      await expect(result.current.signAndSendTransaction(mockTransaction)).rejects.toThrow(
+        "Phantom provider not found.",
+      );
+    });
+  });
+
+  it("should throw error when phantom.solana is not available", async () => {
+    // @ts-expect-error - window.phantom is not typed
+    window.phantom = {}; // Phantom is present, but window.phantom.solana is not
+    const { result } = renderHook(() => useSignAndSendTransaction(), sharedConfig);
+    await act(async () => {
+      // Expecting SDK error
+      await expect(result.current.signAndSendTransaction(mockTransaction)).rejects.toThrow(
+        "Phantom provider not found.",
+      );
+    });
+  });
+
+  it("should successfully sign and send a transaction when phantom.solana.signAndSendTransaction is available", async () => {
+    const mockSignAndSendResult = { signature: mockSignatureString, publicKey: mockPublicKeyString };
+    // @ts-expect-error - window.phantom is not typed
+    window.phantom = {
+      solana: {
+        signAndSendTransaction: jest.fn().mockResolvedValue(mockSignAndSendResult),
+        isConnected: true,
+        connect: jest.fn().mockResolvedValue({ publicKey: actualMockPublicKeyObject }),
+      },
+    };
+
+    const { result } = renderHook(() => useSignAndSendTransaction(), sharedConfig);
+    let response;
+    await act(async () => {
+      response = await result.current.signAndSendTransaction(mockTransaction);
+    });
+
+    // @ts-expect-error - window.phantom is not typed
+    expect(window.phantom.solana.signAndSendTransaction).toHaveBeenCalledWith(mockTransaction);
+    expect(response).toEqual(mockSignAndSendResult);
+  });
+
+  it("should successfully sign and send a versioned transaction", async () => {
+    const mockSignAndSendResult = { signature: mockSignatureString }; // publicKey is optional
+    // @ts-expect-error - window.phantom is not typed
+    window.phantom = {
+      solana: {
+        signAndSendTransaction: jest.fn().mockResolvedValue(mockSignAndSendResult),
+        isConnected: true,
+        connect: jest.fn().mockResolvedValue({ publicKey: actualMockPublicKeyObject }),
+      },
+    };
+
+    const { result } = renderHook(() => useSignAndSendTransaction(), sharedConfig);
+
+    let response;
+    await act(async () => {
+      response = await result.current.signAndSendTransaction(mockVersionedTransaction);
+    });
+    // @ts-expect-error - window.phantom is not typed
+    expect(window.phantom.solana.signAndSendTransaction).toHaveBeenCalledWith(mockVersionedTransaction);
+    expect(response).toEqual(mockSignAndSendResult);
+  });
+
+  it("should throw an error if phantom.solana.signAndSendTransaction is not a function", async () => {
+    // @ts-expect-error - window.phantom is not typed
+    window.phantom = {
+      solana: {
+        signAndSendTransaction: "not-a-function",
+        isConnected: true, // To prevent connect from being called
+        connect: jest.fn(),
+      },
+    };
+
+    const { result } = renderHook(() => useSignAndSendTransaction(), sharedConfig);
+    await act(async () => {
+      await expect(result.current.signAndSendTransaction(mockTransaction)).rejects.toThrow(
+        /provider.signAndSendTransaction is not a function|signAndSendTransaction is not a function/i,
+      );
+    });
+  });
+
+  it("should attempt to connect if provider is not connected, then sign and send", async () => {
+    const mockSignAndSendResult = { signature: mockSignatureString, publicKey: mockPublicKeyString };
+
+    // @ts-expect-error - window.phantom is not typed
+    window.phantom = {
+      solana: {
+        signAndSendTransaction: jest.fn().mockResolvedValue(mockSignAndSendResult),
+        isConnected: false, // Initially not connected
+        connect: jest.fn().mockImplementation(async () => {
+          // @ts-expect-error - window.phantom is not typed
+          window.phantom.solana.isConnected = true; // Simulate successful connection
+          return Promise.resolve({ publicKey: actualMockPublicKeyObject });
+        }),
+      },
+    };
+
+    const { result } = renderHook(() => useSignAndSendTransaction(), sharedConfig);
+    let response;
+    await act(async () => {
+      response = await result.current.signAndSendTransaction(mockTransaction);
+    });
+
+    // @ts-expect-error - window.phantom is not typed
+    expect(window.phantom.solana.connect).toHaveBeenCalledTimes(1);
+    // @ts-expect-error - window.phantom is not typed
+    expect(window.phantom.solana.signAndSendTransaction).toHaveBeenCalledWith(mockTransaction);
+    expect(response).toEqual(mockSignAndSendResult);
+  });
+
+  it("should throw 'The connected provider does not support signAndSendTransaction' if provider.signAndSendTransaction is undefined", async () => {
+    // @ts-expect-error - window.phantom is not typed
+    window.phantom = {
+      solana: {
+        isConnected: true, // To prevent connect from being called
+        connect: jest.fn(),
+        // signAndSendTransaction is undefined
+      },
+    };
+
+    const { result } = renderHook(() => useSignAndSendTransaction(), sharedConfig);
+    await act(async () => {
+      await expect(result.current.signAndSendTransaction(mockTransaction)).rejects.toThrow(
+        "The connected provider does not support signAndSendTransaction.",
+      );
+    });
+  });
+});

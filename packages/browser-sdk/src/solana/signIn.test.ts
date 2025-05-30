@@ -8,7 +8,7 @@ jest.mock("./getProvider", () => ({
 }));
 const mockDefaultGetProvider = defaultGetProvider as jest.MockedFunction<() => PhantomSolanaProvider | null>;
 
-const mockPublicKey = { toBase58: () => "mockPublicKey" } as unknown as PublicKey;
+const mockPublicKey = { toBase58: () => "mockPublicKey", toString: () => "mockPublicKey" } as unknown as PublicKey;
 
 describe("signIn", () => {
   let mockProvider: Partial<PhantomSolanaProvider>;
@@ -25,7 +25,7 @@ describe("signIn", () => {
 
   it("should use default getProvider and call provider.signIn", async () => {
     const expectedResult = {
-      address: mockPublicKey,
+      address: mockPublicKey.toString(),
       signature: new Uint8Array([1]),
       signedMessage: new Uint8Array([2]),
     };

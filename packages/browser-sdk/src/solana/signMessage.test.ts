@@ -15,7 +15,7 @@ jest.mock("./connect", () => ({
 const mockDefaultGetProvider = defaultGetProvider as jest.MockedFunction<() => PhantomSolanaProvider | null>;
 const mockConnect = connect as jest.MockedFunction<typeof connect>;
 
-const mockPublicKey = { toBase58: () => "mockPublicKey" } as unknown as PublicKey;
+const mockPublicKey = { toBase58: () => "mockPublicKey", toString: () => "mockPublicKey" } as unknown as PublicKey;
 
 describe("signMessage", () => {
   let mockProvider: Partial<PhantomSolanaProvider>;
@@ -34,7 +34,7 @@ describe("signMessage", () => {
     const message = new Uint8Array([1, 2, 3]);
     const display: DisplayEncoding = "hex";
     const expectedSignature = new Uint8Array([4, 5, 6]);
-    const expectedResult = { signature: expectedSignature, publicKey: mockPublicKey };
+    const expectedResult = { signature: expectedSignature, publicKey: mockPublicKey.toString() };
     (mockProvider.signMessage as jest.Mock).mockResolvedValue(expectedResult);
 
     const result = await signMessage(message, display);
@@ -60,7 +60,7 @@ describe("signMessage", () => {
     const message = new Uint8Array([1, 2, 3]);
     const display: DisplayEncoding = "hex";
     const expectedSignature = new Uint8Array([4, 5, 6]);
-    const expectedResult = { signature: expectedSignature, publicKey: mockPublicKey };
+    const expectedResult = { signature: expectedSignature, publicKey: mockPublicKey.toString() };
 
     mockProvider.isConnected = false;
 
@@ -115,7 +115,7 @@ describe("signMessage", () => {
   it("should use default display encoding if not provided", async () => {
     const message = new Uint8Array([1, 2, 3]);
     const expectedSignature = new Uint8Array([10, 11, 12]);
-    const expectedResult = { signature: expectedSignature, publicKey: mockPublicKey };
+    const expectedResult = { signature: expectedSignature, publicKey: mockPublicKey.toString() };
     (mockProvider.signMessage as jest.Mock).mockResolvedValue(expectedResult);
     mockProvider.isConnected = true;
     mockDefaultGetProvider.mockReturnValue(mockProvider as PhantomSolanaProvider);
