@@ -7,11 +7,24 @@ import * as PhantomContext from "../PhantomContext";
 
 const MOCK_PUBLIC_KEY = "11111111111111111111111111111111";
 
+const mockSolanaPlugin = {
+  ...createSolanaPlugin().create(),
+  addEventListener: jest.fn(),
+  removeEventListener: jest.fn(),
+};
+
+const createPlugin = {
+  name: "solana",
+  create: () => {
+    return mockSolanaPlugin;
+  },
+};
+
 const sharedConfig = {
   wrapper: ({ children }: { children: React.ReactNode }) => (
     <PhantomProvider
       config={{
-        chainPlugins: [createSolanaPlugin()],
+        chainPlugins: [createPlugin],
       }}
     >
       {children}
@@ -20,7 +33,12 @@ const sharedConfig = {
 };
 
 describe("useAccount", () => {
-  beforeAll(() => {
+  afterEach(() => {
+    delete (window as any).phantom;
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
     (window as any).phantom = {
       solana: {
         isConnected: true,
@@ -30,14 +48,6 @@ describe("useAccount", () => {
         removeListener: jest.fn(),
       },
     };
-  });
-
-  afterAll(() => {
-    delete (window as any).phantom;
-  });
-
-  beforeEach(() => {
-    jest.clearAllMocks();
   });
 
   it("should return connected status and publicKey when account is connected", () => {
@@ -69,7 +79,7 @@ describe("useAccount", () => {
     (window as any).phantom.solana.isConnected = true;
     (window as any).phantom.solana.publicKey = { toString: () => MOCK_PUBLIC_KEY };
     act(() => {
-      const connectHandler = (window as any).phantom.solana.on.mock.calls.find(
+      const connectHandler = mockSolanaPlugin.addEventListener.mock.calls.find(
         (call: any) => call[0] === "connect",
       )?.[1];
       if (connectHandler) {
@@ -93,7 +103,7 @@ describe("useAccount", () => {
     (window as any).phantom.solana.isConnected = false;
     (window as any).phantom.solana.publicKey = null;
     act(() => {
-      const disconnectHandler = (window as any).phantom.solana.on.mock.calls.find(
+      const disconnectHandler = mockSolanaPlugin.addEventListener.mock.calls.find(
         (call: any) => call[0] === "disconnect",
       )?.[1];
       if (disconnectHandler) {
@@ -108,27 +118,27 @@ describe("useAccount", () => {
   it("should set up event listeners on mount", () => {
     renderHook(() => useAccount(), sharedConfig);
 
-    expect((window as any).phantom.solana.on).toHaveBeenCalledWith("connect", expect.any(Function));
-    expect((window as any).phantom.solana.on).toHaveBeenCalledWith("disconnect", expect.any(Function));
-    expect((window as any).phantom.solana.on).toHaveBeenCalledWith("accountChanged", expect.any(Function));
+    expect(mockSolanaPlugin.addEventListener).toHaveBeenCalledWith("connect", expect.any(Function));
+    expect(mockSolanaPlugin.addEventListener).toHaveBeenCalledWith("disconnect", expect.any(Function));
+    expect(mockSolanaPlugin.addEventListener).toHaveBeenCalledWith("accountChanged", expect.any(Function));
   });
 
   it("should clean up event listeners on unmount", () => {
     const { unmount } = renderHook(() => useAccount(), sharedConfig);
 
-    const connectHandler = (window as any).phantom.solana.on.mock.calls.find((call: any) => call[0] === "connect")?.[1];
-    const disconnectHandler = (window as any).phantom.solana.on.mock.calls.find(
+    const connectHandler = mockSolanaPlugin.addEventListener.mock.calls.find((call: any) => call[0] === "connect")?.[1];
+    const disconnectHandler = mockSolanaPlugin.addEventListener.mock.calls.find(
       (call: any) => call[0] === "disconnect",
     )?.[1];
-    const accountChangedHandler = (window as any).phantom.solana.on.mock.calls.find(
+    const accountChangedHandler = mockSolanaPlugin.addEventListener.mock.calls.find(
       (call: any) => call[0] === "accountChanged",
     )?.[1];
 
     unmount();
 
-    expect((window as any).phantom.solana.off).toHaveBeenCalledWith("connect", connectHandler);
-    expect((window as any).phantom.solana.off).toHaveBeenCalledWith("disconnect", disconnectHandler);
-    expect((window as any).phantom.solana.off).toHaveBeenCalledWith("accountChanged", accountChangedHandler);
+    expect(mockSolanaPlugin.removeEventListener).toHaveBeenCalledWith("connect", connectHandler);
+    expect(mockSolanaPlugin.removeEventListener).toHaveBeenCalledWith("disconnect", disconnectHandler);
+    expect(mockSolanaPlugin.removeEventListener).toHaveBeenCalledWith("accountChanged", accountChangedHandler);
   });
 
   it("should handle account changes", () => {
@@ -142,7 +152,7 @@ describe("useAccount", () => {
     const newPublicKey = "22222222222222222222222222222223";
     (window as any).phantom.solana.publicKey = { toString: () => newPublicKey };
     act(() => {
-      const accountChangedHandler = (window as any).phantom.solana.on.mock.calls.find(
+      const accountChangedHandler = mockSolanaPlugin.addEventListener.mock.calls.find(
         (call: any) => call[0] === "accountChanged",
       )?.[1];
       if (accountChangedHandler) {
@@ -192,19 +202,19 @@ describe("useAccount", () => {
       off: jest.fn(),
       removeListener: jest.fn(),
     };
-    
-    spy.mockReturnValue({ 
+
+    spy.mockReturnValue({
       phantom: {
         solana: {
           getAccount: () => ({ status: "connected" as const, publicKey: MOCK_PUBLIC_KEY }),
           getProvider: () => mockProvider,
-          on: jest.fn(),
-          off: jest.fn(),
-        }
-      } as any, 
-      isReady: true 
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+        },
+      } as any,
+      isReady: true,
     });
-    
+
     rerender();
 
     await waitFor(() => {

@@ -26,7 +26,7 @@ export function useConnect({ autoConnect = false }: UseConnectProps = {}) {
     if (autoConnect && phantom?.solana) {
       connect();
     }
-  }, [autoConnect, connect]);
+  }, [autoConnect, connect, phantom?.solana]);
 
   return { connect };
 }

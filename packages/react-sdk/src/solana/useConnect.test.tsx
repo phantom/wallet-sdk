@@ -46,7 +46,7 @@ describe("useConnect", () => {
     expect(window.phantom.solana.connect).toHaveBeenCalled();
   });
 
-  it("should automatically connect when autoConnect is true", async () => {
+  it("should automatically connect when autoConnect is true", () => {
     // @ts-expect-error - window.phantom is not typed
     window.phantom = {
       solana: {
@@ -60,7 +60,7 @@ describe("useConnect", () => {
     expect(window.phantom.solana.connect).toHaveBeenCalled();
   });
 
-  it("should not automatically connect when autoConnect is false", async () => {
+  it("should not automatically connect when autoConnect is false", () => {
     // @ts-expect-error - window.phantom is not typed
     window.phantom = {
       solana: {
