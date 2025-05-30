@@ -3,6 +3,7 @@ node_modules
 **/jest.config.js
 sharedJestConfig.js
 dist/
+dist
 **/dist/
 **/node_modules/
 /**/node_modules/*
@@ -11,3 +12,5 @@ dist/
 **/*.spec.ts
 **/*.test.ts
 **/vite.config.ts
+
+
