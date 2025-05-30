@@ -5,7 +5,8 @@
     "moduleResolution": "bundler",
     "rootDir": "src",
     "lib": ["dom", "esnext"],
-    "types": ["node", "jest"]
+    "types": ["node", "jest"],
+    "isolatedModules": true
   },
   "include": ["src/**/*", "src/**/*.test.ts", "src/**/*.spec.ts"]
 }
