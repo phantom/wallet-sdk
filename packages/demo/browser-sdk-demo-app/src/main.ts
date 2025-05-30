@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Phantom instance created:", phantomInstance);
 
     const connectBtn = document.getElementById("connectBtn") as HTMLButtonElement;
+    const getAccountBtn = document.getElementById("getAccountBtn") as HTMLButtonElement;
     const signMessageBtn = document.getElementById("signMessageBtn") as HTMLButtonElement;
     const signTransactionBtn = document.getElementById("signTransactionBtn") as HTMLButtonElement;
     const disconnectBtn = document.getElementById("disconnectBtn") as HTMLButtonElement;
@@ -26,6 +27,8 @@ document.addEventListener("DOMContentLoaded", () => {
           userPublicKey = connectResult ?? null;
           if (userPublicKey) {
             alert(`Connected: ${userPublicKey}`);
+            if (signMessageBtn) signMessageBtn.disabled = false;
+            if (signTransactionBtn) signTransactionBtn.disabled = false;
           } else {
             alert("Connected, but public key was not retrieved.");
           }
@@ -38,8 +41,30 @@ document.addEventListener("DOMContentLoaded", () => {
       };
     }
 
+    if (getAccountBtn) {
+      getAccountBtn.onclick = async () => {
+        try {
+          const accountResult = await phantomInstance.solana.getAccount();
+          if (accountResult && accountResult.status === "connected") {
+            userPublicKey = accountResult.publicKey;
+            console.log("Account retrieved:", accountResult);
+            alert(`Account retrieved: ${accountResult.publicKey}`);
+            
+            if (signMessageBtn) signMessageBtn.disabled = false;
+            if (signTransactionBtn) signTransactionBtn.disabled = false;
+            if (disconnectBtn) disconnectBtn.disabled = false;
+          } else {
+            alert("No account found or user denied access.");
+          }
+        } catch (error) {
+          console.error("Error getting account:", error);
+          alert(`Error getting account: ${(error as Error).message || error}`);
+        }
+      };
+    }
+
     if (signMessageBtn) {
-      signMessageBtn.disabled = false;
+      signMessageBtn.disabled = !userPublicKey;
       signMessageBtn.onclick = async () => {
         try {
           if (!phantomInstance.solana.getProvider() || !userPublicKey) {
@@ -58,7 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (signTransactionBtn) {
-      signTransactionBtn.disabled = false;
+      signTransactionBtn.disabled = !userPublicKey;
       signTransactionBtn.onclick = async () => {
         try {
           const provider = phantomInstance.solana.getProvider();
