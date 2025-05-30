@@ -1,5 +1,13 @@
 # @phantom/react-sdk
 
+## 0.0.4
+
+### Patch Changes
+
+- 805bb86: small fixes and improvements
+- Updated dependencies [805bb86]
+  - @phantom/browser-sdk@0.0.4
+
 ## 0.0.3
 
 ### Patch Changes
