@@ -9,11 +9,13 @@ import { usePhantom } from "../PhantomContext";
 export function useDisconnect() {
   const { phantom } = usePhantom();
 
-  return React.useCallback(async () => {
+  const disconnect = React.useCallback(async () => {
     if (!phantom?.solana) {
       throw new Error("Phantom solana disconnect method not found.");
     }
 
     return await phantom.solana.disconnect();
   }, [phantom]);
-} 
+
+  return { disconnect };
+}

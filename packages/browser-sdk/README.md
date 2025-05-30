@@ -106,4 +106,58 @@ Once the `phantom.solana` object is initialized, you can access the following me
 - `signAndSendTransaction(transaction: Transaction, connection?: Connection, options?: SendOptions): Promise<TransactionSignature>`
   - Prompts the user to sign and then sends the transaction. (Requires `@solana/web3.js` for `Transaction` object)
 
+### Event Handling
+
+The SDK also allows you to listen for `connect`, `disconnect`, and `accountChanged` events:
+
+- `addEventListener(event: PhantomEventType, callback: PhantomEventCallback): () => void`
+
+  - Registers a callback that will be invoked when the specified event occurs.
+  - For the `connect` event, the callback receives the public key (as a string) of the connected account.
+  - For the `disconnect` event, the callback receives no arguments.
+  - For the `accountChanged` event, the callback receives the new public key (as a string).
+  - Returns a function that, when called, will unregister the callback.
+  - Multiple callbacks can be registered for the same event.
+
+  **Example:**
+
+  ```typescript
+  const phantom = createPhantom({ chainPlugins: [createSolanaPlugin()] });
+
+  const handleConnect = (publicKey: string) => {
+    console.log(`Wallet connected with public key: ${publicKey}`);
+  };
+
+  const clearConnectListener = phantom.solana.addEventListener("connect", handleConnect);
+
+  const handleAccountChanged = (newPublicKey: string) => {
+    console.log(`Account changed to: ${newPublicKey}`);
+  };
+
+  const clearAccountChangedListener = phantom.solana.addEventListener("accountChanged", handleAccountChanged);
+
+  // To stop listening for a specific event:
+  // clearConnectListener();
+  // clearAccountChangedListener();
+  ```
+
+- `removeEventListener(event: PhantomEventType, callback: PhantomEventCallback): void`
+
+  - Unregisters a previously registered callback for the specified event.
+
+  **Example:**
+
+  ```typescript
+  const phantom = createPhantom({ chainPlugins: [createSolanaPlugin()] });
+
+  const handleDisconnect = () => {
+    console.log("Wallet disconnected");
+  };
+
+  phantom.solana.addEventListener("disconnect", handleDisconnect);
+
+  // To stop listening for this specific disconnect event:
+  // phantom.solana.removeEventListener("disconnect", handleDisconnect);
+  ```
+
 Please refer to the Phantom documentation and the `@solana/web3.js` library for more details on constructing transactions and interacting with the Solana blockchain.

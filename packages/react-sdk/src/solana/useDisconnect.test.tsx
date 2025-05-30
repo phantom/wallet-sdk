@@ -21,7 +21,13 @@ describe("useDisconnect", () => {
       wrapper: ({ children }) => <PhantomProvider config={{}}>{children}</PhantomProvider>,
     });
 
-    await expect(result.current()).rejects.toThrow("Phantom solana disconnect method not found.");
+    await expect(result.current.disconnect()).rejects.toThrow("Phantom solana disconnect method not found.");
+  });
+
+  it("should throw error when phantom provider is not available", async () => {
+    const { result } = renderHook(() => useDisconnect(), sharedConfig);
+
+    await expect(result.current.disconnect()).rejects.toThrow("Phantom provider not found.");
   });
 
   it("should successfully disconnect when phantom.solana is available", async () => {
@@ -34,7 +40,7 @@ describe("useDisconnect", () => {
 
     const { result } = renderHook(() => useDisconnect(), sharedConfig);
 
-    await result.current();
+    await result.current.disconnect();
 
     // @ts-expect-error - window.phantom is not typed
     expect(window.phantom.solana.disconnect).toHaveBeenCalled();

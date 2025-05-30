@@ -3,11 +3,7 @@ const config = {
   testEnvironment: "jsdom",
   transform: {
     "^.+\\.(ts|tsx)$": [
-      "ts-jest",
-      {
-        tsconfig: "tsconfig.json",
-        babelConfig: true,
-      },
+      "ts-jest"
     ],
   },
   testMatch: ["<rootDir>/src/**/*.test.{ts,tsx}"],

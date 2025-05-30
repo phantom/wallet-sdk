@@ -9,9 +9,6 @@ const config = {
     "<rootDir>/packages/demo/react-sdk-demo-app",
     "<rootDir>/packages/demo/browser-sdk-demo-app",
   ],
-  
-  // Add a top-level testEnvironment as a fallback, though it should be per-project.
-  testEnvironment: "jsdom",
  
 };
 

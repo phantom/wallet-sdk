@@ -4,8 +4,8 @@ import { useConnect, useDisconnect } from "@phantom/react-sdk/solana";
 
 export function Actions() {
   const [publicKey, setPublicKey] = React.useState<string | null>(null);
-  const connect = useConnect();
-  const disconnect = useDisconnect();
+  const { connect } = useConnect();
+  const { disconnect } = useDisconnect();
 
   const onConnect = async () => {
     try {

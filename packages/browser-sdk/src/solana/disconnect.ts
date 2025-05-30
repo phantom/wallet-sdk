@@ -1,4 +1,5 @@
 import { getProvider } from "./getProvider";
+import { triggerEvent } from "./eventListeners";
 
 export async function disconnect() {
   const provider = getProvider();
@@ -7,4 +8,5 @@ export async function disconnect() {
   }
 
   await provider.disconnect();
+  triggerEvent("disconnect");
 }

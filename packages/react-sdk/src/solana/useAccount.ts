@@ -33,6 +33,7 @@ export function useAccount(): UseAccountResult {
     if (!isReady) return;
     assertSolanaConfigured(phantom);
 
+    // TODO: this probably should be in the isReady check from usePhantom instead of useProvider
     if (providerStatus !== "success" || !provider) return;
 
     if (account.status === "loading") {
@@ -43,14 +44,14 @@ export function useAccount(): UseAccountResult {
       setAccount(phantom.solana.getAccount());
     };
 
-    provider.on("connect", updateAccount);
-    provider.on("disconnect", updateAccount);
-    provider.on("accountChanged", updateAccount);
+    phantom.solana.addEventListener("connect", updateAccount);
+    phantom.solana.addEventListener("disconnect", updateAccount);
+    phantom.solana.addEventListener("accountChanged", updateAccount);
 
     return () => {
-      provider.off("connect", updateAccount);
-      provider.off("disconnect", updateAccount);
-      provider.off("accountChanged", updateAccount);
+      phantom.solana.removeEventListener("connect", updateAccount);
+      phantom.solana.removeEventListener("disconnect", updateAccount);
+      phantom.solana.removeEventListener("accountChanged", updateAccount);
     };
   }, [provider, phantom, providerStatus, isReady, account.status]);
 
