@@ -43,15 +43,14 @@ async function connectAndSign() {
     }
 
     // Attempt to connect to the wallet
-    // The actual connect method might be part of the provider,
-    // this example assumes a common pattern.
-    // You might need to call provider.connect() or a similar method
-    // depending on the provider's API.
-    // For instance, with Solana's window.solana, it's often implicit or handled by specific actions.
+    const connectionResult = await phantom.solana.connect();
+    console.log("Connection Result:", connectionResult.publicKey.toString());
 
     // Example: Sign in (if supported by the specific provider/plugin)
-    const signInResult = await phantom.solana.signIn();
-    console.log("Sign In Result:", signInResult);
+    // Construct SolanaSignInData according to your needs
+    const signInData = { domain: window.location.host, statement: "Please sign in to access this dApp." };
+    const signInResult = await phantom.solana.signIn(signInData);
+    console.log("Sign In Result:", signInResult.address.toString());
 
     // Example: Sign a message
     const message = new TextEncoder().encode("Hello from Phantom Browser SDK!");
@@ -76,7 +75,7 @@ async function connectAndSign() {
 
     // The SDK provides `signAndSendTransaction` which may handle connection internally or require it
     // Check the specific implementation or provider documentation
-    const signature = await phantom.solana.signAndSendTransaction(transaction, connection); // Adjust based on actual API
+    const signature = await phantom.solana.signAndSendTransaction(transaction); // Removed connection parameter
     console.log('Transaction Signature:', signature);
     */
   } catch (error) {
@@ -97,14 +96,17 @@ Once the `phantom.solana` object is initialized, you can access the following me
   - Connects to the Phantom wallet. Optionally, `onlyIfTrusted` can be set to true to only connect if the dApp is already trusted.
 - `disconnect(): Promise<void>`
   - Disconnects from the Phantom wallet.
-- `getAccount(): { status: "connected" | "disconnected"; publicKey: string | null }`
-  - Gets the current connected account state. When account is connected returns a public key, when it's not returns it as null.
-- `signIn(): Promise<SignInResult>`
-  - Initiates a sign-in request to the wallet.
-- `signMessage(message: Uint8Array | string, display?: 'utf8' | 'hex'): Promise<SignedMessage>`
-  - Prompts the user to sign a given message.
-- `signAndSendTransaction(transaction: Transaction, connection?: Connection, options?: SendOptions): Promise<TransactionSignature>`
-  - Prompts the user to sign and then sends the transaction. (Requires `@solana/web3.js` for `Transaction` object)
+- `getAccount(): { status: "connected"; publicKey: string } | { status: "disconnected"; publicKey: null }`
+  - Gets the current connected account state. Returns an object with `status` and `publicKey`.
+- `signIn(signInData: SolanaSignInData): Promise<{ address: PublicKey; signature: Uint8Array; signedMessage: Uint8Array }>`
+  - Initiates a sign-in request to the wallet. `SolanaSignInData` is a type imported from `@phantom/browser-sdk/solana`.
+  - Returns a promise that resolves with the `address` (PublicKey), `signature` (Uint8Array), and `signedMessage` (Uint8Array).
+- `signMessage(message: Uint8Array, display?: 'utf8' | 'hex'): Promise<{ signature: Uint8Array; publicKey: PublicKey }>`
+  - Prompts the user to sign a given message (as `Uint8Array`). The optional `display` parameter can be 'utf8' or 'hex'.
+  - Returns a promise that resolves with the `signature` (Uint8Array) and `publicKey` (PublicKey).
+- `signAndSendTransaction(transaction: Transaction | VersionedTransaction, options?: SendOptions): Promise<{ signature: string; publicKey?: string }>`
+  - Prompts the user to sign and then sends the transaction. `Transaction` and `VersionedTransaction` are from `@solana/web3.js`. `SendOptions` is also from `@solana/web3.js`.
+  - Returns a promise that resolves with the `signature` (string) and an optional `publicKey` (string).
 
 ### Event Handling
 

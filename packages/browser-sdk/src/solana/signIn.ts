@@ -1,6 +1,5 @@
 import { getProvider } from "./getProvider";
 import type { PhantomSolanaProvider, SolanaSignInData } from "./types";
-import type { PublicKey } from "@solana/web3.js";
 
 /**
  * Signs in with Solana using the Phantom provider.
@@ -10,7 +9,7 @@ import type { PublicKey } from "@solana/web3.js";
  */
 export async function signIn(
   signInData: SolanaSignInData,
-): Promise<{ address: PublicKey; signature: Uint8Array; signedMessage: Uint8Array }> {
+): Promise<{ address: string; signature: Uint8Array; signedMessage: Uint8Array }> {
   const provider = getProvider() as PhantomSolanaProvider | null;
 
   if (!provider) {
@@ -20,5 +19,10 @@ export async function signIn(
     throw new Error("The connected provider does not support signIn.");
   }
   // No isConnected check typically needed for signIn, as it might establish connection
-  return provider.signIn(signInData);
+  const result = await provider.signIn(signInData);
+  return {
+    address: result.address.toString(),
+    signature: result.signature,
+    signedMessage: result.signedMessage,
+  };
 }
