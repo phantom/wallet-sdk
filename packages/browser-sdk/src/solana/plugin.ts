@@ -6,12 +6,15 @@ import { signAndSendTransaction } from "./signAndSendTransaction";
 import type { PhantomSolanaProvider } from "./types";
 import { connect } from "./connect";
 import { disconnect } from "./disconnect";
+import { getAccount } from "./getAccount";
 
 export type Solana = {
   getProvider: () => PhantomSolanaProvider | null;
 
   connect: typeof connect;
   disconnect: typeof disconnect;
+
+  getAccount: typeof getAccount;
 
   signMessage: typeof signMessage;
   signIn: typeof signIn;
@@ -22,6 +25,7 @@ const solana: Solana = {
   getProvider,
   connect,
   disconnect,
+  getAccount,
   signMessage,
   signIn,
   signAndSendTransaction,
