@@ -58,7 +58,13 @@ import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
 <PhantomProvider config={{ chainPlugins: [createSolanaPlugin()] }}>{children}</PhantomProvider>;
 ```
 
-### useProvider (Solana)
+### usePhantom
+
+The `usePhantom` hoo provides access to the phantom instance. With Phantom instance you can call browser-sdk methods directly.
+
+## Solana API Reference
+
+### useProvider
 
 The `useProvider` hook provides access to the Solana provider with automatic retry logic and state management.
 
@@ -128,3 +134,13 @@ function MyComponent() {
   // ...
 }
 ```
+### useAccount
+
+The `useAccount` hook provides access the currently connected account state. It is reactive and changes according to the connected account state.
+
+#### Return Value
+
+The hook returns an object with the following properties:
+
+- `status: 'loading' | 'connected' | 'disconnected'` - Current account status
+- `publicKey: string | null` - Current public key of the connected account or null when account is not connected.
