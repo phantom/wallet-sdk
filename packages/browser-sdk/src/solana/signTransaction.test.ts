@@ -1,7 +1,8 @@
 import { signTransaction } from "./signTransaction";
 import { getProvider as defaultGetProvider } from "./getProvider";
 import type { PhantomSolanaProvider } from "./types";
-import type { Transaction, VersionedTransaction } from "@solana/web3.js";
+import type { Transaction } from "@solana/kit";
+import type { VersionedTransaction } from "@solana/web3.js";
 import { connect } from "./connect";
 
 jest.mock("./getProvider", () => ({
@@ -17,12 +18,24 @@ const mockConnect = connect as jest.MockedFunction<typeof connect>;
 const mockTransaction = {} as Transaction;
 const mockVersionedTransaction = {} as VersionedTransaction;
 
+jest.mock("./utils/transactionToVersionedTransaction", () => ({
+  transactionToVersionedTransaction: jest.fn(),
+}));
+jest.mock("@solana/compat", () => ({
+  fromVersionedTransaction: jest.fn(),
+}));
+
+import { transactionToVersionedTransaction } from "./utils/transactionToVersionedTransaction";
+import { fromVersionedTransaction } from "@solana/compat";
+
 describe("signTransaction", () => {
   let mockProvider: Partial<PhantomSolanaProvider>;
 
   beforeEach(() => {
     mockDefaultGetProvider.mockReset();
     mockConnect.mockReset();
+    (transactionToVersionedTransaction as jest.Mock).mockReset();
+    (fromVersionedTransaction as jest.Mock).mockReset();
     mockProvider = {
       signTransaction: jest.fn(),
       isConnected: true,
@@ -30,26 +43,17 @@ describe("signTransaction", () => {
     mockDefaultGetProvider.mockReturnValue(mockProvider as PhantomSolanaProvider);
   });
 
-  it("should call provider.signTransaction for a legacy transaction", async () => {
-    const expectedSignedTransaction = mockTransaction;
-    (mockProvider.signTransaction as jest.Mock).mockResolvedValue(expectedSignedTransaction);
+  it("should call provider.signTransaction with converted transaction and return Kit transaction", async () => {
+    (transactionToVersionedTransaction as jest.Mock).mockReturnValue(mockVersionedTransaction);
+    (mockProvider.signTransaction as jest.Mock).mockResolvedValue(mockVersionedTransaction);
+    (fromVersionedTransaction as jest.Mock).mockReturnValue(mockTransaction);
 
     const result = await signTransaction(mockTransaction);
 
-    expect(mockDefaultGetProvider).toHaveBeenCalledTimes(1);
-    expect(mockProvider.signTransaction).toHaveBeenCalledWith(mockTransaction);
-    expect(result).toEqual(expectedSignedTransaction);
-  });
-
-  it("should call provider.signTransaction for a versioned transaction", async () => {
-    const expectedSignedTransaction = mockVersionedTransaction;
-    (mockProvider.signTransaction as jest.Mock).mockResolvedValue(expectedSignedTransaction);
-
-    const result = await signTransaction(mockVersionedTransaction);
-
-    expect(mockDefaultGetProvider).toHaveBeenCalledTimes(1);
+    expect(transactionToVersionedTransaction).toHaveBeenCalledWith(mockTransaction);
     expect(mockProvider.signTransaction).toHaveBeenCalledWith(mockVersionedTransaction);
-    expect(result).toEqual(expectedSignedTransaction);
+    expect(fromVersionedTransaction).toHaveBeenCalledWith(mockVersionedTransaction);
+    expect(result).toEqual(mockTransaction);
   });
 
   it("should throw an error if provider is not found", async () => {
@@ -76,7 +80,9 @@ describe("signTransaction", () => {
       return Promise.resolve("mockPublicKeyString");
     });
 
-    (mockProvider.signTransaction as jest.Mock).mockResolvedValue(expectedSignedTransaction);
+    (transactionToVersionedTransaction as jest.Mock).mockReturnValue(mockVersionedTransaction);
+    (mockProvider.signTransaction as jest.Mock).mockResolvedValue(mockVersionedTransaction);
+    (fromVersionedTransaction as jest.Mock).mockReturnValue(expectedSignedTransaction);
 
     const result = await signTransaction(mockTransaction);
 
@@ -84,7 +90,7 @@ describe("signTransaction", () => {
     expect(mockConnect).toHaveBeenCalledTimes(1);
     expect(mockConnect).toHaveBeenCalledWith();
     expect(mockProvider.isConnected).toBe(true);
-    expect(mockProvider.signTransaction).toHaveBeenCalledWith(mockTransaction);
+    expect(mockProvider.signTransaction).toHaveBeenCalledWith(mockVersionedTransaction);
     expect(result).toEqual(expectedSignedTransaction);
   });
 

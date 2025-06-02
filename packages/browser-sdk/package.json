@@ -33,6 +33,8 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
+    "@solana/compat": "2.1.1",
+    "@solana/kit": "^2.1.1",
     "@solana/web3.js": "^1.98.2"
   }
 }

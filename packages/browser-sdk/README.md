@@ -59,25 +59,20 @@ async function connectAndSign() {
     console.log("Signed Message:", signedMessage);
 
     // Example: Sign and send a transaction
-    // Note: Constructing a real transaction requires @solana/web3.js
-    // This is a conceptual example.
+
     /*
-    import { Connection, SystemProgram, Transaction, sendAndConfirmTransaction } from '@solana/web3.js';
+    import { createTransfer } from "@solana/transactions";
 
-    // Placeholder for a real transaction
-    const transaction = new Transaction().add(
-      SystemProgram.transfer({
-        fromPubkey: provider.publicKey, // Assuming provider has publicKey
-        toPubkey: provider.publicKey, // Sending to self for example
-        lamports: 1000,
-      })
-    );
-    const connection = new Connection("https://api.devnet.solana.com"); // or your desired cluster
+    // Build a simple transfer of 1 000 lamports back to ourselves.
+    // `createTransfer` is an illustrative helper – use whichever builder you prefer.
+    const transaction = createTransfer({
+      from: provider.publicKey!.toString(),
+      to: provider.publicKey!.toString(),
+      lamports: 1_000,
+    });
 
-    // The SDK provides `signAndSendTransaction` which may handle connection internally or require it
-    // Check the specific implementation or provider documentation
-    const signature = await phantom.solana.signAndSendTransaction(transaction, connection); // Adjust based on actual API
-    console.log('Transaction Signature:', signature);
+    const { signature } = await phantom.solana.signAndSendTransaction(transaction);
+    console.log("Transaction Signature:", signature);
     */
   } catch (error) {
     console.error("Error interacting with Phantom:", error);
@@ -103,8 +98,8 @@ Once the `phantom.solana` object is initialized, you can access the following me
   - Initiates a sign-in request to the wallet.
 - `signMessage(message: Uint8Array | string, display?: 'utf8' | 'hex'): Promise<SignedMessage>`
   - Prompts the user to sign a given message.
-- `signAndSendTransaction(transaction: Transaction, connection?: Connection, options?: SendOptions): Promise<TransactionSignature>`
-  - Prompts the user to sign and then sends the transaction. (Requires `@solana/web3.js` for `Transaction` object)
+- `signAndSendTransaction(transaction: Transaction): Promise<{ signature: string; publicKey?: string }>`
+  - Prompts the user to sign **and send** a Kit `Transaction` and returns the confirmed signature.
 
 ### Event Handling
 
