@@ -6,6 +6,7 @@ import {
   useSignAndSendTransaction,
   useSignMessage,
   useAccount,
+  useAccountEffect,
 } from "@phantom/react-sdk/solana";
 import { PublicKey, Transaction, SystemProgram, Connection } from "@solana/web3.js"; // Added for transaction creation
 
@@ -16,6 +17,21 @@ export function Actions() {
   const { signIn } = useSignIn();
   const { signAndSendTransaction } = useSignAndSendTransaction();
   const { signMessage } = useSignMessage();
+
+  useAccountEffect({
+    onConnect: data => {
+      // eslint-disable-next-line no-console
+      console.log("Connected to Phantom with public key:", data.publicKey);
+    },
+    onDisconnect: () => {
+      // eslint-disable-next-line no-console
+      console.log("Disconnected from Phantom");
+    },
+    onAccountChanged: data => {
+      // eslint-disable-next-line no-console
+      console.log("Account changed to:", data.publicKey);
+    },
+  });
 
   const onConnect = async () => {
     try {
