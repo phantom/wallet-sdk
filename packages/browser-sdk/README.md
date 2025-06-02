@@ -43,15 +43,14 @@ async function connectAndSign() {
     }
 
     // Attempt to connect to the wallet
-    // The actual connect method might be part of the provider,
-    // this example assumes a common pattern.
-    // You might need to call provider.connect() or a similar method
-    // depending on the provider's API.
-    // For instance, with Solana's window.solana, it's often implicit or handled by specific actions.
+    const connectionResult = await phantom.solana.connect();
+    console.log("Connection Result:", connectionResult.publicKey.toString());
 
     // Example: Sign in (if supported by the specific provider/plugin)
-    const signInResult = await phantom.solana.signIn();
-    console.log("Sign In Result:", signInResult);
+    // Construct SolanaSignInData according to your needs
+    const signInData = { domain: window.location.host, statement: "Please sign in to access this dApp." };
+    const signInResult = await phantom.solana.signIn(signInData);
+    console.log("Sign In Result:", signInResult.address.toString());
 
     // Example: Sign a message
     const message = new TextEncoder().encode("Hello from Phantom Browser SDK!");
