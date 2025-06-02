@@ -28,6 +28,7 @@
     "test": "jest"
   },
   "devDependencies": {
+    "@solana/web3.js": "^1.98.2",
     "eslint": "8.53.0",
     "tsup": "^6.7.0",
     "typescript": "^5.0.4"
@@ -35,7 +36,6 @@
   "dependencies": {
     "@solana/compat": "2.1.1",
     "@solana/kit": "^2.1.1",
-    "@solana/transactions": "^2.1.1",
-    "@solana/web3.js": "^1.98.2"
+    "@solana/transactions": "^2.1.1"
   }
 }
