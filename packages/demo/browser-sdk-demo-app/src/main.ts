@@ -54,9 +54,9 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
           const accountResult = await phantomInstance.solana.getAccount();
           if (accountResult && accountResult.status === "connected") {
-            userPublicKey = accountResult.publicKey;
+            userPublicKey = accountResult.address;
             console.log("Account retrieved:", accountResult);
-            alert(`Account retrieved: ${accountResult.publicKey}`);
+            alert(`Account retrieved: ${accountResult.address}`);
 
             if (signMessageBtn) signMessageBtn.disabled = false;
             if (signTransactionBtn) signTransactionBtn.disabled = false;

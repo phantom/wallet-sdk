@@ -44,35 +44,18 @@ async function connectAndSign() {
 
     // Attempt to connect to the wallet
     const connectionResult = await phantom.solana.connect();
-    console.log("Connection Result:", connectionResult.publicKey.toString());
+    console.log("Connection Result:", connectionResult.address);
 
     // Example: Sign in (if supported by the specific provider/plugin)
     // Construct SolanaSignInData according to your needs
     const signInData = { domain: window.location.host, statement: "Please sign in to access this dApp." };
     const signInResult = await phantom.solana.signIn(signInData);
-    console.log("Sign In Result:", signInResult.address.toString());
+    console.log("Sign In Result:", signInResult.address);
 
     // Example: Sign a message
     const message = new TextEncoder().encode("Hello from Phantom Browser SDK!");
     const signedMessage = await phantom.solana.signMessage(message, "utf8");
     console.log("Signed Message:", signedMessage);
-
-    // Example: Sign and send a transaction
-
-    /*
-    import { createTransfer } from "@solana/transactions";
-
-    // Build a simple transfer of 1 000 lamports back to ourselves.
-    // `createTransfer` is an illustrative helper – use whichever builder you prefer.
-    const transaction = createTransfer({
-      from: provider.publicKey!.toString(),
-      to: provider.publicKey!.toString(),
-      lamports: 1_000,
-    });
-
-    const { signature } = await phantom.solana.signAndSendTransaction(transaction);
-    console.log("Transaction Signature:", signature);
-    */
   } catch (error) {
     console.error("Error interacting with Phantom:", error);
   }
@@ -87,17 +70,17 @@ Once the `phantom.solana` object is initialized, you can access the following me
 
 - `getProvider(): PhantomSolanaProvider | null`
   - Retrieves the Phantom Solana provider instance.
-- `connect(opts?: { onlyIfTrusted?: boolean }): Promise<{ publicKey: PublicKey }>`
+- `connect(opts?: { onlyIfTrusted?: boolean }): Promise<string>`
   - Connects to the Phantom wallet. Optionally, `onlyIfTrusted` can be set to true to only connect if the dApp is already trusted.
 - `disconnect(): Promise<void>`
   - Disconnects from the Phantom wallet.
-- `getAccount(): { status: "connected" | "disconnected"; publicKey: string | null }`
+- `getAccount(): { status: "connected" | "disconnected"; address: string | null }`
   - Gets the current connected account state. When account is connected returns a public key, when it's not returns it as null.
 - `signIn(): Promise<SignInResult>`
   - Initiates a sign-in request to the wallet.
 - `signMessage(message: Uint8Array | string, display?: 'utf8' | 'hex'): Promise<SignedMessage>`
   - Prompts the user to sign a given message.
-- `signAndSendTransaction(transaction: Transaction): Promise<{ signature: string; publicKey?: string }>`
+- `signAndSendTransaction(transaction: Transaction): Promise<{ signature: string; address?: string }>`
   - Prompts the user to sign **and send** a Kit `Transaction` and returns the confirmed signature.
 
 ### Event Handling
@@ -118,14 +101,14 @@ The SDK also allows you to listen for `connect`, `disconnect`, and `accountChang
   ```typescript
   const phantom = createPhantom({ chainPlugins: [createSolanaPlugin()] });
 
-  const handleConnect = (publicKey: string) => {
-    console.log(`Wallet connected with public key: ${publicKey}`);
+  const handleConnect = (address: string) => {
+    console.log(`Wallet connected with public key: ${address}`);
   };
 
   const clearConnectListener = phantom.solana.addEventListener("connect", handleConnect);
 
-  const handleAccountChanged = (newPublicKey: string) => {
-    console.log(`Account changed to: ${newPublicKey}`);
+  const handleAccountChanged = (newAddress: string) => {
+    console.log(`Account changed to: ${newAddress}`);
   };
 
   const clearAccountChangedListener = phantom.solana.addEventListener("accountChanged", handleAccountChanged);
@@ -154,4 +137,34 @@ The SDK also allows you to listen for `connect`, `disconnect`, and `accountChang
   // phantom.solana.removeEventListener("disconnect", handleDisconnect);
   ```
 
-Please refer to the Phantom documentation and the `@solana/web3.js` library for more details on constructing transactions and interacting with the Solana blockchain.
+### Creating a transaction
+
+Phantom's SDK uses the `@solana/kit` library to create transactions. You can use the `createTransactionMessage` function to create a transaction message.
+
+```typescript
+import {
+  createSolanaRpc,
+  pipe,
+  createTransactionMessage,
+  setTransactionMessageFeePayer,
+  setTransactionMessageLifetimeUsingBlockhash,
+  address,
+  compileTransaction,
+} from "@solana/kit";
+
+// Example: Sign and send a transaction
+
+const rpc = createSolanaRpc("https://my-rpc-url.com"); // Replace with your own RPC URL
+
+const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
+
+const transactionMessage = pipe(
+  createTransactionMessage({ version: 0 }),
+  tx => setTransactionMessageFeePayer(address(userPublicKey as string), tx),
+  tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
+);
+
+const transaction = compileTransaction(transactionMessage);
+
+const { signature } = await phantomInstance.solana.signAndSendTransaction(transaction);
+```

@@ -3,11 +3,11 @@ import { getProvider } from "./getProvider";
 type GetAccountResult =
   | {
       status: "connected";
-      publicKey: string;
+      address: string;
     }
   | {
       status: "disconnected";
-      publicKey: null;
+      address: null;
     };
 
 export function getAccount(): GetAccountResult {
@@ -16,11 +16,11 @@ export function getAccount(): GetAccountResult {
   if (provider && provider.isConnected && provider.publicKey) {
     return {
       status: "connected",
-      publicKey: provider.publicKey.toString(),
+      address: provider.publicKey.toString(),
     };
   }
   return {
     status: "disconnected",
-    publicKey: null,
+    address: null,
   };
 }

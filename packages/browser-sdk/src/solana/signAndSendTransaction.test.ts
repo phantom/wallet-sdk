@@ -1,8 +1,7 @@
 import { signAndSendTransaction } from "./signAndSendTransaction";
 import { getProvider as defaultGetProvider } from "./getProvider";
-import type { PhantomSolanaProvider } from "./types";
+import type { PhantomSolanaProvider, VersionedTransaction } from "./types";
 import type { Transaction } from "@solana/kit";
-import type { VersionedTransaction } from "@solana/web3.js";
 import { connect } from "./connect";
 import { transactionToVersionedTransaction } from "./utils/transactionToVersionedTransaction";
 
@@ -38,10 +37,13 @@ describe("signAndSendTransaction", () => {
   });
 
   it("should use default getProvider for a transaction", async () => {
-    const expectedResult = { signature: "mockSig", publicKey: "mockKey" };
+    const expectedResult = { signature: "mockSig", address: "mockKey" };
 
     (transactionToVersionedTransaction as jest.Mock).mockReturnValue(mockVersionedTransaction);
-    (mockProvider.signAndSendTransaction as jest.Mock).mockResolvedValue(expectedResult);
+    (mockProvider.signAndSendTransaction as jest.Mock).mockResolvedValue({
+      signature: "mockSig",
+      publicKey: "mockKey",
+    });
 
     const result = await signAndSendTransaction(mockTransaction);
 
@@ -64,7 +66,7 @@ describe("signAndSendTransaction", () => {
   });
 
   it("should call connect if provider is not initially connected, then proceed", async () => {
-    const expectedResult = { signature: "mockSig", publicKey: "mockKey" };
+    const expectedResult = { signature: "mockSig", address: "mockKey" };
     mockProvider.isConnected = false;
     mockConnect.mockImplementation(async () => {
       // Simulate connect updating the provider's state
@@ -73,7 +75,10 @@ describe("signAndSendTransaction", () => {
       return Promise.resolve("somePublicKey");
     });
     (transactionToVersionedTransaction as jest.Mock).mockReturnValue(mockVersionedTransaction);
-    (mockProvider.signAndSendTransaction as jest.Mock).mockResolvedValue(expectedResult);
+    (mockProvider.signAndSendTransaction as jest.Mock).mockResolvedValue({
+      signature: "mockSig",
+      publicKey: "mockKey",
+    });
     mockDefaultGetProvider.mockReturnValue(mockProvider as PhantomSolanaProvider);
 
     const result = await signAndSendTransaction(mockTransaction);

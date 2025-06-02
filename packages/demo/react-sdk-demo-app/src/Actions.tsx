@@ -7,10 +7,18 @@ import {
   useSignMessage,
   useAccount,
 } from "@phantom/react-sdk/solana";
-import { PublicKey, Transaction, SystemProgram, Connection } from "@solana/web3.js"; // Added for transaction creation
+import {
+  createSolanaRpc,
+  pipe,
+  createTransactionMessage,
+  setTransactionMessageFeePayer,
+  setTransactionMessageLifetimeUsingBlockhash,
+  address,
+  compileTransaction,
+} from "@solana/kit";
 
 export function Actions() {
-  const { publicKey, status } = useAccount();
+  const { address: userAddress, status } = useAccount();
   const { connect } = useConnect();
   const { disconnect } = useDisconnect();
   const { signIn } = useSignIn();
@@ -37,7 +45,7 @@ export function Actions() {
   };
 
   const onSignIn = async () => {
-    if (!publicKey) {
+    if (!userAddress) {
       alert("Please connect your wallet first.");
       return;
     }
@@ -45,7 +53,7 @@ export function Actions() {
       // Example sign-in data. Adjust according to your dApp's requirements.
       const signInData = {
         domain: window.location.host,
-        address: publicKey,
+        address: userAddress,
         statement: "Sign in to the demo app.",
         // nonce: "oAuthNonce", // Optional: for preventing replay attacks
         // chainId: "mainnet-beta", // Optional: specify the chain
@@ -63,14 +71,14 @@ export function Actions() {
   };
 
   const onSignMessage = async () => {
-    if (!publicKey) {
+    if (!userAddress) {
       alert("Please connect your wallet first.");
       return;
     }
     try {
       const message = new TextEncoder().encode("Hello from Phantom React SDK Demo!");
       const result = await signMessage(message);
-      alert(`Message Signed! Signature: ${result.signature}, Public Key: ${result.publicKey}`);
+      alert(`Message Signed! Signature: ${result.signature}, Public Key: ${result.address}`);
     } catch (error) {
       console.error("Error signing message:", error);
       alert(`Error signing message: ${(error as Error).message || error}`);
@@ -78,25 +86,23 @@ export function Actions() {
   };
 
   const onSignAndSendTransaction = async () => {
-    if (!publicKey) {
+    if (!userAddress) {
       alert("Please connect your wallet first.");
       return;
     }
     try {
-      const connection = new Connection("https://api.mainnet-beta.solana.com");
+      const rpc = createSolanaRpc("https://solana-mainnet.g.alchemy.com/v2/Pnb7lrjdZw6df2yXSKDiG");
 
-      const transaction = new Transaction({
-        recentBlockhash: (await connection.getLatestBlockhash()).blockhash,
-      }).add(
-        SystemProgram.transfer({
-          fromPubkey: new PublicKey(publicKey),
-          toPubkey: new PublicKey(publicKey), // Sending to self for demo
-          lamports: 1000000, // 0.001 SOL
-        }),
+      const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
+
+      const transactionMessage = pipe(
+        createTransactionMessage({ version: 0 }),
+        tx => setTransactionMessageFeePayer(address(userAddress), tx),
+        tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
       );
-      // Note: For the transaction to succeed, the connected wallet needs to have a provider
-      // that can fetch recent blockhash and fee payer information.
-      // The Phantom wallet provider handles this.
+
+      const transaction = compileTransaction(transactionMessage);
+
       const { signature } = await signAndSendTransaction(transaction);
       alert(`Transaction sent with signature: ${signature}`);
     } catch (error) {
@@ -110,7 +116,7 @@ export function Actions() {
       <h1>Phantom React SDK Demo</h1>
       <div className="account-info">
         <p>
-          <strong>Account Public Key:</strong> {publicKey}
+          <strong>Account Public Key:</strong> {userAddress}
         </p>
         <p>
           <strong>Account Status:</strong> {status}
@@ -120,16 +126,16 @@ export function Actions() {
         <button id="connectBtn" onClick={onConnect}>
           Connect
         </button>
-        <button id="signInBtn" onClick={onSignIn} disabled={!publicKey}>
+        <button id="signInBtn" onClick={onSignIn} disabled={!userAddress}>
           Sign In (SIWS)
         </button>
-        <button id="signMessageBtn" onClick={onSignMessage} disabled={!publicKey}>
+        <button id="signMessageBtn" onClick={onSignMessage} disabled={!userAddress}>
           Sign Message
         </button>
-        <button id="signAndSendTransactionBtn" onClick={onSignAndSendTransaction} disabled={!publicKey}>
+        <button id="signAndSendTransactionBtn" onClick={onSignAndSendTransaction} disabled={!userAddress}>
           Sign and Send Transaction
         </button>
-        <button id="disconnectBtn" onClick={onDisconnect} disabled={!publicKey}>
+        <button id="disconnectBtn" onClick={onDisconnect} disabled={!userAddress}>
           Disconnect
         </button>
       </div>

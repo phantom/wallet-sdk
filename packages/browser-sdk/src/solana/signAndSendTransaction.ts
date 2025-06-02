@@ -1,7 +1,6 @@
 import { getProvider } from "./getProvider";
-import type { PhantomSolanaProvider } from "./types";
+import type { PhantomSolanaProvider, VersionedTransaction } from "./types";
 import type { Transaction } from "@solana/kit";
-import type { VersionedTransaction } from "@solana/web3.js";
 import { connect } from "./connect";
 import { transactionToVersionedTransaction } from "./utils/transactionToVersionedTransaction";
 
@@ -13,7 +12,7 @@ import { transactionToVersionedTransaction } from "./utils/transactionToVersione
  */
 export async function signAndSendTransaction(
   transaction: Transaction,
-): Promise<{ signature: string; publicKey?: string }> {
+): Promise<{ signature: string; address?: string }> {
   const provider = getProvider() as PhantomSolanaProvider | null;
 
   if (!provider) {
@@ -36,5 +35,9 @@ export async function signAndSendTransaction(
   // Convert the Kit transaction into a web3.js VersionedTransaction before sending.
   const versionedTransaction: VersionedTransaction = transactionToVersionedTransaction(transaction);
 
-  return provider.signAndSendTransaction(versionedTransaction);
+  const result = await provider.signAndSendTransaction(versionedTransaction);
+  return {
+    signature: result.signature,
+    address: result.publicKey,
+  };
 }

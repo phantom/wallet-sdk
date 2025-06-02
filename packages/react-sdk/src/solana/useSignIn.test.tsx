@@ -4,7 +4,6 @@ import { useSignIn } from "./useSignIn";
 import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
 import { PhantomProvider } from "../PhantomContext";
 import type { SolanaSignInData } from "@phantom/browser-sdk/solana";
-import type { PublicKey } from "@solana/web3.js";
 
 const sharedConfig = {
   wrapper: ({ children }: { children: React.ReactNode }) => (
@@ -16,10 +15,6 @@ const mockSignInData: SolanaSignInData = { domain: "example.com", address: "mock
 const mockPublicKeyString = "mockPublicKey";
 const mockSignature = new Uint8Array([1, 2, 3]);
 const mockSignedMessage = new Uint8Array([4, 5, 6]);
-const actualMockPublicKeyObject = {
-  toString: () => mockPublicKeyString,
-  toBase58: () => mockPublicKeyString,
-} as unknown as PublicKey;
 
 describe("useSignIn", () => {
   beforeEach(() => {
@@ -63,9 +58,9 @@ describe("useSignIn", () => {
       signature: mockSignature,
       signedMessage: mockSignedMessage,
     };
-    // This is what the provider's signIn method should return (address as PublicKey)
+    // This is what the provider's signIn method should return (address as string)
     const mockProviderRawResult = {
-      address: actualMockPublicKeyObject,
+      address: mockPublicKeyString,
       signature: mockSignature,
       signedMessage: mockSignedMessage,
     };

@@ -1,5 +1,5 @@
 import type { Address } from "@solana/addresses";
-import type { PublicKey } from "@solana/web3.js";
+import type { PublicKey } from "../types";
 
 /**
  * Convert a `@solana/addresses` `Address` into an object that satisfies the
@@ -11,8 +11,6 @@ import type { PublicKey } from "@solana/web3.js";
  * provider eventually relies on more `PublicKey` methods, extend this object
  * accordingly.
  *
- * No runtime code from `@solana/web3.js` is imported; we only reference its
- * `PublicKey` type for compile-time compatibility.
  */
 export function addressToPublicKey(address: Address): PublicKey {
   const fakePublicKey = {

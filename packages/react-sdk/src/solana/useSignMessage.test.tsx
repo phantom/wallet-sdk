@@ -3,7 +3,6 @@ import { renderHook, act } from "@testing-library/react";
 import { useSignMessage } from "./useSignMessage";
 import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
 import { PhantomProvider } from "../PhantomContext";
-import type { PublicKey } from "@solana/web3.js";
 
 const sharedConfig = {
   wrapper: ({ children }: { children: React.ReactNode }) => (
@@ -13,10 +12,7 @@ const sharedConfig = {
 
 const mockMessage = new Uint8Array([1, 2, 3, 4, 5]);
 const mockPublicKeyString = "mockPublicKey";
-const actualMockPublicKeyObject = {
-  toString: () => mockPublicKeyString,
-  toBase58: () => mockPublicKeyString,
-} as unknown as PublicKey;
+
 const mockSignature = new Uint8Array([5, 4, 3, 2, 1]);
 
 describe("useSignMessage", () => {
@@ -55,16 +51,16 @@ describe("useSignMessage", () => {
 
   it("should successfully sign a message when phantom.solana.signMessage is available", async () => {
     // This is the result the hook should return (publicKey as string)
-    const mockHookResult = { signature: mockSignature, publicKey: mockPublicKeyString };
-    // This is what the provider's signMessage method should return (publicKey as PublicKey)
-    const mockProviderRawResult = { signature: mockSignature, publicKey: actualMockPublicKeyObject };
+    const mockHookResult = { signature: mockSignature, address: mockPublicKeyString };
+    // This is what the provider's signMessage method should return (publicKey as string)
+    const mockProviderRawResult = { signature: mockSignature, publicKey: mockPublicKeyString };
 
     // @ts-expect-error - window.phantom is not typed
     window.phantom = {
       solana: {
         signMessage: jest.fn().mockResolvedValue(mockProviderRawResult),
         isConnected: true,
-        connect: jest.fn().mockResolvedValue({ publicKey: actualMockPublicKeyObject }),
+        connect: jest.fn().mockResolvedValue({ publicKey: mockPublicKeyString }),
       },
     };
 
@@ -81,14 +77,14 @@ describe("useSignMessage", () => {
   });
 
   it("should use default display encoding if not provided", async () => {
-    const mockProviderRawResult = { signature: mockSignature, publicKey: actualMockPublicKeyObject };
+    const mockProviderRawResult = { signature: mockSignature, publicKey: mockPublicKeyString };
 
     // @ts-expect-error - window.phantom is not typed
     window.phantom = {
       solana: {
         signMessage: jest.fn().mockResolvedValue(mockProviderRawResult),
         isConnected: true,
-        connect: jest.fn().mockResolvedValue({ publicKey: actualMockPublicKeyObject }),
+        connect: jest.fn().mockResolvedValue({ address: mockPublicKeyString }),
       },
     };
 
@@ -119,8 +115,8 @@ describe("useSignMessage", () => {
   });
 
   it("should attempt to connect if provider is not connected, then sign", async () => {
-    const mockHookResult = { signature: mockSignature, publicKey: mockPublicKeyString };
-    const mockProviderRawResult = { signature: mockSignature, publicKey: actualMockPublicKeyObject };
+    const mockHookResult = { signature: mockSignature, address: mockPublicKeyString };
+    const mockProviderRawResult = { signature: mockSignature, publicKey: mockPublicKeyString };
 
     // @ts-expect-error - window.phantom is not typed
     window.phantom = {
@@ -130,7 +126,7 @@ describe("useSignMessage", () => {
         connect: jest.fn().mockImplementation(async () => {
           // @ts-expect-error - window.phantom is not typed
           window.phantom.solana.isConnected = true; // Simulate successful connection
-          return Promise.resolve({ publicKey: actualMockPublicKeyObject });
+          return Promise.resolve({ publicKey: mockPublicKeyString });
         }),
       },
     };

@@ -1,8 +1,7 @@
 import { signAllTransactions } from "./signAllTransactions";
 import { getProvider as defaultGetProvider } from "./getProvider";
-import type { PhantomSolanaProvider } from "./types";
+import type { PhantomSolanaProvider, VersionedTransaction } from "./types";
 import type { Transaction } from "@solana/kit";
-import type { VersionedTransaction } from "@solana/web3.js";
 import { connect } from "./connect";
 
 jest.mock("./getProvider", () => ({

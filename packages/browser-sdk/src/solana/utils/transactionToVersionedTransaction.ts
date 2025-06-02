@@ -1,5 +1,5 @@
 import { getTransactionEncoder, type Transaction } from "@solana/transactions";
-import type { VersionedTransaction } from "@solana/web3.js";
+import type { VersionedTransaction } from "../types";
 
 /**
  * Convert a `@solana/kit` `Transaction` into a `@solana/web3.js` `VersionedTransaction` like object.

@@ -1,7 +1,6 @@
 import { getProvider } from "./getProvider";
-import type { PhantomSolanaProvider } from "./types";
+import type { PhantomSolanaProvider, VersionedTransaction } from "./types";
 import type { Transaction } from "@solana/kit";
-import type { VersionedTransaction } from "@solana/web3.js";
 import { connect } from "./connect";
 import { transactionToVersionedTransaction } from "./utils/transactionToVersionedTransaction";
 import { fromVersionedTransaction } from "@solana/compat";
@@ -40,7 +39,7 @@ export async function signAllTransactions(transactions: Transaction[]): Promise<
 
   // Convert the signed web3.js transactions back into Kit transactions before returning.
   const signedTransactions = signedVersionedTransactions.map(vt => {
-    const tx = fromVersionedTransaction(vt);
+    const tx = fromVersionedTransaction(vt as any);
     return tx as unknown as Transaction;
   });
 

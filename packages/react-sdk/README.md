@@ -87,7 +87,7 @@ The `useConnect` hook provides a function to connect to the Phantom wallet for S
 
 The hook returns an object with the following property:
 
-- `connect: () => Promise<ConnectResponse>` - An asynchronous function that initiates the connection process. Returns a promise that resolves with the connection response (e.g., `{ publicKey: PublicKey }`) or rejects if connection fails.
+- `connect: () => Promise<ConnectResponse>` - An asynchronous function that initiates the connection process. Returns a promise that resolves with the connection response (e.g., `{ publicKey: string }`) or rejects if connection fails.
 
 ```tsx
 import { useConnect } from "@phantom/react-sdk"; // Or '@phantom/react-sdk/solana' if specific
@@ -154,7 +154,7 @@ The `useSignIn` hook provides a function to initiate a sign-in request to the Ph
 
 The hook returns an object with the following property:
 
-- `signIn: (signInData: SolanaSignInData) => Promise<{ address: PublicKey; signature: Uint8Array; signedMessage: Uint8Array }>` - An asynchronous function that initiates the sign-in process. `SolanaSignInData` is a type imported from `@phantom/browser-sdk/solana`. Returns a promise that resolves with the `address` (PublicKey), `signature` (Uint8Array), and `signedMessage` (Uint8Array), or rejects if the sign-in fails.
+- `signIn: (signInData: SolanaSignInData) => Promise<{ address: string; signature: Uint8Array; signedMessage: Uint8Array }>` - An asynchronous function that initiates the sign-in process. `SolanaSignInData` is a type imported from `@phantom/browser-sdk/solana`. Returns a promise that resolves with the `address` (string), `signature` (Uint8Array), and `signedMessage` (Uint8Array), or rejects if the sign-in fails.
 
 ```tsx
 import { useSignIn } from "@phantom/react-sdk"; // Or '@phantom/react-sdk/solana' if specific
@@ -195,11 +195,10 @@ The `useSignMessage` hook provides a function to prompt the user to sign an arbi
 
 The hook returns an object with the following property:
 
-- `signMessage: (message: Uint8Array, display?: 'utf8' | 'hex') => Promise<{ signature: Uint8Array; publicKey: PublicKey }>` - An asynchronous function that prompts the user to sign a message. The `message` must be a `Uint8Array`. The optional `display` parameter can be 'utf8' (default) or 'hex' to suggest how the wallet should display the message bytes. Returns a promise that resolves with the `signature` (Uint8Array) and `publicKey` (PublicKey) of the signer, or rejects if signing fails.
+- `signMessage: (message: Uint8Array, display?: 'utf8' | 'hex') => Promise<{ signature: Uint8Array; publicKey: string }>` - An asynchronous function that prompts the user to sign a message. The `message` must be a `Uint8Array`. The optional `display` parameter can be 'utf8' (default) or 'hex' to suggest how the wallet should display the message bytes. Returns a promise that resolves with the `signature` (Uint8Array) and `publicKey` (string) of the signer, or rejects if signing fails.
 
 ```tsx
 import { useSignMessage } from "@phantom/react-sdk"; // Or '@phantom/react-sdk/solana' if specific
-import { PublicKey } from "@solana/web3.js"; // Assuming PublicKey might be used or needed
 
 function MyComponent() {
   const { signMessage } = useSignMessage();
@@ -211,7 +210,7 @@ function MyComponent() {
       const { signature, publicKey } = await signMessage(messageBytes, "utf8");
       console.log("Message signed successfully!");
       console.log("Signature:", signature);
-      console.log("Public Key:", publicKey.toString());
+      console.log("Public Key:", publicKey);
       // You can now verify this signature on a backend or use it as needed.
     } catch (err) {
       console.error("Sign message error:", err);
@@ -225,54 +224,55 @@ function MyComponent() {
 
 ### useSignAndSendTransaction (Solana)
 
-The `useSignAndSendTransaction` hook provides a function to prompt the user to sign and then send a transaction on the Solana network.
+The `useSignAndSendTransaction` hook prompts the user to sign **and** send a Kit-style transaction.
 
 #### Return Value
 
 The hook returns an object with the following property:
 
-- `signAndSendTransaction: (transaction: Transaction | VersionedTransaction) => Promise<{ signature: string; publicKey?: string }>` - An asynchronous function that prompts to sign and then sends a transaction. `Transaction` and `VersionedTransaction` are types from `@solana/web3.js`. Returns a promise that resolves with the transaction `signature` (string) and an optional `publicKey` (string) of the signer, or rejects if the process fails.
+- `signAndSendTransaction(transaction: Transaction): Promise<{ signature: string; publicKey?: string }>` – accepts a `Transaction` built with **`@solana/kit`** and returns the confirmed signature.
 
 ```tsx
-import { useSignAndSendTransaction } from "@phantom/react-sdk"; // Or '@phantom/react-sdk/solana' if specific
-import { Transaction, SystemProgram, PublicKey, Connection } from "@solana/web3.js";
-// For VersionedTransaction, you might need: import { VersionedTransaction } from '@solana/web3.js';
+import { useSignAndSendTransaction } from "@phantom/react-sdk/solana"; // scoped import is fine
+import {
+  createSolanaRpc,
+  createTransactionMessage,
+  setTransactionMessageFeePayer,
+  setTransactionMessageLifetimeUsingBlockhash,
+  pipe,
+  address,
+  compileTransaction,
+} from "@solana/kit";
 
 function MyComponent() {
   const { signAndSendTransaction } = useSignAndSendTransaction();
-  // Assume `connectedPublicKey` is available from `useConnect` or similar context
-  const connectedPublicKey = new PublicKey("YOUR_CONNECTED_WALLET_PUBLIC_KEY"); // Replace with actual public key
 
-  const handlePayment = async () => {
-    if (!connectedPublicKey) {
-      console.error("Wallet not connected");
-      return;
-    }
-
-    // Example: Create a simple SOL transfer transaction
-    const transaction = new Transaction().add(
-      SystemProgram.transfer({
-        fromPubkey: connectedPublicKey,
-        toPubkey: new PublicKey("RECEIVER_PUBLIC_KEY_HERE"), // Replace with recipient's public key
-        lamports: 1000000, // 0.001 SOL (1 SOL = 1,000,000,000 lamports)
-      }),
-    );
-
-    // Optional: Set recent blockhash and fee payer if not handled by the hook/provider
-    // const connection = new Connection("https://api.devnet.solana.com");
-    // transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-    // transaction.feePayer = connectedPublicKey;
+  const handlePayment = async (publicKey: string) => {
+    // 0️⃣  Ensure the wallet is connected and we have a fee-payer address
+    if (!publicKey) return console.error("Wallet not connected");
 
     try {
+      // 1️⃣  Fetch a recent blockhash
+      const rpc = createSolanaRpc("https://api.devnet.solana.com");
+      const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
+
+      // 2️⃣  Build a minimal v0 transaction message (no instructions – demo only)
+      const txMessage = pipe(
+        createTransactionMessage({ version: 0 }),
+        tx => setTransactionMessageFeePayer(address(publicKey), tx),
+        tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
+      );
+
+      const transaction = compileTransaction(txMessage);
+
+      // 3️⃣  Prompt the user to sign and send
       const { signature } = await signAndSendTransaction(transaction);
-      console.log(`Transaction successful with signature: ${signature}`);
-      // You can now monitor this signature on a Solana explorer or use a connection to confirm the transaction.
+      console.log("Transaction signature:", signature);
     } catch (err) {
-      console.error("Sign and send transaction error:", err);
-      // Handle error (e.g., user rejected, insufficient funds, network error)
+      console.error("Transaction error:", err);
     }
   };
 
-  return <button onClick={handlePayment}>Send 0.001 SOL</button>;
+  return <button onClick={() => handlePayment("YOUR_CONNECTED_WALLET_PUBLIC_KEY")}>Send 0.001 SOL</button>;
 }
 ```
