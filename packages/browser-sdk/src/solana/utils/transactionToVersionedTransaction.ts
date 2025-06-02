@@ -20,13 +20,6 @@ export function transactionToVersionedTransaction(transaction: Transaction): Ver
   // Encode the Kit transaction into its canonical wire format (Uint8Array).
   const serialized = getTransactionEncoder().encode(transaction);
 
-  // Return a *shape-compatible* object that implements only the subset of the
-  // `@solana/web3.js` `VersionedTransaction` API that wallet providers use —
-  // typically just the `serialize` method.
-  //
-  // We cast the value to `unknown` first, then to `VersionedTransaction` so
-  // that TypeScript treats the object as such at compile time without pulling
-  // in the runtime implementation from `@solana/web3.js`.
   const fakeVersioned = {
     serialize() {
       // `serialize` should return a *new* `Uint8Array` each call to avoid
