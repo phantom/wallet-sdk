@@ -105,7 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
 
           const transactionMessage = pipe(
-            createTransactionMessage({ version: "legacy" }),
+            createTransactionMessage({ version: 0 }),
             tx => setTransactionMessageFeePayer(address(userPublicKey as string), tx),
             tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
           );
