@@ -32,7 +32,7 @@ export async function signAllTransactions(transactions: Transaction[]): Promise<
   }
 
   // Convert each Kit transaction into a VersionedTransaction understood by the provider.
-  const versionedTransactions = transactions.map(transactionToVersionedTransaction);
+  const versionedTransactions = transactions.map(t => transactionToVersionedTransaction(t));
 
   const signedVersionedTransactions = (await provider.signAllTransactions(
     versionedTransactions,
