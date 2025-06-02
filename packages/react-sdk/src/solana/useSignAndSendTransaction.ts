@@ -8,12 +8,8 @@ interface UseSignAndSendTransactionResult {
   ) => Promise<{ signature: string; publicKey?: string }>;
 }
 
-/**
- * Hook to provide a function to sign and send a transaction using the Phantom wallet for Solana.
- * Leverages the `signAndSendTransaction` method from the Phantom Browser SDK.
- */
 export function useSignAndSendTransaction(): UseSignAndSendTransactionResult {
-  const { phantom } = usePhantom(); // Assuming phantom instance is available via context
+  const { phantom } = usePhantom();
 
   const signAndSendTransaction = useCallback(
     async (transaction: Transaction | VersionedTransaction) => {

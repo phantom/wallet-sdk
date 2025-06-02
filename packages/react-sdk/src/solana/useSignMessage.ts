@@ -5,12 +5,8 @@ interface UseSignMessageResult {
   signMessage: (message: Uint8Array, display?: "utf8" | "hex") => Promise<{ signature: Uint8Array; publicKey: string }>;
 }
 
-/**
- * Hook to provide a function to sign a message using the Phantom wallet for Solana.
- * Leverages the `signMessage` method from the Phantom Browser SDK.
- */
 export function useSignMessage(): UseSignMessageResult {
-  const { phantom } = usePhantom(); // Assuming phantom instance is available via context
+  const { phantom } = usePhantom();
 
   const signMessage = useCallback(
     async (message: Uint8Array, display?: "utf8" | "hex") => {

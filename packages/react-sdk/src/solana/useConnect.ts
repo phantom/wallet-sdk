@@ -5,11 +5,6 @@ type UseConnectProps = {
   autoConnect?: boolean;
 };
 
-/**
- * Hook that provides a connect function using the phantom.solana.connect method.
- * This is a simple passthrough with no complex logic involved.
- * @returns A function to connect to the Phantom wallet.
- */
 export function useConnect({ autoConnect = false }: UseConnectProps = {}) {
   const { phantom } = usePhantom();
 

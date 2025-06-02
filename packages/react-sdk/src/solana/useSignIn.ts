@@ -8,12 +8,8 @@ interface UseSignInResult {
   ) => Promise<{ address: string; signature: Uint8Array; signedMessage: Uint8Array }>;
 }
 
-/**
- * Hook to provide a sign-in function for Solana.
- * Leverages the `signIn` method from the Phantom Browser SDK.
- */
 export function useSignIn(): UseSignInResult {
-  const { phantom } = usePhantom(); // Assuming phantom instance is available via context
+  const { phantom } = usePhantom();
 
   const signIn = useCallback(
     async (signInData: SolanaSignInData) => {
