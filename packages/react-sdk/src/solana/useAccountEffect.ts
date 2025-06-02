@@ -38,14 +38,26 @@ export function useAccountEffect(parameters: UseAccountEffectParameters = {}) {
       });
     };
 
-    phantom.solana.addEventListener("connect", handleConnect);
-    phantom.solana.addEventListener("disconnect", handleDisconnect);
-    phantom.solana.addEventListener("accountChanged", handleAccountChanged);
+    if (onConnect) {
+      phantom.solana.addEventListener("connect", handleConnect);
+    }
+    if (onDisconnect) {
+      phantom.solana.addEventListener("disconnect", handleDisconnect);
+    }
+    if (onAccountChanged) {
+      phantom.solana.addEventListener("accountChanged", handleAccountChanged);
+    }
 
     return () => {
-      phantom.solana.removeEventListener("connect", handleConnect);
-      phantom.solana.removeEventListener("disconnect", handleDisconnect);
-      phantom.solana.removeEventListener("accountChanged", handleAccountChanged);
+      if (onConnect) {
+        phantom.solana.removeEventListener("connect", handleConnect);
+      }
+      if (onDisconnect) {
+        phantom.solana.removeEventListener("disconnect", handleDisconnect);
+      }
+      if (onAccountChanged) {
+        phantom.solana.removeEventListener("accountChanged", handleAccountChanged);
+      }
     };
   }, [isReady, providerStatus, provider, phantom, onConnect, onDisconnect, onAccountChanged]);
 }

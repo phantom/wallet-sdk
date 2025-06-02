@@ -276,3 +276,23 @@ function MyComponent() {
   return <button onClick={handlePayment}>Send 0.001 SOL</button>;
 }
 ```
+
+### useAccountEffect
+
+The `useAccountEffect` hook provides easy way to subscribe to events like `connect`, `disconnect` and `accountChanged`. You can subscribe by calling the hook and declaring event callbacks you want to react to.
+
+Example:
+
+```tsx
+useAccountEffect({
+  onConnect: data => {
+    console.log("Connected to Phantom with public key:", data.publicKey);
+  },
+  onDisconnect: () => {
+    console.log("Disconnected from Phantom");
+  },
+  onAccountChanged: data => {
+    console.log("Account changed to:", data.publicKey);
+  },
+});
+```
