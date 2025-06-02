@@ -1530,6 +1530,7 @@ __metadata:
   dependencies:
     "@solana/compat": "npm:2.1.1"
     "@solana/kit": "npm:^2.1.1"
+    "@solana/transactions": "npm:^2.1.1"
     "@solana/web3.js": "npm:^1.98.2"
     eslint: "npm:8.53.0"
     tsup: "npm:^6.7.0"
@@ -2326,7 +2327,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@solana/transactions@npm:2.1.1":
+"@solana/transactions@npm:2.1.1, @solana/transactions@npm:^2.1.1":
   version: 2.1.1
   resolution: "@solana/transactions@npm:2.1.1"
   dependencies:

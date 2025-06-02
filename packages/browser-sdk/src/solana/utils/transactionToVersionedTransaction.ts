@@ -1,4 +1,4 @@
-import { getTransactionEncoder, Transaction } from "@solana/transactions";
+import { getTransactionEncoder, type Transaction } from "@solana/transactions";
 import type { VersionedTransaction } from "@solana/web3.js";
 
 /**
