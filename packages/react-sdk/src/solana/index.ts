@@ -6,3 +6,4 @@ export { useSignIn } from "./useSignIn";
 export { useSignAndSendTransaction } from "./useSignAndSendTransaction";
 export { useSignMessage } from "./useSignMessage";
 export { useAccount } from "./useAccount";
+export { useAccountEffect } from "./useAccountEffect";
