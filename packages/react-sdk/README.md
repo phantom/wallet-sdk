@@ -214,7 +214,7 @@ The `useSignAndSendTransaction` hook provides a function to prompt the user to s
 
 The hook returns an object with the following property:
 
-- `signAndSendTransaction: (transaction: Transaction | VersionedTransaction, options?: SendOptions) => Promise<{ signature: string; publicKey?: string }>` - An asynchronous function that prompts to sign and then sends a transaction. `Transaction` and `VersionedTransaction` are types from `@solana/web3.js`. `SendOptions` (also from `@solana/web3.js`) can be used to specify preflight commitment and other sending options. Returns a promise that resolves with the transaction `signature` (string) and an optional `publicKey` (string) of the signer, or rejects if the process fails.
+- `signAndSendTransaction: (transaction: Transaction | VersionedTransaction) => Promise<{ signature: string; publicKey?: string }>` - An asynchronous function that prompts to sign and then sends a transaction. `Transaction` and `VersionedTransaction` are types from `@solana/web3.js`. Returns a promise that resolves with the transaction `signature` (string) and an optional `publicKey` (string) of the signer, or rejects if the process fails.
 
 ```tsx
 import { useSignAndSendTransaction } from "@phantom/react-sdk"; // Or '@phantom/react-sdk/solana' if specific
@@ -247,8 +247,7 @@ function MyComponent() {
     // transaction.feePayer = connectedPublicKey;
 
     try {
-      // The `options` parameter can be used to set `skipPreflight`, `preflightCommitment`, etc.
-      const { signature } = await signAndSendTransaction(transaction, { skipPreflight: false });
+      const { signature } = await signAndSendTransaction(transaction);
       console.log(`Transaction successful with signature: ${signature}`);
       // You can now monitor this signature on a Solana explorer or use a connection to confirm the transaction.
     } catch (err) {
