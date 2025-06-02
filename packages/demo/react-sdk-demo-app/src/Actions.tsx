@@ -1,16 +1,13 @@
 import "./Actions.css";
-<<<<<<< HEAD
 import {
   useConnect,
   useDisconnect,
   useSignIn,
   useSignAndSendTransaction,
   useSignMessage,
+  useAccount,
 } from "@phantom/react-sdk/solana";
 import { PublicKey, Transaction, SystemProgram, Connection } from "@solana/web3.js"; // Added for transaction creation
-=======
-import { useAccount, useConnect, useDisconnect } from "@phantom/react-sdk/solana";
->>>>>>> d5031373e2ddd16d25b981ff7bf1cd8f82d7dc42
 
 export function Actions() {
   const { publicKey, status } = useAccount();
