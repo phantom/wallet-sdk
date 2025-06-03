@@ -64,17 +64,6 @@ The `usePhantom` hoo provides access to the phantom instance. With Phantom insta
 
 ## Solana API Reference
 
-### useProvider
-
-The `useProvider` hook provides access to the Solana provider with automatic retry logic and state management.
-
-#### Return Value
-
-The hook returns an object with the following properties:
-
-- `status: 'loading' | 'success' | 'error'` - Current status of the provider
-- `provider: NonNullable<unknown> | null` - The Solana provider instance (null when not available)
-
 ### useConnect (Solana)
 
 The `useConnect` hook provides a function to connect to the Phantom wallet for Solana.
@@ -137,14 +126,13 @@ function MyComponent() {
 
 ### useAccount
 
-The `useAccount` hook provides access the currently connected account state. It is reactive and changes according to the connected account state.
+The `useAccount` hook provides access the currently connected address
 
 #### Return Value
 
-The hook returns an object with the following properties:
+The hook returns a string with the currently connected address or undefined when account is not connected.
 
-- `status: 'loading' | 'connected' | 'disconnected'` - Current account status
-- `publicKey: string | null` - Current public key of the connected account or null when account is not connected.
+````tsx
 
 ### useSignIn (Solana)
 
@@ -185,7 +173,7 @@ function MyComponent() {
 
   return <button onClick={handleSignInClick}>Sign In with Solana</button>;
 }
-```
+````
 
 ### useSignMessage (Solana)
 

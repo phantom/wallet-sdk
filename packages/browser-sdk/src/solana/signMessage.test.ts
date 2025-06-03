@@ -1,136 +1,82 @@
+import type { SolanaAdapter } from "./adapters/types";
+import { getAdapter } from "./getAdapter";
 import { signMessage } from "./signMessage";
-import { getProvider as defaultGetProvider } from "./getProvider";
-import type { PhantomSolanaProvider, DisplayEncoding, PublicKey } from "./types";
-import { connect } from "./connect";
+import type { DisplayEncoding, PhantomSolanaProvider } from "./types";
 
-// Mock defaultGetProvider
-jest.mock("./getProvider", () => ({
-  getProvider: jest.fn(),
+jest.mock("./getAdapter", () => ({
+  getAdapter: jest.fn(),
 }));
-jest.mock("./connect", () => ({
-  connect: jest.fn(),
-}));
-
-const mockDefaultGetProvider = defaultGetProvider as jest.MockedFunction<() => PhantomSolanaProvider | null>;
-const mockConnect = connect as jest.MockedFunction<typeof connect>;
-
-const mockPublicKey = { toBase58: () => "mockPublicKey", toString: () => "mockPublicKey" } as unknown as PublicKey;
 
 describe("signMessage", () => {
-  let mockProvider: Partial<PhantomSolanaProvider>;
+  let mockAdapter: Partial<PhantomSolanaProvider>;
 
   beforeEach(() => {
-    mockDefaultGetProvider.mockReset();
-    mockConnect.mockReset();
-    mockProvider = {
+    jest.clearAllMocks();
+    mockAdapter = {
       signMessage: jest.fn(),
       isConnected: true,
+      connect: jest.fn(),
     };
-    mockDefaultGetProvider.mockReturnValue(mockProvider as PhantomSolanaProvider);
+    (getAdapter as jest.Mock).mockReturnValue(mockAdapter as unknown as SolanaAdapter);
   });
 
-  it("should use default getProvider and call provider.signMessage", async () => {
+  it("should properly call signMessage on the adapter", async () => {
     const message = new Uint8Array([1, 2, 3]);
     const display: DisplayEncoding = "hex";
     const expectedSignature = new Uint8Array([4, 5, 6]);
-    const expectedResult = { signature: expectedSignature, address: mockPublicKey.toString() };
-    (mockProvider.signMessage as jest.Mock).mockResolvedValue({
+    const expectedResult = { signature: expectedSignature, address: "123" };
+    (mockAdapter.signMessage as jest.Mock).mockResolvedValue({
       signature: expectedSignature,
-      publicKey: mockPublicKey,
+      address: "123",
     });
 
     const result = await signMessage(message, display);
 
-    expect(mockDefaultGetProvider).toHaveBeenCalledTimes(1);
-    expect(mockProvider.signMessage).toHaveBeenCalledWith(message, display);
+    expect(getAdapter).toHaveBeenCalledTimes(1);
+    expect(mockAdapter.signMessage).toHaveBeenCalledWith(message, display);
     expect(result).toEqual(expectedResult);
   });
 
-  it("should throw an error if provider is not found", async () => {
-    mockDefaultGetProvider.mockReturnValue(null);
+  it("should throw an error if adapter is not found", async () => {
+    (getAdapter as jest.Mock).mockReturnValue(null);
     const message = new Uint8Array([1, 2, 3]);
-    await expect(signMessage(message)).rejects.toThrow("Phantom provider not found.");
+    await expect(signMessage(message)).rejects.toThrow("Adapter not found.");
   });
 
-  it("should throw an error if provider does not support signMessage", async () => {
-    mockDefaultGetProvider.mockReturnValue({ isConnected: true } as PhantomSolanaProvider);
-    const message = new Uint8Array([1, 2, 3]);
-    await expect(signMessage(message)).rejects.toThrow("The connected provider does not support signMessage.");
-  });
-
-  it("should call connect if provider is not initially connected, then proceed with signMessage", async () => {
+  it("should call connect if adapter is not initially connected, then proceed with signMessage", async () => {
     const message = new Uint8Array([1, 2, 3]);
     const display: DisplayEncoding = "hex";
     const expectedSignature = new Uint8Array([4, 5, 6]);
-    const expectedResult = { signature: expectedSignature, address: mockPublicKey.toString() };
+    const expectedResult = { signature: expectedSignature, address: "123" };
 
-    mockProvider.isConnected = false;
-
-    mockConnect.mockImplementation(async () => {
-      const providerFromGetProvider = defaultGetProvider() as PhantomSolanaProvider | null;
-      if (providerFromGetProvider) {
-        providerFromGetProvider.isConnected = true;
-      }
-      return Promise.resolve("mockPublicKeyString");
-    });
-
-    (mockProvider.signMessage as jest.Mock).mockResolvedValue({
+    mockAdapter.isConnected = false;
+    (mockAdapter.signMessage as jest.Mock).mockResolvedValue({
       signature: expectedSignature,
-      publicKey: mockPublicKey,
+      address: "123",
     });
 
     const result = await signMessage(message, display);
 
-    expect(mockDefaultGetProvider).toHaveBeenCalledTimes(2);
-    expect(mockConnect).toHaveBeenCalledTimes(1);
-    expect(mockConnect).toHaveBeenCalledWith();
-    expect(mockProvider.isConnected).toBe(true);
-    expect(mockProvider.signMessage).toHaveBeenCalledWith(message, display);
+    expect(getAdapter).toHaveBeenCalledTimes(1);
+    expect(mockAdapter.signMessage).toHaveBeenCalledWith(message, display);
+    expect(mockAdapter.connect).toHaveBeenCalledTimes(1);
     expect(result).toEqual(expectedResult);
-  });
-
-  it("should throw error if connect fails when provider is not initially connected", async () => {
-    const message = new Uint8Array([1, 2, 3]);
-    mockProvider.isConnected = false;
-
-    mockConnect.mockRejectedValue(new Error("ConnectionFailedError"));
-
-    await expect(signMessage(message)).rejects.toThrow("ConnectionFailedError");
-    expect(mockConnect).toHaveBeenCalledTimes(1);
-    expect(mockProvider.signMessage).not.toHaveBeenCalled();
-  });
-
-  it("should throw error if provider is still not connected after connect attempt", async () => {
-    const message = new Uint8Array([1, 2, 3]);
-    mockProvider.isConnected = false;
-
-    mockConnect.mockImplementation(async () => {
-      const providerFromGetProvider = defaultGetProvider() as PhantomSolanaProvider | null;
-      if (providerFromGetProvider) {
-        providerFromGetProvider.isConnected = false;
-      }
-      return Promise.resolve("mockPublicKeyString");
-    });
-
-    await expect(signMessage(message)).rejects.toThrow("Provider is not connected even after attempting to connect.");
-    expect(mockConnect).toHaveBeenCalledTimes(1);
-    expect(mockProvider.signMessage).not.toHaveBeenCalled();
   });
 
   it("should use default display encoding if not provided", async () => {
     const message = new Uint8Array([1, 2, 3]);
     const expectedSignature = new Uint8Array([10, 11, 12]);
-    const expectedResult = { signature: expectedSignature, address: mockPublicKey.toString() };
-    (mockProvider.signMessage as jest.Mock).mockResolvedValue({
+    const expectedResult = { signature: expectedSignature, address: "123" };
+    (mockAdapter.signMessage as jest.Mock).mockResolvedValue({
       signature: expectedSignature,
-      publicKey: mockPublicKey,
+      address: "123",
     });
-    mockProvider.isConnected = true;
-    mockDefaultGetProvider.mockReturnValue(mockProvider as PhantomSolanaProvider);
+    mockAdapter.isConnected = true;
+    (getAdapter as jest.Mock).mockReturnValue(mockAdapter as unknown as SolanaAdapter);
 
     const result = await signMessage(message);
 
-    expect(mockProvider.signMessage).toHaveBeenCalledWith(message, undefined);
+    expect(mockAdapter.signMessage).toHaveBeenCalledWith(message, undefined);
     expect(result).toEqual(expectedResult);
   });
 });

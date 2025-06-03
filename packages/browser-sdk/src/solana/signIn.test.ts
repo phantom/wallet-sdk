@@ -1,49 +1,42 @@
+import type { SolanaAdapter } from "./adapters/types";
+import { getAdapter } from "./getAdapter";
 import { signIn } from "./signIn";
-import { getProvider as defaultGetProvider } from "./getProvider";
-import type { PhantomSolanaProvider, PublicKey, SolanaSignInData } from "./types";
+import type { PhantomSolanaProvider, SolanaSignInData } from "./types";
 
-jest.mock("./getProvider", () => ({
-  getProvider: jest.fn(),
+jest.mock("./getAdapter", () => ({
+  getAdapter: jest.fn(),
 }));
-const mockDefaultGetProvider = defaultGetProvider as jest.MockedFunction<() => PhantomSolanaProvider | null>;
-
-const mockPublicKey = { toBase58: () => "mockPublicKey", toString: () => "mockPublicKey" } as unknown as PublicKey;
 
 describe("signIn", () => {
-  let mockProvider: Partial<PhantomSolanaProvider>;
+  let mockAdapter: Partial<PhantomSolanaProvider>;
   const mockSignInData: SolanaSignInData = { domain: "example.com", address: "mockAddress" };
 
   beforeEach(() => {
-    mockDefaultGetProvider.mockReset();
-    mockProvider = {
+    jest.clearAllMocks();
+    mockAdapter = {
       signIn: jest.fn(),
       isConnected: true,
     };
-    mockDefaultGetProvider.mockReturnValue(mockProvider as PhantomSolanaProvider);
+    (getAdapter as jest.Mock).mockReturnValue(mockAdapter as unknown as SolanaAdapter);
   });
 
-  it("should use default getProvider and call provider.signIn", async () => {
+  it("should properly call signIn on the adapter", async () => {
     const expectedResult = {
-      address: mockPublicKey.toString(),
+      address: "123",
       signature: new Uint8Array([1]),
       signedMessage: new Uint8Array([2]),
     };
-    (mockProvider.signIn as jest.Mock).mockResolvedValue(expectedResult);
+    (mockAdapter.signIn as jest.Mock).mockResolvedValue(expectedResult);
 
     const result = await signIn(mockSignInData);
 
-    expect(mockDefaultGetProvider).toHaveBeenCalledTimes(1);
-    expect(mockProvider.signIn).toHaveBeenCalledWith(mockSignInData);
+    expect(getAdapter).toHaveBeenCalledTimes(1);
+    expect(mockAdapter.signIn).toHaveBeenCalledWith(mockSignInData);
     expect(result).toEqual(expectedResult);
   });
 
-  it("should throw an error if provider is not found", async () => {
-    mockDefaultGetProvider.mockReturnValue(null);
-    await expect(signIn(mockSignInData)).rejects.toThrow("Phantom provider not found.");
-  });
-
-  it("should throw an error if provider does not support signIn", async () => {
-    mockDefaultGetProvider.mockReturnValue({ isConnected: true } as PhantomSolanaProvider);
-    await expect(signIn(mockSignInData)).rejects.toThrow("The connected provider does not support signIn.");
+  it("should throw an error if adapter is not found", async () => {
+    (getAdapter as jest.Mock).mockReturnValue(null);
+    await expect(signIn(mockSignInData)).rejects.toThrow("Adapter not found.");
   });
 });

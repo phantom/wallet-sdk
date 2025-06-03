@@ -1,7 +1,6 @@
 import * as React from "react";
 import { usePhantom } from "../PhantomContext";
 import { assertSolanaConfigured } from "./assertions";
-import { useProvider } from "./useProvider";
 
 type UseAccountEffectParameters = {
   onConnect?(data: { publicKey: string }): void;
@@ -16,10 +15,9 @@ type UseAccountEffectParameters = {
 export function useAccountEffect(parameters: UseAccountEffectParameters = {}) {
   const { onConnect, onDisconnect, onAccountChanged } = parameters;
   const { phantom, isReady } = usePhantom();
-  const { status: providerStatus, provider } = useProvider();
 
   React.useEffect(() => {
-    if (!isReady || providerStatus !== "success" || !provider) return;
+    if (!isReady) return;
     assertSolanaConfigured(phantom);
 
     const handleConnect = (publicKey: string) => {
@@ -59,5 +57,5 @@ export function useAccountEffect(parameters: UseAccountEffectParameters = {}) {
         phantom.solana.removeEventListener("accountChanged", handleAccountChanged);
       }
     };
-  }, [isReady, providerStatus, provider, phantom, onConnect, onDisconnect, onAccountChanged]);
+  }, [isReady, phantom, onConnect, onDisconnect, onAccountChanged]);
 }

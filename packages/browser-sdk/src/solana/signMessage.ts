@@ -1,6 +1,5 @@
-import { getProvider } from "./getProvider";
-import type { PhantomSolanaProvider, DisplayEncoding } from "./types";
-import { connect } from "./connect";
+import { getAdapter } from "./getAdapter";
+import type { DisplayEncoding } from "./types";
 
 /**
  * Signs a message using the Phantom provider.
@@ -13,26 +12,15 @@ export async function signMessage(
   message: Uint8Array,
   display?: DisplayEncoding,
 ): Promise<{ signature: Uint8Array; address: string }> {
-  const provider = getProvider() as PhantomSolanaProvider | null;
+  const adapter = await getAdapter();
 
-  if (!provider) {
-    throw new Error("Phantom provider not found.");
+  if (!adapter) {
+    throw new Error("Adapter not found.");
   }
 
-  if (!provider.isConnected) {
-    await connect();
+  if (!adapter.isConnected) {
+    await adapter.connect({ onlyIfTrusted: false });
   }
 
-  if (!provider.signMessage) {
-    throw new Error("The connected provider does not support signMessage.");
-  }
-
-  if (!provider.isConnected) {
-    throw new Error("Provider is not connected even after attempting to connect.");
-  }
-  const result = await provider.signMessage(message, display);
-  return {
-    signature: result.signature,
-    address: result.publicKey.toString(),
-  };
+  return adapter.signMessage(message, display);
 }

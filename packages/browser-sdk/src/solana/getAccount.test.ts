@@ -1,9 +1,11 @@
+import type { SolanaAdapter } from "./adapters/types";
 import { getAccount } from "./getAccount";
-import type { PhantomSolanaProvider } from "./types";
-import { getProvider } from "./getProvider";
+import { getAdapter } from "./getAdapter";
 
-jest.mock("./getProvider", () => ({
-  getProvider: jest.fn(),
+const MOCK_PUBLIC_KEY = "11111111111111111111111111111112";
+
+jest.mock("./getAdapter", () => ({
+  getAdapter: jest.fn(),
 }));
 
 describe("getAccount", () => {
@@ -11,62 +13,39 @@ describe("getAccount", () => {
     jest.clearAllMocks();
   });
 
-  it("should return connected status with public key when provider is connected", () => {
-    const mockPublicKey = {
-      toString: () => "11111111111111111111111111111112",
-    };
-    const mockProvider = {
+  it("should return account address when adapter is connected", async () => {
+    const mockAdapter = {
       isConnected: true,
-      publicKey: mockPublicKey,
+      getAccount: jest.fn().mockImplementation(() => MOCK_PUBLIC_KEY),
     };
-    (getProvider as jest.Mock).mockReturnValue(mockProvider);
+    (getAdapter as jest.Mock).mockReturnValue(mockAdapter);
 
-    const result = getAccount();
+    const result = await getAccount();
 
-    expect(result).toEqual({
-      status: "connected",
-      address: mockPublicKey.toString(),
-    });
+    expect(result).toEqual(MOCK_PUBLIC_KEY);
   });
 
-  it("should return disconnected status when provider exists but is not connected", () => {
-    const mockProvider: Partial<PhantomSolanaProvider> = {
+  it("should return undefined when adapter exists but is not connected", async () => {
+    const mockAdapter: Partial<SolanaAdapter> = {
       isConnected: false,
-      publicKey: null,
+      getAccount: jest.fn().mockImplementation(() => null),
     };
-    (getProvider as jest.Mock).mockReturnValue(mockProvider);
+    (getAdapter as jest.Mock).mockReturnValue(mockAdapter);
 
-    const result = getAccount();
+    const result = await getAccount();
 
-    expect(result).toEqual({
-      status: "disconnected",
-      address: null,
-    });
+    expect(result).toEqual(null);
   });
 
-  it("should return disconnected status when provider cannot be retrieved", () => {
-    (getProvider as jest.Mock).mockReturnValue(null);
-
-    const result = getAccount();
-
-    expect(result).toEqual({
-      status: "disconnected",
-      address: null,
-    });
-  });
-
-  it("should return disconnected status when provider is connected but has no public key", () => {
-    const mockProvider: Partial<PhantomSolanaProvider> = {
+  it("should return undefined when adapter is connected but has no public key", async () => {
+    const mockAdapter: Partial<SolanaAdapter> = {
       isConnected: true,
-      publicKey: null,
+      getAccount: jest.fn().mockImplementation(() => undefined),
     };
-    (getProvider as jest.Mock).mockReturnValue(mockProvider);
+    (getAdapter as jest.Mock).mockReturnValue(mockAdapter);
 
-    const result = getAccount();
+    const result = await getAccount();
 
-    expect(result).toEqual({
-      status: "disconnected",
-      address: null,
-    });
+    expect(result).toEqual(undefined);
   });
 });

@@ -1,5 +1,5 @@
-import { getProvider } from "./getProvider";
-import type { PhantomSolanaProvider, SolanaSignInData } from "./types";
+import { getAdapter } from "./getAdapter";
+import type { SolanaSignInData } from "./types";
 
 /**
  * Signs in with Solana using the Phantom provider.
@@ -10,19 +10,11 @@ import type { PhantomSolanaProvider, SolanaSignInData } from "./types";
 export async function signIn(
   signInData: SolanaSignInData,
 ): Promise<{ address: string; signature: Uint8Array; signedMessage: Uint8Array }> {
-  const provider = getProvider() as PhantomSolanaProvider | null;
+  const adapter = await getAdapter();
 
-  if (!provider) {
-    throw new Error("Phantom provider not found.");
+  if (!adapter) {
+    throw new Error("Adapter not found.");
   }
-  if (!provider.signIn) {
-    throw new Error("The connected provider does not support signIn.");
-  }
-  // No isConnected check typically needed for signIn, as it might establish connection
-  const result = await provider.signIn(signInData);
-  return {
-    address: result.address.toString(),
-    signature: result.signature,
-    signedMessage: result.signedMessage,
-  };
+
+  return adapter.signIn(signInData);
 }

@@ -1,9 +1,5 @@
-import { getProvider } from "./getProvider";
-import type { PhantomSolanaProvider, VersionedTransaction } from "./types";
 import type { Transaction } from "@solana/kit";
-import { connect } from "./connect";
-import { transactionToVersionedTransaction } from "./utils/transactionToVersionedTransaction";
-import { fromVersionedTransaction } from "@solana/compat";
+import { getAdapter } from "./getAdapter";
 /**
  * Signs a transaction using the Phantom provider without sending it.
  * @param transaction The transaction to sign.
@@ -11,25 +7,15 @@ import { fromVersionedTransaction } from "@solana/compat";
  * @throws Error if Phantom provider is not found or if the operation fails.
  */
 export async function signTransaction(transaction: Transaction): Promise<Transaction> {
-  const provider = getProvider() as PhantomSolanaProvider | null;
+  const adapter = await getAdapter();
 
-  if (!provider) {
-    throw new Error("Phantom provider not found.");
+  if (!adapter) {
+    throw new Error("Adapter not found.");
   }
 
-  if (!provider.isConnected) {
-    await connect();
+  if (!adapter.isConnected) {
+    await adapter.connect({ onlyIfTrusted: false });
   }
 
-  if (!provider.signTransaction) {
-    throw new Error("The connected provider does not support signTransaction.");
-  }
-
-  if (!provider.isConnected) {
-    throw new Error("Provider is not connected even after attempting to connect.");
-  }
-  const versionedTransaction = transactionToVersionedTransaction(transaction);
-  const responseVersionedTransaction = (await provider.signTransaction(versionedTransaction)) as VersionedTransaction;
-  const responseTransaction = await fromVersionedTransaction(responseVersionedTransaction as any);
-  return responseTransaction as unknown as Transaction;
+  return adapter.signTransaction(transaction);
 }

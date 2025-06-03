@@ -36,7 +36,6 @@ describe("useSignIn", () => {
   it("should throw error when phantom provider is not available (window.phantom is undefined)", async () => {
     const { result } = renderHook(() => useSignIn(), sharedConfig);
     await act(async () => {
-      // Expecting SDK error because the hook's phantom.solana exists, but SDK's getProvider fails
       await expect(result.current.signIn(mockSignInData)).rejects.toThrow("Phantom provider not found.");
     });
   });
@@ -105,7 +104,7 @@ describe("useSignIn", () => {
     });
   });
 
-  it("should throw 'The connected provider does not support signIn' if provider.signIn is undefined", async () => {
+  it("should throw an error if provider.signIn is undefined", async () => {
     // @ts-expect-error - window.phantom is not typed
     window.phantom = {
       solana: {
@@ -115,9 +114,7 @@ describe("useSignIn", () => {
 
     const { result } = renderHook(() => useSignIn(), sharedConfig);
     await act(async () => {
-      await expect(result.current.signIn(mockSignInData)).rejects.toThrow(
-        "The connected provider does not support signIn.",
-      );
+      await expect(result.current.signIn(mockSignInData)).rejects.toThrow("provider.signIn is not a function");
     });
   });
 });

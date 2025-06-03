@@ -34,14 +34,6 @@ const phantom = createPhantom({
 // Now you can use the Solana-specific methods
 async function connectAndSign() {
   try {
-    // Get the Solana provider (Phantom wallet instance)
-    const provider = phantom.solana.getProvider();
-
-    if (!provider) {
-      console.error("Phantom wallet not found. Please install Phantom.");
-      return;
-    }
-
     // Attempt to connect to the wallet
     const connectionResult = await phantom.solana.connect();
     console.log("Connection Result:", connectionResult.address);
@@ -68,14 +60,12 @@ connectAndSign();
 
 Once the `phantom.solana` object is initialized, you can access the following methods:
 
-- `getProvider(): PhantomSolanaProvider | null`
-  - Retrieves the Phantom Solana provider instance.
 - `connect(opts?: { onlyIfTrusted?: boolean }): Promise<string>`
   - Connects to the Phantom wallet. Optionally, `onlyIfTrusted` can be set to true to only connect if the dApp is already trusted.
 - `disconnect(): Promise<void>`
   - Disconnects from the Phantom wallet.
-- `getAccount(): { status: "connected" | "disconnected"; address: string | null }`
-  - Gets the current connected account state. When account is connected returns a public key, when it's not returns it as null.
+- `getAccount(): Promise<string | undefined>`
+  - Gets the current connected address
 - `signIn(): Promise<SignInResult>`
   - Initiates a sign-in request to the wallet.
 - `signMessage(message: Uint8Array | string, display?: 'utf8' | 'hex'): Promise<SignedMessage>`

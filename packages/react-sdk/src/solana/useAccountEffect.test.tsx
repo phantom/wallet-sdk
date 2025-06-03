@@ -6,14 +6,9 @@ import { useAccountEffect } from "./useAccountEffect";
 const MOCK_PUBLIC_KEY = "11111111111111111111111111111111";
 const MOCK_PUBLIC_KEY_2 = "22222222222222222222222222222222";
 
-const mockProvider = {
-  // Mock provider methods if needed
-};
-
 const mockSolanaPlugin = {
   addEventListener: jest.fn(),
   removeEventListener: jest.fn(),
-  getProvider: jest.fn(() => mockProvider),
 };
 
 const mockCreateSolanaPlugin = () => {

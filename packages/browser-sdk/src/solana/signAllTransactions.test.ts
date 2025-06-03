@@ -1,153 +1,62 @@
-import { signAllTransactions } from "./signAllTransactions";
-import { getProvider as defaultGetProvider } from "./getProvider";
-import type { PhantomSolanaProvider, VersionedTransaction } from "./types";
 import type { Transaction } from "@solana/kit";
-import { connect } from "./connect";
+import { getAdapter } from "./getAdapter";
+import type { SolanaAdapter } from "./adapters/types";
+import { signAllTransactions } from "./signAllTransactions";
 
-jest.mock("./getProvider", () => ({
-  getProvider: jest.fn(),
+jest.mock("./getAdapter", () => ({
+  getAdapter: jest.fn(),
 }));
-jest.mock("./connect", () => ({
-  connect: jest.fn(),
-}));
-
-const mockDefaultGetProvider = defaultGetProvider as jest.MockedFunction<() => PhantomSolanaProvider | null>;
-const mockConnect = connect as jest.MockedFunction<typeof connect>;
 
 const mockTransactionA = {} as Transaction;
 const mockTransactionB = {} as Transaction;
-const mockVersionedTransactionA = {} as VersionedTransaction;
-const mockVersionedTransactionB = {} as VersionedTransaction;
-
-jest.mock("./utils/transactionToVersionedTransaction", () => ({
-  transactionToVersionedTransaction: jest.fn(),
-}));
-jest.mock("@solana/compat", () => ({
-  fromVersionedTransaction: jest.fn(),
-}));
-
-import { transactionToVersionedTransaction } from "./utils/transactionToVersionedTransaction";
-import { fromVersionedTransaction } from "@solana/compat";
 
 describe("signAllTransactions", () => {
-  let mockProvider: Partial<PhantomSolanaProvider>;
+  let mockAdapter: Partial<SolanaAdapter>;
 
   beforeEach(() => {
-    mockDefaultGetProvider.mockReset();
-    mockConnect.mockReset();
-    (transactionToVersionedTransaction as jest.Mock).mockReset();
-    (fromVersionedTransaction as jest.Mock).mockReset();
-    mockProvider = {
+    jest.clearAllMocks();
+    mockAdapter = {
       signAllTransactions: jest.fn(),
       isConnected: true,
+      connect: jest.fn(),
     };
-    mockDefaultGetProvider.mockReturnValue(mockProvider as PhantomSolanaProvider);
+    (getAdapter as jest.Mock).mockReturnValue(mockAdapter as unknown as SolanaAdapter);
   });
 
-  it("should call provider.signAllTransactions", async () => {
+  it("should properly call signAllTransactions on the adapter", async () => {
     const transactions = [mockTransactionA, mockTransactionB];
-    const versionedTransactions = [mockVersionedTransactionA, mockVersionedTransactionB];
-
-    (transactionToVersionedTransaction as jest.Mock)
-      .mockReturnValueOnce(mockVersionedTransactionA)
-      .mockReturnValueOnce(mockVersionedTransactionB);
-
-    (mockProvider.signAllTransactions as jest.Mock).mockResolvedValue(versionedTransactions);
-
-    (fromVersionedTransaction as jest.Mock).mockReturnValueOnce(mockTransactionA).mockReturnValueOnce(mockTransactionB);
-
+    (mockAdapter.signAllTransactions as jest.Mock).mockResolvedValue(transactions);
     const result = await signAllTransactions(transactions);
-
-    expect(transactionToVersionedTransaction).toHaveBeenCalledTimes(2);
-    expect(transactionToVersionedTransaction).toHaveBeenNthCalledWith(1, mockTransactionA);
-    expect(transactionToVersionedTransaction).toHaveBeenNthCalledWith(2, mockTransactionB);
-
-    expect(mockProvider.signAllTransactions).toHaveBeenCalledWith(versionedTransactions);
-
-    expect(fromVersionedTransaction).toHaveBeenCalledTimes(2);
+    expect(mockAdapter.signAllTransactions).toHaveBeenCalledWith(transactions);
     expect(result).toEqual(transactions);
   });
 
-  it("should throw an error if provider is not found", async () => {
-    mockDefaultGetProvider.mockReturnValue(null);
-    await expect(signAllTransactions([mockTransactionA])).rejects.toThrow("Phantom provider not found.");
+  it("should throw an error if adapter is not found", async () => {
+    (getAdapter as jest.Mock).mockReturnValue(null);
+    await expect(signAllTransactions([mockTransactionA])).rejects.toThrow("Adapter not found.");
   });
 
-  it("should throw an error if provider does not support signAllTransactions", async () => {
-    mockDefaultGetProvider.mockReturnValue({ isConnected: true } as PhantomSolanaProvider);
-    await expect(signAllTransactions([mockTransactionA])).rejects.toThrow(
-      "The connected provider does not support signAllTransactions.",
-    );
-  });
-
-  it("should call connect if provider is not initially connected, then proceed with signAllTransactions", async () => {
+  it("should call connect if not initially connected, then proceed with signAllTransactions", async () => {
     const transactions = [mockTransactionA];
-    const versionedTransactions = [mockVersionedTransactionA];
-    mockProvider.isConnected = false;
-
-    mockConnect.mockImplementation(async () => {
-      const providerFromGetProvider = defaultGetProvider() as PhantomSolanaProvider | null;
-      if (providerFromGetProvider) {
-        providerFromGetProvider.isConnected = true;
-      }
-      return Promise.resolve("mockPublicKeyString");
-    });
-
-    (transactionToVersionedTransaction as jest.Mock).mockReturnValue(mockVersionedTransactionA);
-    (mockProvider.signAllTransactions as jest.Mock).mockResolvedValue(versionedTransactions);
-
-    (fromVersionedTransaction as jest.Mock).mockReturnValue(mockTransactionA);
+    mockAdapter.isConnected = false;
+    (mockAdapter.signAllTransactions as jest.Mock).mockResolvedValue(transactions);
 
     const result = await signAllTransactions(transactions);
 
-    expect(mockDefaultGetProvider).toHaveBeenCalledTimes(2); // Once in the main function, once in the mockConnect
-    expect(mockConnect).toHaveBeenCalledTimes(1);
-    expect(mockConnect).toHaveBeenCalledWith();
-    expect(mockProvider.isConnected).toBe(true);
-    expect(mockProvider.signAllTransactions).toHaveBeenCalledWith(versionedTransactions);
+    expect(getAdapter).toHaveBeenCalled();
+    expect(mockAdapter.connect).toHaveBeenCalled();
+    expect(mockAdapter.signAllTransactions).toHaveBeenCalledWith(transactions);
     expect(result).toEqual(transactions);
-  });
-
-  it("should throw error if connect fails when provider is not initially connected", async () => {
-    const transactions = [mockTransactionA];
-    mockProvider.isConnected = false;
-    mockConnect.mockRejectedValue(new Error("ConnectionFailedError"));
-
-    await expect(signAllTransactions(transactions)).rejects.toThrow("ConnectionFailedError");
-    expect(mockConnect).toHaveBeenCalledTimes(1);
-    expect(mockProvider.signAllTransactions).not.toHaveBeenCalled();
-  });
-
-  it("should throw error if provider is still not connected after connect attempt", async () => {
-    const transactions = [mockTransactionA];
-    mockProvider.isConnected = false;
-    mockConnect.mockImplementation(async () => {
-      const providerFromGetProvider = defaultGetProvider() as PhantomSolanaProvider | null;
-      if (providerFromGetProvider) {
-        providerFromGetProvider.isConnected = false; // Still false
-      }
-      return Promise.resolve("mockPublicKeyString");
-    });
-
-    await expect(signAllTransactions(transactions)).rejects.toThrow(
-      "Provider is not connected even after attempting to connect.",
-    );
-    expect(mockConnect).toHaveBeenCalledTimes(1);
-    expect(mockProvider.signAllTransactions).not.toHaveBeenCalled();
   });
 
   it("should handle an empty array of transactions", async () => {
     const transactions: Transaction[] = [];
-    const versionedTransactions: VersionedTransaction[] = [];
-    const expectedSignedTxs: Transaction[] = [];
 
-    (mockProvider.signAllTransactions as jest.Mock).mockResolvedValue(versionedTransactions);
-    (fromVersionedTransaction as jest.Mock).mockImplementation(() => undefined);
-    mockProvider.isConnected = true;
-    mockDefaultGetProvider.mockReturnValue(mockProvider as PhantomSolanaProvider);
+    (mockAdapter.signAllTransactions as jest.Mock).mockResolvedValue(transactions);
+    mockAdapter.isConnected = true;
 
     const result = await signAllTransactions(transactions);
-    expect(mockProvider.signAllTransactions).toHaveBeenCalledWith(versionedTransactions);
-    expect(result).toEqual(expectedSignedTxs);
+    expect(mockAdapter.signAllTransactions).toHaveBeenCalledWith(transactions);
+    expect(result).toEqual(transactions);
   });
 });

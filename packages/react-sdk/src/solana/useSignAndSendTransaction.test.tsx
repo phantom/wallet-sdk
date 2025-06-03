@@ -91,39 +91,4 @@ describe("useSignAndSendTransaction", () => {
     expect(mockSolanaProvider.signAndSendTransaction).toHaveBeenCalledWith(mockTransaction);
     expect(response).toEqual(mockSignAndSendResult);
   });
-
-  it("should throw 'The connected provider does not support signAndSendTransaction' if provider.signAndSendTransaction is undefined", async () => {
-    // @ts-expect-error - window.phantom is not typed
-    window.phantom = {
-      solana: {
-        isConnected: true, // To prevent connect from being called
-        connect: jest.fn(),
-        // signAndSendTransaction is undefined
-      },
-    };
-
-    const { result } = renderHook(() => useSignAndSendTransaction(), {
-      wrapper: ({ children }) => (
-        <PhantomProvider
-          config={{
-            chainPlugins: [
-              {
-                name: "solana",
-                create: () => ({
-                  ...solanaPlugin.create(),
-                }),
-              },
-            ],
-          }}
-        >
-          {children}
-        </PhantomProvider>
-      ),
-    });
-    await act(async () => {
-      await expect(result.current.signAndSendTransaction(mockTransaction)).rejects.toThrow(
-        "The connected provider does not support signAndSendTransaction.",
-      );
-    });
-  });
 });

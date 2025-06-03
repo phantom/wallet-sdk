@@ -1,23 +1,23 @@
-import { getProvider } from "./getProvider";
+import { getAdapter } from "./getAdapter";
 import { triggerEvent } from "./eventListeners";
 
 export async function connect() {
-  const provider = getProvider();
-  if (!provider) {
+  const adapter = await getAdapter();
+
+  if (!adapter) {
     throw new Error("Phantom provider not found.");
   }
 
-  if (provider.isConnected) {
-    return provider.publicKey?.toString();
+  if (adapter.isConnected) {
+    return adapter.getAccount();
   }
 
   // first try eager connecting without prompting user
   try {
-    const eagerConnectResult = await provider.connect({ onlyIfTrusted: true });
-    if (eagerConnectResult.publicKey) {
-      const publicKeyStr = eagerConnectResult.publicKey.toString();
-      triggerEvent("connect", publicKeyStr);
-      return publicKeyStr;
+    const address = await adapter.connect({ onlyIfTrusted: true });
+    if (address) {
+      triggerEvent("connect", address);
+      return address;
     }
   } catch (error) {
     // Silently fail eager connect attempt
@@ -25,12 +25,11 @@ export async function connect() {
 
   // if not connected, prompt user to connect prominently
   try {
-    const connectResult = await provider.connect({ onlyIfTrusted: false });
+    const address = await adapter.connect({ onlyIfTrusted: false });
 
-    if (connectResult.publicKey) {
-      const publicKeyStr = connectResult.publicKey.toString();
-      triggerEvent("connect", publicKeyStr);
-      return publicKeyStr;
+    if (address) {
+      triggerEvent("connect", address);
+      return address;
     }
   } catch (error) {
     // Silently fail eager connect attempt
