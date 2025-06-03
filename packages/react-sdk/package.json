@@ -27,7 +27,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@phantom/browser-sdk": "workspace:^"
+    "@phantom/browser-sdk": "workspace:*"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.0",
