@@ -1,5 +1,13 @@
 # @phantom/react-sdk
 
+## 0.0.5
+
+### Patch Changes
+
+- d29bc43: Fix dependencies
+- Updated dependencies [d29bc43]
+  - @phantom/browser-sdk@0.0.5
+
 ## 0.0.4
 
 ### Patch Changes
