@@ -1,5 +1,11 @@
 # @phantom/browser-sdk
 
+## 0.0.4
+
+### Patch Changes
+
+- 805bb86: small fixes and improvements
+
 ## 0.0.3
 
 ### Patch Changes
