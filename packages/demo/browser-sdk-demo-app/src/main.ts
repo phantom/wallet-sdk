@@ -1,7 +1,15 @@
 /* eslint-disable no-console */
 import { createPhantom } from "@phantom/browser-sdk";
 import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
-import { SystemProgram, Transaction, LAMPORTS_PER_SOL, PublicKey, Connection } from "@solana/web3.js";
+import {
+  createSolanaRpc,
+  pipe,
+  createTransactionMessage,
+  setTransactionMessageFeePayer,
+  setTransactionMessageLifetimeUsingBlockhash,
+  address,
+  compileTransaction,
+} from "@solana/kit";
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log("Document loaded, attempting to create Phantom instance...");
@@ -46,10 +54,10 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
           const accountResult = await phantomInstance.solana.getAccount();
           if (accountResult && accountResult.status === "connected") {
-            userPublicKey = accountResult.publicKey;
+            userPublicKey = accountResult.address;
             console.log("Account retrieved:", accountResult);
-            alert(`Account retrieved: ${accountResult.publicKey}`);
-            
+            alert(`Account retrieved: ${accountResult.address}`);
+
             if (signMessageBtn) signMessageBtn.disabled = false;
             if (signTransactionBtn) signTransactionBtn.disabled = false;
             if (disconnectBtn) disconnectBtn.disabled = false;
@@ -92,21 +100,20 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
 
-          const connection = new Connection("https://api.mainnet-beta.solana.com");
+          const rpc = createSolanaRpc("https://solana-mainnet.g.alchemy.com/v2/Pnb7lrjdZw6df2yXSKDiG");
 
-          const transaction = new Transaction({
-            recentBlockhash: (await connection.getLatestBlockhash()).blockhash,
-          }).add(
-            SystemProgram.transfer({
-              fromPubkey: new PublicKey(userPublicKey),
-              toPubkey: new PublicKey(userPublicKey),
-              lamports: 0.001 * LAMPORTS_PER_SOL,
-            }),
+          const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
+
+          const transactionMessage = pipe(
+            createTransactionMessage({ version: 0 }),
+            tx => setTransactionMessageFeePayer(address(userPublicKey as string), tx),
+            tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
           );
 
-          const signature = await phantomInstance.solana.signAndSendTransaction(transaction);
-          console.log("Transaction Signature:", signature);
-          alert(`Transaction sent with signature: ${signature.signature}`);
+          const transaction = compileTransaction(transactionMessage);
+
+          const { signature } = await phantomInstance.solana.signAndSendTransaction(transaction);
+          alert(`Transaction sent with signature: ${signature}`);
         } catch (error) {
           console.error("Error signing or sending transaction:", error);
           alert(`Error signing/sending transaction: ${(error as Error).message || error}`);

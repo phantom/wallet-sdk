@@ -1,7 +1,6 @@
 import { signIn } from "./signIn";
 import { getProvider as defaultGetProvider } from "./getProvider";
-import type { PhantomSolanaProvider, SolanaSignInData } from "./types";
-import type { PublicKey } from "@solana/web3.js";
+import type { PhantomSolanaProvider, PublicKey, SolanaSignInData } from "./types";
 
 jest.mock("./getProvider", () => ({
   getProvider: jest.fn(),

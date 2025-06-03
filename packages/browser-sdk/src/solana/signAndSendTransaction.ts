@@ -1,7 +1,8 @@
 import { getProvider } from "./getProvider";
-import type { PhantomSolanaProvider } from "./types";
-import type { Transaction, VersionedTransaction } from "@solana/web3.js";
+import type { PhantomSolanaProvider, VersionedTransaction } from "./types";
+import type { Transaction } from "@solana/kit";
 import { connect } from "./connect";
+import { transactionToVersionedTransaction } from "./utils/transactionToVersionedTransaction";
 
 /**
  * Signs and sends a transaction using the Phantom provider.
@@ -10,8 +11,8 @@ import { connect } from "./connect";
  * @throws Error if Phantom provider is not found or if the operation fails.
  */
 export async function signAndSendTransaction(
-  transaction: Transaction | VersionedTransaction,
-): Promise<{ signature: string; publicKey?: string }> {
+  transaction: Transaction,
+): Promise<{ signature: string; address?: string }> {
   const provider = getProvider() as PhantomSolanaProvider | null;
 
   if (!provider) {
@@ -30,5 +31,13 @@ export async function signAndSendTransaction(
   if (!provider.isConnected) {
     throw new Error("Provider is not connected even after attempting to connect.");
   }
-  return provider.signAndSendTransaction(transaction);
+
+  // Convert the Kit transaction into a web3.js VersionedTransaction before sending.
+  const versionedTransaction: VersionedTransaction = transactionToVersionedTransaction(transaction);
+
+  const result = await provider.signAndSendTransaction(versionedTransaction);
+  return {
+    signature: result.signature,
+    address: result.publicKey,
+  };
 }

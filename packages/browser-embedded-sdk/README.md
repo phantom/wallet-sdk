@@ -133,7 +133,7 @@ In this case, you must use the returned object for all interactions:
 
 ```typescript
 // Connect to Solana using your namespaced instance
-const publicKey = await phantom.solana.connect();
+const address = await phantom.solana.connect();
 ```
 
 ### Usage with Existing dApps
@@ -155,7 +155,7 @@ const phantom = await createPhantom({
 });
 
 // All providers are available through the phantom instance only
-const solanaPublicKey = await phantom.solana.connect();
+const solanaAddress = await phantom.solana.connect();
 ```
 
 The SDK will:
@@ -228,7 +228,7 @@ The SDK provides access to Phantom's blockchain-specific RPC interfaces:
 
 ```typescript
 // Connect to wallet
-const publicKey = await phantom.solana.connect();
+const address = await phantom.solana.connect();
 
 // Sign a message
 const message = new TextEncoder().encode("Hello, Solana!");

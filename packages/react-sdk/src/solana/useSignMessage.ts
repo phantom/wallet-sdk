@@ -2,7 +2,7 @@ import { usePhantom } from "../PhantomContext"; // Assuming this provides the SD
 import { useCallback } from "react";
 
 interface UseSignMessageResult {
-  signMessage: (message: Uint8Array, display?: "utf8" | "hex") => Promise<{ signature: Uint8Array; publicKey: string }>;
+  signMessage: (message: Uint8Array, display?: "utf8" | "hex") => Promise<{ signature: Uint8Array; address: string }>;
 }
 
 export function useSignMessage(): UseSignMessageResult {

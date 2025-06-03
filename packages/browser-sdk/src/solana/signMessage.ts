@@ -12,7 +12,7 @@ import { connect } from "./connect";
 export async function signMessage(
   message: Uint8Array,
   display?: DisplayEncoding,
-): Promise<{ signature: Uint8Array; publicKey: string }> {
+): Promise<{ signature: Uint8Array; address: string }> {
   const provider = getProvider() as PhantomSolanaProvider | null;
 
   if (!provider) {
@@ -33,6 +33,6 @@ export async function signMessage(
   const result = await provider.signMessage(message, display);
   return {
     signature: result.signature,
-    publicKey: result.publicKey.toString(),
+    address: result.publicKey.toString(),
   };
 }

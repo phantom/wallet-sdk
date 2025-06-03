@@ -1,7 +1,6 @@
 import { signMessage } from "./signMessage";
 import { getProvider as defaultGetProvider } from "./getProvider";
-import type { PhantomSolanaProvider, DisplayEncoding } from "./types";
-import type { PublicKey } from "@solana/web3.js";
+import type { PhantomSolanaProvider, DisplayEncoding, PublicKey } from "./types";
 import { connect } from "./connect";
 
 // Mock defaultGetProvider
@@ -34,8 +33,11 @@ describe("signMessage", () => {
     const message = new Uint8Array([1, 2, 3]);
     const display: DisplayEncoding = "hex";
     const expectedSignature = new Uint8Array([4, 5, 6]);
-    const expectedResult = { signature: expectedSignature, publicKey: mockPublicKey.toString() };
-    (mockProvider.signMessage as jest.Mock).mockResolvedValue(expectedResult);
+    const expectedResult = { signature: expectedSignature, address: mockPublicKey.toString() };
+    (mockProvider.signMessage as jest.Mock).mockResolvedValue({
+      signature: expectedSignature,
+      publicKey: mockPublicKey,
+    });
 
     const result = await signMessage(message, display);
 
@@ -60,7 +62,7 @@ describe("signMessage", () => {
     const message = new Uint8Array([1, 2, 3]);
     const display: DisplayEncoding = "hex";
     const expectedSignature = new Uint8Array([4, 5, 6]);
-    const expectedResult = { signature: expectedSignature, publicKey: mockPublicKey.toString() };
+    const expectedResult = { signature: expectedSignature, address: mockPublicKey.toString() };
 
     mockProvider.isConnected = false;
 
@@ -72,7 +74,10 @@ describe("signMessage", () => {
       return Promise.resolve("mockPublicKeyString");
     });
 
-    (mockProvider.signMessage as jest.Mock).mockResolvedValue(expectedResult);
+    (mockProvider.signMessage as jest.Mock).mockResolvedValue({
+      signature: expectedSignature,
+      publicKey: mockPublicKey,
+    });
 
     const result = await signMessage(message, display);
 
@@ -115,13 +120,17 @@ describe("signMessage", () => {
   it("should use default display encoding if not provided", async () => {
     const message = new Uint8Array([1, 2, 3]);
     const expectedSignature = new Uint8Array([10, 11, 12]);
-    const expectedResult = { signature: expectedSignature, publicKey: mockPublicKey.toString() };
-    (mockProvider.signMessage as jest.Mock).mockResolvedValue(expectedResult);
+    const expectedResult = { signature: expectedSignature, address: mockPublicKey.toString() };
+    (mockProvider.signMessage as jest.Mock).mockResolvedValue({
+      signature: expectedSignature,
+      publicKey: mockPublicKey,
+    });
     mockProvider.isConnected = true;
     mockDefaultGetProvider.mockReturnValue(mockProvider as PhantomSolanaProvider);
 
-    await signMessage(message);
+    const result = await signMessage(message);
 
     expect(mockProvider.signMessage).toHaveBeenCalledWith(message, undefined);
+    expect(result).toEqual(expectedResult);
   });
 });

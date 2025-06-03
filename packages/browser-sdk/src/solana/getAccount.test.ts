@@ -25,7 +25,7 @@ describe("getAccount", () => {
 
     expect(result).toEqual({
       status: "connected",
-      publicKey: mockPublicKey.toString(),
+      address: mockPublicKey.toString(),
     });
   });
 
@@ -40,7 +40,7 @@ describe("getAccount", () => {
 
     expect(result).toEqual({
       status: "disconnected",
-      publicKey: null,
+      address: null,
     });
   });
 
@@ -51,7 +51,7 @@ describe("getAccount", () => {
 
     expect(result).toEqual({
       status: "disconnected",
-      publicKey: null,
+      address: null,
     });
   });
 
@@ -66,7 +66,7 @@ describe("getAccount", () => {
 
     expect(result).toEqual({
       status: "disconnected",
-      publicKey: null,
+      address: null,
     });
   });
 });
