@@ -7,17 +7,12 @@ export async function connect() {
     throw new Error("Phantom provider not found.");
   }
 
-  if (provider.isConnected) {
-    return provider.publicKey?.toString();
-  }
-
   // first try eager connecting without prompting user
   try {
-    const eagerConnectResult = await provider.connect({ onlyIfTrusted: true });
-    if (eagerConnectResult.publicKey) {
-      const publicKeyStr = eagerConnectResult.publicKey.toString();
-      triggerEvent("connect", publicKeyStr);
-      return publicKeyStr;
+    const address = await provider.connect({ onlyIfTrusted: true });
+    if (address) {
+      triggerEvent("connect", address);
+      return address;
     }
   } catch (error) {
     // Silently fail eager connect attempt
@@ -25,12 +20,11 @@ export async function connect() {
 
   // if not connected, prompt user to connect prominently
   try {
-    const connectResult = await provider.connect({ onlyIfTrusted: false });
+    const address = await provider.connect({ onlyIfTrusted: false });
 
-    if (connectResult.publicKey) {
-      const publicKeyStr = connectResult.publicKey.toString();
-      triggerEvent("connect", publicKeyStr);
-      return publicKeyStr;
+    if (address) {
+      triggerEvent("connect", address);
+      return address;
     }
   } catch (error) {
     // Silently fail eager connect attempt

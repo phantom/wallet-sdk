@@ -1,17 +1,14 @@
 import type { ChainPlugin } from "../index";
-import { getProvider } from "./getProvider";
-import { signMessage } from "./signMessage";
-import { signIn } from "./signIn";
-import { signAndSendTransaction } from "./signAndSendTransaction";
-import type { PhantomSolanaProvider, PhantomEventType } from "./types";
 import { connect } from "./connect";
 import { disconnect } from "./disconnect";
 import { addEventListener, removeEventListener, type PhantomEventCallback } from "./eventListeners";
 import { getAccount } from "./getAccount";
+import { signAndSendTransaction } from "./signAndSendTransaction";
+import { signIn } from "./signIn";
+import { signMessage } from "./signMessage";
+import type { PhantomEventType } from "./types";
 
 export type Solana = {
-  getProvider: () => PhantomSolanaProvider | null;
-
   connect: typeof connect;
   disconnect: typeof disconnect;
 
@@ -26,7 +23,6 @@ export type Solana = {
 };
 
 const solana: Solana = {
-  getProvider,
   connect,
   disconnect,
   getAccount,
