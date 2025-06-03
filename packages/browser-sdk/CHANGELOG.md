@@ -1,5 +1,11 @@
 # @phantom/browser-sdk
 
+## 0.0.5
+
+### Patch Changes
+
+- d29bc43: Fix dependencies
+
 ## 0.0.4
 
 ### Patch Changes
