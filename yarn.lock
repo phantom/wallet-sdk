@@ -1531,7 +1531,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/browser-sdk@workspace:*, @phantom/browser-sdk@workspace:^, @phantom/browser-sdk@workspace:packages/browser-sdk":
+"@phantom/browser-sdk@workspace:*, @phantom/browser-sdk@workspace:packages/browser-sdk":
   version: 0.0.0-use.local
   resolution: "@phantom/browser-sdk@workspace:packages/browser-sdk"
   dependencies:
@@ -1567,7 +1567,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/react-sdk@workspace:packages/react-sdk"
   dependencies:
-    "@phantom/browser-sdk": "workspace:^"
+    "@phantom/browser-sdk": "workspace:*"
     "@testing-library/dom": "npm:^10.4.0"
     "@testing-library/react": "npm:^16.3.0"
     "@types/jest": "npm:^29.5.14"
