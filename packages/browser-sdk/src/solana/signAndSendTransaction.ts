@@ -1,6 +1,5 @@
 import type { Transaction } from "@solana/kit";
-import { getAccount } from "./getAccount";
-import { getProvider } from "./getProvider";
+import { getAdapter } from "./getAdapter";
 
 /**
  * Signs and sends a transaction using the Phantom provider.
@@ -11,17 +10,15 @@ import { getProvider } from "./getProvider";
 export async function signAndSendTransaction(
   transaction: Transaction,
 ): Promise<{ signature: string; address?: string }> {
-  const provider = getProvider();
+  const adapter = getAdapter();
 
-  if (!provider) {
-    throw new Error("Phantom provider not found.");
+  if (!adapter) {
+    throw new Error("Adapter not found.");
   }
 
-  const account = await getAccount();
-
-  if (!account) {
-    await provider.connect({ onlyIfTrusted: false });
+  if (!adapter.isConnected) {
+    await adapter.connect({ onlyIfTrusted: false });
   }
 
-  return provider.signAndSendTransaction(transaction);
+  return adapter.signAndSendTransaction(transaction);
 }

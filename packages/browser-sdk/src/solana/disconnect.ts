@@ -1,12 +1,12 @@
-import { getProvider } from "./getProvider";
+import { getAdapter } from "./getAdapter";
 import { triggerEvent } from "./eventListeners";
 
 export async function disconnect() {
-  const provider = getProvider();
-  if (!provider) {
+  const adapter = getAdapter();
+  if (!adapter) {
     throw new Error("Phantom provider not found.");
   }
 
-  await provider.disconnect();
+  await adapter.disconnect();
   triggerEvent("disconnect");
 }

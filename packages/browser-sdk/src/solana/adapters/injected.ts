@@ -6,7 +6,12 @@ import { fromVersionedTransaction } from "@solana/compat";
 
 export class InjectedSolanaAdapter implements SolanaAdapter {
   #getProvider(): PhantomSolanaProvider {
-    return (window as any).phantom?.solana;
+    return (window as any)?.phantom?.solana as PhantomSolanaProvider;
+  }
+
+  public get isConnected(): boolean {
+    const provider = this.#getProvider();
+    return provider?.isConnected && provider.publicKey ? true : false;
   }
 
   public async connect({ onlyIfTrusted }: { onlyIfTrusted: boolean }): Promise<string | undefined> {
@@ -14,8 +19,8 @@ export class InjectedSolanaAdapter implements SolanaAdapter {
     if (!provider) {
       throw new Error("Phantom provider not found.");
     }
-    if (provider.isConnected) {
-      return Promise.resolve(provider.publicKey?.toString());
+    if (provider.isConnected && provider.publicKey) {
+      return this.getAccount() ?? undefined;
     }
     try {
       const result = await provider.connect({ onlyIfTrusted });
@@ -36,7 +41,7 @@ export class InjectedSolanaAdapter implements SolanaAdapter {
   public async getAccount(): Promise<string | undefined> {
     const provider = this.#getProvider();
     if (provider && provider.isConnected && provider.publicKey) {
-      return provider.publicKey.toString();
+      return Promise.resolve(provider.publicKey.toString());
     }
     return Promise.resolve(undefined);
   }

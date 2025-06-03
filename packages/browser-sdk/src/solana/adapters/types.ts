@@ -2,6 +2,8 @@ import type { Transaction } from "@solana/transactions";
 import type { DisplayEncoding, SolanaSignInData } from "../types";
 
 export interface SolanaAdapter {
+  isConnected: boolean;
+
   connect: ({ onlyIfTrusted }: { onlyIfTrusted: boolean }) => Promise<string | undefined>;
   disconnect: () => Promise<void>;
 

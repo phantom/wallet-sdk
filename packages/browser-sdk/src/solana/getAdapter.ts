@@ -1,13 +1,13 @@
 import { InjectedSolanaAdapter } from "./adapters/injected";
 import type { SolanaAdapter } from "./adapters/types";
 
-type ProviderType = "injected" | "kms" | "deeplink";
+type AdapterType = "injected" | "kms" | "deeplink";
 
 /**
  * Retrieves Phantom injected provider and returns it if it exists.
  * @returns Phantom injected provider or null if it doesn't exist.
  */
-export function getProvider(type: ProviderType = "injected"): SolanaAdapter {
+export function getAdapter(_type: AdapterType = "injected"): SolanaAdapter {
   return new InjectedSolanaAdapter();
   // TODO: add other providers here
   // if (type === "injected") {

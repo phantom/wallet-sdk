@@ -1,5 +1,5 @@
-import { getProvider } from "./getProvider";
+import { getAdapter } from "./getAdapter";
 
 export function getAccount(): Promise<string | undefined> {
-  return getProvider().getAccount();
+  return getAdapter().getAccount();
 }
