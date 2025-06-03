@@ -7,7 +7,7 @@
     "format:fix": "prettier . --write",
     "format:check": "prettier . --check",
     "lint": "yarn workspaces foreach -Avpi run lint",
-    "release": "yarn build && yarn changeset publish",
+    "release": "yarn build && yarn changeset publish --publish-args=\"--yarn\"",
     "test": "jest"
   },
   "workspaces": [
