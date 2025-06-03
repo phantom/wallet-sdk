@@ -144,7 +144,7 @@ describe("useSignMessage", () => {
     expect(signMessageResponse).toEqual(mockHookResult);
   });
 
-  it("should throw 'The connected provider does not support signMessage' if provider.signMessage is undefined", async () => {
+  it("should throw an error if provider.signMessage is undefined", async () => {
     // @ts-expect-error - window.phantom is not typed
     window.phantom = {
       solana: {
@@ -156,9 +156,7 @@ describe("useSignMessage", () => {
 
     const { result } = renderHook(() => useSignMessage(), sharedConfig);
     await act(async () => {
-      await expect(result.current.signMessage(mockMessage)).rejects.toThrow(
-        "The connected provider does not support signMessage.",
-      );
+      await expect(result.current.signMessage(mockMessage)).rejects.toThrow("provider.signMessage is not a function");
     });
   });
 });

@@ -1,7 +1,7 @@
 import type { Transaction } from "@solana/kit";
 import { signTransaction } from "./signTransaction";
 import type { PhantomSolanaProvider } from "./types";
-import { SolanaAdapter } from "./adapters/types";
+import type { SolanaAdapter } from "./adapters/types";
 import { getAdapter } from "./getAdapter";
 
 jest.mock("./getAdapter", () => ({

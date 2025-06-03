@@ -53,10 +53,10 @@ document.addEventListener("DOMContentLoaded", () => {
       getAccountBtn.onclick = async () => {
         try {
           const accountResult = await phantomInstance.solana.getAccount();
-          if (accountResult && accountResult.status === "connected") {
-            userPublicKey = accountResult.address;
+          if (accountResult) {
+            userPublicKey = accountResult;
             console.log("Account retrieved:", accountResult);
-            alert(`Account retrieved: ${accountResult.address}`);
+            alert(`Account retrieved: ${accountResult}`);
 
             if (signMessageBtn) signMessageBtn.disabled = false;
             if (signTransactionBtn) signTransactionBtn.disabled = false;
@@ -75,10 +75,6 @@ document.addEventListener("DOMContentLoaded", () => {
       signMessageBtn.disabled = !userPublicKey;
       signMessageBtn.onclick = async () => {
         try {
-          if (!phantomInstance.solana.getProvider() || !userPublicKey) {
-            alert("Please connect your wallet first.");
-            return;
-          }
           const message = new TextEncoder().encode("Hello from Phantom Browser SDK Demo!");
           const signedMessage = await phantomInstance.solana.signMessage(message, "utf8");
           console.log("Signed Message:", signedMessage);
@@ -94,12 +90,6 @@ document.addEventListener("DOMContentLoaded", () => {
       signTransactionBtn.disabled = !userPublicKey;
       signTransactionBtn.onclick = async () => {
         try {
-          const provider = phantomInstance.solana.getProvider();
-          if (!provider || !userPublicKey) {
-            alert("Please connect your wallet first.");
-            return;
-          }
-
           const rpc = createSolanaRpc("https://solana-mainnet.g.alchemy.com/v2/Pnb7lrjdZw6df2yXSKDiG");
 
           const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();

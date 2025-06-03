@@ -1,4 +1,4 @@
-import { SolanaAdapter } from "./adapters/types";
+import type { SolanaAdapter } from "./adapters/types";
 import { getAdapter } from "./getAdapter";
 import { signMessage } from "./signMessage";
 import type { DisplayEncoding, PhantomSolanaProvider } from "./types";

@@ -1,4 +1,4 @@
-import { SolanaAdapter } from "./adapters/types";
+import type { SolanaAdapter } from "./adapters/types";
 import { disconnect } from "./disconnect";
 import { addEventListener, clearAllEventListeners } from "./eventListeners";
 import { getAdapter } from "./getAdapter";
@@ -11,7 +11,7 @@ jest.mock("./getAdapter", () => ({
 // to ensure the actual callback logic is tested.
 const eventListenersModule = jest.requireActual("./eventListeners");
 const triggerEventSpy = jest.spyOn(eventListenersModule, "triggerEvent");
-const mockDefaultGetAdapter = getAdapter as jest.MockedFunction<() => SolanaAdapter | null>;
+const mockDefaultGetAdapter = getAdapter as jest.MockedFunction<() => Promise<SolanaAdapter | null>>;
 
 describe("disconnect", () => {
   let mockProvider: Partial<SolanaAdapter>;
@@ -24,7 +24,7 @@ describe("disconnect", () => {
     mockProvider = {
       disconnect: jest.fn(),
     };
-    mockDefaultGetAdapter.mockReturnValue(mockProvider as unknown as SolanaAdapter);
+    mockDefaultGetAdapter.mockReturnValue(Promise.resolve(mockProvider as unknown as SolanaAdapter));
   });
 
   it("should call disconnect and trigger callbacks", async () => {
@@ -40,7 +40,7 @@ describe("disconnect", () => {
   });
 
   it("should throw error when provider is not properly injected", async () => {
-    mockDefaultGetAdapter.mockReturnValue(null);
+    mockDefaultGetAdapter.mockReturnValue(Promise.resolve(null));
 
     await expect(disconnect()).rejects.toThrow("Phantom provider not found.");
     expect(mockDefaultGetAdapter).toHaveBeenCalledTimes(1);

@@ -10,7 +10,7 @@ import type { SolanaSignInData } from "./types";
 export async function signIn(
   signInData: SolanaSignInData,
 ): Promise<{ address: string; signature: Uint8Array; signedMessage: Uint8Array }> {
-  const adapter = getAdapter();
+  const adapter = await getAdapter();
 
   if (!adapter) {
     throw new Error("Adapter not found.");

@@ -10,7 +10,7 @@ import { getAdapter } from "./getAdapter";
 export async function signAndSendTransaction(
   transaction: Transaction,
 ): Promise<{ signature: string; address?: string }> {
-  const adapter = getAdapter();
+  const adapter = await getAdapter();
 
   if (!adapter) {
     throw new Error("Adapter not found.");

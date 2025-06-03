@@ -1,5 +1,5 @@
 import type { Transaction } from "@solana/kit";
-import { SolanaAdapter } from "./adapters/types";
+import type { SolanaAdapter } from "./adapters/types";
 import { getAdapter } from "./getAdapter";
 import { signAndSendTransaction } from "./signAndSendTransaction";
 import type { PhantomSolanaProvider } from "./types";

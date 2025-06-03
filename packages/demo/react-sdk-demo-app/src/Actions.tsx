@@ -19,7 +19,7 @@ import {
 } from "@solana/kit";
 
 export function Actions() {
-  const { address: userAddress, status } = useAccount();
+  const userAddress = useAccount();
   const { connect } = useConnect();
   const { disconnect } = useDisconnect();
   const { signIn } = useSignIn();
@@ -133,9 +133,6 @@ export function Actions() {
       <div className="account-info">
         <p>
           <strong>Account Public Key:</strong> {userAddress}
-        </p>
-        <p>
-          <strong>Account Status:</strong> {status}
         </p>
       </div>
       <div className="controls">

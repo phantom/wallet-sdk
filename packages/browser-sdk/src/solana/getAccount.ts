@@ -1,5 +1,6 @@
 import { getAdapter } from "./getAdapter";
 
-export function getAccount(): Promise<string | undefined> {
-  return getAdapter().getAccount();
+export async function getAccount(): Promise<string | undefined> {
+  const adapter = await getAdapter();
+  return adapter.getAccount();
 }

@@ -50,31 +50,34 @@ describe("useAccount", () => {
     };
   });
 
-  it("should return connected status and publicKey when account is connected", () => {
+  it("should return publicKey when account is connected", async () => {
     const { result } = renderHook(() => useAccount(), sharedConfig);
 
-    expect(result.current.status).toBe("connected");
-    expect(result.current.address).toBe(MOCK_PUBLIC_KEY);
+    await waitFor(() => {
+      expect(result.current).toBe(MOCK_PUBLIC_KEY);
+    });
   });
 
-  it("should return disconnected status and null publicKey when account is disconnected", () => {
+  it("should return undefined when account is disconnected", async () => {
     (window as any).phantom.solana.isConnected = false;
     (window as any).phantom.solana.publicKey = null;
 
     const { result } = renderHook(() => useAccount(), sharedConfig);
 
-    expect(result.current.status).toBe("disconnected");
-    expect(result.current.address).toBe(null);
+    await waitFor(() => {
+      expect(result.current).toBe(undefined);
+    });
   });
 
-  it("should automatically update state when account connects", () => {
+  it("should automatically update state when account connects", async () => {
     (window as any).phantom.solana.isConnected = false;
     (window as any).phantom.solana.publicKey = null;
 
     const { result } = renderHook(() => useAccount(), sharedConfig);
 
-    expect(result.current.status).toBe("disconnected");
-    expect(result.current.address).toBe(null);
+    await waitFor(() => {
+      expect(result.current).toBe(undefined);
+    });
 
     (window as any).phantom.solana.isConnected = true;
     (window as any).phantom.solana.publicKey = { toString: () => MOCK_PUBLIC_KEY };
@@ -87,18 +90,20 @@ describe("useAccount", () => {
       }
     });
 
-    expect(result.current.status).toBe("connected");
-    expect(result.current.address).toBe(MOCK_PUBLIC_KEY);
+    await waitFor(() => {
+      expect(result.current).toBe(MOCK_PUBLIC_KEY);
+    });
   });
 
-  it("should automatically update state when account disconnects", () => {
+  it("should automatically update state when account disconnects", async () => {
     (window as any).phantom.solana.isConnected = true;
     (window as any).phantom.solana.publicKey = { toString: () => MOCK_PUBLIC_KEY };
 
     const { result } = renderHook(() => useAccount(), sharedConfig);
 
-    expect(result.current.status).toBe("connected");
-    expect(result.current.address).toBe(MOCK_PUBLIC_KEY);
+    await waitFor(() => {
+      expect(result.current).toBe(MOCK_PUBLIC_KEY);
+    });
 
     (window as any).phantom.solana.isConnected = false;
     (window as any).phantom.solana.publicKey = null;
@@ -111,8 +116,9 @@ describe("useAccount", () => {
       }
     });
 
-    expect(result.current.status).toBe("disconnected");
-    expect(result.current.address).toBe(null);
+    await waitFor(() => {
+      expect(result.current).toBe(undefined);
+    });
   });
 
   it("should set up event listeners on mount", () => {
@@ -141,13 +147,15 @@ describe("useAccount", () => {
     expect(mockSolanaPlugin.removeEventListener).toHaveBeenCalledWith("accountChanged", accountChangedHandler);
   });
 
-  it("should handle account changes", () => {
+  it("should handle account changes", async () => {
     (window as any).phantom.solana.isConnected = true;
     (window as any).phantom.solana.publicKey = { toString: () => MOCK_PUBLIC_KEY };
 
     const { result } = renderHook(() => useAccount(), sharedConfig);
 
-    expect(result.current.address).toBe(MOCK_PUBLIC_KEY);
+    await waitFor(() => {
+      expect(result.current).toBe(MOCK_PUBLIC_KEY);
+    });
 
     const newPublicKey = "22222222222222222222222222222223";
     (window as any).phantom.solana.publicKey = { toString: () => newPublicKey };
@@ -160,8 +168,9 @@ describe("useAccount", () => {
       }
     });
 
-    expect(result.current.status).toBe("connected");
-    expect(result.current.address).toBe(newPublicKey);
+    await waitFor(() => {
+      expect(result.current).toBe(newPublicKey);
+    });
 
     (window as any).phantom.solana.publicKey = { toString: () => MOCK_PUBLIC_KEY };
   });
@@ -172,8 +181,7 @@ describe("useAccount", () => {
 
     const { result } = renderHook(() => useAccount(), sharedConfig);
 
-    expect(result.current.status).toBe("loading");
-    expect(result.current.address).toBe(null);
+    expect(result.current).toBe(undefined);
 
     (window as any).phantom = originalPhantom;
   });
@@ -182,8 +190,7 @@ describe("useAccount", () => {
     const spy = jest.spyOn(PhantomContext, "usePhantom").mockReturnValue({ phantom: undefined, isReady: false });
     const { result } = renderHook(() => useAccount(), sharedConfig);
 
-    expect(result.current.status).toBe("loading");
-    expect(result.current.address).toBe(null);
+    expect(result.current).toBe(undefined);
 
     spy.mockRestore();
   });
@@ -194,20 +201,12 @@ describe("useAccount", () => {
 
     const { result, rerender } = renderHook(() => useAccount(), sharedConfig);
 
-    expect(result.current.status).toBe("loading");
-    expect(result.current.address).toBe(null);
-
-    const mockProvider = {
-      on: jest.fn(),
-      off: jest.fn(),
-      removeListener: jest.fn(),
-    };
+    expect(result.current).toBe(undefined);
 
     spy.mockReturnValue({
       phantom: {
         solana: {
-          getAccount: () => ({ status: "connected" as const, address: MOCK_PUBLIC_KEY }),
-          getProvider: () => mockProvider,
+          getAccount: () => Promise.resolve(MOCK_PUBLIC_KEY),
           addEventListener: jest.fn(),
           removeEventListener: jest.fn(),
         },
@@ -218,8 +217,7 @@ describe("useAccount", () => {
     rerender();
 
     await waitFor(() => {
-      expect(result.current.status).toBe("connected");
-      expect(result.current.address).toBe(MOCK_PUBLIC_KEY);
+      expect(result.current).toBe(MOCK_PUBLIC_KEY);
     });
 
     spy.mockRestore();

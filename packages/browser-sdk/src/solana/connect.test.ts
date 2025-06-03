@@ -1,4 +1,4 @@
-import { SolanaAdapter } from "./adapters/types";
+import type { SolanaAdapter } from "./adapters/types";
 import { connect } from "./connect";
 import { addEventListener, clearAllEventListeners } from "./eventListeners";
 import { getAdapter } from "./getAdapter";
@@ -7,7 +7,7 @@ jest.mock("./getAdapter", () => ({
   getAdapter: jest.fn(),
 }));
 
-const mockDefaultGetAdapter = getAdapter as jest.MockedFunction<() => SolanaAdapter | null>;
+const mockDefaultGetAdapter = getAdapter as jest.MockedFunction<() => Promise<SolanaAdapter | null>>;
 
 // We will spy on triggerEvent rather than fully mocking it
 // to ensure the actual callback logic is tested.
@@ -32,7 +32,7 @@ describe("connect", () => {
         return "123";
       }),
     };
-    mockDefaultGetAdapter.mockReturnValue(mockProvider as unknown as SolanaAdapter);
+    mockDefaultGetAdapter.mockReturnValue(Promise.resolve(mockProvider as unknown as SolanaAdapter));
   });
 
   it("should perform regular non-eager connect when app is not trusted", async () => {
@@ -82,7 +82,7 @@ describe("connect", () => {
     expect(triggerEventSpy).not.toHaveBeenCalled();
   });
   it("should throw error when provider is not properly injected", async () => {
-    mockDefaultGetAdapter.mockReturnValue(null);
+    mockDefaultGetAdapter.mockReturnValue(Promise.resolve(null));
     await expect(connect()).rejects.toThrow("Phantom provider not found.");
     expect(triggerEventSpy).not.toHaveBeenCalled();
     expect(mockDefaultGetAdapter).toHaveBeenCalledTimes(1);

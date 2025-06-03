@@ -1,4 +1,4 @@
-import { SolanaAdapter } from "./adapters/types";
+import type { SolanaAdapter } from "./adapters/types";
 import { getAccount } from "./getAccount";
 import { getAdapter } from "./getAdapter";
 

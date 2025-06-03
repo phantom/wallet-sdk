@@ -12,7 +12,7 @@ export async function signMessage(
   message: Uint8Array,
   display?: DisplayEncoding,
 ): Promise<{ signature: Uint8Array; address: string }> {
-  const adapter = getAdapter();
+  const adapter = await getAdapter();
 
   if (!adapter) {
     throw new Error("Adapter not found.");

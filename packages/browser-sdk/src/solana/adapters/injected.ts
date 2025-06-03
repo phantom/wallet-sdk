@@ -4,7 +4,36 @@ import type { Transaction } from "@solana/transactions";
 import { transactionToVersionedTransaction } from "../utils/transactionToVersionedTransaction";
 import { fromVersionedTransaction } from "@solana/compat";
 
+const MAX_RETRIES = 4;
+const BASE_DELAY = 100;
+
 export class InjectedSolanaAdapter implements SolanaAdapter {
+  load() {
+    // We add a backoff retry to see if window.phantom.solana is available
+    let retryCount = 0;
+    const scheduleRetry = (resolve: () => void, reject: () => void) => {
+      const delay = BASE_DELAY * Math.pow(2, Math.min(retryCount, 5));
+
+      setTimeout(() => {
+        if (this.#getProvider()) {
+          resolve();
+          return;
+        }
+
+        retryCount++;
+        if (retryCount >= MAX_RETRIES) {
+          reject();
+        } else {
+          scheduleRetry(resolve, reject);
+        }
+      }, delay);
+    };
+
+    return new Promise((resolve, reject) => {
+      scheduleRetry(() => resolve(this), reject);
+    });
+  }
+
   #getProvider(): PhantomSolanaProvider {
     return (window as any)?.phantom?.solana as PhantomSolanaProvider;
   }

@@ -8,7 +8,7 @@ import { getAdapter } from "./getAdapter";
  * @throws Error if Phantom provider is not found or if the operation fails.
  */
 export async function signAllTransactions(transactions: Transaction[]): Promise<Transaction[]> {
-  const adapter = getAdapter();
+  const adapter = await getAdapter();
   if (!adapter) {
     throw new Error("Adapter not found.");
   }

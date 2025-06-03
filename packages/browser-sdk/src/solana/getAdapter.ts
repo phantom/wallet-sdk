@@ -7,8 +7,16 @@ type AdapterType = "injected" | "kms" | "deeplink";
  * Retrieves Phantom injected provider and returns it if it exists.
  * @returns Phantom injected provider or null if it doesn't exist.
  */
-export function getAdapter(_type: AdapterType = "injected"): SolanaAdapter {
-  return new InjectedSolanaAdapter();
+export async function getAdapter(_type: AdapterType = "injected"): Promise<SolanaAdapter> {
+  const adapter = new InjectedSolanaAdapter();
+  try {
+    await adapter.load();
+
+    return adapter;
+  } catch (error) {
+    throw new Error("Phantom provider not found.");
+  }
+
   // TODO: add other providers here
   // if (type === "injected") {
   //   return ((window as any).phantom?.solana as NonNullable<PhantomSolanaProvider>) ?? null;

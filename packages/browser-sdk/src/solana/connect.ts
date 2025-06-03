@@ -2,7 +2,8 @@ import { getAdapter } from "./getAdapter";
 import { triggerEvent } from "./eventListeners";
 
 export async function connect() {
-  const adapter = getAdapter();
+  const adapter = await getAdapter();
+
   if (!adapter) {
     throw new Error("Phantom provider not found.");
   }

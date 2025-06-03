@@ -1,4 +1,4 @@
-import { PhantomSolanaProvider, VersionedTransaction } from "../types";
+import type { PhantomSolanaProvider, VersionedTransaction } from "../types";
 import { InjectedSolanaAdapter } from "./injected";
 import { transactionToVersionedTransaction } from "../utils/transactionToVersionedTransaction";
 import type { Transaction } from "@solana/transactions";

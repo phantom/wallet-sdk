@@ -11,13 +11,10 @@ import type { PhantomEventType } from "./types";
 export type Solana = {
   connect: typeof connect;
   disconnect: typeof disconnect;
-
   getAccount: typeof getAccount;
-
   signMessage: typeof signMessage;
   signIn: typeof signIn;
   signAndSendTransaction: typeof signAndSendTransaction;
-
   addEventListener: (event: PhantomEventType, callback: PhantomEventCallback) => () => void;
   removeEventListener: (event: PhantomEventType, callback: PhantomEventCallback) => void;
 };
