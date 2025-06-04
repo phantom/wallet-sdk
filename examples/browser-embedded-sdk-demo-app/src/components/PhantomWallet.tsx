@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createPhantom, type Phantom, Position } from "../../../../packages/browser-embedded-sdk/src/index";
+import { createPhantom, type Phantom, Position } from "@phantom/wallet-sdk";
 import { NavigationScreen } from "./NavigationScreen";
 import { NormalConfigScreen } from "./NormalConfigScreen";
 import { ElementConfigScreen } from "./ElementConfigScreen";

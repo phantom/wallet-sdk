@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { Phantom } from "../../../../packages/browser-embedded-sdk/src/index";
+import type { Phantom } from "@phantom/wallet-sdk";
 import { Prism, type SyntaxHighlighterProps } from "react-syntax-highlighter";
 
 import { docco } from "react-syntax-highlighter/dist/esm/styles/hljs";
