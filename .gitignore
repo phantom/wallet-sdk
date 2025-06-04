@@ -19,3 +19,7 @@ node_modules
 **/.DS_Store
 .eslintcache
 **/.eslintcache
+
+# release workaround for changesets
+_release
+**/_release
