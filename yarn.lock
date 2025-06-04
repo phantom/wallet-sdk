@@ -1542,6 +1542,7 @@ __metadata:
     "@types/jest": "npm:^29.5.14"
     eslint: "npm:8.53.0"
     jest: "npm:^29.7.0"
+    rimraf: "npm:^6.0.1"
     tsup: "npm:^6.7.0"
     typescript: "npm:^5.0.4"
   languageName: unknown
@@ -1580,6 +1581,7 @@ __metadata:
     jest-environment-jsdom: "npm:^29.7.0"
     react: "npm:18.2.0"
     react-dom: "npm:18.2.0"
+    rimraf: "npm:^6.0.1"
     ts-jest: "npm:^29"
     tsup: "npm:^6.7.0"
     typescript: "npm:^5.0.4"
