@@ -4,9 +4,9 @@
   "version": "0.0.7",
   "type": "module",
   "scripts": {
-    "predev": "cd ../../browser-embedded-sdk && yarn build",
+    "predev": "yarn workspace @phantom/browser-embedded-sdk build",
     "dev": "vite --port 5174",
-    "prebuild": "cd ../../browser-embedded-sdk && yarn build",
+    "prebuild": "yarn workspace @phantom/browser-embedded-sdk build",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },

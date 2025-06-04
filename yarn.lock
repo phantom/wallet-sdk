@@ -1502,9 +1502,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@phantom/browser-embedded-sdk-demo-app@workspace:packages/demo/browser-embedded-sdk-demo-app":
+"@phantom/browser-embedded-sdk-demo-app@workspace:examples/browser-embedded-sdk-demo-app":
   version: 0.0.0-use.local
-  resolution: "@phantom/browser-embedded-sdk-demo-app@workspace:packages/demo/browser-embedded-sdk-demo-app"
+  resolution: "@phantom/browser-embedded-sdk-demo-app@workspace:examples/browser-embedded-sdk-demo-app"
   dependencies:
     "@phantom/wallet-sdk": "workspace:*"
     "@types/react": "npm:^18.2.15"
@@ -1519,9 +1519,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/browser-sdk-demo-app@workspace:packages/demo/browser-sdk-demo-app":
+"@phantom/browser-sdk-demo-app@workspace:examples/browser-sdk-demo-app":
   version: 0.0.0-use.local
-  resolution: "@phantom/browser-sdk-demo-app@workspace:packages/demo/browser-sdk-demo-app"
+  resolution: "@phantom/browser-sdk-demo-app@workspace:examples/browser-sdk-demo-app"
   dependencies:
     "@phantom/browser-sdk": "workspace:*"
     "@solana/kit": "npm:^2.1.1"
@@ -1547,9 +1547,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/react-sdk-demo-app@workspace:packages/demo/react-sdk-demo-app":
+"@phantom/react-sdk-demo-app@workspace:examples/react-sdk-demo-app":
   version: 0.0.0-use.local
-  resolution: "@phantom/react-sdk-demo-app@workspace:packages/demo/react-sdk-demo-app"
+  resolution: "@phantom/react-sdk-demo-app@workspace:examples/react-sdk-demo-app"
   dependencies:
     "@phantom/browser-sdk": "workspace:*"
     "@phantom/react-sdk": "workspace:*"

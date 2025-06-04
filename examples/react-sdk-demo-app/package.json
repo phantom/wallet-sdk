@@ -4,9 +4,9 @@
   "version": "0.0.2",
   "type": "module",
   "scripts": {
-    "predev": "cd ../../react-sdk && yarn build",
+    "predev": "yarn workspace @phantom/react-sdk build",
     "dev": "vite --port 5174",
-    "prebuild": "cd ../../react-sdk && yarn build",
+    "prebuild": "yarn workspace @phantom/react-sdk build",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"

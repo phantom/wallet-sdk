@@ -2,10 +2,15 @@
   "$schema": "https://unpkg.com/@changesets/config@3.0.3/schema.json",
   "changelog": "@changesets/cli/changelog",
   "commit": false,
-  "fixed": [["@phantom/react-sdk", "@phantom/browser-sdk"]],
+  "fixed": [["@phantom/browser-sdk", "@phantom/react-sdk"]],
   "linked": [],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": []
+  "bumpVersionsWithWorkspaceProtocolOnly": true,
+  "ignore": [
+    "@phantom/browser-sdk-demo-app",
+    "@phantom/react-sdk-demo-app",
+    "@phantom/browser-embedded-sdk-demo-app"
+  ]
 }
