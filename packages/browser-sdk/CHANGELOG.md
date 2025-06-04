@@ -1,5 +1,11 @@
 # @phantom/browser-sdk
 
+## 0.0.6
+
+### Patch Changes
+
+- c90cd0b: Fixed publishing with woekspace: references
+
 ## 0.0.5
 
 ### Patch Changes
