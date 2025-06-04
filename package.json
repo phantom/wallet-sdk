@@ -11,7 +11,8 @@
     "test": "jest"
   },
   "workspaces": [
-    "packages/**/*"
+    "packages/*",
+    "examples/*"
   ],
   "devDependencies": {
     "@changesets/cli": "^2.27.8",

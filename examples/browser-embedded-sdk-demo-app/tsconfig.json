@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "useDefineForClassFields": true,
     "allowImportingTsExtensions": true,
@@ -10,7 +10,7 @@
     "moduleResolution": "bundler",
     "baseUrl": ".",
     "paths": {
-      "@phantom/wallet-sdk": ["../../browser-embedded-sdk/src/index.ts"]
+      "@phantom/wallet-sdk": ["../../packages/browser-embedded-sdk/src/index.ts"]
     }
   },
   "include": ["src"],

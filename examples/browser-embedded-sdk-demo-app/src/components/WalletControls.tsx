@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { Phantom } from "../../../../browser-embedded-sdk/src/index";
+import type { Phantom } from "../../../../packages/browser-embedded-sdk/src/index";
 
 // Define these constants once, to be used across the application
 export const SOL_CAIP19 = "solana:101/nativeToken:501";

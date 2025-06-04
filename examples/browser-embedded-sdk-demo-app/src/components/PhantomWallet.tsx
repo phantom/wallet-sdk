@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createPhantom, type Phantom, Position } from "../../../../browser-embedded-sdk/src/index";
+import { createPhantom, type Phantom, Position } from "../../../../packages/browser-embedded-sdk/src/index";
 import { NavigationScreen } from "./NavigationScreen";
 import { NormalConfigScreen } from "./NormalConfigScreen";
 import { ElementConfigScreen } from "./ElementConfigScreen";
