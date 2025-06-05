@@ -33,7 +33,8 @@ export class DeepLinkSolanaAdapter implements SolanaAdapter {
     message: Uint8Array,
     display?: DisplayEncoding,
   ): Promise<{ signature: Uint8Array; address: string }> {
-    const deeplink = `phantom://sign-message?message=${message}&display=${display}`;
+    const messageEncoded = Buffer.from(message).toString("base64");
+    const deeplink = `phantom://sign-message?message=${messageEncoded}&display=${display}`;
     window.location.href = deeplink;
     return Promise.resolve({
       signature: new Uint8Array(),
@@ -44,7 +45,7 @@ export class DeepLinkSolanaAdapter implements SolanaAdapter {
   public async signIn(
     signInData: SolanaSignInData,
   ): Promise<{ address: string; signature: Uint8Array; signedMessage: Uint8Array }> {
-    const deeplink = `phantom://sign-in?signInData=${signInData}`;
+    const deeplink = `phantom://sign-in?signInData=${encodeURIComponent(JSON.stringify(signInData))}`;
     window.location.href = deeplink;
     return Promise.resolve({
       address: "",

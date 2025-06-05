@@ -91,7 +91,7 @@ export class KmsSolanaAdapter implements SolanaAdapter {
       .then(res => res.json())
       .then(data => {
         return {
-          signature: data.signature as Uint8Array,
+          signature: new Uint8Array(Buffer.from(data.signature as string, "base64")),
           address: data.publicKey as string,
         };
       });
@@ -115,8 +115,8 @@ export class KmsSolanaAdapter implements SolanaAdapter {
       .then(data => {
         return {
           address: data.address as string,
-          signature: data.signature as Uint8Array,
-          signedMessage: data.signedMessage as Uint8Array,
+          signature: new Uint8Array(Buffer.from(data.signature, "base64")),
+          signedMessage: new Uint8Array(Buffer.from(data.signedMessage, "base64")),
         };
       });
   }
