@@ -1,19 +1,91 @@
-# Phantom Wallet SDK
+# Phantom Wallet SDK Monorepo
 
-This monorepo contains the Phantom Wallet SDKs and demo applications that demonstrate their usage.
+This monorepo contains the Phantom Wallet SDKs and demo applications.
+
+## ⚠️ Deprecation Notice
+
+**@phantom/wallet-sdk** (the embedded wallet SDK) is now deprecated. Future development and support will focus on the following packages:
+
+- [@phantom/browser-sdk](https://www.npmjs.com/package/@phantom/browser-sdk): Core browser SDK for Phantom wallet integration (no UI components).
+- [@phantom/react-sdk](https://www.npmjs.com/package/@phantom/react-sdk): React wrapper for the browser SDK, providing hooks and components for easy integration.
 
 ## Packages
 
-- **@phantom/wallet-sdk (browser-embedded-sdk directory)**: The embedded wallet SDK that provides the Phantom wallet integration with UI in directly in your app.
-- **@phantom/browser-embedded-sdk-demo-app**: A React-based demo app that demonstrates how to use the embedded wallet SDK.
-- **@phantom/browser-sdk**: Core browser SDK that provides access to the Phantom wallet functionality without UI components. Works with Phantom extension and in Phantom mobile dapp browser.
-- **@phantom/react-sdk**: A React wrapper for the brower SDK that provides React components and hooks for easier integration in React applications. Works with Phantom extension and in Phantom mobile dapp browser.
+- **[@phantom/browser-sdk](./packages/browser-sdk/README.md)**: Core browser SDK for Phantom wallet functionality. [NPM](https://www.npmjs.com/package/@phantom/browser-sdk)
+- **[@phantom/react-sdk](./packages/react-sdk/README.md)**: React hooks and components for Phantom wallet. [NPM](https://www.npmjs.com/package/@phantom/react-sdk)
+- **@phantom/wallet-sdk (DEPRECATED)**: Embedded wallet SDK with UI (no longer maintained).
 
-## Getting Started
+## Examples
 
-For detailed documentation and usage examples, please refer to each package's README file:
+You can find example applications in the [`examples/`](./examples) folder:
 
-- [@phantom/wallet-sdk documentation](./packages/browser-embedded-sdk/README.md)
+- [`examples/react-sdk-demo-app`](./examples/react-sdk-demo-app)
+- [`examples/browser-sdk-demo-app`](./examples/browser-sdk-demo-app)
+- [`examples/browser-embedded-sdk-demo-app`](./examples/browser-embedded-sdk-demo-app)
+
+## Quick Start
+
+### Using @phantom/browser-sdk
+
+```bash
+npm install @phantom/browser-sdk
+# or
+yarn add @phantom/browser-sdk
+```
+
+```typescript
+import { createPhantom } from "@phantom/browser-sdk";
+import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
+
+const phantom = createPhantom({
+  chainPlugins: [createSolanaPlugin()],
+});
+
+// Example: connect to wallet
+const connect = async () => {
+  const result = await phantom.solana.connect();
+  console.log("Connected address:", result.address);
+};
+```
+
+See the [@phantom/browser-sdk README](./packages/browser-sdk/README.md) for more details and API reference.
+
+### Using @phantom/react-sdk
+
+```bash
+npm install @phantom/react-sdk @phantom/browser-sdk
+# or
+yarn add @phantom/react-sdk @phantom/browser-sdk
+```
+
+```tsx
+import React from "react";
+import { PhantomProvider, useConnect } from "@phantom/react-sdk";
+import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
+
+function App() {
+  return (
+    <PhantomProvider config={{ chainPlugins: [createSolanaPlugin()] }}>
+      <WalletComponent />
+    </PhantomProvider>
+  );
+}
+
+function WalletComponent() {
+  const { connect } = useConnect();
+  const handleConnect = async () => {
+    try {
+      const connectedAccount = await connect();
+      console.log("Wallet connected:", connectedAccount?.publicKey?.toString());
+    } catch (error) {
+      console.error("Connection failed:", error);
+    }
+  };
+  return <button onClick={handleConnect}>Connect to Solana</button>;
+}
+```
+
+See the [@phantom/react-sdk README](./packages/react-sdk/README.md) for more details and API reference.
 
 ## Development
 
@@ -27,8 +99,7 @@ yarn build
 
 ## Give Feedback
 
-Phantom SDKs are in active development and will be prioritizing features requested by early adopters. If you are
-interested in working with us, please email us at `developers@phantom.app` or message `@brianfriel` on Telegram.
+Phantom SDKs are in active development and will be prioritizing features requested by early adopters. If you are interested in working with us, please email us at `developers@phantom.app` or message `@brianfriel` on Telegram.
 
 ## Disclaimers
 
