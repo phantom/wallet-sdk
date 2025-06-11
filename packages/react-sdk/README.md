@@ -12,7 +12,7 @@ npm install @phantom/react-sdk @phantom/browser-sdk
 
 ```tsx
 import React from "react";
-import { PhantomProvider, useConnect } from "@phantom/react-sdk";
+import { PhantomProvider, useConnect } from "@phantom/react-sdk/solana";
 import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
 
 function App() {
@@ -79,7 +79,7 @@ The hook returns an object with the following property:
 - `connect: () => Promise<ConnectResponse>` - An asynchronous function that initiates the connection process. Returns a promise that resolves with the connection response (e.g., `{ publicKey: string }`) or rejects if connection fails.
 
 ```tsx
-import { useConnect } from "@phantom/react-sdk"; // Or '@phantom/react-sdk/solana' if specific
+import { useConnect } from "@phantom/react-sdk/solana"; // Or '@phantom/react-sdk/solana' if specific
 
 function MyComponent() {
   const { connect } = useConnect({ autoConnect: true });
@@ -107,7 +107,7 @@ The hook returns an object with the following property:
 - `disconnect: () => Promise<void>` - An asynchronous function that initiates the disconnection process. Returns a promise that resolves when disconnection is complete or rejects if disconnection fails.
 
 ```tsx
-import { useDisconnect } from "@phantom/react-sdk"; // Or '@phantom/react-sdk/solana' if specific
+import { useDisconnect } from "@phantom/react-sdk/solana";
 
 function MyComponent() {
   const { disconnect } = useDisconnect();
@@ -145,7 +145,7 @@ The hook returns an object with the following property:
 - `signIn: (signInData: SolanaSignInData) => Promise<{ address: string; signature: Uint8Array; signedMessage: Uint8Array }>` - An asynchronous function that initiates the sign-in process. `SolanaSignInData` is a type imported from `@phantom/browser-sdk/solana`. Returns a promise that resolves with the `address` (string), `signature` (Uint8Array), and `signedMessage` (Uint8Array), or rejects if the sign-in fails.
 
 ```tsx
-import { useSignIn } from "@phantom/react-sdk"; // Or '@phantom/react-sdk/solana' if specific
+import { useSignIn } from "@phantom/react-sdk/solana";
 import { SolanaSignInData } from "@phantom/browser-sdk/solana"; // This type might be needed from the browser-sdk
 
 function MyComponent() {
@@ -186,7 +186,7 @@ The hook returns an object with the following property:
 - `signMessage: (message: Uint8Array, display?: 'utf8' | 'hex') => Promise<{ signature: Uint8Array; publicKey: string }>` - An asynchronous function that prompts the user to sign a message. The `message` must be a `Uint8Array`. The optional `display` parameter can be 'utf8' (default) or 'hex' to suggest how the wallet should display the message bytes. Returns a promise that resolves with the `signature` (Uint8Array) and `publicKey` (string) of the signer, or rejects if signing fails.
 
 ```tsx
-import { useSignMessage } from "@phantom/react-sdk"; // Or '@phantom/react-sdk/solana' if specific
+import { useSignMessage } from "@phantom/react-sdk/solana";
 
 function MyComponent() {
   const { signMessage } = useSignMessage();
