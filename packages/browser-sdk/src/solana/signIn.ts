@@ -1,3 +1,4 @@
+import { triggerEvent } from "./eventListeners";
 import { getAdapter } from "./getAdapter";
 import type { SolanaSignInData } from "./types";
 
@@ -16,5 +17,11 @@ export async function signIn(
     throw new Error("Adapter not found.");
   }
 
-  return adapter.signIn(signInData);
+  const result = await adapter.signIn(signInData);
+
+  if (result.address) {
+    triggerEvent("connect", result.address);
+  }
+
+  return result;
 }
