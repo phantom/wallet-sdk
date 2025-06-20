@@ -1,5 +1,7 @@
 import type { Transaction } from "@solana/kit";
+import { fromVersionedTransaction } from "@solana/compat";
 import { getAdapter } from "./getAdapter";
+import { type VersionedTransaction } from "@solana/web3.js";
 
 /**
  * Signs and sends a transaction using the Phantom provider.
@@ -8,7 +10,7 @@ import { getAdapter } from "./getAdapter";
  * @throws Error if Phantom provider is not found or if the operation fails.
  */
 export async function signAndSendTransaction(
-  transaction: Transaction,
+  transaction: Transaction | VersionedTransaction,
 ): Promise<{ signature: string; address?: string }> {
   const adapter = await getAdapter();
 
@@ -20,5 +22,14 @@ export async function signAndSendTransaction(
     await adapter.connect({ onlyIfTrusted: false });
   }
 
-  return adapter.signAndSendTransaction(transaction);
+  let kitTransaction: Transaction;
+
+  // convert web3.js transaction to @solana/kit Transaction if needed
+  if (transaction.constructor.name === "VersionedTransaction") {
+    kitTransaction = fromVersionedTransaction(transaction as VersionedTransaction);
+  } else {
+    kitTransaction = transaction as Transaction;
+  }
+
+  return adapter.signAndSendTransaction(kitTransaction);
 }

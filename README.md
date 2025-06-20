@@ -97,6 +97,37 @@ yarn install
 yarn build
 ```
 
+### Developing locally
+
+If you wanna contribute to this SDK and develop locally, we recommend using [`yalc`](https://github.com/wclr/yalc)
+
+```
+# Install yalc globally
+npm install -g yalc
+
+# In your monorepo package
+cd packages/your-package
+yalc publish
+
+# In your external project
+yalc add your-package-name
+npm install
+```
+
+to update after changes:
+
+```
+# In monorepo package
+yalc push
+
+# Or in external project
+yalc update
+```
+
+Don't forget to build changes: `yarn build`
+
+NOTE: You can run this automatically using `yarn watch` in the root of this repo
+
 ## Give Feedback
 
 Phantom SDKs are in active development and will be prioritizing features requested by early adopters. If you are interested in working with us, please email us at `developers@phantom.app` or message `@brianfriel` on Telegram.
