@@ -1,5 +1,11 @@
 # @phantom/browser-sdk
 
+## 0.0.7
+
+### Patch Changes
+
+- 87c93ec: Add template function for signing a transaction using web3/kit
+
 ## 0.0.6
 
 ### Patch Changes
