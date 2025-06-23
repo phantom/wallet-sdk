@@ -1,5 +1,13 @@
 # @phantom/react-sdk
 
+## 0.0.8
+
+### Patch Changes
+
+- f14e169: fix: Incorrect web3 support after minifying
+- Updated dependencies [f14e169]
+  - @phantom/browser-sdk@0.0.8
+
 ## 0.0.7
 
 ### Patch Changes
