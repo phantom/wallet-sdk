@@ -25,7 +25,7 @@ export async function signAndSendTransaction(
   let kitTransaction: Transaction;
 
   // convert web3.js transaction to @solana/kit Transaction if needed
-  if (transaction.constructor.name === "VersionedTransaction") {
+  if ((transaction as any)?.messageBytes == null) {
     kitTransaction = fromVersionedTransaction(transaction as VersionedTransaction);
   } else {
     kitTransaction = transaction as Transaction;
