@@ -9,7 +9,8 @@
     "format:check": "prettier . --check",
     "lint": "yarn workspaces foreach -Avpi run lint",
     "release": "yarn build && yarn pack-release && yarn changeset publish",
-    "test": "jest"
+    "test": "jest",
+    "watch": "node scripts/develop.mjs"
   },
   "workspaces": [
     "packages/*",
@@ -21,6 +22,7 @@
     "@types/node": "^22.15.21",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
+    "chokidar": "^4.0.3",
     "eslint": "8.53.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-define-config": "^1.24.1",

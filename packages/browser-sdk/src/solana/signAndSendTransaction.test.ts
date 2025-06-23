@@ -3,12 +3,14 @@ import type { SolanaAdapter } from "./adapters/types";
 import { getAdapter } from "./getAdapter";
 import { signAndSendTransaction } from "./signAndSendTransaction";
 import type { PhantomSolanaProvider } from "./types";
+import { type VersionedTransaction } from "@solana/web3.js";
 
 jest.mock("./getAdapter", () => ({
   getAdapter: jest.fn(),
 }));
 
 const mockTransaction = {} as Transaction;
+const mockWeb3jsTransaction = {} as VersionedTransaction;
 
 describe("signAndSendTransaction", () => {
   let mockAdapter: Partial<PhantomSolanaProvider>;
@@ -34,6 +36,20 @@ describe("signAndSendTransaction", () => {
     const result = await signAndSendTransaction(mockTransaction);
 
     expect(mockAdapter.signAndSendTransaction).toHaveBeenCalledWith(mockTransaction);
+    expect(result).toEqual(expectedResult);
+  });
+
+  it("should properly call signAndSendTransaction on the adapter for a web3.js transaction", async () => {
+    const expectedResult = { signature: "mockSig", address: "mockKey" };
+
+    (mockAdapter.signAndSendTransaction as jest.Mock).mockResolvedValue({
+      signature: "mockSig",
+      address: "mockKey",
+    });
+
+    const result = await signAndSendTransaction(mockWeb3jsTransaction);
+
+    expect(mockAdapter.signAndSendTransaction).toHaveBeenCalledWith(mockWeb3jsTransaction);
     expect(result).toEqual(expectedResult);
   });
 
