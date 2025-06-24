@@ -28,7 +28,7 @@ import { createSolanaPlugin } from "@phantom/browser-sdk/solana"; // Import the 
 
 // Create a Phantom instance with the Solana plugin
 const phantom = createPhantom({
-  chainPlugins: [createSolanaPlugin()],
+  plugins: [createSolanaPlugin()],
 });
 
 // Now you can use the Solana-specific methods
@@ -89,7 +89,7 @@ The SDK also allows you to listen for `connect`, `disconnect`, and `accountChang
   **Example:**
 
   ```typescript
-  const phantom = createPhantom({ chainPlugins: [createSolanaPlugin()] });
+  const phantom = createPhantom({ plugins: [createSolanaPlugin()] });
 
   const handleConnect = (address: string) => {
     console.log(`Wallet connected with public key: ${address}`);
@@ -115,7 +115,7 @@ The SDK also allows you to listen for `connect`, `disconnect`, and `accountChang
   **Example:**
 
   ```typescript
-  const phantom = createPhantom({ chainPlugins: [createSolanaPlugin()] });
+  const phantom = createPhantom({ plugins: [createSolanaPlugin()] });
 
   const handleDisconnect = () => {
     console.log("Wallet disconnected");

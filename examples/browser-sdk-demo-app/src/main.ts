@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("Document loaded, attempting to create Phantom instance...");
   try {
     const phantomInstance = createPhantom({
-      chainPlugins: [createSolanaPlugin()],
+      plugins: [createSolanaPlugin()],
     });
     console.log("Phantom instance created:", phantomInstance);
 

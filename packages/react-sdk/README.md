@@ -17,7 +17,7 @@ import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
 
 function App() {
   return (
-    <PhantomProvider config={{ chainPlugins: [createSolanaPlugin()] }}>
+    <PhantomProvider config={{ plugins: [createSolanaPlugin()] }}>
       <WalletComponent />
     </PhantomProvider>
   );
@@ -55,7 +55,7 @@ The PhantomProvider component provides the Phantom context to child components.
 import { PhantomProvider } from "@phantom/react-sdk";
 import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
 
-<PhantomProvider config={{ chainPlugins: [createSolanaPlugin()] }}>{children}</PhantomProvider>;
+<PhantomProvider config={{ plugins: [createSolanaPlugin()] }}>{children}</PhantomProvider>;
 ```
 
 ### usePhantom

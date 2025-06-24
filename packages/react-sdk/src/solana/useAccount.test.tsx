@@ -24,7 +24,7 @@ const sharedConfig = {
   wrapper: ({ children }: { children: React.ReactNode }) => (
     <PhantomProvider
       config={{
-        chainPlugins: [createPlugin],
+        plugins: [createPlugin],
       }}
     >
       {children}
