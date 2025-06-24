@@ -1,6 +1,6 @@
 import type { PhantomProvider } from "./types";
 
-export async function getProvider(): Promise<PhantomProvider | null> {
+export function getProvider(): PhantomProvider | null {
   if (typeof window === "undefined") {
     return null;
   }
