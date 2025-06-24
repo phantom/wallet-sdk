@@ -3,7 +3,7 @@ import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
 import { Actions } from "./Actions";
 
 const phantomConfig = {
-  chainPlugins: [createSolanaPlugin()],
+  plugins: [createSolanaPlugin()],
 };
 
 function App() {

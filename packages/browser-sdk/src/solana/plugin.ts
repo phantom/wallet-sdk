@@ -1,4 +1,4 @@
-import type { ChainPlugin } from "../index";
+import type { Plugin } from "../index";
 import { connect } from "./connect";
 import { disconnect } from "./disconnect";
 import { addEventListener, removeEventListener, type PhantomEventCallback } from "./eventListeners";
@@ -30,7 +30,7 @@ const solana: Solana = {
   removeEventListener,
 };
 
-export function createSolanaPlugin(): ChainPlugin<Solana> {
+export function createSolanaPlugin(): Plugin<Solana> {
   return {
     name: "solana",
     create: () => solana,

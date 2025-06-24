@@ -22,7 +22,7 @@ const sharedConfig = {
   wrapper: ({ children }: { children: React.ReactNode }) => (
     <PhantomProvider
       config={{
-        chainPlugins: [mockCreateSolanaPlugin()],
+        plugins: [mockCreateSolanaPlugin()],
       }}
     >
       {children}

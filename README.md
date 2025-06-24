@@ -38,7 +38,7 @@ import { createPhantom } from "@phantom/browser-sdk";
 import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
 
 const phantom = createPhantom({
-  chainPlugins: [createSolanaPlugin()],
+  plugins: [createSolanaPlugin()],
 });
 
 // Example: connect to wallet
@@ -65,7 +65,7 @@ import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
 
 function App() {
   return (
-    <PhantomProvider config={{ chainPlugins: [createSolanaPlugin()] }}>
+    <PhantomProvider config={{ plugins: [createSolanaPlugin()] }}>
       <WalletComponent />
     </PhantomProvider>
   );

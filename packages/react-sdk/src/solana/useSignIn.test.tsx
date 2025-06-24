@@ -7,7 +7,7 @@ import type { SolanaSignInData } from "@phantom/browser-sdk/solana";
 
 const sharedConfig = {
   wrapper: ({ children }: { children: React.ReactNode }) => (
-    <PhantomProvider config={{ chainPlugins: [createSolanaPlugin()] }}>{children}</PhantomProvider>
+    <PhantomProvider config={{ plugins: [createSolanaPlugin()] }}>{children}</PhantomProvider>
   ),
 };
 
@@ -23,7 +23,7 @@ describe("useSignIn", () => {
     delete window.phantom;
   });
 
-  it("should throw error when solana chain plugin is not properly configured", async () => {
+  it("should throw error when solana plugin is not properly configured", async () => {
     const { result } = renderHook(() => useSignIn(), {
       wrapper: ({ children }) => <PhantomProvider config={{}}>{children}</PhantomProvider>,
     });

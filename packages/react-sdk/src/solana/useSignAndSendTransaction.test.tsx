@@ -21,7 +21,7 @@ const sharedConfig = {
   wrapper: ({ children }: { children: React.ReactNode }) => (
     <PhantomProvider
       config={{
-        chainPlugins: [
+        plugins: [
           {
             name: "solana",
             create: () => {
@@ -42,7 +42,7 @@ describe("useSignAndSendTransaction", () => {
     delete window.phantom;
   });
 
-  it("should throw error when solana chain plugin is not properly configured", async () => {
+  it("should throw error when solana plugin is not properly configured", async () => {
     const { result } = renderHook(() => useSignAndSendTransaction(), {
       wrapper: ({ children }) => <PhantomProvider config={{}}>{children}</PhantomProvider>,
     });
