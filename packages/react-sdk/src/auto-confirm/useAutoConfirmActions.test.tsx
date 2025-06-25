@@ -10,6 +10,8 @@ const mockAutoConfirmPlugin = {
   ...createAutoConfirmPlugin().create(),
   autoConfirmEnable: jest.fn(),
   autoConfirmDisable: jest.fn(),
+  autoConfirmStatus: jest.fn(),
+  autoConfirmSupportedChains: jest.fn(),
 };
 
 const createPlugin = {
@@ -36,13 +38,17 @@ describe("useAutoConfirmActions", () => {
     jest.clearAllMocks();
     mockAutoConfirmPlugin.autoConfirmEnable.mockResolvedValue(undefined);
     mockAutoConfirmPlugin.autoConfirmDisable.mockResolvedValue(undefined);
+    mockAutoConfirmPlugin.autoConfirmStatus.mockResolvedValue({ enabled: false, chains: [] });
+    mockAutoConfirmPlugin.autoConfirmSupportedChains.mockResolvedValue({ chains: ["solana:101", "solana:102"] });
   });
 
-  it("should provide enable and disable functions", () => {
+  it("should provide enable, disable, getStatus, and getSupportedChains functions", () => {
     const { result } = renderHook(() => useAutoConfirmActions(), sharedConfig);
 
     expect(typeof result.current.enable).toBe("function");
     expect(typeof result.current.disable).toBe("function");
+    expect(typeof result.current.getStatus).toBe("function");
+    expect(typeof result.current.getSupportedChains).toBe("function");
   });
 
   it("should call autoConfirmEnable with params", async () => {
@@ -152,4 +158,108 @@ describe("useAutoConfirmActions", () => {
 
     await expect(result.current.disable()).rejects.toThrow("Disable failed");
   });
+
+  it("should call autoConfirmStatus and return status", async () => {
+    const mockStatus = { enabled: true, chains: ["solana:101" as NetworkID] };
+    mockAutoConfirmPlugin.autoConfirmStatus.mockResolvedValue(mockStatus);
+
+    const { result } = renderHook(() => useAutoConfirmActions(), sharedConfig);
+
+    await act(async () => {
+      const status = await result.current.getStatus();
+      expect(status).toEqual(mockStatus);
+    });
+
+    expect(mockAutoConfirmPlugin.autoConfirmStatus).toHaveBeenCalled();
+  });
+
+  it("should call autoConfirmSupportedChains and return supported chains", async () => {
+    const mockSupportedChains = { chains: ["solana:101" as NetworkID, "solana:102" as NetworkID] };
+    mockAutoConfirmPlugin.autoConfirmSupportedChains.mockResolvedValue(mockSupportedChains);
+
+    const { result } = renderHook(() => useAutoConfirmActions(), sharedConfig);
+
+    await act(async () => {
+      const supportedChains = await result.current.getSupportedChains();
+      expect(supportedChains).toEqual(mockSupportedChains);
+    });
+
+    expect(mockAutoConfirmPlugin.autoConfirmSupportedChains).toHaveBeenCalled();
+  });
+
+  it("should throw error when phantom is not ready for getStatus", async () => {
+    const spy = jest.spyOn(PhantomContext, "usePhantom").mockReturnValue({
+      phantom: undefined,
+      isReady: false,
+    });
+
+    const { result } = renderHook(() => useAutoConfirmActions(), sharedConfig);
+
+    await expect(result.current.getStatus()).rejects.toThrow("Phantom is not ready");
+
+    spy.mockRestore();
+  });
+
+  it("should throw error when phantom is not ready for getSupportedChains", async () => {
+    const spy = jest.spyOn(PhantomContext, "usePhantom").mockReturnValue({
+      phantom: undefined,
+      isReady: false,
+    });
+
+    const { result } = renderHook(() => useAutoConfirmActions(), sharedConfig);
+
+    await expect(result.current.getSupportedChains()).rejects.toThrow("Phantom is not ready");
+
+    spy.mockRestore();
+  });
+
+  it("should throw error when auto-confirm plugin is not configured for getStatus", async () => {
+    const spy = jest.spyOn(PhantomContext, "usePhantom").mockReturnValue({
+      phantom: {} as any,
+      isReady: true,
+    });
+
+    const { result } = renderHook(() => useAutoConfirmActions(), sharedConfig);
+
+    await expect(result.current.getStatus()).rejects.toThrow(
+      "Phantom auto-confirm plugin not found. Please ensure the auto-confirm plugin is installed and configured properly."
+    );
+
+    spy.mockRestore();
+  });
+
+  it("should throw error when auto-confirm plugin is not configured for getSupportedChains", async () => {
+    const spy = jest.spyOn(PhantomContext, "usePhantom").mockReturnValue({
+      phantom: {} as any,
+      isReady: true,
+    });
+
+    const { result } = renderHook(() => useAutoConfirmActions(), sharedConfig);
+
+    await expect(result.current.getSupportedChains()).rejects.toThrow(
+      "Phantom auto-confirm plugin not found. Please ensure the auto-confirm plugin is installed and configured properly."
+    );
+
+    spy.mockRestore();
+  });
+
+  it("should propagate errors from autoConfirmStatus", async () => {
+    const error = new Error("Status fetch failed");
+    mockAutoConfirmPlugin.autoConfirmStatus.mockRejectedValue(error);
+
+    const { result } = renderHook(() => useAutoConfirmActions(), sharedConfig);
+
+    await expect(result.current.getStatus()).rejects.toThrow("Status fetch failed");
+  });
+
+  it("should propagate errors from autoConfirmSupportedChains", async () => {
+    const error = new Error("Supported chains fetch failed");
+    mockAutoConfirmPlugin.autoConfirmSupportedChains.mockRejectedValue(error);
+
+    const { result } = renderHook(() => useAutoConfirmActions(), sharedConfig);
+
+    await expect(result.current.getSupportedChains()).rejects.toThrow("Supported chains fetch failed");
+  });
+
+  
 });

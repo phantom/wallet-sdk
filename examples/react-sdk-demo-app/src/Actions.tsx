@@ -8,6 +8,7 @@ import {
   useAccount,
   useAccountEffect,
 } from "@phantom/react-sdk/solana";
+import { useAutoConfirmActions, useAutoConfirmState } from "@phantom/react-sdk/auto-confirm";
 import {
   createSolanaRpc,
   pipe,
@@ -25,6 +26,8 @@ export function Actions() {
   const { signIn } = useSignIn();
   const { signAndSendTransaction } = useSignAndSendTransaction();
   const { signMessage } = useSignMessage();
+  const { enable, disable, getSupportedChains, getStatus } = useAutoConfirmActions();
+  const autoConfirmState = useAutoConfirmState();
 
   useAccountEffect({
     onConnect: data => {
@@ -127,6 +130,47 @@ export function Actions() {
     }
   };
 
+  // Auto-confirm plugin functionality
+  const onEnableAutoConfirm = async () => {
+    try {
+      const result = await enable();
+      alert(`Auto-confirm ${result.enabled ? "enabled" : "not enabled"} for chains: ${result.chains.join(", ")}`);
+    } catch (error) {
+      console.error("Error enabling auto-confirm:", error);
+      alert(`Error enabling auto-confirm: ${(error as Error).message || error}`);
+    }
+  };
+
+  const onDisableAutoConfirm = async () => {
+    try {
+      const result = await disable();
+      alert(`Auto-confirm disabled. Status: enabled=${result.enabled}, chains: ${result.chains.join(", ")}`);
+    } catch (error) {
+      console.error("Error disabling auto-confirm:", error);
+      alert(`Error disabling auto-confirm: ${(error as Error).message || error}`);
+    }
+  };
+
+  const onGetSupportedChains = async () => {
+    try {
+      const result = await getSupportedChains();
+      alert(`Supported chains: ${result.chains.join(", ")}`);
+    } catch (error) {
+      console.error("Error getting supported chains:", error);
+      alert(`Error getting supported chains: ${(error as Error).message || error}`);
+    }
+  };
+
+  const onGetStatus = async () => {
+    try {
+      const result = await getStatus();
+      alert(`Auto-confirm status: enabled=${result.enabled}, chains: ${result.chains.join(", ")}`);
+    } catch (error) {
+      console.error("Error getting auto-confirm status:", error);
+      alert(`Error getting auto-confirm status: ${(error as Error).message || error}`);
+    }
+  };
+
   return (
     <div id="app">
       <h1>Phantom React SDK Demo</h1>
@@ -135,22 +179,53 @@ export function Actions() {
           <strong>Account Public Key:</strong> {userAddress}
         </p>
       </div>
-      <div className="controls">
-        <button id="connectBtn" onClick={onConnect}>
-          Connect
-        </button>
-        <button id="signInBtn" onClick={onSignIn} disabled={!userAddress}>
-          Sign In (SIWS)
-        </button>
-        <button id="signMessageBtn" onClick={onSignMessage} disabled={!userAddress}>
-          Sign Message
-        </button>
-        <button id="signAndSendTransactionBtn" onClick={onSignAndSendTransaction} disabled={!userAddress}>
-          Sign and Send Transaction
-        </button>
-        <button id="disconnectBtn" onClick={onDisconnect} disabled={!userAddress}>
-          Disconnect
-        </button>
+
+      <div className="plugin-section">
+        <h2>Solana Plugin</h2>
+        <div className="controls">
+          <button id="connectBtn" onClick={onConnect}>
+            Connect
+          </button>
+          <button id="signInBtn" onClick={onSignIn} disabled={!userAddress}>
+            Sign In (SIWS)
+          </button>
+          <button id="signMessageBtn" onClick={onSignMessage} disabled={!userAddress}>
+            Sign Message
+          </button>
+          <button id="signAndSendTransactionBtn" onClick={onSignAndSendTransaction} disabled={!userAddress}>
+            Sign and Send Transaction
+          </button>
+          <button id="disconnectBtn" onClick={onDisconnect} disabled={!userAddress}>
+            Disconnect
+          </button>
+        </div>
+      </div>
+
+      <div className="plugin-section">
+        <h2>Auto-Confirm Plugin</h2>
+        <div className="account-info">
+          <p>
+            <strong>Auto-Confirm Status:</strong> {autoConfirmState?.status?.enabled ? "Enabled" : "Disabled"},{" "}
+            <strong>on chains:</strong> {autoConfirmState?.status?.chains?.join(", ") || "None"}
+          </p>
+          <p>
+            <strong>Auto-Confirm Supported Chains:</strong> {autoConfirmState?.supportedChains?.join(", ") || "None"}
+          </p>
+        </div>
+        <div className="controls">
+          <button id="enableAutoConfirmBtn" onClick={onEnableAutoConfirm}>
+            Request to Enable Auto-Confirm
+          </button>
+          <button id="disableAutoConfirmBtn" onClick={onDisableAutoConfirm}>
+            Disable Auto-Confirm
+          </button>
+          <button id="getSupportedChainsBtn" onClick={onGetSupportedChains}>
+            Get Auto-Confirm Supported Chains
+          </button>
+          <button id="getStatusBtn" onClick={onGetStatus}>
+            Get Auto-Confirm Status
+          </button>
+        </div>
       </div>
     </div>
   );
