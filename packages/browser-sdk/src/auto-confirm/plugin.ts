@@ -20,7 +20,7 @@ const autoConfirm: AutoConfirmPlugin = {
 
 export function createAutoConfirmPlugin(): Plugin<AutoConfirmPlugin> {
   return {
-    name: "auto-confirm",
+    name: "autoConfirm",
     create: () => autoConfirm,
   };
 }

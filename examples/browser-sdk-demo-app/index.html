@@ -9,12 +9,26 @@
   <body>
     <div id="app">
       <h1>Phantom Browser SDK Demo</h1>
-      <div class="controls">
-        <button id="connectBtn" disabled>Connect</button>
-        <button id="getAccountBtn">Get Account</button>
-        <button id="signMessageBtn" disabled>Sign Message</button>
-        <button id="signTransactionBtn" disabled>Sign Transaction</button>
-        <button id="disconnectBtn" disabled>Disconnect</button>
+      
+      <div class="plugin-section">
+        <h2>Solana Plugin</h2>
+        <div class="controls">
+          <button id="connectBtn" disabled>Connect</button>
+          <button id="getAccountBtn">Get Account</button>
+          <button id="signMessageBtn" disabled>Sign Message</button>
+          <button id="signTransactionBtn" disabled>Sign Transaction</button>
+          <button id="disconnectBtn" disabled>Disconnect</button>
+        </div>
+      </div>
+
+      <div class="plugin-section">
+        <h2>Auto-Confirm Plugin</h2>
+        <div class="controls">
+          <button id="enableAutoConfirmBtn">Request to Enable Auto-Confirm</button>
+          <button id="disableAutoConfirmBtn">Disable Auto-Confirm</button>
+          <button id="getAutoConfirmStatusBtn">Get Auto-Confirm Status</button>
+          <button id="getSupportedChainsBtn">Get Auto-Confirm Supported Chains</button>
+        </div>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
