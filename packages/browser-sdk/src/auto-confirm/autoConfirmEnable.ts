@@ -5,7 +5,7 @@ export async function autoConfirmEnable(params?: AutoConfirmEnableParams): Promi
   const provider = await getProvider();
 
   if (!provider) {
-    throw new Error("Phantom provider not found.");
+    throw new Error("Provider not found.");
   }
 
   const result = await provider.request({

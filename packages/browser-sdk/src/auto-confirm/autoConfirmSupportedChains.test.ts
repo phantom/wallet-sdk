@@ -6,7 +6,7 @@ jest.mock("./getProvider", () => ({
   getProvider: jest.fn(),
 }));
 
-const mockGetProvider = getProvider as jest.MockedFunction<() => Promise<PhantomProvider | null>>;
+const mockGetProvider = getProvider as jest.MockedFunction<() => PhantomProvider | null>;
 
 describe("autoConfirmSupportedChains", () => {
   let mockProvider: Partial<PhantomProvider>;
@@ -16,7 +16,7 @@ describe("autoConfirmSupportedChains", () => {
     mockProvider = {
       request: jest.fn(),
     };
-    mockGetProvider.mockReturnValue(Promise.resolve(mockProvider as PhantomProvider));
+    mockGetProvider.mockReturnValue(mockProvider as PhantomProvider);
   });
 
   it("should get supported chains", async () => {
@@ -34,9 +34,9 @@ describe("autoConfirmSupportedChains", () => {
   });
 
   it("should throw error when provider is not found", async () => {
-    mockGetProvider.mockReturnValue(Promise.resolve(null));
+    mockGetProvider.mockReturnValue(null);
 
-    await expect(autoConfirmSupportedChains()).rejects.toThrow("Phantom provider not found.");
+    await expect(autoConfirmSupportedChains()).rejects.toThrow("Provider not found.");
     expect(mockGetProvider).toHaveBeenCalledTimes(1);
   });
 

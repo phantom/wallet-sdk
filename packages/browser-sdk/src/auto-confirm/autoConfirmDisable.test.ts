@@ -6,7 +6,7 @@ jest.mock("./getProvider", () => ({
   getProvider: jest.fn(),
 }));
 
-const mockGetProvider = getProvider as jest.MockedFunction<() => Promise<PhantomProvider | null>>;
+const mockGetProvider = getProvider as jest.MockedFunction<() => PhantomProvider | null>;
 
 describe("autoConfirmDisable", () => {
   let mockProvider: Partial<PhantomProvider>;
@@ -16,11 +16,11 @@ describe("autoConfirmDisable", () => {
     mockProvider = {
       request: jest.fn(),
     };
-    mockGetProvider.mockReturnValue(Promise.resolve(mockProvider as PhantomProvider));
+    mockGetProvider.mockReturnValue(mockProvider as PhantomProvider);
   });
 
   it("should disable auto-confirm", async () => {
-    const mockResult = { enabled: false, chains: [] };
+    const mockResult = { enabled: false, chains: [] };  
     (mockProvider.request as jest.Mock).mockResolvedValue(mockResult);
 
     const result = await autoConfirmDisable();
@@ -34,9 +34,9 @@ describe("autoConfirmDisable", () => {
   });
 
   it("should throw error when provider is not found", async () => {
-    mockGetProvider.mockReturnValue(Promise.resolve(null));
+    mockGetProvider.mockReturnValue(null);
 
-    await expect(autoConfirmDisable()).rejects.toThrow("Phantom provider not found.");
+    await expect(autoConfirmDisable()).rejects.toThrow("Provider not found.");
     expect(mockGetProvider).toHaveBeenCalledTimes(1);
   });
 
