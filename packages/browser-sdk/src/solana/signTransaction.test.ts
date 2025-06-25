@@ -13,7 +13,7 @@ const mockTransaction = {} as Transaction;
 describe("signTransaction", () => {
   let mockProvider: Partial<PhantomSolanaProvider>;
 
-  beforeEach(() => {  
+  beforeEach(() => {
     jest.clearAllMocks();
     mockProvider = {
       signTransaction: jest.fn(),

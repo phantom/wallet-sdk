@@ -19,7 +19,7 @@ describe("autoConfirmEnable", () => {
     mockGetProvider.mockReturnValue(mockProvider as PhantomProvider);
   });
 
-  it("should enable auto-confirm with chains parameter", async () => {  
+  it("should enable auto-confirm with chains parameter", async () => {
     const mockResult = { enabled: true, chains: ["solana:101", "eip155:1"] };
     (mockProvider.request as jest.Mock).mockResolvedValue(mockResult);
 

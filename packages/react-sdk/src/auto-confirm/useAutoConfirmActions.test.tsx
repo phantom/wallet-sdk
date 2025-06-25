@@ -90,9 +90,7 @@ describe("useAutoConfirmActions", () => {
       await result.current.enable({ chains: ["solana:101" as NetworkID] });
     });
 
-    expect(dispatchEventSpy).toHaveBeenCalledWith(
-      new CustomEvent("phantomAutoConfirmStateChanged")
-    );
+    expect(dispatchEventSpy).toHaveBeenCalledWith(new CustomEvent("phantomAutoConfirmStateChanged"));
 
     dispatchEventSpy.mockRestore();
   });
@@ -105,9 +103,7 @@ describe("useAutoConfirmActions", () => {
       await result.current.disable();
     });
 
-    expect(dispatchEventSpy).toHaveBeenCalledWith(
-      new CustomEvent("phantomAutoConfirmStateChanged")
-    );
+    expect(dispatchEventSpy).toHaveBeenCalledWith(new CustomEvent("phantomAutoConfirmStateChanged"));
 
     dispatchEventSpy.mockRestore();
   });
@@ -135,7 +131,7 @@ describe("useAutoConfirmActions", () => {
     const { result } = renderHook(() => useAutoConfirmActions(), sharedConfig);
 
     await expect(result.current.enable()).rejects.toThrow(
-      "Phantom auto-confirm plugin not found. Please ensure the auto-confirm plugin is installed and configured properly."
+      "Phantom auto-confirm plugin not found. Please ensure the auto-confirm plugin is installed and configured properly.",
     );
 
     spy.mockRestore();
@@ -222,7 +218,7 @@ describe("useAutoConfirmActions", () => {
     const { result } = renderHook(() => useAutoConfirmActions(), sharedConfig);
 
     await expect(result.current.getStatus()).rejects.toThrow(
-      "Phantom auto-confirm plugin not found. Please ensure the auto-confirm plugin is installed and configured properly."
+      "Phantom auto-confirm plugin not found. Please ensure the auto-confirm plugin is installed and configured properly.",
     );
 
     spy.mockRestore();
@@ -237,7 +233,7 @@ describe("useAutoConfirmActions", () => {
     const { result } = renderHook(() => useAutoConfirmActions(), sharedConfig);
 
     await expect(result.current.getSupportedChains()).rejects.toThrow(
-      "Phantom auto-confirm plugin not found. Please ensure the auto-confirm plugin is installed and configured properly."
+      "Phantom auto-confirm plugin not found. Please ensure the auto-confirm plugin is installed and configured properly.",
     );
 
     spy.mockRestore();
@@ -260,6 +256,4 @@ describe("useAutoConfirmActions", () => {
 
     await expect(result.current.getSupportedChains()).rejects.toThrow("Supported chains fetch failed");
   });
-
-  
 });

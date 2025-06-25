@@ -16,7 +16,7 @@ describe("assertAutoConfirmConfigured", () => {
 
   it("should throw when phantom is undefined", () => {
     expect(() => assertAutoConfirmConfigured(undefined)).toThrow(
-      "Phantom auto-confirm plugin not found. Please ensure the auto-confirm plugin is installed and configured properly."
+      "Phantom auto-confirm plugin not found. Please ensure the auto-confirm plugin is installed and configured properly.",
     );
   });
 
@@ -24,7 +24,7 @@ describe("assertAutoConfirmConfigured", () => {
     const phantom = {} as any;
 
     expect(() => assertAutoConfirmConfigured(phantom)).toThrow(
-      "Phantom auto-confirm plugin not found. Please ensure the auto-confirm plugin is installed and configured properly."
+      "Phantom auto-confirm plugin not found. Please ensure the auto-confirm plugin is installed and configured properly.",
     );
   });
 
@@ -32,7 +32,7 @@ describe("assertAutoConfirmConfigured", () => {
     const phantom = { autoConfirm: null } as any;
 
     expect(() => assertAutoConfirmConfigured(phantom)).toThrow(
-      "Phantom auto-confirm plugin not found. Please ensure the auto-confirm plugin is installed and configured properly."
+      "Phantom auto-confirm plugin not found. Please ensure the auto-confirm plugin is installed and configured properly.",
     );
   });
 });

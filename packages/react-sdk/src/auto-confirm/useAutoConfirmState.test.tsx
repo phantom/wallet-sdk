@@ -113,9 +113,9 @@ describe("useAutoConfirmState", () => {
   });
 
   it("should handle phantom not being ready", () => {
-    const spy = jest.spyOn(PhantomContext, "usePhantom").mockReturnValue({ 
-      phantom: undefined, 
-      isReady: false 
+    const spy = jest.spyOn(PhantomContext, "usePhantom").mockReturnValue({
+      phantom: undefined,
+      isReady: false,
     });
 
     const { result } = renderHook(() => useAutoConfirmState(), sharedConfig);
@@ -134,10 +134,7 @@ describe("useAutoConfirmState", () => {
 
     unmount();
 
-    expect(removeEventListenerSpy).toHaveBeenCalledWith(
-      "phantomAutoConfirmStateChanged",
-      expect.any(Function)
-    );
+    expect(removeEventListenerSpy).toHaveBeenCalledWith("phantomAutoConfirmStateChanged", expect.any(Function));
 
     removeEventListenerSpy.mockRestore();
   });

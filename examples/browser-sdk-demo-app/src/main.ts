@@ -140,10 +140,10 @@ document.addEventListener("DOMContentLoaded", () => {
       enableAutoConfirmBtn.onclick = async () => {
         try {
           const result = await phantomInstance.autoConfirm.autoConfirmEnable({
-            chains: ["solana:101", "solana:102", "solana:103"] // Enable for Solana mainnet, testnet, devnet
+            chains: ["solana:101", "solana:102", "solana:103"], // Enable for Solana mainnet, testnet, devnet
           });
           console.log("Auto-confirm enable result:", result);
-          alert(`Auto-confirm ${result.enabled ? 'enabled' : 'not enabled'} for chains: ${result.chains.join(', ')}`);
+          alert(`Auto-confirm ${result.enabled ? "enabled" : "not enabled"} for chains: ${result.chains.join(", ")}`);
         } catch (error) {
           console.error("Error enabling auto-confirm:", error);
           alert(`Error enabling auto-confirm: ${(error as Error).message || error}`);
@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
           const result = await phantomInstance.autoConfirm.autoConfirmDisable();
           console.log("Auto-confirm disable result:", result);
-          alert(`Auto-confirm disabled. Status: enabled=${result.enabled}, chains: ${result.chains.join(', ')}`);
+          alert(`Auto-confirm disabled. Status: enabled=${result.enabled}, chains: ${result.chains.join(", ")}`);
         } catch (error) {
           console.error("Error disabling auto-confirm:", error);
           alert(`Error disabling auto-confirm: ${(error as Error).message || error}`);
@@ -169,7 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
           const result = await phantomInstance.autoConfirm.autoConfirmStatus();
           console.log("Auto-confirm status:", result);
-          alert(`Auto-confirm status: enabled=${result.enabled}, chains: ${result.chains.join(', ')}`);
+          alert(`Auto-confirm status: enabled=${result.enabled}, chains: ${result.chains.join(", ")}`);
         } catch (error) {
           console.error("Error getting auto-confirm status:", error);
           alert(`Error getting auto-confirm status: ${(error as Error).message || error}`);
@@ -182,7 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
           const result = await phantomInstance.autoConfirm.autoConfirmSupportedChains();
           console.log("Supported chains:", result);
-          alert(`Supported chains: ${result.chains.join(', ')}`);
+          alert(`Supported chains: ${result.chains.join(", ")}`);
         } catch (error) {
           console.error("Error getting supported chains:", error);
           alert(`Error getting supported chains: ${(error as Error).message || error}`);
