@@ -1,6 +1,6 @@
 import type { Transaction } from "@solana/kit";
 import { fromVersionedTransaction } from "@solana/compat";
-import { getAdapter } from "./getAdapter";
+import { getProvider } from "./getProvider";
 import { type VersionedTransaction } from "@solana/web3.js";
 
 /**
@@ -12,14 +12,14 @@ import { type VersionedTransaction } from "@solana/web3.js";
 export async function signAndSendTransaction(
   transaction: Transaction | VersionedTransaction,
 ): Promise<{ signature: string; address?: string }> {
-  const adapter = await getAdapter();
+  const provider = await getProvider();
 
-  if (!adapter) {
-    throw new Error("Adapter not found.");
+  if (!provider) {
+    throw new Error("Provider not found.");
   }
 
-  if (!adapter.isConnected) {
-    await adapter.connect({ onlyIfTrusted: false });
+  if (!provider.isConnected) {
+    await provider.connect({ onlyIfTrusted: false });
   }
 
   let kitTransaction: Transaction;
@@ -31,5 +31,5 @@ export async function signAndSendTransaction(
     kitTransaction = transaction as Transaction;
   }
 
-  return adapter.signAndSendTransaction(kitTransaction);
+  return provider.signAndSendTransaction(kitTransaction);
 }

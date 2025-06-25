@@ -1,8 +1,11 @@
-import type { SolanaAdapter } from "./types";
+import type { SolanaStrategy } from "./types";
 import type { DisplayEncoding, SolanaSignInData } from "../types";
 import type { Transaction } from "@solana/transactions";
+import { ProviderStrategy } from "../../types";
 
-export class DeepLinkSolanaAdapter implements SolanaAdapter {
+export class DeepLinkSolanaStrategy implements SolanaStrategy {
+  type = ProviderStrategy.DEEPLINK;
+
   load() {
     return Promise.resolve(this);
   }

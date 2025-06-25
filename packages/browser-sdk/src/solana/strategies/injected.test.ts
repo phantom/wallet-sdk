@@ -1,5 +1,5 @@
 import type { PhantomSolanaProvider, VersionedTransaction } from "../types";
-import { InjectedSolanaAdapter } from "./injected";
+import { InjectedSolanaStrategy } from "./injected";
 import { transactionToVersionedTransaction } from "../utils/transactionToVersionedTransaction";
 import type { Transaction } from "@solana/transactions";
 import { fromVersionedTransaction } from "@solana/compat";
@@ -41,7 +41,7 @@ const createMockProvider = () => ({
   signIn: jest.fn(),
 });
 
-describe("InjectedSolanaAdapter", () => {
+describe("InjectedSolanaStrategy", () => {
   let mockProvider: Partial<PhantomSolanaProvider>;
 
   beforeAll(() => {
@@ -65,39 +65,39 @@ describe("InjectedSolanaAdapter", () => {
     });
 
     it("should properly call connect on the provider with onlyIfTrusted true and when provider is not connected", async () => {
-      const adapter = new InjectedSolanaAdapter();
-      const result = await adapter.connect({ onlyIfTrusted: true });
+      const strategy = new InjectedSolanaStrategy();
+      const result = await strategy.connect({ onlyIfTrusted: true });
       expect(result).toBe("123");
       expect(mockProvider.connect).toHaveBeenCalledWith({ onlyIfTrusted: true });
     });
 
     it("should properly call connect on the provider with onlyIfTrusted false and when provider is not connected", async () => {
-      const adapter = new InjectedSolanaAdapter();
-      const result = await adapter.connect({ onlyIfTrusted: false });
+      const strategy = new InjectedSolanaStrategy();
+      const result = await strategy.connect({ onlyIfTrusted: false });
       expect(result).toBe("123");
       expect(mockProvider.connect).toHaveBeenCalledWith({ onlyIfTrusted: false });
     });
 
     it("should not call connect on the provider with onlyIfTrusted true and when provider is connected", async () => {
-      const adapter = new InjectedSolanaAdapter();
+      const strategy = new InjectedSolanaStrategy();
       mockProvider.isConnected = true;
-      const result = await adapter.connect({ onlyIfTrusted: true });
+      const result = await strategy.connect({ onlyIfTrusted: true });
       expect(result).toBeDefined();
       expect(mockProvider.connect).not.toHaveBeenCalled();
     });
 
     it("should not call connect on the provider with onlyIfTrusted false and when provider is connected", async () => {
-      const adapter = new InjectedSolanaAdapter();
+      const strategy = new InjectedSolanaStrategy();
       mockProvider.isConnected = true;
-      const result = await adapter.connect({ onlyIfTrusted: false });
+      const result = await strategy.connect({ onlyIfTrusted: false });
       expect(result).toBeDefined();
       expect(mockProvider.connect).not.toHaveBeenCalled();
     });
 
     it("should throw an error if the provider is not connected", async () => {
       (window as any).phantom = undefined;
-      const adapter = new InjectedSolanaAdapter();
-      await expect(adapter.connect({ onlyIfTrusted: true })).rejects.toThrow("Phantom provider not found.");
+      const strategy = new InjectedSolanaStrategy();
+      await expect(strategy.connect({ onlyIfTrusted: true })).rejects.toThrow("Provider not found.");
     });
   });
 
@@ -111,15 +111,15 @@ describe("InjectedSolanaAdapter", () => {
     });
 
     it("should properly call disconnect on the provider", async () => {
-      const adapter = new InjectedSolanaAdapter();
-      await adapter.disconnect();
+      const strategy = new InjectedSolanaStrategy();
+      await strategy.disconnect();
       expect(mockProvider.disconnect).toHaveBeenCalled();
     });
 
     it("should throw an error if the provider is not connected", async () => {
       (window as any).phantom = undefined;
-      const adapter = new InjectedSolanaAdapter();
-      await expect(adapter.disconnect()).rejects.toThrow("Phantom provider not found.");
+      const strategy = new InjectedSolanaStrategy();
+      await expect(strategy.disconnect()).rejects.toThrow("Provider not found.");
     });
   });
 
@@ -132,26 +132,26 @@ describe("InjectedSolanaAdapter", () => {
     });
 
     it("should return true when provider is connected and has public key", () => {
-      const adapter = new InjectedSolanaAdapter();
-      expect(adapter.isConnected).toBe(true);
+      const strategy = new InjectedSolanaStrategy();
+      expect(strategy.isConnected).toBe(true);
     });
 
     it("should return false when provider is connected but has no public key", () => {
       mockProvider.publicKey = undefined;
-      const adapter = new InjectedSolanaAdapter();
-      expect(adapter.isConnected).toBe(false);
+      const strategy = new InjectedSolanaStrategy();
+      expect(strategy.isConnected).toBe(false);
     });
 
     it("should return false when provider is not connected", () => {
       mockProvider.isConnected = false;
-      const adapter = new InjectedSolanaAdapter();
-      expect(adapter.isConnected).toBe(false);
+      const strategy = new InjectedSolanaStrategy();
+      expect(strategy.isConnected).toBe(false);
     });
 
     it("should return false when provider is not found", () => {
       (window as any).phantom = undefined;
-      const adapter = new InjectedSolanaAdapter();
-      expect(adapter.isConnected).toBe(false);
+      const strategy = new InjectedSolanaStrategy();
+      expect(strategy.isConnected).toBe(false);
     });
   });
 
@@ -164,29 +164,29 @@ describe("InjectedSolanaAdapter", () => {
     });
 
     it("should return the public key when provider is connected and has public key", async () => {
-      const adapter = new InjectedSolanaAdapter();
-      const result = await adapter.getAccount();
+      const strategy = new InjectedSolanaStrategy();
+      const result = await strategy.getAccount();
       expect(result).toBe("123");
     });
 
     it("should return undefined when provider is connected but has no public key", async () => {
       mockProvider.publicKey = undefined;
-      const adapter = new InjectedSolanaAdapter();
-      const result = await adapter.getAccount();
+      const strategy = new InjectedSolanaStrategy();
+      const result = await strategy.getAccount();
       expect(result).toBeUndefined();
     });
 
     it("should return undefined when provider is not connected", async () => {
       mockProvider.isConnected = false;
-      const adapter = new InjectedSolanaAdapter();
-      const result = await adapter.getAccount();
+      const strategy = new InjectedSolanaStrategy();
+      const result = await strategy.getAccount();
       expect(result).toBeUndefined();
     });
 
     it("should return undefined when provider is not found", async () => {
       (window as any).phantom = undefined;
-      const adapter = new InjectedSolanaAdapter();
-      const result = await adapter.getAccount();
+      const strategy = new InjectedSolanaStrategy();
+      const result = await strategy.getAccount();
       expect(result).toBeUndefined();
     });
   });
@@ -208,10 +208,10 @@ describe("InjectedSolanaAdapter", () => {
     });
 
     it("should properly call signMessage on the provider", async () => {
-      const adapter = new InjectedSolanaAdapter();
+      const strategy = new InjectedSolanaStrategy();
       const message = new Uint8Array([1, 2, 3]);
 
-      const result = await adapter.signMessage(message);
+      const result = await strategy.signMessage(message);
 
       expect(result).toEqual({
         signature: new Uint8Array([1, 2, 3]),
@@ -221,9 +221,9 @@ describe("InjectedSolanaAdapter", () => {
     });
 
     it("should sign message with display encoding when provided", async () => {
-      const adapter = new InjectedSolanaAdapter();
+      const strategy = new InjectedSolanaStrategy();
       const message = new Uint8Array([1, 2, 3]);
-      const result = await adapter.signMessage(message, "utf8");
+      const result = await strategy.signMessage(message, "utf8");
       expect(result).toEqual({
         signature: new Uint8Array([1, 2, 3]),
         address: "mockKey",
@@ -233,16 +233,16 @@ describe("InjectedSolanaAdapter", () => {
 
     it("should throw error when provider is not connected", async () => {
       mockProvider.isConnected = false;
-      const adapter = new InjectedSolanaAdapter();
+      const strategy = new InjectedSolanaStrategy();
       const message = new Uint8Array([1, 2, 3]);
-      await expect(adapter.signMessage(message)).rejects.toThrow("Provider is not connected.");
+      await expect(strategy.signMessage(message)).rejects.toThrow("Provider is not connected.");
     });
 
     it("should throw error when provider is not found", async () => {
       (window as any).phantom = undefined;
-      const adapter = new InjectedSolanaAdapter();
+      const strategy = new InjectedSolanaStrategy();
       const message = new Uint8Array([1, 2, 3]);
-      await expect(adapter.signMessage(message)).rejects.toThrow("Phantom provider not found.");
+      await expect(strategy.signMessage(message)).rejects.toThrow("Provider not found.");
     });
   });
 
@@ -262,7 +262,7 @@ describe("InjectedSolanaAdapter", () => {
     });
 
     it("should properly call signIn on the provider", async () => {
-      const adapter = new InjectedSolanaAdapter();
+      const strategy = new InjectedSolanaStrategy();
       const signInData = {
         domain: "example.com",
         statement: "Sign in to Example App",
@@ -273,7 +273,7 @@ describe("InjectedSolanaAdapter", () => {
         issuedAt: "2023-01-01T00:00:00.000Z",
       };
 
-      const result = await adapter.signIn(signInData);
+      const result = await strategy.signIn(signInData);
 
       expect(result).toEqual({
         address: "mockAddress",
@@ -285,7 +285,7 @@ describe("InjectedSolanaAdapter", () => {
 
     it("should throw error when provider is not found", async () => {
       (window as any).phantom = undefined;
-      const adapter = new InjectedSolanaAdapter();
+      const strategy = new InjectedSolanaStrategy();
       const signInData = {
         domain: "example.com",
         statement: "Sign in to Example App",
@@ -295,7 +295,7 @@ describe("InjectedSolanaAdapter", () => {
         nonce: "12345",
         issuedAt: "2023-01-01T00:00:00.000Z",
       };
-      await expect(adapter.signIn(signInData)).rejects.toThrow("Phantom provider not found.");
+      await expect(strategy.signIn(signInData)).rejects.toThrow("Provider not found.");
     });
   });
 
@@ -318,9 +318,9 @@ describe("InjectedSolanaAdapter", () => {
     });
 
     it("should properly call signAndSendTransaction on the provider with converted transaction", async () => {
-      const adapter = new InjectedSolanaAdapter();
+      const strategy = new InjectedSolanaStrategy();
 
-      const result = await adapter.signAndSendTransaction(mockTransaction);
+      const result = await strategy.signAndSendTransaction(mockTransaction);
 
       expect(result).toEqual({
         signature: "mockSignature123",
@@ -332,18 +332,18 @@ describe("InjectedSolanaAdapter", () => {
 
     it("should throw error when provider is not connected", async () => {
       mockProvider.isConnected = false;
-      const adapter = new InjectedSolanaAdapter();
+      const strategy = new InjectedSolanaStrategy();
       const mockTransaction = {} as Transaction;
 
-      await expect(adapter.signAndSendTransaction(mockTransaction)).rejects.toThrow("Provider is not connected.");
+      await expect(strategy.signAndSendTransaction(mockTransaction)).rejects.toThrow("Provider is not connected.");
     });
 
     it("should throw error when provider is not found", async () => {
       (window as any).phantom = undefined;
-      const adapter = new InjectedSolanaAdapter();
+      const strategy = new InjectedSolanaStrategy();
       const mockTransaction = {} as Transaction;
 
-      await expect(adapter.signAndSendTransaction(mockTransaction)).rejects.toThrow("Phantom provider not found.");
+      await expect(strategy.signAndSendTransaction(mockTransaction)).rejects.toThrow("Provider not found.");
     });
   });
 
@@ -364,9 +364,9 @@ describe("InjectedSolanaAdapter", () => {
     });
 
     it("should properly call signTransaction on the provider with converted transaction", async () => {
-      const adapter = new InjectedSolanaAdapter();
+      const strategy = new InjectedSolanaStrategy();
 
-      const result = await adapter.signTransaction(mockTransaction);
+      const result = await strategy.signTransaction(mockTransaction);
 
       expect(transactionToVersionedTransaction).toHaveBeenCalledWith(mockTransaction);
       expect(mockProvider.signTransaction).toHaveBeenCalledWith(mockVersionedTransaction);
@@ -375,18 +375,18 @@ describe("InjectedSolanaAdapter", () => {
 
     it("should throw error when provider is not connected", async () => {
       mockProvider.isConnected = false;
-      const adapter = new InjectedSolanaAdapter();
+      const strategy = new InjectedSolanaStrategy();
       const mockTransaction = {} as Transaction;
 
-      await expect(adapter.signTransaction(mockTransaction)).rejects.toThrow("Provider is not connected.");
+      await expect(strategy.signTransaction(mockTransaction)).rejects.toThrow("Provider is not connected.");
     });
 
     it("should throw error when provider is not found", async () => {
       (window as any).phantom = undefined;
-      const adapter = new InjectedSolanaAdapter();
+      const strategy = new InjectedSolanaStrategy();
       const mockTransaction = {} as Transaction;
 
-      await expect(adapter.signTransaction(mockTransaction)).rejects.toThrow("Phantom provider not found.");
+      await expect(strategy.signTransaction(mockTransaction)).rejects.toThrow("Provider not found.");
     });
   });
 
@@ -409,10 +409,10 @@ describe("InjectedSolanaAdapter", () => {
     });
 
     it("should properly call signAllTransactions on the provider with converted transactions", async () => {
-      const adapter = new InjectedSolanaAdapter();
+      const strategy = new InjectedSolanaStrategy();
       const mockTransactions = [{} as Transaction, {} as Transaction];
 
-      const result = await adapter.signAllTransactions(mockTransactions);
+      const result = await strategy.signAllTransactions(mockTransactions);
 
       expect(transactionToVersionedTransaction).toHaveBeenCalledTimes(2);
       expect(transactionToVersionedTransaction).toHaveBeenNthCalledWith(1, mockTransactions[0]);
@@ -427,10 +427,10 @@ describe("InjectedSolanaAdapter", () => {
 
     it("should handle empty array of transactions", async () => {
       mockProvider.signAllTransactions = jest.fn().mockResolvedValue([]);
-      const adapter = new InjectedSolanaAdapter();
+      const strategy = new InjectedSolanaStrategy();
       const mockTransactions: Transaction[] = [];
 
-      const result = await adapter.signAllTransactions(mockTransactions);
+      const result = await strategy.signAllTransactions(mockTransactions);
 
       expect(transactionToVersionedTransaction).not.toHaveBeenCalled();
       expect(mockProvider.signAllTransactions).toHaveBeenCalledWith([]);
@@ -439,18 +439,18 @@ describe("InjectedSolanaAdapter", () => {
 
     it("should throw error when provider is not connected", async () => {
       mockProvider.isConnected = false;
-      const adapter = new InjectedSolanaAdapter();
+      const strategy = new InjectedSolanaStrategy();
       const mockTransactions = [{} as Transaction];
 
-      await expect(adapter.signAllTransactions(mockTransactions)).rejects.toThrow("Provider is not connected.");
+      await expect(strategy.signAllTransactions(mockTransactions)).rejects.toThrow("Provider is not connected.");
     });
 
     it("should throw error when provider is not found", async () => {
       (window as any).phantom = undefined;
-      const adapter = new InjectedSolanaAdapter();
+      const strategy = new InjectedSolanaStrategy();
       const mockTransactions = [{} as Transaction];
 
-      await expect(adapter.signAllTransactions(mockTransactions)).rejects.toThrow("Phantom provider not found.");
+      await expect(strategy.signAllTransactions(mockTransactions)).rejects.toThrow("Provider not found.");
     });
   });
 });

@@ -35,7 +35,7 @@ describe("useSignMessage", () => {
     const { result } = renderHook(() => useSignMessage(), sharedConfig);
     await act(async () => {
       // Expecting SDK error
-      await expect(result.current.signMessage(mockMessage)).rejects.toThrow("Phantom provider not found.");
+      await expect(result.current.signMessage(mockMessage)).rejects.toThrow("Provider not found.");
     });
   });
 
@@ -45,7 +45,7 @@ describe("useSignMessage", () => {
     const { result } = renderHook(() => useSignMessage(), sharedConfig);
     await act(async () => {
       // Expecting SDK error
-      await expect(result.current.signMessage(mockMessage)).rejects.toThrow("Phantom provider not found.");
+      await expect(result.current.signMessage(mockMessage)).rejects.toThrow("Provider not found.");
     });
   });
 

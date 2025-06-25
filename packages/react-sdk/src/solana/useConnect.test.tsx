@@ -27,7 +27,7 @@ describe("useConnect", () => {
   it("should throw error when phantom provider is not available", async () => {
     const { result } = renderHook(() => useConnect(), sharedConfig);
 
-    await expect(result.current.connect()).rejects.toThrow("Phantom provider not found.");
+    await expect(result.current.connect()).rejects.toThrow("Provider not found.");
   });
 
   it("should successfully connect when phantom.solana is available", async () => {

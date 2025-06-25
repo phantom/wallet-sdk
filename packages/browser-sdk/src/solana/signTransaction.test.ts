@@ -1,51 +1,51 @@
 import type { Transaction } from "@solana/kit";
 import { signTransaction } from "./signTransaction";
 import type { PhantomSolanaProvider } from "./types";
-import type { SolanaAdapter } from "./adapters/types";
-import { getAdapter } from "./getAdapter";
+import type { SolanaStrategy } from "./strategies/types";
+import { getProvider } from "./getProvider";
 
-jest.mock("./getAdapter", () => ({
-  getAdapter: jest.fn(),
+jest.mock("./getProvider", () => ({
+  getProvider: jest.fn(),
 }));
 
 const mockTransaction = {} as Transaction;
 
 describe("signTransaction", () => {
-  let mockAdapter: Partial<PhantomSolanaProvider>;
+  let mockProvider: Partial<PhantomSolanaProvider>;
 
-  beforeEach(() => {
+  beforeEach(() => {  
     jest.clearAllMocks();
-    mockAdapter = {
+    mockProvider = {
       signTransaction: jest.fn(),
       isConnected: true,
       connect: jest.fn(),
     };
-    (getAdapter as jest.Mock).mockReturnValue(mockAdapter as unknown as SolanaAdapter);
+    (getProvider as jest.Mock).mockReturnValue(mockProvider as unknown as SolanaStrategy);
   });
 
-  it("should properly call signTransaction on the adapter", async () => {
-    (mockAdapter.signTransaction as jest.Mock).mockResolvedValue(mockTransaction);
+  it("should properly call signTransaction on the provider", async () => {
+    (mockProvider.signTransaction as jest.Mock).mockResolvedValue(mockTransaction);
 
     const result = await signTransaction(mockTransaction);
 
-    expect(mockAdapter.signTransaction).toHaveBeenCalledWith(mockTransaction);
+    expect(mockProvider.signTransaction).toHaveBeenCalledWith(mockTransaction);
     expect(result).toEqual(mockTransaction);
   });
 
-  it("should throw an error if the adapter is not found", async () => {
-    (getAdapter as jest.Mock).mockReturnValue(null);
-    await expect(signTransaction(mockTransaction)).rejects.toThrow("Adapter not found.");
+  it("should throw an error if the provider is not found", async () => {
+    (getProvider as jest.Mock).mockReturnValue(null);
+    await expect(signTransaction(mockTransaction)).rejects.toThrow("Provider not found.");
   });
 
-  it("should call connect if adapter is not initially connected, then proceed with signTransaction", async () => {
-    mockAdapter.isConnected = false;
-    (mockAdapter.signTransaction as jest.Mock).mockResolvedValue(mockTransaction);
+  it("should call connect if provider is not initially connected, then proceed with signTransaction", async () => {
+    mockProvider.isConnected = false;
+    (mockProvider.signTransaction as jest.Mock).mockResolvedValue(mockTransaction);
 
     const result = await signTransaction(mockTransaction);
 
-    expect(getAdapter).toHaveBeenCalledTimes(1);
-    expect(mockAdapter.connect).toHaveBeenCalledTimes(1);
-    expect(mockAdapter.signTransaction).toHaveBeenCalledWith(mockTransaction);
+    expect(getProvider).toHaveBeenCalledTimes(1);
+    expect(mockProvider.connect).toHaveBeenCalledTimes(1);
+    expect(mockProvider.signTransaction).toHaveBeenCalledWith(mockTransaction);
     expect(result).toEqual(mockTransaction);
   });
 });

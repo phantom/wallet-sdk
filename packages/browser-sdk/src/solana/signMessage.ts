@@ -1,4 +1,4 @@
-import { getAdapter } from "./getAdapter";
+import { getProvider } from "./getProvider";
 import type { DisplayEncoding } from "./types";
 
 /**
@@ -12,15 +12,15 @@ export async function signMessage(
   message: Uint8Array,
   display?: DisplayEncoding,
 ): Promise<{ signature: Uint8Array; address: string }> {
-  const adapter = await getAdapter();
+  const provider = await getProvider();
 
-  if (!adapter) {
-    throw new Error("Adapter not found.");
+  if (!provider) {
+    throw new Error("Provider not found.");
   }
 
-  if (!adapter.isConnected) {
-    await adapter.connect({ onlyIfTrusted: false });
+  if (!provider.isConnected) {
+    await provider.connect({ onlyIfTrusted: false });
   }
 
-  return adapter.signMessage(message, display);
+  return provider.signMessage(message, display);
 }

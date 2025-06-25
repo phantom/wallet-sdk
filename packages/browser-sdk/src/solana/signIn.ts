@@ -1,5 +1,5 @@
 import { triggerEvent } from "./eventListeners";
-import { getAdapter } from "./getAdapter";
+import { getProvider } from "./getProvider";
 import type { SolanaSignInData } from "./types";
 
 /**
@@ -11,13 +11,13 @@ import type { SolanaSignInData } from "./types";
 export async function signIn(
   signInData: SolanaSignInData,
 ): Promise<{ address: string; signature: Uint8Array; signedMessage: Uint8Array }> {
-  const adapter = await getAdapter();
+  const provider = await getProvider();
 
-  if (!adapter) {
-    throw new Error("Adapter not found.");
+  if (!provider) {
+    throw new Error("Provider not found.");
   }
 
-  const result = await adapter.signIn(signInData);
+  const result = await provider.signIn(signInData);
 
   if (result.address) {
     triggerEvent("connect", result.address);

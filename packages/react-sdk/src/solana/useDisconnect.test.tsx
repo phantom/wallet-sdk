@@ -27,7 +27,7 @@ describe("useDisconnect", () => {
   it("should throw error when phantom provider is not available", async () => {
     const { result } = renderHook(() => useDisconnect(), sharedConfig);
 
-    await expect(result.current.disconnect()).rejects.toThrow("Phantom provider not found.");
+    await expect(result.current.disconnect()).rejects.toThrow("Provider not found.");
   });
 
   it("should successfully disconnect when phantom.solana is available", async () => {
