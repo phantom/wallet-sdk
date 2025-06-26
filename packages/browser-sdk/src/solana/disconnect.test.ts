@@ -1,30 +1,30 @@
-import type { SolanaAdapter } from "./adapters/types";
+import type { SolanaStrategy } from "./strategies/types";
 import { disconnect } from "./disconnect";
 import { addEventListener, clearAllEventListeners } from "./eventListeners";
-import { getAdapter } from "./getAdapter";
+import { getProvider } from "./getProvider";
 
-jest.mock("./getAdapter", () => ({
-  getAdapter: jest.fn(),
+jest.mock("./getProvider", () => ({
+  getProvider: jest.fn(),
 }));
 
 // We will spy on triggerEvent rather than fully mocking it
 // to ensure the actual callback logic is tested.
 const eventListenersModule = jest.requireActual("./eventListeners");
 const triggerEventSpy = jest.spyOn(eventListenersModule, "triggerEvent");
-const mockDefaultGetAdapter = getAdapter as jest.MockedFunction<() => Promise<SolanaAdapter | null>>;
+const mockDefaultGetProvider = getProvider as jest.MockedFunction<() => Promise<SolanaStrategy | null>>;
 
 describe("disconnect", () => {
-  let mockProvider: Partial<SolanaAdapter>;
+  let mockProvider: Partial<SolanaStrategy>;
 
   beforeEach(() => {
     jest.clearAllMocks();
     clearAllEventListeners();
     triggerEventSpy.mockClear();
-    mockDefaultGetAdapter.mockReset();
+    mockDefaultGetProvider.mockReset();
     mockProvider = {
       disconnect: jest.fn(),
     };
-    mockDefaultGetAdapter.mockReturnValue(Promise.resolve(mockProvider as unknown as SolanaAdapter));
+    mockDefaultGetProvider.mockReturnValue(Promise.resolve(mockProvider as unknown as SolanaStrategy));
   });
 
   it("should call disconnect and trigger callbacks", async () => {
@@ -33,17 +33,17 @@ describe("disconnect", () => {
 
     await disconnect();
 
-    expect(mockDefaultGetAdapter).toHaveBeenCalledTimes(1);
+    expect(mockDefaultGetProvider).toHaveBeenCalledTimes(1);
     expect(mockProvider.disconnect).toHaveBeenCalledTimes(1);
     expect(triggerEventSpy).toHaveBeenCalledWith("disconnect");
     expect(mockCallback).toHaveBeenCalledTimes(1);
   });
 
   it("should throw error when provider is not properly injected", async () => {
-    mockDefaultGetAdapter.mockReturnValue(Promise.resolve(null));
+    mockDefaultGetProvider.mockReturnValue(Promise.resolve(null));
 
-    await expect(disconnect()).rejects.toThrow("Phantom provider not found.");
-    expect(mockDefaultGetAdapter).toHaveBeenCalledTimes(1);
+    await expect(disconnect()).rejects.toThrow("Provider not found.");
+    expect(mockDefaultGetProvider).toHaveBeenCalledTimes(1);
     expect(triggerEventSpy).not.toHaveBeenCalled();
   });
 });

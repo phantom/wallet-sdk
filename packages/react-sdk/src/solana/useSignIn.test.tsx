@@ -36,7 +36,7 @@ describe("useSignIn", () => {
   it("should throw error when phantom provider is not available (window.phantom is undefined)", async () => {
     const { result } = renderHook(() => useSignIn(), sharedConfig);
     await act(async () => {
-      await expect(result.current.signIn(mockSignInData)).rejects.toThrow("Phantom provider not found.");
+      await expect(result.current.signIn(mockSignInData)).rejects.toThrow("Provider not found.");
     });
   });
 
@@ -46,7 +46,7 @@ describe("useSignIn", () => {
     const { result } = renderHook(() => useSignIn(), sharedConfig);
     await act(async () => {
       // Expecting SDK error
-      await expect(result.current.signIn(mockSignInData)).rejects.toThrow("Phantom provider not found.");
+      await expect(result.current.signIn(mockSignInData)).rejects.toThrow("Provider not found.");
     });
   });
 

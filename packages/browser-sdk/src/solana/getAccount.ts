@@ -1,6 +1,6 @@
-import { getAdapter } from "./getAdapter";
+import { getProvider } from "./getProvider";
 
 export async function getAccount(): Promise<string | undefined> {
-  const adapter = await getAdapter();
-  return adapter.getAccount();
+  const provider = await getProvider();
+  return provider.getAccount();
 }

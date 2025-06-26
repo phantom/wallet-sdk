@@ -1,7 +1,9 @@
 import type { Transaction } from "@solana/transactions";
 import type { DisplayEncoding, SolanaSignInData } from "../types";
+import type { ProviderStrategy } from "../../types";
 
-export interface SolanaAdapter {
+export interface SolanaStrategy {
+  readonly type: ProviderStrategy;
   isConnected: boolean;
 
   connect: ({ onlyIfTrusted }: { onlyIfTrusted: boolean }) => Promise<string | undefined>;

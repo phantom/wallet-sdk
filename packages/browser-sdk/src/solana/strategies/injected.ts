@@ -1,13 +1,16 @@
-import type { SolanaAdapter } from "./types";
+import type { SolanaStrategy } from "./types";
 import type { DisplayEncoding, PhantomSolanaProvider, SolanaSignInData, VersionedTransaction } from "../types";
 import type { Transaction } from "@solana/transactions";
 import { transactionToVersionedTransaction } from "../utils/transactionToVersionedTransaction";
 import { fromVersionedTransaction } from "@solana/compat";
+import { ProviderStrategy } from "../../types";
 
 const MAX_RETRIES = 4;
 const BASE_DELAY = 100;
 
-export class InjectedSolanaAdapter implements SolanaAdapter {
+export class InjectedSolanaStrategy implements SolanaStrategy {
+  type = ProviderStrategy.INJECTED;
+
   load() {
     // We add a backoff retry to see if window.phantom.solana is available
     let retryCount = 0;
@@ -46,7 +49,7 @@ export class InjectedSolanaAdapter implements SolanaAdapter {
   public async connect({ onlyIfTrusted }: { onlyIfTrusted: boolean }): Promise<string | undefined> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Phantom provider not found.");
+      throw new Error("Provider not found.");
     }
     if (provider.isConnected && provider.publicKey) {
       return this.getAccount() ?? undefined;
@@ -62,7 +65,7 @@ export class InjectedSolanaAdapter implements SolanaAdapter {
   public async disconnect(): Promise<void> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Phantom provider not found.");
+      throw new Error("Provider not found.");
     }
     await provider.disconnect();
   }
@@ -81,7 +84,7 @@ export class InjectedSolanaAdapter implements SolanaAdapter {
   ): Promise<{ signature: Uint8Array; address: string }> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Phantom provider not found.");
+      throw new Error("Provider not found.");
     }
 
     if (!provider.isConnected) {
@@ -100,7 +103,7 @@ export class InjectedSolanaAdapter implements SolanaAdapter {
   ): Promise<{ address: string; signature: Uint8Array; signedMessage: Uint8Array }> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Phantom provider not found.");
+      throw new Error("Provider not found.");
     }
 
     const result = await provider.signIn(signInData);
@@ -114,7 +117,7 @@ export class InjectedSolanaAdapter implements SolanaAdapter {
   public async signAndSendTransaction(transaction: Transaction): Promise<{ signature: string; address?: string }> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Phantom provider not found.");
+      throw new Error("Provider not found.");
     }
 
     if (!provider.isConnected) {
@@ -133,7 +136,7 @@ export class InjectedSolanaAdapter implements SolanaAdapter {
   public async signTransaction(transaction: Transaction): Promise<Transaction> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Phantom provider not found.");
+      throw new Error("Provider not found.");
     }
 
     if (!provider.isConnected) {
@@ -150,7 +153,7 @@ export class InjectedSolanaAdapter implements SolanaAdapter {
   public async signAllTransactions(transactions: Transaction[]): Promise<Transaction[]> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Phantom provider not found.");
+      throw new Error("Provider not found.");
     }
 
     if (!provider.isConnected) {

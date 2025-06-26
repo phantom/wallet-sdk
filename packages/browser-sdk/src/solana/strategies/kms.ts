@@ -1,11 +1,14 @@
-import type { SolanaAdapter } from "./types";
+import type { SolanaStrategy } from "./types";
 import type { DisplayEncoding, SolanaSignInData } from "../types";
 import type { Transaction } from "@solana/transactions";
+import { ProviderStrategy } from "../../types";
 
 // TODO: Replace with the actual API URL
 const API_URL = "https://api.phantom.app/v1/wallet";
 
-export class KmsSolanaAdapter implements SolanaAdapter {
+export class KmsSolanaStrategy implements SolanaStrategy {
+  type = ProviderStrategy.KMS;
+
   load() {
     // TODO: when loading we probably want to restore some local storage JWT token, to make sure that the user is still connected
     // load the JWT token from local storage

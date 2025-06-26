@@ -1,20 +1,20 @@
-import { getAdapter } from "./getAdapter";
+import { getProvider } from "./getProvider";
 import { triggerEvent } from "./eventListeners";
 
 export async function connect() {
-  const adapter = await getAdapter();
+  const provider = await getProvider();
 
-  if (!adapter) {
-    throw new Error("Phantom provider not found.");
+  if (!provider) {
+    throw new Error("Provider not found.");
   }
 
-  if (adapter.isConnected) {
-    return adapter.getAccount();
+  if (provider.isConnected) {
+    return provider.getAccount();
   }
 
   // first try eager connecting without prompting user
   try {
-    const address = await adapter.connect({ onlyIfTrusted: true });
+    const address = await provider.connect({ onlyIfTrusted: true });
     if (address) {
       triggerEvent("connect", address);
       return address;
@@ -25,7 +25,7 @@ export async function connect() {
 
   // if not connected, prompt user to connect prominently
   try {
-    const address = await adapter.connect({ onlyIfTrusted: false });
+    const address = await provider.connect({ onlyIfTrusted: false });
 
     if (address) {
       triggerEvent("connect", address);
