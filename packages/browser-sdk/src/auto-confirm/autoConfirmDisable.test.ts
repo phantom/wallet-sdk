@@ -1,6 +1,6 @@
 import { autoConfirmDisable } from "./autoConfirmDisable";
 import { getProvider } from "./getProvider";
-import type { PhantomProvider } from "./types";
+import type { AutoConfirmResult, PhantomProvider } from "./types";
 
 jest.mock("./getProvider", () => ({
   getProvider: jest.fn(),
@@ -20,8 +20,13 @@ describe("autoConfirmDisable", () => {
   });
 
   it("should disable auto-confirm", async () => {
-    const mockResult = { enabled: false, chains: [] };  
-    (mockProvider.request as jest.Mock).mockResolvedValue(mockResult);
+    const mockResult: AutoConfirmResult = { enabled: false, chains: [] };
+    (mockProvider.request as jest.Mock).mockImplementation(({ method }) => {
+      if (method === "phantom_auto_confirm_disable") {
+        return Promise.resolve(mockResult);
+      }
+      throw new Error(`Unknown ${method}`);
+    });
 
     const result = await autoConfirmDisable();
 
