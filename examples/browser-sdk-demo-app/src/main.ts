@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import { createPhantom } from "@phantom/browser-sdk";
 import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
+import { createAutoConfirmPlugin } from "@phantom/browser-sdk/auto-confirm";
 import {
   createSolanaRpc,
   pipe,
@@ -15,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("Document loaded, attempting to create Phantom instance...");
   try {
     const phantomInstance = createPhantom({
-      plugins: [createSolanaPlugin()],
+      plugins: [createSolanaPlugin(), createAutoConfirmPlugin()],
     });
     console.log("Phantom instance created:", phantomInstance);
 
@@ -24,6 +25,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const signMessageBtn = document.getElementById("signMessageBtn") as HTMLButtonElement;
     const signTransactionBtn = document.getElementById("signTransactionBtn") as HTMLButtonElement;
     const disconnectBtn = document.getElementById("disconnectBtn") as HTMLButtonElement;
+
+    // Auto-confirm plugin buttons
+    const enableAutoConfirmBtn = document.getElementById("enableAutoConfirmBtn") as HTMLButtonElement;
+    const disableAutoConfirmBtn = document.getElementById("disableAutoConfirmBtn") as HTMLButtonElement;
+    const getAutoConfirmStatusBtn = document.getElementById("getAutoConfirmStatusBtn") as HTMLButtonElement;
+    const getSupportedChainsBtn = document.getElementById("getSupportedChainsBtn") as HTMLButtonElement;
 
     let userPublicKey: string | null = null;
 
@@ -124,6 +131,61 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (error) {
           console.error("Error disconnecting from Phantom:", error);
           alert(`Error disconnecting: ${(error as Error).message || error}`);
+        }
+      };
+    }
+
+    // Auto-confirm plugin functionality
+    if (enableAutoConfirmBtn) {
+      enableAutoConfirmBtn.onclick = async () => {
+        try {
+          const result = await phantomInstance.autoConfirm.autoConfirmEnable({
+            chains: ["solana:101", "solana:102", "solana:103"], // Enable for Solana mainnet, testnet, devnet
+          });
+          console.log("Auto-confirm enable result:", result);
+          alert(`Auto-confirm ${result.enabled ? "enabled" : "not enabled"} for chains: ${result.chains.join(", ")}`);
+        } catch (error) {
+          console.error("Error enabling auto-confirm:", error);
+          alert(`Error enabling auto-confirm: ${(error as Error).message || error}`);
+        }
+      };
+    }
+
+    if (disableAutoConfirmBtn) {
+      disableAutoConfirmBtn.onclick = async () => {
+        try {
+          const result = await phantomInstance.autoConfirm.autoConfirmDisable();
+          console.log("Auto-confirm disable result:", result);
+          alert(`Auto-confirm disabled. Status: enabled=${result.enabled}, chains: ${result.chains.join(", ")}`);
+        } catch (error) {
+          console.error("Error disabling auto-confirm:", error);
+          alert(`Error disabling auto-confirm: ${(error as Error).message || error}`);
+        }
+      };
+    }
+
+    if (getAutoConfirmStatusBtn) {
+      getAutoConfirmStatusBtn.onclick = async () => {
+        try {
+          const result = await phantomInstance.autoConfirm.autoConfirmStatus();
+          console.log("Auto-confirm status:", result);
+          alert(`Auto-confirm status: enabled=${result.enabled}, chains: ${result.chains.join(", ")}`);
+        } catch (error) {
+          console.error("Error getting auto-confirm status:", error);
+          alert(`Error getting auto-confirm status: ${(error as Error).message || error}`);
+        }
+      };
+    }
+
+    if (getSupportedChainsBtn) {
+      getSupportedChainsBtn.onclick = async () => {
+        try {
+          const result = await phantomInstance.autoConfirm.autoConfirmSupportedChains();
+          console.log("Supported chains:", result);
+          alert(`Supported chains: ${result.chains.join(", ")}`);
+        } catch (error) {
+          console.error("Error getting supported chains:", error);
+          alert(`Error getting supported chains: ${(error as Error).message || error}`);
         }
       };
     }

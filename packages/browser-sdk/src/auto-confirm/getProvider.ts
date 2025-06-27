@@ -5,7 +5,7 @@ export function getProvider(): PhantomProvider | null {
     return null;
   }
 
-  const provider = (window as any).phantom?.app
+  const provider = (window as any).phantom?.app;
 
   if (!provider) {
     return null;

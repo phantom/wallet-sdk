@@ -12,17 +12,19 @@ import type { AutoConfirmActions, AutoConfirmEnableParams } from "./types";
 export function useAutoConfirmActions(): AutoConfirmActions {
   const { phantom, isReady } = usePhantom();
 
-  const enable = React.useCallback(async (params?: AutoConfirmEnableParams) => {
-    if (!isReady) {
-      throw new Error("Phantom is not ready");
-    }
+  const enable = React.useCallback(
+    async (params?: AutoConfirmEnableParams) => {
+      if (!isReady) {
+        throw new Error("Phantom is not ready");
+      }
 
-    assertAutoConfirmConfigured(phantom);
-    await phantom.autoConfirm.autoConfirmEnable(params);
-
-    // Notify state hook of changes
-    window.dispatchEvent(new CustomEvent("phantomAutoConfirmStateChanged"));
-  }, [phantom, isReady]);
+      assertAutoConfirmConfigured(phantom);
+      const result = await phantom.autoConfirm.autoConfirmEnable(params);
+      window.dispatchEvent(new CustomEvent("phantomAutoConfirmStateChanged"));
+      return result;
+    },
+    [phantom, isReady],
+  );
 
   const disable = React.useCallback(async () => {
     if (!isReady) {
@@ -30,14 +32,35 @@ export function useAutoConfirmActions(): AutoConfirmActions {
     }
 
     assertAutoConfirmConfigured(phantom);
-    await phantom.autoConfirm.autoConfirmDisable();
-
-    // Notify state hook of changes
+    const result = await phantom.autoConfirm.autoConfirmDisable();
     window.dispatchEvent(new CustomEvent("phantomAutoConfirmStateChanged"));
+    return result;
+  }, [phantom, isReady]);
+
+  const getSupportedChains = React.useCallback(async () => {
+    if (!isReady) {
+      throw new Error("Phantom is not ready");
+    }
+
+    assertAutoConfirmConfigured(phantom);
+    const result = await phantom.autoConfirm.autoConfirmSupportedChains();
+    return result;
+  }, [phantom, isReady]);
+
+  const getStatus = React.useCallback(async () => {
+    if (!isReady) {
+      throw new Error("Phantom is not ready");
+    }
+
+    assertAutoConfirmConfigured(phantom);
+    const result = await phantom.autoConfirm.autoConfirmStatus();
+    return result;
   }, [phantom, isReady]);
 
   return {
     enable,
     disable,
+    getSupportedChains,
+    getStatus,
   };
 }

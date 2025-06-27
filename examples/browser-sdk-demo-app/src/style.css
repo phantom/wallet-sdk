@@ -16,6 +16,23 @@ body {
   text-align: center;
 }
 
+.plugin-section {
+  margin: 2rem 0;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.plugin-section:last-child {
+  border-bottom: none;
+}
+
+.plugin-section h2 {
+  font-size: 1.5rem;
+  color: #2d3748;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
 .controls {
   margin-top: 1.5rem;
   display: flex;
