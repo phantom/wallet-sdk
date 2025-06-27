@@ -11,6 +11,7 @@ import type { AutoConfirmState, NetworkID, AutoConfirmResult } from "./types";
  */
 export function useAutoConfirmState(): AutoConfirmState {
   const { phantom, isReady } = usePhantom();
+  const isMountedRef = React.useRef(true);
 
   const [status, setStatus] = React.useState<AutoConfirmResult | null>(null);
   const [supportedChains, setSupportedChains] = React.useState<NetworkID[] | null>(null);
@@ -18,15 +19,16 @@ export function useAutoConfirmState(): AutoConfirmState {
   const [error, setError] = React.useState<Error | null>(null);
 
   const updateState = React.useCallback(async () => {
-    if (!isReady) return;
+    if (!isReady || !isMountedRef.current) return;
 
     try {
       assertAutoConfirmConfigured(phantom);
+      
+      if (!isMountedRef.current) return;
       setError(null);
       
-      // Only show loading state on initial load (when status is null)
-      const isInitialLoad = status === null;
-      if (isInitialLoad) {
+      // Only show loading state on initial load
+      if (status === null && isMountedRef.current) {
         setIsLoading(true);
       }
 
@@ -35,16 +37,18 @@ export function useAutoConfirmState(): AutoConfirmState {
         phantom.autoConfirm.autoConfirmSupportedChains(),
       ]);
 
+      if (!isMountedRef.current) return;
+
       setStatus(statusResult);
       setSupportedChains(supportedChainsResult.chains);
     } catch (err) {
+      if (!isMountedRef.current) return;
+      
       setError(err instanceof Error ? err : new Error("Failed to fetch auto-confirm state"));
       setStatus(null);
       setSupportedChains(null);
     } finally {
-      // Only set loading to false if we set it to true (initial load)
-      const isInitialLoad = status === null;
-      if (isInitialLoad) {
+      if (status === null && isMountedRef.current) {
         setIsLoading(false);
       }
     }
@@ -62,6 +66,7 @@ export function useAutoConfirmState(): AutoConfirmState {
     window.addEventListener("phantomAutoConfirmStateChanged", handleStateChange);
 
     return () => {
+      isMountedRef.current = false;
       window.removeEventListener("phantomAutoConfirmStateChanged", handleStateChange);
     };
   }, [updateState]);
