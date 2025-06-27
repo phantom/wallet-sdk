@@ -1,5 +1,13 @@
 # @phantom/react-sdk
 
+## 0.0.9
+
+### Patch Changes
+
+- 2087efe: Add auto-confirm features to browser-sdk and react-sdk
+- Updated dependencies [2087efe]
+  - @phantom/browser-sdk@0.0.9
+
 ## 0.0.8
 
 ### Patch Changes
