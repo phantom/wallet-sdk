@@ -13,6 +13,7 @@ This monorepo contains the Phantom Wallet SDKs and demo applications.
 
 - **[@phantom/browser-sdk](./packages/browser-sdk/README.md)**: Core browser SDK for Phantom wallet functionality. [NPM](https://www.npmjs.com/package/@phantom/browser-sdk)
 - **[@phantom/react-sdk](./packages/react-sdk/README.md)**: React hooks and components for Phantom wallet. [NPM](https://www.npmjs.com/package/@phantom/react-sdk)
+- **[@phantom/server-sdk](./packages/server-sdk/README.md)**: Server-side SDK for secure wallet management and transaction signing. [NPM](https://www.npmjs.com/package/@phantom/server-sdk)
 - **@phantom/wallet-sdk (DEPRECATED)**: Embedded wallet SDK with UI (no longer maintained).
 
 ## Examples
