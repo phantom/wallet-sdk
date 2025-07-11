@@ -1,0 +1,25 @@
+{
+  "name": "@phantom-connect/server-sdk",
+  "version": "0.0.1",
+  "description": "Server SDK for Phantom Connect",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "@phantom/openapi-wallet-service": "^0.1.2",
+    "@solana/web3.js": "^1.98.2",
+    "axios": "^1.10.0",
+    "bs58": "^6.0.0",
+    "tweetnacl": "^1.0.3"
+  },
+  "files": [
+    "dist"
+  ]
+}
