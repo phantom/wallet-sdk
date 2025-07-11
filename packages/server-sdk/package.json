@@ -1,7 +1,7 @@
 {
-  "name": "@phantom-connect/server-sdk",
+  "name": "@phantom/server-sdk",
   "version": "0.0.1",
-  "description": "Server SDK for Phantom Connect",
+  "description": "Server SDK for Phantom Wallet",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
