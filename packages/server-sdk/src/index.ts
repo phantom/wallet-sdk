@@ -222,8 +222,10 @@ export class ServerSDK {
 
       const request: SignRawPayload = {
         method: SignRawPayloadMethodEnum.signRawPayload,
-        params: signRequest
-      };
+        params: signRequest,
+        timestampMs: Date.now()
+      } as any;
+      
 
       const response = await this.kmsApi.postKmsRpc(request);
       const result = response.data.result as SignatureWithPublicKey;
