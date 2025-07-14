@@ -156,12 +156,12 @@ async function sendSOL(walletId: string, fromAddress: string, toAddress: string,
     });
     
     // Sign and send with SDK
-    const signedTx = await sdk.signAndSendTransaction({
+    const signedTx = await sdk.signAndSendTransaction(walletId, {
       from: fromAddress,
       to: toAddress,
       data: serializedTransaction.toString('base64'),
       networkId: 'solana:101' // Mainnet
-    }, walletId);
+    });
     
     console.log('Transaction sent:', {
       signature: signedTx.signature,
@@ -363,12 +363,12 @@ app.post('/api/users/:userId/send-sol', async (req, res) => {
     });
     
     // Sign and send using stored wallet ID
-    const signed = await sdk.signAndSendTransaction({
+    const signed = await sdk.signAndSendTransaction(wallet.walletId, {
       from: wallet.address,
       to: recipientAddress,
       data: serialized.toString('base64'),
       networkId: wallet.networkId
-    }, wallet.walletId);
+    });
     
     // Wait for confirmation
     const confirmation = await connection.confirmTransaction(signed.txHash);

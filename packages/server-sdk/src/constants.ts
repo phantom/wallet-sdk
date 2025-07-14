@@ -1,9 +1,4 @@
 import {
-  Configuration,
-  KMSRPCApi,
-  CreateWalletMethodEnum,
-  SignTransactionMethodEnum,
-  SignRawPayloadMethodEnum,
   Algorithm,
   Curve,
   PublicKeyFormat,
@@ -55,9 +50,9 @@ export function getDerivationPathForNetwork(networkId: string): string {
  */
 export interface NetworkConfig {
   derivationPath: string;
-  curve: 'Ed25519' | 'Secp256k1';
-  algorithm: 'Ed25519' | 'Secp256k1' | 'Secp256k1Keccak256';
-  addressFormat: 'Solana' | 'Ethereum';
+  curve:Curve;
+  algorithm:Algorithm;
+  addressFormat: PublicKeyFormat;
 }
 
 /**
@@ -79,23 +74,23 @@ export function getNetworkConfig(networkId: string): NetworkConfig {
         derivationPath: DerivationPath.Sui,
         curve: Curve.ed25519,
         algorithm: Algorithm.ed25519,
-        addressFormat: PublicKeyFormat.sui, // Sui uses similar address format to Solana
+        addressFormat: PublicKeyFormat.ethereum, // Sui uses similar address format to Ethereum
       };
     case 'bitcoin':
     case 'btc':
       return {
         derivationPath: DerivationPath.Bitcoin,
-        curve: 'Secp256k1',
-        algorithm: 'Secp256k1',
-        addressFormat: 'Ethereum' // Using Ethereum format as placeholder
+        curve: Curve.secp256k1,
+        algorithm: Algorithm.secp256k1,
+        addressFormat: PublicKeyFormat.ethereum // Bitcoin uses a different format, but for SDK consistency we use Ethereum format
       };
     default:
       // All EVM-compatible chains (Ethereum, Polygon, BSC, Arbitrum, etc.)
       return {
         derivationPath: DerivationPath.Ethereum,
-        curve: 'Secp256k1',
-        algorithm: 'Secp256k1',
-        addressFormat: 'Ethereum'
+        curve: Curve.secp256k1,
+        algorithm: Algorithm.secp256k1Keccak256,
+        addressFormat: PublicKeyFormat.ethereum
       };
   }
 }

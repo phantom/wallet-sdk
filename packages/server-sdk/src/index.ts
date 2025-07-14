@@ -113,7 +113,7 @@ export class ServerSDK {
     }
   }
 
-  async signAndSendTransaction(transaction: Transaction, walletId: string): Promise<SignedTransaction> {
+  async signAndSendTransaction(walletId: string, transaction: Transaction): Promise<SignedTransaction> {
     try {
       // For Solana transactions, the data field contains the base64 encoded transaction
       if (transaction.networkId.startsWith('solana:')) {

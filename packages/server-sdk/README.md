@@ -40,19 +40,19 @@ const wallet = await sdk.createWallet('My Main Wallet');
 // }
 ```
 
-### signAndSendTransaction(transaction: Transaction)
+### signAndSendTransaction(walletId: string, transaction: Transaction)
 Signs a transaction using the wallet service. The transaction should be base64 encoded.
 
 ```typescript
-const result = await sdk.signAndSendTransaction({
-  from: 'wallet-id',
+const result = await sdk.signAndSendTransaction('wallet-id', {
+  from: 'sender-address',
   to: 'recipient-address',
   data: 'base64-encoded-transaction',
   networkId: 'solana:101'
 });
 // Returns: { 
-//   txHash: '', // Empty - hash generated after submission
-//   signature: 'signing-public-key',
+//   txHash: 'transaction-hash',
+//   signature: 'transaction-signature',
 //   rawTransaction: 'base64-signed-transaction'
 // }
 ```
