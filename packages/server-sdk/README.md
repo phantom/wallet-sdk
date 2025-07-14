@@ -12,17 +12,17 @@ npm install @phantom/server-sdk
 
 The SDK requires the following configuration:
 
-- `privateKey`: Your signing key for authentication (base58 encoded)
+- `apiPrivateKey`: Your signing key for authentication (base58 encoded)
 - `organizationId`: Your organization ID from Phantom
-- `walletApi`: The wallet API endpoint URL
+- `apiBaseUrl`: The wallet API endpoint URL
 
 ```typescript
 import { ServerSDK } from '@phantom/server-sdk';
 
 const sdk = new ServerSDK({
-  privateKey: 'your-signing-key-base58',
+  apiPrivateKey: 'your-signing-key-base58',
   organizationId: 'your-org-id',
-  walletApi: 'https://api.phantom.app/wallet'
+  apiBaseUrl: 'https://api.phantom.app/v1/kms/rpc'
 });
 ```
 

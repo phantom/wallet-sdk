@@ -2,15 +2,28 @@
 
 This guide demonstrates how to integrate the `@phantom/server-sdk` into your application for secure wallet management and transaction signing.
 
+## ⚠️ Critical Security Information
+
+**IMPORTANT**: The private key for your organization is meant to be stored **ONLY on your server**, in a secure environment. 
+
+- **NEVER expose this key in client-side code**
+- **NEVER commit it to version control**
+- **Store it securely using environment variables or secret management systems**
+
+
+
 ## Table of Contents
 - [Installation](#installation)
-- [Configuration](#configuration)
-- [Basic Setup](#basic-setup)
-- [Wallet Management](#wallet-management)
-- [Transaction Signing](#transaction-signing)
-- [Message Signing](#message-signing)
+- [Getting Started](#getting-started)
+- [Basic Examples](#basic-examples)
+  - [Creating a Wallet](#creating-a-wallet)
+  - [Signing a Message](#signing-a-message)
+  - [Signing a Transaction](#signing-a-transaction)
+- [Backend Integration](#backend-integration)
+  - [Database Schema](#database-schema)
+  - [Complete API Example](#complete-api-example)
 - [Best Practices](#best-practices)
-- [Complete Example](#complete-example)
+- [Security Considerations](#security-considerations)
 
 ## Installation
 
@@ -22,118 +35,160 @@ yarn add @phantom/server-sdk
 pnpm add @phantom/server-sdk
 ```
 
-## Configuration
+## Getting Started
 
-### Environment Variables
+### 1. Set up Environment Variables
 
 Create a `.env` file in your project root:
 
 ```env
-# Phantom Wallet Service Configuration
-PHANTOM_ORGANIZATION_PRIVATE_KEY=your-base58-encoded-private-key
-PHANTOM_ORGANIZATION_ID=your-organization-id
-PHANTOM_WALLET_API=https://api.phantom.app/wallet
-
-# Database Configuration (example using PostgreSQL)
-DATABASE_URL=postgresql://user:password@localhost:5432/myapp
+PRIVATE_KEY=your-base58-encoded-private-key
+ORGANIZATION_ID=your-organization-id
+PHANTOM_API_URL=https://api.phantom.app/wallet
 ```
 
-### SDK Initialization
+### 2. Initialize the SDK
 
 ```typescript
-import { ServerSDK } from '@phantom/server-sdk';
-
-// Initialize the SDK
-const sdk = new ServerSDK({
-  privateKey: process.env.PHANTOM_ORGANIZATION_PRIVATE_KEY!,
-  organizationId: process.env.PHANTOM_ORGANIZATION_ID!,
-  walletApi: process.env.PHANTOM_WALLET_API!
-});
-```
-
-## Basic Setup
-
-Here's a minimal Express application setup:
-
-```typescript
-import express from 'express';
 import { ServerSDK } from '@phantom/server-sdk';
 import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
 
-const app = express();
-app.use(express.json());
-
-// Initialize SDK
+// Initialize the SDK
 const sdk = new ServerSDK({
-  privateKey: process.env.PHANTOM_ORGANIZATION_PRIVATE_KEY!,
-  organizationId: process.env.PHANTOM_ORGANIZATION_ID!,
-  walletApi: process.env.PHANTOM_WALLET_API!
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  apiPrivateKey: process.env.PRIVATE_KEY!,
+  organizationId: process.env.ORGANIZATION_ID!,
+  apiBaseUrl: process.env.PHANTOM_API_URL!
 });
 ```
 
-## Wallet Management
+## Basic Examples
 
-### Creating Wallets
+Let's start with simple examples before moving to a complete backend integration.
 
-**Important**: Always persist the wallet ID in your database to maintain the relationship between your users and their wallets.
+### Creating a Wallet
 
 ```typescript
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
-
-app.post('/api/wallets/create', async (req, res) => {
+// Create a new wallet
+async function createWallet() {
   try {
-    const { userId } = req.body;
-    
-    // Check if user already has a wallet
-    const existingWallet = await prisma.wallet.findUnique({
-      where: { userId }
-    });
-    
-    if (existingWallet) {
-      return res.json({ 
-        walletId: existingWallet.walletId,
-        address: existingWallet.address 
-      });
-    }
-    
-    // Create wallet using userId as wallet name for easy recovery
-    const walletName = `user_${userId}`;
+    // Use a meaningful name for wallet recovery
+    const walletName = 'user_123456';
     const wallet = await sdk.createWallet(walletName);
     
-    // Persist wallet information
-    const savedWallet = await prisma.wallet.create({
-      data: {
-        userId,
-        walletId: wallet.walletId,
-        walletName,
-        // Example storing one address
-        address: wallet.addresses[0].address,
-        networkId: wallet.addresses[0].networkId
-      }
+    console.log('Wallet created:', {
+      walletId: wallet.walletId,
+      walletName: wallet.walletName,
+      addresses: wallet.addresses
     });
     
-    res.json({
-      walletId: savedWallet.walletId,
-      address: savedWallet.address,
-      networkId: savedWallet.networkId
-    });
+    // IMPORTANT: Save the walletId in your database!
+    // You'll need it for all future operations
+    return wallet;
   } catch (error) {
     console.error('Failed to create wallet:', error);
-    res.status(500).json({ error: 'Failed to create wallet' });
+    throw error;
   }
-});
+}
 ```
 
-### Database Schema Example (Prisma)
+### Signing a Message
+
+```typescript
+// Sign a message with an existing wallet
+async function signMessage(walletId: string, message: string) {
+  try {
+    const signature = await sdk.signMessage(
+      walletId,
+      message,
+      'solana:101' // Network ID for Solana mainnet
+    );
+    
+    console.log('Message signed:', {
+      message,
+      signature
+    });
+    
+    return signature;
+  } catch (error) {
+    console.error('Failed to sign message:', error);
+    throw error;
+  }
+}
+
+// Example usage
+const walletId = 'your-wallet-id';
+const message = 'Hello, Phantom!';
+const signature = await signMessage(walletId, message);
+```
+
+### Signing a Transaction
+
+```typescript
+import { Connection, Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
+
+// Sign and send a Solana transaction
+async function sendSOL(walletId: string, fromAddress: string, toAddress: string, amount: number) {
+  try {
+    // Create connection to Solana
+    const connection = new Connection('https://api.mainnet-beta.solana.com');
+    
+    // Create transaction
+    const transaction = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: new PublicKey(fromAddress),
+        toPubkey: new PublicKey(toAddress),
+        lamports: amount * LAMPORTS_PER_SOL
+      })
+    );
+    
+    // Get recent blockhash
+    const { blockhash } = await connection.getLatestBlockhash();
+    transaction.recentBlockhash = blockhash;
+    transaction.feePayer = new PublicKey(fromAddress);
+    
+    // Serialize transaction
+    const serializedTransaction = transaction.serialize({
+      requireAllSignatures: false,
+      verifySignatures: false
+    });
+    
+    // Sign and send with SDK
+    const signedTx = await sdk.signAndSendTransaction({
+      from: fromAddress,
+      to: toAddress,
+      data: serializedTransaction.toString('base64'),
+      networkId: 'solana:101' // Mainnet
+    }, walletId);
+    
+    console.log('Transaction sent:', {
+      signature: signedTx.signature,
+      txHash: signedTx.txHash
+    });
+    
+    return signedTx;
+  } catch (error) {
+    console.error('Failed to send transaction:', error);
+    throw error;
+  }
+}
+```
+
+## Backend Integration
+
+When integrating the SDK into your backend, it's **CRITICAL** to maintain the relationship between your users and their wallets.
+
+### Key Requirements
+
+1. **Always store the wallet ID** in your database immediately after creation
+2. **Associate each wallet with a user ID** to maintain ownership
+3. **Use meaningful wallet names** (e.g., `user_${userId}`) for easier recovery
+
+### Database Schema
+
+Here's an example using Prisma:
 
 ```prisma
 model User {
@@ -147,7 +202,7 @@ model Wallet {
   id         String   @id @default(cuid())
   userId     String   @unique
   user       User     @relation(fields: [userId], references: [id])
-  walletId   String   @unique
+  walletId   String   @unique // Phantom wallet ID - CRITICAL to store!
   walletName String
   address    String
   networkId  String
@@ -158,168 +213,9 @@ model Wallet {
 }
 ```
 
-## Transaction Signing
+### Complete API Example
 
-### Solana Transaction Example
-
-```typescript
-import { Connection, Transaction, SystemProgram, PublicKey } from '@solana/web3.js';
-
-app.post('/api/transactions/sign', async (req, res) => {
-  try {
-    const { userId, recipientAddress, amount } = req.body;
-    
-    // Get user's wallet from database
-    const userWallet = await prisma.wallet.findUnique({
-      where: { userId }
-    });
-    
-    if (!userWallet) {
-      return res.status(404).json({ error: 'Wallet not found' });
-    }
-    
-    // Create Solana transaction
-    const connection = new Connection(process.env.SOLANA_RPC_URL!);
-    const transaction = new Transaction().add(
-      SystemProgram.transfer({
-        fromPubkey: new PublicKey(userWallet.address),
-        toPubkey: new PublicKey(recipientAddress),
-        lamports: amount * 1e9 // Convert SOL to lamports
-      })
-    );
-    
-    // Get recent blockhash
-    const { blockhash } = await connection.getLatestBlockhash();
-    transaction.recentBlockhash = blockhash;
-    transaction.feePayer = new PublicKey(userWallet.address);
-    
-    // Serialize transaction
-    const serializedTransaction = transaction.serialize({
-      requireAllSignatures: false,
-      verifySignatures: false
-    });
-    
-    // Sign and send with SDK
-    const signedTx = await sdk.signAndSendTransaction({
-      from: userWallet.address,
-      to: recipientAddress,
-      data: serializedTransaction.toString('base64'),
-      networkId: 'solana:101' // Mainnet
-    }, userWallet.walletId);
-    
-    res.json({
-      signature: signedTx.signature,
-      txHash: signedTx.txHash
-    });
-  } catch (error) {
-    console.error('Failed to sign transaction:', error);
-    res.status(500).json({ error: 'Failed to sign transaction' });
-  }
-});
-```
-
-## Message Signing
-
-```typescript
-app.post('/api/messages/sign', async (req, res) => {
-  try {
-    const { userId, message } = req.body;
-    
-    // Get user's wallet from database
-    const userWallet = await prisma.wallet.findUnique({
-      where: { userId }
-    });
-    
-    if (!userWallet) {
-      return res.status(404).json({ error: 'Wallet not found' });
-    }
-    
-    // Sign message
-    const signature = await sdk.signMessage(
-      userWallet.walletId,
-      message,
-      userWallet.networkId
-    );
-    
-    res.json({
-      message,
-      signature,
-      publicKey: userWallet.address
-    });
-  } catch (error) {
-    console.error('Failed to sign message:', error);
-    res.status(500).json({ error: 'Failed to sign message' });
-  }
-});
-```
-
-## Best Practices
-
-### 1. Wallet ID Persistence
-
-Always store the wallet ID in your database immediately after creation:
-
-```typescript
-// ✅ Good: Store wallet information
-const wallet = await sdk.createWallet(walletName);
-await saveWalletToDatabase(userId, wallet);
-
-// ❌ Bad: Not persisting wallet ID
-const wallet = await sdk.createWallet(walletName);
-// If your app crashes here, the wallet ID is lost!
-```
-
-### 2. Use User ID as Wallet Name
-
-Using a predictable wallet name helps with recovery:
-
-```typescript
-// ✅ Good: Predictable wallet name
-const walletName = `user_${userId}`;
-const wallet = await sdk.createWallet(walletName);
-
-// ✅ Also good: Include email for better identification
-const walletName = `user_${userId}_${userEmail}`;
-const wallet = await sdk.createWallet(walletName);
-
-// ❌ Bad: Random or no wallet name
-const wallet = await sdk.createWallet(); // Uses timestamp
-```
-
-### 3. Error Handling
-
-Always implement proper error handling:
-
-```typescript
-try {
-  const wallet = await sdk.createWallet(walletName);
-  // Handle success
-} catch (error) {
-  if (error.message.includes('already exists')) {
-    // Handle duplicate wallet
-  } else {
-    // Handle other errors
-  }
-}
-```
-
-### 4. Transaction Verification
-
-After signing, verify the transaction on-chain:
-
-```typescript
-const signedTx = await sdk.signAndSendTransaction(transaction);
-
-// Wait for confirmation
-const confirmation = await connection.confirmTransaction(signedTx.txHash);
-if (confirmation.value.err) {
-  throw new Error('Transaction failed');
-}
-```
-
-## Complete Example
-
-Here's a complete example of an Express API with wallet management:
+Here's a production-ready Express API with proper wallet management:
 
 ```typescript
 import express from 'express';
@@ -335,43 +231,46 @@ app.use(express.json());
 
 const prisma = new PrismaClient();
 const sdk = new ServerSDK({
-  privateKey: process.env.PHANTOM_ORGANIZATION_PRIVATE_KEY!,
-  organizationId: process.env.PHANTOM_ORGANIZATION_ID!,
-  walletApi: process.env.PHANTOM_WALLET_API!
+  apiPrivateKey: process.env.PRIVATE_KEY!,
+  organizationId: process.env.ORGANIZATION_ID!,
+  apiBaseUrl: process.env.PHANTOM_API_URL!
 });
 
 const connection = new Connection(process.env.SOLANA_RPC_URL!);
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
-});
-
-// Create or get wallet
+// Create or get wallet for user
 app.post('/api/users/:userId/wallet', async (req, res) => {
   try {
     const { userId } = req.params;
     
-    // Check existing wallet
+    // Check if user already has a wallet
     let wallet = await prisma.wallet.findUnique({
       where: { userId }
     });
     
-    if (!wallet) {
-      // Create new wallet
-      const walletName = `user_${userId}`;
-      const result = await sdk.createWallet(walletName);
-      
-      wallet = await prisma.wallet.create({
-        data: {
-          userId,
-          walletId: result.walletId,
-          walletName,
-          address: result.addresses[0].address,
-          networkId: result.addresses[0].networkId
-        }
+    if (wallet) {
+      // Return existing wallet
+      return res.json({
+        walletId: wallet.walletId,
+        address: wallet.address,
+        networkId: wallet.networkId
       });
     }
+    
+    // Create new wallet with meaningful name
+    const walletName = `user_${userId}`;
+    const result = await sdk.createWallet(walletName);
+    
+    // CRITICAL: Immediately persist wallet information
+    wallet = await prisma.wallet.create({
+      data: {
+        userId,
+        walletId: result.walletId, // NEVER lose this!
+        walletName,
+        address: result.addresses[0].address,
+        networkId: result.addresses[0].networkId
+      }
+    });
     
     res.json({
       walletId: wallet.walletId,
@@ -384,65 +283,13 @@ app.post('/api/users/:userId/wallet', async (req, res) => {
   }
 });
 
-// Send SOL
-app.post('/api/users/:userId/send-sol', async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const { recipientAddress, amount } = req.body;
-    
-    // Get wallet
-    const wallet = await prisma.wallet.findUnique({
-      where: { userId }
-    });
-    
-    if (!wallet) {
-      return res.status(404).json({ error: 'Wallet not found' });
-    }
-    
-    // Create transaction
-    const transaction = new Transaction().add(
-      SystemProgram.transfer({
-        fromPubkey: new PublicKey(wallet.address),
-        toPubkey: new PublicKey(recipientAddress),
-        lamports: amount * LAMPORTS_PER_SOL
-      })
-    );
-    
-    // Prepare transaction
-    const { blockhash } = await connection.getLatestBlockhash();
-    transaction.recentBlockhash = blockhash;
-    transaction.feePayer = new PublicKey(wallet.address);
-    
-    // Sign transaction
-    const serialized = transaction.serialize({
-      requireAllSignatures: false,
-      verifySignatures: false
-    });
-    
-    const signed = await sdk.signAndSendTransaction({
-      from: wallet.address,
-      to: recipientAddress,
-      data: serialized.toString('base64'),
-      networkId: wallet.networkId
-    }, wallet.walletId);
-    
-    res.json({
-      signature: signed.signature,
-      amount,
-      recipient: recipientAddress
-    });
-  } catch (error) {
-    console.error('Transaction failed:', error);
-    res.status(500).json({ error: 'Failed to send transaction' });
-  }
-});
-
-// Sign message
+// Sign a message
 app.post('/api/users/:userId/sign-message', async (req, res) => {
   try {
     const { userId } = req.params;
     const { message } = req.body;
     
+    // Get user's wallet from database
     const wallet = await prisma.wallet.findUnique({
       where: { userId }
     });
@@ -451,6 +298,7 @@ app.post('/api/users/:userId/sign-message', async (req, res) => {
       return res.status(404).json({ error: 'Wallet not found' });
     }
     
+    // Sign message using stored wallet ID
     const signature = await sdk.signMessage(
       wallet.walletId,
       message,
@@ -468,16 +316,78 @@ app.post('/api/users/:userId/sign-message', async (req, res) => {
   }
 });
 
+// Send SOL transaction
+app.post('/api/users/:userId/send-sol', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { recipientAddress, amount } = req.body;
+    
+    // Validate inputs
+    if (!recipientAddress || !amount || amount <= 0) {
+      return res.status(400).json({ error: 'Invalid request parameters' });
+    }
+    
+    // Get user's wallet
+    const wallet = await prisma.wallet.findUnique({
+      where: { userId }
+    });
+    
+    if (!wallet) {
+      return res.status(404).json({ error: 'Wallet not found' });
+    }
+    
+    // Check balance (optional but recommended)
+    const balance = await connection.getBalance(new PublicKey(wallet.address));
+    if (balance < amount * LAMPORTS_PER_SOL) {
+      return res.status(400).json({ error: 'Insufficient balance' });
+    }
+    
+    // Create transaction
+    const transaction = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: new PublicKey(wallet.address),
+        toPubkey: new PublicKey(recipientAddress),
+        lamports: amount * LAMPORTS_PER_SOL
+      })
+    );
+    
+    // Prepare transaction
+    const { blockhash } = await connection.getLatestBlockhash();
+    transaction.recentBlockhash = blockhash;
+    transaction.feePayer = new PublicKey(wallet.address);
+    
+    // Serialize transaction
+    const serialized = transaction.serialize({
+      requireAllSignatures: false,
+      verifySignatures: false
+    });
+    
+    // Sign and send using stored wallet ID
+    const signed = await sdk.signAndSendTransaction({
+      from: wallet.address,
+      to: recipientAddress,
+      data: serialized.toString('base64'),
+      networkId: wallet.networkId
+    }, wallet.walletId);
+    
+    // Wait for confirmation
+    const confirmation = await connection.confirmTransaction(signed.txHash);
+    
+    res.json({
+      signature: signed.signature,
+      txHash: signed.txHash,
+      amount,
+      recipient: recipientAddress,
+      confirmed: !confirmation.value.err
+    });
+  } catch (error) {
+    console.error('Transaction failed:', error);
+    res.status(500).json({ error: 'Failed to send transaction' });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 ```
-
-## Security Considerations
-
-1. **Never expose your organization private key** - Keep it secure in environment variables
-2. **Validate all inputs** - Sanitize user inputs before processing
-3. **Use HTTPS in production** - Ensure all API calls are encrypted
-4. **Implement rate limiting** - Prevent abuse of wallet creation and signing endpoints
-5. **Add authentication** - Protect your endpoints with proper user authentication

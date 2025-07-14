@@ -1,7 +1,7 @@
 export interface ServerSDKConfig {
-  privateKey: string;
+  apiPrivateKey: string;
   organizationId: string;
-  walletApi: string;
+  apiBaseUrl: string;
   solanaRpcUrl?: string;
 }
 

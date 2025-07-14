@@ -33,12 +33,12 @@ export class ServerSDK {
   constructor(config: ServerSDKConfig) {
     this.config = config;
 
-    if (!config.organizationId || !config.walletApi) {
-      throw new Error('organizationId and walletApi are required');
+    if (!config.organizationId || !config.apiBaseUrl) {
+      throw new Error('organizationId and apiBaseUrl are required');
     }
 
     // Decode the private key from base58
-    const privateKeyBytes = bs58.decode(config.privateKey);
+    const privateKeyBytes = bs58.decode(config.apiPrivateKey);
     this.signingKeypair = Keypair.fromSecretKey(privateKeyBytes);
 
     // Create authenticated axios instance
@@ -46,11 +46,11 @@ export class ServerSDK {
 
     // Configure the KMS API client with authentication
     const configuration = new Configuration({
-      basePath: config.walletApi,
+      basePath: config.apiBaseUrl,
     });
 
     // Pass the authenticated axios instance to the KMS API
-    this.kmsApi = new KMSRPCApi(configuration, config.walletApi, authenticatedAxios);
+    this.kmsApi = new KMSRPCApi(configuration, config.apiBaseUrl, authenticatedAxios);
 
     // Initialize Solana connection if RPC URL is provided
     if (config.solanaRpcUrl) {
