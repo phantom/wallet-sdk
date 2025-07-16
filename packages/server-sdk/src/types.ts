@@ -1,3 +1,5 @@
+import { DerivationInfoAddressFormatEnum } from "@phantom/openapi-wallet-service";
+
 export interface ServerSDKConfig {
   apiPrivateKey: string;
   organizationId: string;
@@ -6,7 +8,7 @@ export interface ServerSDKConfig {
 }
 
 export interface WalletAddress {
-  networkId: string;
+  addressType: DerivationInfoAddressFormatEnum;
   address: string;
 }
 

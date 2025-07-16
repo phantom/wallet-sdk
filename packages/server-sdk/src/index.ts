@@ -9,9 +9,6 @@ import {
   CreateWalletMethodEnum,
   SignTransactionMethodEnum,
   SignRawPayloadMethodEnum,
-  Algorithm,
-  Curve,
-  PublicKeyFormat,
   type CreateWallet,
   type SignTransaction,
   type SignRawPayload,
@@ -21,7 +18,10 @@ import {
   type DerivationInfo,
   type ExternalKmsWallet,
   type SignedTransactionWithPublicKey,
-  type SignatureWithPublicKey
+  type SignatureWithPublicKey,
+  GetAccounts,
+  GetAccountsMethodEnum,
+ ExternalDerivedAccount
 } from '@phantom/openapi-wallet-service';
 
 export class ServerSDK {
@@ -63,8 +63,16 @@ export class ServerSDK {
       // Create wallet request
       const walletRequest: CreateWalletRequest = {
         organizationId: this.config.organizationId,
-        walletName: walletName || `Wallet ${Date.now()}`
+        walletName: walletName || `Wallet ${Date.now()}`,
+        accounts: [
+          DerivationPath.Solana,
+          DerivationPath.Ethereum,
+          DerivationPath.Bitcoin,
+          DerivationPath.Sui
+        ] as any
       };
+
+      console.log("Creating wallet with request:", walletRequest);
 
       const request: CreateWallet = {
         method: CreateWalletMethodEnum.createWallet,
@@ -75,37 +83,37 @@ export class ServerSDK {
       const response = await this.kmsApi.postKmsRpc(request);
       const walletResult = response.data.result as ExternalKmsWallet;
 
-      // The result should contain a wallet ID that we can use
-      // Let's get the public key by signing an empty payload
-      const derivationInfo: DerivationInfo = {
-        derivationPath: DerivationPath.Solana,
-        curve: Curve.ed25519,
-        addressFormat: PublicKeyFormat.solana
-      };
+      console.log("Wallet created successfully:", walletResult);
 
-      const signRequest: SignRawPayloadRequest = {
-        organizationId: this.config.organizationId,
-        walletId: walletResult.walletId,
-        payload: Buffer.from('test', 'utf8').toString("base64") as any, // Empty payload just to get the public key
-        algorithm: Algorithm.ed25519,
-        derivationInfo: derivationInfo,
-      };
-
-      const signPayloadRequest: SignRawPayload = {
-        method: SignRawPayloadMethodEnum.signRawPayload,
-        params: signRequest,
+      // Fetch the accounts
+      const requestAccounts: GetAccounts = {
+        method: GetAccountsMethodEnum.getAccounts,
+        params: {
+          accounts: [
+            DerivationPath.Solana,
+            DerivationPath.Ethereum,
+            DerivationPath.Bitcoin,
+            DerivationPath.Sui],
+          organizationId: this.config.organizationId,
+          walletId: walletResult.walletId
+        },
         timestampMs: Date.now()
-      } as any
+      } as any;
 
-      const signResponse = await this.kmsApi.postKmsRpc(signPayloadRequest);
-      const signResult = signResponse.data.result as SignatureWithPublicKey;
+      console.log("Fetching accounts for wallet:", walletResult.walletId);
 
+      const accountsResponse = await this.kmsApi.postKmsRpc(requestAccounts);
+
+      console.log("Accounts fetched successfully:", accountsResponse.data.result);
+      const accountsResult = accountsResponse.data.result as  (ExternalDerivedAccount & { publicKey : string })[];
+
+      
       return {
         walletId: walletResult.walletId,
-        addresses: [{
-          networkId: 'solana:101',
-          address: signResult.public_key
-        }]
+        addresses: accountsResult.map(account => ({
+          addressType: account.addressFormat,
+          address: account.publicKey
+        })),
       };
     } catch (error: any) {
       console.error('Failed to create wallet:', error.response?.data || error.message);
@@ -132,7 +140,6 @@ export class ServerSDK {
           organizationId: this.config.organizationId,
           walletId: walletId,
           transaction: transaction.data as any,
-          algorithm: networkConfig.algorithm,
           derivationInfo: derivationInfo
         };
 
@@ -145,13 +152,11 @@ export class ServerSDK {
         const response = await this.kmsApi.postKmsRpc(request);
         const result = response.data.result as SignedTransactionWithPublicKey;
 
-        console.log("Result", result)
-
         // Send the transaction to Solana network
         if (this.solanaConnection) {
           try {
             // Decode the signed transaction from base64
-            const signedTxBuffer = Buffer.from(result.transaction, 'base64');
+            const signedTxBuffer = Buffer.from(result.transaction as unknown as string, 'base64');
 
             // Send raw transaction
             const signature = await this.solanaConnection.sendRawTransaction(
@@ -173,7 +178,7 @@ export class ServerSDK {
             return {
               txHash: signature,
               signature: signature,
-              rawTransaction: result.transaction, // Base64 encoded signed transaction
+              rawTransaction: result.transaction as unknown as string, // Base64 encoded signed transaction
             };
           } catch (sendError: any) {
             console.error('Failed to send transaction to Solana:', sendError);
@@ -194,6 +199,38 @@ export class ServerSDK {
     }
   }
 
+  async getWalletAddresses(walletId: string, derivationPaths?: string[]): Promise<{ addressType: string; address: string }[]> {
+    try {
+      const paths = derivationPaths || [
+        DerivationPath.Solana,
+        DerivationPath.Ethereum,
+        DerivationPath.Bitcoin,
+        DerivationPath.Sui
+      ];
+
+      const requestAccounts: GetAccounts = {
+        method: GetAccountsMethodEnum.getAccounts,
+        params: {
+          accounts: paths,
+          organizationId: this.config.organizationId,
+          walletId: walletId
+        },
+        timestampMs: Date.now()
+      } as any;
+
+      const accountsResponse = await this.kmsApi.postKmsRpc(requestAccounts);
+      const accountsResult = accountsResponse.data.result as (ExternalDerivedAccount & { publicKey: string })[];
+
+      return accountsResult.map(account => ({
+        addressType: account.addressFormat,
+        address: account.publicKey
+      }));
+    } catch (error: any) {
+      console.error('Failed to get wallet addresses:', error.response?.data || error.message);
+      throw new Error(`Failed to get wallet addresses: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
   async signMessage(walletId: string, message: string, networkId: string): Promise<string> {
     try {
       // Convert message to byte array
@@ -204,19 +241,15 @@ export class ServerSDK {
 
       const derivationInfo: DerivationInfo = {
         derivationPath: networkConfig.derivationPath,
-        curve: networkConfig.curve === 'Ed25519' ? Curve.ed25519 : Curve.secp256k1,
-        addressFormat: networkConfig.addressFormat === 'Solana'
-          ? PublicKeyFormat.solana
-          : PublicKeyFormat.ethereum
+        curve: networkConfig.curve,
+        addressFormat: networkConfig.addressFormat
       };
 
       const signRequest: SignRawPayloadRequest = {
         organizationId: this.config.organizationId,
         walletId: walletId,
         payload: messageBytes,
-        algorithm: networkConfig.algorithm === 'Ed25519'
-          ? Algorithm.ed25519
-          : Algorithm.secp256k1,
+        algorithm: networkConfig.algorithm,
         derivationInfo: derivationInfo
       };
 
@@ -225,7 +258,7 @@ export class ServerSDK {
         params: signRequest,
         timestampMs: Date.now()
       } as any;
-      
+
 
       const response = await this.kmsApi.postKmsRpc(request);
       const result = response.data.result as SignatureWithPublicKey;

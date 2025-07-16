@@ -1548,12 +1548,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/openapi-wallet-service@npm:^0.1.2":
-  version: 0.1.2
-  resolution: "@phantom/openapi-wallet-service@npm:0.1.2"
+"@phantom/openapi-wallet-service@npm:^0.1.5":
+  version: 0.1.5
+  resolution: "@phantom/openapi-wallet-service@npm:0.1.5"
   dependencies:
     axios: "npm:^1.6.1"
-  checksum: 10c0/c2c43b5510190a2d0202ad013d62766a1b2247221186b1562139ecb093e9e6567601b8d80bf88deefe71967929395c621493593da62a1c9d7b8025eb402ce6d0
+  checksum: 10c0/c69a36f509a5ec18bd4ef9744688a959475d9611be69effa565d82e366116f1bbb8e594a24b34495cdd2a61f99d232b789f3bc8cb529ccdbf71cf26682c54a55
   languageName: node
   linkType: hard
 
@@ -1630,10 +1630,15 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/server-sdk@workspace:packages/server-sdk"
   dependencies:
-    "@phantom/openapi-wallet-service": "npm:^0.1.2"
+    "@phantom/openapi-wallet-service": "npm:^0.1.5"
     "@solana/web3.js": "npm:^1.98.2"
+    "@types/jest": "npm:^29.5.12"
+    "@types/node": "npm:^20.11.0"
     axios: "npm:^1.10.0"
     bs58: "npm:^6.0.0"
+    dotenv: "npm:^16.4.1"
+    jest: "npm:^29.7.0"
+    ts-jest: "npm:^29.1.2"
     tweetnacl: "npm:^1.0.3"
     typescript: "npm:^5.0.4"
   languageName: unknown
@@ -2576,7 +2581,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/jest@npm:^29.5.14":
+"@types/jest@npm:^29.5.12, @types/jest@npm:^29.5.14":
   version: 29.5.14
   resolution: "@types/jest@npm:29.5.14"
   dependencies:
@@ -2617,6 +2622,15 @@ __metadata:
   version: 12.20.55
   resolution: "@types/node@npm:12.20.55"
   checksum: 10c0/3b190bb0410047d489c49bbaab592d2e6630de6a50f00ba3d7d513d59401d279972a8f5a598b5bb8ddc1702f8a2f4ec57a65d93852f9c329639738e7053637d1
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^20.11.0":
+  version: 20.19.8
+  resolution: "@types/node@npm:20.19.8"
+  dependencies:
+    undici-types: "npm:~6.21.0"
+  checksum: 10c0/77c8310719982bb624940272263f11a5a6ca43f14c56495a4566f156dae2255a06b111cf9e402c66994ab8a10849d44f666d8da91ea740666d02c72b5efc0879
   languageName: node
   linkType: hard
 
@@ -4123,6 +4137,13 @@ __metadata:
   dependencies:
     webidl-conversions: "npm:^7.0.0"
   checksum: 10c0/774277cd9d4df033f852196e3c0077a34dbd15a96baa4d166e0e47138a80f4c0bdf0d94e4703e6ff5883cec56bb821a6fff84402d8a498e31de7c87eb932a294
+  languageName: node
+  linkType: hard
+
+"dotenv@npm:^16.4.1":
+  version: 16.6.1
+  resolution: "dotenv@npm:16.6.1"
+  checksum: 10c0/15ce56608326ea0d1d9414a5c8ee6dcf0fffc79d2c16422b4ac2268e7e2d76ff5a572d37ffe747c377de12005f14b3cc22361e79fc7f1061cce81f77d2c973dc
   languageName: node
   linkType: hard
 
@@ -8980,6 +9001,46 @@ __metadata:
   bin:
     ts-jest: cli.js
   checksum: 10c0/68ed5abbbdb16ff8a9df2ba7ebb8e19ea4fffe87db7e0b59d842d674e7935af8b375b51a69c2cc9215ef22a6325a9f99b80ab97f5c300c30910695000e3bfeee
+  languageName: node
+  linkType: hard
+
+"ts-jest@npm:^29.1.2":
+  version: 29.4.0
+  resolution: "ts-jest@npm:29.4.0"
+  dependencies:
+    bs-logger: "npm:^0.2.6"
+    ejs: "npm:^3.1.10"
+    fast-json-stable-stringify: "npm:^2.1.0"
+    json5: "npm:^2.2.3"
+    lodash.memoize: "npm:^4.1.2"
+    make-error: "npm:^1.3.6"
+    semver: "npm:^7.7.2"
+    type-fest: "npm:^4.41.0"
+    yargs-parser: "npm:^21.1.1"
+  peerDependencies:
+    "@babel/core": ">=7.0.0-beta.0 <8"
+    "@jest/transform": ^29.0.0 || ^30.0.0
+    "@jest/types": ^29.0.0 || ^30.0.0
+    babel-jest: ^29.0.0 || ^30.0.0
+    jest: ^29.0.0 || ^30.0.0
+    jest-util: ^29.0.0 || ^30.0.0
+    typescript: ">=4.3 <6"
+  peerDependenciesMeta:
+    "@babel/core":
+      optional: true
+    "@jest/transform":
+      optional: true
+    "@jest/types":
+      optional: true
+    babel-jest:
+      optional: true
+    esbuild:
+      optional: true
+    jest-util:
+      optional: true
+  bin:
+    ts-jest: cli.js
+  checksum: 10c0/c266431200786995b5bd32f8e61f17a564ce231278aace1d98fb0ae670f24013aeea06c90ec6019431e5a6f5e798868785131bef856085c931d193e2efbcea04
   languageName: node
   linkType: hard
 

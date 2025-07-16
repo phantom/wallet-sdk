@@ -1,7 +1,7 @@
 import {
+  DerivationInfoCurveEnum,
+  DerivationInfoAddressFormatEnum,
   Algorithm,
-  Curve,
-  PublicKeyFormat,
 } from '@phantom/openapi-wallet-service';
 
 /**
@@ -10,24 +10,25 @@ import {
 export enum DerivationPath {
   // Solana - BIP44 standard for Solana (coin type 501)
   Solana = "m/44'/501'/0'/0'",
-  
+
   // Ethereum - BIP44 standard for Ethereum and all EVM-compatible chains (coin type 60)
-  Ethereum = "m/44'/60'/0'/0/0",
-  
+  Ethereum = "m/44'/60'/0'/0",
+
   // Bitcoin - BIP44 standard for Bitcoin (coin type 0)
-  Bitcoin = "m/44'/0'/0'/0/0",
-  
+  Bitcoin = "m/84'/0'/0'/0",
+
   // Sui - BIP44 standard for Sui (coin type 784)
   Sui = "m/44'/784'/0'/0'/0'",
 }
+
 
 /**
  * Helper function to get derivation path based on network ID
  */
 export function getDerivationPathForNetwork(networkId: string): string {
-  // Extract the chain name from network ID format (e.g., "solana:101" -> "solana")
+  // Extract the chain name from network ID format (e.g., "solana:mainnet" -> "solana")
   const network = networkId.split(':')[0].toLowerCase();
-  
+
   switch (network) {
     case 'solana':
       return DerivationPath.Solana;
@@ -46,13 +47,13 @@ export function getDerivationPathForNetwork(networkId: string): string {
 }
 
 /**
- * Network configuration with algorithm and curve information
+ * Network configuration
  */
 export interface NetworkConfig {
   derivationPath: string;
-  curve:Curve;
-  algorithm:Algorithm;
-  addressFormat: PublicKeyFormat;
+  curve: DerivationInfoCurveEnum;
+  algorithm: Algorithm;
+  addressFormat: DerivationInfoAddressFormatEnum;
 }
 
 /**
@@ -60,37 +61,37 @@ export interface NetworkConfig {
  */
 export function getNetworkConfig(networkId: string): NetworkConfig {
   const network = networkId.split(':')[0].toLowerCase();
-  
+
   switch (network) {
     case 'solana':
       return {
         derivationPath: DerivationPath.Solana,
-        curve: Curve.ed25519,
+        curve: DerivationInfoCurveEnum.ed25519,
         algorithm: Algorithm.ed25519,
-        addressFormat: PublicKeyFormat.solana
+        addressFormat: DerivationInfoAddressFormatEnum.solana
       };
     case 'sui':
       return {
         derivationPath: DerivationPath.Sui,
-        curve: Curve.ed25519,
+        curve: DerivationInfoCurveEnum.ed25519,
         algorithm: Algorithm.ed25519,
-        addressFormat: PublicKeyFormat.ethereum, // Sui uses similar address format to Ethereum
+        addressFormat: DerivationInfoAddressFormatEnum.sui,
       };
     case 'bitcoin':
     case 'btc':
       return {
         derivationPath: DerivationPath.Bitcoin,
-        curve: Curve.secp256k1,
+        curve: DerivationInfoCurveEnum.secp256k1,
         algorithm: Algorithm.secp256k1,
-        addressFormat: PublicKeyFormat.ethereum // Bitcoin uses a different format, but for SDK consistency we use Ethereum format
+        addressFormat: DerivationInfoAddressFormatEnum.bitcoinSegwit // Bitcoin uses a different format, but for SDK consistency we use Ethereum format
       };
     default:
       // All EVM-compatible chains (Ethereum, Polygon, BSC, Arbitrum, etc.)
       return {
         derivationPath: DerivationPath.Ethereum,
-        curve: Curve.secp256k1,
-        algorithm: Algorithm.secp256k1Keccak256,
-        addressFormat: PublicKeyFormat.ethereum
+        curve: DerivationInfoCurveEnum.secp256k1,
+        algorithm: Algorithm.secp256k1,
+        addressFormat: DerivationInfoAddressFormatEnum.ethereum // EVM chains use Ethereum address format
       };
   }
 }

@@ -36,7 +36,7 @@ After creation, it retrieves the public key by signing an empty payload.
 const wallet = await sdk.createWallet('My Main Wallet');
 // Returns: { 
 //   walletId: 'wallet-uuid',
-//   addresses: [{ networkId: 'solana:101', address: 'public-key' }]
+//   addresses: [{ addressType: 'Solana', address: 'public-key' }]
 // }
 ```
 
@@ -48,7 +48,7 @@ const result = await sdk.signAndSendTransaction('wallet-id', {
   from: 'sender-address',
   to: 'recipient-address',
   data: 'base64-encoded-transaction',
-  networkId: 'solana:101'
+  addressType: 'Solana'
 });
 // Returns: { 
 //   txHash: 'transaction-hash',
@@ -57,11 +57,11 @@ const result = await sdk.signAndSendTransaction('wallet-id', {
 // }
 ```
 
-### signMessage(walletId: string, message: string, networkId: string)
+### signMessage(walletId: string, message: string, addressType: string)
 Signs a message with the specified wallet using the signRawPayload method.
 
 ```typescript
-const signature = await sdk.signMessage('wallet-id', 'Hello World', 'solana:101');
+const signature = await sdk.signMessage('wallet-id', 'Hello World', 'Solana');
 // Returns: base64 encoded signature
 ```
 
