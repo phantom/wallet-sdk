@@ -1,7 +1,7 @@
-import { ServerSDKConfig, CreateWalletResult, Transaction, SignedTransaction } from "./types";
+import { ServerSDKConfig, CreateWalletResult, Transaction, SignedTransaction, GetWalletsResult, Wallet } from "./types";
 import { createAuthenticatedAxiosInstance } from "./auth";
 import { DerivationPath, getNetworkConfig } from "./constants";
-import { deriveSubmissionConfig } from "./caip2-mappings";
+import { deriveSubmissionConfig, NetworkId } from "./caip2-mappings";
 import bs58 from "bs58";
 import {
   Configuration,
@@ -125,59 +125,57 @@ export class ServerSDK {
   async signAndSendTransaction(
     walletId: string,
     transaction: Transaction,
-    networkId: string
+    networkId: NetworkId
   ): Promise<SignedTransaction> {
     try {
       // Encode the Uint8Array as a base64 string
       const encodedTransaction = Buffer.from(transaction).toString('base64');
-      
+
       const submissionConfig = deriveSubmissionConfig(networkId);
-      
+
       // If we don't have a submission config, the transaction will only be signed, not submitted
       if (!submissionConfig) {
         console.warn(`No submission config available for network ${networkId}. Transaction will be signed but not submitted.`);
       }
-      
-      // For Solana transactions
-      if (networkId.startsWith("solana:")) {
-        // Get network configuration
-        const networkConfig = getNetworkConfig(networkId);
 
-        const derivationInfo: DerivationInfo = {
-          derivationPath: networkConfig.derivationPath,
-          curve: networkConfig.curve,
-          addressFormat: networkConfig.addressFormat,
-        };
+      // Get network configuration
+      const networkConfig = getNetworkConfig(networkId);
 
-        // Sign transaction request - only include submissionConfig if available
-        const signRequest: SignTransactionRequest & { submissionConfig?: SubmissionConfig } = {
-          organizationId: this.config.organizationId,
-          walletId: walletId,
-          transaction: encodedTransaction as any,
-          derivationInfo: derivationInfo,
-        };
-
-        // Add submission config if available
-        if (submissionConfig) {
-          signRequest.submissionConfig = submissionConfig;
-        }
-
-        const request: SignTransaction = {
-          method: SignTransactionMethodEnum.signTransaction,
-          params: signRequest,
-          timestampMs: Date.now(),
-        } as any;
-
-        const response = await this.kmsApi.postKmsRpc(request);
-        const result = response.data.result as SignedTransactionWithPublicKey;
-
-        return {
-          rawTransaction: result.transaction as unknown as string, // Base64 encoded signed transaction
-        };
-      } else {
-        // For EVM chains (future implementation)
-        throw new Error("EVM transaction signing not yet implemented");
+      if (!networkConfig) {
+        throw new Error(`Unsupported network ID: ${networkId}`);
       }
+
+      const derivationInfo: DerivationInfo = {
+        derivationPath: networkConfig.derivationPath,
+        curve: networkConfig.curve,
+        addressFormat: networkConfig.addressFormat,
+      };
+
+      // Sign transaction request - only include submissionConfig if available
+      const signRequest: SignTransactionRequest & { submissionConfig?: SubmissionConfig } = {
+        organizationId: this.config.organizationId,
+        walletId: walletId,
+        transaction: encodedTransaction as any,
+        derivationInfo: derivationInfo,
+      };
+
+      // Add submission config if available
+      if (submissionConfig) {
+        signRequest.submissionConfig = submissionConfig;
+      }
+
+      const request: SignTransaction = {
+        method: SignTransactionMethodEnum.signTransaction,
+        params: signRequest,
+        timestampMs: Date.now(),
+      } as any;
+
+      const response = await this.kmsApi.postKmsRpc(request);
+      const result = response.data.result as SignedTransactionWithPublicKey;
+
+      return {
+        rawTransaction: result.transaction as unknown as string, // Base64 encoded signed transaction
+      };
     } catch (error: any) {
       console.error("Failed to sign and send transaction:", error.response?.data || error.message);
       throw new Error(`Failed to sign and send transaction: ${error.response?.data?.message || error.message}`);
@@ -219,13 +217,15 @@ export class ServerSDK {
     }
   }
 
-  async signMessage(walletId: string, message: string, networkId: string): Promise<string> {
+  async signMessage(walletId: string, message: string, networkId: NetworkId): Promise<string> {
     try {
-      // Convert message to byte array
-      const messageBytes = Array.from(Buffer.from(message, "utf8"));
 
       // Get network configuration
       const networkConfig = getNetworkConfig(networkId);
+
+      if (!networkConfig) {
+        throw new Error(`Unsupported network ID: ${networkId}`);
+      }
 
       const derivationInfo: DerivationInfo = {
         derivationPath: networkConfig.derivationPath,
@@ -233,10 +233,12 @@ export class ServerSDK {
         addressFormat: networkConfig.addressFormat,
       };
 
+      const base64StringMessage = Buffer.from(message, "utf8").toString("base64");
+
       const signRequest: SignRawPayloadRequest = {
         organizationId: this.config.organizationId,
         walletId: walletId,
-        payload: messageBytes,
+        payload: base64StringMessage as any,
         algorithm: networkConfig.algorithm,
         derivationInfo: derivationInfo,
       };
@@ -247,6 +249,7 @@ export class ServerSDK {
         timestampMs: Date.now(),
       } as any;
 
+
       const response = await this.kmsApi.postKmsRpc(request);
       const result = response.data.result as SignatureWithPublicKey;
 
@@ -255,6 +258,48 @@ export class ServerSDK {
     } catch (error: any) {
       console.error("Failed to sign message:", error.response?.data || error.message);
       throw new Error(`Failed to sign message: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  async getWallets(
+    limit?: number,
+    offset?: number
+  ): Promise<GetWalletsResult> {
+    try {
+      const request = {
+        method: "getOrganizationWallets",
+        params: {
+          organizationId: this.config.organizationId,
+          limit: limit || 20,
+          offset: offset || 0,
+        },
+        timestampMs: Date.now(),
+      };
+
+      console.log("Fetching wallets for organization:", this.config.organizationId);
+
+      const response = await this.kmsApi.postKmsRpc(request as any);
+      const result = response.data.result as {
+        wallets: ExternalKmsWallet[];
+        totalCount: number;
+        limit: number;
+        offset: number;
+      };
+
+      console.log(`Fetched ${result.wallets.length} wallets out of ${result.totalCount} total`);
+
+      return {
+        wallets: result.wallets.map((wallet) => ({
+          walletId: wallet.walletId,
+          walletName: wallet.walletName,
+        })),
+        totalCount: result.totalCount,
+        limit: result.limit,
+        offset: result.offset,
+      };
+    } catch (error: any) {
+      console.error("Failed to get wallets:", error.response?.data || error.message);
+      throw new Error(`Failed to get wallets: ${error.response?.data?.message || error.message}`);
     }
   }
 }

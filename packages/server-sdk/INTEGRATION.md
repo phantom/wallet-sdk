@@ -17,6 +17,7 @@ This guide demonstrates how to integrate the `@phantom/server-sdk` into your app
 - [Getting Started](#getting-started)
 - [Basic Examples](#basic-examples)
   - [Creating a Wallet](#creating-a-wallet)
+  - [Listing Wallets](#listing-wallets)
   - [Signing a Message](#signing-a-message)
   - [Signing a Transaction](#signing-a-transaction)
 - [Backend Integration](#backend-integration)
@@ -50,7 +51,7 @@ PHANTOM_API_URL=https://api.phantom.app/wallet
 ### 2. Initialize the SDK
 
 ```typescript
-import { ServerSDK } from '@phantom/server-sdk';
+import { ServerSDK, NetworkId } from '@phantom/server-sdk';
 import dotenv from 'dotenv';
 
 // Load environment variables
@@ -94,6 +95,38 @@ async function createWallet() {
 }
 ```
 
+### Listing Wallets
+
+```typescript
+// Get all wallets for your organization
+async function listWallets(limit?: number, offset?: number) {
+  try {
+    const result = await sdk.getWallets(limit, offset);
+    
+    console.log(`Found ${result.totalCount} wallets total`);
+    console.log(`Showing ${result.wallets.length} wallets (offset: ${result.offset})`);
+    
+    result.wallets.forEach(wallet => {
+      console.log(`- ${wallet.walletName} (ID: ${wallet.walletId})`);
+    });
+    
+    return result;
+  } catch (error) {
+    console.error('Failed to list wallets:', error);
+    throw error;
+  }
+}
+
+// Example: Get first 10 wallets
+const firstPage = await listWallets(10, 0);
+
+// Example: Get next 10 wallets
+const secondPage = await listWallets(10, 10);
+
+// Example: Get all wallets (default limit is 20)
+const allWallets = await sdk.getWallets();
+```
+
 ### Signing a Message
 
 ```typescript
@@ -103,7 +136,7 @@ async function signMessage(walletId: string, message: string) {
     const signature = await sdk.signMessage(
       walletId,
       message,
-      'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' // CAIP-2 Network ID for Solana mainnet
+      NetworkId.SOLANA_MAINNET 
     );
     
     console.log('Message signed:', {
@@ -160,7 +193,7 @@ async function sendSOL(walletId: string, fromAddress: string, toAddress: string,
     const signedTx = await sdk.signAndSendTransaction(
       walletId,
       serializedTransaction,
-      'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' // CAIP-2 Solana mainnet - submission config automatically derived
+      NetworkId.SOLANA_MAINNET 
     );
     
     // Extract the transaction signature from the signed transaction
@@ -197,7 +230,7 @@ async function sendSOL(walletId: string, fromAddress: string, toAddress: string,
 
 ## Backend Integration
 
-When integrating the SDK into your backend, it's **CRITICAL** to maintain the relationship between your users and their wallets.
+When integrating the SDK into your backend, it's **IMPORTANT** to maintain the relationship between your users and their wallets.
 
 ### Key Requirements
 
@@ -238,7 +271,7 @@ Here's a production-ready Express API with proper wallet management:
 
 ```typescript
 import express from 'express';
-import { ServerSDK } from '@phantom/server-sdk';
+import { ServerSDK, NetworkId } from '@phantom/server-sdk';
 import { PrismaClient } from '@prisma/client';
 import { Connection, Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import bs58 from 'bs58';
@@ -257,6 +290,29 @@ const sdk = new ServerSDK({
 });
 
 const connection = new Connection(process.env.SOLANA_RPC_URL!);
+
+// List all wallets for the organization
+app.get('/api/wallets', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 20;
+    const offset = parseInt(req.query.offset as string) || 0;
+    
+    const result = await sdk.getWallets(limit, offset);
+    
+    res.json({
+      wallets: result.wallets,
+      pagination: {
+        total: result.totalCount,
+        limit: result.limit,
+        offset: result.offset,
+        hasMore: result.offset + result.wallets.length < result.totalCount
+      }
+    });
+  } catch (error) {
+    console.error('Failed to list wallets:', error);
+    res.status(500).json({ error: 'Failed to list wallets' });
+  }
+});
 
 // Create or get wallet for user
 app.post('/api/users/:userId/wallet', async (req, res) => {
@@ -281,11 +337,11 @@ app.post('/api/users/:userId/wallet', async (req, res) => {
     const walletName = `user_${userId}`;
     const result = await sdk.createWallet(walletName);
     
-    // CRITICAL: Immediately persist wallet information
+    // Immediately persist wallet information
     wallet = await prisma.wallet.create({
       data: {
         userId,
-        walletId: result.walletId, // NEVER lose this!
+        walletId: result.walletId, 
         walletName,
         address: result.addresses[0].address,
         networkId: result.addresses[0].networkId
@@ -386,7 +442,7 @@ app.post('/api/users/:userId/send-sol', async (req, res) => {
     const signed = await sdk.signAndSendTransaction(
       wallet.walletId,
       serialized,
-      'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' // CAIP-2 network ID - submission config auto-derived
+      NetworkId.SOLANA_MAINNET 
     );
     
     // Extract the transaction signature from the signed transaction

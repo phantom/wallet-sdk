@@ -23,3 +23,15 @@ export interface SignedTransaction {
   rawTransaction: string;
 }
 
+export interface Wallet {
+  walletId: string;
+  walletName: string;
+}
+
+export interface GetWalletsResult {
+  wallets: Wallet[];
+  totalCount: number;
+  limit: number;
+  offset: number;
+}
+
