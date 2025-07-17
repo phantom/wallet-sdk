@@ -40,21 +40,34 @@ const wallet = await sdk.createWallet('My Main Wallet');
 // }
 ```
 
-### signAndSendTransaction(walletId: string, transaction: Transaction)
+### signAndSendTransaction(walletId: string, transaction: Transaction, submissionConfig: SubmissionConfig)
 Signs a transaction using the wallet service. The transaction should be base64 encoded.
 
+When `submissionConfig` is provided with valid `chain` and `network` values, Phantom will submit the transaction to the blockchain after signing. Otherwise, it only signs the transaction.
+
+**Note:** This method returns only the signed transaction data. To get the transaction hash/signature, you need to extract it from the signed transaction.
+
 ```typescript
+// Example with transaction submission
 const result = await sdk.signAndSendTransaction('wallet-id', {
   from: 'sender-address',
   to: 'recipient-address',
   data: 'base64-encoded-transaction',
-  addressType: 'Solana'
+  networkId: 'solana:101'
+}, {
+  chain: 'solana',
+  network: 'mainnet'  // Phantom will submit to mainnet
 });
 // Returns: { 
-//   txHash: 'transaction-hash',
-//   signature: 'transaction-signature',
 //   rawTransaction: 'base64-signed-transaction'
 // }
+
+// Extract the transaction signature (hash)
+// Note: requires 'import bs58 from "bs58"'
+const signedTx = Transaction.from(Buffer.from(result.rawTransaction, 'base64'));
+const signature = signedTx.signature 
+  ? bs58.encode(signedTx.signature)
+  : bs58.encode(signedTx.signatures[0].signature);
 ```
 
 ### signMessage(walletId: string, message: string, addressType: string)

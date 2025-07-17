@@ -128,6 +128,7 @@ const signature = await signMessage(walletId, message);
 
 ```typescript
 import { Connection, Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import bs58 from 'bs58'; // Added missing import for bs58
 
 // Sign and send a Solana transaction
 async function sendSOL(walletId: string, fromAddress: string, toAddress: string, amount: number) {
@@ -155,20 +156,42 @@ async function sendSOL(walletId: string, fromAddress: string, toAddress: string,
       verifySignatures: false
     });
     
-    // Sign and send with SDK
+    // Option 1: Sign and have Phantom submit the transaction
     const signedTx = await sdk.signAndSendTransaction(walletId, {
       from: fromAddress,
       to: toAddress,
       data: serializedTransaction.toString('base64'),
       networkId: 'solana:101' // Mainnet
+    }, {
+      chain: 'solana',
+      network: 'mainnet'  // This tells Phantom to submit the transaction
     });
     
-    console.log('Transaction sent:', {
-      signature: signedTx.signature,
-      txHash: signedTx.txHash
-    });
+    // Extract the transaction signature from the signed transaction
+    const signedTransaction = Transaction.from(
+      Buffer.from(signedTx.rawTransaction, 'base64')
+    );
     
-    return signedTx;
+    // Get the signature (transaction hash)
+    const signature = signedTransaction.signature 
+      ? bs58.encode(signedTransaction.signature)
+      : signedTransaction.signatures[0].signature 
+        ? bs58.encode(signedTransaction.signatures[0].signature)
+        : null;
+    
+    if (!signature) {
+      throw new Error('Failed to extract transaction signature');
+    }
+    
+    console.log('Transaction signature:', signature);
+    
+    // Wait for confirmation (Phantom submitted it for us)
+    const confirmation = await connection.confirmTransaction(signature);
+    
+    return {
+      signature,
+      confirmed: !confirmation.value.err
+    };
   } catch (error) {
     console.error('Failed to send transaction:', error);
     throw error;
@@ -222,6 +245,7 @@ import express from 'express';
 import { ServerSDK } from '@phantom/server-sdk';
 import { PrismaClient } from '@prisma/client';
 import { Connection, Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import bs58 from 'bs58';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -368,14 +392,33 @@ app.post('/api/users/:userId/send-sol', async (req, res) => {
       to: recipientAddress,
       data: serialized.toString('base64'),
       networkId: wallet.networkId
+    }, {
+      chain: 'solana',
+      network: 'mainnet' // or 'devnet' for testing
     });
     
+    // Extract the transaction signature from the signed transaction
+    const signedTransaction = Transaction.from(
+      Buffer.from(signed.rawTransaction, 'base64')
+    );
+    
+    // Get the signature (transaction hash)
+    const signature = signedTransaction.signature 
+      ? bs58.encode(signedTransaction.signature)
+      : signedTransaction.signatures[0].signature 
+        ? bs58.encode(signedTransaction.signatures[0].signature)
+        : null;
+    
+    if (!signature) {
+      return res.status(500).json({ error: 'Failed to extract transaction signature' });
+    }
+    
     // Wait for confirmation
-    const confirmation = await connection.confirmTransaction(signed.txHash);
+    const confirmation = await connection.confirmTransaction(signature);
     
     res.json({
-      signature: signed.signature,
-      txHash: signed.txHash,
+      signature: signature, 
+      txHash: signature,
       amount,
       recipient: recipientAddress,
       confirmed: !confirmation.value.err
