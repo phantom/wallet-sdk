@@ -1,0 +1,49 @@
+name: Convert Server SDK Docs to Mintlify MDX
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'packages/server-sdk/INTEGRATION.md'
+    branches:
+      - main
+      - md-to-mdx-docs
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  convert-and-pr:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.BOT_ACCOUNT_ACCESS_TOKEN }}
+      OPENAI_API_KEY: ${{ secrets.RELEASE_AUTOMATION_OPENAI_API_KEY }}
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Checkout docs-v2 repo
+        uses: actions/checkout@v3
+        with:
+          repository: phantom/docs-v2
+          token: ${{ secrets.BOT_ACCOUNT_ACCESS_TOKEN }}
+          path: docs-v2
+
+      - name: ChatGPT convert
+        run: |
+          pip3 install openai
+          python3 scripts/convert_to_mdx.py docs-v2/server-sdk/server-sdk.mdx packages/server-sdk/INTEGRATION.md
+
+      - name: Create PR in DOCS-V2 with updated mdx
+        run: |
+          cd docs-v2
+          git checkout -b update-docs-${GITHUB_REF##*/}-$(date +%s)
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          cp ../converted.mdx server-sdk/server-sdk.mdx # copy over the new file
+          git add .
+          git commit -m "chore: Update docs"
+          git push origin HEAD
+          echo "${GITHUB_TOKEN}" | gh auth login --with-token
+          gh pr create --title "Update docs" --body "Auto-generated MDX" -- base main
