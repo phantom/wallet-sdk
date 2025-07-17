@@ -73,12 +73,12 @@ describe('createAuthenticatedAxiosInstance', () => {
       expect(result.headers['X-Phantom-Sig']).toBeDefined();
       expect(typeof result.headers['X-Phantom-Sig']).toBe('string');
 
-      // Verify the signature is valid base64
-      expect(() => Buffer.from(result.headers['X-Phantom-Sig'], 'base64')).not.toThrow();
+      // Verify the signature is valid base64url
+      expect(() => Buffer.from(result.headers['X-Phantom-Sig'], 'base64url')).not.toThrow();
 
       // Verify the signature
       const dataUtf8 = Buffer.from(config.data, 'utf8');
-      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64');
+      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64url');
       const isValid = nacl.sign.detached.verify(
         dataUtf8,
         signature,
@@ -101,7 +101,7 @@ describe('createAuthenticatedAxiosInstance', () => {
       // Verify the signature
       const jsonString = JSON.stringify(config.data);
       const dataUtf8 = Buffer.from(jsonString, 'utf8');
-      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64');
+      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64url');
       const isValid = nacl.sign.detached.verify(
         dataUtf8,
         signature,
@@ -122,7 +122,7 @@ describe('createAuthenticatedAxiosInstance', () => {
       
       // Verify signature for empty string
       const dataUtf8 = Buffer.from('', 'utf8');
-      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64');
+      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64url');
       const isValid = nacl.sign.detached.verify(
         dataUtf8,
         signature,
@@ -143,7 +143,7 @@ describe('createAuthenticatedAxiosInstance', () => {
       
       // null should be stringified as "null"
       const dataUtf8 = Buffer.from('null', 'utf8');
-      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64');
+      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64url');
       const isValid = nacl.sign.detached.verify(
         dataUtf8,
         signature,
@@ -183,7 +183,7 @@ describe('createAuthenticatedAxiosInstance', () => {
       
       const jsonString = JSON.stringify(config.data);
       const dataUtf8 = Buffer.from(jsonString, 'utf8');
-      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64');
+      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64url');
       const isValid = nacl.sign.detached.verify(
         dataUtf8,
         signature,
@@ -204,7 +204,7 @@ describe('createAuthenticatedAxiosInstance', () => {
       
       const jsonString = JSON.stringify(config.data);
       const dataUtf8 = Buffer.from(jsonString, 'utf8');
-      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64');
+      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64url');
       const isValid = nacl.sign.detached.verify(
         dataUtf8,
         signature,
@@ -245,7 +245,7 @@ describe('createAuthenticatedAxiosInstance', () => {
       expect(result.headers['X-Phantom-Sig']).toBeDefined();
       
       const dataUtf8 = Buffer.from(config.data, 'utf8');
-      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64');
+      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64url');
       const isValid = nacl.sign.detached.verify(
         dataUtf8,
         signature,
@@ -266,7 +266,7 @@ describe('createAuthenticatedAxiosInstance', () => {
       
       // true should be stringified as "true"
       const dataUtf8 = Buffer.from('true', 'utf8');
-      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64');
+      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64url');
       const isValid = nacl.sign.detached.verify(
         dataUtf8,
         signature,
@@ -287,7 +287,7 @@ describe('createAuthenticatedAxiosInstance', () => {
       
       // 42.5 should be stringified as "42.5"
       const dataUtf8 = Buffer.from('42.5', 'utf8');
-      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64');
+      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64url');
       const isValid = nacl.sign.detached.verify(
         dataUtf8,
         signature,

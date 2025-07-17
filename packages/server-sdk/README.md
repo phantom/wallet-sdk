@@ -318,27 +318,10 @@ const solanaNetworks = getNetworkIdsByChain('solana');
 ```
 
 ## Security Best Practices
-
-1. **Protect Your Credentials**
-   - Never commit private keys to version control
-   - Use environment variables for sensitive data
-   - Rotate keys regularly
-
-2. **Secure Your Server**
-   - Run the SDK only on secure backend servers
-   - Use HTTPS for all API communications
-   - Implement proper access controls
-
-3. **Validate Inputs**
-   - Always validate transaction data before signing
-   - Verify addresses and amounts
-   - Implement transaction limits and controls
-
-4. **Monitor Activity**
-   - Log all wallet operations
-   - Set up alerts for unusual activity
-   - Regularly audit wallet usage
-
+- **Never expose your private key** in client-side code or commit it to version control
+- Store your credentials securely using environment variables or secret management systems
+- Each wallet is isolated and can only be accessed by your organization
+- All API requests are authenticated using cryptographic signatures
 
 ## Complete Example
 
@@ -431,7 +414,7 @@ main().catch(console.error);
 
 ### Getting Help
 
-- Review the [demo script](../scripts/src/server-sdk-demo.ts) for working examples
+- Review the [demo script](https://github.com/phantom/wallet-sdk/tree/main/packages/server-sdk-examples) for working examples
 - Contact Phantom support
 
 ## License
@@ -445,3 +428,7 @@ We welcome contributions! Please see our [Contributing Guide](../../CONTRIBUTING
 ## Changelog
 
 See [CHANGELOG.md](./CHANGELOG.md) for a history of changes to this package. 
+
+## Integration
+
+For detailed integration examples and best practices, see the [Integration Guide](./INTEGRATION.md).

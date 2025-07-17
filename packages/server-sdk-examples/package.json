@@ -1,5 +1,5 @@
 {
-  "name": "@phantom/scripts",
+  "name": "@phantom/server-sdk-examples",
   "version": "1.0.0",
   "description": "Scripts for demonstrating Phantom SDK capabilities",
   "private": true,
