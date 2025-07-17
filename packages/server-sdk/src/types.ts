@@ -17,13 +17,7 @@ export interface CreateWalletResult {
   addresses: WalletAddress[];
 }
 
-export interface Transaction {
-  from: string;
-  to: string;
-  data: string;
-  value?: string;
-  networkId: string;
-}
+export type Transaction = Uint8Array;
 
 export interface SignedTransaction {
   rawTransaction: string;

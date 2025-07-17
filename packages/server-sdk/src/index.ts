@@ -114,13 +114,17 @@ export class ServerSDK {
   async signAndSendTransaction(
     walletId: string,
     transaction: Transaction,
+    networkId: string,
     submissionConfig: SubmissionConfig,
   ): Promise<SignedTransaction> {
     try {
-      // For Solana transactions, the data field contains the base64 encoded transaction
-      if (transaction.networkId.startsWith("solana:")) {
+      // Encode the Uint8Array as a base64 string
+      const encodedTransaction = Buffer.from(transaction).toString('base64');
+      
+      // For Solana transactions
+      if (networkId.startsWith("solana:")) {
         // Get network configuration
-        const networkConfig = getNetworkConfig(transaction.networkId);
+        const networkConfig = getNetworkConfig(networkId);
 
         const derivationInfo: DerivationInfo = {
           derivationPath: networkConfig.derivationPath,
@@ -132,7 +136,7 @@ export class ServerSDK {
         const signRequest: SignTransactionRequest & { submissionConfig: SubmissionConfig } = {
           organizationId: this.config.organizationId,
           walletId: walletId,
-          transaction: transaction.data as any,
+          transaction: encodedTransaction as any,
           derivationInfo: derivationInfo,
           submissionConfig: submissionConfig,
         };

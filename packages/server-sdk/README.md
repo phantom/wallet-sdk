@@ -40,8 +40,8 @@ const wallet = await sdk.createWallet('My Main Wallet');
 // }
 ```
 
-### signAndSendTransaction(walletId: string, transaction: Transaction, submissionConfig: SubmissionConfig)
-Signs a transaction using the wallet service. The transaction should be base64 encoded.
+### signAndSendTransaction(walletId: string, transaction: Uint8Array, networkId: string, submissionConfig: SubmissionConfig)
+Signs a transaction using the wallet service. The transaction should be provided as a Uint8Array and will be encoded as base64 before sending to the KMS.
 
 When `submissionConfig` is provided with valid `chain` and `network` values, Phantom will submit the transaction to the blockchain after signing. Otherwise, it only signs the transaction.
 
@@ -49,15 +49,16 @@ When `submissionConfig` is provided with valid `chain` and `network` values, Pha
 
 ```typescript
 // Example with transaction submission
-const result = await sdk.signAndSendTransaction('wallet-id', {
-  from: 'sender-address',
-  to: 'recipient-address',
-  data: 'base64-encoded-transaction',
-  networkId: 'solana:101'
-}, {
-  chain: 'solana',
-  network: 'mainnet'  // Phantom will submit to mainnet
-});
+const transactionBuffer = new Uint8Array([...]); // Your serialized transaction
+const result = await sdk.signAndSendTransaction(
+  'wallet-id',
+  transactionBuffer,
+  'solana:101', // Network ID
+  {
+    chain: 'solana',
+    network: 'mainnet'  // Phantom will submit to mainnet
+  }
+);
 // Returns: { 
 //   rawTransaction: 'base64-signed-transaction'
 // }

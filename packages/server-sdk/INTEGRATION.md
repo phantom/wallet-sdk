@@ -157,15 +157,15 @@ async function sendSOL(walletId: string, fromAddress: string, toAddress: string,
     });
     
     // Option 1: Sign and have Phantom submit the transaction
-    const signedTx = await sdk.signAndSendTransaction(walletId, {
-      from: fromAddress,
-      to: toAddress,
-      data: serializedTransaction.toString('base64'),
-      networkId: 'solana:101' // Mainnet
-    }, {
-      chain: 'solana',
-      network: 'mainnet'  // This tells Phantom to submit the transaction
-    });
+    const signedTx = await sdk.signAndSendTransaction(
+      walletId,
+      serializedTransaction,
+      'solana:101', // Mainnet
+      {
+        chain: 'solana',
+        network: 'mainnet'  // This tells Phantom to submit the transaction
+      }
+    );
     
     // Extract the transaction signature from the signed transaction
     const signedTransaction = Transaction.from(
@@ -387,15 +387,15 @@ app.post('/api/users/:userId/send-sol', async (req, res) => {
     });
     
     // Sign and send using stored wallet ID
-    const signed = await sdk.signAndSendTransaction(wallet.walletId, {
-      from: wallet.address,
-      to: recipientAddress,
-      data: serialized.toString('base64'),
-      networkId: wallet.networkId
-    }, {
-      chain: 'solana',
-      network: 'mainnet' // or 'devnet' for testing
-    });
+    const signed = await sdk.signAndSendTransaction(
+      wallet.walletId,
+      serialized,
+      wallet.networkId,
+      {
+        chain: 'solana',
+        network: 'mainnet' // or 'devnet' for testing
+      }
+    );
     
     // Extract the transaction signature from the signed transaction
     const signedTransaction = Transaction.from(
