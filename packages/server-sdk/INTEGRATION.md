@@ -503,3 +503,117 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 ```
+
+## Best Practices
+
+### 1. Wallet Management
+
+- **Always use meaningful wallet names**: Use identifiers like `user_${userId}` or `org_${orgId}_wallet_${timestamp}` to make wallet recovery easier.
+- **Store wallet IDs immediately**: As soon as you create a wallet, persist the `walletId` in your database. This is critical for accessing the wallet later.
+- **Maintain wallet-user relationships**: Always associate wallets with user accounts in your database to ensure proper ownership tracking.
+
+### 2. Error Handling
+
+- **Implement retry logic**: Network requests can fail. Implement exponential backoff for transient failures.
+- **Log errors comprehensively**: Log both the error message and any response data for debugging.
+- **Handle specific error cases**: Different errors require different handling (e.g., insufficient balance vs network errors).
+
+### 3. Performance
+
+- **Cache wallet addresses**: After fetching addresses, cache them to reduce API calls.
+- **Use pagination**: When listing wallets, always use pagination to handle large datasets efficiently.
+- **Batch operations**: If you need to perform multiple operations, consider batching where possible.
+
+### 4. Transaction Management
+
+- **Always verify transactions**: After signing and sending, always wait for confirmation.
+- **Implement timeout handling**: Set reasonable timeouts for transaction confirmations.
+- **Store transaction history**: Keep records of all transactions for audit trails.
+
+## Security Considerations
+
+### 1. API Key Management
+
+```typescript
+// ❌ NEVER do this
+const sdk = new ServerSDK({
+  apiPrivateKey: 'your-actual-private-key', // NEVER hardcode!
+  organizationId: 'org-id',
+  apiBaseUrl: 'url'
+});
+
+// ✅ Always use environment variables
+const sdk = new ServerSDK({
+  apiPrivateKey: process.env.PRIVATE_KEY!,
+  organizationId: process.env.ORGANIZATION_ID!,
+  apiBaseUrl: process.env.PHANTOM_API_URL!
+});
+```
+
+### 2. Environment Security
+
+- **Use secret management services**: In production, use services like AWS Secrets Manager, HashiCorp Vault, or similar.
+- **Rotate keys regularly**: Implement a key rotation strategy.
+- **Limit key access**: Only give access to the private key to services that absolutely need it.
+- **Monitor API usage**: Set up alerts for unusual API activity.
+
+### 3. Database Security
+
+- **Encrypt sensitive data**: Consider encrypting wallet IDs and user associations at rest.
+- **Use database access controls**: Implement proper RBAC for database access.
+- **Audit wallet operations**: Log all wallet creation and transaction operations.
+
+### 4. API Security
+
+- **Implement rate limiting**: Protect your endpoints from abuse.
+- **Use authentication**: Require proper authentication for all wallet operations.
+- **Validate all inputs**: Never trust client-provided data.
+- **Use HTTPS only**: Ensure all API communications are encrypted.
+
+### 5. Monitoring and Alerts
+
+```typescript
+// Example: Add monitoring to wallet operations
+async function createWalletWithMonitoring(userId: string) {
+  const startTime = Date.now();
+  
+  try {
+    const wallet = await sdk.createWallet(`user_${userId}`);
+    
+    // Log success metrics
+    logger.info('Wallet created successfully', {
+      userId,
+      walletId: wallet.walletId,
+      duration: Date.now() - startTime
+    });
+    
+    // Send metrics to monitoring service
+    metrics.increment('wallet.created');
+    metrics.timing('wallet.creation.duration', Date.now() - startTime);
+    
+    return wallet;
+  } catch (error) {
+    // Log error with context
+    logger.error('Failed to create wallet', {
+      userId,
+      error: error.message,
+      duration: Date.now() - startTime
+    });
+    
+    // Alert on critical failures
+    alerting.sendAlert('Wallet creation failed', {
+      userId,
+      error: error.message
+    });
+    
+    throw error;
+  }
+}
+```
+
+### 6. Compliance
+
+- **Know Your Customer (KYC)**: Implement appropriate KYC procedures before creating wallets.
+- **Transaction monitoring**: Monitor transactions for suspicious activity.
+- **Data retention**: Follow regulations for data retention and deletion.
+- **Geographic restrictions**: Ensure compliance with geographic restrictions on crypto services.
