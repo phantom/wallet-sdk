@@ -1,0 +1,22 @@
+{
+  "name": "@phantom/scripts",
+  "version": "1.0.0",
+  "description": "Scripts for demonstrating Phantom SDK capabilities",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "server-sdk-demo": "tsx src/server-sdk-demo.ts"
+  },
+  "dependencies": {
+    "@phantom/server-sdk": "workspace:*",
+    "@solana/web3.js": "^1.87.6",
+    "bs58": "^6.0.0",
+    "dotenv": "^16.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.4"
+  }
+}
