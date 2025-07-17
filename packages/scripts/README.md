@@ -162,4 +162,205 @@ After running the demo, you can:
 For issues or questions:
 - Check the [Server SDK Integration Guide](../server-sdk/INTEGRATION.md)
 - Review the demo source code at `src/server-sdk-demo.ts`
-- Contact Phantom support for organization-specific issues 
+- Contact Phantom support for organization-specific issues
+
+## List Wallets Script
+
+The `list-wallets` script provides a comprehensive view of all wallets in your organization.
+
+### What It Does
+
+1. **Fetches all wallets** from your organization with automatic pagination
+2. **Displays detailed information** for each wallet including:
+   - Wallet ID and name
+   - Creation and update timestamps
+   - All associated blockchain addresses
+3. **Provides summary statistics** about your wallet inventory
+4. **Shows address distribution** across different blockchain networks
+
+### Running the Script
+
+From the `packages/scripts` directory:
+
+```bash
+yarn list-wallets
+```
+
+Or from the monorepo root:
+
+```bash
+yarn workspace @phantom/scripts list-wallets
+```
+
+### Sample Output
+
+```
+🔍 Phantom Wallet Lister
+
+📦 Initializing Server SDK...
+📊 Fetching wallets...
+
+📈 Total wallets in organization: 47
+
+✅ Fetched all 47 wallets!
+
+📝 Wallet Details:
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+🔑 Wallet #1
+   ID: wallet_abc123...
+   Name: User Wallet 123
+   Created: 11/15/2023, 10:30:45 AM
+   Updated: 11/15/2023, 10:31:02 AM
+   Addresses:
+     • Solana: 5XY...ABC
+     • Ethereum: 0x123...def
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+📊 Summary:
+   Total wallets: 47
+   Address types:
+     • Solana: 47 addresses
+     • Ethereum: 47 addresses
+     • Polygon: 23 addresses
+
+💡 Tip: You can modify this script to filter wallets by:
+   • Creation date
+   • Wallet name pattern
+   • Address type
+   • Or export to CSV/JSON for further analysis
+```
+
+### Use Cases
+
+- **Inventory Management**: Get a complete overview of all wallets in your organization
+- **Auditing**: Track wallet creation and usage patterns
+- **Debugging**: Find specific wallets by ID or address
+- **Analytics**: Export wallet data for further analysis
+
+### Customization Ideas
+
+The script can be easily modified to:
+
+1. **Filter wallets** by creation date range
+2. **Search for wallets** by name pattern
+3. **Export data** to CSV or JSON format
+4. **Find wallets** with specific address types
+5. **Generate reports** for compliance or analytics
+
+## Sign Message Script
+
+The `sign-message` script demonstrates message signing capabilities using the Phantom Server SDK with Solana addresses.
+
+### What It Does
+
+1. **Takes a user-provided message** as a command-line argument
+2. **Creates or uses an existing wallet** based on provided options
+3. **Signs the message** using the wallet's Solana address
+4. **Outputs the signature** in multiple formats (base64, hex, bytes)
+5. **Provides verification information** for validating the signature
+
+### Running the Script
+
+Basic usage - sign a message with a new wallet:
+
+```bash
+yarn sign-message "Hello, Phantom!"
+```
+
+Use an existing wallet by ID:
+
+```bash
+yarn sign-message "Your message here" --wallet-id wallet_abc123...
+```
+
+Use or create a wallet with a specific name:
+
+```bash
+yarn sign-message "Sign this!" --wallet-name "My Signing Wallet"
+```
+
+From the monorepo root:
+
+```bash
+yarn workspace @phantom/scripts sign-message "Your message"
+```
+
+### Command Line Options
+
+- `--wallet-id` - Use an existing wallet by its ID
+- `--wallet-name` - Create a new wallet with this name, or use the first existing wallet with this name
+
+### Sample Output
+
+```
+✍️  Phantom Message Signer
+
+📦 Initializing Server SDK...
+🆕 Creating new wallet: Message Signing Wallet 1699999999999
+✅ Wallet created: wallet_abc123...
+
+📝 Message Details:
+   Message: "Hello, Phantom!"
+   Length: 15 characters
+   UTF-8 bytes: 15
+
+🔑 Wallet Details:
+   Wallet ID: wallet_abc123...
+   Solana Address: 5XY...ABC
+   Status: Newly created
+
+🖊️  Signing message with Solana network...
+
+✅ Message signed successfully!
+
+📊 Signature Details:
+   Base64: 3ab4c5d6e7f8...
+   Length: 88 characters
+   Hex: ddaeb87...
+   Bytes: [221, 174, 184, 119...] (64 bytes)
+
+🔐 Verification Info:
+   To verify this signature:
+   - Public Key: 5XY...ABC
+   - Message: "Hello, Phantom!"
+   - Signature (base64): 3ab4c5d6e7f8...
+
+💡 Tips:
+   - This signature was created using the Solana network context
+   - You can modify the script to use other networks (Ethereum, etc.)
+   - The signature can be verified using the public key and original message
+   - Save the wallet ID to reuse the same wallet for future signatures
+
+⚠️  Remember to save this wallet ID for future use: wallet_abc123...
+```
+
+### Use Cases
+
+- **Authentication**: Sign challenges to prove wallet ownership
+- **Document Signing**: Create verifiable signatures for documents or agreements
+- **API Authentication**: Generate signed tokens for API access
+- **Testing**: Verify signature generation and validation logic
+
+### Technical Details
+
+The script uses the Phantom Server SDK's `signMessage` function which:
+1. Takes a UTF-8 string message
+2. Converts it to base64 internally
+3. Signs it with the wallet's private key for the specified network
+4. Returns a base64-encoded signature
+
+The signature can be verified using:
+- The public key (Solana address)
+- The original message
+- Standard Ed25519 signature verification (for Solana)
+
+### Extending the Script
+
+You can modify the script to:
+1. **Sign with different networks** - Change `NetworkId.SOLANA_MAINNET` to other networks
+2. **Batch sign messages** - Process multiple messages from a file
+3. **Output to file** - Save signatures and metadata to JSON
+4. **Verify signatures** - Add signature verification functionality
+5. **Sign structured data** - Sign JSON objects or other data formats 

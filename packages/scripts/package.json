@@ -6,7 +6,9 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
-    "server-sdk-demo": "tsx src/server-sdk-demo.ts"
+    "server-sdk-demo": "tsx src/server-sdk-demo.ts",
+    "sign-message": "tsx src/sign-message.ts",
+    "list-wallets": "tsx src/list-wallets.ts"
   },
   "dependencies": {
     "@phantom/server-sdk": "workspace:*",
