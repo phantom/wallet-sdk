@@ -3,6 +3,7 @@ import {
   DerivationInfoAddressFormatEnum,
   Algorithm,
 } from '@phantom/openapi-wallet-service';
+import { NetworkId } from './caip2-mappings';
 
 /**
  * Default derivation paths for different blockchain networks
@@ -12,7 +13,7 @@ export enum DerivationPath {
   Solana = "m/44'/501'/0'/0'",
 
   // Ethereum - BIP44 standard for Ethereum and all EVM-compatible chains (coin type 60)
-  Ethereum = "m/44'/60'/0'/0",
+  Ethereum = "m/44'/60'/0'/0/0",
 
   // Bitcoin - BIP44 standard for Bitcoin (coin type 0)
   Bitcoin = "m/84'/0'/0'/0",
@@ -59,7 +60,7 @@ export interface NetworkConfig {
 /**
  * Get complete network configuration
  */
-export function getNetworkConfig(networkId: string): NetworkConfig {
+export function getNetworkConfig(networkId: NetworkId): NetworkConfig | null {
   const network = networkId.split(':')[0].toLowerCase();
 
   switch (network) {
@@ -85,7 +86,7 @@ export function getNetworkConfig(networkId: string): NetworkConfig {
         algorithm: Algorithm.secp256k1,
         addressFormat: DerivationInfoAddressFormatEnum.bitcoinSegwit // Bitcoin uses a different format, but for SDK consistency we use Ethereum format
       };
-    default:
+    case 'eip155': // EVM chains use eip155 prefix
       // All EVM-compatible chains (Ethereum, Polygon, BSC, Arbitrum, etc.)
       return {
         derivationPath: DerivationPath.Ethereum,
@@ -93,5 +94,8 @@ export function getNetworkConfig(networkId: string): NetworkConfig {
         algorithm: Algorithm.secp256k1,
         addressFormat: DerivationInfoAddressFormatEnum.ethereum // EVM chains use Ethereum address format
       };
+
+    default: 
+      return null 
   }
 }

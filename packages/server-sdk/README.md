@@ -1,6 +1,6 @@
-# Server SDK
+# Phantom Server SDK
 
-This package provides integration with @phantom/openapi-wallet-service for secure wallet management and transaction signing.
+The Phantom Server SDK enables secure wallet creation, message signing and transaction signing and submission for your applications.
 
 ## Installation
 
@@ -10,19 +10,15 @@ npm install @phantom/server-sdk
 
 ## Configuration
 
-The SDK requires the following configuration:
-
-- `apiPrivateKey`: Your signing key for authentication (base58 encoded)
-- `organizationId`: Your organization ID from Phantom
-- `apiBaseUrl`: The wallet API endpoint URL
+To get started, initialize the SDK with your credentials:
 
 ```typescript
 import { ServerSDK } from '@phantom/server-sdk';
 
 const sdk = new ServerSDK({
-  apiPrivateKey: 'your-signing-key-base58',
-  organizationId: 'your-org-id',
-  apiBaseUrl: 'https://api.phantom.app/v1'
+  apiPrivateKey: 'your-private-key',  // Base58 encoded private key
+  organizationId: 'your-org-id',      // Your organization ID
+  apiBaseUrl: 'https://api.phantom.app/wallet'
 });
 ```
 
@@ -95,23 +91,24 @@ CAIP-2 identifiers follow the format: `namespace:reference`
 ## Methods
 
 ### createWallet(walletName?: string)
-Creates a new wallet with an optional name. If no name is provided, a default name with timestamp is used.
-After creation, it retrieves the public key by signing an empty payload.
+Creates a new wallet in your organization. Each wallet supports multiple chains.
 
 ```typescript
 const wallet = await sdk.createWallet('My Main Wallet');
 // Returns: { 
 //   walletId: 'wallet-uuid',
-//   addresses: [{ addressType: 'Solana', address: 'public-key' }]
+//   addresses: [
+//     { addressType: 'Solana', address: '...' },
+//     { addressType: 'Ethereum', address: '...' },
+//     { addressType: 'BitcoinSegwit', address: '...' },
+//     { addressType: 'Sui', address: '...' }
+//   ]
 // }
 ```
 
 ### signAndSendTransaction(walletId: string, transaction: Uint8Array, networkId: string)
-Signs a transaction using the wallet service. The transaction should be provided as a Uint8Array and will be encoded as base64 before sending to the KMS.
-
-The SDK automatically derives the submission configuration from the CAIP-2 network ID. If the network supports transaction submission, Phantom will submit the transaction to the blockchain after signing.
-
-**Note:** This method returns only the signed transaction data. To get the transaction hash/signature, you need to extract it from the signed transaction.
+Signs a transaction and tries to submits it to the blockchain. The SDK automatically handles network-specific requirements.
+If the networkId is not supported for sending, the transaction will only be signed.
 
 ```typescript
 import { NetworkId } from '@phantom/server-sdk';
@@ -120,11 +117,12 @@ const transactionBuffer = new Uint8Array([...]); // Your serialized transaction
 const result = await sdk.signAndSendTransaction(
   'wallet-id',
   transactionBuffer,
-  NetworkId.SOLANA_MAINNET // Using enum - submission config automatically derived
+  NetworkId.SOLANA_MAINNET
 );
 
 // Returns: { 
 //   rawTransaction: 'base64-signed-transaction'
+//   txHash: 'tx-hash-string'
 // }
 
 // Extract the transaction signature (hash)
@@ -136,15 +134,45 @@ const signature = signedTx.signature
 ```
 
 ### signMessage(walletId: string, message: string, networkId: string)
-Signs a message with the specified wallet using the signRawPayload method.
+Signs a message with the specified wallet.
 
 ```typescript
 const signature = await sdk.signMessage(
   'wallet-id', 
   'Hello World', 
-  NetworkId.SOLANA_MAINNET // Using enum for CAIP-2 network ID
+  NetworkId.SOLANA_MAINNET
 );
 // Returns: base64 encoded signature
+```
+
+### getWallets(limit?: number, offset?: number)
+Retrieves all wallets for your organization with pagination support.
+
+```typescript
+// Get first 10 wallets
+const result = await sdk.getWallets(10, 0);
+// Returns: {
+//   wallets: [{ walletId: '...', walletName: '...' }, ...],
+//   totalCount: 25,
+//   limit: 10,
+//   offset: 0
+// }
+
+// Get all wallets (default limit: 20)
+const allWallets = await sdk.getWallets();
+```
+
+### getWalletAddresses(walletId: string, derivationPaths?: string[])
+Retrieves addresses for a specific wallet across different blockchains.
+
+```typescript
+const addresses = await sdk.getWalletAddresses('wallet-id');
+// Returns: [
+//   { addressType: 'Solana', address: '...' },
+//   { addressType: 'Ethereum', address: '...' },
+//   { addressType: 'Bitcoin', address: '...' },
+//   { addressType: 'Sui', address: '...' }
+// ]
 ```
 
 ## CAIP-2 Utility Functions
@@ -176,33 +204,25 @@ const solanaNetworks = getNetworkIdsByChain('solana');
 // ['solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', 'solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1', ...]
 ```
 
-## Implementation Details
+## Security Best Practices
 
-This SDK uses the @phantom/openapi-wallet-service package which provides:
-- `createWallet` - Creates a new wallet and retrieves its public key via signRawPayload
-- `signTransaction` - Signs transactions with the wallet's private key
-- `signRawPayload` - Signs raw payloads/messages and returns signature with public key
+- **Never expose your private key** in client-side code or commit it to version control
+- Store your credentials securely using environment variables or secret management systems
+- Each wallet is isolated and can only be accessed by your organization
+- All API requests are authenticated using cryptographic signatures
 
-The SDK handles:
-- Network-specific algorithms and curves automatically
-- Standard derivation paths for each blockchain
-- Base64 encoding for transaction data
-- Authentication via Ed25519 signatures
-- CAIP-2 network ID parsing and submission config derivation
+## Error Handling
 
-## Authentication
+All SDK methods throw descriptive errors when operations fail:
 
-The SDK authenticates requests using Ed25519 signatures:
-- Each request is signed with your organization's private key
-- The signature, public key, and timestamp are added as headers
-- This ensures secure communication with the Phantom wallet service
+```typescript
+try {
+  const wallet = await sdk.createWallet();
+} catch (error) {
+  console.error('Failed to create wallet:', error.message);
+}
+```
 
+## Support
 
-## Notes
-
-- The wallet ID is a UUID assigned by the service when creating the wallet
-- Public keys are retrieved using the signRawPayload method with an empty payload
-- Transaction hashes are not returned by the signing service - they're generated after blockchain submission
-- The service returns the public key that signed the transaction in the signature field
-- Default wallet names include a timestamp to ensure uniqueness
-- Message signing supports both Solana (Ed25519) and Ethereum (Secp256k1) networks
+For detailed integration examples and best practices, see the [Integration Guide](./INTEGRATION.md).

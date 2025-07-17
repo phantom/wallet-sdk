@@ -39,7 +39,7 @@ describe('CAIP-2 Network Mappings', () => {
 
   describe('deriveSubmissionConfig', () => {
     it('should derive submission config for Solana mainnet', () => {
-      const config = deriveSubmissionConfig('solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp');
+      const config = deriveSubmissionConfig(NetworkId.SOLANA_MAINNET);
       expect(config).toEqual({
         chain: 'solana',
         network: 'mainnet'
@@ -47,7 +47,7 @@ describe('CAIP-2 Network Mappings', () => {
     });
 
     it('should derive submission config for Solana devnet', () => {
-      const config = deriveSubmissionConfig('solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1');
+      const config = deriveSubmissionConfig(NetworkId.SOLANA_DEVNET);
       expect(config).toEqual({
         chain: 'solana',
         network: 'devnet'
@@ -57,7 +57,7 @@ describe('CAIP-2 Network Mappings', () => {
 
 
     it('should derive submission config for Ethereum mainnet', () => {
-      const config = deriveSubmissionConfig('eip155:1');
+      const config = deriveSubmissionConfig(NetworkId.ETHEREUM_MAINNET);
       expect(config).toEqual({
         chain: 'ethereum',
         network: 'mainnet'
@@ -65,7 +65,7 @@ describe('CAIP-2 Network Mappings', () => {
     });
 
     it('should derive submission config for Polygon mainnet', () => {
-      const config = deriveSubmissionConfig('eip155:137');
+      const config = deriveSubmissionConfig(NetworkId.POLYGON_MAINNET);
       expect(config).toEqual({
         chain: 'polygon',
         network: 'mainnet'
@@ -73,7 +73,7 @@ describe('CAIP-2 Network Mappings', () => {
     });
 
     it('should derive submission config for Base Sepolia', () => {
-      const config = deriveSubmissionConfig('eip155:84532');
+      const config = deriveSubmissionConfig(NetworkId.BASE_SEPOLIA);
       expect(config).toEqual({
         chain: 'base',
         network: 'sepolia'
@@ -88,9 +88,9 @@ describe('CAIP-2 Network Mappings', () => {
 
   describe('supportsTransactionSubmission', () => {
     it('should return true for supported networks', () => {
-      expect(supportsTransactionSubmission('solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp')).toBe(true);
-      expect(supportsTransactionSubmission('eip155:1')).toBe(true);
-      expect(supportsTransactionSubmission('eip155:137')).toBe(true);
+      expect(supportsTransactionSubmission(NetworkId.SOLANA_MAINNET)).toBe(true);
+      expect(supportsTransactionSubmission(NetworkId.ETHEREUM_MAINNET)).toBe(true);
+      expect(supportsTransactionSubmission(NetworkId.POLYGON_MAINNET)).toBe(true);
     });
 
     it('should return false for unsupported networks', () => {
@@ -101,9 +101,9 @@ describe('CAIP-2 Network Mappings', () => {
 
   describe('getNetworkDescription', () => {
     it('should return description for known networks', () => {
-      expect(getNetworkDescription('solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp')).toBe('Solana Mainnet-Beta');
-      expect(getNetworkDescription('eip155:1')).toBe('Ethereum Mainnet');
-      expect(getNetworkDescription('eip155:137')).toBe('Polygon Mainnet');
+      expect(getNetworkDescription(NetworkId.SOLANA_MAINNET)).toBe('Solana Mainnet-Beta');
+      expect(getNetworkDescription(NetworkId.ETHEREUM_MAINNET)).toBe('Ethereum Mainnet');
+      expect(getNetworkDescription(NetworkId.POLYGON_MAINNET)).toBe('Polygon Mainnet');
     });
 
     it('should return undefined for unknown networks', () => {
@@ -116,30 +116,30 @@ describe('CAIP-2 Network Mappings', () => {
       const networkIds = getSupportedNetworkIds();
       expect(Array.isArray(networkIds)).toBe(true);
       expect(networkIds.length).toBeGreaterThan(0);
-      expect(networkIds).toContain('solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp');
-      expect(networkIds).toContain('eip155:1');
+      expect(networkIds).toContain(NetworkId.SOLANA_MAINNET);
+      expect(networkIds).toContain(NetworkId.ETHEREUM_MAINNET);
     });
   });
 
   describe('getNetworkIdsByChain', () => {
     it('should return Solana network IDs', () => {
       const solanaNetworks = getNetworkIdsByChain('solana');
-      expect(solanaNetworks).toContain('solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp');
-      expect(solanaNetworks).toContain('solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1');
-      expect(solanaNetworks).toContain('solana:4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z');
+      expect(solanaNetworks).toContain(NetworkId.SOLANA_MAINNET);
+      expect(solanaNetworks).toContain(NetworkId.SOLANA_DEVNET);
+      expect(solanaNetworks).toContain(NetworkId.SOLANA_TESTNET);
     });
 
     it('should return Ethereum network IDs', () => {
       const ethNetworks = getNetworkIdsByChain('ethereum');
-      expect(ethNetworks).toContain('eip155:1');
-      expect(ethNetworks).toContain('eip155:5');
-      expect(ethNetworks).toContain('eip155:11155111');
+      expect(ethNetworks).toContain(NetworkId.ETHEREUM_MAINNET);
+      expect(ethNetworks).toContain(NetworkId.ETHEREUM_GOERLI);
+      expect(ethNetworks).toContain(NetworkId.ETHEREUM_SEPOLIA);
     });
 
     it('should return Polygon network IDs', () => {
       const polygonNetworks = getNetworkIdsByChain('polygon');
-      expect(polygonNetworks).toContain('eip155:137');
-      expect(polygonNetworks).toContain('eip155:80001');
+      expect(polygonNetworks).toContain(NetworkId.POLYGON_MAINNET);
+      expect(polygonNetworks).toContain(NetworkId.POLYGON_MUMBAI);
     });
 
     it('should be case insensitive', () => {
