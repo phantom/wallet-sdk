@@ -103,7 +103,7 @@ async function signMessage(walletId: string, message: string) {
     const signature = await sdk.signMessage(
       walletId,
       message,
-      'solana:101' // Network ID for Solana mainnet
+      'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' // CAIP-2 Network ID for Solana mainnet
     );
     
     console.log('Message signed:', {
@@ -156,15 +156,11 @@ async function sendSOL(walletId: string, fromAddress: string, toAddress: string,
       verifySignatures: false
     });
     
-    // Option 1: Sign and have Phantom submit the transaction
+    // Sign and have Phantom submit the transaction
     const signedTx = await sdk.signAndSendTransaction(
       walletId,
       serializedTransaction,
-      'solana:101', // Mainnet
-      {
-        chain: 'solana',
-        network: 'mainnet'  // This tells Phantom to submit the transaction
-      }
+      'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' // CAIP-2 Solana mainnet - submission config automatically derived
     );
     
     // Extract the transaction signature from the signed transaction
@@ -390,11 +386,7 @@ app.post('/api/users/:userId/send-sol', async (req, res) => {
     const signed = await sdk.signAndSendTransaction(
       wallet.walletId,
       serialized,
-      wallet.networkId,
-      {
-        chain: 'solana',
-        network: 'mainnet' // or 'devnet' for testing
-      }
+      'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' // CAIP-2 network ID - submission config auto-derived
     );
     
     // Extract the transaction signature from the signed transaction

@@ -1,6 +1,7 @@
 import { ServerSDKConfig, CreateWalletResult, Transaction, SignedTransaction } from "./types";
 import { createAuthenticatedAxiosInstance } from "./auth";
 import { DerivationPath, getNetworkConfig } from "./constants";
+import { deriveSubmissionConfig } from "./caip2-mappings";
 import bs58 from "bs58";
 import {
   Configuration,
@@ -29,6 +30,16 @@ export interface SubmissionConfig {
   chain: string; // e.g., 'solana', 'ethereum', 'polygon'
   network: string; // e.g., 'mainnet', 'devnet', 'sepolia'
 }
+
+// Export CAIP-2 utilities and enums
+export {
+  NetworkId,
+  deriveSubmissionConfig,
+  supportsTransactionSubmission,
+  getNetworkDescription,
+  getSupportedNetworkIds,
+  getNetworkIdsByChain
+} from "./caip2-mappings";
 
 export class ServerSDK {
   private config: ServerSDKConfig;
@@ -114,12 +125,18 @@ export class ServerSDK {
   async signAndSendTransaction(
     walletId: string,
     transaction: Transaction,
-    networkId: string,
-    submissionConfig: SubmissionConfig,
+    networkId: string
   ): Promise<SignedTransaction> {
     try {
       // Encode the Uint8Array as a base64 string
       const encodedTransaction = Buffer.from(transaction).toString('base64');
+      
+      const submissionConfig = deriveSubmissionConfig(networkId);
+      
+      // If we don't have a submission config, the transaction will only be signed, not submitted
+      if (!submissionConfig) {
+        console.warn(`No submission config available for network ${networkId}. Transaction will be signed but not submitted.`);
+      }
       
       // For Solana transactions
       if (networkId.startsWith("solana:")) {
@@ -132,14 +149,18 @@ export class ServerSDK {
           addressFormat: networkConfig.addressFormat,
         };
 
-        // Sign transaction request
-        const signRequest: SignTransactionRequest & { submissionConfig: SubmissionConfig } = {
+        // Sign transaction request - only include submissionConfig if available
+        const signRequest: SignTransactionRequest & { submissionConfig?: SubmissionConfig } = {
           organizationId: this.config.organizationId,
           walletId: walletId,
           transaction: encodedTransaction as any,
           derivationInfo: derivationInfo,
-          submissionConfig: submissionConfig,
         };
+
+        // Add submission config if available
+        if (submissionConfig) {
+          signRequest.submissionConfig = submissionConfig;
+        }
 
         const request: SignTransaction = {
           method: SignTransactionMethodEnum.signTransaction,

@@ -26,6 +26,72 @@ const sdk = new ServerSDK({
 });
 ```
 
+## Network Identifiers
+
+The SDK provides user-friendly enums for CAIP-2 network identifiers:
+
+```typescript
+import { NetworkId } from '@phantom/server-sdk';
+
+// Use the NetworkId enum for easy access to CAIP-2 identifiers
+const solanaMainnet = NetworkId.SOLANA_MAINNET; // 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp'
+const ethMainnet = NetworkId.ETHEREUM_MAINNET;  // 'eip155:1'
+const polygonMainnet = NetworkId.POLYGON_MAINNET; // 'eip155:137'
+
+// Example usage with SDK methods
+const result = await sdk.signAndSendTransaction(
+  walletId,
+  transaction,
+  NetworkId.SOLANA_MAINNET  // Instead of hardcoding 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp'
+);
+
+// Sign a message on Ethereum
+const signature = await sdk.signMessage(
+  walletId,
+  'Hello World',
+  NetworkId.ETHEREUM_MAINNET
+);
+
+
+```
+
+### Available Networks
+
+| Network | Enum Value | CAIP-2 ID |
+|---------|-----------|-----------|
+| **Solana** | | |
+| Mainnet | `NetworkId.SOLANA_MAINNET` | `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp` |
+| Devnet | `NetworkId.SOLANA_DEVNET` | `solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1` |
+| Testnet | `NetworkId.SOLANA_TESTNET` | `solana:4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z` |
+| **Ethereum** | | |
+| Mainnet | `NetworkId.ETHEREUM_MAINNET` | `eip155:1` |
+| Goerli | `NetworkId.ETHEREUM_GOERLI` | `eip155:5` |
+| Sepolia | `NetworkId.ETHEREUM_SEPOLIA` | `eip155:11155111` |
+| **Polygon** | | |
+| Mainnet | `NetworkId.POLYGON_MAINNET` | `eip155:137` |
+| Mumbai | `NetworkId.POLYGON_MUMBAI` | `eip155:80001` |
+| **Arbitrum** | | |
+| One | `NetworkId.ARBITRUM_ONE` | `eip155:42161` |
+| Goerli | `NetworkId.ARBITRUM_GOERLI` | `eip155:421613` |
+| **Base** | | |
+| Mainnet | `NetworkId.BASE_MAINNET` | `eip155:8453` |
+| Sepolia | `NetworkId.BASE_SEPOLIA` | `eip155:84532` |
+
+## CAIP-2 Network Identifiers
+
+This SDK uses the CAIP-2 (Chain Agnostic Improvement Proposal 2) standard for network identifiers. CAIP-2 provides a standardized way to identify blockchain networks across different ecosystems.
+
+### Format
+CAIP-2 identifiers follow the format: `namespace:reference`
+
+### Common Network IDs
+- **Solana Mainnet**: `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp`
+- **Solana Devnet**: `solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1`
+- **Ethereum Mainnet**: `eip155:1`
+- **Polygon Mainnet**: `eip155:137`
+- **Arbitrum One**: `eip155:42161`
+- **Base Mainnet**: `eip155:8453`
+
 ## Methods
 
 ### createWallet(walletName?: string)
@@ -40,25 +106,23 @@ const wallet = await sdk.createWallet('My Main Wallet');
 // }
 ```
 
-### signAndSendTransaction(walletId: string, transaction: Uint8Array, networkId: string, submissionConfig: SubmissionConfig)
+### signAndSendTransaction(walletId: string, transaction: Uint8Array, networkId: string)
 Signs a transaction using the wallet service. The transaction should be provided as a Uint8Array and will be encoded as base64 before sending to the KMS.
 
-When `submissionConfig` is provided with valid `chain` and `network` values, Phantom will submit the transaction to the blockchain after signing. Otherwise, it only signs the transaction.
+The SDK automatically derives the submission configuration from the CAIP-2 network ID. If the network supports transaction submission, Phantom will submit the transaction to the blockchain after signing.
 
 **Note:** This method returns only the signed transaction data. To get the transaction hash/signature, you need to extract it from the signed transaction.
 
 ```typescript
-// Example with transaction submission
+import { NetworkId } from '@phantom/server-sdk';
+
 const transactionBuffer = new Uint8Array([...]); // Your serialized transaction
 const result = await sdk.signAndSendTransaction(
   'wallet-id',
   transactionBuffer,
-  'solana:101', // Network ID
-  {
-    chain: 'solana',
-    network: 'mainnet'  // Phantom will submit to mainnet
-  }
+  NetworkId.SOLANA_MAINNET // Using enum - submission config automatically derived
 );
+
 // Returns: { 
 //   rawTransaction: 'base64-signed-transaction'
 // }
@@ -71,12 +135,45 @@ const signature = signedTx.signature
   : bs58.encode(signedTx.signatures[0].signature);
 ```
 
-### signMessage(walletId: string, message: string, addressType: string)
+### signMessage(walletId: string, message: string, networkId: string)
 Signs a message with the specified wallet using the signRawPayload method.
 
 ```typescript
-const signature = await sdk.signMessage('wallet-id', 'Hello World', 'Solana');
+const signature = await sdk.signMessage(
+  'wallet-id', 
+  'Hello World', 
+  NetworkId.SOLANA_MAINNET // Using enum for CAIP-2 network ID
+);
 // Returns: base64 encoded signature
+```
+
+## CAIP-2 Utility Functions
+
+The SDK exports several utility functions for working with CAIP-2 network identifiers:
+
+```typescript
+import {
+  deriveSubmissionConfig,
+  supportsTransactionSubmission,
+  getNetworkDescription,
+  getSupportedNetworkIds,
+  getNetworkIdsByChain
+} from '@phantom/server-sdk';
+
+// Check if a network supports transaction submission
+if (supportsTransactionSubmission('solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp')) {
+  // Network supports automatic transaction submission
+}
+
+// Get human-readable network description
+const description = getNetworkDescription('eip155:137'); // "Polygon Mainnet"
+
+// List all supported networks
+const allNetworks = getSupportedNetworkIds();
+
+// Get networks for a specific chain
+const solanaNetworks = getNetworkIdsByChain('solana');
+// ['solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', 'solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1', ...]
 ```
 
 ## Implementation Details
@@ -91,6 +188,7 @@ The SDK handles:
 - Standard derivation paths for each blockchain
 - Base64 encoding for transaction data
 - Authentication via Ed25519 signatures
+- CAIP-2 network ID parsing and submission config derivation
 
 ## Authentication
 
