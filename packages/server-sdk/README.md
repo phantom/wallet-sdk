@@ -22,7 +22,7 @@ import { ServerSDK } from '@phantom/server-sdk';
 const sdk = new ServerSDK({
   apiPrivateKey: 'your-signing-key-base58',
   organizationId: 'your-org-id',
-  apiBaseUrl: 'https://api.phantom.app/v1/kms/rpc'
+  apiBaseUrl: 'https://api.phantom.app/v1'
 });
 ```
 
