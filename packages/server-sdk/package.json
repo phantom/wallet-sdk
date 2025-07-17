@@ -21,7 +21,6 @@
   },
   "dependencies": {
     "@phantom/openapi-wallet-service": "^0.1.5",
-    "@solana/web3.js": "^1.98.2",
     "axios": "^1.10.0",
     "bs58": "^6.0.0",
     "tweetnacl": "^1.0.3"

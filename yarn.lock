@@ -1631,7 +1631,6 @@ __metadata:
   resolution: "@phantom/server-sdk@workspace:packages/server-sdk"
   dependencies:
     "@phantom/openapi-wallet-service": "npm:^0.1.5"
-    "@solana/web3.js": "npm:^1.98.2"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
     axios: "npm:^1.10.0"

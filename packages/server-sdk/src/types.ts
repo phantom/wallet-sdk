@@ -26,8 +26,6 @@ export interface Transaction {
 }
 
 export interface SignedTransaction {
-  txHash: string;
-  signature: string;
   rawTransaction: string;
 }
 

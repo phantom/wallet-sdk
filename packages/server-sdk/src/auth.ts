@@ -1,11 +1,10 @@
 import axios, { AxiosInstance } from 'axios';
 import nacl from 'tweetnacl';
-import { Keypair } from '@solana/web3.js';
 
 /**
  * Creates an authenticated axios instance that signs requests with Ed25519
  */
-export function createAuthenticatedAxiosInstance(signingKeypair: Keypair): AxiosInstance {
+export function createAuthenticatedAxiosInstance(signingKeypair: nacl.SignKeyPair): AxiosInstance {
   const instance = axios.create();
 
   instance.interceptors.request.use((config) => {
