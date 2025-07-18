@@ -129,7 +129,7 @@ export class ServerSDK {
   ): Promise<SignedTransaction> {
     try {
       // Encode the Uint8Array as a base64 string
-      const encodedTransaction = Buffer.from(transaction).toString('base64');
+      const encodedTransaction = Buffer.from(transaction).toString('base64url');
 
       const submissionConfig = deriveSubmissionConfig(networkId);
 
@@ -233,7 +233,7 @@ export class ServerSDK {
         addressFormat: networkConfig.addressFormat,
       };
 
-      const base64StringMessage = Buffer.from(message, "utf8").toString("base64");
+      const base64StringMessage = Buffer.from(message, "utf8").toString("base64url");
 
       const signRequest: SignRawPayloadRequest = {
         organizationId: this.config.organizationId,
