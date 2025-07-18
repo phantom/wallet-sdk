@@ -58,7 +58,7 @@ yarn server-sdk-demo
 Or from the monorepo root:
 
 ```bash
-yarn workspace @phantom/scripts server-sdk-demo
+yarn workspace @phantom/server-sdk-examples server-sdk-demo
 ```
 
 ### What the Demo Does
@@ -189,7 +189,7 @@ yarn list-wallets
 Or from the monorepo root:
 
 ```bash
-yarn workspace @phantom/scripts list-wallets
+yarn workspace @phantom/server-sdk-examples list-wallets
 ```
 
 ### Sample Output
@@ -284,7 +284,7 @@ yarn sign-message "Sign this!" --wallet-name "My Signing Wallet"
 From the monorepo root:
 
 ```bash
-yarn workspace @phantom/scripts sign-message "Your message"
+yarn workspace @phantom/server-sdk-examples sign-message "Your message"
 ```
 
 ### Command Line Options
