@@ -57,8 +57,11 @@ export class ServerSDK {
     const privateKeyBytes = bs58.decode(config.apiPrivateKey);
     this.signingKeypair = nacl.sign.keyPair.fromSecretKey(privateKeyBytes);
 
-    // Create authenticated axios instance
-    const authenticatedAxios = createAuthenticatedAxiosInstance(this.signingKeypair);
+    // Create authenticated axios instance with optional debug logging
+    const authenticatedAxios = createAuthenticatedAxiosInstance(
+      this.signingKeypair,
+      config.debug
+    );
 
     // Configure the KMS API client with authentication
     const configuration = new Configuration({
@@ -129,7 +132,7 @@ export class ServerSDK {
   ): Promise<SignedTransaction> {
     try {
       // Encode the Uint8Array as a base64 string
-      const encodedTransaction = Buffer.from(transaction).toString('base64');
+      const encodedTransaction = Buffer.from(transaction).toString('base64url');
 
       const submissionConfig = deriveSubmissionConfig(networkId);
 
@@ -233,7 +236,7 @@ export class ServerSDK {
         addressFormat: networkConfig.addressFormat,
       };
 
-      const base64StringMessage = Buffer.from(message, "utf8").toString("base64");
+      const base64StringMessage = Buffer.from(message, "utf8").toString("base64url");
 
       const signRequest: SignRawPayloadRequest = {
         organizationId: this.config.organizationId,
