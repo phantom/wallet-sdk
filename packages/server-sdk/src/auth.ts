@@ -14,7 +14,7 @@ export function createAuthenticatedAxiosInstance(signingKeypair: nacl.SignKeyPai
     const dataUtf8 = Buffer.from(requestBody, "utf8");
     const signature = nacl.sign.detached(dataUtf8, signingKeypair.secretKey);
 
-    config.headers["X-Phantom-Sig"] = Buffer.from(signature).toString("base64");
+    config.headers["X-Phantom-Sig"] = Buffer.from(signature).toString("base64url");
 
     return config;
   });

@@ -203,7 +203,7 @@ describe('ServerSDK', () => {
       expect(typeof signature).toBe('string');
       expect(signature.length).toBeGreaterThan(0);
       // Base64 signature should be a valid base64 string
-      expect(() => Buffer.from(signature, 'base64')).not.toThrow();
+      expect(() => Buffer.from(signature, 'base64url')).not.toThrow();
     }, 30000);
 
     it('should sign a message for Ethereum', async () => {
@@ -216,7 +216,7 @@ describe('ServerSDK', () => {
       expect(typeof signature).toBe('string');
       expect(signature.length).toBeGreaterThan(0);
       // Base64 signature should be a valid base64 string
-      expect(() => Buffer.from(signature, 'base64')).not.toThrow();
+      expect(() => Buffer.from(signature, 'base64url')).not.toThrow();
     }, 30000);
 
     it('should sign different messages and get different signatures', async () => {
