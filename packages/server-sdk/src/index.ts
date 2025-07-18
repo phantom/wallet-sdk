@@ -57,11 +57,8 @@ export class ServerSDK {
     const privateKeyBytes = bs58.decode(config.apiPrivateKey);
     this.signingKeypair = nacl.sign.keyPair.fromSecretKey(privateKeyBytes);
 
-    // Create authenticated axios instance with optional debug logging
-    const authenticatedAxios = createAuthenticatedAxiosInstance(
-      this.signingKeypair,
-      config.debug
-    );
+    // Create authenticated axios instance
+    const authenticatedAxios = createAuthenticatedAxiosInstance(this.signingKeypair);
 
     // Configure the KMS API client with authentication
     const configuration = new Configuration({
