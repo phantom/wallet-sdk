@@ -33,6 +33,9 @@ jobs:
       - name: ChatGPT convert
         run: |
           pip3 install openai
+          ls -la
+          ls -la docs-v2
+          if [! -f "docs-v2/server-sdk/server-sdk.mdx"]; then touch "docs-v2/server-sdk/server-sdk.mdx"; fi
           python3 scripts/convert_to_mdx.py docs-v2/server-sdk/server-sdk.mdx packages/server-sdk/INTEGRATION.md
 
       - name: Create PR in DOCS-V2 with updated mdx

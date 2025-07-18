@@ -2,7 +2,7 @@
 
 This guide demonstrates how to integrate the `@phantom/server-sdk` into your application for secure wallet management and transaction signing.
 
-test
+test2
 
 ## ⚠️ Critical Security Information
 
