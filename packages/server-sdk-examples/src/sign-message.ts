@@ -74,7 +74,7 @@ async function getOrCreateWallet(
     // Get wallet addresses to verify it exists and get Solana address
     try {
       const addresses = await sdk.getWalletAddresses(walletId);
-      const solanaAddress = addresses.find(addr => addr.addressType === 'Solana')?.address;
+      const solanaAddress = addresses.find((addr: any) => addr.addressType === 'Solana')?.address;
       
       if (!solanaAddress) {
         throw new Error('Wallet does not have a Solana address');
@@ -94,12 +94,12 @@ async function getOrCreateWallet(
     try {
       // Search for existing wallet with this name
       const result = await sdk.getWallets(100, 0);
-      const existingWallet = result.wallets.find(w => w.walletName === walletName);
+      const existingWallet = result.wallets.find((w: any) => w.walletName === walletName);
       
       if (existingWallet) {
         console.log(`✅ Found existing wallet: ${existingWallet.walletId}`);
         const addresses = await sdk.getWalletAddresses(existingWallet.walletId);
-        const solanaAddress = addresses.find(addr => addr.addressType === 'Solana')?.address;
+        const solanaAddress = addresses.find((addr: { addressType: string }) => addr.addressType === 'Solana')?.address;
         
         if (!solanaAddress) {
           throw new Error('Wallet does not have a Solana address');
@@ -118,7 +118,7 @@ async function getOrCreateWallet(
   
   try {
     const wallet = await sdk.createWallet(name);
-    const solanaAddress = wallet.addresses.find(addr => addr.addressType === 'Solana')?.address;
+    const solanaAddress = wallet.addresses.find((addr: any) => addr.addressType === 'Solana')?.address;
     
     if (!solanaAddress) {
       throw new Error('Created wallet does not have a Solana address');

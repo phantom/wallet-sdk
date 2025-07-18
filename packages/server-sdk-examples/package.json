@@ -4,8 +4,6 @@
   "description": "Scripts for demonstrating Phantom SDK capabilities",
   "private": true,
   "scripts": {
-    "build": "tsc",
-    "clean": "rm -rf dist",
     "server-sdk-demo": "tsx src/server-sdk-demo.ts",
     "sign-message": "tsx src/sign-message.ts",
     "list-wallets": "tsx src/list-wallets.ts"
@@ -17,8 +15,9 @@
     "dotenv": "^16.4.1"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
+    "@types/node": "^24.0.14",
     "tsx": "^4.0.0",
-    "typescript": "^5.0.4"
+    "typescript": "^5.0.4",
+    "undici-types": "6.21.0"
   }
 }

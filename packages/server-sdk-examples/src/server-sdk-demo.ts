@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 
 import { ServerSDK, NetworkId } from '@phantom/server-sdk';
-import { 
-  Connection, 
-  Transaction, 
-  SystemProgram, 
-  PublicKey, 
+import {
+  PublicKey,
+  Transaction,
+  SystemProgram,
+  Connection,
   LAMPORTS_PER_SOL,
-  TransactionSignature,
-  ComputeBudgetProgram 
+  ComputeBudgetProgram,
 } from '@solana/web3.js';
 import bs58 from 'bs58';
 import * as dotenv from 'dotenv';
@@ -70,17 +69,17 @@ async function runDemo() {
     const wallet = await sdk.createWallet(walletName);
     
     console.log('✅ Wallet created successfully!');
+    console.log(`\n🔍 Wallet Details:`);
     console.log(`   Wallet ID: ${wallet.walletId}`);
-    console.log(`   Name: ${walletName}`);
+    console.log(`   Wallet Name: ${walletName}`);
+    const solanaAddress = wallet.addresses.find((addr: any) => addr.addressType === 'Solana')?.address;
+    console.log(`   Solana Address: ${solanaAddress}`);
     
     // Find the Solana address
-    const solanaAddress = wallet.addresses.find(addr => addr.addressType === 'Solana')?.address;
     if (!solanaAddress) {
       throw new Error('No Solana address found in wallet');
     }
-    
-    console.log(`   Solana Address: ${solanaAddress}\n`);
-    
+        
     // Step 2: Check wallet balance
     console.log('2️⃣ Checking wallet balance...');
     let balance = await connection.getBalance(new PublicKey(solanaAddress));
@@ -147,8 +146,8 @@ async function runDemo() {
       })
     );
     
-    // Get recent blockhash
-    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+    // Get recent blockhash - needed for transaction
+    const { blockhash } = await connection.getLatestBlockhash();
     transaction.recentBlockhash = blockhash;
     transaction.feePayer = new PublicKey(solanaAddress);
     
