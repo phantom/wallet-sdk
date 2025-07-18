@@ -210,7 +210,7 @@ async function sendSOL(walletId: string, fromAddress: string, toAddress: string,
     
     // Extract the transaction signature from the signed transaction
     const signedTransaction = Transaction.from(
-      Buffer.from(signedTx.rawTransaction, 'base64')
+      Buffer.from(signedTx.rawTransaction, 'base64url')
     );
     
     // Get the signature (transaction hash)
@@ -468,7 +468,7 @@ app.post('/api/users/:userId/send-sol', async (req, res) => {
     
     // Extract the transaction signature from the signed transaction
     const signedTransaction = Transaction.from(
-      Buffer.from(signed.rawTransaction, 'base64')
+      Buffer.from(signed.rawTransaction, 'base64url')
     );
     
     // Get the signature (transaction hash)

@@ -171,7 +171,7 @@ async function runDemo() {
     console.log(`   Raw transaction (base64): ${signedResult.rawTransaction}`);
     
     // Extract signature from the signed transaction
-    const signedTx = Transaction.from(Buffer.from(signedResult.rawTransaction, 'base64'));
+    const signedTx = Transaction.from(Buffer.from(signedResult.rawTransaction, 'base64url'));
     let signature: string | null = null;
     
     if (signedTx.signature) {

@@ -178,7 +178,7 @@ async function signMessage() {
     console.log(`   Length: ${signature.length} characters`);
     
     // Convert to other formats
-    const signatureBuffer = Buffer.from(signature, 'base64');
+    const signatureBuffer = Buffer.from(signature, 'base64url');
     const signatureHex = signatureBuffer.toString('hex');
     const signatureBytes = Array.from(signatureBuffer);
     
