@@ -34,7 +34,7 @@ Before running the demo, you need:
 
 2. **Configure environment variables**:
    ```bash
-   cd packages/scripts
+   cd packages/server-sdk-examples
    cp env.example .env
    ```
 
@@ -49,7 +49,7 @@ Before running the demo, you need:
 
 ### Running the Demo
 
-From the `packages/scripts` directory:
+From the `packages/server-sdk-examples` directory:
 
 ```bash
 yarn server-sdk-demo
@@ -180,7 +180,7 @@ The `list-wallets` script provides a comprehensive view of all wallets in your o
 
 ### Running the Script
 
-From the `packages/scripts` directory:
+From the `packages/server-sdk-examples` directory:
 
 ```bash
 yarn list-wallets
