@@ -7,16 +7,24 @@ The Phantom Server SDK provides a secure and straightforward way to create and m
 - 🔐 **Secure wallet creation and management** - Create wallets programmatically with enterprise-grade security
 - ✍️ **Transaction signing** - Sign and optionally submit transactions across multiple blockchains
 - 📝 **Message signing** - Sign arbitrary messages for authentication or verification
-- 🌐 **Multi-chain support** - Works with Solana, Ethereum, Polygon, and other major blockchains
+- 🌐 **Multi-chain support** - Works with Solana, Ethereum, Polygon, Sui, Bitcoin, Base and other major blockchains
 - 🔑 **Ed25519 authentication** - Secure API authentication using cryptographic signatures
 - 📊 **Wallet listing and pagination** - Efficiently manage large numbers of wallets
 
 ## Installation
 
+Install the Server SDK using your preferred package manager:
+
 ```bash
 npm install @phantom/server-sdk
-# or
+```
+
+```bash
 yarn add @phantom/server-sdk
+```
+
+```bash
+pnpm add @phantom/server-sdk
 ```
 
 ## Prerequisites
@@ -32,16 +40,41 @@ Before using the SDK, you need:
 
 2. **Node.js** version 16 or higher
 
+## Security First
+
+The private key for your organization is meant to be stored **ONLY on your server** in a secure environment.
+
+- **NEVER expose this key in client-side code**
+- **NEVER commit it to version control**
+- **Always use environment variables or secret management systems**
+
+
 ## Quick Start
+
+### 1. Set up Environment Variables
+
+Create a `.env` file in your project root:
+
+```env
+PHANTOM_ORGANIZATION_ID=your-organization-id
+PHANTOM_PRIVATE_KEY=your-base58-encoded-private-key
+PHANTOM_API_URL=https://api.phantom.app/wallet
+```
+
+### 2. Initialize the SDK
 
 ```typescript
 import { ServerSDK, NetworkId } from '@phantom/server-sdk';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 // Initialize the SDK
 const sdk = new ServerSDK({
-  organizationId: 'your-organization-id',
-  apiPrivateKey: 'your-base58-private-key',
-  apiBaseUrl: 'https://api.phantom.app/wallet'
+  organizationId: process.env.PHANTOM_ORGANIZATION_ID!,
+  apiPrivateKey: process.env.PHANTOM_PRIVATE_KEY!,
+  apiBaseUrl: process.env.PHANTOM_API_URL!
 });
 
 // Create a wallet
@@ -134,7 +167,7 @@ const ethSignature = await sdk.signMessage(
 ### Managing Wallets
 
 ```typescript
-// Get all wallets with pagination
+// Get all wallets for your organization with pagination
 const result = await sdk.getWallets(20, 0); // limit: 20, offset: 0
 
 console.log(`Total wallets: ${result.totalCount}`);
@@ -317,12 +350,6 @@ const solanaNetworks = getNetworkIdsByChain('solana');
 // Returns: [SOLANA_MAINNET, SOLANA_DEVNET, SOLANA_TESTNET]
 ```
 
-## Security Best Practices
-- **Never expose your private key** in client-side code or commit it to version control
-- Store your credentials securely using environment variables or secret management systems
-- Each wallet is isolated and can only be accessed by your organization
-- All API requests are authenticated using cryptographic signatures
-
 ## Complete Example
 
 Here's a complete example demonstrating wallet creation and transaction signing:
@@ -390,31 +417,9 @@ async function main() {
 main().catch(console.error);
 ```
 
-## Troubleshooting
-
-### Common Issues
-
-1. **"organizationId and apiBaseUrl are required"**
-   - Ensure all required config parameters are provided
-   - Check for typos in parameter names
-
-2. **"Failed to create wallet"**
-   - Verify your organization credentials are correct
-   - Check network connectivity to the API endpoint
-   - Ensure your organization has wallet creation permissions
-
-3. **Transaction signing fails**
-   - Verify the wallet ID exists and belongs to your organization
-   - Check that the transaction is properly formatted
-   - Ensure you're using the correct network ID
-
-4. **"Unsupported network ID"**
-   - Use one of the predefined `NetworkId` enum values
-   - Check that the network is supported for your operation
-
 ### Getting Help
 
-- Review the [demo script](https://github.com/phantom/wallet-sdk/tree/main/packages/server-sdk-examples) for working examples
+- Review the [demo script](https://github.com/phantom/wallet-sdk/tree/main/examples/server-sdk-examples) for working examples
 - Contact Phantom support
 
 ## License

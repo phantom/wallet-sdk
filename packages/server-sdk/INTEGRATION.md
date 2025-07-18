@@ -269,7 +269,7 @@ model Wallet {
   walletId   String   @unique // Phantom wallet ID - CRITICAL to store!
   walletName String
   address    String
-  addressType String  // Changed from networkId to addressType
+  addressType String 
   createdAt  DateTime @default(now())
   
   @@index([userId])
@@ -569,51 +569,3 @@ const sdk = new ServerSDK({
 - **Use authentication**: Require proper authentication for all wallet operations.
 - **Validate all inputs**: Never trust client-provided data.
 - **Use HTTPS only**: Ensure all API communications are encrypted.
-
-### 5. Monitoring and Alerts
-
-```typescript
-// Example: Add monitoring to wallet operations
-async function createWalletWithMonitoring(userId: string) {
-  const startTime = Date.now();
-  
-  try {
-    const wallet = await sdk.createWallet(`user_${userId}`);
-    
-    // Log success metrics
-    logger.info('Wallet created successfully', {
-      userId,
-      walletId: wallet.walletId,
-      duration: Date.now() - startTime
-    });
-    
-    // Send metrics to monitoring service
-    metrics.increment('wallet.created');
-    metrics.timing('wallet.creation.duration', Date.now() - startTime);
-    
-    return wallet;
-  } catch (error) {
-    // Log error with context
-    logger.error('Failed to create wallet', {
-      userId,
-      error: error.message,
-      duration: Date.now() - startTime
-    });
-    
-    // Alert on critical failures
-    alerting.sendAlert('Wallet creation failed', {
-      userId,
-      error: error.message
-    });
-    
-    throw error;
-  }
-}
-```
-
-### 6. Compliance
-
-- **Know Your Customer (KYC)**: Implement appropriate KYC procedures before creating wallets.
-- **Transaction monitoring**: Monitor transactions for suspicious activity.
-- **Data retention**: Follow regulations for data retention and deletion.
-- **Geographic restrictions**: Ensure compliance with geographic restrictions on crypto services.
