@@ -1808,9 +1808,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/server-sdk-examples@workspace:packages/server-sdk-examples":
+"@phantom/server-sdk-examples@workspace:examples/server-sdk-examples":
   version: 0.0.0-use.local
-  resolution: "@phantom/server-sdk-examples@workspace:packages/server-sdk-examples"
+  resolution: "@phantom/server-sdk-examples@workspace:examples/server-sdk-examples"
   dependencies:
     "@phantom/server-sdk": "workspace:*"
     "@solana/web3.js": "npm:^1.87.6"
