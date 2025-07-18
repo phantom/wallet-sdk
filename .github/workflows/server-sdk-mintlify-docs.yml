@@ -33,8 +33,6 @@ jobs:
       - name: ChatGPT convert
         run: |
           pip3 install openai
-          ls -la
-          ls -la docs-v2
           # ensure dir exists and file exists
           mkdir -p docs-v2/server-sdk
           [ ! -f "docs-v2/server-sdk/server-sdk.mdx" ] && touch "docs-v2/server-sdk/server-sdk.mdx"
@@ -43,12 +41,13 @@ jobs:
       - name: Create PR in DOCS-V2 with updated mdx
         run: |
           cd docs-v2
-          git checkout -b update-docs-${GITHUB_REF##*/}-$(date +%s)
+          branch_name="update-docs-${GITHUB_REF##*/}-$(date +%s)"
+          git checkout -b "$branch_name"
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           cp ../converted.mdx server-sdk/server-sdk.mdx # copy over the new file
           git add .
           git commit -m "chore: Update docs"
-          git push origin HEAD
+          git push origin "$branch_name"
           echo "${GITHUB_TOKEN}" | gh auth login --with-token
           gh pr create --title "Update docs" --body "Auto-generated MDX" -- base main
