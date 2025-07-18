@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.BOT_ACCOUNT_ACCESS_TOKEN }}
-      OPENAI_API_KEY: ${{ secrets.RELEASE_AUTOMATION_OPENAI_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3
