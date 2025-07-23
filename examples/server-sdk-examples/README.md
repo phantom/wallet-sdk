@@ -16,7 +16,7 @@ Before running the demo, you need:
 
 1. **Phantom Organization Credentials**
    - Organization ID
-   - Organization Private Key (base58 encoded)
+   - Organization Private Key (base58 encoded, P256 private key)
    - These are provided when you create an organization with Phantom
 
 2. **Node.js** version 16 or higher
@@ -136,7 +136,7 @@ yarn workspace @phantom/server-sdk-examples server-sdk-demo
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `PHANTOM_ORGANIZATION_ID` | Your organization ID | `org_abc123...` |
-| `PHANTOM_ORGANIZATION_PRIVATE_KEY` | Base58 encoded private key | `5Kb8kL...` |
+| `PHANTOM_ORGANIZATION_PRIVATE_KEY` | Base58 encoded P256 private key | `5Kb8kL...` |
 | `PHANTOM_WALLET_API` | Phantom API endpoint | `https://api.phantom.app/wallet` |
 | `SOLANA_RPC_URL` | Solana RPC endpoint | `https://api.devnet.solana.com` |
 | `NETWORK` | Network to use | `devnet` or `mainnet` |
@@ -347,9 +347,9 @@ yarn workspace @phantom/server-sdk-examples sign-message "Your message"
 
 The script uses the Phantom Server SDK's `signMessage` function which:
 1. Takes a UTF-8 string message
-2. Converts it to base64 internally
+2. Converts it to base64url internally
 3. Signs it with the wallet's private key for the specified network
-4. Returns a base64-encoded signature
+4. Returns a base64url-encoded signature
 
 The signature can be verified using:
 - The public key (Solana address)

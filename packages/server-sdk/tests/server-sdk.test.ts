@@ -42,14 +42,14 @@ describe('ServerSDK', () => {
       const invalidConfig = { ...config, organizationId: '' };
       expect(() => {
         new ServerSDK(invalidConfig);
-      }).toThrow('organizationId and apiBaseUrl are required');
+      }).toThrow('organizationId and baseUrl are required');
     });
 
     it('should throw error when apiBaseUrl is missing', () => {
       const invalidConfig = { ...config, apiBaseUrl: '' };
       expect(() => {
         new ServerSDK(invalidConfig);
-      }).toThrow('organizationId and apiBaseUrl are required');
+      }).toThrow('organizationId and baseUrl are required');
     });
 
     it('should throw error with invalid private key', () => {
@@ -194,7 +194,7 @@ describe('ServerSDK', () => {
     });
 
     it('should sign a message for Solana', async () => {
-      const message = 'Hello from Phantom SDK tests!';
+      const message = Buffer.from('Hello from Phantom SDK tests!').toString('base64url');
       const networkId = NetworkId.SOLANA_MAINNET; 
 
       const signature = await sdk.signMessage(testWalletId, message, networkId);
@@ -207,7 +207,7 @@ describe('ServerSDK', () => {
     }, 30000);
 
     it('should sign a message for Ethereum', async () => {
-      const message = 'Hello from Phantom SDK Ethereum test!';
+      const message = Buffer.from('Hello from Phantom SDK Ethereum test!').toString('base64url');
       const networkId = NetworkId.ETHEREUM_MAINNET;
 
       const signature = await sdk.signMessage(testWalletId, message, networkId);
@@ -220,8 +220,8 @@ describe('ServerSDK', () => {
     }, 30000);
 
     it('should sign different messages and get different signatures', async () => {
-      const message1 = 'First message';
-      const message2 = 'Second message';
+      const message1 = Buffer.from('First message').toString('base64url');
+      const message2 = Buffer.from('Second message').toString('base64url');
       const networkId = NetworkId.SOLANA_MAINNET; 
 
       const signature1 = await sdk.signMessage(testWalletId, message1, networkId);
@@ -231,7 +231,7 @@ describe('ServerSDK', () => {
     }, 30000);
 
     it('should handle UTF-8 messages correctly', async () => {
-      const message = '🚀 Unicode message with emojis! 你好世界';
+      const message = Buffer.from('🚀 Unicode message with emojis! 你好世界').toString('base64url');
       const networkId = NetworkId.SOLANA_MAINNET;
 
       const signature = await sdk.signMessage(testWalletId, message, networkId);
@@ -245,7 +245,7 @@ describe('ServerSDK', () => {
   describe('Error Handling', () => {
     it('should throw error when signing with invalid wallet ID', async () => {
       const invalidWalletId = 'invalid-wallet-id';
-      const message = 'Test message';
+      const message = Buffer.from('Test message').toString('base64url');
       const networkId = NetworkId.SOLANA_MAINNET; 
 
       await expect(
@@ -262,7 +262,7 @@ describe('ServerSDK', () => {
     });
 
     it('should throw error for unsupported network ID', async () => {
-      const message = 'Test message';
+      const message = Buffer.from('Test message').toString('base64url');
       const unsupportedNetworkId = 'unsupported:network';
 
       await expect(

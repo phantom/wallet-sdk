@@ -2,6 +2,19 @@
 
 The Phantom Server SDK provides a secure and straightforward way to create and manage wallets, sign transactions, and interact with multiple blockchains from your backend services. This SDK is designed for server-side applications that need programmatic access to Phantom's wallet infrastructure.
 
+## 📖 Documentation
+
+Visit **[docs.phantom.com/server-sdk](https://docs.phantom.com/server-sdk)** for comprehensive documentation including:
+
+- Getting Started Guide
+- Creating and Managing Wallets
+- Signing Transactions
+- Signing Messages
+- Complete API Reference
+- Integration Examples
+- Best Practices
+- Security Considerations
+
 ## Features
 
 - 🔐 **Secure wallet creation and management** - Create wallets programmatically with enterprise-grade security
@@ -47,7 +60,6 @@ The private key for your organization is meant to be stored **ONLY on your serve
 - **NEVER expose this key in client-side code**
 - **NEVER commit it to version control**
 - **Always use environment variables or secret management systems**
-
 
 ## Quick Start
 
@@ -216,217 +228,23 @@ The SDK supports multiple blockchain networks through the `NetworkId` enum:
 
 ## API Reference
 
-### `new ServerSDK(config)`
+For complete API documentation, visit **[docs.phantom.com/server-sdk](https://docs.phantom.com/server-sdk)**.
 
-Creates a new instance of the SDK.
+### Key Methods
 
-**Parameters:**
-- `config.organizationId` (string) - Your organization ID
-- `config.apiPrivateKey` (string) - Your base58-encoded private key
-- `config.apiBaseUrl` (string) - The Phantom API endpoint
+- `createWallet(walletName?)` - Creates a new wallet
+- `signAndSendTransaction(walletId, transaction, networkId)` - Signs and optionally submits transactions
+- `signMessage(walletId, message, networkId)` - Signs arbitrary messages
+- `getWalletAddresses(walletId, derivationPaths?)` - Retrieves wallet addresses
+- `getWallets(limit?, offset?)` - Lists all wallets with pagination
 
-**Example:**
-```typescript
-const sdk = new ServerSDK({
-  organizationId: 'org_abc123',
-  apiPrivateKey: '5Kb8kLf9zgW...',
-  apiBaseUrl: 'https://api.phantom.app/wallet'
-});
-```
+## Resources
 
-### `createWallet(walletName?)`
-
-Creates a new wallet with addresses for multiple blockchains.
-
-**Parameters:**
-- `walletName` (string, optional) - Custom name for the wallet
-
-**Returns:** `Promise<CreateWalletResult>`
-- `walletId` (string) - Unique identifier for the wallet
-- `addresses` (WalletAddress[]) - Array of blockchain addresses
-
-**Example:**
-```typescript
-const wallet = await sdk.createWallet('Customer Wallet');
-```
-
-### `signAndSendTransaction(walletId, transaction, networkId)`
-
-Signs a transaction and optionally submits it to the network.
-
-**Parameters:**
-- `walletId` (string) - The wallet ID to sign with
-- `transaction` (Uint8Array) - The serialized transaction
-- `networkId` (NetworkId) - The target network
-
-**Returns:** `Promise<SignedTransaction>`
-- `rawTransaction` (string) - Base64-encoded signed transaction
-
-**Example:**
-```typescript
-const signed = await sdk.signAndSendTransaction(
-  walletId,
-  serializedTx,
-  NetworkId.SOLANA_MAINNET
-);
-```
-
-### `signMessage(walletId, message, networkId)`
-
-Signs an arbitrary message.
-
-**Parameters:**
-- `walletId` (string) - The wallet ID to sign with
-- `message` (string) - The message to sign
-- `networkId` (NetworkId) - The network context for signing
-
-**Returns:** `Promise<string>` - Base64-encoded signature
-
-**Example:**
-```typescript
-const signature = await sdk.signMessage(
-  walletId,
-  'Authenticate with our service',
-  NetworkId.ETHEREUM_MAINNET
-);
-```
-
-### `getWalletAddresses(walletId, derivationPaths?)`
-
-Retrieves addresses for a wallet.
-
-**Parameters:**
-- `walletId` (string) - The wallet ID
-- `derivationPaths` (string[], optional) - Custom derivation paths
-
-**Returns:** `Promise<WalletAddress[]>` - Array of addresses
-
-**Example:**
-```typescript
-const addresses = await sdk.getWalletAddresses(walletId);
-```
-
-### `getWallets(limit?, offset?)`
-
-Lists all wallets in your organization.
-
-**Parameters:**
-- `limit` (number, optional) - Number of results (default: 20)
-- `offset` (number, optional) - Pagination offset (default: 0)
-
-**Returns:** `Promise<GetWalletsResult>`
-- `wallets` (Wallet[]) - Array of wallets
-- `totalCount` (number) - Total number of wallets
-- `limit` (number) - Results per page
-- `offset` (number) - Current offset
-
-**Example:**
-```typescript
-const page1 = await sdk.getWallets(50, 0);
-const page2 = await sdk.getWallets(50, 50);
-```
-
-## CAIP-2 Network Utilities
-
-The SDK includes utilities for working with CAIP-2 network identifiers:
-
-```typescript
-import { 
-  deriveSubmissionConfig,
-  supportsTransactionSubmission,
-  getNetworkDescription,
-  getSupportedNetworkIds,
-  getNetworkIdsByChain
-} from '@phantom/server-sdk';
-
-// Check if a network supports transaction submission
-if (supportsTransactionSubmission(NetworkId.SOLANA_MAINNET)) {
-  // Network supports automatic transaction submission
-}
-
-// Get human-readable network description
-const description = getNetworkDescription(NetworkId.ETHEREUM_MAINNET);
-// Returns: "Ethereum Mainnet"
-
-// List all supported networks
-const allNetworks = getSupportedNetworkIds();
-
-// Get all networks for a specific chain
-const solanaNetworks = getNetworkIdsByChain('solana');
-// Returns: [SOLANA_MAINNET, SOLANA_DEVNET, SOLANA_TESTNET]
-```
-
-## Complete Example
-
-Here's a complete example demonstrating wallet creation and transaction signing:
-
-```typescript
-import { ServerSDK, NetworkId } from '@phantom/server-sdk';
-import { 
-  Connection, 
-  Transaction, 
-  SystemProgram, 
-  PublicKey,
-  LAMPORTS_PER_SOL 
-} from '@solana/web3.js';
-
-async function main() {
-  // Initialize SDK
-  const sdk = new ServerSDK({
-    organizationId: process.env.PHANTOM_ORG_ID!,
-    apiPrivateKey: process.env.PHANTOM_PRIVATE_KEY!,
-    apiBaseUrl: 'https://api.phantom.app/wallet'
-  });
-
-  // Create a wallet
-  const wallet = await sdk.createWallet('Demo Wallet');
-  const solanaAddress = wallet.addresses.find(
-    a => a.addressType === 'Solana'
-  )?.address!;
-
-  console.log('Created wallet:', wallet.walletId);
-  console.log('Solana address:', solanaAddress);
-
-  // Connect to Solana
-  const connection = new Connection('https://api.devnet.solana.com');
-  
-  // Create a transaction
-  const transaction = new Transaction().add(
-    SystemProgram.transfer({
-      fromPubkey: new PublicKey(solanaAddress),
-      toPubkey: new PublicKey(solanaAddress), // Self-transfer
-      lamports: 0.001 * LAMPORTS_PER_SOL
-    })
-  );
-
-  // Set transaction details
-  const { blockhash } = await connection.getLatestBlockhash();
-  transaction.recentBlockhash = blockhash;
-  transaction.feePayer = new PublicKey(solanaAddress);
-
-  // Serialize transaction
-  const serializedTx = transaction.serialize({
-    requireAllSignatures: false,
-    verifySignatures: false
-  });
-
-  // Sign and send
-  const signed = await sdk.signAndSendTransaction(
-    wallet.walletId,
-    serializedTx,
-    NetworkId.SOLANA_DEVNET
-  );
-
-  console.log('Transaction signed:', signed.rawTransaction);
-}
-
-main().catch(console.error);
-```
-
-### Getting Help
-
-- Review the [demo script](https://github.com/phantom/wallet-sdk/tree/main/examples/server-sdk-examples) for working examples
-- Contact Phantom support
+- [Documentation](https://docs.phantom.com/server-sdk)
+- [Example Code](https://github.com/phantom/wallet-sdk/tree/main/examples/server-sdk-examples)
+- [Integration Guide](https://docs.phantom.com/server-sdk/integration-guide)
+- [API Reference](https://docs.phantom.com/server-sdk/api-reference)
+- [Changelog](./CHANGELOG.md)
 
 ## License
 
@@ -435,11 +253,3 @@ This SDK is distributed under the MIT License. See the [LICENSE](../../LICENSE) 
 ## Contributing
 
 We welcome contributions! Please see our [Contributing Guide](../../CONTRIBUTING.md) for details.
-
-## Changelog
-
-See [CHANGELOG.md](./CHANGELOG.md) for a history of changes to this package. 
-
-## Integration
-
-For detailed integration examples and best practices, see the [Integration Guide](./INTEGRATION.md).
