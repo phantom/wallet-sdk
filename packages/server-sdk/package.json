@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@phantom/openapi-wallet-service": "^0.1.5",
-    "axios": "^1.10.0",
+    "axios": "^1.11.0",
     "bs58": "^6.0.0",
     "tweetnacl": "^1.0.3"
   },
