@@ -1,7 +1,7 @@
 {
-  "name": "@phantom/server-sdk",
-  "version": "0.0.3",
-  "description": "Server SDK for Phantom Wallet",
+  "name": "@phantom/client",
+  "version": "0.0.1",
+  "description": "HTTP client for Phantom Wallet API",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -14,15 +14,13 @@
   "devDependencies": {
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.0",
-    "dotenv": "^16.4.1",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.2",
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "@phantom/api-key-stamper": "^0.0.1",
-    "@phantom/client": "^0.0.1",
-    "@phantom/openapi-wallet-service": "^0.1.5"
+    "@phantom/openapi-wallet-service": "^0.1.5",
+    "axios": "^1.10.0"
   },
   "files": [
     "dist"

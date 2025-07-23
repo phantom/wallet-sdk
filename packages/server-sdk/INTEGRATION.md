@@ -144,14 +144,18 @@ import { NetworkId } from '@phantom/server-sdk';
 // Sign a message with an existing wallet
 async function signMessage(walletId: string, message: string) {
   try {
+    // Encode message to base64url
+    const encodedMessage = Buffer.from(message).toString('base64url');
+    
     const signature = await sdk.signMessage(
       walletId,
-      message,
+      encodedMessage,
       NetworkId.SOLANA_MAINNET 
     );
     
     console.log('Message signed:', {
-      message,
+      originalMessage: message,
+      encodedMessage,
       signature
     });
     
@@ -201,10 +205,13 @@ async function sendSOL(walletId: string, fromAddress: string, toAddress: string,
       verifySignatures: false
     });
     
+    // Convert to base64url
+    const encodedTransaction = Buffer.from(serializedTransaction).toString('base64url');
+    
     // Sign and have Phantom submit the transaction
     const signedTx = await sdk.signAndSendTransaction(
       walletId,
-      serializedTransaction,
+      encodedTransaction,
       NetworkId.SOLANA_MAINNET 
     );
     
@@ -395,10 +402,13 @@ app.post('/api/users/:userId/sign-message', async (req, res) => {
       return res.status(404).json({ error: 'Wallet not found' });
     }
     
+    // Encode message to base64url
+    const encodedMessage = Buffer.from(message).toString('base64url');
+    
     // Sign message using stored wallet ID
     const signature = await sdk.signMessage(
       wallet.walletId,
-      message,
+      encodedMessage,
       NetworkId.SOLANA_MAINNET
     );
     
@@ -459,10 +469,13 @@ app.post('/api/users/:userId/send-sol', async (req, res) => {
       verifySignatures: false
     });
     
+    // Convert to base64url
+    const encodedTransaction = Buffer.from(serialized).toString('base64url');
+    
     // Sign and send using stored wallet ID
     const signed = await sdk.signAndSendTransaction(
       wallet.walletId,
-      serialized,
+      encodedTransaction,
       NetworkId.SOLANA_MAINNET 
     );
     

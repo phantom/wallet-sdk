@@ -1684,6 +1684,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@phantom/api-key-stamper@npm:^0.0.1, @phantom/api-key-stamper@workspace:^, @phantom/api-key-stamper@workspace:packages/api-key-stamper":
+  version: 0.0.0-use.local
+  resolution: "@phantom/api-key-stamper@workspace:packages/api-key-stamper"
+  dependencies:
+    "@types/jest": "npm:^29.5.12"
+    "@types/node": "npm:^20.11.0"
+    axios: "npm:^1.10.0"
+    bs58: "npm:^6.0.0"
+    jest: "npm:^29.7.0"
+    ts-jest: "npm:^29.1.2"
+    tweetnacl: "npm:^1.0.3"
+    typescript: "npm:^5.0.4"
+  languageName: unknown
+  linkType: soft
+
 "@phantom/browser-embedded-sdk-demo-app@workspace:examples/browser-embedded-sdk-demo-app":
   version: 0.0.0-use.local
   resolution: "@phantom/browser-embedded-sdk-demo-app@workspace:examples/browser-embedded-sdk-demo-app"
@@ -1701,11 +1716,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/browser-sdk-demo-app@workspace:examples/browser-sdk-demo-app":
+"@phantom/browser-injected-sdk-demo-app@workspace:examples/browser-sdk-demo-app":
   version: 0.0.0-use.local
-  resolution: "@phantom/browser-sdk-demo-app@workspace:examples/browser-sdk-demo-app"
+  resolution: "@phantom/browser-injected-sdk-demo-app@workspace:examples/browser-sdk-demo-app"
   dependencies:
-    "@phantom/browser-sdk": "workspace:*"
+    "@phantom/browser-injected-sdk": "workspace:*"
     "@solana/kit": "npm:^2.1.1"
     concurrently: "npm:^9.1.2"
     typescript: "npm:^5.0.4"
@@ -1713,9 +1728,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/browser-sdk@workspace:*, @phantom/browser-sdk@workspace:^, @phantom/browser-sdk@workspace:packages/browser-sdk":
+"@phantom/browser-injected-sdk@workspace:*, @phantom/browser-injected-sdk@workspace:^, @phantom/browser-injected-sdk@workspace:packages/browser-injected-sdk":
   version: 0.0.0-use.local
-  resolution: "@phantom/browser-sdk@workspace:packages/browser-sdk"
+  resolution: "@phantom/browser-injected-sdk@workspace:packages/browser-injected-sdk"
   dependencies:
     "@solana/compat": "npm:2.1.1"
     "@solana/kit": "npm:^2.1.1"
@@ -1726,6 +1741,20 @@ __metadata:
     jest: "npm:^29.7.0"
     rimraf: "npm:^6.0.1"
     tsup: "npm:^6.7.0"
+    typescript: "npm:^5.0.4"
+  languageName: unknown
+  linkType: soft
+
+"@phantom/client@npm:^0.0.1, @phantom/client@workspace:^, @phantom/client@workspace:packages/client":
+  version: 0.0.0-use.local
+  resolution: "@phantom/client@workspace:packages/client"
+  dependencies:
+    "@phantom/openapi-wallet-service": "npm:^0.1.5"
+    "@types/jest": "npm:^29.5.12"
+    "@types/node": "npm:^20.11.0"
+    axios: "npm:^1.10.0"
+    jest: "npm:^29.7.0"
+    ts-jest: "npm:^29.1.2"
     typescript: "npm:^5.0.4"
   languageName: unknown
   linkType: soft
@@ -1743,7 +1772,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/react-sdk-demo-app@workspace:examples/react-sdk-demo-app"
   dependencies:
-    "@phantom/browser-sdk": "workspace:*"
+    "@phantom/browser-injected-sdk": "workspace:*"
     "@phantom/react-sdk": "workspace:*"
     "@solana/kit": "npm:^2.1.1"
     "@types/react": "npm:^19.1.2"
@@ -1761,7 +1790,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/react-sdk@workspace:packages/react-sdk"
   dependencies:
-    "@phantom/browser-sdk": "workspace:^"
+    "@phantom/api-key-stamper": "workspace:^"
+    "@phantom/browser-injected-sdk": "workspace:^"
+    "@phantom/client": "workspace:^"
     "@testing-library/dom": "npm:^10.4.0"
     "@testing-library/react": "npm:^16.3.0"
     "@types/jest": "npm:^29.5.14"
@@ -1827,15 +1858,14 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/server-sdk@workspace:packages/server-sdk"
   dependencies:
+    "@phantom/api-key-stamper": "npm:^0.0.1"
+    "@phantom/client": "npm:^0.0.1"
     "@phantom/openapi-wallet-service": "npm:^0.1.5"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
-    axios: "npm:^1.10.0"
-    bs58: "npm:^6.0.0"
     dotenv: "npm:^16.4.1"
     jest: "npm:^29.7.0"
     ts-jest: "npm:^29.1.2"
-    tweetnacl: "npm:^1.0.3"
     typescript: "npm:^5.0.4"
   languageName: unknown
   linkType: soft

@@ -82,10 +82,11 @@ const wallet = await sdk.createWallet('My First Wallet');
 console.log('Wallet ID:', wallet.walletId);
 console.log('Addresses:', wallet.addresses);
 
-// Sign a message
+// Sign a message (base64url encoded)
+const message = Buffer.from('Hello, Phantom!').toString('base64url');
 const signature = await sdk.signMessage(
   wallet.walletId,
-  'Hello, Phantom!',
+  message,
   NetworkId.SOLANA_MAINNET
 );
 console.log('Signature:', signature);
@@ -136,10 +137,13 @@ const serializedTx = transaction.serialize({
   verifySignatures: false
 });
 
+// Convert to base64url
+const transactionBase64 = Buffer.from(serializedTx).toString('base64url');
+
 // Sign and send the transaction
 const signedTx = await sdk.signAndSendTransaction(
   wallet.walletId,
-  serializedTx,
+  transactionBase64,
   NetworkId.SOLANA_MAINNET
 );
 
@@ -149,17 +153,19 @@ console.log('Signed transaction:', signedTx.rawTransaction);
 ### Signing Messages
 
 ```typescript
-// Sign a message for Solana
+// Sign a message for Solana (base64url encoded)
+const solanaMessage = Buffer.from('Please sign this message to authenticate').toString('base64url');
 const solanaSignature = await sdk.signMessage(
   wallet.walletId,
-  'Please sign this message to authenticate',
+  solanaMessage,
   NetworkId.SOLANA_MAINNET
 );
 
-// Sign a message for Ethereum
+// Sign a message for Ethereum (base64url encoded)
+const ethMessage = Buffer.from('Sign in to our dApp').toString('base64url');
 const ethSignature = await sdk.signMessage(
   wallet.walletId,
-  'Sign in to our dApp',
+  ethMessage,
   NetworkId.ETHEREUM_MAINNET
 );
 ```

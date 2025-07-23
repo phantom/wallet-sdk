@@ -1,6 +1,6 @@
 import { PhantomProvider } from "@phantom/react-sdk";
-import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
-import { createAutoConfirmPlugin } from "@phantom/browser-sdk/auto-confirm";
+import { createSolanaPlugin } from "@phantom/browser-injected-sdk/solana";
+import { createAutoConfirmPlugin } from "@phantom/browser-injected-sdk/auto-confirm";
 import { Actions } from "./Actions";
 
 const phantomConfig = {

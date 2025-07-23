@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
-import { createPhantom } from "@phantom/browser-sdk";
-import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
-import { createAutoConfirmPlugin } from "@phantom/browser-sdk/auto-confirm";
+import { createPhantom } from "@phantom/browser-injected-sdk";
+import { createSolanaPlugin } from "@phantom/browser-injected-sdk/solana";
+import { createAutoConfirmPlugin } from "@phantom/browser-injected-sdk/auto-confirm";
 import {
   createSolanaRpc,
   pipe,

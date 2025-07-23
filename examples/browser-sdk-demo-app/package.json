@@ -1,17 +1,17 @@
 {
-  "name": "@phantom/browser-sdk-demo-app",
+  "name": "@phantom/browser-injected-sdk-demo-app",
   "private": true,
   "version": "0.0.3",
   "type": "module",
   "scripts": {
-    "predev": "yarn workspace @phantom/browser-sdk build:watch",
+    "predev": "yarn workspace @phantom/browser-injected-sdk build:watch",
     "dev": "concurrently \"yarn predev\" \"vite --port 5175\"",
-    "prebuild": "yarn workspace @phantom/browser-sdk build",
+    "prebuild": "yarn workspace @phantom/browser-injected-sdk build",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@phantom/browser-sdk": "workspace:*",
+    "@phantom/browser-injected-sdk": "workspace:*",
     "@solana/kit": "^2.1.1",
     "typescript": "^5.0.4"
   },

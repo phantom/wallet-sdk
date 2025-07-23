@@ -202,7 +202,7 @@ describe('ServerSDK', () => {
       expect(signature).toBeDefined();
       expect(typeof signature).toBe('string');
       expect(signature.length).toBeGreaterThan(0);
-      // Base64 signature should be a valid base64 string
+      // Base64 signature should be a valid base64url string
       expect(() => Buffer.from(signature, 'base64url')).not.toThrow();
     }, 30000);
 
@@ -215,7 +215,7 @@ describe('ServerSDK', () => {
       expect(signature).toBeDefined();
       expect(typeof signature).toBe('string');
       expect(signature.length).toBeGreaterThan(0);
-      // Base64 signature should be a valid base64 string
+      // Base64 signature should be a valid base64url string
       expect(() => Buffer.from(signature, 'base64url')).not.toThrow();
     }, 30000);
 

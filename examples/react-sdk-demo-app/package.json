@@ -12,7 +12,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@phantom/browser-sdk": "workspace:*",
+    "@phantom/browser-injected-sdk": "workspace:*",
     "@phantom/react-sdk": "workspace:*",
     "@solana/kit": "^2.1.1",
     "@vitejs/plugin-react": "^4.4.1",
