@@ -1,5 +1,5 @@
 export enum ProviderStrategy {
   INJECTED = "injected",
-  EMBEDDED = "embedded",
+  KMS = "kms",
   DEEPLINK = "deeplink",
 }
