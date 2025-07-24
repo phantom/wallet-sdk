@@ -1,15 +1,15 @@
 import { PhantomProvider } from "@phantom/react-sdk";
-import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
-import { createAutoConfirmPlugin } from "@phantom/browser-sdk/auto-confirm";
 import { Actions } from "./Actions";
 
-const phantomConfig = {
-  plugins: [createSolanaPlugin(), createAutoConfirmPlugin()],
+// Configuration for using the injected wallet (Phantom browser extension)
+const config = {
+  walletType: 'injected' as const,
+  appName: 'React SDK Demo App'
 };
 
 function App() {
   return (
-    <PhantomProvider config={phantomConfig}>
+    <PhantomProvider config={config}>
       <Actions />
     </PhantomProvider>
   );

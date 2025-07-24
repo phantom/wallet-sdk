@@ -1,286 +1,404 @@
-# Phantom React SDK
+# @phantom/react-sdk
 
-React hooks and components for integrating with Phantom wallet.
+React SDK for integrating Phantom wallet functionality into React applications.
 
 ## Installation
 
 ```bash
-npm install @phantom/react-sdk @phantom/browser-sdk
+npm install @phantom/react-sdk
+# or
+yarn add @phantom/react-sdk
 ```
 
-## Quick Start
+## Usage
+
+### Setup Provider
+
+Wrap your application with the `PhantomProvider`:
 
 ```tsx
-import React from "react";
-import { PhantomProvider, useConnect } from "@phantom/react-sdk/solana";
-import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
+import { PhantomProvider } from '@phantom/react-sdk';
 
 function App() {
   return (
-    <PhantomProvider config={{ plugins: [createSolanaPlugin()] }}>
-      <WalletComponent />
+    <PhantomProvider config={{
+      walletType: 'injected', // or 'embedded'
+      appName: 'My DApp',
+      // For embedded wallets:
+      apiBaseUrl: 'https://api.phantom.com',
+      organizationId: 'your-org-id',
+      authUrl: 'https://auth.phantom.com', // Required for embedded auth
+      embeddedWalletType: 'app-wallet', // or 'user-wallet' (default: 'app-wallet')
+    }}>
+      <YourApp />
     </PhantomProvider>
   );
 }
+```
 
-function WalletComponent() {
-  const { connect } = useConnect();
+#### Example: Using Phantom Wallets (Pre-funded)
+
+```tsx
+<PhantomProvider config={{
+  walletType: 'embedded',
+  apiBaseUrl: 'https://api.phantom.com',
+  organizationId: 'your-org-id',
+  authUrl: 'https://auth.phantom.com',
+  embeddedWalletType: 'user-wallet', // Use pre-funded Phantom user wallets
+  appName: 'My Demo App',
+}}>
+  <YourApp />
+</PhantomProvider>
+```
+
+### Available Hooks
+
+#### useConnect
+
+Connect to a wallet:
+
+```tsx
+import { useConnect } from '@phantom/react-sdk';
+
+function ConnectButton() {
+  const { connect, isConnecting, error } = useConnect();
 
   const handleConnect = async () => {
     try {
-      const connectedAccount = await connect();
-      console.log("Wallet connected:", connectedAccount?.publicKey?.toString());
-    } catch (error) {
-      console.error("Connection failed:", error);
+      await connect();
+      // Connection will automatically handle:
+      // - For injected: Opens Phantom extension
+      // - For embedded: Creates/restores session with iframe auth
+    } catch (err) {
+      console.error('Failed to connect:', err);
     }
   };
 
   return (
+    <button onClick={handleConnect} disabled={isConnecting}>
+      {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+    </button>
+  );
+}
+```
+
+#### useAccounts
+
+Get connected wallet addresses:
+
+```tsx
+import { useAccounts } from '@phantom/react-sdk';
+
+function WalletAddresses() {
+  const addresses = useAccounts();
+
+  if (!addresses) {
+    return <div>Not connected</div>;
+  }
+
+  return (
     <div>
-      <button onClick={handleConnect}>Connect to Solana</button>
+      {addresses.map((addr, index) => (
+        <div key={index}>
+          <strong>{addr.addressType}:</strong> {addr.address}
+        </div>
+      ))}
     </div>
   );
 }
-
-export default App;
 ```
 
-## API Reference
+#### useDisconnect
 
-### PhantomProvider
-
-The PhantomProvider component provides the Phantom context to child components.
+Disconnect from wallet:
 
 ```tsx
-import { PhantomProvider } from "@phantom/react-sdk";
-import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
+import { useDisconnect } from '@phantom/react-sdk';
 
-<PhantomProvider config={{ plugins: [createSolanaPlugin()] }}>{children}</PhantomProvider>;
-```
+function DisconnectButton() {
+  const { disconnect, isDisconnecting } = useDisconnect();
 
-### usePhantom
-
-The `usePhantom` hoo provides access to the phantom instance. With Phantom instance you can call browser-sdk methods directly.
-
-## Solana API Reference
-
-### useConnect (Solana)
-
-The `useConnect` hook provides a function to connect to the Phantom wallet for Solana.
-
-#### Props
-
-- `autoConnect?: boolean` (optional) - If `true`, attempts to connect to the wallet automatically when the component mounts. Defaults to `false`.
-
-#### Return Value
-
-The hook returns an object with the following property:
-
-- `connect: () => Promise<ConnectResponse>` - An asynchronous function that initiates the connection process. Returns a promise that resolves with the connection response (e.g., `{ publicKey: string }`) or rejects if connection fails.
-
-```tsx
-import { useConnect } from "@phantom/react-sdk/solana"; // Or '@phantom/react-sdk/solana' if specific
-
-function MyComponent() {
-  const { connect } = useConnect({ autoConnect: true });
-
-  const handleConnectClick = async () => {
-    try {
-      const res = await connect();
-      console.log("Connected:", res.publicKey.toString());
-    } catch (err) {
-      console.error("Connection error:", err);
-    }
-  };
-  // ...
+  return (
+    <button onClick={disconnect} disabled={isDisconnecting}>
+      Disconnect
+    </button>
+  );
 }
 ```
 
-### useDisconnect (Solana)
+#### useSignMessage
 
-The `useDisconnect` hook provides a function to disconnect from the Phantom wallet for Solana.
-
-#### Return Value
-
-The hook returns an object with the following property:
-
-- `disconnect: () => Promise<void>` - An asynchronous function that initiates the disconnection process. Returns a promise that resolves when disconnection is complete or rejects if disconnection fails.
+Sign messages with base64url encoding:
 
 ```tsx
-import { useDisconnect } from "@phantom/react-sdk/solana";
+import { useSignMessage, NetworkId, stringToBase64url } from '@phantom/react-sdk';
 
-function MyComponent() {
-  const { disconnect } = useDisconnect();
+function SignMessage() {
+  const { signMessage, isSigning, error } = useSignMessage();
 
-  const handleDisconnectClick = async () => {
+  const handleSign = async () => {
+    // Convert message to base64url using the provided utility
+    const message = stringToBase64url('Hello Phantom!');
+    
     try {
-      await disconnect();
-      console.log("Disconnected");
+      const signature = await signMessage({
+        message,
+        networkId: NetworkId.SOLANA_MAINNET,
+      });
+      console.log('Signature:', signature);
     } catch (err) {
-      console.error("Disconnection error:", err);
+      console.error('Failed to sign:', err);
     }
   };
-  // ...
+
+  return (
+    <button onClick={handleSign} disabled={isSigning}>
+      Sign Message
+    </button>
+  );
 }
 ```
 
-### useAccount
+#### useSignAndSendTransaction
 
-The `useAccount` hook provides access the currently connected address
-
-#### Return Value
-
-The hook returns a string with the currently connected address or undefined when account is not connected.
-
-````tsx
-
-### useSignIn (Solana)
-
-The `useSignIn` hook provides a function to initiate a sign-in request to the Phantom wallet for Solana. This is compliant with SIP-001 (Sign In With Solana).
-
-#### Return Value
-
-The hook returns an object with the following property:
-
-- `signIn: (signInData: SolanaSignInData) => Promise<{ address: string; signature: Uint8Array; signedMessage: Uint8Array }>` - An asynchronous function that initiates the sign-in process. `SolanaSignInData` is a type imported from `@phantom/browser-sdk/solana`. Returns a promise that resolves with the `address` (string), `signature` (Uint8Array), and `signedMessage` (Uint8Array), or rejects if the sign-in fails.
+Sign and send transactions with base64url encoding:
 
 ```tsx
-import { useSignIn } from "@phantom/react-sdk/solana";
-import { SolanaSignInData } from "@phantom/browser-sdk/solana"; // This type might be needed from the browser-sdk
+import { useSignAndSendTransaction, NetworkId, base64urlEncode } from '@phantom/react-sdk';
 
-function MyComponent() {
-  const { signIn } = useSignIn();
+function SendTransaction() {
+  const { signAndSendTransaction, isSigning, error } = useSignAndSendTransaction();
 
-  const handleSignInClick = async () => {
-    // Construct SolanaSignInData according to your needs
-    // This typically includes the domain and a statement for the user.
-    const signInData: SolanaSignInData = {
-      domain: window.location.host,
-      statement: "Please sign in to access exclusive features.",
-      // Other fields like `nonce`, `chainId`, `resources` can be added as per SIP-001
-    };
-
+  const handleSend = async () => {
+    // Transaction should always be base64url encoded
+    const transaction = base64urlEncode(transactionBytes);
+    
     try {
-      const result = await signIn(signInData);
-      console.log("Sign In successful. Address:", result.address.toString());
-      // You can now verify the signature and signedMessage on your backend
-      // Handle successful sign-in (e.g., update UI, set user session)
+      const result = await signAndSendTransaction({
+        transaction,
+        networkId: NetworkId.SOLANA_MAINNET,
+      });
+      console.log('Transaction sent:', result.rawTransaction);
     } catch (err) {
-      console.error("Sign In error:", err);
-      // Handle sign-in error (e.g., show error message to user)
+      console.error('Failed to send:', err);
     }
   };
 
-  return <button onClick={handleSignInClick}>Sign In with Solana</button>;
-}
-````
-
-### useSignMessage (Solana)
-
-The `useSignMessage` hook provides a function to prompt the user to sign an arbitrary message with their Solana account.
-
-#### Return Value
-
-The hook returns an object with the following property:
-
-- `signMessage: (message: Uint8Array, display?: 'utf8' | 'hex') => Promise<{ signature: Uint8Array; publicKey: string }>` - An asynchronous function that prompts the user to sign a message. The `message` must be a `Uint8Array`. The optional `display` parameter can be 'utf8' (default) or 'hex' to suggest how the wallet should display the message bytes. Returns a promise that resolves with the `signature` (Uint8Array) and `publicKey` (string) of the signer, or rejects if signing fails.
-
-```tsx
-import { useSignMessage } from "@phantom/react-sdk/solana";
-
-function MyComponent() {
-  const { signMessage } = useSignMessage();
-
-  const handleSignMessage = async () => {
-    const messageToSign = "Please confirm your action by signing this message.";
-    const messageBytes = new TextEncoder().encode(messageToSign);
-    try {
-      const { signature, publicKey } = await signMessage(messageBytes, "utf8");
-      console.log("Message signed successfully!");
-      console.log("Signature:", signature);
-      console.log("Public Key:", publicKey);
-      // You can now verify this signature on a backend or use it as needed.
-    } catch (err) {
-      console.error("Sign message error:", err);
-      // Handle error (e.g., user rejected, wallet error)
-    }
-  };
-
-  return <button onClick={handleSignMessage}>Sign Message</button>;
+  return (
+    <button onClick={handleSend} disabled={isSigning}>
+      Send Transaction
+    </button>
+  );
 }
 ```
 
-### useSignAndSendTransaction (Solana)
+### Accessing Context
 
-The `useSignAndSendTransaction` hook prompts the user to sign **and** send a Kit-style transaction.
-
-#### Return Value
-
-The hook returns an object with the following property:
-
-- `signAndSendTransaction(transaction: Transaction): Promise<{ signature: string; publicKey?: string }>` – accepts a `Transaction` built with **`@solana/kit`** and returns the confirmed signature.
+Use the `usePhantom` hook to access the underlying context:
 
 ```tsx
-import { useSignAndSendTransaction } from "@phantom/react-sdk/solana"; // scoped import is fine
+import { usePhantom } from '@phantom/react-sdk';
+
+function WalletInfo() {
+  const { connection, isReady } = usePhantom();
+
+  if (!isReady) return <div>Loading...</div>;
+  
+  if (!connection) return <div>Not connected</div>;
+
+  return (
+    <div>
+      <p>Connected: {connection.connected ? 'Yes' : 'No'}</p>
+      <p>Wallet ID: {connection.walletId || 'N/A (Injected)'}</p>
+      <p>Addresses: {connection.addresses.length}</p>
+    </div>
+  );
+}
+```
+
+## Architecture
+
+The SDK supports two wallet types:
+
+### Injected Wallets
+- Uses the Phantom browser extension
+- Currently only supports Solana network
+- Direct connection through browser provider
+
+### Embedded Wallets
+- Uses iframe authentication flow
+- Stores session in IndexedDB
+- Supports all networks via server-side signing
+- Automatically manages keypairs and sessions
+
+#### Embedded Wallet Types
+
+When using embedded wallets, you can choose between two wallet types:
+
+**`app-wallet`** (default)
+- Creates a completely new, empty wallet
+- Non-custodial - user has full control
+- User needs to fund the wallet before use
+- Ideal for new users starting fresh
+
+**`user-wallet`**
+- Provides access to Phantom user wallets
+- Wallets may be pre-funded by users
+- Ideal for demos, testing, or onboarding flows
+- Phantom users with existing funded wallets
+
+## Configuration Options
+
+```typescript
+interface PhantomSDKConfig {
+  walletType?: 'injected' | 'embedded'; // Default: 'injected'
+  appName?: string;                      // Your app name
+  apiBaseUrl?: string;                   // Required for embedded wallets
+  organizationId?: string;               // Required for embedded wallets
+  authUrl?: string;                      // Required for embedded wallet auth
+  embeddedWalletType?: 'app-wallet' | 'user-wallet'; // Default: 'app-wallet'
+}
+```
+
+## Network Support
+
+### Injected Wallets
+- Currently only supports Solana networks
+- Other networks will throw "not implemented" error
+
+### Embedded Wallets
+- Supports all networks available in `@phantom/client`:
+  - Solana: `SOLANA_MAINNET`, `SOLANA_DEVNET`, `SOLANA_TESTNET`
+  - Ethereum: `ETHEREUM_MAINNET`, `ETHEREUM_SEPOLIA`
+  - Polygon: `POLYGON_MAINNET`, `POLYGON_MUMBAI`
+  - And more...
+
+## Data Encoding
+
+All messages and transactions must be base64url encoded before passing to the SDK methods. The SDK provides utility functions for base64url encoding/decoding that work in browser environments:
+
+```typescript
+import { stringToBase64url, base64urlEncode } from '@phantom/react-sdk';
+
+// Encoding a message from string
+const message = stringToBase64url('Hello World');
+
+// Encoding transaction bytes
+const transaction = base64urlEncode(transactionBytes);
+```
+
+### Available Base64URL Utilities
+
+```typescript
+// Convert a string to base64url
+stringToBase64url(str: string): string
+
+// Encode bytes to base64url
+base64urlEncode(data: string | Uint8Array | ArrayLike<number>): string
+
+// Decode base64url to bytes
+base64urlDecode(str: string): Uint8Array
+
+// Decode base64url directly to string
+base64urlDecodeToString(str: string): string
+```
+
+### Creating Transactions
+
+#### Using @solana/web3.js
+
+```typescript
+import { 
+  Transaction, 
+  SystemProgram, 
+  PublicKey, 
+  Connection,
+  LAMPORTS_PER_SOL 
+} from '@solana/web3.js';
+import { base64urlEncode, NetworkId } from '@phantom/react-sdk';
+
+// Create a transaction
+const connection = new Connection('https://api.mainnet-beta.solana.com');
+const { blockhash } = await connection.getLatestBlockhash();
+
+const transaction = new Transaction().add(
+  SystemProgram.transfer({
+    fromPubkey: new PublicKey(fromAddress),
+    toPubkey: new PublicKey(toAddress),
+    lamports: 0.001 * LAMPORTS_PER_SOL
+  })
+);
+
+transaction.recentBlockhash = blockhash;
+transaction.feePayer = new PublicKey(fromAddress);
+
+// Serialize and encode for the SDK
+const serializedTransaction = transaction.serialize({
+  requireAllSignatures: false,
+  verifySignatures: false
+});
+
+const transactionBase64 = base64urlEncode(serializedTransaction);
+
+// Use with the SDK
+const result = await signAndSendTransaction({
+  transaction: transactionBase64,
+  networkId: NetworkId.SOLANA_MAINNET
+});
+```
+
+#### Using @solana/kit
+
+```typescript
 import {
   createSolanaRpc,
+  pipe,
   createTransactionMessage,
   setTransactionMessageFeePayer,
   setTransactionMessageLifetimeUsingBlockhash,
-  pipe,
   address,
   compileTransaction,
-} from "@solana/kit";
+} from '@solana/kit';
+import { base64urlEncode, NetworkId } from '@phantom/react-sdk';
 
-function MyComponent() {
-  const { signAndSendTransaction } = useSignAndSendTransaction();
+// Create a transaction
+const rpc = createSolanaRpc('https://api.mainnet-beta.solana.com');
+const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
 
-  const handlePayment = async (publicKey: string) => {
-    // 0️⃣  Ensure the wallet is connected and we have a fee-payer address
-    if (!publicKey) return console.error("Wallet not connected");
+const transactionMessage = pipe(
+  createTransactionMessage({ version: 0 }),
+  tx => setTransactionMessageFeePayer(address(fromAddress), tx),
+  tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
+  // Add your instructions here
+);
 
-    try {
-      // 1️⃣  Fetch a recent blockhash
-      const rpc = createSolanaRpc("https://api.devnet.solana.com");
-      const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
+const transaction = compileTransaction(transactionMessage);
 
-      // 2️⃣  Build a minimal v0 transaction message (no instructions – demo only)
-      const txMessage = pipe(
-        createTransactionMessage({ version: 0 }),
-        tx => setTransactionMessageFeePayer(address(publicKey), tx),
-        tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
-      );
+// Serialize and encode for the SDK
+// The transaction.messageBytes contains the serialized message
+const transactionBase64 = base64urlEncode(transaction.messageBytes);
 
-      const transaction = compileTransaction(txMessage);
-
-      // 3️⃣  Prompt the user to sign and send
-      const { signature } = await signAndSendTransaction(transaction);
-      console.log("Transaction signature:", signature);
-    } catch (err) {
-      console.error("Transaction error:", err);
-    }
-  };
-
-  return <button onClick={() => handlePayment("YOUR_CONNECTED_WALLET_PUBLIC_KEY")}>Send 0.001 SOL</button>;
-}
-```
-
-### useAccountEffect
-
-The `useAccountEffect` hook provides easy way to subscribe to events like `connect`, `disconnect` and `accountChanged`. You can subscribe by calling the hook and declaring event callbacks you want to react to.
-
-Example:
-
-```tsx
-useAccountEffect({
-  onConnect: data => {
-    console.log("Connected to Phantom with public key:", data.publicKey);
-  },
-  onDisconnect: () => {
-    console.log("Disconnected from Phantom");
-  },
-  onAccountChanged: data => {
-    console.log("Account changed to:", data.publicKey);
-  },
+// Use with the SDK
+const result = await signAndSendTransaction({
+  transaction: transactionBase64,
+  networkId: NetworkId.SOLANA_MAINNET
 });
 ```
+
+## Session Management (Embedded Wallets)
+
+The SDK automatically manages sessions for embedded wallets:
+
+1. On first connect:
+   - Generates Ed25519 keypair
+   - Creates organization (mock in current implementation)
+   - Opens iframe for authentication
+   - Stores session in IndexedDB
+
+2. On subsequent connects:
+   - Restores session from IndexedDB
+   - No iframe authentication needed
+
+3. On disconnect:
+   - Clears session from IndexedDB
+   - Removes client instance

@@ -1,160 +1,243 @@
-# Phantom Browser SDK
+# @phantom/browser-sdk
 
-The Phantom Browser SDK allows you to interact with the Phantom wallet from your web application. It uses a plugin system to support different blockchains.
+Browser SDK for Phantom Wallet with a unified interface for both injected and embedded wallets.
 
 ## Installation
 
-You can install the SDK using npm or yarn:
-
-**npm:**
-
 ```bash
 npm install @phantom/browser-sdk
-```
-
-**yarn:**
-
-```bash
+# or
 yarn add @phantom/browser-sdk
 ```
 
+## Features
+
+- Support for both injected (browser extension) and embedded (iframe) wallets
+- Multi-network support (Solana, Ethereum, Polygon, etc.)
+- Base64url encoding for all messages and transactions
+- TypeScript support
+
 ## Usage
 
-Here's an example of how to import and use the SDK with the Solana plugin:
+### Injected Wallet (Browser Extension)
 
 ```typescript
-import { createPhantom } from "@phantom/browser-sdk";
-import { createSolanaPlugin } from "@phantom/browser-sdk/solana"; // Import the solana plugin
+import { BrowserSDK, NetworkId, stringToBase64url } from '@phantom/browser-sdk';
 
-// Create a Phantom instance with the Solana plugin
-const phantom = createPhantom({
-  plugins: [createSolanaPlugin()],
+// Initialize SDK with injected provider
+const sdk = new BrowserSDK({
+  providerType: 'injected',
+  appName: 'My DApp',
 });
 
-// Now you can use the Solana-specific methods
-async function connectAndSign() {
-  try {
-    // Attempt to connect to the wallet
-    const connectionResult = await phantom.solana.connect();
-    console.log("Connection Result:", connectionResult.address);
+// Connect to wallet
+const { addresses } = await sdk.connect();
+console.log('Connected addresses:', addresses);
 
-    // Example: Sign in (if supported by the specific provider/plugin)
-    // Construct SolanaSignInData according to your needs
-    const signInData = { domain: window.location.host, statement: "Please sign in to access this dApp." };
-    const signInResult = await phantom.solana.signIn(signInData);
-    console.log("Sign In Result:", signInResult.address);
+// Sign a message
+const message = stringToBase64url('Hello from Browser SDK!');
+const signature = await sdk.signMessage(message, NetworkId.SOLANA_MAINNET);
+console.log('Signature:', signature);
 
-    // Example: Sign a message
-    const message = new TextEncoder().encode("Hello from Phantom Browser SDK!");
-    const signedMessage = await phantom.solana.signMessage(message, "utf8");
-    console.log("Signed Message:", signedMessage);
-  } catch (error) {
-    console.error("Error interacting with Phantom:", error);
-  }
-}
+// Sign and send transaction
+const transaction = base64urlEncode(transactionBytes);
+const result = await sdk.signAndSendTransaction(transaction, NetworkId.SOLANA_MAINNET);
+console.log('Transaction sent:', result.rawTransaction);
 
-connectAndSign();
+// Disconnect
+await sdk.disconnect();
 ```
 
-### Available Solana Methods
-
-Once the `phantom.solana` object is initialized, you can access the following methods:
-
-- `connect(opts?: { onlyIfTrusted?: boolean }): Promise<string>`
-  - Connects to the Phantom wallet. Optionally, `onlyIfTrusted` can be set to true to only connect if the dApp is already trusted.
-- `disconnect(): Promise<void>`
-  - Disconnects from the Phantom wallet.
-- `getAccount(): Promise<string | undefined>`
-  - Gets the current connected address
-- `signIn(): Promise<SignInResult>`
-  - Initiates a sign-in request to the wallet.
-- `signMessage(message: Uint8Array | string, display?: 'utf8' | 'hex'): Promise<SignedMessage>`
-  - Prompts the user to sign a given message.
-- `signAndSendTransaction(transaction: Transaction): Promise<{ signature: string; address?: string }>`
-  - Prompts the user to sign **and send** a Kit `Transaction` and returns the confirmed signature.
-
-### Event Handling
-
-The SDK also allows you to listen for `connect`, `disconnect`, and `accountChanged` events:
-
-- `addEventListener(event: PhantomEventType, callback: PhantomEventCallback): () => void`
-
-  - Registers a callback that will be invoked when the specified event occurs.
-  - For the `connect` event, the callback receives the public key (as a string) of the connected account.
-  - For the `disconnect` event, the callback receives no arguments.
-  - For the `accountChanged` event, the callback receives the new public key (as a string).
-  - Returns a function that, when called, will unregister the callback.
-  - Multiple callbacks can be registered for the same event.
-
-  **Example:**
-
-  ```typescript
-  const phantom = createPhantom({ plugins: [createSolanaPlugin()] });
-
-  const handleConnect = (address: string) => {
-    console.log(`Wallet connected with public key: ${address}`);
-  };
-
-  const clearConnectListener = phantom.solana.addEventListener("connect", handleConnect);
-
-  const handleAccountChanged = (newAddress: string) => {
-    console.log(`Account changed to: ${newAddress}`);
-  };
-
-  const clearAccountChangedListener = phantom.solana.addEventListener("accountChanged", handleAccountChanged);
-
-  // To stop listening for a specific event:
-  // clearConnectListener();
-  // clearAccountChangedListener();
-  ```
-
-- `removeEventListener(event: PhantomEventType, callback: PhantomEventCallback): void`
-
-  - Unregisters a previously registered callback for the specified event.
-
-  **Example:**
-
-  ```typescript
-  const phantom = createPhantom({ plugins: [createSolanaPlugin()] });
-
-  const handleDisconnect = () => {
-    console.log("Wallet disconnected");
-  };
-
-  phantom.solana.addEventListener("disconnect", handleDisconnect);
-
-  // To stop listening for this specific disconnect event:
-  // phantom.solana.removeEventListener("disconnect", handleDisconnect);
-  ```
-
-### Creating a transaction
-
-Phantom's SDK uses the `@solana/kit` library to create transactions. You can use the `createTransactionMessage` function to create a transaction message.
+### Embedded Wallet
 
 ```typescript
-import {
-  createSolanaRpc,
-  pipe,
-  createTransactionMessage,
-  setTransactionMessageFeePayer,
-  setTransactionMessageLifetimeUsingBlockhash,
-  address,
-  compileTransaction,
-} from "@solana/kit";
+import { BrowserSDK, NetworkId } from '@phantom/browser-sdk';
 
-// Example: Sign and send a transaction
+// Initialize SDK with embedded provider
+const sdk = new BrowserSDK({
+  providerType: 'embedded',
+  appName: 'My DApp',
+  apiBaseUrl: 'https://api.phantom.com',
+  organizationId: 'your-org-id',
+  authUrl: 'https://auth.phantom.com',
+  embeddedWalletType: 'app-wallet', // or 'user-wallet'
+});
 
-const rpc = createSolanaRpc("https://my-rpc-url.com"); // Replace with your own RPC URL
+// Connect creates or restores session
+const { walletId, addresses } = await sdk.connect();
+console.log('Wallet ID:', walletId);
+console.log('Addresses:', addresses);
 
-const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
+// Use the same methods as injected
+const signature = await sdk.signMessage(message, NetworkId.ETHEREUM_MAINNET);
+```
 
-const transactionMessage = pipe(
-  createTransactionMessage({ version: 0 }),
-  tx => setTransactionMessageFeePayer(address(userPublicKey as string), tx),
-  tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
+## API Reference
+
+### Constructor
+
+```typescript
+new BrowserSDK(config: BrowserSDKConfig)
+```
+
+#### BrowserSDKConfig
+
+```typescript
+interface BrowserSDKConfig {
+  providerType: 'injected' | 'embedded';
+  appName?: string;
+  // Required for embedded provider
+  apiBaseUrl?: string;
+  organizationId?: string;
+  authUrl?: string;
+  embeddedWalletType?: 'app-wallet' | 'user-wallet';
+}
+```
+
+### Methods
+
+#### connect()
+
+Connect to the wallet. For embedded wallets, this creates or restores a session.
+
+```typescript
+const result = await sdk.connect();
+// result.walletId - Only for embedded wallets
+// result.addresses - Array of wallet addresses
+```
+
+#### disconnect()
+
+Disconnect from the wallet. For embedded wallets, this clears the session.
+
+```typescript
+await sdk.disconnect();
+```
+
+#### signMessage(message, networkId)
+
+Sign a base64url encoded message.
+
+```typescript
+const signature = await sdk.signMessage(
+  stringToBase64url('Hello World'),
+  NetworkId.SOLANA_MAINNET
+);
+```
+
+#### signAndSendTransaction(transaction, networkId)
+
+Sign and send a base64url encoded transaction.
+
+```typescript
+const result = await sdk.signAndSendTransaction(
+  base64urlEncode(transactionBytes),
+  NetworkId.ETHEREUM_MAINNET
+);
+```
+
+#### getAddresses()
+
+Get the connected wallet addresses.
+
+```typescript
+const addresses = await sdk.getAddresses();
+// [{ addressType: 'Solana', address: '...' }]
+```
+
+#### isConnected()
+
+Check if the wallet is connected.
+
+```typescript
+const connected = sdk.isConnected();
+```
+
+#### getWalletId()
+
+Get the wallet ID (only for embedded wallets).
+
+```typescript
+const walletId = sdk.getWalletId();
+```
+
+## Network Support
+
+### Injected Wallets
+- **Solana**: Full support for all Solana networks
+- **Ethereum**: Support for Ethereum and EVM-compatible chains
+- **Other networks**: Will be added based on Phantom wallet support
+
+### Embedded Wallets
+- All networks supported by the Phantom API
+
+## Base64URL Utilities
+
+The SDK exports utility functions for base64url encoding/decoding:
+
+```typescript
+import { 
+  stringToBase64url,
+  base64urlEncode,
+  base64urlDecode,
+  base64urlDecodeToString 
+} from '@phantom/browser-sdk';
+
+// Convert string to base64url
+const encoded = stringToBase64url('Hello World');
+
+// Encode bytes to base64url
+const encoded = base64urlEncode(new Uint8Array([1, 2, 3]));
+
+// Decode base64url to bytes
+const bytes = base64urlDecode(encoded);
+
+// Decode base64url to string
+const decoded = base64urlDecodeToString(encoded);
+```
+
+## Creating Transactions
+
+### Solana with @solana/web3.js
+
+```typescript
+import { Transaction, SystemProgram, PublicKey } from '@solana/web3.js';
+import { base64urlEncode } from '@phantom/browser-sdk';
+
+const transaction = new Transaction().add(
+  SystemProgram.transfer({
+    fromPubkey: new PublicKey(fromAddress),
+    toPubkey: new PublicKey(toAddress),
+    lamports: 0.001 * LAMPORTS_PER_SOL
+  })
 );
 
-const transaction = compileTransaction(transactionMessage);
+const serialized = transaction.serialize({
+  requireAllSignatures: false,
+  verifySignatures: false
+});
 
-const { signature } = await phantomInstance.solana.signAndSendTransaction(transaction);
+const transactionBase64 = base64urlEncode(serialized);
 ```
+
+### Solana with @solana/kit
+
+```typescript
+import { compileTransaction } from '@solana/kit';
+import { base64urlEncode } from '@phantom/browser-sdk';
+
+const transaction = compileTransaction(transactionMessage);
+const transactionBase64 = base64urlEncode(transaction.messageBytes);
+```
+
+## Session Management (Embedded Wallets)
+
+Embedded wallets automatically manage sessions using IndexedDB:
+
+1. **First connect**: Creates new session with iframe authentication
+2. **Subsequent connects**: Restores existing session
+3. **Disconnect**: Clears session data
+
+## Examples
+
+See the [examples](../../examples) directory for complete working examples.

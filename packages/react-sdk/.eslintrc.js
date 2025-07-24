@@ -16,5 +16,13 @@ module.exports = defineConfig({
     project: "./tsconfig.json",
   },
 
-  overrides,
+  overrides: [
+    ...(overrides || []),
+    {
+      files: ["tsup.config.ts"],
+      rules: {
+        "import/no-extraneous-dependencies": ["error", { devDependencies: true }],
+      },
+    },
+  ],
 });

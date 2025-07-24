@@ -1,25 +1,16 @@
-export type Plugin<T> = {
-  name: string;
-  create: () => T;
-};
+// Main SDK
+export { BrowserSDK } from './BrowserSDK';
 
-export type CreatePhantomConfig = {
-  plugins?: Plugin<unknown>[];
-};
+// Types
+export * from './types';
 
-// Base interface that plugins will extend via declaration merging
-export interface Phantom {}
+// Re-export useful types from client
+export { NetworkId, AddressType } from '@phantom/client';
 
-/**
- * Creates a Phantom instance with the provided plugins.
- * Each plugin extends the Phantom interface via declaration merging.
- */
-export function createPhantom({ plugins = [] }: CreatePhantomConfig): Phantom {
-  const phantom: Record<string, unknown> = {};
-
-  for (const plugin of plugins) {
-    phantom[plugin.name] = plugin.create();
-  }
-
-  return phantom as unknown as Phantom;
-}
+// Export base64url utilities
+export { 
+  base64urlEncode, 
+  base64urlDecode, 
+  base64urlDecodeToString, 
+  stringToBase64url 
+} from './utils/base64url';

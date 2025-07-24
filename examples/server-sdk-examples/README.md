@@ -347,9 +347,9 @@ yarn workspace @phantom/server-sdk-examples sign-message "Your message"
 
 The script uses the Phantom Server SDK's `signMessage` function which:
 1. Takes a UTF-8 string message
-2. Converts it to base64 internally
+2. Converts it to base64url internally
 3. Signs it with the wallet's private key for the specified network
-4. Returns a base64-encoded signature
+4. Returns a base64url-encoded signature
 
 The signature can be verified using:
 - The public key (Solana address)
