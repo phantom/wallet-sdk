@@ -17,7 +17,7 @@ export class ServerSDK extends PhantomClient {
     // Initialize the parent PhantomClient with the stamper
     super(
       {
-        baseUrl: config.apiBaseUrl,
+        apiBaseUrl: config.apiBaseUrl,
         organizationId: config.organizationId,
       },
       stamper

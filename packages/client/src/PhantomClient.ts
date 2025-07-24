@@ -45,8 +45,8 @@ export class PhantomClient {
   constructor(config: PhantomClientConfig, stamper?: Stamper) {
     this.config = config;
 
-    if (!config.organizationId || !config.baseUrl) {
-      throw new Error("organizationId and baseUrl are required");
+    if (!config.organizationId || !config.apiBaseUrl) {
+      throw new Error("organizationId and apiBaseUrl are required");
     }
 
     // Create axios instance
@@ -61,11 +61,11 @@ export class PhantomClient {
 
     // Configure the KMS API client
     const configuration = new Configuration({
-      basePath: config.baseUrl,
+      basePath: config.apiBaseUrl,
     });
 
     // Pass the axios instance to the KMS API
-    this.kmsApi = new KMSRPCApi(configuration, config.baseUrl, this.axiosInstance);
+    this.kmsApi = new KMSRPCApi(configuration, config.apiBaseUrl, this.axiosInstance);
   }
 
   async createWallet(walletName?: string): Promise<CreateWalletResult> {

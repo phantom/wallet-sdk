@@ -42,14 +42,14 @@ describe('ServerSDK', () => {
       const invalidConfig = { ...config, organizationId: '' };
       expect(() => {
         new ServerSDK(invalidConfig);
-      }).toThrow('organizationId and baseUrl are required');
+      }).toThrow('organizationId and apiBaseUrl are required');
     });
 
     it('should throw error when apiBaseUrl is missing', () => {
       const invalidConfig = { ...config, apiBaseUrl: '' };
       expect(() => {
         new ServerSDK(invalidConfig);
-      }).toThrow('organizationId and baseUrl are required');
+      }).toThrow('organizationId and apiBaseUrl are required');
     });
 
     it('should throw error with invalid private key', () => {

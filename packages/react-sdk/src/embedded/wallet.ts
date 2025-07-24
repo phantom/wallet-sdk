@@ -52,7 +52,7 @@ export async function connectEmbeddedWallet(options: ConnectOptions): Promise<Co
 
   const client = new PhantomClient(
     {
-      baseUrl: options.apiBaseUrl,
+      apiBaseUrl: options.apiBaseUrl,
       organizationId: session.organizationId,
     },
     stamper
@@ -89,7 +89,7 @@ export async function getEmbeddedWalletClient(apiBaseUrl: string): Promise<Phant
 
   return new PhantomClient(
     {
-      baseUrl: apiBaseUrl,
+      apiBaseUrl: apiBaseUrl,
       organizationId: session.organizationId,
     },
     stamper

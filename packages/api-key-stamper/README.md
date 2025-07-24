@@ -27,7 +27,7 @@ const stamper = new ApiKeyStamper({
 
 // Use it with PhantomClient
 const client = new PhantomClient({
-  baseUrl: 'https://api.phantom.com',
+  apiBaseUrl: 'https://api.phantom.com',
   organizationId: 'your-org-id'
 }, stamper);
 

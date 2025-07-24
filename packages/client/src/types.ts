@@ -1,7 +1,7 @@
 import { AxiosInstance } from "axios";
 
 export interface PhantomClientConfig {
-  baseUrl: string;
+  apiBaseUrl: string;
   organizationId: string;
 }
 

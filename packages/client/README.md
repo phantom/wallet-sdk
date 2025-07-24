@@ -20,7 +20,7 @@ The `PhantomClient` class provides a fully typed HTTP client for interacting wit
 import { PhantomClient } from '@phantom/client';
 
 const client = new PhantomClient({
-  baseUrl: 'https://api.phantom.com',
+  apiBaseUrl: 'https://api.phantom.com',
   organizationId: 'your-org-id'
 });
 
@@ -43,7 +43,7 @@ const stamper = new ApiKeyStamper({
 
 // Create client with authentication
 const client = new PhantomClient({
-  baseUrl: 'https://api.phantom.com',
+  apiBaseUrl: 'https://api.phantom.com',
   organizationId: 'your-org-id'
 }, stamper);
 
