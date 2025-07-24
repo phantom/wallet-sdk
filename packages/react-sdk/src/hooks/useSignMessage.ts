@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { usePhantom } from '../PhantomProvider';
 import type { SignMessageParams } from '../types';
+import { base64urlDecodeToString, base64urlEncode } from '../utils/base64url';
 
 export function useSignMessage() {
   const { config, injectedProvider, connection, embeddedClient } = usePhantom();
@@ -47,9 +48,7 @@ export function useSignMessage() {
         }
 
         // Decode base64url message for injected wallet
-        const messageBytes = Buffer.from(params.message, 'base64url');
-        const textDecoder = new TextDecoder();
-        const decodedMessage = textDecoder.decode(messageBytes);
+        const decodedMessage = base64urlDecodeToString(params.message);
 
         // Sign with injected wallet
         const { signature } = await solanaProvider.signMessage(
@@ -57,7 +56,7 @@ export function useSignMessage() {
         );
 
         // Return base64url encoded signature
-        return Buffer.from(signature).toString('base64url');
+        return base64urlEncode(signature);
       } else {
         throw new Error('No wallet provider available');
       }

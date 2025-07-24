@@ -2,13 +2,14 @@ import "./Actions.css";
 import {
   useConnect,
   useDisconnect,
-  useSignIn,
   useSignAndSendTransaction,
   useSignMessage,
-  useAccount,
-  useAccountEffect,
-} from "@phantom/react-sdk/solana";
-import { useAutoConfirmActions, useAutoConfirmState } from "@phantom/react-sdk/auto-confirm";
+  useAccounts,
+  usePhantom,
+  NetworkId,
+  stringToBase64url,
+  base64urlEncode
+} from "@phantom/react-sdk";
 import {
   createSolanaRpc,
   pipe,
@@ -18,40 +19,32 @@ import {
   address,
   compileTransaction,
 } from "@solana/kit";
+import { useState, useEffect } from "react";
 
 export function Actions() {
-  const userAddress = useAccount();
-  const { connect } = useConnect();
-  const { disconnect } = useDisconnect();
-  const { signIn } = useSignIn();
-  const { signAndSendTransaction } = useSignAndSendTransaction();
-  const { signMessage } = useSignMessage();
-  const { enable, disable, getSupportedChains, getStatus } = useAutoConfirmActions();
-  const autoConfirmState = useAutoConfirmState();
+  const { connect, isConnecting, error: connectError } = useConnect();
+  const { disconnect, isDisconnecting } = useDisconnect();
+  const { signAndSendTransaction, isSigning: isSigningTransaction } = useSignAndSendTransaction();
+  const { signMessage, isSigning: isSigningMessage } = useSignMessage();
+  const { connection, isReady } = usePhantom();
+  const addresses = useAccounts();
+  
+  const [solanaAddress, setSolanaAddress] = useState<string | null>(null);
 
-  useAccountEffect({
-    onConnect: data => {
-      // eslint-disable-next-line no-console
-      console.log("Connected to Phantom with public key:", data.publicKey);
-    },
-    onDisconnect: () => {
-      // eslint-disable-next-line no-console
-      console.log("Disconnected from Phantom");
-    },
-    onAccountChanged: data => {
-      // eslint-disable-next-line no-console
-      console.log("Account changed to:", data.publicKey);
-    },
-  });
+  // Extract Solana address when addresses change
+  useEffect(() => {
+    if (addresses && addresses.length > 0) {
+      const solAddr = addresses.find(addr => addr.addressType === 'Solana');
+      setSolanaAddress(solAddr?.address || null);
+    } else {
+      setSolanaAddress(null);
+    }
+  }, [addresses]);
 
   const onConnect = async () => {
     try {
-      const connectResult = await connect();
-      if (connectResult) {
-        alert(`Connected to Phantom with public key: ${connectResult}`);
-      } else {
-        alert("Connected, but public key was not retrieved.");
-      }
+      await connect();
+      // Connection state will be updated in the provider
     } catch (error) {
       console.error("Error connecting to Phantom:", error);
       alert(`Error connecting: ${(error as Error).message || error}`);
@@ -59,45 +52,27 @@ export function Actions() {
   };
 
   const onDisconnect = async () => {
-    await disconnect();
-    alert("Disconnected from Phantom");
-  };
-
-  const onSignIn = async () => {
-    if (!userAddress) {
-      alert("Please connect your wallet first.");
-      return;
-    }
     try {
-      // Example sign-in data. Adjust according to your dApp's requirements.
-      const signInData = {
-        domain: window.location.host,
-        address: userAddress,
-        statement: "Sign in to the demo app.",
-        // nonce: "oAuthNonce", // Optional: for preventing replay attacks
-        // chainId: "mainnet-beta", // Optional: specify the chain
-      };
-      const result = await signIn(signInData);
-      alert(
-        `Signed In! Address: ${result.address}, Signature: ${
-          result.signature
-        }, Signed Message: ${result.signedMessage}`,
-      );
+      await disconnect();
     } catch (error) {
-      console.error("Error signing in:", error);
-      alert(`Error signing in: ${(error as Error).message || error}`);
+      console.error("Error disconnecting:", error);
+      alert(`Error disconnecting: ${(error as Error).message || error}`);
     }
   };
 
   const onSignMessage = async () => {
-    if (!userAddress) {
+    if (!connection?.connected || !solanaAddress) {
       alert("Please connect your wallet first.");
       return;
     }
     try {
-      const message = new TextEncoder().encode("Hello from Phantom React SDK Demo!");
-      const result = await signMessage(message);
-      alert(`Message Signed! Signature: ${result.signature}, Public Key: ${result.address}`);
+      // Convert message to base64url as required by the new SDK
+      const message = stringToBase64url("Hello from Phantom React SDK Demo!");
+      const signature = await signMessage({
+        message,
+        networkId: NetworkId.SOLANA_MAINNET
+      });
+      alert(`Message Signed! Signature: ${signature}`);
     } catch (error) {
       console.error("Error signing message:", error);
       alert(`Error signing message: ${(error as Error).message || error}`);
@@ -105,7 +80,7 @@ export function Actions() {
   };
 
   const onSignAndSendTransaction = async () => {
-    if (!userAddress) {
+    if (!connection?.connected || !solanaAddress) {
       alert("Please connect your wallet first.");
       return;
     }
@@ -116,116 +91,102 @@ export function Actions() {
 
       const transactionMessage = pipe(
         createTransactionMessage({ version: 0 }),
-        tx => setTransactionMessageFeePayer(address(userAddress), tx),
+        tx => setTransactionMessageFeePayer(address(solanaAddress), tx),
         tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
       );
 
       const transaction = compileTransaction(transactionMessage);
+      
+      // Convert transaction to base64url for both embedded and injected wallets
+      // For @solana/kit transactions, use transaction.messageBytes which contains the serialized bytes
+      const transactionBase64 = base64urlEncode(transaction.messageBytes);
 
-      const { signature } = await signAndSendTransaction(transaction);
-      alert(`Transaction sent with signature: ${signature}`);
+      const result = await signAndSendTransaction({
+        transaction: transactionBase64,
+        networkId: NetworkId.SOLANA_MAINNET
+      });
+      
+      alert(`Transaction sent! Signature: ${result.rawTransaction}`);
     } catch (error) {
       console.error("Error signing and sending transaction:", error);
       alert(`Error signing and sending transaction: ${(error as Error).message || error}`);
     }
   };
 
-  // Auto-confirm plugin functionality
-  const onEnableAutoConfirm = async () => {
-    try {
-      const result = await enable();
-      alert(`Auto-confirm ${result.enabled ? "enabled" : "not enabled"} for chains: ${result.chains.join(", ")}`);
-    } catch (error) {
-      console.error("Error enabling auto-confirm:", error);
-      alert(`Error enabling auto-confirm: ${(error as Error).message || error}`);
-    }
-  };
-
-  const onDisableAutoConfirm = async () => {
-    try {
-      const result = await disable();
-      alert(`Auto-confirm disabled. Status: enabled=${result.enabled}, chains: ${result.chains.join(", ")}`);
-    } catch (error) {
-      console.error("Error disabling auto-confirm:", error);
-      alert(`Error disabling auto-confirm: ${(error as Error).message || error}`);
-    }
-  };
-
-  const onGetSupportedChains = async () => {
-    try {
-      const result = await getSupportedChains();
-      alert(`Supported chains: ${result.chains.join(", ")}`);
-    } catch (error) {
-      console.error("Error getting supported chains:", error);
-      alert(`Error getting supported chains: ${(error as Error).message || error}`);
-    }
-  };
-
-  const onGetStatus = async () => {
-    try {
-      const result = await getStatus();
-      alert(`Auto-confirm status: enabled=${result.enabled}, chains: ${result.chains.join(", ")}`);
-    } catch (error) {
-      console.error("Error getting auto-confirm status:", error);
-      alert(`Error getting auto-confirm status: ${(error as Error).message || error}`);
-    }
-  };
+  if (!isReady) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div id="app">
       <h1>Phantom React SDK Demo</h1>
       <div className="account-info">
         <p>
-          <strong>Account Public Key:</strong> {userAddress}
+          <strong>Connection Status:</strong> {connection?.connected ? 'Connected' : 'Not Connected'}
         </p>
+        {solanaAddress && (
+          <p>
+            <strong>Solana Address:</strong> {solanaAddress}
+          </p>
+        )}
+        {addresses && addresses.length > 0 && (
+          <div>
+            <p><strong>All Addresses:</strong></p>
+            <ul>
+              {addresses.map((addr, index) => (
+                <li key={index}>
+                  <strong>{addr.addressType}:</strong> {addr.address}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       <div className="plugin-section">
-        <h2>Solana Plugin</h2>
+        <h2>Wallet Actions</h2>
         <div className="controls">
-          <button id="connectBtn" onClick={onConnect}>
-            Connect
+          <button 
+            id="connectBtn" 
+            onClick={onConnect} 
+            disabled={connection?.connected || isConnecting}
+          >
+            {isConnecting ? 'Connecting...' : 'Connect'}
           </button>
-          <button id="signInBtn" onClick={onSignIn} disabled={!userAddress}>
-            Sign In (SIWS)
+          <button 
+            id="signMessageBtn" 
+            onClick={onSignMessage} 
+            disabled={!connection?.connected || isSigningMessage}
+          >
+            {isSigningMessage ? 'Signing...' : 'Sign Message'}
           </button>
-          <button id="signMessageBtn" onClick={onSignMessage} disabled={!userAddress}>
-            Sign Message
+          <button 
+            id="signAndSendTransactionBtn" 
+            onClick={onSignAndSendTransaction} 
+            disabled={!connection?.connected || isSigningTransaction}
+          >
+            {isSigningTransaction ? 'Signing...' : 'Sign and Send Transaction'}
           </button>
-          <button id="signAndSendTransactionBtn" onClick={onSignAndSendTransaction} disabled={!userAddress}>
-            Sign and Send Transaction
-          </button>
-          <button id="disconnectBtn" onClick={onDisconnect} disabled={!userAddress}>
-            Disconnect
+          <button 
+            id="disconnectBtn" 
+            onClick={onDisconnect} 
+            disabled={!connection?.connected || isDisconnecting}
+          >
+            {isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
           </button>
         </div>
+        {connectError && (
+          <p style={{ color: 'red' }}>
+            Connection Error: {connectError.message}
+          </p>
+        )}
       </div>
 
-      <div className="plugin-section">
-        <h2>Auto-Confirm Plugin</h2>
-        <div className="account-info">
-          <p>
-            <strong>Auto-Confirm Status:</strong> {autoConfirmState?.status?.enabled ? "Enabled" : "Disabled"},{" "}
-            <strong>on chains:</strong> {autoConfirmState?.status?.chains?.join(", ") || "None"}
-          </p>
-          <p>
-            <strong>Auto-Confirm Supported Chains:</strong> {autoConfirmState?.supportedChains?.join(", ") || "None"}
-          </p>
-        </div>
-        <div className="controls">
-          <button id="enableAutoConfirmBtn" onClick={onEnableAutoConfirm}>
-            Request to Enable Auto-Confirm
-          </button>
-          <button id="disableAutoConfirmBtn" onClick={onDisableAutoConfirm}>
-            Disable Auto-Confirm
-          </button>
-          <button id="getSupportedChainsBtn" onClick={onGetSupportedChains}>
-            Get Auto-Confirm Supported Chains
-          </button>
-          <button id="getStatusBtn" onClick={onGetStatus}>
-            Get Auto-Confirm Status
-          </button>
-        </div>
+      <div className="info-section">
+        <h3>Note:</h3>
+        <p>This demo uses the Phantom browser extension (injected provider).</p>
+        <p>Make sure you have the Phantom wallet extension installed.</p>
+        <p>Currently, only Solana network is supported for injected wallets.</p>
       </div>
     </div>
   );

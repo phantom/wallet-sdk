@@ -131,14 +131,14 @@ function DisconnectButton() {
 Sign messages with base64url encoding:
 
 ```tsx
-import { useSignMessage, NetworkId } from '@phantom/react-sdk';
+import { useSignMessage, NetworkId, stringToBase64url } from '@phantom/react-sdk';
 
 function SignMessage() {
   const { signMessage, isSigning, error } = useSignMessage();
 
   const handleSign = async () => {
-    // Convert message to base64url
-    const message = Buffer.from('Hello Phantom!').toString('base64url');
+    // Convert message to base64url using the provided utility
+    const message = stringToBase64url('Hello Phantom!');
     
     try {
       const signature = await signMessage({
@@ -164,14 +164,14 @@ function SignMessage() {
 Sign and send transactions with base64url encoding:
 
 ```tsx
-import { useSignAndSendTransaction, NetworkId } from '@phantom/react-sdk';
+import { useSignAndSendTransaction, NetworkId, base64urlEncode } from '@phantom/react-sdk';
 
 function SendTransaction() {
   const { signAndSendTransaction, isSigning, error } = useSignAndSendTransaction();
 
   const handleSend = async () => {
-    // Transaction should be base64url encoded
-    const transaction = 'your-base64url-encoded-transaction';
+    // Transaction should always be base64url encoded
+    const transaction = base64urlEncode(transactionBytes);
     
     try {
       const result = await signAndSendTransaction({
@@ -275,14 +275,114 @@ interface PhantomSDKConfig {
 
 ## Data Encoding
 
-All messages and transactions must be base64url encoded before passing to the SDK methods:
+All messages and transactions must be base64url encoded before passing to the SDK methods. The SDK provides utility functions for base64url encoding/decoding that work in browser environments:
 
 ```typescript
-// Encoding a message
-const message = Buffer.from('Hello World').toString('base64url');
+import { stringToBase64url, base64urlEncode } from '@phantom/react-sdk';
 
-// Encoding a transaction (example for Solana)
-const transaction = Buffer.from(transactionBytes).toString('base64url');
+// Encoding a message from string
+const message = stringToBase64url('Hello World');
+
+// Encoding transaction bytes
+const transaction = base64urlEncode(transactionBytes);
+```
+
+### Available Base64URL Utilities
+
+```typescript
+// Convert a string to base64url
+stringToBase64url(str: string): string
+
+// Encode bytes to base64url
+base64urlEncode(data: string | Uint8Array | ArrayLike<number>): string
+
+// Decode base64url to bytes
+base64urlDecode(str: string): Uint8Array
+
+// Decode base64url directly to string
+base64urlDecodeToString(str: string): string
+```
+
+### Creating Transactions
+
+#### Using @solana/web3.js
+
+```typescript
+import { 
+  Transaction, 
+  SystemProgram, 
+  PublicKey, 
+  Connection,
+  LAMPORTS_PER_SOL 
+} from '@solana/web3.js';
+import { base64urlEncode, NetworkId } from '@phantom/react-sdk';
+
+// Create a transaction
+const connection = new Connection('https://api.mainnet-beta.solana.com');
+const { blockhash } = await connection.getLatestBlockhash();
+
+const transaction = new Transaction().add(
+  SystemProgram.transfer({
+    fromPubkey: new PublicKey(fromAddress),
+    toPubkey: new PublicKey(toAddress),
+    lamports: 0.001 * LAMPORTS_PER_SOL
+  })
+);
+
+transaction.recentBlockhash = blockhash;
+transaction.feePayer = new PublicKey(fromAddress);
+
+// Serialize and encode for the SDK
+const serializedTransaction = transaction.serialize({
+  requireAllSignatures: false,
+  verifySignatures: false
+});
+
+const transactionBase64 = base64urlEncode(serializedTransaction);
+
+// Use with the SDK
+const result = await signAndSendTransaction({
+  transaction: transactionBase64,
+  networkId: NetworkId.SOLANA_MAINNET
+});
+```
+
+#### Using @solana/kit
+
+```typescript
+import {
+  createSolanaRpc,
+  pipe,
+  createTransactionMessage,
+  setTransactionMessageFeePayer,
+  setTransactionMessageLifetimeUsingBlockhash,
+  address,
+  compileTransaction,
+} from '@solana/kit';
+import { base64urlEncode, NetworkId } from '@phantom/react-sdk';
+
+// Create a transaction
+const rpc = createSolanaRpc('https://api.mainnet-beta.solana.com');
+const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
+
+const transactionMessage = pipe(
+  createTransactionMessage({ version: 0 }),
+  tx => setTransactionMessageFeePayer(address(fromAddress), tx),
+  tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
+  // Add your instructions here
+);
+
+const transaction = compileTransaction(transactionMessage);
+
+// Serialize and encode for the SDK
+// The transaction.messageBytes contains the serialized message
+const transactionBase64 = base64urlEncode(transaction.messageBytes);
+
+// Use with the SDK
+const result = await signAndSendTransaction({
+  transaction: transactionBase64,
+  networkId: NetworkId.SOLANA_MAINNET
+});
 ```
 
 ## Session Management (Embedded Wallets)

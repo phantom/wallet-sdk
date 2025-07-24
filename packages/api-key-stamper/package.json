@@ -3,9 +3,17 @@
   "version": "0.0.1",
   "description": "API key stamper for Phantom Wallet SDK",
   "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "scripts": {
-    "build": "tsc",
+    "build": "rimraf ./dist && tsup src/index.ts --format cjs,esm --dts --external tweetnacl,bs58",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "test": "jest",
@@ -15,7 +23,9 @@
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.0",
     "jest": "^29.7.0",
+    "rimraf": "^6.0.1",
     "ts-jest": "^29.1.2",
+    "tsup": "^6.7.0",
     "typescript": "^5.0.4"
   },
   "dependencies": {

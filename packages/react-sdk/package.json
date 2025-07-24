@@ -16,7 +16,7 @@
   ],
   "license": "MIT",
   "scripts": {
-    "build": "rimraf ./dist && tsup src/index.ts --format cjs,esm --dts",
+    "build": "rimraf ./dist && tsup",
     "?pack-release": "When https://github.com/changesets/changesets/issues/432 has a solution we can remove this trick",
     "pack-release": "rimraf ./_release && yarn pack && mkdir ./_release && tar zxvf ./package.tgz --directory ./_release && rm ./package.tgz",
     "dev": "rimraf ./dist && tsup src/index.ts --format cjs,esm --dts --watch",
@@ -26,7 +26,8 @@
   "dependencies": {
     "@phantom/api-key-stamper": "workspace:^",
     "@phantom/browser-injected-sdk": "workspace:^",
-    "@phantom/client": "workspace:^"
+    "@phantom/client": "workspace:^",
+    "axios": "^1.10.0"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.0",

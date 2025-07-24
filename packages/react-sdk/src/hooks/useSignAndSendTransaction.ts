@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { usePhantom } from '../PhantomProvider';
 import type { SignAndSendTransactionParams } from '../types';
 import type { SignedTransaction } from '@phantom/client';
+import { base64urlDecode } from '../utils/base64url';
 
 export function useSignAndSendTransaction() {
   const { config, injectedProvider, connection, embeddedClient } = usePhantom();
@@ -44,9 +45,37 @@ export function useSignAndSendTransaction() {
           throw new Error(`Network ${params.networkId} is not supported for injected wallets yet`);
         }
 
-        // For injected wallets, we need to decode and handle transactions
-        // This is not fully implemented yet
-        throw new Error('Transaction signing for injected wallets is not yet implemented. Please use embedded wallets.');
+        // For injected wallets, decode the base64url transaction
+        const solanaProvider = injectedProvider.solana;
+        if (!solanaProvider) {
+          throw new Error('Phantom wallet not found');
+        }
+
+        // Decode the base64url encoded transaction bytes
+        const transactionBytes = base64urlDecode(params.transaction);
+        
+        let transaction: any;
+        try {
+          // First, try to deserialize as a VersionedTransaction from @solana/web3.js
+          const { VersionedTransaction } = await import('@solana/web3.js');
+          transaction = VersionedTransaction.deserialize(transactionBytes);
+        } catch (versionedTxError) {
+          // If that fails, create a @solana/kit Transaction object
+          // This is just a plain object creation, so it shouldn't fail
+          transaction = {
+            messageBytes: transactionBytes,
+            signatures: new Map(), // Empty signatures map as it will be signed by the wallet
+          };
+        }
+        
+        // Send the transaction using the Solana provider
+        const result = await solanaProvider.signAndSendTransaction(transaction);
+        
+        // Return in the same format as embedded wallet
+        // The signature from the provider is base58
+        return {
+          rawTransaction: result.signature,
+        };
       } else {
         throw new Error('No wallet provider available');
       }
