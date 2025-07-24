@@ -1,12 +1,8 @@
 import { usePhantom } from '../PhantomProvider';
-import type { WalletAddress } from '../types';
 
-export function useAccounts(): WalletAddress[] | null {
-  const { connection } = usePhantom();
-
-  if (!connection || !connection.connected) {
-    return null;
-  }
-
-  return connection.addresses;
+export function useAccounts() {
+  const { addresses, isConnected } = usePhantom();
+  
+  // Return addresses only when connected
+  return isConnected ? addresses : null;
 }

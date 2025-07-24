@@ -5,12 +5,24 @@ import {
   CreateWalletMethodEnum,
   SignTransactionMethodEnum,
   SignRawPayloadMethodEnum,
+  CreateOrganizationMethodEnum,
+  CreateAuthenticatorMethodEnum,
+  DeleteAuthenticatorMethodEnum,
+  GrantOrganizationAccessMethodEnum,
   type CreateWallet,
   type SignTransaction,
   type SignRawPayload,
   type CreateWalletRequest,
   type SignTransactionRequest,
   type SignRawPayloadRequest,
+  type CreateOrganization,
+  type CreateOrganizationRequest,
+  type CreateAuthenticator,
+  type CreateAuthenticatorRequest,
+  type DeleteAuthenticator,
+  type DeleteAuthenticatorRequest,
+  type GrantOrganizationAccess,
+  type GrantOrganizationAccessRequest,
   type DerivationInfo,
   type ExternalKmsWallet,
   type SignedTransactionWithPublicKey,
@@ -300,6 +312,106 @@ export class PhantomClient {
     } catch (error: any) {
       console.error("Failed to get wallets:", error.response?.data || error.message);
       throw new Error(`Failed to get wallets: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  async getOrCreateOrganization(params: CreateOrganizationRequest): Promise<any> {
+    try {
+      // First, try to get the organization
+      // Since there's no explicit getOrganization method, we'll create it
+      // This assumes the API returns existing org if it already exists
+      return await this.createOrganization(params);
+    } catch (error: any) {
+      console.error("Failed to get or create organization:", error.response?.data || error.message);
+      throw new Error(`Failed to get or create organization: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  async createOrganization(params: CreateOrganizationRequest): Promise<any> {
+    try {
+      const request: CreateOrganization = {
+        method: CreateOrganizationMethodEnum.createOrganization,
+        params: params,
+        timestampMs: Date.now(),
+      } as any;
+
+      console.log("Creating organization with request:", params);
+
+      const response = await this.kmsApi.postKmsRpc(request);
+      const result = response.data.result;
+
+      console.log("Organization created successfully:", result);
+
+      return result;
+    } catch (error: any) {
+      console.error("Failed to create organization:", error.response?.data || error.message);
+      throw new Error(`Failed to create organization: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  async createAuthenticator(params: CreateAuthenticatorRequest): Promise<any> {
+    try {
+      const request: CreateAuthenticator = {
+        method: CreateAuthenticatorMethodEnum.createAuthenticator,
+        params: params,
+        timestampMs: Date.now(),
+      } as any;
+
+      console.log("Creating authenticator with request:", params);
+
+      const response = await this.kmsApi.postKmsRpc(request);
+      const result = response.data.result;
+
+      console.log("Authenticator created successfully:", result);
+
+      return result;
+    } catch (error: any) {
+      console.error("Failed to create authenticator:", error.response?.data || error.message);
+      throw new Error(`Failed to create authenticator: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  async deleteAuthenticator(params: DeleteAuthenticatorRequest): Promise<any> {
+    try {
+      const request: DeleteAuthenticator = {
+        method: DeleteAuthenticatorMethodEnum.deleteAuthenticator,
+        params: params,
+        timestampMs: Date.now(),
+      } as any;
+
+      console.log("Deleting authenticator with request:", params);
+
+      const response = await this.kmsApi.postKmsRpc(request);
+      const result = response.data.result;
+
+      console.log("Authenticator deleted successfully:", result);
+
+      return result;
+    } catch (error: any) {
+      console.error("Failed to delete authenticator:", error.response?.data || error.message);
+      throw new Error(`Failed to delete authenticator: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  async grantOrganizationAccess(params: GrantOrganizationAccessRequest): Promise<any> {
+    try {
+      const request: GrantOrganizationAccess = {
+        method: GrantOrganizationAccessMethodEnum.grantOrganizationAccess,
+        params: params,
+        timestampMs: Date.now(),
+      } as any;
+
+      console.log("Granting organization access with request:", params);
+
+      const response = await this.kmsApi.postKmsRpc(request);
+      const result = response.data.result;
+
+      console.log("Organization access granted successfully:", result);
+
+      return result;
+    } catch (error: any) {
+      console.error("Failed to grant organization access:", error.response?.data || error.message);
+      throw new Error(`Failed to grant organization access: ${error.response?.data?.message || error.message}`);
     }
   }
 }

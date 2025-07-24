@@ -24,10 +24,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@phantom/api-key-stamper": "workspace:^",
-    "@phantom/browser-injected-sdk": "workspace:^",
-    "@phantom/client": "workspace:^",
-    "axios": "^1.10.0"
+    "@phantom/browser-sdk": "workspace:^"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.0",

@@ -5,5 +5,4 @@ export { DerivationPath, getDerivationPathForNetwork, getNetworkConfig } from '.
 export type { NetworkConfig } from './constants';
 
 // Re-export enums from openapi-wallet-service
-export { DerivationInfoAddressFormatEnum } from '@phantom/openapi-wallet-service';
-export { DerivationInfoAddressFormatEnum as AddressType } from '@phantom/openapi-wallet-service';
+export { DerivationInfoAddressFormatEnum as AddressType} from '@phantom/openapi-wallet-service';

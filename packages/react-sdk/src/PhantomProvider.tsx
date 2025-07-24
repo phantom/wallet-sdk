@@ -1,19 +1,19 @@
 import type { ReactNode } from 'react';
-import { createContext, useContext, useState, useEffect } from 'react';
-import type { PhantomClient } from '@phantom/client';
-import type { Phantom} from '@phantom/browser-injected-sdk';
-import { createPhantom } from '@phantom/browser-injected-sdk';
-import { createSolanaPlugin } from '@phantom/browser-injected-sdk/solana';
-import type { PhantomSDKConfig, WalletConnection } from './types';
-import { getEmbeddedWalletClient } from './embedded';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { BrowserSDK } from '@phantom/browser-sdk';
+import type { BrowserSDKConfig, WalletAddress } from '@phantom/browser-sdk';
+
+export interface PhantomSDKConfig extends Omit<BrowserSDKConfig, 'providerType'> {
+  walletType?: 'injected' | 'embedded';
+}
 
 interface PhantomContextValue {
-  config: PhantomSDKConfig;
-  injectedProvider?: Phantom;
-  embeddedClient?: PhantomClient | null;
-  connection: WalletConnection | null;
-  setConnection: (connection: WalletConnection | null) => void;
+  sdk: BrowserSDK | null;
+  isConnected: boolean;
+  addresses: WalletAddress[];
+  walletId: string | null;
   isReady: boolean;
+  error: Error | null;
 }
 
 const PhantomContext = createContext<PhantomContextValue | undefined>(undefined);
@@ -24,47 +24,70 @@ export interface PhantomProviderProps {
 }
 
 export function PhantomProvider({ children, config }: PhantomProviderProps) {
-  const [connection, setConnection] = useState<WalletConnection | null>(null);
+  const [sdk, setSdk] = useState<BrowserSDK | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [addresses, setAddresses] = useState<WalletAddress[]>([]);
+  const [walletId, setWalletId] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
-  const [injectedProvider, setInjectedProvider] = useState<Phantom | undefined>();
-  const [embeddedClient, setEmbeddedClient] = useState<PhantomClient | null | undefined>();
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    const initialize = async () => {
-      if (config.walletType === 'embedded') {
-        // Try to restore existing session
-        if (config.apiBaseUrl) {
-          const client = await getEmbeddedWalletClient(config.apiBaseUrl);
-          setEmbeddedClient(client);
-        }
-        setIsReady(true);
-      } else {
-        // Default to injected wallet
-        const phantom = createPhantom({
-          plugins: [createSolanaPlugin()],
-        });
-        setInjectedProvider(phantom);
-        setIsReady(true);
-      }
-    };
+    try {
+      const browserConfig: BrowserSDKConfig = {
+        ...config,
+        providerType: config.walletType === 'embedded' ? 'embedded' : 'injected',
+      };
 
-    initialize();
+      const browserSDK = new BrowserSDK(browserConfig);
+      setSdk(browserSDK);
+      setIsReady(true);
+    } catch (err) {
+      setError(err as Error);
+      setIsReady(true);
+    }
   }, [config]);
 
-  // Update embedded client when connection changes
-  useEffect(() => {
-    if (config.walletType === 'embedded' && connection && config.apiBaseUrl) {
-      getEmbeddedWalletClient(config.apiBaseUrl).then(setEmbeddedClient);
+  // Function to update connection state
+  const updateConnectionState = useCallback(async () => {
+    if (sdk) {
+      try {
+        const connected = sdk.isConnected();
+        setIsConnected(connected);
+        
+        if (connected) {
+          const addrs = await sdk.getAddresses();
+          setAddresses(addrs);
+          setWalletId(sdk.getWalletId());
+        } else {
+          setAddresses([]);
+          setWalletId(null);
+        }
+      } catch (err) {
+        console.error('Error updating connection state:', err);
+      }
     }
-  }, [connection, config]);
+  }, [sdk]);
+
+  // Update connection state when SDK changes
+  useEffect(() => {
+    updateConnectionState();
+  }, [updateConnectionState]);
+
+  // Expose a method to trigger state updates after connection changes
+  useEffect(() => {
+    if (sdk) {
+      // Attach update function to SDK instance for hooks to use
+      (sdk as any)._updateConnectionState = updateConnectionState;
+    }
+  }, [sdk, updateConnectionState]);
 
   const value: PhantomContextValue = {
-    config,
-    injectedProvider,
-    embeddedClient,
-    connection,
-    setConnection,
+    sdk,
+    isConnected,
+    addresses,
+    walletId,
     isReady,
+    error,
   };
 
   return <PhantomContext.Provider value={value}>{children}</PhantomContext.Provider>;

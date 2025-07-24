@@ -3,14 +3,17 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: ['src/index.ts'],
   format: ['cjs', 'esm'],
-  dts: true,
+  dts: {
+    resolve: true,
+  },
   clean: true,
   external: [
-    'react',
-    'react-dom',
-    '@phantom/browser-sdk',
+    '@phantom/api-key-stamper',
+    '@phantom/client',
   ],
-  noExternal: [],
   platform: 'browser',
   shims: true,
+  esbuildOptions(options) {
+    options.packages = 'external';
+  },
 });

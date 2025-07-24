@@ -26,7 +26,7 @@ export function Actions() {
   const { disconnect, isDisconnecting } = useDisconnect();
   const { signAndSendTransaction, isSigning: isSigningTransaction } = useSignAndSendTransaction();
   const { signMessage, isSigning: isSigningMessage } = useSignMessage();
-  const { connection, isReady } = usePhantom();
+  const { isConnected, isReady } = usePhantom();
   const addresses = useAccounts();
   
   const [solanaAddress, setSolanaAddress] = useState<string | null>(null);
@@ -61,7 +61,7 @@ export function Actions() {
   };
 
   const onSignMessage = async () => {
-    if (!connection?.connected || !solanaAddress) {
+    if (!isConnected || !solanaAddress) {
       alert("Please connect your wallet first.");
       return;
     }
@@ -80,7 +80,7 @@ export function Actions() {
   };
 
   const onSignAndSendTransaction = async () => {
-    if (!connection?.connected || !solanaAddress) {
+    if (!isConnected || !solanaAddress) {
       alert("Please connect your wallet first.");
       return;
     }
@@ -122,7 +122,7 @@ export function Actions() {
       <h1>Phantom React SDK Demo</h1>
       <div className="account-info">
         <p>
-          <strong>Connection Status:</strong> {connection?.connected ? 'Connected' : 'Not Connected'}
+          <strong>Connection Status:</strong> {isConnected ? 'Connected' : 'Not Connected'}
         </p>
         {solanaAddress && (
           <p>
@@ -149,28 +149,28 @@ export function Actions() {
           <button 
             id="connectBtn" 
             onClick={onConnect} 
-            disabled={connection?.connected || isConnecting}
+            disabled={isConnected || isConnecting}
           >
             {isConnecting ? 'Connecting...' : 'Connect'}
           </button>
           <button 
             id="signMessageBtn" 
             onClick={onSignMessage} 
-            disabled={!connection?.connected || isSigningMessage}
+            disabled={!isConnected || isSigningMessage}
           >
             {isSigningMessage ? 'Signing...' : 'Sign Message'}
           </button>
           <button 
             id="signAndSendTransactionBtn" 
             onClick={onSignAndSendTransaction} 
-            disabled={!connection?.connected || isSigningTransaction}
+            disabled={!isConnected || isSigningTransaction}
           >
             {isSigningTransaction ? 'Signing...' : 'Sign and Send Transaction'}
           </button>
           <button 
             id="disconnectBtn" 
             onClick={onDisconnect} 
-            disabled={!connection?.connected || isDisconnecting}
+            disabled={!isConnected || isDisconnecting}
           >
             {isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
           </button>

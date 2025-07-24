@@ -28,7 +28,7 @@ function App() {
       apiBaseUrl: 'https://api.phantom.com',
       organizationId: 'your-org-id',
       authUrl: 'https://auth.phantom.com', // Required for embedded auth
-      embeddedWalletType: 'new-wallet', // or 'phantom-wallet' (default: 'new-wallet')
+      embeddedWalletType: 'app-wallet', // or 'user-wallet' (default: 'app-wallet')
     }}>
       <YourApp />
     </PhantomProvider>
@@ -44,7 +44,7 @@ function App() {
   apiBaseUrl: 'https://api.phantom.com',
   organizationId: 'your-org-id',
   authUrl: 'https://auth.phantom.com',
-  embeddedWalletType: 'phantom-wallet', // Use pre-funded Phantom wallets
+  embeddedWalletType: 'user-wallet', // Use pre-funded Phantom user wallets
   appName: 'My Demo App',
 }}>
   <YourApp />
@@ -235,15 +235,15 @@ The SDK supports two wallet types:
 
 When using embedded wallets, you can choose between two wallet types:
 
-**`new-wallet`** (default)
+**`app-wallet`** (default)
 - Creates a completely new, empty wallet
 - Non-custodial - user has full control
 - User needs to fund the wallet before use
 - Ideal for new users starting fresh
 
-**`phantom-wallet`**
-- Provides access to Phantom-managed wallets
-- Wallets come pre-funded for testing/demo purposes
+**`user-wallet`**
+- Provides access to Phantom user wallets
+- Wallets may be pre-funded by users
 - Ideal for demos, testing, or onboarding flows
 - Phantom users with existing funded wallets
 
@@ -256,7 +256,7 @@ interface PhantomSDKConfig {
   apiBaseUrl?: string;                   // Required for embedded wallets
   organizationId?: string;               // Required for embedded wallets
   authUrl?: string;                      // Required for embedded wallet auth
-  embeddedWalletType?: 'new-wallet' | 'phantom-wallet'; // Default: 'new-wallet'
+  embeddedWalletType?: 'app-wallet' | 'user-wallet'; // Default: 'app-wallet'
 }
 ```
 
