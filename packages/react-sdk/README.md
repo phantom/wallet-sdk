@@ -284,3 +284,9 @@ useAccountEffect({
   },
 });
 ```
+
+## Extension API Reference
+
+### useIsInstalled
+
+The `useIsInstalled` hook provides a function to check whether the phantom extension is installed

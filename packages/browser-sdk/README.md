@@ -73,6 +73,13 @@ Once the `phantom.solana` object is initialized, you can access the following me
 - `signAndSendTransaction(transaction: Transaction): Promise<{ signature: string; address?: string }>`
   - Prompts the user to sign **and send** a Kit `Transaction` and returns the confirmed signature.
 
+### Available Extension Methods
+
+Once the `phantom.extension` object is initialized, you can access the following methods:
+
+- `isInstalled(): boolean`
+  - Displays `true` if the phantom extension is installed, `false` if not
+
 ### Event Handling
 
 The SDK also allows you to listen for `connect`, `disconnect`, and `accountChanged` events:

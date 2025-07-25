@@ -11,7 +11,7 @@ const mockSolanaPlugin = {
   removeEventListener: jest.fn(),
 };
 
-const mockCreateSolanaPlugin = () => {
+const mockCreateSolanaPlugin: any = () => {
   return {
     name: "solana",
     create: () => mockSolanaPlugin,
