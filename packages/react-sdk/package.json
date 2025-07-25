@@ -10,6 +10,11 @@
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
+    "./extension": {
+      "import": "./dist/extension/index.mjs",
+      "require": "./dist/extension/index.js",
+      "types": "./dist/extension/index.d.ts"
+    },
     "./solana": {
       "import": "./dist/solana/index.mjs",
       "require": "./dist/solana/index.js",
@@ -26,10 +31,10 @@
   ],
   "license": "MIT",
   "scripts": {
-    "build": "rimraf ./dist && tsup src/index.ts src/solana/index.ts src/auto-confirm/index.ts --format cjs,esm --dts",
+    "build": "rimraf ./dist && tsup src/index.ts src/solana/index.ts src/extension/index.ts src/auto-confirm/index.ts --format cjs,esm --dts",
     "?pack-release": "When https://github.com/changesets/changesets/issues/432 has a solution we can remove this trick",
     "pack-release": "rimraf ./_release && yarn pack && mkdir ./_release && tar zxvf ./package.tgz --directory ./_release && rm ./package.tgz",
-    "dev": "rimraf ./dist && tsup src/index.ts src/solana/index.ts src/auto-confirm/index.ts --format cjs,esm --dts --watch",
+    "dev": "rimraf ./dist && tsup src/index.ts src/solana/index.ts src/extension/index.ts src/auto-confirm/index.ts --format cjs,esm --dts --watch",
     "lint": "tsc --noEmit && eslint --cache . --ext .ts,.tsx",
     "test": "jest"
   },
