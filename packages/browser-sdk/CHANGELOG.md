@@ -1,5 +1,11 @@
 # @phantom/browser-sdk
 
+## 0.0.10
+
+### Patch Changes
+
+- dff64e5: Add function to detect whether phantom wallet is installed
+
 ## 0.0.9
 
 ### Patch Changes
