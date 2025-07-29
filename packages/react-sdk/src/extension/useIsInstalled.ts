@@ -1,16 +1,16 @@
 import * as React from "react";
 import { usePhantom } from "../PhantomContext";
+import { assertExtensionConfigured } from "./assertions";
 
 export function useIsInstalled() {
-  const { phantom } = usePhantom();
+  const { phantom, isReady } = usePhantom();
 
-  const isInstalled = React.useCallback(async () => {
-    if (!phantom?.extension) {
-      throw new Error("Phantom extension plugin not found.");
-    }
+  const isInstalled = React.useMemo(() => {
+    if (!isReady) return;
+    assertExtensionConfigured(phantom);
 
-    return await phantom.extension.isInstalled();
-  }, [phantom]);
+    return phantom.extension.isInstalled();
+  }, [phantom, isReady]);
 
   return { isInstalled };
 }
