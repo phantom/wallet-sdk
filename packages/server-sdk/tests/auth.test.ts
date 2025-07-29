@@ -69,16 +69,27 @@ describe('createAuthenticatedAxiosInstance', () => {
 
       const result = interceptorFunction(config);
 
-      // Verify signature header was added
-      expect(result.headers['X-Phantom-Sig']).toBeDefined();
-      expect(typeof result.headers['X-Phantom-Sig']).toBe('string');
+      // Verify stamp header was added
+      expect(result.headers['X-Phantom-Stamp']).toBeDefined();
+      expect(typeof result.headers['X-Phantom-Stamp']).toBe('string');
 
-      // Verify the signature is valid base64url
-      expect(() => Buffer.from(result.headers['X-Phantom-Sig'], 'base64url')).not.toThrow();
+      // Verify the stamp is valid base64url
+      const stampB64 = result.headers['X-Phantom-Stamp'];
+      const stampJson = Buffer.from(stampB64, 'base64url').toString('utf8');
+      const stamp = JSON.parse(stampJson);
+
+      // Verify stamp structure
+      expect(stamp.kind).toBe('PKI');
+      expect(stamp.publicKey).toBeDefined();
+      expect(stamp.signature).toBeDefined();
+
+      // Verify the public key matches
+      const publicKeyFromStamp = Buffer.from(stamp.publicKey, 'base64url');
+      expect(publicKeyFromStamp).toEqual(Buffer.from(testKeypair.publicKey));
 
       // Verify the signature
       const dataUtf8 = Buffer.from(config.data, 'utf8');
-      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64url');
+      const signature = Buffer.from(stamp.signature, 'base64url');
       const isValid = nacl.sign.detached.verify(
         dataUtf8,
         signature,
@@ -95,13 +106,18 @@ describe('createAuthenticatedAxiosInstance', () => {
 
       const result = interceptorFunction(config);
 
-      // Verify signature header was added
-      expect(result.headers['X-Phantom-Sig']).toBeDefined();
+      // Verify stamp header was added
+      expect(result.headers['X-Phantom-Stamp']).toBeDefined();
+
+      // Decode and verify stamp
+      const stampB64 = result.headers['X-Phantom-Stamp'];
+      const stampJson = Buffer.from(stampB64, 'base64url').toString('utf8');
+      const stamp = JSON.parse(stampJson);
 
       // Verify the signature
       const jsonString = JSON.stringify(config.data);
       const dataUtf8 = Buffer.from(jsonString, 'utf8');
-      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64url');
+      const signature = Buffer.from(stamp.signature, 'base64url');
       const isValid = nacl.sign.detached.verify(
         dataUtf8,
         signature,
@@ -118,11 +134,16 @@ describe('createAuthenticatedAxiosInstance', () => {
 
       const result = interceptorFunction(config);
 
-      expect(result.headers['X-Phantom-Sig']).toBeDefined();
+      expect(result.headers['X-Phantom-Stamp']).toBeDefined();
+      
+      // Decode stamp
+      const stampB64 = result.headers['X-Phantom-Stamp'];
+      const stampJson = Buffer.from(stampB64, 'base64url').toString('utf8');
+      const stamp = JSON.parse(stampJson);
       
       // Verify signature for empty string
       const dataUtf8 = Buffer.from('', 'utf8');
-      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64url');
+      const signature = Buffer.from(stamp.signature, 'base64url');
       const isValid = nacl.sign.detached.verify(
         dataUtf8,
         signature,
@@ -139,11 +160,16 @@ describe('createAuthenticatedAxiosInstance', () => {
 
       const result = interceptorFunction(config);
 
-      expect(result.headers['X-Phantom-Sig']).toBeDefined();
+      expect(result.headers['X-Phantom-Stamp']).toBeDefined();
+      
+      // Decode stamp
+      const stampB64 = result.headers['X-Phantom-Stamp'];
+      const stampJson = Buffer.from(stampB64, 'base64url').toString('utf8');
+      const stamp = JSON.parse(stampJson);
       
       // null should be stringified as "null"
       const dataUtf8 = Buffer.from('null', 'utf8');
-      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64url');
+      const signature = Buffer.from(stamp.signature, 'base64url');
       const isValid = nacl.sign.detached.verify(
         dataUtf8,
         signature,
@@ -179,11 +205,12 @@ describe('createAuthenticatedAxiosInstance', () => {
 
       const result = interceptorFunction(config);
 
-      expect(result.headers['X-Phantom-Sig']).toBeDefined();
+      expect(result.headers['X-Phantom-Stamp']).toBeDefined();
       
       const jsonString = JSON.stringify(config.data);
       const dataUtf8 = Buffer.from(jsonString, 'utf8');
-      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64url');
+      const stamp = JSON.parse(Buffer.from(result.headers['X-Phantom-Stamp'], 'base64url').toString('utf8'));
+      const signature = Buffer.from(stamp.signature, 'base64url');
       const isValid = nacl.sign.detached.verify(
         dataUtf8,
         signature,
@@ -200,11 +227,12 @@ describe('createAuthenticatedAxiosInstance', () => {
 
       const result = interceptorFunction(config);
 
-      expect(result.headers['X-Phantom-Sig']).toBeDefined();
+      expect(result.headers['X-Phantom-Stamp']).toBeDefined();
       
       const jsonString = JSON.stringify(config.data);
       const dataUtf8 = Buffer.from(jsonString, 'utf8');
-      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64url');
+      const stamp = JSON.parse(Buffer.from(result.headers['X-Phantom-Stamp'], 'base64url').toString('utf8'));
+      const signature = Buffer.from(stamp.signature, 'base64url');
       const isValid = nacl.sign.detached.verify(
         dataUtf8,
         signature,
@@ -230,8 +258,8 @@ describe('createAuthenticatedAxiosInstance', () => {
       expect(result.headers['Authorization']).toBe('Bearer token123');
       expect(result.headers['X-Custom-Header']).toBe('custom-value');
       
-      // And signature header should be added
-      expect(result.headers['X-Phantom-Sig']).toBeDefined();
+      // And stamp header should be added
+      expect(result.headers['X-Phantom-Stamp']).toBeDefined();
     });
 
     it('should handle UTF-8 characters correctly', () => {
@@ -242,10 +270,11 @@ describe('createAuthenticatedAxiosInstance', () => {
 
       const result = interceptorFunction(config);
 
-      expect(result.headers['X-Phantom-Sig']).toBeDefined();
+      expect(result.headers['X-Phantom-Stamp']).toBeDefined();
       
       const dataUtf8 = Buffer.from(config.data, 'utf8');
-      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64url');
+      const stamp = JSON.parse(Buffer.from(result.headers['X-Phantom-Stamp'], 'base64url').toString('utf8'));
+      const signature = Buffer.from(stamp.signature, 'base64url');
       const isValid = nacl.sign.detached.verify(
         dataUtf8,
         signature,
@@ -262,11 +291,12 @@ describe('createAuthenticatedAxiosInstance', () => {
 
       const result = interceptorFunction(config);
 
-      expect(result.headers['X-Phantom-Sig']).toBeDefined();
+      expect(result.headers['X-Phantom-Stamp']).toBeDefined();
       
       // true should be stringified as "true"
       const dataUtf8 = Buffer.from('true', 'utf8');
-      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64url');
+      const stamp = JSON.parse(Buffer.from(result.headers['X-Phantom-Stamp'], 'base64url').toString('utf8'));
+      const signature = Buffer.from(stamp.signature, 'base64url');
       const isValid = nacl.sign.detached.verify(
         dataUtf8,
         signature,
@@ -283,11 +313,12 @@ describe('createAuthenticatedAxiosInstance', () => {
 
       const result = interceptorFunction(config);
 
-      expect(result.headers['X-Phantom-Sig']).toBeDefined();
+      expect(result.headers['X-Phantom-Stamp']).toBeDefined();
       
       // 42.5 should be stringified as "42.5"
       const dataUtf8 = Buffer.from('42.5', 'utf8');
-      const signature = Buffer.from(result.headers['X-Phantom-Sig'], 'base64url');
+      const stamp = JSON.parse(Buffer.from(result.headers['X-Phantom-Stamp'], 'base64url').toString('utf8'));
+      const signature = Buffer.from(stamp.signature, 'base64url');
       const isValid = nacl.sign.detached.verify(
         dataUtf8,
         signature,
@@ -310,7 +341,7 @@ describe('createAuthenticatedAxiosInstance', () => {
       const result1 = interceptorFunction(config1);
       const result2 = interceptorFunction(config2);
 
-      expect(result1.headers['X-Phantom-Sig']).not.toBe(result2.headers['X-Phantom-Sig']);
+      expect(result1.headers['X-Phantom-Stamp']).not.toBe(result2.headers['X-Phantom-Stamp']);
     });
 
     it('should produce same signature for same data', () => {
@@ -322,7 +353,7 @@ describe('createAuthenticatedAxiosInstance', () => {
       const result1 = interceptorFunction({ ...config, headers: {} });
       const result2 = interceptorFunction({ ...config, headers: {} });
 
-      expect(result1.headers['X-Phantom-Sig']).toBe(result2.headers['X-Phantom-Sig']);
+      expect(result1.headers['X-Phantom-Stamp']).toBe(result2.headers['X-Phantom-Stamp']);
     });
 
     it('should return the config object', () => {

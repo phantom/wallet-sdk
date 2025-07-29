@@ -14,7 +14,16 @@ export function createAuthenticatedAxiosInstance(signingKeypair: nacl.SignKeyPai
     const dataUtf8 = Buffer.from(requestBody, "utf8");
     const signature = nacl.sign.detached(dataUtf8, signingKeypair.secretKey);
 
-    config.headers["X-Phantom-Sig"] = Buffer.from(signature).toString("base64url");
+    // Create the stamp object
+    const stamp = {
+      kind: "PKI",
+      publicKey: Buffer.from(signingKeypair.publicKey).toString("base64url"),
+      signature: Buffer.from(signature).toString("base64url"),
+    };
+
+    // Encode the stamp as base64url
+    const stampB64 = Buffer.from(JSON.stringify(stamp)).toString("base64url");
+    config.headers["X-Phantom-Stamp"] = stampB64;
 
     return config;
   });
