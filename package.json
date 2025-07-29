@@ -5,8 +5,7 @@
   "scripts": {
     "build": "yarn workspaces foreach --all --topological-dev run build",
     "pack-release": "yarn workspaces foreach --all --topological-dev run pack-release",
-    "format:fix": "prettier . --write",
-    "format:check": "prettier . --check",
+    "prettier": "prettier . --write",
     "lint": "yarn workspaces foreach -Avpi run lint",
     "release": "yarn build && yarn pack-release && yarn changeset publish",
     "test": "jest",

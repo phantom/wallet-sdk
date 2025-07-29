@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Browser SDK Demo</title>
+    <title>Phantom Browser SDK Demo</title>
     <link rel="stylesheet" href="./src/style.css" />
   </head>
   <body>
@@ -11,7 +11,7 @@
       <h1>Phantom Browser SDK Demo</h1>
 
       <div class="plugin-section">
-        <h2>Solana Plugin</h2>
+        <h2>Wallet Operations</h2>
         <div class="controls">
           <button id="connectBtn" disabled>Connect</button>
           <button id="getAccountBtn">Get Account</button>
@@ -21,13 +21,24 @@
         </div>
       </div>
 
-      <div class="plugin-section">
-        <h2>Auto-Confirm Plugin</h2>
+      <div class="plugin-section" id="providerConfigSection">
+        <h2>Provider Configuration</h2>
         <div class="controls">
-          <button id="enableAutoConfirmBtn">Request to Enable Auto-Confirm</button>
-          <button id="disableAutoConfirmBtn">Disable Auto-Confirm</button>
-          <button id="getAutoConfirmStatusBtn">Get Auto-Confirm Status</button>
-          <button id="getSupportedChainsBtn">Get Auto-Confirm Supported Chains</button>
+          <label for="providerType">Provider Type:</label>
+          <select id="providerType">
+            <option value="injected">Injected (Browser Extension)</option>
+            <option value="embedded">Embedded (Non-Custodial)</option>
+          </select>
+
+          <label for="solanaProvider">Solana Library:</label>
+          <select id="solanaProvider">
+            <option value="web3js">@solana/web3.js</option>
+            <option value="kit">@solana/kit</option>
+          </select>
+
+          <button id="testWeb3jsBtn" disabled>Test @solana/web3.js</button>
+          <button id="testKitBtn" disabled>Test @solana/kit</button>
+          <button id="testEthereumBtn" disabled>Test Ethereum</button>
         </div>
       </div>
     </div>

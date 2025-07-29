@@ -1,15 +1,16 @@
 import { PhantomProvider } from "@phantom/react-sdk";
-import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
-import { createAutoConfirmPlugin } from "@phantom/browser-sdk/auto-confirm";
 import { Actions } from "./Actions";
 
-const phantomConfig = {
-  plugins: [createSolanaPlugin(), createAutoConfirmPlugin()],
+// Configuration supporting both embedded and injected providers
+const config = {
+  appName: "React SDK Demo App",
+  serverUrl: "http://localhost:3000/api", // Required for embedded provider
+  providerType: "injected", // Default provider type
 };
 
 function App() {
   return (
-    <PhantomProvider config={phantomConfig}>
+    <PhantomProvider config={config}>
       <Actions />
     </PhantomProvider>
   );

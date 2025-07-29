@@ -19,10 +19,12 @@
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "lint": "tsc --noEmit && eslint --cache . --ext .ts,.tsx",
-    "test": "jest"
+    "test": "jest",
+    "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
   },
   "devDependencies": {
     "eslint": "8.53.0",
+    "prettier": "^3.5.2",
     "tsup": "^6.7.0",
     "typescript": "^5.0.4"
   }

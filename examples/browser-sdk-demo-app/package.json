@@ -13,7 +13,10 @@
   "dependencies": {
     "@phantom/browser-sdk": "workspace:*",
     "@solana/kit": "^2.1.1",
-    "typescript": "^5.0.4"
+    "@solana/web3.js": "^1.98.2",
+    "buffer": "^6.0.3",
+    "typescript": "^5.0.4",
+    "viem": "^2.33.1"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",

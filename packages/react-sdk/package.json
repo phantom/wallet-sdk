@@ -9,16 +9,6 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
-    },
-    "./solana": {
-      "import": "./dist/solana/index.mjs",
-      "require": "./dist/solana/index.js",
-      "types": "./dist/solana/index.d.ts"
-    },
-    "./auto-confirm": {
-      "import": "./dist/auto-confirm/index.mjs",
-      "require": "./dist/auto-confirm/index.js",
-      "types": "./dist/auto-confirm/index.d.ts"
     }
   },
   "files": [
@@ -26,12 +16,13 @@
   ],
   "license": "MIT",
   "scripts": {
-    "build": "rimraf ./dist && tsup src/index.ts src/solana/index.ts src/auto-confirm/index.ts --format cjs,esm --dts",
+    "build": "rimraf ./dist && tsup",
     "?pack-release": "When https://github.com/changesets/changesets/issues/432 has a solution we can remove this trick",
     "pack-release": "rimraf ./_release && yarn pack && mkdir ./_release && tar zxvf ./package.tgz --directory ./_release && rm ./package.tgz",
-    "dev": "rimraf ./dist && tsup src/index.ts src/solana/index.ts src/auto-confirm/index.ts --format cjs,esm --dts --watch",
+    "dev": "rimraf ./dist && tsup src/index.ts --format cjs,esm --dts --watch",
     "lint": "tsc --noEmit && eslint --cache . --ext .ts,.tsx",
-    "test": "jest"
+    "test": "jest",
+    "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
   },
   "dependencies": {
     "@phantom/browser-sdk": "workspace:^"
@@ -45,6 +36,7 @@
     "eslint": "8.53.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
+    "prettier": "^3.5.2",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "rimraf": "^6.0.1",

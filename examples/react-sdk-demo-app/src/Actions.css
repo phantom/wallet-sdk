@@ -72,6 +72,83 @@
   background-color: #434190;
 }
 
-/* Basic layout for buttons on the right - will need more work */
-/* For now, let's just imagine a sidebar or a section for them */
-/* We will adjust this later as the app grows */
+/* Provider Selection Styles */
+.provider-selection {
+  background-color: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  text-align: left;
+}
+
+.provider-selection h2 {
+  font-size: 1.25rem;
+  color: #2d3748;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.provider-selection h3 {
+  font-size: 1.1rem;
+  color: #4a5568;
+  margin: 1rem 0 0.5rem 0;
+  font-weight: 500;
+}
+
+.provider-selection .controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.provider-selection label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.provider-selection label:hover {
+  background-color: #edf2f7;
+}
+
+.provider-selection input[type="radio"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.embedded-options {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.info-section {
+  background-color: #fef5e7;
+  border: 1px solid #f6d55c;
+  border-radius: 6px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  text-align: left;
+}
+
+.info-section h3 {
+  color: #744210;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.info-section p {
+  color: #92692d;
+  margin: 0.5rem 0;
+  line-height: 1.5;
+}
+
+.info-section p strong {
+  color: #744210;
+}

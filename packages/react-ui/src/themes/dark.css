@@ -1,0 +1,42 @@
+/* Dark Theme */
+[data-theme="dark"] {
+  /* Colors */
+  --primary: #ab9ff2;
+  --primary-hover: #9c8dff;
+  --secondary: #8e95a0;
+  --secondary-hover: #a1a8b3;
+  --success: #34d058;
+  --danger: #f85149;
+  --warning: #ffb347;
+  --info: #58a6ff;
+
+  /* Background */
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-modal: #21262d;
+  --bg-overlay: rgba(0, 0, 0, 0.8);
+  --bg-button-primary: var(--primary);
+  --bg-button-secondary: transparent;
+  --bg-button-tertiary: #21262d;
+
+  /* Text */
+  --text-primary: #f0f6fc;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --text-inverse: #0d1117;
+  --text-button-primary: #ffffff;
+  --text-button-secondary: var(--primary);
+  --text-button-tertiary: var(--text-primary);
+
+  /* Border */
+  --border-color: #30363d;
+  --border-radius: 8px;
+  --border-radius-lg: 12px;
+  --border-button: 1px solid var(--primary);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3);
+  --shadow-modal: 0 20px 25px rgba(0, 0, 0, 0.5);
+}

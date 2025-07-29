@@ -1,92 +1,90 @@
-import { NetworkId, ServerSDK } from '../src/index';
-import { ServerSDKConfig } from '../src/types';
+import { NetworkId, ServerSDK } from "../src/index";
+import { ServerSDKConfig } from "../src/types";
 
-describe('ServerSDK', () => {
+describe("ServerSDK", () => {
   let sdk: ServerSDK;
   let config: ServerSDKConfig;
   let testWalletId: string;
 
   beforeAll(() => {
     // Validate required environment variables
-    const requiredEnvVars = [
-      'PHANTOM_ORGANIZATION_PRIVATE_KEY',
-      'PHANTOM_ORGANIZATION_ID',
-      'PHANTOM_WALLET_API'
-    ];
+    const requiredEnvVars = ["ORGANIZATION_PRIVATE_KEY", "ORGANIZATION_ID", "WALLET_API"];
 
     for (const envVar of requiredEnvVars) {
       if (!process.env[envVar]) {
-        throw new Error(`Missing required environment variable: ${envVar}. Please create a .env file based on .env.example`);
+        throw new Error(
+          `Missing required environment variable: ${envVar}. Please create a .env file based on .env.example`,
+        );
       }
     }
 
     // Initialize config from environment variables
     config = {
-      organizationId: process.env.PHANTOM_ORGANIZATION_ID!,
-      apiPrivateKey: process.env.PHANTOM_ORGANIZATION_PRIVATE_KEY!,
-      apiBaseUrl: process.env.PHANTOM_WALLET_API!,
-      solanaRpcUrl: process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com'
+      organizationId: process.env.ORGANIZATION_ID!,
+      apiPrivateKey: process.env.ORGANIZATION_PRIVATE_KEY!,
+      apiBaseUrl: process.env.WALLET_API!,
+      solanaRpcUrl: process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com",
     };
 
     sdk = new ServerSDK(config);
   });
 
-  describe('Initialization', () => {
-    it('should initialize SDK with valid environment variables', () => {
+  describe("Initialization", () => {
+    it("should initialize SDK with valid environment variables", () => {
       expect(() => {
         new ServerSDK(config);
       }).not.toThrow();
     });
 
-    it('should throw error when organizationId is missing', () => {
-      const invalidConfig = { ...config, organizationId: '' };
+    it("should throw error when organizationId is missing", () => {
+      const invalidConfig = { ...config, organizationId: "" };
       expect(() => {
         new ServerSDK(invalidConfig);
-      }).toThrow('organizationId and apiBaseUrl are required');
+      }).toThrow("organizationId and apiBaseUrl are required");
     });
 
-    it('should throw error when apiBaseUrl is missing', () => {
-      const invalidConfig = { ...config, apiBaseUrl: '' };
+    it("should throw error when apiBaseUrl is missing", () => {
+      const invalidConfig = { ...config, apiBaseUrl: "" };
       expect(() => {
         new ServerSDK(invalidConfig);
-      }).toThrow('organizationId and apiBaseUrl are required');
+      }).toThrow("organizationId and apiBaseUrl are required");
     });
 
-    it('should throw error with invalid private key', () => {
-      const invalidConfig = { ...config, apiPrivateKey: 'invalid-key' };
+    it("should throw error with invalid private key", () => {
+      const invalidConfig = { ...config, apiPrivateKey: "invalid-key" };
       expect(() => {
         new ServerSDK(invalidConfig);
       }).toThrow();
     });
   });
 
-  describe('Wallet Operations', () => {
+  describe("Wallet Operations", () => {
     let createdWalletIds: string[] = [];
 
-    it('should create a wallet and return accounts', async () => {
+    it("should create a wallet and return accounts", async () => {
       const walletName = `Test Wallet ${Date.now()}`;
       const result = await sdk.createWallet(walletName);
 
       expect(result).toBeDefined();
       expect(result.walletId).toBeDefined();
-      expect(typeof result.walletId).toBe('string');
+      expect(typeof result.walletId).toBe("string");
       expect(result.addresses).toBeDefined();
       expect(Array.isArray(result.addresses)).toBe(true);
       expect(result.addresses.length).toBeGreaterThan(0);
 
       // Check that we have addresses for different chains
       const addressTypes = result.addresses.map(addr => addr.addressType);
-      expect(addressTypes).toContain('Solana');
-      expect(addressTypes).toContain('Ethereum');
-      expect(addressTypes).toContain('BitcoinSegwit');
-      expect(addressTypes).toContain('Sui');
+      expect(addressTypes).toContain("Solana");
+      expect(addressTypes).toContain("Ethereum");
+      expect(addressTypes).toContain("BitcoinSegwit");
+      expect(addressTypes).toContain("Sui");
 
       // Store wallet ID for subsequent tests
       testWalletId = result.walletId;
       createdWalletIds.push(result.walletId);
     }, 30000); // 30 second timeout for API calls
 
-    it('should fetch wallet addresses using getWalletAddresses', async () => {
+    it("should fetch wallet addresses using getWalletAddresses", async () => {
       // Ensure we have a wallet ID from previous test
       expect(testWalletId).toBeDefined();
 
@@ -98,21 +96,21 @@ describe('ServerSDK', () => {
 
       // Verify address structure
       addresses.forEach(addr => {
-        expect(addr).toHaveProperty('addressType');
-        expect(addr).toHaveProperty('address');
-        expect(typeof addr.addressType).toBe('string');
-        expect(typeof addr.address).toBe('string');
+        expect(addr).toHaveProperty("addressType");
+        expect(addr).toHaveProperty("address");
+        expect(typeof addr.addressType).toBe("string");
+        expect(typeof addr.address).toBe("string");
       });
 
       // Check that we have all expected address types
       const addressTypes = addresses.map(addr => addr.addressType);
-      expect(addressTypes).toContain('Solana');
-      expect(addressTypes).toContain('Ethereum');
-      expect(addressTypes).toContain('BitcoinSegwit');
-      expect(addressTypes).toContain('Sui');
+      expect(addressTypes).toContain("Solana");
+      expect(addressTypes).toContain("Ethereum");
+      expect(addressTypes).toContain("BitcoinSegwit");
+      expect(addressTypes).toContain("Sui");
     }, 30000);
 
-    it('should fetch specific wallet addresses using custom derivation paths', async () => {
+    it("should fetch specific wallet addresses using custom derivation paths", async () => {
       // Test fetching only Solana and Ethereum addresses
       const customPaths = ["m/44'/501'/0'/0'", "m/44'/60'/0'/0/0"];
       const addresses = await sdk.getWalletAddresses(testWalletId, customPaths);
@@ -122,11 +120,11 @@ describe('ServerSDK', () => {
       expect(addresses.length).toBe(2);
 
       const addressTypes = addresses.map(addr => addr.addressType);
-      expect(addressTypes).toContain('Solana');
-      expect(addressTypes).toContain('Ethereum');
+      expect(addressTypes).toContain("Solana");
+      expect(addressTypes).toContain("Ethereum");
     }, 30000);
 
-    it('should list wallets using getWallets', async () => {
+    it("should list wallets using getWallets", async () => {
       // First create another wallet to ensure we have multiple wallets
       const secondWallet = await sdk.createWallet(`Test Wallet 2 ${Date.now()}`);
       createdWalletIds.push(secondWallet.walletId);
@@ -143,10 +141,10 @@ describe('ServerSDK', () => {
 
       // Verify wallet structure
       firstPage.wallets.forEach(wallet => {
-        expect(wallet).toHaveProperty('walletId');
-        expect(wallet).toHaveProperty('walletName');
-        expect(typeof wallet.walletId).toBe('string');
-        expect(typeof wallet.walletName).toBe('string');
+        expect(wallet).toHaveProperty("walletId");
+        expect(wallet).toHaveProperty("walletName");
+        expect(typeof wallet.walletId).toBe("string");
+        expect(typeof wallet.walletName).toBe("string");
       });
 
       // Check that our created wallets are in the list
@@ -155,7 +153,7 @@ describe('ServerSDK', () => {
       expect(foundWallets.length).toBeGreaterThanOrEqual(1); // At least one of our wallets should be in the first page
     }, 30000);
 
-    it('should handle pagination correctly in getWallets', async () => {
+    it("should handle pagination correctly in getWallets", async () => {
       // Get first page
       const firstPage = await sdk.getWallets(2, 0);
       expect(firstPage.limit).toBe(2);
@@ -173,7 +171,7 @@ describe('ServerSDK', () => {
       expect(overlap.length).toBe(0);
     }, 30000);
 
-    it('should use default pagination values in getWallets', async () => {
+    it("should use default pagination values in getWallets", async () => {
       // Call without parameters
       const result = await sdk.getWallets();
 
@@ -184,45 +182,45 @@ describe('ServerSDK', () => {
     }, 30000);
   });
 
-  describe('Message Signing', () => {
+  describe("Message Signing", () => {
     beforeAll(async () => {
       // Create a wallet if we don't have one from previous tests
       if (!testWalletId) {
-        const result = await sdk.createWallet('Test Wallet for Signing');
+        const result = await sdk.createWallet("Test Wallet for Signing");
         testWalletId = result.walletId;
       }
     });
 
-    it('should sign a message for Solana', async () => {
-      const message = 'Hello from Phantom SDK tests!';
-      const networkId = NetworkId.SOLANA_MAINNET; 
+    it("should sign a message for Solana", async () => {
+      const message = Buffer.from("Hello from Phantom SDK tests!").toString("base64url");
+      const networkId = NetworkId.SOLANA_MAINNET;
 
       const signature = await sdk.signMessage(testWalletId, message, networkId);
 
       expect(signature).toBeDefined();
-      expect(typeof signature).toBe('string');
+      expect(typeof signature).toBe("string");
       expect(signature.length).toBeGreaterThan(0);
-      // Base64 signature should be a valid base64 string
-      expect(() => Buffer.from(signature, 'base64')).not.toThrow();
+      // Base64 signature should be a valid base64url string
+      expect(() => Buffer.from(signature, "base64url")).not.toThrow();
     }, 30000);
 
-    it('should sign a message for Ethereum', async () => {
-      const message = 'Hello from Phantom SDK Ethereum test!';
+    it("should sign a message for Ethereum", async () => {
+      const message = Buffer.from("Hello from Phantom SDK Ethereum test!").toString("base64url");
       const networkId = NetworkId.ETHEREUM_MAINNET;
 
       const signature = await sdk.signMessage(testWalletId, message, networkId);
 
       expect(signature).toBeDefined();
-      expect(typeof signature).toBe('string');
+      expect(typeof signature).toBe("string");
       expect(signature.length).toBeGreaterThan(0);
-      // Base64 signature should be a valid base64 string
-      expect(() => Buffer.from(signature, 'base64')).not.toThrow();
+      // Base64 signature should be a valid base64url string
+      expect(() => Buffer.from(signature, "base64url")).not.toThrow();
     }, 30000);
 
-    it('should sign different messages and get different signatures', async () => {
-      const message1 = 'First message';
-      const message2 = 'Second message';
-      const networkId = NetworkId.SOLANA_MAINNET; 
+    it("should sign different messages and get different signatures", async () => {
+      const message1 = Buffer.from("First message").toString("base64url");
+      const message2 = Buffer.from("Second message").toString("base64url");
+      const networkId = NetworkId.SOLANA_MAINNET;
 
       const signature1 = await sdk.signMessage(testWalletId, message1, networkId);
       const signature2 = await sdk.signMessage(testWalletId, message2, networkId);
@@ -230,44 +228,38 @@ describe('ServerSDK', () => {
       expect(signature1).not.toBe(signature2);
     }, 30000);
 
-    it('should handle UTF-8 messages correctly', async () => {
-      const message = '🚀 Unicode message with emojis! 你好世界';
+    it("should handle UTF-8 messages correctly", async () => {
+      const message = Buffer.from("🚀 Unicode message with emojis! 你好世界").toString("base64url");
       const networkId = NetworkId.SOLANA_MAINNET;
 
       const signature = await sdk.signMessage(testWalletId, message, networkId);
 
       expect(signature).toBeDefined();
-      expect(typeof signature).toBe('string');
+      expect(typeof signature).toBe("string");
       expect(signature.length).toBeGreaterThan(0);
     }, 30000);
   });
 
-  describe('Error Handling', () => {
-    it('should throw error when signing with invalid wallet ID', async () => {
-      const invalidWalletId = 'invalid-wallet-id';
-      const message = 'Test message';
-      const networkId = NetworkId.SOLANA_MAINNET; 
+  describe("Error Handling", () => {
+    it("should throw error when signing with invalid wallet ID", async () => {
+      const invalidWalletId = "invalid-wallet-id";
+      const message = Buffer.from("Test message").toString("base64url");
+      const networkId = NetworkId.SOLANA_MAINNET;
 
-      await expect(
-        sdk.signMessage(invalidWalletId, message, networkId)
-      ).rejects.toThrow('Failed to sign message');
+      await expect(sdk.signMessage(invalidWalletId, message, networkId)).rejects.toThrow("Failed to sign message");
     });
 
-    it('should throw error when getting addresses for invalid wallet ID', async () => {
-      const invalidWalletId = 'invalid-wallet-id';
+    it("should throw error when getting addresses for invalid wallet ID", async () => {
+      const invalidWalletId = "invalid-wallet-id";
 
-      await expect(
-        sdk.getWalletAddresses(invalidWalletId)
-      ).rejects.toThrow('Failed to get wallet addresses');
+      await expect(sdk.getWalletAddresses(invalidWalletId)).rejects.toThrow("Failed to get wallet addresses");
     });
 
-    it('should throw error for unsupported network ID', async () => {
-      const message = 'Test message';
-      const unsupportedNetworkId = 'unsupported:network';
+    it("should throw error for unsupported network ID", async () => {
+      const message = Buffer.from("Test message").toString("base64url");
+      const unsupportedNetworkId = "unsupported:network";
 
-      await expect(
-        sdk.signMessage(testWalletId, message, unsupportedNetworkId as any)
-      ).rejects.toThrow();
+      await expect(sdk.signMessage(testWalletId, message, unsupportedNetworkId as any)).rejects.toThrow();
     });
   });
 });

@@ -11,10 +11,18 @@ const { overrides } = rootConfig;
 module.exports = defineConfig({
   ...rootConfig,
   root: true,
-  parserOptions: { 
+  parserOptions: {
     tsconfigRootDir: __dirname,
     project: "./tsconfig.json",
   },
 
-  overrides,
+  overrides: [
+    ...(overrides || []),
+    {
+      files: ["tsup.config.ts"],
+      rules: {
+        "import/no-extraneous-dependencies": ["error", { devDependencies: true }],
+      },
+    },
+  ],
 });

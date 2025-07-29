@@ -1,0 +1,53 @@
+{
+  "name": "@phantom/client",
+  "version": "0.0.1",
+  "description": "HTTP client for Phantom Wallet API",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "rimraf ./dist && tsup src/index.ts --format cjs,esm --dts --external axios",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "tsc --noEmit && eslint --cache . --ext .ts,.tsx",
+    "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.0",
+    "eslint": "8.53.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.5.2",
+    "rimraf": "^6.0.1",
+    "ts-jest": "^29.1.2",
+    "tsup": "^6.7.0",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "@phantom/openapi-wallet-service": "^0.1.5",
+    "axios": "^1.10.0",
+    "bs58": "^6.0.0",
+    "tweetnacl": "^1.0.3"
+  },
+  "files": [
+    "dist"
+  ],
+  "browser": {
+    "crypto": false,
+    "http": false,
+    "https": false,
+    "stream": false,
+    "url": false,
+    "util": false,
+    "zlib": false
+  }
+}

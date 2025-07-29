@@ -1,228 +1,240 @@
 # Phantom Server SDK
 
-The Phantom Server SDK enables secure wallet creation, message signing and transaction signing and submission for your applications.
+The Phantom Server SDK provides a secure and straightforward way to create and manage wallets, sign transactions, and interact with multiple blockchains from your backend services. This SDK is designed for server-side applications that need programmatic access to Phantom's wallet infrastructure.
+
+## 📖 Documentation
+
+Visit **[docs.phantom.com/server-sdk](https://docs.phantom.com/server-sdk)** for comprehensive documentation including:
+
+- Getting Started Guide
+- Creating and Managing Wallets
+- Signing Transactions
+- Signing Messages
+- Complete API Reference
+- Integration Examples
+- Best Practices
+- Security Considerations
+
+## Features
+
+- 🔐 **Secure wallet creation and management** - Create wallets programmatically with enterprise-grade security
+- ✍️ **Transaction signing** - Sign and optionally submit transactions across multiple blockchains
+- 📝 **Message signing** - Sign arbitrary messages for authentication or verification
+- 🌐 **Multi-chain support** - Works with Solana, Ethereum, Polygon, Sui, Bitcoin, Base and other major blockchains
+- 🔑 **Ed25519 authentication** - Secure API authentication using cryptographic signatures
+- 📊 **Wallet listing and pagination** - Efficiently manage large numbers of wallets
 
 ## Installation
+
+Install the Server SDK using your preferred package manager:
 
 ```bash
 npm install @phantom/server-sdk
 ```
 
-## Configuration
+```bash
+yarn add @phantom/server-sdk
+```
 
-To get started, initialize the SDK with your credentials:
+```bash
+pnpm add @phantom/server-sdk
+```
+
+## Prerequisites
+
+Before using the SDK, you need:
+
+1. **Phantom Organization Credentials**
+
+   - Organization ID
+   - Organization Private Key (base58 encoded)
+   - API Base URL
+
+   These credentials are provided when you create an organization with Phantom.
+
+2. **Node.js** version 16 or higher
+
+## Security First
+
+The private key for your organization is meant to be stored **ONLY on your server** in a secure environment.
+
+- **NEVER expose this key in client-side code**
+- **NEVER commit it to version control**
+- **Always use environment variables or secret management systems**
+
+## Quick Start
+
+### 1. Set up Environment Variables
+
+Create a `.env` file in your project root:
+
+```env
+ORGANIZATION_ID=your-organization-id
+PRIVATE_KEY=your-base58-encoded-private-key
+API_URL=https://api.phantom.app/wallet
+```
+
+### 2. Initialize the SDK
 
 ```typescript
-import { ServerSDK } from '@phantom/server-sdk';
+import { ServerSDK, NetworkId } from "@phantom/server-sdk";
+import dotenv from "dotenv";
 
+// Load environment variables
+dotenv.config();
+
+// Initialize the SDK
 const sdk = new ServerSDK({
-  apiPrivateKey: 'your-private-key',  // Base58 encoded private key
-  organizationId: 'your-org-id',      // Your organization ID
-  apiBaseUrl: 'https://api.phantom.app/wallet'
+  organizationId: process.env.ORGANIZATION_ID!,
+  apiPrivateKey: process.env.PRIVATE_KEY!,
+  apiBaseUrl: process.env.API_URL!,
 });
+
+// Create a wallet
+const wallet = await sdk.createWallet("My First Wallet");
+console.log("Wallet ID:", wallet.walletId);
+console.log("Addresses:", wallet.addresses);
+
+// Sign a message (base64url encoded)
+const message = Buffer.from("Hello, Phantom!").toString("base64url");
+const signature = await sdk.signMessage(wallet.walletId, message, NetworkId.SOLANA_MAINNET);
+console.log("Signature:", signature);
 ```
 
-## Network Identifiers
+## Usage Examples
 
-The SDK provides user-friendly enums for CAIP-2 network identifiers:
+### Creating a Wallet
 
 ```typescript
-import { NetworkId } from '@phantom/server-sdk';
+// Create a wallet with a custom name
+const wallet = await sdk.createWallet("User Wallet 123");
 
-// Use the NetworkId enum for easy access to CAIP-2 identifiers
-const solanaMainnet = NetworkId.SOLANA_MAINNET; // 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp'
-const ethMainnet = NetworkId.ETHEREUM_MAINNET;  // 'eip155:1'
-const polygonMainnet = NetworkId.POLYGON_MAINNET; // 'eip155:137'
+// Access addresses for different chains
+const solanaAddress = wallet.addresses.find(addr => addr.addressType === "Solana")?.address;
 
-// Example usage with SDK methods
-const result = await sdk.signAndSendTransaction(
+const ethereumAddress = wallet.addresses.find(addr => addr.addressType === "Ethereum")?.address;
+
+console.log("Solana address:", solanaAddress);
+console.log("Ethereum address:", ethereumAddress);
+```
+
+### Signing and Sending Transactions
+
+```typescript
+import { Transaction, SystemProgram, PublicKey } from "@solana/web3.js";
+
+// Create a Solana transaction
+const transaction = new Transaction().add(
+  SystemProgram.transfer({
+    fromPubkey: new PublicKey(solanaAddress),
+    toPubkey: new PublicKey(recipientAddress),
+    lamports: 1000000, // 0.001 SOL
+  }),
+);
+
+// Set transaction parameters
+transaction.recentBlockhash = blockhash;
+transaction.feePayer = new PublicKey(solanaAddress);
+
+// Serialize the transaction
+const serializedTx = transaction.serialize({
+  requireAllSignatures: false,
+  verifySignatures: false,
+});
+
+// Convert to base64url
+const transactionBase64 = Buffer.from(serializedTx).toString("base64url");
+
+// Sign and send the transaction
+const signedTx = await sdk.signAndSendTransaction(wallet.walletId, transactionBase64, NetworkId.SOLANA_MAINNET);
+
+console.log("Signed transaction:", signedTx.rawTransaction);
+```
+
+### Signing Messages
+
+```typescript
+// Sign a message for Solana (base64url encoded)
+const solanaMessage = Buffer.from("Please sign this message to authenticate").toString("base64url");
+const solanaSignature = await sdk.signMessage(wallet.walletId, solanaMessage, NetworkId.SOLANA_MAINNET);
+
+// Sign a message for Ethereum (base64url encoded)
+const ethMessage = Buffer.from("Sign in to our dApp").toString("base64url");
+const ethSignature = await sdk.signMessage(wallet.walletId, ethMessage, NetworkId.ETHEREUM_MAINNET);
+```
+
+### Managing Wallets
+
+```typescript
+// Get all wallets for your organization with pagination
+const result = await sdk.getWallets(20, 0); // limit: 20, offset: 0
+
+console.log(`Total wallets: ${result.totalCount}`);
+console.log("Wallets:", result.wallets);
+
+// Get addresses for a specific wallet
+const addresses = await sdk.getWalletAddresses(walletId);
+
+// Get specific addresses by derivation path
+const customAddresses = await sdk.getWalletAddresses(
   walletId,
-  transaction,
-  NetworkId.SOLANA_MAINNET  // Instead of hardcoding 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp'
+  ["m/44'/501'/0'/0'", "m/44'/60'/0'/0/0"], // Solana and Ethereum
 );
-
-// Sign a message on Ethereum
-const signature = await sdk.signMessage(
-  walletId,
-  'Hello World',
-  NetworkId.ETHEREUM_MAINNET
-);
-
-
 ```
 
-### Available Networks
+## Network Support
 
-| Network | Enum Value | CAIP-2 ID |
-|---------|-----------|-----------|
-| **Solana** | | |
-| Mainnet | `NetworkId.SOLANA_MAINNET` | `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp` |
-| Devnet | `NetworkId.SOLANA_DEVNET` | `solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1` |
-| Testnet | `NetworkId.SOLANA_TESTNET` | `solana:4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z` |
-| **Ethereum** | | |
-| Mainnet | `NetworkId.ETHEREUM_MAINNET` | `eip155:1` |
-| Goerli | `NetworkId.ETHEREUM_GOERLI` | `eip155:5` |
-| Sepolia | `NetworkId.ETHEREUM_SEPOLIA` | `eip155:11155111` |
-| **Polygon** | | |
-| Mainnet | `NetworkId.POLYGON_MAINNET` | `eip155:137` |
-| Mumbai | `NetworkId.POLYGON_MUMBAI` | `eip155:80001` |
-| **Arbitrum** | | |
-| One | `NetworkId.ARBITRUM_ONE` | `eip155:42161` |
-| Goerli | `NetworkId.ARBITRUM_GOERLI` | `eip155:421613` |
-| **Base** | | |
-| Mainnet | `NetworkId.BASE_MAINNET` | `eip155:8453` |
-| Sepolia | `NetworkId.BASE_SEPOLIA` | `eip155:84532` |
+The SDK supports multiple blockchain networks through the `NetworkId` enum:
 
-## CAIP-2 Network Identifiers
+### Solana Networks
 
-This SDK uses the CAIP-2 (Chain Agnostic Improvement Proposal 2) standard for network identifiers. CAIP-2 provides a standardized way to identify blockchain networks across different ecosystems.
+- `NetworkId.SOLANA_MAINNET` - Solana Mainnet-Beta
+- `NetworkId.SOLANA_DEVNET` - Solana Devnet
+- `NetworkId.SOLANA_TESTNET` - Solana Testnet
 
-### Format
-CAIP-2 identifiers follow the format: `namespace:reference`
+### Ethereum Networks
 
-### Common Network IDs
-- **Solana Mainnet**: `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp`
-- **Solana Devnet**: `solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1`
-- **Ethereum Mainnet**: `eip155:1`
-- **Polygon Mainnet**: `eip155:137`
-- **Arbitrum One**: `eip155:42161`
-- **Base Mainnet**: `eip155:8453`
+- `NetworkId.ETHEREUM_MAINNET` - Ethereum Mainnet
+- `NetworkId.ETHEREUM_GOERLI` - Goerli Testnet
+- `NetworkId.ETHEREUM_SEPOLIA` - Sepolia Testnet
 
-## Methods
+### Other EVM Networks
 
-### createWallet(walletName?: string)
-Creates a new wallet in your organization. Each wallet supports multiple chains.
+- `NetworkId.POLYGON_MAINNET` - Polygon Mainnet
+- `NetworkId.POLYGON_MUMBAI` - Mumbai Testnet
+- `NetworkId.OPTIMISM_MAINNET` - Optimism Mainnet
+- `NetworkId.ARBITRUM_ONE` - Arbitrum One
+- `NetworkId.BASE_MAINNET` - Base Mainnet
 
-```typescript
-const wallet = await sdk.createWallet('My Main Wallet');
-// Returns: { 
-//   walletId: 'wallet-uuid',
-//   addresses: [
-//     { addressType: 'Solana', address: '...' },
-//     { addressType: 'Ethereum', address: '...' },
-//     { addressType: 'BitcoinSegwit', address: '...' },
-//     { addressType: 'Sui', address: '...' }
-//   ]
-// }
-```
+### Future Support
 
-### signAndSendTransaction(walletId: string, transaction: Uint8Array, networkId: string)
-Signs a transaction and tries to submits it to the blockchain. The SDK automatically handles network-specific requirements.
-If the networkId is not supported for sending, the transaction will only be signed.
+- `NetworkId.BITCOIN_MAINNET` - Bitcoin Mainnet
+- `NetworkId.SUI_MAINNET` - Sui Mainnet
 
-```typescript
-import { NetworkId } from '@phantom/server-sdk';
+## API Reference
 
-const transactionBuffer = new Uint8Array([...]); // Your serialized transaction
-const result = await sdk.signAndSendTransaction(
-  'wallet-id',
-  transactionBuffer,
-  NetworkId.SOLANA_MAINNET
-);
+For complete API documentation, visit **[docs.phantom.com/server-sdk](https://docs.phantom.com/server-sdk)**.
 
-// Returns: { 
-//   rawTransaction: 'base64-signed-transaction'
-//   txHash: 'tx-hash-string'
-// }
+### Key Methods
 
-// Extract the transaction signature (hash)
-// Note: requires 'import bs58 from "bs58"'
-const signedTx = Transaction.from(Buffer.from(result.rawTransaction, 'base64'));
-const signature = signedTx.signature 
-  ? bs58.encode(signedTx.signature)
-  : bs58.encode(signedTx.signatures[0].signature);
-```
+- `createWallet(walletName?)` - Creates a new wallet
+- `signAndSendTransaction(walletId, transaction, networkId)` - Signs and optionally submits transactions
+- `signMessage(walletId, message, networkId)` - Signs arbitrary messages
+- `getWalletAddresses(walletId, derivationPaths?)` - Retrieves wallet addresses
+- `getWallets(limit?, offset?)` - Lists all wallets with pagination
 
-### signMessage(walletId: string, message: string, networkId: string)
-Signs a message with the specified wallet.
+## Resources
 
-```typescript
-const signature = await sdk.signMessage(
-  'wallet-id', 
-  'Hello World', 
-  NetworkId.SOLANA_MAINNET
-);
-// Returns: base64 encoded signature
-```
+- [Documentation](https://docs.phantom.com/server-sdk)
+- [Example Code](https://github.com/phantom/wallet-sdk/tree/main/examples/server-sdk-examples)
+- [Integration Guide](https://docs.phantom.com/server-sdk/integration-guide)
+- [API Reference](https://docs.phantom.com/server-sdk/api-reference)
+- [Changelog](./CHANGELOG.md)
 
-### getWallets(limit?: number, offset?: number)
-Retrieves all wallets for your organization with pagination support.
+## License
 
-```typescript
-// Get first 10 wallets
-const result = await sdk.getWallets(10, 0);
-// Returns: {
-//   wallets: [{ walletId: '...', walletName: '...' }, ...],
-//   totalCount: 25,
-//   limit: 10,
-//   offset: 0
-// }
+This SDK is distributed under the MIT License. See the [LICENSE](../../LICENSE) file for details.
 
-// Get all wallets (default limit: 20)
-const allWallets = await sdk.getWallets();
-```
+## Contributing
 
-### getWalletAddresses(walletId: string, derivationPaths?: string[])
-Retrieves addresses for a specific wallet across different blockchains.
-
-```typescript
-const addresses = await sdk.getWalletAddresses('wallet-id');
-// Returns: [
-//   { addressType: 'Solana', address: '...' },
-//   { addressType: 'Ethereum', address: '...' },
-//   { addressType: 'Bitcoin', address: '...' },
-//   { addressType: 'Sui', address: '...' }
-// ]
-```
-
-## CAIP-2 Utility Functions
-
-The SDK exports several utility functions for working with CAIP-2 network identifiers:
-
-```typescript
-import {
-  deriveSubmissionConfig,
-  supportsTransactionSubmission,
-  getNetworkDescription,
-  getSupportedNetworkIds,
-  getNetworkIdsByChain
-} from '@phantom/server-sdk';
-
-// Check if a network supports transaction submission
-if (supportsTransactionSubmission('solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp')) {
-  // Network supports automatic transaction submission
-}
-
-// Get human-readable network description
-const description = getNetworkDescription('eip155:137'); // "Polygon Mainnet"
-
-// List all supported networks
-const allNetworks = getSupportedNetworkIds();
-
-// Get networks for a specific chain
-const solanaNetworks = getNetworkIdsByChain('solana');
-// ['solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', 'solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1', ...]
-```
-
-## Security Best Practices
-
-- **Never expose your private key** in client-side code or commit it to version control
-- Store your credentials securely using environment variables or secret management systems
-- Each wallet is isolated and can only be accessed by your organization
-- All API requests are authenticated using cryptographic signatures
-
-## Error Handling
-
-All SDK methods throw descriptive errors when operations fail:
-
-```typescript
-try {
-  const wallet = await sdk.createWallet();
-} catch (error) {
-  console.error('Failed to create wallet:', error.message);
-}
-```
-
-## Support
-
-For detailed integration examples and best practices, see the [Integration Guide](./INTEGRATION.md).
+We welcome contributions! Please see our [Contributing Guide](../../CONTRIBUTING.md) for details.

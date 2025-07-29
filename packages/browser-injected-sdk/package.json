@@ -1,0 +1,61 @@
+{
+  "name": "@phantom/browser-injected-sdk",
+  "version": "0.0.9",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./solana": {
+      "import": "./dist/solana/index.mjs",
+      "require": "./dist/solana/index.js",
+      "types": "./dist/solana/index.d.ts"
+    },
+    "./auto-confirm": {
+      "import": "./dist/auto-confirm/index.mjs",
+      "require": "./dist/auto-confirm/index.js",
+      "types": "./dist/auto-confirm/index.d.ts"
+    },
+    "./ethereum": {
+      "import": "./dist/ethereum/index.mjs",
+      "require": "./dist/ethereum/index.js",
+      "types": "./dist/ethereum/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "?pack-release": "When https://github.com/changesets/changesets/issues/432 has a solution we can remove this trick",
+    "pack-release": "rimraf ./_release && yarn pack && mkdir ./_release && tar zxvf ./package.tgz --directory ./_release && rm ./package.tgz",
+    "build": "rimraf ./dist && tsup src/index.ts src/solana/index.ts src/auto-confirm/index.ts src/ethereum/index.ts --format cjs,esm --dts",
+    "build:watch": "rimraf ./dist && tsup src/index.ts src/solana/index.ts src/auto-confirm/index.ts src/ethereum/index.ts --format cjs,esm --dts --watch",
+    "dev": "rimraf ./dist && tsup src/index.ts src/solana/index.ts src/auto-confirm/index.ts src/ethereum/index.ts --format cjs,esm --dts --watch",
+    "lint": "tsc --noEmit && eslint --cache . --ext .ts,.tsx",
+    "test": "jest",
+    "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
+  },
+  "devDependencies": {
+    "@solana/web3.js": "^1.98.2",
+    "@types/jest": "^29.5.14",
+    "eslint": "8.53.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.5.2",
+    "rimraf": "^6.0.1",
+    "tsup": "^6.7.0",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "@solana/compat": "2.1.1",
+    "@solana/kit": "^2.1.1",
+    "@solana/transactions": "^2.1.1"
+  },
+  "publishConfig": {
+    "directory": "_release/package"
+  }
+}
