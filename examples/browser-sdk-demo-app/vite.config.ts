@@ -5,4 +5,15 @@ export default defineConfig({
     port: 5175, // Different port from the other demo app
     open: true,
   },
+  define: {
+    global: "globalThis",
+  },
+  resolve: {
+    alias: {
+      buffer: "buffer",
+    },
+  },
+  optimizeDeps: {
+    include: ["buffer"],
+  },
 });

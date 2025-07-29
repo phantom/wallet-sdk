@@ -1,0 +1,10 @@
+node_modules/
+dist/
+build/
+**/dist/
+**/node_modules/
+**/build/
+*.md
+*.json
+*.js
+*.mjs

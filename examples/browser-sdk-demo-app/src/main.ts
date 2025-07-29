@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
-import { createPhantom } from "@phantom/browser-sdk";
-import { createSolanaPlugin } from "@phantom/browser-sdk/solana";
-import { createAutoConfirmPlugin } from "@phantom/browser-sdk/auto-confirm";
+/// <reference types="vite/client" />
+import { BrowserSDK, NetworkId, AddressType } from "@phantom/browser-sdk";
+import { Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL, Connection } from "@solana/web3.js";
 import {
   createSolanaRpc,
   pipe,
@@ -11,186 +11,319 @@ import {
   address,
   compileTransaction,
 } from "@solana/kit";
+import { parseEther, parseGwei } from "viem";
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("Document loaded, attempting to create Phantom instance...");
-  try {
-    const phantomInstance = createPhantom({
-      plugins: [createSolanaPlugin(), createAutoConfirmPlugin()],
-    });
-    console.log("Phantom instance created:", phantomInstance);
+  console.log("Document loaded, setting up Browser SDK Demo...");
 
-    const connectBtn = document.getElementById("connectBtn") as HTMLButtonElement;
-    const getAccountBtn = document.getElementById("getAccountBtn") as HTMLButtonElement;
-    const signMessageBtn = document.getElementById("signMessageBtn") as HTMLButtonElement;
-    const signTransactionBtn = document.getElementById("signTransactionBtn") as HTMLButtonElement;
-    const disconnectBtn = document.getElementById("disconnectBtn") as HTMLButtonElement;
+  // UI Elements
+  const connectBtn = document.getElementById("connectBtn") as HTMLButtonElement;
+  const getAccountBtn = document.getElementById("getAccountBtn") as HTMLButtonElement;
+  const signMessageBtn = document.getElementById("signMessageBtn") as HTMLButtonElement;
+  const signTransactionBtn = document.getElementById("signTransactionBtn") as HTMLButtonElement;
+  const disconnectBtn = document.getElementById("disconnectBtn") as HTMLButtonElement;
 
-    // Auto-confirm plugin buttons
-    const enableAutoConfirmBtn = document.getElementById("enableAutoConfirmBtn") as HTMLButtonElement;
-    const disableAutoConfirmBtn = document.getElementById("disableAutoConfirmBtn") as HTMLButtonElement;
-    const getAutoConfirmStatusBtn = document.getElementById("getAutoConfirmStatusBtn") as HTMLButtonElement;
-    const getSupportedChainsBtn = document.getElementById("getSupportedChainsBtn") as HTMLButtonElement;
+  console.log("Found buttons:", {
+    connectBtn: !!connectBtn,
+    getAccountBtn: !!getAccountBtn,
+    signMessageBtn: !!signMessageBtn,
+    signTransactionBtn: !!signTransactionBtn,
+    disconnectBtn: !!disconnectBtn,
+  });
 
-    let userPublicKey: string | null = null;
+  // Get configuration UI elements
+  const providerTypeSelect = document.getElementById("providerType") as HTMLSelectElement;
+  const solanaProviderSelect = document.getElementById("solanaProvider") as HTMLSelectElement;
+  const testWeb3jsBtn = document.getElementById("testWeb3jsBtn") as HTMLButtonElement;
+  const testKitBtn = document.getElementById("testKitBtn") as HTMLButtonElement;
+  const testEthereumBtn = document.getElementById("testEthereumBtn") as HTMLButtonElement;
 
-    if (connectBtn) {
-      connectBtn.disabled = false;
-      connectBtn.onclick = async () => {
-        try {
-          const connectResult = await phantomInstance.solana.connect();
-          userPublicKey = connectResult ?? null;
-          if (userPublicKey) {
-            alert(`Connected: ${userPublicKey}`);
-            if (signMessageBtn) signMessageBtn.disabled = false;
-            if (signTransactionBtn) signTransactionBtn.disabled = false;
-          } else {
-            alert("Connected, but public key was not retrieved.");
-          }
+  let sdk: BrowserSDK | null = null;
+  let connectedAddresses: any[] = [];
 
-          if (disconnectBtn) disconnectBtn.disabled = false;
-        } catch (error) {
-          console.error("Error connecting to Phantom:", error);
-          alert(`Error connecting: ${(error as Error).message || error}`);
-        }
-      };
+  // Create SDK instance based on current configuration
+  function createSDK(): BrowserSDK {
+    const providerType = providerTypeSelect.value as "injected" | "embedded";
+    const solanaProvider = solanaProviderSelect.value as "web3js" | "kit";
+
+    if (providerType === "injected") {
+      return new BrowserSDK({
+        providerType: "injected",
+        solanaProvider: solanaProvider,
+      });
+    } else {
+      // For demo purposes, use hardcoded embedded config
+      return new BrowserSDK({
+        providerType: "embedded",
+        addressTypes: [AddressType.solana, AddressType.ethereum],
+        apiBaseUrl: "https://api.phantom.com",
+        organizationId: "demo-org-id",
+        embeddedWalletType: "app-wallet",
+        solanaProvider: solanaProvider,
+      });
     }
-
-    if (getAccountBtn) {
-      getAccountBtn.onclick = async () => {
-        try {
-          const accountResult = await phantomInstance.solana.getAccount();
-          if (accountResult) {
-            userPublicKey = accountResult;
-            console.log("Account retrieved:", accountResult);
-            alert(`Account retrieved: ${accountResult}`);
-
-            if (signMessageBtn) signMessageBtn.disabled = false;
-            if (signTransactionBtn) signTransactionBtn.disabled = false;
-            if (disconnectBtn) disconnectBtn.disabled = false;
-          } else {
-            alert("No account found or user denied access.");
-          }
-        } catch (error) {
-          console.error("Error getting account:", error);
-          alert(`Error getting account: ${(error as Error).message || error}`);
-        }
-      };
-    }
-
-    if (signMessageBtn) {
-      signMessageBtn.disabled = !userPublicKey;
-      signMessageBtn.onclick = async () => {
-        try {
-          const message = new TextEncoder().encode("Hello from Phantom Browser SDK Demo!");
-          const signedMessage = await phantomInstance.solana.signMessage(message, "utf8");
-          console.log("Signed Message:", signedMessage);
-          alert(`Message signed: ${signedMessage.signature}`);
-        } catch (error) {
-          console.error("Error signing message:", error);
-          alert(`Error signing message: ${(error as Error).message || error}`);
-        }
-      };
-    }
-
-    if (signTransactionBtn) {
-      signTransactionBtn.disabled = !userPublicKey;
-      signTransactionBtn.onclick = async () => {
-        try {
-          const rpc = createSolanaRpc("https://solana-mainnet.g.alchemy.com/v2/Pnb7lrjdZw6df2yXSKDiG");
-
-          const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
-
-          const transactionMessage = pipe(
-            createTransactionMessage({ version: 0 }),
-            tx => setTransactionMessageFeePayer(address(userPublicKey as string), tx),
-            tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
-          );
-
-          const transaction = compileTransaction(transactionMessage);
-
-          const { signature } = await phantomInstance.solana.signAndSendTransaction(transaction);
-          alert(`Transaction sent with signature: ${signature}`);
-        } catch (error) {
-          console.error("Error signing or sending transaction:", error);
-          alert(`Error signing/sending transaction: ${(error as Error).message || error}`);
-        }
-      };
-    }
-
-    if (disconnectBtn) {
-      disconnectBtn.onclick = async () => {
-        try {
-          await phantomInstance.solana.disconnect();
-          userPublicKey = null;
-          alert("Disconnected from Phantom.");
-          if (connectBtn) connectBtn.disabled = false;
-          if (signMessageBtn) signMessageBtn.disabled = true;
-          if (signTransactionBtn) signTransactionBtn.disabled = true;
-          if (disconnectBtn) disconnectBtn.disabled = true;
-        } catch (error) {
-          console.error("Error disconnecting from Phantom:", error);
-          alert(`Error disconnecting: ${(error as Error).message || error}`);
-        }
-      };
-    }
-
-    // Auto-confirm plugin functionality
-    if (enableAutoConfirmBtn) {
-      enableAutoConfirmBtn.onclick = async () => {
-        try {
-          const result = await phantomInstance.autoConfirm.autoConfirmEnable({
-            chains: ["solana:101", "solana:102", "solana:103"], // Enable for Solana mainnet, testnet, devnet
-          });
-          console.log("Auto-confirm enable result:", result);
-          alert(`Auto-confirm ${result.enabled ? "enabled" : "not enabled"} for chains: ${result.chains.join(", ")}`);
-        } catch (error) {
-          console.error("Error enabling auto-confirm:", error);
-          alert(`Error enabling auto-confirm: ${(error as Error).message || error}`);
-        }
-      };
-    }
-
-    if (disableAutoConfirmBtn) {
-      disableAutoConfirmBtn.onclick = async () => {
-        try {
-          const result = await phantomInstance.autoConfirm.autoConfirmDisable();
-          console.log("Auto-confirm disable result:", result);
-          alert(`Auto-confirm disabled. Status: enabled=${result.enabled}, chains: ${result.chains.join(", ")}`);
-        } catch (error) {
-          console.error("Error disabling auto-confirm:", error);
-          alert(`Error disabling auto-confirm: ${(error as Error).message || error}`);
-        }
-      };
-    }
-
-    if (getAutoConfirmStatusBtn) {
-      getAutoConfirmStatusBtn.onclick = async () => {
-        try {
-          const result = await phantomInstance.autoConfirm.autoConfirmStatus();
-          console.log("Auto-confirm status:", result);
-          alert(`Auto-confirm status: enabled=${result.enabled}, chains: ${result.chains.join(", ")}`);
-        } catch (error) {
-          console.error("Error getting auto-confirm status:", error);
-          alert(`Error getting auto-confirm status: ${(error as Error).message || error}`);
-        }
-      };
-    }
-
-    if (getSupportedChainsBtn) {
-      getSupportedChainsBtn.onclick = async () => {
-        try {
-          const result = await phantomInstance.autoConfirm.autoConfirmSupportedChains();
-          console.log("Supported chains:", result);
-          alert(`Supported chains: ${result.chains.join(", ")}`);
-        } catch (error) {
-          console.error("Error getting supported chains:", error);
-          alert(`Error getting supported chains: ${(error as Error).message || error}`);
-        }
-      };
-    }
-  } catch (error) {
-    console.error("Error creating Phantom instance:", error);
-    alert(`Error initializing Phantom: ${(error as Error).message || error}`);
   }
+
+  // Update button states
+  function updateButtonStates(connected: boolean) {
+    if (connectBtn) connectBtn.disabled = connected;
+    if (getAccountBtn) getAccountBtn.disabled = !connected;
+    if (signMessageBtn) signMessageBtn.disabled = !connected;
+    if (signTransactionBtn) signTransactionBtn.disabled = !connected;
+    if (disconnectBtn) disconnectBtn.disabled = !connected;
+    if (testWeb3jsBtn) testWeb3jsBtn.disabled = !connected;
+    if (testKitBtn) testKitBtn.disabled = !connected;
+    if (testEthereumBtn) testEthereumBtn.disabled = !connected;
+  }
+
+  // Connect button
+  if (connectBtn) {
+    connectBtn.onclick = async () => {
+      try {
+        sdk = createSDK();
+        const result = await sdk.connect();
+        connectedAddresses = result.addresses;
+
+        console.log("Connected successfully:", result);
+        alert(`Connected! Addresses: ${result.addresses.map(a => `${a.addressType}: ${a.address}`).join(", ")}`);
+
+        updateButtonStates(true);
+      } catch (error) {
+        console.error("Error connecting:", error);
+        alert(`Error connecting: ${(error as Error).message || error}`);
+      }
+    };
+  }
+
+  // Get Account button
+  if (getAccountBtn) {
+    getAccountBtn.onclick = async () => {
+      try {
+        if (!sdk) {
+          alert("Please connect first");
+          return;
+        }
+
+        const addresses = await sdk.getAddresses();
+        console.log("Current addresses:", addresses);
+        alert(`Addresses: ${addresses.map(a => `${a.addressType}: ${a.address}`).join(", ")}`);
+      } catch (error) {
+        console.error("Error getting addresses:", error);
+        alert(`Error getting addresses: ${(error as Error).message || error}`);
+      }
+    };
+  }
+
+  // Sign Message button
+  if (signMessageBtn) {
+    signMessageBtn.onclick = async () => {
+      try {
+        if (!sdk) {
+          alert("Please connect first");
+          return;
+        }
+
+        const message = "Hello from Phantom Browser SDK!";
+        // Use devnet by default for demo, but could be configurable
+        const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL || "https://api.devnet.solana.com";
+        const networkId = rpcUrl.includes("mainnet") ? NetworkId.SOLANA_MAINNET : NetworkId.SOLANA_DEVNET;
+        const signature = await sdk.signMessage(message, networkId);
+
+        console.log("Message signed:", signature);
+        alert(`Message signed: ${signature}`);
+      } catch (error) {
+        console.error("Error signing message:", error);
+        alert(`Error signing message: ${(error as Error).message || error}`);
+      }
+    };
+  }
+
+  // Sign Transaction button (basic test)
+  if (signTransactionBtn) {
+    signTransactionBtn.onclick = async () => {
+      try {
+        if (!sdk) {
+          alert("Please connect first");
+          return;
+        }
+
+        // Find Solana address
+        const solanaAddress = connectedAddresses.find(a => a.addressType === AddressType.solana);
+        if (!solanaAddress) {
+          alert("No Solana address found");
+          return;
+        }
+
+        // Use current Solana provider selection
+        const solanaProvider = solanaProviderSelect.value as "web3js" | "kit";
+
+        if (solanaProvider === "web3js") {
+          await testWeb3jsTransaction();
+        } else {
+          await testKitTransaction();
+        }
+      } catch (error) {
+        console.error("Error signing transaction:", error);
+        alert(`Error signing transaction: ${(error as Error).message || error}`);
+      }
+    };
+  }
+
+  // Test @solana/web3.js transaction
+  async function testWeb3jsTransaction() {
+    const solanaAddress = connectedAddresses.find(a => a.addressType === AddressType.solana);
+    if (!solanaAddress) {
+      alert("No Solana address found");
+      return;
+    }
+
+    // Create connection to get recent blockhash (using environment RPC URL)
+    const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL || "https://api.devnet.solana.com";
+    const connection = new Connection(rpcUrl);
+
+    // Get recent blockhash
+    const { blockhash } = await connection.getLatestBlockhash();
+
+    // Create a simple transfer transaction with blockhash
+    const transaction = new Transaction({
+      recentBlockhash: blockhash,
+      feePayer: new PublicKey(solanaAddress.address),
+    }).add(
+      SystemProgram.transfer({
+        fromPubkey: new PublicKey(solanaAddress.address),
+        toPubkey: new PublicKey(solanaAddress.address), // Self-transfer for demo
+        lamports: 0.001 * LAMPORTS_PER_SOL,
+      }),
+    );
+
+    // Determine network based on RPC URL
+    const networkId = rpcUrl.includes("mainnet") ? NetworkId.SOLANA_MAINNET : NetworkId.SOLANA_DEVNET;
+
+    const result = await sdk!.signAndSendTransaction({
+      networkId: networkId,
+      transaction: transaction,
+    });
+
+    console.log("Transaction sent (web3.js):", result);
+    alert(`Transaction sent: ${result.rawTransaction}`);
+  }
+
+  // Test @solana/kit transaction
+  async function testKitTransaction() {
+    const solanaAddress = connectedAddresses.find(a => a.addressType === AddressType.solana);
+    if (!solanaAddress) {
+      alert("No Solana address found");
+      return;
+    }
+
+    const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL || "https://api.devnet.solana.com";
+    const rpc = createSolanaRpc(rpcUrl);
+    const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
+
+    const transactionMessage = pipe(
+      createTransactionMessage({ version: 0 }),
+      tx => setTransactionMessageFeePayer(address(solanaAddress.address), tx),
+      tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
+    );
+
+    const transaction = compileTransaction(transactionMessage);
+
+    // Determine network based on RPC URL
+    const networkId = rpcUrl.includes("mainnet") ? NetworkId.SOLANA_MAINNET : NetworkId.SOLANA_DEVNET;
+
+    const result = await sdk!.signAndSendTransaction({
+      networkId: networkId,
+      transaction: transaction,
+    });
+
+    console.log("Transaction sent (kit):", result);
+    alert(`Transaction sent: ${result.rawTransaction}`);
+  }
+
+  // Test Web3.js button
+  if (testWeb3jsBtn) {
+    testWeb3jsBtn.onclick = async () => {
+      try {
+        await testWeb3jsTransaction();
+      } catch (error) {
+        console.error("Error with web3.js transaction:", error);
+        alert(`Error with web3.js transaction: ${(error as Error).message || error}`);
+      }
+    };
+  }
+
+  // Test Kit button
+  if (testKitBtn) {
+    testKitBtn.onclick = async () => {
+      try {
+        await testKitTransaction();
+      } catch (error) {
+        console.error("Error with kit transaction:", error);
+        alert(`Error with kit transaction: ${(error as Error).message || error}`);
+      }
+    };
+  }
+
+  // Test Ethereum button
+  if (testEthereumBtn) {
+    testEthereumBtn.onclick = async () => {
+      try {
+        if (!sdk) {
+          alert("Please connect first");
+          return;
+        }
+
+        const ethAddress = connectedAddresses.find(a => a.addressType === AddressType.ethereum);
+        if (!ethAddress) {
+          alert("No Ethereum address found");
+          return;
+        }
+
+        // Create simple ETH transfer
+        const result = await sdk.signAndSendTransaction({
+          networkId: NetworkId.ETHEREUM_MAINNET,
+          transaction: {
+            to: ethAddress.address, // Self-transfer for demo
+            value: parseEther("0.001"), // 0.001 ETH
+            gas: 21000n,
+            gasPrice: parseGwei("20"), // 20 gwei
+          },
+        });
+
+        console.log("Ethereum transaction sent:", result);
+        alert(`Ethereum transaction sent: ${result.rawTransaction}`);
+      } catch (error) {
+        console.error("Error with Ethereum transaction:", error);
+        alert(`Error with Ethereum transaction: ${(error as Error).message || error}`);
+      }
+    };
+  }
+
+  // Disconnect button
+  if (disconnectBtn) {
+    disconnectBtn.onclick = async () => {
+      try {
+        if (sdk) {
+          await sdk.disconnect();
+          sdk = null;
+          connectedAddresses = [];
+          alert("Disconnected successfully");
+          updateButtonStates(false);
+        }
+      } catch (error) {
+        console.error("Error disconnecting:", error);
+        alert(`Error disconnecting: ${(error as Error).message || error}`);
+      }
+    };
+  }
+
+  // Initialize button states
+  updateButtonStates(false);
+
+  // Ensure Connect button is enabled initially
+  if (connectBtn) {
+    connectBtn.disabled = false;
+  }
+
+  console.log("Browser SDK Demo initialized");
 });

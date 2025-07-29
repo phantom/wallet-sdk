@@ -2,9 +2,7 @@
 const config = {
   testEnvironment: "jsdom",
   transform: {
-    "^.+\\.(ts|tsx)$": [
-      "ts-jest"
-    ],
+    "^.+\\.(ts|tsx)$": ["ts-jest"],
   },
   testMatch: ["<rootDir>/src/**/*.test.{ts,tsx}"],
   moduleNameMapper: {

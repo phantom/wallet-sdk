@@ -1,6 +1,7 @@
 {
   "name": "@phantom/browser-sdk",
-  "version": "0.0.10",
+  "version": "0.0.1",
+  "description": "Browser SDK for Phantom Wallet with unified interface",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -9,51 +10,41 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
-    },
-    "./solana": {
-      "import": "./dist/solana/index.mjs",
-      "require": "./dist/solana/index.js",
-      "types": "./dist/solana/index.d.ts"
-    },
-    "./extension": {
-      "import": "./dist/extension/index.mjs",
-      "require": "./dist/extension/index.js",
-      "types": "./dist/extension/index.d.ts"
-    },
-    "./auto-confirm": {
-      "import": "./dist/auto-confirm/index.mjs",
-      "require": "./dist/auto-confirm/index.js",
-      "types": "./dist/auto-confirm/index.d.ts"
     }
   },
   "files": [
     "dist"
   ],
-  "license": "MIT",
   "scripts": {
-    "?pack-release": "When https://github.com/changesets/changesets/issues/432 has a solution we can remove this trick",
-    "pack-release": "rimraf ./_release && yarn pack && mkdir ./_release && tar zxvf ./package.tgz --directory ./_release && rm ./package.tgz",
-    "build": "rimraf ./dist && tsup src/index.ts src/solana/index.ts src/extension/index.ts src/auto-confirm/index.ts --format cjs,esm --dts",
-    "build:watch": "rimraf ./dist && tsup src/index.ts src/solana/index.ts src/extension/index.ts src/auto-confirm/index.ts --format cjs,esm --dts --watch",
-    "dev": "rimraf ./dist && tsup src/index.ts src/solana/index.ts src/extension/index.ts src/auto-confirm/index.ts --format cjs,esm --dts --watch",
+    "build": "rimraf ./dist && tsup",
+    "dev": "rimraf ./dist && tsup --watch",
+    "clean": "rm -rf dist",
+    "test": "jest",
+    "test:watch": "jest --watch",
     "lint": "tsc --noEmit && eslint --cache . --ext .ts,.tsx",
-    "test": "jest"
-  },
-  "devDependencies": {
-    "@solana/web3.js": "^1.98.2",
-    "@types/jest": "^29.5.14",
-    "eslint": "8.53.0",
-    "jest": "^29.7.0",
-    "rimraf": "^6.0.1",
-    "tsup": "^6.7.0",
-    "typescript": "^5.0.4"
+    "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
   },
   "dependencies": {
-    "@solana/compat": "2.1.1",
-    "@solana/kit": "^2.1.1",
-    "@solana/transactions": "^2.1.1"
+    "@phantom/api-key-stamper": "workspace:^",
+    "@phantom/browser-injected-sdk": "workspace:^",
+    "@phantom/client": "workspace:^",
+    "axios": "^1.10.0",
+    "bs58": "^6.0.0",
+    "buffer": "^6.0.3",
+    "jose": "^6.0.12",
+    "tweetnacl": "^1.0.3"
   },
-  "publishConfig": {
-    "directory": "_release/package"
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.0",
+    "eslint": "8.53.0",
+    "fake-indexeddb": "^4.0.2",
+    "jest": "^30.0.5",
+    "jest-environment-jsdom": "^30.0.5",
+    "prettier": "^3.5.2",
+    "rimraf": "^6.0.1",
+    "ts-jest": "^29.1.2",
+    "tsup": "^6.7.0",
+    "typescript": "^5.0.4"
   }
 }

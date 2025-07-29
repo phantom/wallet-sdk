@@ -1,0 +1,54 @@
+{
+  "name": "@phantom/react-ui",
+  "version": "1.0.0",
+  "description": "React UI components for Phantom Wallet SDK with built-in transaction and connection modals",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit && eslint --cache . --ext .ts,.tsx",
+    "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
+  },
+  "dependencies": {
+    "@phantom/client": "workspace:^",
+    "@phantom/react-sdk": "workspace:^"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "eslint": "8.53.0",
+    "prettier": "^3.5.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tsup": "^7.2.0",
+    "typescript": "^5.2.0"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "keywords": [
+    "phantom",
+    "wallet",
+    "react",
+    "ui",
+    "components",
+    "modal",
+    "transaction",
+    "connection"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phantom/wallet-sdk.git",
+    "directory": "packages/react-ui"
+  },
+  "license": "MIT"
+}

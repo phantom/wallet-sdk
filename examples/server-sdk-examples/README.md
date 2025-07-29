@@ -15,6 +15,7 @@ The `server-sdk-demo` script demonstrates the core functionality of the Phantom 
 Before running the demo, you need:
 
 1. **Phantom Organization Credentials**
+
    - Organization ID
    - Organization Private Key (base58 encoded, P256 private key)
    - These are provided when you create an organization with Phantom
@@ -28,11 +29,13 @@ Before running the demo, you need:
 ### Setup
 
 1. **Install dependencies** from the monorepo root:
+
    ```bash
    yarn install
    ```
 
 2. **Configure environment variables**:
+
    ```bash
    cd packages/server-sdk-examples
    cp env.example .env
@@ -40,9 +43,9 @@ Before running the demo, you need:
 
 3. **Edit `.env`** and add your credentials:
    ```env
-   PHANTOM_ORGANIZATION_ID=your-organization-id
-   PHANTOM_ORGANIZATION_PRIVATE_KEY=your-base58-encoded-private-key
-   PHANTOM_WALLET_API=https://api.phantom.app/wallet
+   ORGANIZATION_ID=your-organization-id
+   ORGANIZATION_PRIVATE_KEY=your-base58-encoded-private-key
+   WALLET_API=https://api.phantom.app/wallet
    SOLANA_RPC_URL=https://api.devnet.solana.com
    NETWORK=devnet
    ```
@@ -116,14 +119,17 @@ yarn workspace @phantom/server-sdk-examples server-sdk-demo
 ### Troubleshooting
 
 1. **"Missing required environment variables"**
+
    - Ensure `.env` file exists and contains all required values
    - Check that values are not wrapped in quotes
 
 2. **"Wallet has 0 balance"**
+
    - For devnet: Request SOL from https://faucet.solana.com/
    - For mainnet: Send SOL to the displayed address
 
 3. **"Transaction confirmation timeout"**
+
    - Network congestion may cause delays
    - Check the explorer link for manual verification
 
@@ -133,17 +139,18 @@ yarn workspace @phantom/server-sdk-examples server-sdk-demo
 
 ### Environment Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `PHANTOM_ORGANIZATION_ID` | Your organization ID | `org_abc123...` |
-| `PHANTOM_ORGANIZATION_PRIVATE_KEY` | Base58 encoded P256 private key | `5Kb8kL...` |
-| `PHANTOM_WALLET_API` | Phantom API endpoint | `https://api.phantom.app/wallet` |
-| `SOLANA_RPC_URL` | Solana RPC endpoint | `https://api.devnet.solana.com` |
-| `NETWORK` | Network to use | `devnet` or `mainnet` |
+| Variable                   | Description                     | Example                          |
+| -------------------------- | ------------------------------- | -------------------------------- |
+| `ORGANIZATION_ID`          | Your organization ID            | `org_abc123...`                  |
+| `ORGANIZATION_PRIVATE_KEY` | Base58 encoded P256 private key | `5Kb8kL...`                      |
+| `WALLET_API`               | Phantom API endpoint            | `https://api.phantom.app/wallet` |
+| `SOLANA_RPC_URL`           | Solana RPC endpoint             | `https://api.devnet.solana.com`  |
+| `NETWORK`                  | Network to use                  | `devnet` or `mainnet`            |
 
 ### Security Notes
 
-⚠️ **IMPORTANT**: 
+⚠️ **IMPORTANT**:
+
 - Never commit your `.env` file to version control
 - Keep your organization private key secure
 - Use environment-specific credentials (dev/staging/prod)
@@ -160,6 +167,7 @@ After running the demo, you can:
 ### Support
 
 For issues or questions:
+
 - Check the [Server SDK Integration Guide](../server-sdk/INTEGRATION.md)
 - Review the demo source code at `src/server-sdk-demo.ts`
 - Contact Phantom support for organization-specific issues
@@ -346,12 +354,14 @@ yarn workspace @phantom/server-sdk-examples sign-message "Your message"
 ### Technical Details
 
 The script uses the Phantom Server SDK's `signMessage` function which:
+
 1. Takes a UTF-8 string message
-2. Converts it to base64 internally
+2. Converts it to base64url internally
 3. Signs it with the wallet's private key for the specified network
-4. Returns a base64-encoded signature
+4. Returns a base64url-encoded signature
 
 The signature can be verified using:
+
 - The public key (Solana address)
 - The original message
 - Standard Ed25519 signature verification (for Solana)
@@ -359,8 +369,9 @@ The signature can be verified using:
 ### Extending the Script
 
 You can modify the script to:
+
 1. **Sign with different networks** - Change `NetworkId.SOLANA_MAINNET` to other networks
 2. **Batch sign messages** - Process multiple messages from a file
 3. **Output to file** - Save signatures and metadata to JSON
 4. **Verify signatures** - Add signature verification functionality
-5. **Sign structured data** - Sign JSON objects or other data formats 
+5. **Sign structured data** - Sign JSON objects or other data formats

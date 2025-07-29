@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@phantom/browser-sdk": "workspace:*",
+    "@phantom/client": "workspace:*",
     "@phantom/react-sdk": "workspace:*",
     "@solana/kit": "^2.1.1",
     "@vitejs/plugin-react": "^4.4.1",
