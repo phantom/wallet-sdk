@@ -1,27 +1,4 @@
-import { Buffer } from "buffer";
-
-// Import the internal functions by re-implementing them for testing
-// Since they're not exported, we'll test them through the main functionality
-// But let's create separate tests for the encoding logic
-
-function base64urlEncode(data: Uint8Array): string {
-  const base64 = Buffer.from(data).toString("base64");
-  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-function stringToBase64url(str: string): string {
-  const bytes = new TextEncoder().encode(str);
-  return base64urlEncode(bytes);
-}
-
-function decodeBase64url(str: string): string {
-  const base64 = str
-    .replace(/-/g, "+")
-    .replace(/_/g, "/")
-    .padEnd(str.length + ((4 - (str.length % 4)) % 4), "=");
-
-  return Buffer.from(base64, "base64").toString("utf8");
-}
+import { base64urlEncode, stringToBase64url, base64urlDecodeToString } from "@phantom/base64url";
 
 describe("Base64url encoding utilities", () => {
   describe("base64urlEncode", () => {
@@ -79,7 +56,7 @@ describe("Base64url encoding utilities", () => {
       expect(result).toMatch(/^[A-Za-z0-9_-]*$/);
 
       // Should be decodable back to original
-      const decoded = decodeBase64url(result);
+      const decoded = base64urlDecodeToString(result);
       expect(decoded).toBe(input);
     });
   });
@@ -98,7 +75,7 @@ describe("Base64url encoding utilities", () => {
 
       testStrings.forEach(str => {
         const encoded = stringToBase64url(str);
-        const decoded = decodeBase64url(encoded);
+        const decoded = base64urlDecodeToString(encoded);
         expect(decoded).toBe(str);
       });
     });

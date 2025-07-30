@@ -1,5 +1,5 @@
 import type { NetworkId } from "@phantom/client";
-import { base64urlEncode, stringToBase64url } from "../utils/base64url";
+import { base64urlEncode, stringToBase64url } from "@phantom/base64url";
 import { Buffer } from "../polyfills";
 
 export interface ParsedTransaction {

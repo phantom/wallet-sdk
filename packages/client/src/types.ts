@@ -2,7 +2,7 @@
 
 export interface PhantomClientConfig {
   apiBaseUrl: string;
-  organizationId: string;
+  organizationId?: string;
 }
 
 export interface Stamper {

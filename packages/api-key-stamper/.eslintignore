@@ -6,3 +6,6 @@ dist/
 /**/node_modules/*
 build/
 **/build/
+*.js
+*.d.ts
+tsup.config.ts

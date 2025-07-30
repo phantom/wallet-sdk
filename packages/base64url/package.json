@@ -1,7 +1,7 @@
 {
-  "name": "@phantom/api-key-stamper",
+  "name": "@phantom/base64url",
   "version": "0.0.1",
-  "description": "API key stamper for Phantom Wallet SDK",
+  "description": "Isomorphic base64url encoding/decoding utilities",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -12,17 +12,19 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "rimraf ./dist && tsup src/index.ts --format cjs,esm --dts --external buffer,@phantom/base64url,@phantom/crypto",
-    "dev": "tsc --watch",
+    "build": "rimraf ./dist && tsup",
+    "dev": "rimraf ./dist && tsup --watch",
     "clean": "rm -rf dist",
     "test": "jest",
     "test:watch": "jest --watch",
-    "lint": "tsc --noEmit && eslint --cache . --ext .ts,.tsx",
-    "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
+    "lint": "tsc --noEmit && eslint --cache . --ext .ts",
+    "prettier": "prettier --write \"src/**/*.{ts}\""
   },
   "devDependencies": {
-    "@types/bs58": "^4.0.1",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.0",
     "eslint": "8.53.0",
@@ -33,14 +35,13 @@
     "tsup": "^6.7.0",
     "typescript": "^5.0.4"
   },
-  "dependencies": {
-    "@phantom/base64url": "workspace:^",
-    "@phantom/crypto": "workspace:^",
-    "axios": "^1.10.0",
-    "bs58": "^6.0.0",
-    "buffer": "^6.0.3"
-  },
-  "files": [
-    "dist"
-  ]
+  "keywords": [
+    "base64url",
+    "encoding",
+    "decoding",
+    "isomorphic",
+    "browser",
+    "node"
+  ],
+  "license": "MIT"
 }

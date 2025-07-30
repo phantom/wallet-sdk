@@ -7,6 +7,7 @@ export interface ServerSDKConfig {
   apiPrivateKey: string;
 }
 
+
 export class ServerSDK extends PhantomClient {
   constructor(config: ServerSDKConfig) {
     // Create the API key stamper
@@ -24,6 +25,7 @@ export class ServerSDK extends PhantomClient {
     );
   }
 }
+
 
 // Re-export specific items from client for backward compatibility
 export {
@@ -43,6 +45,7 @@ export {
   type SignedTransaction,
   type GetWalletsResult,
   type Wallet,
+  generateKeyPair,
 } from "@phantom/client";
 
 export { ApiKeyStamper } from "@phantom/api-key-stamper";

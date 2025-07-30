@@ -1,4 +1,4 @@
-import { NetworkId, ServerSDK } from "../src/index";
+import { NetworkId, ServerSDK, generateKeyPair } from "../src/index";
 import { ServerSDKConfig } from "../src/types";
 
 describe("ServerSDK", () => {
@@ -36,18 +36,13 @@ describe("ServerSDK", () => {
       }).not.toThrow();
     });
 
-    it("should throw error when organizationId is missing", () => {
-      const invalidConfig = { ...config, organizationId: "" };
-      expect(() => {
-        new ServerSDK(invalidConfig);
-      }).toThrow("organizationId and apiBaseUrl are required");
-    });
+  
 
     it("should throw error when apiBaseUrl is missing", () => {
       const invalidConfig = { ...config, apiBaseUrl: "" };
       expect(() => {
         new ServerSDK(invalidConfig);
-      }).toThrow("organizationId and apiBaseUrl are required");
+      }).toThrow("apiBaseUrl is required");
     });
 
     it("should throw error with invalid private key", () => {
@@ -260,6 +255,24 @@ describe("ServerSDK", () => {
       const unsupportedNetworkId = "unsupported:network";
 
       await expect(sdk.signMessage(testWalletId, message, unsupportedNetworkId as any)).rejects.toThrow();
+    });
+  });
+
+  describe("Create organization", () => {
+    it("should create an organization", async () => {
+      const organizationName = `Test Organization ${Date.now()}`;
+      const authorizedKeyPair = generateKeyPair();
+     
+      const result = await sdk.createOrganization(organizationName, authorizedKeyPair);
+      expect(result).toBeDefined();
+      expect(result.organizationId).toBeDefined();
+      expect(typeof result.organizationId).toBe("string");
+      expect(result.organizationName).toBe(organizationName);
+    }, 30000);
+
+    it("should throw error when creating organization with invalid name", async () => {
+      const authorizedKeyPair = generateKeyPair();
+      await expect(sdk.createOrganization("", authorizedKeyPair)).rejects.toThrow("Organization name is required");
     });
   });
 });

@@ -1,39 +1,21 @@
 import type { AxiosRequestConfig } from "axios";
-import nacl from "tweetnacl";
-import bs58 from "bs58";
 import { Buffer } from "buffer";
+import { base64urlEncode, stringToBase64url } from "@phantom/base64url";
+import { createKeyPairFromSecret, signWithSecret } from "@phantom/crypto";
+import bs58 from "bs58";
 export interface ApiKeyStamperConfig {
   apiSecretKey: string;
-}
-
-/**
- * Convert Uint8Array to base64url string
- */
-function base64urlEncode(data: Uint8Array): string {
-  // Convert Uint8Array to base64
-  const base64 = Buffer.from(data).toString("base64");
-  // Convert base64 to base64url
-  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-/**
- * Convert string to base64url string
- */
-function stringToBase64url(str: string): string {
-  const bytes = new TextEncoder().encode(str);
-  return base64urlEncode(bytes);
 }
 
 /**
  * ApiKeyStamper that signs requests with Ed25519
  */
 export class ApiKeyStamper {
-  private signingKeypair: nacl.SignKeyPair;
+  private keypair: { publicKey: string; secretKey: string };
 
   constructor(config: ApiKeyStamperConfig) {
-    // Decode the secret key from base58
-    const secretKeyBytes = bs58.decode(config.apiSecretKey);
-    this.signingKeypair = nacl.sign.keyPair.fromSecretKey(secretKeyBytes);
+    // Create keypair from the provided secret key
+    this.keypair = createKeyPairFromSecret(config.apiSecretKey);
   }
 
   /**
@@ -44,11 +26,12 @@ export class ApiKeyStamper {
     const requestBody =
       typeof config.data === "string" ? config.data : config.data === undefined ? "" : JSON.stringify(config.data);
     const dataUtf8 = Buffer.from(requestBody, "utf8");
-    const signature = nacl.sign.detached(dataUtf8, this.signingKeypair.secretKey);
+    const signature = signWithSecret(this.keypair.secretKey, dataUtf8);
 
     // Create the new stamp structure
     const stampData = {
-      publicKey: base64urlEncode(this.signingKeypair.publicKey),
+      // The keypair is bs58 encoded, need to decode and then base64url encode the public key
+      publicKey: base64urlEncode(bs58.decode(this.keypair.publicKey)),  
       signature: base64urlEncode(signature),
       kind: "PKI" as const,
     };
@@ -60,6 +43,7 @@ export class ApiKeyStamper {
     // Add the new stamp header
     config.headers = config.headers || {};
     config.headers["X-Phantom-Stamp"] = stamp;
+
     return Promise.resolve(config);
   }
 }

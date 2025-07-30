@@ -1,7 +1,7 @@
 {
-  "name": "@phantom/api-key-stamper",
+  "name": "@phantom/crypto",
   "version": "0.0.1",
-  "description": "API key stamper for Phantom Wallet SDK",
+  "description": "Cryptographic utilities for Phantom SDK",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -12,14 +12,21 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "rimraf ./dist && tsup src/index.ts --format cjs,esm --dts --external buffer,@phantom/base64url,@phantom/crypto",
-    "dev": "tsc --watch",
+    "build": "rimraf ./dist && tsup",
+    "dev": "rimraf ./dist && tsup --watch",
     "clean": "rm -rf dist",
     "test": "jest",
     "test:watch": "jest --watch",
-    "lint": "tsc --noEmit && eslint --cache . --ext .ts,.tsx",
-    "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
+    "lint": "tsc --noEmit && eslint --cache . --ext .ts",
+    "prettier": "prettier --write \"src/**/*.{ts}\""
+  },
+  "dependencies": {
+    "bs58": "^5.0.0",
+    "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
     "@types/bs58": "^4.0.1",
@@ -33,14 +40,14 @@
     "tsup": "^6.7.0",
     "typescript": "^5.0.4"
   },
-  "dependencies": {
-    "@phantom/base64url": "workspace:^",
-    "@phantom/crypto": "workspace:^",
-    "axios": "^1.10.0",
-    "bs58": "^6.0.0",
-    "buffer": "^6.0.3"
-  },
-  "files": [
-    "dist"
-  ]
+  "keywords": [
+    "crypto",
+    "cryptography",
+    "ed25519",
+    "nacl",
+    "phantom",
+    "keypair",
+    "signing"
+  ],
+  "license": "MIT"
 }
