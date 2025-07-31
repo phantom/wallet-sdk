@@ -36,7 +36,7 @@
     "@phantom/api-key-stamper": "workspace:^",
     "@phantom/base64url": "workspace:^",
     "@phantom/crypto": "workspace:^",
-    "@phantom/openapi-wallet-service": "^0.1.5",
+    "@phantom/openapi-wallet-service": "^0.1.7",
     "axios": "^1.10.0",
     "bs58": "^6.0.0"
   },

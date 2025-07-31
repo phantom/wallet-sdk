@@ -19,18 +19,13 @@ npm install @phantom/base64url
 ## Usage
 
 ```typescript
-import { 
-  base64urlEncode, 
-  base64urlDecode, 
-  stringToBase64url, 
-  base64urlDecodeToString 
-} from '@phantom/base64url';
+import { base64urlEncode, base64urlDecode, stringToBase64url, base64urlDecodeToString } from "@phantom/base64url";
 
 // Encode string to base64url
-const encoded = stringToBase64url('Hello World');
+const encoded = stringToBase64url("Hello World");
 console.log(encoded); // "SGVsbG8gV29ybGQ"
 
-// Decode base64url to string  
+// Decode base64url to string
 const decoded = base64urlDecodeToString(encoded);
 console.log(decoded); // "Hello World"
 
@@ -64,7 +59,7 @@ Decodes base64url string to Uint8Array.
 
 Encodes UTF-8 string to base64url format.
 
-- **str**: UTF-8 string to encode  
+- **str**: UTF-8 string to encode
 - **Returns**: base64url encoded string
 
 ### `base64urlDecodeToString(str: string): string`
@@ -79,7 +74,7 @@ Decodes base64url string to UTF-8 string.
 Base64url is a URL-safe variant of Base64 encoding defined in RFC 4648:
 
 - Uses `-` instead of `+`
-- Uses `_` instead of `/`  
+- Uses `_` instead of `/`
 - Removes padding (`=`) characters
 - Safe to use in URLs, filenames, and HTTP headers
 
@@ -94,12 +89,12 @@ Base64url is a URL-safe variant of Base64 encoding defined in RFC 4648:
 ### JWT Token Handling
 
 ```typescript
-import { stringToBase64url, base64urlDecodeToString } from '@phantom/base64url';
+import { stringToBase64url, base64urlDecodeToString } from "@phantom/base64url";
 
 const payload = JSON.stringify({
   sub: "1234567890",
-  name: "John Doe", 
-  iat: 1516239022
+  name: "John Doe",
+  iat: 1516239022,
 });
 
 const encodedPayload = stringToBase64url(payload);
@@ -112,10 +107,10 @@ console.log(JSON.parse(decodedPayload));
 ### Binary Data Encoding
 
 ```typescript
-import { base64urlEncode, base64urlDecode } from '@phantom/base64url';
+import { base64urlEncode, base64urlDecode } from "@phantom/base64url";
 
 // Encode binary data
-const binaryData = new Uint8Array([0xFF, 0xFE, 0xFD, 0xFC]);
+const binaryData = new Uint8Array([0xff, 0xfe, 0xfd, 0xfc]);
 const encoded = base64urlEncode(binaryData);
 console.log(encoded); // URL-safe encoded string
 
@@ -127,10 +122,10 @@ console.log(decoded); // Original Uint8Array
 ### API Integration
 
 ```typescript
-import { stringToBase64url } from '@phantom/base64url';
+import { stringToBase64url } from "@phantom/base64url";
 
 // Safe for URL parameters
-const userData = JSON.stringify({ userId: 123, action: 'login' });
+const userData = JSON.stringify({ userId: 123, action: "login" });
 const safeParam = stringToBase64url(userData);
 
 // Use in URL without encoding issues

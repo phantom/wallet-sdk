@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return new BrowserSDK({
         providerType: "injected",
         solanaProvider: solanaProvider,
-         addressTypes: [AddressType.solana, AddressType.ethereum],
+        addressTypes: [AddressType.solana, AddressType.ethereum],
       });
     } else {
       // For demo purposes, use hardcoded embedded config

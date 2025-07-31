@@ -24,7 +24,7 @@ describe("@phantom/base64url", () => {
 
     it("should replace base64 chars with base64url chars", () => {
       // Test data that produces + and / in standard base64
-      const input = new Uint8Array([62, 63, 64]); 
+      const input = new Uint8Array([62, 63, 64]);
       const result = base64urlEncode(input);
       expect(result).not.toContain("+");
       expect(result).not.toContain("/");
@@ -98,7 +98,7 @@ describe("@phantom/base64url", () => {
       const input = "Hello 🌍";
       const result = stringToBase64url(input);
       expect(result).toMatch(/^[A-Za-z0-9_-]*$/);
-      
+
       // Should be decodable back to original
       const decoded = base64urlDecodeToString(result);
       expect(decoded).toBe(input);
@@ -108,7 +108,7 @@ describe("@phantom/base64url", () => {
       const input = JSON.stringify({ key: "value", number: 42, bool: true });
       const result = stringToBase64url(input);
       expect(result).toMatch(/^[A-Za-z0-9_-]*$/);
-      
+
       const decoded = base64urlDecodeToString(result);
       expect(decoded).toBe(input);
     });
@@ -175,9 +175,9 @@ describe("@phantom/base64url", () => {
       const payload = JSON.stringify({
         sub: "1234567890",
         name: "John Doe",
-        iat: 1516239022
+        iat: 1516239022,
       });
-      
+
       const encoded = stringToBase64url(payload);
       const decoded = base64urlDecodeToString(encoded);
       expect(JSON.parse(decoded)).toEqual(JSON.parse(payload));

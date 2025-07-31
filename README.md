@@ -12,113 +12,114 @@ A comprehensive suite of SDKs for integrating Phantom Wallet across different pl
 - [@phantom/server-sdk](https://www.npmjs.com/package/@phantom/server-sdk): Server SDK for custodial server wallets
 - [@phantom/browser-injected-sdk](https://www.npmjs.com/package/@phantom/browser-injected-sdk): Direct SDK to interface with the Phantom browser extension
 
-
 ## SDK Overview
 
 This repository contains multiple SDKs for different integration needs, prioritized by ease of use:
 
-### React SDK **
+### React SDK \*\*
+
 **[@phantom/react-sdk](./packages/react-sdk/README.md)** - React hooks for Phantom integration with native transaction support.
 
 ```tsx
-import { PhantomProvider, useConnect, useSignAndSendTransaction, AddressType, NetworkId } from '@phantom/react-sdk';
+import { PhantomProvider, useConnect, useSignAndSendTransaction, AddressType, NetworkId } from "@phantom/react-sdk";
 
 // App wrapper
-<PhantomProvider config={{
-  providerType: 'embedded',
-  embeddedWalletType: 'app-wallet',
-  addressTypes: [AddressType.solana],
-  apiBaseUrl: 'https://api.phantom.com',
-  organizationId: 'your-org-id'
-}}>
+<PhantomProvider
+  config={{
+    providerType: "embedded",
+    embeddedWalletType: "app-wallet",
+    addressTypes: [AddressType.solana],
+    apiBaseUrl: "https://api.phantom.com",
+    organizationId: "your-org-id",
+  }}
+>
   <App />
-</PhantomProvider>
+</PhantomProvider>;
 
 // Component - works with native transaction objects!
 function SendTransaction() {
   const { connect } = useConnect();
   const { signAndSendTransaction } = useSignAndSendTransaction();
-  
+
   const handleSend = async () => {
     await connect();
     const transaction = new Transaction().add(/* your instructions */);
     await signAndSendTransaction({
       networkId: NetworkId.SOLANA_MAINNET,
-      transaction // Native Solana Transaction object!
+      transaction, // Native Solana Transaction object!
     });
   };
 }
 ```
 
 ### Browser SDK - **For Vanilla JS/TS**
+
 **[@phantom/browser-sdk](./packages/browser-sdk/README.md)** - Core browser SDK with unified interface for Phantom extension and embedded wallets.
 
 ```typescript
-import { BrowserSDK, NetworkId, AddressType } from '@phantom/browser-sdk';
+import { BrowserSDK, NetworkId, AddressType } from "@phantom/browser-sdk";
 
 const sdk = new BrowserSDK({
-  providerType: 'embedded', // or 'injected' for browser extension
-  embeddedWalletType: 'app-wallet',
+  providerType: "embedded", // or 'injected' for browser extension
+  embeddedWalletType: "app-wallet",
   addressTypes: [AddressType.solana],
-  apiBaseUrl: 'https://api.phantom.com',
-  organizationId: 'your-org-id'
+  apiBaseUrl: "https://api.phantom.com",
+  organizationId: "your-org-id",
 });
 
 await sdk.connect();
 await sdk.signAndSendTransaction({
   networkId: NetworkId.SOLANA_MAINNET,
-  transaction: solanaTransaction // Native transaction objects
+  transaction: solanaTransaction, // Native transaction objects
 });
 ```
 
 ### Server SDK - **For Backend Applications**
+
 **[@phantom/server-sdk](./packages/server-sdk/README.md)** - Server-side SDK for backend applications with built-in authentication.
 
 ```typescript
-import { ServerSDK, NetworkId } from '@phantom/server-sdk';
+import { ServerSDK, NetworkId } from "@phantom/server-sdk";
 
 const sdk = new ServerSDK({
   organizationId: process.env.ORGANIZATION_ID,
   apiPrivateKey: process.env.PRIVATE_KEY,
-  apiBaseUrl: process.env.API_URL
+  apiBaseUrl: process.env.API_URL,
 });
 
-const wallet = await sdk.createWallet('User Wallet');
-const signature = await sdk.signMessage(
-  wallet.walletId,
-  'Hello from Phantom!',
-  NetworkId.SOLANA_MAINNET
-);
+const wallet = await sdk.createWallet("User Wallet");
+const signature = await sdk.signMessage(wallet.walletId, "Hello from Phantom!", NetworkId.SOLANA_MAINNET);
 ```
 
 ### React UI - **Complete UI Solution**
+
 **[@phantom/react-ui](./packages/react-ui/README.md)** - Pre-built React UI components with automatic modal injection.
 
 ```tsx
-import { PhantomUIProvider, useSignAndSendTransaction } from '@phantom/react-ui';
+import { PhantomUIProvider, useSignAndSendTransaction } from "@phantom/react-ui";
 
 // App wrapper - includes react-sdk + UI theme
 <PhantomUIProvider
   config={{
-    providerType: 'embedded',
+    providerType: "embedded",
     addressTypes: [AddressType.solana],
-    apiBaseUrl: 'https://api.phantom.com',
-    organizationId: 'your-org-id'
+    apiBaseUrl: "https://api.phantom.com",
+    organizationId: "your-org-id",
   }}
   theme="dark"
 >
   <App />
-</PhantomUIProvider>
+</PhantomUIProvider>;
 
 // Component - UI appears automatically
 function SendTransaction() {
   const { signAndSendTransaction } = useSignAndSendTransaction();
-  
+
   const send = async () => {
     // Connection/transaction modals appear automatically
     await signAndSendTransaction({
       networkId: NetworkId.SOLANA_MAINNET,
-      transaction: solanaTransaction
+      transaction: solanaTransaction,
     });
   };
 }
@@ -127,12 +128,15 @@ function SendTransaction() {
 ## Core Infrastructure
 
 ### 🔧 Client
+
 **[@phantom/client](./packages/client/README.md)** - Low-level HTTP client for Phantom's API with authentication support.
 
-### 🔐 API Key Stamper  
+### 🔐 API Key Stamper
+
 **[@phantom/api-key-stamper](./packages/api-key-stamper/README.md)** - Ed25519 authentication for API requests.
 
 ### 🔌 Browser Injected SDK
+
 **[@phantom/browser-injected-sdk](./packages/browser-injected-sdk/README.md)** - Direct integration with Phantom browser extension.
 
 ## Packages

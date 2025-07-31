@@ -316,7 +316,7 @@ describe("BrowserSDK", () => {
 
         const result = await sdk.signMessage("test-message", NetworkId.SOLANA_MAINNET);
 
-        expect(mockProvider.signMessage).toHaveBeenCalledWith( {
+        expect(mockProvider.signMessage).toHaveBeenCalledWith({
           message: "test-message",
           networkId: NetworkId.SOLANA_MAINNET,
         });
@@ -342,7 +342,7 @@ describe("BrowserSDK", () => {
           networkId: NetworkId.ETHEREUM_MAINNET,
         });
 
-        expect(mockProvider.signAndSendTransaction).toHaveBeenCalledWith( {
+        expect(mockProvider.signAndSendTransaction).toHaveBeenCalledWith({
           transaction: mockTransaction,
           networkId: NetworkId.ETHEREUM_MAINNET,
         });
@@ -394,5 +394,4 @@ describe("BrowserSDK", () => {
       ).rejects.toThrow("Transaction failed");
     });
   });
-
 });
