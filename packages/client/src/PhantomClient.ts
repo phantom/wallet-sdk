@@ -46,6 +46,8 @@ import {
   type Transaction,
   type SignedTransaction,
   type GetWalletsResult,
+  type SignMessageParams,
+  type SignAndSendTransactionParams,
 } from "./types";
 
 // TODO(napas): Auto generate this from the OpenAPI spec
@@ -149,32 +151,57 @@ export class PhantomClient {
     }
   }
 
+  /**
+   * Sign and send a transaction - supports both object and individual parameters
+   */
+  async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<SignedTransaction>;
   async signAndSendTransaction(
     walletId: string,
     transaction: Transaction,
     networkId: NetworkId,
+  ): Promise<SignedTransaction>;
+  async signAndSendTransaction(
+    paramsOrWalletId: SignAndSendTransactionParams | string,
+    transaction?: Transaction,
+    networkId?: NetworkId,
   ): Promise<SignedTransaction> {
+    let walletId: string;
+    let transactionParam: Transaction;
+    let networkIdParam: NetworkId;
+
+    if (typeof paramsOrWalletId === "object") {
+      // New object-based API
+      walletId = paramsOrWalletId.walletId;
+      transactionParam = paramsOrWalletId.transaction;
+      networkIdParam = paramsOrWalletId.networkId;
+    } else {
+      // Legacy API
+      walletId = paramsOrWalletId;
+      transactionParam = transaction!;
+      networkIdParam = networkId!;
+    }
+
     try {
       if (!this.config.organizationId) {
         throw new Error("organizationId is required to sign and send a transaction");
       }
       // Transaction is already base64url encoded
-      const encodedTransaction = transaction;
+      const encodedTransaction = transactionParam;
 
-      const submissionConfig = deriveSubmissionConfig(networkId);
+      const submissionConfig = deriveSubmissionConfig(networkIdParam);
 
       // If we don't have a submission config, the transaction will only be signed, not submitted
       if (!submissionConfig) {
         console.error(
-          `No submission config available for network ${networkId}. Transaction will be signed but not submitted.`,
+          `No submission config available for network ${networkIdParam}. Transaction will be signed but not submitted.`,
         );
       }
 
       // Get network configuration
-      const networkConfig = getNetworkConfig(networkId);
+      const networkConfig = getNetworkConfig(networkIdParam);
 
       if (!networkConfig) {
-        throw new Error(`Unsupported network ID: ${networkId}`);
+        throw new Error(`Unsupported network ID: ${networkIdParam}`);
       }
 
       const derivationInfo: DerivationInfo = {
@@ -249,16 +276,41 @@ export class PhantomClient {
     }
   }
 
-  async signMessage(walletId: string, message: string, networkId: NetworkId): Promise<string> {
+  /**
+   * Sign a message - supports both object and individual parameters
+   */
+  async signMessage(params: SignMessageParams): Promise<string>;
+  async signMessage(walletId: string, message: string, networkId: NetworkId): Promise<string>;
+  async signMessage(
+    paramsOrWalletId: SignMessageParams | string,
+    message?: string,
+    networkId?: NetworkId,
+  ): Promise<string> {
+    let walletId: string;
+    let messageParam: string;
+    let networkIdParam: NetworkId;
+
+    if (typeof paramsOrWalletId === "object") {
+      // New object-based API
+      walletId = paramsOrWalletId.walletId;
+      messageParam = paramsOrWalletId.message;
+      networkIdParam = paramsOrWalletId.networkId;
+    } else {
+      // Legacy API
+      walletId = paramsOrWalletId;
+      messageParam = message!;
+      networkIdParam = networkId!;
+    }
+
     try {
       if (!this.config.organizationId) {
         throw new Error("organizationId is required to sign a message");
       }
       // Get network configuration
-      const networkConfig = getNetworkConfig(networkId);
+      const networkConfig = getNetworkConfig(networkIdParam);
 
       if (!networkConfig) {
-        throw new Error(`Unsupported network ID: ${networkId}`);
+        throw new Error(`Unsupported network ID: ${networkIdParam}`);
       }
 
       const derivationInfo: DerivationInfo = {
@@ -268,7 +320,7 @@ export class PhantomClient {
       };
 
       // Message is already base64url encoded
-      const base64StringMessage = message;
+      const base64StringMessage = messageParam;
 
       const signRequest: SignRawPayloadRequest = {
         organizationId: this.config.organizationId,

@@ -16,7 +16,7 @@ A comprehensive suite of SDKs for integrating Phantom Wallet across different pl
 
 This repository contains multiple SDKs for different integration needs, prioritized by ease of use:
 
-### React SDK \*\*
+### React SDK
 
 **[@phantom/react-sdk](./packages/react-sdk/README.md)** - React hooks for Phantom integration with native transaction support.
 
@@ -88,7 +88,12 @@ const sdk = new ServerSDK({
 });
 
 const wallet = await sdk.createWallet("User Wallet");
-const signature = await sdk.signMessage(wallet.walletId, "Hello from Phantom!", NetworkId.SOLANA_MAINNET);
+const message = Buffer.from("Hello from Phantom!").toString("base64url"); // base64url encode
+const signature = await sdk.signMessage({
+  walletId: wallet.walletId,
+  message,
+  networkId: NetworkId.SOLANA_MAINNET,
+});
 ```
 
 ### React UI - **Complete UI Solution**

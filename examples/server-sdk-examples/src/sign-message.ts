@@ -157,14 +157,20 @@ async function signMessage() {
     console.log(`   Message: "${message}"`);
     console.log(`   Length: ${message.length} characters`);
     console.log(`   UTF-8 bytes: ${Buffer.from(message, "utf8").length}`);
+    console.log(`   Base64url encoded: ${Buffer.from(message, "utf8").toString("base64url")}`);
     console.log(`\n🔑 Wallet Details:`);
     console.log(`   Wallet ID: ${wallet.walletId}`);
     console.log(`   Solana Address: ${wallet.solanaAddress}`);
     console.log(`   Status: ${wallet.isNew ? "Newly created" : "Existing wallet"}`);
 
-    // Sign the message
+    // Sign the message (encode as base64url)
     console.log(`\n🖊️  Signing message with Solana network...`);
-    const signature = await sdk.signMessage(wallet.walletId, message, NetworkId.SOLANA_MAINNET);
+    const base64urlMessage = Buffer.from(message, "utf8").toString("base64url");
+    const signature = await sdk.signMessage({
+      walletId: wallet.walletId,
+      message: base64urlMessage,
+      networkId: NetworkId.SOLANA_MAINNET,
+    });
 
     // Display results
     console.log(`\n✅ Message signed successfully!`);

@@ -64,8 +64,34 @@ const wallet = await client.createWallet("My Wallet");
 
 #### Transaction & Signing
 
-- `signAndSendTransaction(walletId, transaction, networkId)` - Sign and optionally submit a transaction to the blockchain
-- `signMessage(walletId, message, networkId)` - Sign a message with a wallet's private key
+- `signAndSendTransaction(params)` - Sign and optionally submit a transaction to the blockchain
+- `signMessage(params)` - Sign a message with a wallet's private key
+
+**Object Parameters:**
+
+```typescript
+// Sign message with object parameters
+await client.signMessage({
+  walletId: "wallet_123",
+  message: "base64url_encoded_message",
+  networkId: NetworkId.SOLANA_MAINNET,
+});
+
+// Sign transaction with object parameters
+await client.signAndSendTransaction({
+  walletId: "wallet_123",
+  transaction: "base64url_encoded_transaction",
+  networkId: NetworkId.SOLANA_MAINNET,
+});
+```
+
+**Legacy API (still supported):**
+
+```typescript
+// Legacy individual parameters (deprecated but still works)
+await client.signMessage(walletId, message, networkId);
+await client.signAndSendTransaction(walletId, transaction, networkId);
+```
 
 #### Organization Management
 
@@ -86,12 +112,30 @@ The client supports multiple blockchain networks through CAIP-2 identifiers:
 import { NetworkId } from "@phantom/client";
 
 // Solana
-await client.signAndSendTransaction(walletId, transaction, NetworkId.SOLANA_MAINNET);
-await client.signAndSendTransaction(walletId, transaction, NetworkId.SOLANA_DEVNET);
+await client.signAndSendTransaction({
+  walletId,
+  transaction,
+  networkId: NetworkId.SOLANA_MAINNET,
+});
+
+await client.signAndSendTransaction({
+  walletId,
+  transaction,
+  networkId: NetworkId.SOLANA_DEVNET,
+});
 
 // Ethereum
-await client.signAndSendTransaction(walletId, transaction, NetworkId.ETHEREUM_MAINNET);
-await client.signAndSendTransaction(walletId, transaction, NetworkId.ETHEREUM_SEPOLIA);
+await client.signAndSendTransaction({
+  walletId,
+  transaction,
+  networkId: NetworkId.ETHEREUM_MAINNET,
+});
+
+await client.signAndSendTransaction({
+  walletId,
+  transaction,
+  networkId: NetworkId.ETHEREUM_SEPOLIA,
+});
 
 // Other supported networks
 NetworkId.POLYGON_MAINNET;

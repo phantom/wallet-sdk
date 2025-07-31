@@ -1,10 +1,10 @@
 import { useCallback } from "react";
 // import { useSignMessage as useBaseSignMessage } from "@phantom/react-sdk";
 import { usePhantomUI } from "../PhantomUIProvider";
-import type { NetworkId } from "@phantom/client";
+import type { SignMessageParams } from "@phantom/browser-sdk";
 
 export interface UseSignMessageResult {
-  signMessage: (message: string, networkId: NetworkId) => Promise<string>;
+  signMessage: (params: SignMessageParams) => Promise<string>;
   isLoading: boolean;
   error: Error | null;
 }
@@ -13,8 +13,8 @@ export function useSignMessage(): UseSignMessageResult {
   const ui = usePhantomUI();
 
   const signMessage = useCallback(
-    async (message: string, networkId: NetworkId): Promise<string> => {
-      return await ui.signMessage(message, networkId);
+    async (params: SignMessageParams): Promise<string> => {
+      return await ui.signMessage(params);
     },
     [ui],
   );

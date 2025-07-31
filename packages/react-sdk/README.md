@@ -239,7 +239,12 @@ function ExtensionStatus() {
       {isInstalled ? (
         <p>✅ Phantom extension is installed!</p>
       ) : (
-        <p>❌ Phantom extension not found. <a href="https://phantom.app/download" target="_blank">Install here</a></p>
+        <p>
+          ❌ Phantom extension not found.{" "}
+          <a href="https://phantom.app/download" target="_blank">
+            Install here
+          </a>
+        </p>
       )}
     </div>
   );
@@ -247,12 +252,14 @@ function ExtensionStatus() {
 ```
 
 **Features:**
+
 - **Session-based caching**: Result is cached during the browser session to avoid redundant checks
 - **Automatic detection**: Runs automatically when the hook is first used
 - **Loading states**: Provides `isLoading` during the initial check
 - **Performance optimized**: Subsequent calls return cached result instantly
 
 **Use cases:**
+
 - Show installation prompts for users without the extension
 - Conditionally render UI based on extension availability
 - Provide fallback options when extension is not installed
@@ -287,7 +294,10 @@ function SignMessage() {
 
   const handleSign = async () => {
     try {
-      const signature = await signMessage("Hello from Phantom!", NetworkId.SOLANA_MAINNET);
+      const signature = await signMessage({
+        message: "Hello from Phantom!",
+        networkId: NetworkId.SOLANA_MAINNET,
+      });
       console.log("Signature:", signature);
     } catch (err) {
       console.error("Failed to sign:", err);
@@ -572,16 +582,16 @@ function MultiChainWallet() {
 
 Quick reference of all available hooks:
 
-| Hook | Purpose | Returns |
-|------|---------|---------|
-| `useConnect` | Connect to wallet | `{ connect, isConnecting, error }` |
-| `useAccounts` | Get wallet addresses | `WalletAddress[]` or `null` |
-| `useIsExtensionInstalled` | Check extension status | `{ isLoading, isInstalled }` |
-| `useDisconnect` | Disconnect from wallet | `{ disconnect, isDisconnecting }` |
-| `useSignMessage` | Sign text messages | `{ signMessage, isSigning, error }` |
-| `useSignAndSendTransaction` | Sign and send transactions | `{ signAndSendTransaction, isSigning, error }` |
+| Hook                        | Purpose                             | Returns                                         |
+| --------------------------- | ----------------------------------- | ----------------------------------------------- |
+| `useConnect`                | Connect to wallet                   | `{ connect, isConnecting, error }`              |
+| `useAccounts`               | Get wallet addresses                | `WalletAddress[]` or `null`                     |
+| `useIsExtensionInstalled`   | Check extension status              | `{ isLoading, isInstalled }`                    |
+| `useDisconnect`             | Disconnect from wallet              | `{ disconnect, isDisconnecting }`               |
+| `useSignMessage`            | Sign text messages                  | `{ signMessage, isSigning, error }`             |
+| `useSignAndSendTransaction` | Sign and send transactions          | `{ signAndSendTransaction, isSigning, error }`  |
 | `useCreateUserOrganization` | Create user organization (embedded) | `{ createUserOrganization, isCreating, error }` |
-| `usePhantom` | Get provider context | `{ isConnected, isReady, currentProviderType }` |
+| `usePhantom`                | Get provider context                | `{ isConnected, isReady, currentProviderType }` |
 
 ## Configuration Reference
 

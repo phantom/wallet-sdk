@@ -6,8 +6,7 @@ import {
   usePhantom,
   type ConnectOptions as _ConnectOptions,
 } from "@phantom/react-sdk";
-import type { SignAndSendTransactionParams, SignedTransaction } from "@phantom/browser-sdk";
-import type { NetworkId } from "@phantom/client";
+import type { SignAndSendTransactionParams, SignedTransaction, SignMessageParams } from "@phantom/browser-sdk";
 
 export interface PhantomUIProviderProps {
   children: ReactNode;
@@ -31,8 +30,7 @@ interface TransactionUIState {
 
 interface MessageUIState {
   isVisible: boolean;
-  message: string | null;
-  networkId: NetworkId | null;
+  params: SignMessageParams | null;
   isLoading: boolean;
   error: Error | null;
 }
@@ -54,8 +52,8 @@ interface PhantomUIContextValue {
 
   // Message state
   messageState: MessageUIState;
-  showMessageModal: (message: string, networkId: NetworkId) => void;
-  signMessage: (message: string, networkId: NetworkId) => Promise<string>;
+  showMessageModal: (params: SignMessageParams) => void;
+  signMessage: (params: SignMessageParams) => Promise<string>;
 
   // Internal methods for modals
   _internal: {
@@ -93,8 +91,7 @@ export function PhantomUIProvider({ children, theme = "light", customTheme }: Ph
   // Message state
   const [messageState, setMessageState] = useState<MessageUIState>({
     isVisible: false,
-    message: null,
-    networkId: null,
+    params: null,
     isLoading: false,
     error: null,
   });
@@ -212,12 +209,11 @@ export function PhantomUIProvider({ children, theme = "light", customTheme }: Ph
 
   // Enhanced sign message with UI
   const signMessage = useCallback(
-    async (message: string, networkId: NetworkId): Promise<string> => {
+    async (params: SignMessageParams): Promise<string> => {
       // Show message modal
       setMessageState({
         isVisible: true,
-        message,
-        networkId,
+        params,
         isLoading: false,
         error: null,
       });
@@ -236,13 +232,12 @@ export function PhantomUIProvider({ children, theme = "light", customTheme }: Ph
         setMessageState(prev => ({ ...prev, isLoading: true }));
 
         // Execute signing
-        const result = await baseSignMessage.signMessage(message, networkId);
+        const result = await baseSignMessage.signMessage(params);
 
         // Hide modal on success
         setMessageState({
           isVisible: false,
-          message: null,
-          networkId: null,
+          params: null,
           isLoading: false,
           error: null,
         });
@@ -293,8 +288,7 @@ export function PhantomUIProvider({ children, theme = "light", customTheme }: Ph
     }
     setMessageState({
       isVisible: false,
-      message: null,
-      networkId: null,
+      params: null,
       isLoading: false,
       error: null,
     });
@@ -310,11 +304,10 @@ export function PhantomUIProvider({ children, theme = "light", customTheme }: Ph
     });
   }, []);
 
-  const showMessageModal = useCallback((message: string, networkId: NetworkId) => {
+  const showMessageModal = useCallback((params: SignMessageParams) => {
     setMessageState({
       isVisible: true,
-      message,
-      networkId,
+      params,
       isLoading: false,
       error: null,
     });

@@ -43,6 +43,8 @@ export {
   type SignedTransaction,
   type GetWalletsResult,
   type Wallet,
+  type SignMessageParams,
+  type SignAndSendTransactionParams,
   generateKeyPair,
 } from "@phantom/client";
 

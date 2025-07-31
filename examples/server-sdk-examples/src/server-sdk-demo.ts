@@ -166,7 +166,11 @@ async function runDemo() {
 
     // Convert to base64url
     const transactionBase64 = Buffer.from(serializedTransaction).toString("base64url");
-    const signedResult = await sdk.signAndSendTransaction(wallet.walletId, transactionBase64, networkId);
+    const signedResult = await sdk.signAndSendTransaction({
+      walletId: wallet.walletId,
+      transaction: transactionBase64,
+      networkId,
+    });
 
     console.log("✅ Transaction signed and sent!");
     console.log(`   Raw transaction (base64): ${signedResult.rawTransaction}`);
