@@ -1,5 +1,12 @@
 # @phantom/api-key-stamper
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [3860924]
+  - @phantom/crypto@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes
