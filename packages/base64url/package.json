@@ -1,6 +1,6 @@
 {
   "name": "@phantom/base64url",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "Isomorphic base64url encoding/decoding utilities",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

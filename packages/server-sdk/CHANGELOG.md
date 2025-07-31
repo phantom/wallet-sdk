@@ -1,5 +1,14 @@
 # @phantom/server-sdk
 
+## 0.1.1
+
+### Patch Changes
+
+- f361c9d: Updated to new interface and trying to fix the deployment versions
+- Updated dependencies [f361c9d]
+  - @phantom/api-key-stamper@0.1.0
+  - @phantom/client@0.1.0
+
 ## 0.1.0
 
 ### Minor Changes

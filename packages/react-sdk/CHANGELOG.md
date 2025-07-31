@@ -1,5 +1,13 @@
 # @phantom/react-sdk
 
+## 0.2.0
+
+### Patch Changes
+
+- f361c9d: Updated to new interface and trying to fix the deployment versions
+- Updated dependencies [f361c9d]
+  - @phantom/browser-sdk@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes
