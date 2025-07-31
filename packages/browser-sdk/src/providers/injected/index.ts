@@ -36,7 +36,7 @@ export class InjectedProvider implements Provider {
     this.addressTypes = config.addressTypes || [AddressType.solana, AddressType.ethereum];
 
     // Initialize phantom instance with plugins based on enabled address types
-    const plugins:any[] = [createExtensionPlugin()]; // Always include extension plugin
+    const plugins: any[] = [createExtensionPlugin()]; // Always include extension plugin
 
     if (this.addressTypes.includes(AddressType.solana)) {
       plugins.push(createSolanaPlugin());

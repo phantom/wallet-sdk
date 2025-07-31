@@ -2465,7 +2465,7 @@ __metadata:
     "@phantom/api-key-stamper": "workspace:^"
     "@phantom/base64url": "workspace:^"
     "@phantom/crypto": "workspace:^"
-    "@phantom/openapi-wallet-service": "npm:^0.1.5"
+    "@phantom/openapi-wallet-service": "npm:^0.1.7"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
     axios: "npm:^1.10.0"
@@ -2499,12 +2499,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/openapi-wallet-service@npm:^0.1.5":
-  version: 0.1.5
-  resolution: "@phantom/openapi-wallet-service@npm:0.1.5"
+"@phantom/openapi-wallet-service@npm:^0.1.7":
+  version: 0.1.7
+  resolution: "@phantom/openapi-wallet-service@npm:0.1.7"
   dependencies:
     axios: "npm:^1.6.1"
-  checksum: 10c0/c69a36f509a5ec18bd4ef9744688a959475d9611be69effa565d82e366116f1bbb8e594a24b34495cdd2a61f99d232b789f3bc8cb529ccdbf71cf26682c54a55
+  checksum: 10c0/ee43ce99ea8fa6db4cfd7d353dba8cfc33d5b2225077a9be05019d76a7330885edfad981ce3e7f3f96fa36526880cfa6e125b7c4c16d9c5f3308d75c9ee8a6a0
   languageName: node
   linkType: hard
 
@@ -2620,7 +2620,7 @@ __metadata:
   dependencies:
     "@phantom/api-key-stamper": "workspace:^"
     "@phantom/client": "workspace:^"
-    "@phantom/openapi-wallet-service": "npm:^0.1.5"
+    "@phantom/openapi-wallet-service": "npm:^0.1.7"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
     dotenv: "npm:^16.4.1"

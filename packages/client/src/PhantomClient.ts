@@ -1,7 +1,7 @@
 import axios, { type AxiosInstance } from "axios";
 import bs58 from "bs58";
 import { base64urlEncode } from "@phantom/base64url";
-import {  type Keypair } from "@phantom/crypto";
+import { type Keypair } from "@phantom/crypto";
 import { ApiKeyStamper } from "@phantom/api-key-stamper";
 import {
   Configuration,
@@ -16,7 +16,6 @@ import {
   type CreateWallet,
   type SignTransaction,
   type SignRawPayload,
-  type CreateWalletRequest,
   type SignTransactionRequest,
   type SignRawPayloadRequest,
   type CreateOrganization,
@@ -36,7 +35,7 @@ import {
   type ExternalDerivedAccount,
   KmsUserRole,
   Algorithm,
-  type KmsOrganizationV0,
+  type ExternalKmsOrganization,
 } from "@phantom/openapi-wallet-service";
 import { DerivationPath, getNetworkConfig } from "./constants";
 import { deriveSubmissionConfig, type NetworkId } from "./caip2-mappings";
@@ -54,7 +53,6 @@ export interface SubmissionConfig {
   chain: string; // e.g., 'solana', 'ethereum', 'polygon'
   network: string; // e.g., 'mainnet', 'devnet', 'sepolia'
 }
-
 
 export class PhantomClient {
   private config: PhantomClientConfig;
@@ -102,7 +100,7 @@ export class PhantomClient {
         throw new Error("organizationId is required to create a wallet");
       }
       // Create wallet request
-      const walletRequest: CreateWalletRequest = {
+      const walletRequest: any = {
         organizationId: this.config.organizationId,
         walletName: walletName || `Wallet ${Date.now()}`,
         accounts: [DerivationPath.Solana, DerivationPath.Ethereum, DerivationPath.Bitcoin, DerivationPath.Sui] as any,
@@ -137,13 +135,12 @@ export class PhantomClient {
       const accountsResponse = await this.kmsApi.postKmsRpc(requestAccounts);
 
       // Accounts fetched successfully
-      const accountsResult = accountsResponse.data.result as (ExternalDerivedAccount & { publicKey: string })[];
-
+      const accountsResult = accountsResponse.data.result as (ExternalDerivedAccount & { address: string })[];
       return {
         walletId: walletResult.walletId,
         addresses: accountsResult.map(account => ({
           addressType: account.addressFormat,
-          address: account.publicKey,
+          address: account.address,
         })),
       };
     } catch (error: any) {
@@ -158,7 +155,6 @@ export class PhantomClient {
     networkId: NetworkId,
   ): Promise<SignedTransaction> {
     try {
-
       if (!this.config.organizationId) {
         throw new Error("organizationId is required to sign and send a transaction");
       }
@@ -241,11 +237,11 @@ export class PhantomClient {
       } as any;
 
       const accountsResponse = await this.kmsApi.postKmsRpc(requestAccounts);
-      const accountsResult = accountsResponse.data.result as (ExternalDerivedAccount & { publicKey: string })[];
+      const accountsResult = accountsResponse.data.result as (ExternalDerivedAccount & { address: string })[];
 
       return accountsResult.map(account => ({
         addressType: account.addressFormat,
-        address: account.publicKey,
+        address: account.address,
       }));
     } catch (error: any) {
       console.error("Failed to get wallet addresses:", error.response?.data || error.message);
@@ -338,9 +334,8 @@ export class PhantomClient {
     }
   }
 
-  async getOrCreateOrganization(tag: string, keyPair: Keypair): Promise<KmsOrganizationV0> {
+  async getOrCreateOrganization(tag: string, keyPair: Keypair): Promise<ExternalKmsOrganization> {
     try {
-
       // First, try to get the organization
       // Since there's no explicit getOrganization method, we'll create it
       // This assumes the API returns existing org if it already exists
@@ -351,23 +346,26 @@ export class PhantomClient {
     }
   }
 
-  async internalCreateOrganization(name: string, keyPair: Keypair) : Promise<KmsOrganizationV0> {
+  async internalCreateOrganization(name: string, keyPair: Keypair): Promise<ExternalKmsOrganization> {
     try {
-    
-      const params : CreateOrganizationRequest = {
+      const params: CreateOrganizationRequest = {
         organizationName: name,
-        users: [{
-          role: KmsUserRole.admin,
-          authenticators: [{
-            algorithm: Algorithm.ed25519,
-            authenticatorKind: "keypair" as any,
-            publicKey: base64urlEncode(bs58.decode(keyPair.publicKey)) as any,
-            authenticatorName: `KeyPair ${Date.now()}` ,
-          }] as any,
-          username: `user-${Date.now()}`,
-        }],
+        users: [
+          {
+            role: KmsUserRole.admin,
+            authenticators: [
+              {
+                algorithm: Algorithm.ed25519,
+                authenticatorKind: "keypair" as any,
+                publicKey: base64urlEncode(bs58.decode(keyPair.publicKey)) as any,
+                authenticatorName: `KeyPair ${Date.now()}`,
+              },
+            ] as any,
+            username: `user-${Date.now()}`,
+          },
+        ],
       };
- 
+
       const request: CreateOrganization = {
         method: CreateOrganizationMethodEnum.createOrganization,
         params: params,
@@ -377,8 +375,7 @@ export class PhantomClient {
       // Creating organization with request
 
       const response = await this.kmsApi.postKmsRpc(request);
-      const result = response.data.result as KmsOrganizationV0;
-
+      const result = response.data.result as ExternalKmsOrganization;
 
       return result;
     } catch (error: any) {
@@ -387,7 +384,7 @@ export class PhantomClient {
     }
   }
 
-  async createOrganization(name: string, keyPair: Keypair): Promise<KmsOrganizationV0> {
+  async createOrganization(name: string, keyPair: Keypair): Promise<ExternalKmsOrganization> {
     try {
       if (!name) {
         throw new Error("Organization name is required");
@@ -403,8 +400,6 @@ export class PhantomClient {
       );
 
       return await tempClient.internalCreateOrganization(name, keyPair);
-
-    
     } catch (error: any) {
       console.error("Failed to create organization:", error.response?.data || error.message);
       throw new Error(`Failed to create organization: ${error.response?.data?.message || error.message}`);

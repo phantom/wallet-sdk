@@ -36,8 +36,6 @@ describe("ServerSDK", () => {
       }).not.toThrow();
     });
 
-  
-
     it("should throw error when apiBaseUrl is missing", () => {
       const invalidConfig = { ...config, apiBaseUrl: "" };
       expect(() => {
@@ -262,7 +260,7 @@ describe("ServerSDK", () => {
     it("should create an organization", async () => {
       const organizationName = `Test Organization ${Date.now()}`;
       const authorizedKeyPair = generateKeyPair();
-     
+
       const result = await sdk.createOrganization(organizationName, authorizedKeyPair);
       expect(result).toBeDefined();
       expect(result.organizationId).toBeDefined();

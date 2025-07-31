@@ -72,6 +72,7 @@ async function runDemo() {
     console.log(`\n🔍 Wallet Details:`);
     console.log(`   Wallet ID: ${wallet.walletId}`);
     console.log(`   Wallet Name: ${walletName}`);
+    console.log(wallet);
     const solanaAddress = wallet.addresses.find((addr: any) => addr.addressType === "Solana")?.address;
     console.log(`   Solana Address: ${solanaAddress}`);
 
@@ -162,7 +163,10 @@ async function runDemo() {
 
     // Step 4: Sign and send transaction
     console.log("4️⃣ Signing and sending transaction...");
-    const signedResult = await sdk.signAndSendTransaction(wallet.walletId, serializedTransaction, networkId);
+
+    // Convert to base64url
+    const transactionBase64 = Buffer.from(serializedTransaction).toString("base64url");
+    const signedResult = await sdk.signAndSendTransaction(wallet.walletId, transactionBase64, networkId);
 
     console.log("✅ Transaction signed and sent!");
     console.log(`   Raw transaction (base64): ${signedResult.rawTransaction}`);

@@ -31,7 +31,7 @@ export class ApiKeyStamper {
     // Create the new stamp structure
     const stampData = {
       // The keypair is bs58 encoded, need to decode and then base64url encode the public key
-      publicKey: base64urlEncode(bs58.decode(this.keypair.publicKey)),  
+      publicKey: base64urlEncode(bs58.decode(this.keypair.publicKey)),
       signature: base64urlEncode(signature),
       kind: "PKI" as const,
     };

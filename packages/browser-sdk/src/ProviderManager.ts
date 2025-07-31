@@ -232,7 +232,7 @@ export class ProviderManager {
    * Restore provider preference from localStorage
    */
 
- /*
+  /*
   private restoreProviderPreference(): void {
     try {
       const saved = localStorage.getItem("phantom-provider-preference");

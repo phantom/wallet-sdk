@@ -68,7 +68,7 @@ export function base64urlDecode(str: string): Uint8Array {
  */
 export function base64urlDecodeToString(str: string): string {
   const bytes = base64urlDecode(str);
-  
+
   if (isBrowser && typeof TextDecoder !== "undefined") {
     return new TextDecoder().decode(bytes);
   } else if (!isBrowser) {

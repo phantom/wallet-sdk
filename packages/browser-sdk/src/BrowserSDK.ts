@@ -20,7 +20,7 @@ export class BrowserSDK {
       throw new Error(`Invalid providerType: ${config.providerType}. Must be "injected" or "embedded".`);
     }
 
-    const embeddedWalletType = config.embeddedWalletType || "app-wallet"
+    const embeddedWalletType = config.embeddedWalletType || "app-wallet";
 
     // Validate embeddedWalletType if provided
     if (config.providerType === "embedded" && !["app-wallet", "user-wallet"].includes(embeddedWalletType)) {

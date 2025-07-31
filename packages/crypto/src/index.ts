@@ -38,13 +38,10 @@ export function createKeyPairFromSecret(b58PrivateKey: string): Keypair {
  * @param data - Data to sign (string, Uint8Array, or Buffer)
  * @returns Base64-encoded signature
  */
-export function signWithSecret(
-  secretKey: string | Uint8Array,
-  data: string | Uint8Array | Buffer
-): Uint8Array {
+export function signWithSecret(secretKey: string | Uint8Array, data: string | Uint8Array | Buffer): Uint8Array {
   // Decode secret key if it's a string
   const secretKeyBytes = typeof secretKey === "string" ? bs58.decode(secretKey) : secretKey;
-  
+
   // Convert data to Uint8Array if needed
   let dataBytes: Uint8Array;
   if (typeof data === "string") {
