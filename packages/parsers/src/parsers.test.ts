@@ -273,14 +273,14 @@ describe("Network Support", () => {
 
     // Test all supported networks
     const networks = [
-      "solana:mainnet", 
-      "ethereum:mainnet", 
-      "polygon:mainnet", 
+      "solana:mainnet",
+      "ethereum:mainnet",
+      "polygon:mainnet",
       "optimism:mainnet",
       "arbitrum:mainnet",
       "base:mainnet",
-      "sui:mainnet", 
-      "bitcoin:mainnet"
+      "sui:mainnet",
+      "bitcoin:mainnet",
     ];
 
     for (const network of networks) {

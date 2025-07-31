@@ -31,9 +31,11 @@ The parsers package provides two main functions:
 Converts various message formats to base64url encoding.
 
 **Parameters:**
+
 - `message` (string | Uint8Array | Buffer) - The message to parse
 
 **Returns:**
+
 - `ParsedMessage` object with:
   - `base64url` (string) - Base64url encoded message
   - `originalFormat` (string) - The detected input format
@@ -41,7 +43,7 @@ Converts various message formats to base64url encoding.
 **Example:**
 
 ```typescript
-import { parseMessage } from '@phantom/parsers';
+import { parseMessage } from "@phantom/parsers";
 
 // Plain text message
 const result1 = parseMessage("Hello, Phantom!");
@@ -60,10 +62,12 @@ console.log(result2.originalFormat); // "bytes"
 Converts various transaction formats to base64url encoding based on the target network.
 
 **Parameters:**
+
 - `transaction` (any) - The transaction object/data to parse
 - `networkId` (NetworkId) - The target network identifier
 
 **Returns:**
+
 - `Promise<ParsedTransaction>` object with:
   - `base64url` (string) - Base64url encoded transaction
   - `originalFormat` (string) - The detected input format
@@ -73,9 +77,9 @@ Converts various transaction formats to base64url encoding based on the target n
 ### Solana
 
 ```typescript
-import { Transaction } from '@solana/web3.js';
-import { parseTransaction } from '@phantom/parsers';
-import { NetworkId } from '@phantom/client';
+import { Transaction } from "@solana/web3.js";
+import { parseTransaction } from "@phantom/parsers";
+import { NetworkId } from "@phantom/client";
 
 // Solana Web3.js Transaction
 const transaction = new Transaction().add(/* instructions */);
@@ -92,8 +96,8 @@ const result3 = await parseTransaction("0x01020304", NetworkId.SOLANA_MAINNET);
 ### Ethereum/EVM
 
 ```typescript
-import { parseTransaction } from '@phantom/parsers';
-import { NetworkId } from '@phantom/client';
+import { parseTransaction } from "@phantom/parsers";
+import { NetworkId } from "@phantom/client";
 
 // Viem/Ethers transaction object
 const evmTransaction = {
@@ -107,7 +111,9 @@ const evmTransaction = {
 const result = await parseTransaction(evmTransaction, NetworkId.ETHEREUM_MAINNET);
 
 // Raw transaction bytes
-const rawTx = new Uint8Array([/* transaction bytes */]);
+const rawTx = new Uint8Array([
+  /* transaction bytes */
+]);
 const result2 = await parseTransaction(rawTx, NetworkId.ETHEREUM_MAINNET);
 
 // Hex-encoded transaction
@@ -117,11 +123,13 @@ const result3 = await parseTransaction("0xf86c...", NetworkId.ETHEREUM_MAINNET);
 ### Bitcoin
 
 ```typescript
-import { parseTransaction } from '@phantom/parsers';
-import { NetworkId } from '@phantom/client';
+import { parseTransaction } from "@phantom/parsers";
+import { NetworkId } from "@phantom/client";
 
 // Raw transaction bytes
-const bitcoinTx = new Uint8Array([/* bitcoin transaction bytes */]);
+const bitcoinTx = new Uint8Array([
+  /* bitcoin transaction bytes */
+]);
 const result = await parseTransaction(bitcoinTx, NetworkId.BITCOIN_MAINNET);
 
 // Hex-encoded transaction
@@ -131,11 +139,13 @@ const result2 = await parseTransaction("0x0100000001...", NetworkId.BITCOIN_MAIN
 ### Sui
 
 ```typescript
-import { parseTransaction } from '@phantom/parsers';
-import { NetworkId } from '@phantom/client';
+import { parseTransaction } from "@phantom/parsers";
+import { NetworkId } from "@phantom/client";
 
 // Sui transaction bytes
-const suiTx = new Uint8Array([/* sui transaction bytes */]);
+const suiTx = new Uint8Array([
+  /* sui transaction bytes */
+]);
 const result = await parseTransaction(suiTx, NetworkId.SUI_MAINNET);
 ```
 
@@ -144,13 +154,15 @@ const result = await parseTransaction(suiTx, NetworkId.SUI_MAINNET);
 The parsers automatically detect the input format and handle conversion appropriately:
 
 ### Message Formats
+
 - **String** - Plain text messages (UTF-8 encoded)
 - **Uint8Array/Buffer** - Raw byte data
 - **Base64/Base64url** - Already encoded data (re-encoded to base64url)
 
 ### Transaction Formats
+
 - **@solana/web3.js** - Solana Web3.js Transaction objects (calls `.serialize()`)
-- **@solana/kit** - Solana Kit transaction objects  
+- **@solana/kit** - Solana Kit transaction objects
 - **Viem** - Ethereum transaction objects with standard fields
 - **Ethers** - Ethereum transaction objects (legacy and modern formats)
 - **Raw bytes** - Uint8Array or Buffer containing transaction data
@@ -203,7 +215,7 @@ This package is part of the Phantom Wallet SDK monorepo. For development:
 # Install dependencies
 yarn install
 
-# Build the package  
+# Build the package
 yarn build
 
 # Run tests

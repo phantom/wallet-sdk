@@ -314,7 +314,7 @@ describe("ServerSDK", () => {
 
     it("should enhance signAndSendTransaction to parse various formats", async () => {
       // Test that the enhanced interface can parse different formats
-      // Note: These will fail at the API level due to invalid transactions, 
+      // Note: These will fail at the API level due to invalid transactions,
       // but they test that our parsing works correctly
 
       // Test raw bytes parsing

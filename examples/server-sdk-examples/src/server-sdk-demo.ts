@@ -153,7 +153,6 @@ async function runDemo() {
     transaction.recentBlockhash = blockhash;
     transaction.feePayer = new PublicKey(solanaAddress);
 
-
     console.log("✅ Transaction created\n");
 
     // Step 4: Sign and send transaction

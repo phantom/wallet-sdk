@@ -124,6 +124,7 @@ console.log("Ethereum address:", ethereumAddress);
 ### Signing and Sending Transactions
 
 #### Solana - Native Web3.js Transaction Objects
+
 ```typescript
 import { Transaction, SystemProgram, PublicKey } from "@solana/web3.js";
 
@@ -151,6 +152,7 @@ console.log("Signed transaction:", signedTx.rawTransaction);
 ```
 
 #### Ethereum/EVM - Transaction Objects
+
 ```typescript
 // Viem transaction object
 const evmTransaction = {
@@ -181,6 +183,7 @@ await sdk.signAndSendTransaction({
 ```
 
 #### Raw Formats - Hex Strings and Bytes
+
 ```typescript
 // Hex string transaction
 await sdk.signAndSendTransaction({
@@ -190,14 +193,12 @@ await sdk.signAndSendTransaction({
 });
 
 // Raw bytes
-const transactionBytes = new Uint8Array([1, 2, 3, 4, 5, /* ... */]);
+const transactionBytes = new Uint8Array([1, 2, 3, 4, 5 /* ... */]);
 await sdk.signAndSendTransaction({
   walletId: wallet.walletId,
   transaction: transactionBytes,
   networkId: NetworkId.SOLANA_MAINNET,
 });
-
-
 ```
 
 ### Signing Messages
@@ -205,7 +206,7 @@ await sdk.signAndSendTransaction({
 ```typescript
 const solanaSignature = await sdk.signMessage({
   walletId: wallet.walletId,
-  message: "Please sign this message to authenticate", 
+  message: "Please sign this message to authenticate",
   networkId: NetworkId.SOLANA_MAINNET,
 });
 
@@ -219,10 +220,9 @@ const unicodeSignature = await sdk.signMessage({
 const ethMessage = Buffer.from().toString("base64url");
 const ethSignature = await sdk.signMessage({
   walletId: wallet.walletId,
-  message: "Sign in to our dApp", 
+  message: "Sign in to our dApp",
   networkId: NetworkId.ETHEREUM_MAINNET,
 });
-
 ```
 
 ### Managing Wallets

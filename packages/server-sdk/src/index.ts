@@ -1,4 +1,9 @@
-import { PhantomClient, type SignMessageParams, type SignAndSendTransactionParams, type NetworkId } from "@phantom/client";
+import {
+  PhantomClient,
+  type SignMessageParams,
+  type SignAndSendTransactionParams,
+  type NetworkId,
+} from "@phantom/client";
 import { ApiKeyStamper } from "@phantom/api-key-stamper";
 import { parseMessage, parseTransaction } from "@phantom/parsers";
 

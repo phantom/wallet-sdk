@@ -210,4 +210,3 @@ function parseBitcoinTransaction(transaction: any): ParsedTransaction {
 
   throw new Error("Unsupported Bitcoin transaction format");
 }
-

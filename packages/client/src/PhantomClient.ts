@@ -38,7 +38,7 @@ import {
   type ExternalKmsOrganization,
 } from "@phantom/openapi-wallet-service";
 import { DerivationPath, getNetworkConfig } from "./constants";
-import { deriveSubmissionConfig} from "./caip2-mappings";
+import { deriveSubmissionConfig } from "./caip2-mappings";
 import {
   type PhantomClientConfig,
   type Stamper,

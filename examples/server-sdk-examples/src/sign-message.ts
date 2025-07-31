@@ -165,7 +165,7 @@ async function signMessage() {
 
     // Sign the message
     console.log(`\n🖊️  Signing message with Solana network...`);
-    
+
     const signature = await sdk.signMessage({
       walletId: wallet.walletId,
       message, // Plain text message - automatically parsed to base64url!

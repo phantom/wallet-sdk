@@ -93,7 +93,7 @@ const wallet = await sdk.createWallet("User Wallet");
 // Sign messages
 const signature = await sdk.signMessage({
   walletId: wallet.walletId,
-  message: "Hello from Phantom!", 
+  message: "Hello from Phantom!",
   networkId: NetworkId.SOLANA_MAINNET,
 });
 
