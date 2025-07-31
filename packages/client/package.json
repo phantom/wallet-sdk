@@ -13,7 +13,7 @@
     }
   },
   "scripts": {
-    "build": "rimraf ./dist && tsup src/index.ts --format cjs,esm --dts --external axios",
+    "build": "rimraf ./dist && tsup src/index.ts --format cjs,esm --dts --external axios,@phantom/base64url,@phantom/crypto",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "test": "jest",
@@ -33,10 +33,12 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
+    "@phantom/api-key-stamper": "workspace:^",
+    "@phantom/base64url": "workspace:^",
+    "@phantom/crypto": "workspace:^",
     "@phantom/openapi-wallet-service": "^0.1.5",
     "axios": "^1.10.0",
-    "bs58": "^6.0.0",
-    "tweetnacl": "^1.0.3"
+    "bs58": "^6.0.0"
   },
   "files": [
     "dist"

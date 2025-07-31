@@ -1,6 +1,7 @@
 export interface AuthOptions {
   iframeUrl: string;
   organizationId: string;
+  parentOrganizationId: string;
   embeddedWalletType: "app-wallet" | "user-wallet";
 }
 

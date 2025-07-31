@@ -1,6 +1,8 @@
 import axios, { type AxiosInstance } from "axios";
-import nacl from "tweetnacl";
 import bs58 from "bs58";
+import { base64urlEncode } from "@phantom/base64url";
+import {  type Keypair } from "@phantom/crypto";
+import { ApiKeyStamper } from "@phantom/api-key-stamper";
 import {
   Configuration,
   KMSRPCApi,
@@ -32,6 +34,9 @@ import {
   type GetAccounts,
   GetAccountsMethodEnum,
   type ExternalDerivedAccount,
+  KmsUserRole,
+  Algorithm,
+  type KmsOrganizationV0,
 } from "@phantom/openapi-wallet-service";
 import { DerivationPath, getNetworkConfig } from "./constants";
 import { deriveSubmissionConfig, type NetworkId } from "./caip2-mappings";
@@ -42,7 +47,6 @@ import {
   type Transaction,
   type SignedTransaction,
   type GetWalletsResult,
-  type Keypair,
 } from "./types";
 
 // TODO(napas): Auto generate this from the OpenAPI spec
@@ -51,24 +55,17 @@ export interface SubmissionConfig {
   network: string; // e.g., 'mainnet', 'devnet', 'sepolia'
 }
 
+
 export class PhantomClient {
   private config: PhantomClientConfig;
   private kmsApi: KMSRPCApi;
   private axiosInstance: AxiosInstance;
 
-  static generateKeyPair(): Keypair {
-    const keypair = nacl.sign.keyPair();
-    return {
-      publicKey: bs58.encode(keypair.publicKey),
-      secretKey: bs58.encode(keypair.secretKey),
-    };
-  }
-
   constructor(config: PhantomClientConfig, stamper?: Stamper) {
     this.config = config;
 
-    if (!config.organizationId || !config.apiBaseUrl) {
-      throw new Error("organizationId and apiBaseUrl are required");
+    if (!config.apiBaseUrl) {
+      throw new Error("apiBaseUrl is required");
     }
 
     // Create axios instance
@@ -92,8 +89,18 @@ export class PhantomClient {
     this.kmsApi = new KMSRPCApi(configuration, config.apiBaseUrl, this.axiosInstance);
   }
 
+  setOrganizationId(organizationId: string): void {
+    if (!organizationId) {
+      throw new Error("organizationId is required");
+    }
+    this.config.organizationId = organizationId;
+  }
+
   async createWallet(walletName?: string): Promise<CreateWalletResult> {
     try {
+      if (!this.config.organizationId) {
+        throw new Error("organizationId is required to create a wallet");
+      }
       // Create wallet request
       const walletRequest: CreateWalletRequest = {
         organizationId: this.config.organizationId,
@@ -151,6 +158,10 @@ export class PhantomClient {
     networkId: NetworkId,
   ): Promise<SignedTransaction> {
     try {
+
+      if (!this.config.organizationId) {
+        throw new Error("organizationId is required to sign and send a transaction");
+      }
       // Transaction is already base64url encoded
       const encodedTransaction = transaction;
 
@@ -244,6 +255,9 @@ export class PhantomClient {
 
   async signMessage(walletId: string, message: string, networkId: NetworkId): Promise<string> {
     try {
+      if (!this.config.organizationId) {
+        throw new Error("organizationId is required to sign a message");
+      }
       // Get network configuration
       const networkConfig = getNetworkConfig(networkId);
 
@@ -324,20 +338,36 @@ export class PhantomClient {
     }
   }
 
-  async getOrCreateOrganization(params: CreateOrganizationRequest): Promise<any> {
+  async getOrCreateOrganization(tag: string, keyPair: Keypair): Promise<KmsOrganizationV0> {
     try {
+
       // First, try to get the organization
       // Since there's no explicit getOrganization method, we'll create it
       // This assumes the API returns existing org if it already exists
-      return await this.createOrganization(params);
+      return await this.createOrganization(tag, keyPair);
     } catch (error: any) {
       console.error("Failed to get or create organization:", error.response?.data || error.message);
       throw new Error(`Failed to get or create organization: ${error.response?.data?.message || error.message}`);
     }
   }
 
-  async createOrganization(params: CreateOrganizationRequest): Promise<any> {
+  async internalCreateOrganization(name: string, keyPair: Keypair) : Promise<KmsOrganizationV0> {
     try {
+    
+      const params : CreateOrganizationRequest = {
+        organizationName: name,
+        users: [{
+          role: KmsUserRole.admin,
+          authenticators: [{
+            algorithm: Algorithm.ed25519,
+            authenticatorKind: "keypair" as any,
+            publicKey: base64urlEncode(bs58.decode(keyPair.publicKey)) as any,
+            authenticatorName: `KeyPair ${Date.now()}` ,
+          }] as any,
+          username: `user-${Date.now()}`,
+        }],
+      };
+ 
       const request: CreateOrganization = {
         method: CreateOrganizationMethodEnum.createOrganization,
         params: params,
@@ -347,11 +377,34 @@ export class PhantomClient {
       // Creating organization with request
 
       const response = await this.kmsApi.postKmsRpc(request);
-      const result = response.data.result;
+      const result = response.data.result as KmsOrganizationV0;
 
-      // Organization created successfully
 
       return result;
+    } catch (error: any) {
+      console.error("Failed to create organization:", error.response?.data || error.message);
+      throw new Error(`Failed to create organization: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  async createOrganization(name: string, keyPair: Keypair): Promise<KmsOrganizationV0> {
+    try {
+      if (!name) {
+        throw new Error("Organization name is required");
+      }
+      // Create a new instance of the client with the provided keyPair
+      const tempClient = new PhantomClient(
+        {
+          apiBaseUrl: this.config.apiBaseUrl,
+        },
+        new ApiKeyStamper({
+          apiSecretKey: keyPair.secretKey,
+        }),
+      );
+
+      return await tempClient.internalCreateOrganization(name, keyPair);
+
+    
     } catch (error: any) {
       console.error("Failed to create organization:", error.response?.data || error.message);
       throw new Error(`Failed to create organization: ${error.response?.data?.message || error.message}`);

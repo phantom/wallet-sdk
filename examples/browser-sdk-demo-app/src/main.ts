@@ -50,14 +50,15 @@ document.addEventListener("DOMContentLoaded", () => {
       return new BrowserSDK({
         providerType: "injected",
         solanaProvider: solanaProvider,
+         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
     } else {
       // For demo purposes, use hardcoded embedded config
       return new BrowserSDK({
         providerType: "embedded",
         addressTypes: [AddressType.solana, AddressType.ethereum],
-        apiBaseUrl: "https://api.phantom.com",
-        organizationId: "demo-org-id",
+        apiBaseUrl: import.meta.env.VITE_WALLET_API || "https://api.phantom.app/v1/wallets",
+        organizationId: import.meta.env.VITE_ORGANIZATION_ID || "your-organization-id",
         embeddedWalletType: "app-wallet",
         solanaProvider: solanaProvider,
       });

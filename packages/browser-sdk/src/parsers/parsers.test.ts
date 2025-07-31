@@ -1,5 +1,5 @@
 import { parseMessage, parseTransaction } from "./index";
-import { base64urlDecode, base64urlDecodeToString } from "../utils/base64url";
+import { base64urlDecode, base64urlDecodeToString } from "@phantom/base64url";
 
 describe("Message Parser", () => {
   it("should parse string message to base64url", () => {

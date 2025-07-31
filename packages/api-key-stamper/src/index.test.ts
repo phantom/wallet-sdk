@@ -1,18 +1,16 @@
 import { ApiKeyStamper } from "./index";
-import nacl from "tweetnacl";
-import bs58 from "bs58";
+import { generateKeyPair, signWithSecret } from "@phantom/crypto";
+import { base64urlDecode, base64urlDecodeToString } from "@phantom/base64url";
 import { Buffer } from "buffer";
 
 describe("ApiKeyStamper", () => {
-  let testKeyPair: nacl.SignKeyPair;
-  let testSecretKeyBase58: string;
+  let testKeyPair: { publicKey: string; secretKey: string };
   let stamper: ApiKeyStamper;
 
   beforeEach(() => {
-    // Generate a test key pair
-    testKeyPair = nacl.sign.keyPair();
-    testSecretKeyBase58 = bs58.encode(testKeyPair.secretKey);
-    stamper = new ApiKeyStamper({ apiSecretKey: testSecretKeyBase58 });
+    // Generate a test key pair using crypto package
+    testKeyPair = generateKeyPair();
+    stamper = new ApiKeyStamper({ apiSecretKey: testKeyPair.secretKey });
   });
 
   describe("constructor", () => {
@@ -93,7 +91,7 @@ describe("ApiKeyStamper", () => {
       const stampHeader = stamped.headers!["X-Phantom-Stamp"] as string;
 
       // Decode the stamp
-      const stampJson = decodeBase64url(stampHeader);
+      const stampJson = base64urlDecodeToString(stampHeader);
       const stampData = JSON.parse(stampJson);
 
       expect(stampData).toHaveProperty("publicKey");
@@ -116,19 +114,18 @@ describe("ApiKeyStamper", () => {
       const stampHeader = stamped.headers!["X-Phantom-Stamp"] as string;
 
       // Decode and verify the stamp
-      const stampJson = decodeBase64url(stampHeader);
+      const stampJson = base64urlDecodeToString(stampHeader);
       const stampData = JSON.parse(stampJson);
 
-      // Decode the public key and signature
-      const publicKey = decodeBase64urlToUint8Array(stampData.publicKey);
-      const signature = decodeBase64urlToUint8Array(stampData.signature);
+      // Decode the signature
+      const signature = base64urlDecode(stampData.signature);
 
-      // Verify the signature
+      // Verify the signature by re-signing the same data and comparing
       const requestBody = JSON.stringify(testData);
       const dataUtf8 = Buffer.from(requestBody, "utf8");
-      const isValid = nacl.sign.detached.verify(dataUtf8, signature, publicKey);
+      const expectedSignature = signWithSecret(testKeyPair.secretKey, dataUtf8);
 
-      expect(isValid).toBe(true);
+      expect(signature).toEqual(expectedSignature);
     });
 
     it("should create different signatures for different data", async () => {
@@ -179,27 +176,3 @@ describe("ApiKeyStamper", () => {
     });
   });
 });
-
-// Helper functions for testing
-function decodeBase64url(str: string): string {
-  const base64 = str
-    .replace(/-/g, "+")
-    .replace(/_/g, "/")
-    .padEnd(str.length + ((4 - (str.length % 4)) % 4), "=");
-
-  return Buffer.from(base64, "base64").toString("utf8");
-}
-
-function decodeBase64urlToUint8Array(str: string): Uint8Array {
-  const base64 = str
-    .replace(/-/g, "+")
-    .replace(/_/g, "/")
-    .padEnd(str.length + ((4 - (str.length % 4)) % 4), "=");
-
-  const binaryString = Buffer.from(base64, "base64").toString("binary");
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes;
-}

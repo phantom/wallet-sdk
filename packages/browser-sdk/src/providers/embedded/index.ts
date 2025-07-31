@@ -1,4 +1,4 @@
-import { PhantomClient } from "@phantom/client";
+import { PhantomClient, generateKeyPair } from "@phantom/client";
 import type { AddressType } from "@phantom/client";
 import { ApiKeyStamper } from "@phantom/api-key-stamper";
 import type {
@@ -42,7 +42,7 @@ export class EmbeddedProvider implements Provider {
     // If no session exists, create new one
     if (!session) {
       // Generate keypair using PhantomClient
-      const keypair = PhantomClient.generateKeyPair();
+      const keypair = generateKeyPair();
 
       // Create a temporary client with the keypair
       const stamper = new ApiKeyStamper({
@@ -52,10 +52,15 @@ export class EmbeddedProvider implements Provider {
       const tempClient = new PhantomClient(
         {
           apiBaseUrl: this.config.apiBaseUrl,
-          organizationId: this.config.organizationId,
         },
         stamper,
       );
+
+      // Create an organization
+      // organization name is a combination of this organizationId and this userId, which will be a unique identifier
+      const uid = Date.now(); // for now
+      const organizationName = `${this.config.organizationId}-${uid}`;
+      const { organizationId } = await tempClient.createOrganization(organizationName, keypair);
 
       let walletId: string;
 
@@ -64,7 +69,8 @@ export class EmbeddedProvider implements Provider {
         const auth = new IframeAuth();
         const authResult = await auth.authenticate({
           iframeUrl: this.config.authUrl || "https://auth-flow.phantom.app",
-          organizationId: this.config.organizationId,
+          organizationId: organizationId,
+          parentOrganizationId: this.config.organizationId,
           embeddedWalletType: this.config.embeddedWalletType,
         });
         walletId = authResult.walletId;

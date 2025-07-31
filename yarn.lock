@@ -2347,6 +2347,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/api-key-stamper@workspace:packages/api-key-stamper"
   dependencies:
+    "@phantom/base64url": "workspace:^"
+    "@phantom/crypto": "workspace:^"
+    "@types/bs58": "npm:^4.0.1"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
     axios: "npm:^1.10.0"
@@ -2358,7 +2361,22 @@ __metadata:
     rimraf: "npm:^6.0.1"
     ts-jest: "npm:^29.1.2"
     tsup: "npm:^6.7.0"
-    tweetnacl: "npm:^1.0.3"
+    typescript: "npm:^5.0.4"
+  languageName: unknown
+  linkType: soft
+
+"@phantom/base64url@workspace:^, @phantom/base64url@workspace:packages/base64url":
+  version: 0.0.0-use.local
+  resolution: "@phantom/base64url@workspace:packages/base64url"
+  dependencies:
+    "@types/jest": "npm:^29.5.12"
+    "@types/node": "npm:^20.11.0"
+    eslint: "npm:8.53.0"
+    jest: "npm:^29.7.0"
+    prettier: "npm:^3.5.2"
+    rimraf: "npm:^6.0.1"
+    ts-jest: "npm:^29.1.2"
+    tsup: "npm:^6.7.0"
     typescript: "npm:^5.0.4"
   languageName: unknown
   linkType: soft
@@ -2418,6 +2436,7 @@ __metadata:
   resolution: "@phantom/browser-sdk@workspace:packages/browser-sdk"
   dependencies:
     "@phantom/api-key-stamper": "workspace:^"
+    "@phantom/base64url": "workspace:^"
     "@phantom/browser-injected-sdk": "workspace:^"
     "@phantom/client": "workspace:^"
     "@types/jest": "npm:^29.5.12"
@@ -2443,11 +2462,32 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/client@workspace:packages/client"
   dependencies:
+    "@phantom/api-key-stamper": "workspace:^"
+    "@phantom/base64url": "workspace:^"
+    "@phantom/crypto": "workspace:^"
     "@phantom/openapi-wallet-service": "npm:^0.1.5"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
     axios: "npm:^1.10.0"
     bs58: "npm:^6.0.0"
+    eslint: "npm:8.53.0"
+    jest: "npm:^29.7.0"
+    prettier: "npm:^3.5.2"
+    rimraf: "npm:^6.0.1"
+    ts-jest: "npm:^29.1.2"
+    tsup: "npm:^6.7.0"
+    typescript: "npm:^5.0.4"
+  languageName: unknown
+  linkType: soft
+
+"@phantom/crypto@workspace:^, @phantom/crypto@workspace:packages/crypto":
+  version: 0.0.0-use.local
+  resolution: "@phantom/crypto@workspace:packages/crypto"
+  dependencies:
+    "@types/bs58": "npm:^4.0.1"
+    "@types/jest": "npm:^29.5.12"
+    "@types/node": "npm:^20.11.0"
+    bs58: "npm:^5.0.0"
     eslint: "npm:8.53.0"
     jest: "npm:^29.7.0"
     prettier: "npm:^3.5.2"
@@ -3530,6 +3570,16 @@ __metadata:
   dependencies:
     "@babel/types": "npm:^7.20.7"
   checksum: 10c0/5386f0af44f8746b063b87418f06129a814e16bb2686965a575e9d7376b360b088b89177778d8c426012abc43dd1a2d8ec3218bfc382280c898682746ce2ffbd
+  languageName: node
+  linkType: hard
+
+"@types/bs58@npm:^4.0.1":
+  version: 4.0.4
+  resolution: "@types/bs58@npm:4.0.4"
+  dependencies:
+    "@types/node": "npm:*"
+    base-x: "npm:^3.0.6"
+  checksum: 10c0/002deb33788f4b36dbb476e71f5b5724b1d7774d92dd83cd7532ae11706bc80ffc2f001920dfeb06eb4bc33df6f7b7bb168892953c859ca9bb969ce96b8e22dc
   languageName: node
   linkType: hard
 
@@ -4695,12 +4745,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"base-x@npm:^3.0.2":
+"base-x@npm:^3.0.2, base-x@npm:^3.0.6":
   version: 3.0.11
   resolution: "base-x@npm:3.0.11"
   dependencies:
     safe-buffer: "npm:^5.0.1"
   checksum: 10c0/4c5b8cd9cef285973b0460934be4fc890eedfd22a8aca527fac3527f041c5d1c912f7b9a6816f19e43e69dc7c29a5deabfa326bd3d6a57ee46af0ad46e3991d5
+  languageName: node
+  linkType: hard
+
+"base-x@npm:^4.0.0":
+  version: 4.0.1
+  resolution: "base-x@npm:4.0.1"
+  checksum: 10c0/26a5a24105b27d94f21fa0640d5345620d758ab5d9269cf11828c502094d4f2fc5e84f3bfee63e9af29e83e0d3c97129264f1ac9653620b9bdab3f81d6aca881
   languageName: node
   linkType: hard
 
@@ -4816,6 +4873,15 @@ __metadata:
   dependencies:
     base-x: "npm:^3.0.2"
   checksum: 10c0/613a1b1441e754279a0e3f44d1faeb8c8e838feef81e550efe174ff021dd2e08a4c9ae5805b52dfdde79f97b5c0918c78dd24a0eb726c4a94365f0984a0ffc65
+  languageName: node
+  linkType: hard
+
+"bs58@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "bs58@npm:5.0.0"
+  dependencies:
+    base-x: "npm:^4.0.0"
+  checksum: 10c0/0d1b05630b11db48039421b5975cb2636ae0a42c62f770eec257b2e5c7d94cb5f015f440785f3ec50870a6e9b1132b35bd0a17c7223655b22229f24b2a3491d1
   languageName: node
   linkType: hard
 
