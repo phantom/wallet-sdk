@@ -1,6 +1,6 @@
 {
   "name": "@phantom/react-ui",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "React UI components for Phantom Wallet SDK with built-in transaction and connection modals",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
