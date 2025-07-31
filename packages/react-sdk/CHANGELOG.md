@@ -1,5 +1,13 @@
 # @phantom/react-sdk
 
+## 0.2.2
+
+### Patch Changes
+
+- 5c70527: New parsers fix for solana
+- Updated dependencies [5c70527]
+  - @phantom/browser-sdk@0.2.2
+
 ## 0.2.1
 
 ### Patch Changes
