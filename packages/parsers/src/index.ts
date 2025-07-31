@@ -62,7 +62,10 @@ function parseSolanaTransaction(transaction: any): ParsedTransaction {
   // Check if it's a @solana/web3.js Transaction/VersionedTransaction (has serialize method)
   if (typeof transaction?.serialize === "function") {
     // @solana/web3.js Transaction or VersionedTransaction
-    const serialized = transaction.serialize();
+    const serialized = transaction.serialize({
+      requireAllSignatures: false,
+      verifySignatures: false,
+    });
     return {
       base64url: base64urlEncode(serialized),
       originalFormat: "@solana/web3.js",
