@@ -1,4 +1,5 @@
 // Removed unused AxiosInstance import
+import { type NetworkId } from "./caip2-mappings";
 
 export interface PhantomClientConfig {
   apiBaseUrl: string;
@@ -38,4 +39,16 @@ export interface Wallet {
 export interface Keypair {
   publicKey: string;
   secretKey: string;
+}
+
+export interface SignMessageParams {
+  walletId: string;
+  message: string; // base64url encoded message
+  networkId: NetworkId;
+}
+
+export interface SignAndSendTransactionParams {
+  walletId: string;
+  transaction: Transaction; // base64url encoded transaction
+  networkId: NetworkId;
 }

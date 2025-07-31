@@ -181,7 +181,10 @@ describe("BrowserSDK", () => {
         const mockSignature = "mockSignature";
         mockProvider.signMessage.mockResolvedValue(mockSignature);
 
-        const result = await sdk.signMessage("test-message", NetworkId.SOLANA_MAINNET);
+        const result = await sdk.signMessage({
+          message: "test-message",
+          networkId: NetworkId.SOLANA_MAINNET,
+        });
 
         expect(mockProvider.signMessage).toHaveBeenCalledWith({
           message: "test-message",
@@ -314,7 +317,10 @@ describe("BrowserSDK", () => {
         const mockSignature = "mockSignature";
         mockProvider.signMessage.mockResolvedValue(mockSignature);
 
-        const result = await sdk.signMessage("test-message", NetworkId.SOLANA_MAINNET);
+        const result = await sdk.signMessage({
+          message: "test-message",
+          networkId: NetworkId.SOLANA_MAINNET,
+        });
 
         expect(mockProvider.signMessage).toHaveBeenCalledWith({
           message: "test-message",
@@ -380,7 +386,12 @@ describe("BrowserSDK", () => {
     it("should propagate signing errors", async () => {
       mockProvider.signMessage.mockRejectedValue(new Error("Signing failed"));
 
-      await expect(sdk.signMessage("test", NetworkId.SOLANA_MAINNET)).rejects.toThrow("Signing failed");
+      await expect(
+        sdk.signMessage({
+          message: "test",
+          networkId: NetworkId.SOLANA_MAINNET,
+        }),
+      ).rejects.toThrow("Signing failed");
     });
 
     it("should propagate transaction errors", async () => {

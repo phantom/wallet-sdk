@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { usePhantom } from "../PhantomProvider";
-import type { NetworkId } from "@phantom/browser-sdk";
+import type { SignMessageParams } from "@phantom/browser-sdk";
 
 export function useSignMessage() {
   const { sdk, isConnected } = usePhantom();
@@ -8,7 +8,7 @@ export function useSignMessage() {
   const [error, setError] = useState<Error | null>(null);
 
   const signMessage = useCallback(
-    async (message: string, networkId: NetworkId): Promise<string> => {
+    async (params: SignMessageParams): Promise<string> => {
       if (!sdk) {
         throw new Error("SDK not initialized");
       }
@@ -21,7 +21,7 @@ export function useSignMessage() {
       setError(null);
 
       try {
-        const signature = await sdk.signMessage(message, networkId);
+        const signature = await sdk.signMessage(params);
         return signature;
       } catch (err) {
         setError(err as Error);

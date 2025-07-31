@@ -97,7 +97,11 @@ console.log("Addresses:", wallet.addresses);
 
 // Sign a message (base64url encoded)
 const message = Buffer.from("Hello, Phantom!").toString("base64url");
-const signature = await sdk.signMessage(wallet.walletId, message, NetworkId.SOLANA_MAINNET);
+const signature = await sdk.signMessage({
+  walletId: wallet.walletId,
+  message,
+  networkId: NetworkId.SOLANA_MAINNET,
+});
 console.log("Signature:", signature);
 ```
 
@@ -146,7 +150,11 @@ const serializedTx = transaction.serialize({
 const transactionBase64 = Buffer.from(serializedTx).toString("base64url");
 
 // Sign and send the transaction
-const signedTx = await sdk.signAndSendTransaction(wallet.walletId, transactionBase64, NetworkId.SOLANA_MAINNET);
+const signedTx = await sdk.signAndSendTransaction({
+  walletId: wallet.walletId,
+  transaction: transactionBase64,
+  networkId: NetworkId.SOLANA_MAINNET,
+});
 
 console.log("Signed transaction:", signedTx.rawTransaction);
 ```
@@ -156,11 +164,19 @@ console.log("Signed transaction:", signedTx.rawTransaction);
 ```typescript
 // Sign a message for Solana (base64url encoded)
 const solanaMessage = Buffer.from("Please sign this message to authenticate").toString("base64url");
-const solanaSignature = await sdk.signMessage(wallet.walletId, solanaMessage, NetworkId.SOLANA_MAINNET);
+const solanaSignature = await sdk.signMessage({
+  walletId: wallet.walletId,
+  message: solanaMessage,
+  networkId: NetworkId.SOLANA_MAINNET,
+});
 
 // Sign a message for Ethereum (base64url encoded)
 const ethMessage = Buffer.from("Sign in to our dApp").toString("base64url");
-const ethSignature = await sdk.signMessage(wallet.walletId, ethMessage, NetworkId.ETHEREUM_MAINNET);
+const ethSignature = await sdk.signMessage({
+  walletId: wallet.walletId,
+  message: ethMessage,
+  networkId: NetworkId.ETHEREUM_MAINNET,
+});
 ```
 
 ### Managing Wallets
@@ -218,8 +234,8 @@ For complete API documentation, visit **[docs.phantom.com/server-sdk](https://do
 ### Key Methods
 
 - `createWallet(walletName?)` - Creates a new wallet
-- `signAndSendTransaction(walletId, transaction, networkId)` - Signs and optionally submits transactions
-- `signMessage(walletId, message, networkId)` - Signs arbitrary messages
+- `signAndSendTransaction(params)` - Signs and optionally submits transactions
+- `signMessage(params)` - Signs arbitrary messages
 - `getWalletAddresses(walletId, derivationPaths?)` - Retrieves wallet addresses
 - `getWallets(limit?, offset?)` - Lists all wallets with pagination
 

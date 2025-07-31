@@ -188,7 +188,11 @@ describe("ServerSDK", () => {
       const message = Buffer.from("Hello from Phantom SDK tests!").toString("base64url");
       const networkId = NetworkId.SOLANA_MAINNET;
 
-      const signature = await sdk.signMessage(testWalletId, message, networkId);
+      const signature = await sdk.signMessage({
+        walletId: testWalletId,
+        message,
+        networkId,
+      });
 
       expect(signature).toBeDefined();
       expect(typeof signature).toBe("string");
@@ -201,7 +205,11 @@ describe("ServerSDK", () => {
       const message = Buffer.from("Hello from Phantom SDK Ethereum test!").toString("base64url");
       const networkId = NetworkId.ETHEREUM_MAINNET;
 
-      const signature = await sdk.signMessage(testWalletId, message, networkId);
+      const signature = await sdk.signMessage({
+        walletId: testWalletId,
+        message,
+        networkId,
+      });
 
       expect(signature).toBeDefined();
       expect(typeof signature).toBe("string");
@@ -225,7 +233,11 @@ describe("ServerSDK", () => {
       const message = Buffer.from("🚀 Unicode message with emojis! 你好世界").toString("base64url");
       const networkId = NetworkId.SOLANA_MAINNET;
 
-      const signature = await sdk.signMessage(testWalletId, message, networkId);
+      const signature = await sdk.signMessage({
+        walletId: testWalletId,
+        message,
+        networkId,
+      });
 
       expect(signature).toBeDefined();
       expect(typeof signature).toBe("string");
@@ -239,7 +251,13 @@ describe("ServerSDK", () => {
       const message = Buffer.from("Test message").toString("base64url");
       const networkId = NetworkId.SOLANA_MAINNET;
 
-      await expect(sdk.signMessage(invalidWalletId, message, networkId)).rejects.toThrow("Failed to sign message");
+      await expect(
+        sdk.signMessage({
+          walletId: invalidWalletId,
+          message,
+          networkId,
+        }),
+      ).rejects.toThrow("Failed to sign message");
     });
 
     it("should throw error when getting addresses for invalid wallet ID", async () => {
@@ -252,7 +270,13 @@ describe("ServerSDK", () => {
       const message = Buffer.from("Test message").toString("base64url");
       const unsupportedNetworkId = "unsupported:network";
 
-      await expect(sdk.signMessage(testWalletId, message, unsupportedNetworkId as any)).rejects.toThrow();
+      await expect(
+        sdk.signMessage({
+          walletId: testWalletId,
+          message,
+          networkId: unsupportedNetworkId as any,
+        }),
+      ).rejects.toThrow();
     });
   });
 

@@ -13,6 +13,8 @@
     }
   },
   "scripts": {
+    "?pack-release": "When https://github.com/changesets/changesets/issues/432 has a solution we can remove this trick",
+    "pack-release": "rimraf ./_release && yarn pack && mkdir ./_release && tar zxvf ./package.tgz --directory ./_release && rm ./package.tgz",
     "build": "rimraf ./dist && tsup src/index.ts --format cjs,esm --dts",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
@@ -40,5 +42,8 @@
   },
   "files": [
     "dist"
-  ]
+  ],
+  "publishConfig": {
+    "directory": "_release/package"
+  }
 }

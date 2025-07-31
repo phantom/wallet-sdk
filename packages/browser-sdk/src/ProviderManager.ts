@@ -5,8 +5,8 @@ import type {
   SignedTransaction,
   WalletAddress,
   SignAndSendTransactionParams,
+  SignMessageParams,
 } from "./types";
-import type { NetworkId } from "@phantom/client";
 import { InjectedProvider } from "./providers/injected";
 import { EmbeddedProvider } from "./providers/embedded";
 
@@ -112,15 +112,12 @@ export class ProviderManager {
   /**
    * Sign a message using current provider
    */
-  async signMessage(message: string, networkId: NetworkId): Promise<string> {
+  async signMessage(params: SignMessageParams): Promise<string> {
     if (!this.currentProvider) {
       throw new Error("No provider connected");
     }
 
-    return this.currentProvider.signMessage({
-      message,
-      networkId,
-    });
+    return this.currentProvider.signMessage(params);
   }
 
   /**

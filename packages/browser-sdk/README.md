@@ -210,13 +210,21 @@ const result = await sdk.signAndSendTransaction({
 });
 ```
 
-#### signMessage(message, networkId)
+#### signMessage(params)
 
 Sign a message string.
 
 ```typescript
-const signature = await sdk.signMessage("Hello from Phantom!", NetworkId.SOLANA_MAINNET);
+const signature = await sdk.signMessage({
+  message: "Hello from Phantom!",
+  networkId: NetworkId.SOLANA_MAINNET,
+});
 ```
+
+**Parameters:**
+
+- `params.message` (string) - Message to sign
+- `params.networkId` (NetworkId) - Network identifier
 
 #### getAddresses()
 

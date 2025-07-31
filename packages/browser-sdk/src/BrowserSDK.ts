@@ -6,8 +6,8 @@ import type {
   SignAndSendTransactionParams,
   CreateUserOrganizationParams,
   CreateUserOrganizationResult,
+  SignMessageParams,
 } from "./types";
-import type { NetworkId } from "@phantom/client";
 import { ProviderManager, type SwitchProviderOptions, type ProviderPreference } from "./ProviderManager";
 import { isPhantomExtensionInstalled } from "@phantom/browser-injected-sdk";
 export class BrowserSDK {
@@ -119,8 +119,8 @@ export class BrowserSDK {
    * @param networkId - Network identifier
    * @returns Signature string
    */
-  async signMessage(message: string, networkId: NetworkId): Promise<string> {
-    return this.providerManager.signMessage(message, networkId);
+  async signMessage(params: SignMessageParams): Promise<string> {
+    return this.providerManager.signMessage(params);
   }
 
   /**

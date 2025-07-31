@@ -256,7 +256,10 @@ function SignMessage() {
 
   const handleSign = async () => {
     // Automatically shows message confirmation modal
-    const signature = await signMessage("Hello from Phantom!", NetworkId.SOLANA_MAINNET);
+    const signature = await signMessage({
+      message: "Hello from Phantom!",
+      networkId: NetworkId.SOLANA_MAINNET,
+    });
   };
 
   return (
@@ -580,7 +583,7 @@ interface UseSignAndSendTransactionReturn {
 
 // useSignMessage
 interface UseSignMessageReturn {
-  signMessage: (message: string, networkId: NetworkId) => Promise<string>;
+  signMessage: (params: SignMessageParams) => Promise<string>;
   isLoading: boolean;
   error: Error | null;
 }
