@@ -38,12 +38,11 @@ import {
   type ExternalKmsOrganization,
 } from "@phantom/openapi-wallet-service";
 import { DerivationPath, getNetworkConfig } from "./constants";
-import { deriveSubmissionConfig, type NetworkId } from "./caip2-mappings";
+import { deriveSubmissionConfig } from "./caip2-mappings";
 import {
   type PhantomClientConfig,
   type Stamper,
   type CreateWalletResult,
-  type Transaction,
   type SignedTransaction,
   type GetWalletsResult,
   type SignMessageParams,
@@ -152,34 +151,12 @@ export class PhantomClient {
   }
 
   /**
-   * Sign and send a transaction - supports both object and individual parameters
+   * Sign and send a transaction
    */
-  async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<SignedTransaction>;
-  async signAndSendTransaction(
-    walletId: string,
-    transaction: Transaction,
-    networkId: NetworkId,
-  ): Promise<SignedTransaction>;
-  async signAndSendTransaction(
-    paramsOrWalletId: SignAndSendTransactionParams | string,
-    transaction?: Transaction,
-    networkId?: NetworkId,
-  ): Promise<SignedTransaction> {
-    let walletId: string;
-    let transactionParam: Transaction;
-    let networkIdParam: NetworkId;
-
-    if (typeof paramsOrWalletId === "object") {
-      // New object-based API
-      walletId = paramsOrWalletId.walletId;
-      transactionParam = paramsOrWalletId.transaction;
-      networkIdParam = paramsOrWalletId.networkId;
-    } else {
-      // Legacy API
-      walletId = paramsOrWalletId;
-      transactionParam = transaction!;
-      networkIdParam = networkId!;
-    }
+  async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<SignedTransaction> {
+    const walletId = params.walletId;
+    const transactionParam = params.transaction;
+    const networkIdParam = params.networkId;
 
     try {
       if (!this.config.organizationId) {
@@ -277,30 +254,12 @@ export class PhantomClient {
   }
 
   /**
-   * Sign a message - supports both object and individual parameters
+   * Sign a message
    */
-  async signMessage(params: SignMessageParams): Promise<string>;
-  async signMessage(walletId: string, message: string, networkId: NetworkId): Promise<string>;
-  async signMessage(
-    paramsOrWalletId: SignMessageParams | string,
-    message?: string,
-    networkId?: NetworkId,
-  ): Promise<string> {
-    let walletId: string;
-    let messageParam: string;
-    let networkIdParam: NetworkId;
-
-    if (typeof paramsOrWalletId === "object") {
-      // New object-based API
-      walletId = paramsOrWalletId.walletId;
-      messageParam = paramsOrWalletId.message;
-      networkIdParam = paramsOrWalletId.networkId;
-    } else {
-      // Legacy API
-      walletId = paramsOrWalletId;
-      messageParam = message!;
-      networkIdParam = networkId!;
-    }
+  async signMessage(params: SignMessageParams): Promise<string> {
+    const walletId = params.walletId;
+    const messageParam = params.message;
+    const networkIdParam = params.networkId;
 
     try {
       if (!this.config.organizationId) {

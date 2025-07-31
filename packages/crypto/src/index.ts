@@ -1,5 +1,6 @@
 import nacl from "tweetnacl";
 import bs58 from "bs58";
+import { Buffer } from "buffer";
 
 export interface Keypair {
   publicKey: string;

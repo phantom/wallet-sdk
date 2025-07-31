@@ -76,6 +76,19 @@ describe("Solana Transaction Parser", () => {
     expect(decoded).toEqual(mockBytes);
   });
 
+  it("should parse Solana transaction as base64 string", async () => {
+    const base64String = Buffer.from([11, 12, 13, 14, 15]).toString("base64");
+
+    const result = await parseTransaction(base64String, "solana:mainnet");
+
+    expect(result.originalFormat).toBe("base64");
+    expect(result.base64url).toBeDefined();
+
+    // Verify the encoded data matches
+    const decoded = base64urlDecode(result.base64url);
+    expect(decoded).toEqual(new Uint8Array([11, 12, 13, 14, 15]));
+  });
+
   it("should throw error for unsupported Solana transaction format", async () => {
     const invalidTransaction = { invalid: true };
 
@@ -86,27 +99,12 @@ describe("Solana Transaction Parser", () => {
 });
 
 describe("EVM Transaction Parser", () => {
-  // Mock viem's encodeTransaction
-  const mockEncodeTransaction = jest.fn();
-
-  beforeEach(() => {
-    jest.doMock("viem", () => ({
-      encodeTransaction: mockEncodeTransaction,
-    }));
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
   it("should parse Viem transaction object", async () => {
     const mockViemTransaction = {
       to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
       value: 1000000000000000000n,
       data: "0x",
     };
-
-    mockEncodeTransaction.mockReturnValue("0x0102030405");
 
     const result = await parseTransaction(mockViemTransaction, "ethereum:mainnet");
 
@@ -152,13 +150,15 @@ describe("EVM Transaction Parser", () => {
     expect(decoded).toEqual(new Uint8Array([1, 2, 3, 4, 5]));
   });
 
-  it("should work with Polygon network", async () => {
+  it("should work with all EVM networks", async () => {
     const mockBytes = new Uint8Array([1, 2, 3]);
+    const evmNetworks = ["ethereum:mainnet", "polygon:mainnet", "optimism:mainnet", "arbitrum:mainnet", "base:mainnet"];
 
-    const result = await parseTransaction(mockBytes, "polygon:mainnet");
-
-    expect(result.originalFormat).toBe("bytes");
-    expect(result.base64url).toBeDefined();
+    for (const network of evmNetworks) {
+      const result = await parseTransaction(mockBytes, network as any);
+      expect(result.originalFormat).toBe("bytes");
+      expect(result.base64url).toBeDefined();
+    }
   });
 });
 
@@ -272,7 +272,16 @@ describe("Network Support", () => {
     const mockBytes = new Uint8Array([1, 2, 3]);
 
     // Test all supported networks
-    const networks = ["solana:mainnet", "ethereum:mainnet", "polygon:mainnet", "sui:mainnet", "bitcoin:mainnet"];
+    const networks = [
+      "solana:mainnet",
+      "ethereum:mainnet",
+      "polygon:mainnet",
+      "optimism:mainnet",
+      "arbitrum:mainnet",
+      "base:mainnet",
+      "sui:mainnet",
+      "bitcoin:mainnet",
+    ];
 
     for (const network of networks) {
       const result = await parseTransaction(mockBytes, network as any);

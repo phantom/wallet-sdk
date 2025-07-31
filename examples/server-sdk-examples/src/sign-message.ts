@@ -163,12 +163,12 @@ async function signMessage() {
     console.log(`   Solana Address: ${wallet.solanaAddress}`);
     console.log(`   Status: ${wallet.isNew ? "Newly created" : "Existing wallet"}`);
 
-    // Sign the message (encode as base64url)
+    // Sign the message
     console.log(`\n🖊️  Signing message with Solana network...`);
-    const base64urlMessage = Buffer.from(message, "utf8").toString("base64url");
+
     const signature = await sdk.signMessage({
       walletId: wallet.walletId,
-      message: base64urlMessage,
+      message, // Plain text message - automatically parsed to base64url!
       networkId: NetworkId.SOLANA_MAINNET,
     });
 

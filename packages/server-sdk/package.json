@@ -38,7 +38,8 @@
   "dependencies": {
     "@phantom/api-key-stamper": "workspace:^",
     "@phantom/client": "workspace:^",
-    "@phantom/openapi-wallet-service": "^0.1.7"
+    "@phantom/openapi-wallet-service": "^0.1.7",
+    "@phantom/parsers": "workspace:^"
   },
   "files": [
     "dist"

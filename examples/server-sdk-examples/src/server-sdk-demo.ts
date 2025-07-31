@@ -153,22 +153,15 @@ async function runDemo() {
     transaction.recentBlockhash = blockhash;
     transaction.feePayer = new PublicKey(solanaAddress);
 
-    // Serialize transaction
-    const serializedTransaction = transaction.serialize({
-      requireAllSignatures: false,
-      verifySignatures: false,
-    });
-
     console.log("✅ Transaction created\n");
 
     // Step 4: Sign and send transaction
     console.log("4️⃣ Signing and sending transaction...");
 
-    // Convert to base64url
-    const transactionBase64 = Buffer.from(serializedTransaction).toString("base64url");
+    // NEW: Use the native Transaction object directly - no manual serialization needed!
     const signedResult = await sdk.signAndSendTransaction({
       walletId: wallet.walletId,
-      transaction: transactionBase64,
+      transaction, // Native @solana/web3.js Transaction object - automatically parsed!
       networkId,
     });
 
