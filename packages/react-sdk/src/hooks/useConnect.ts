@@ -25,6 +25,7 @@ export function useConnect() {
 
         return result;
       } catch (err) {
+        console.error("Error connecting to Phantom:", err);
         setError(err as Error);
         throw err;
       } finally {
