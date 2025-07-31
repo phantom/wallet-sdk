@@ -1,5 +1,11 @@
 # @phantom/client
 
+## 0.1.2
+
+### Patch Changes
+
+- 5c70527: New parsers fix for solana
+
 ## 0.1.1
 
 ### Patch Changes

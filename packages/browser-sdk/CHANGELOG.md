@@ -1,5 +1,14 @@
 # @phantom/browser-sdk
 
+## 0.2.2
+
+### Patch Changes
+
+- 5c70527: New parsers fix for solana
+- Updated dependencies [5c70527]
+  - @phantom/client@0.1.2
+  - @phantom/parsers@0.0.3
+
 ## 0.2.1
 
 ### Patch Changes
