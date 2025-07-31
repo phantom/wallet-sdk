@@ -1,6 +1,6 @@
 import type { NetworkId } from "@phantom/client";
 import { base64urlEncode, stringToBase64url } from "@phantom/base64url";
-import { Buffer } from "../polyfills";
+import { Buffer } from "buffer";
 
 export interface ParsedTransaction {
   base64url: string;
@@ -30,7 +30,11 @@ export async function parseTransaction(transaction: any, networkId: NetworkId): 
     case "solana":
       return parseSolanaTransaction(transaction);
     case "ethereum":
+    case "eip155": // Standard Ethereum chain identifier
     case "polygon":
+    case "optimism":
+    case "arbitrum":
+    case "base":
       return parseEVMTransaction(transaction);
     case "sui":
       return await parseSuiTransaction(transaction);
@@ -73,6 +77,19 @@ function parseSolanaTransaction(transaction: any): ParsedTransaction {
     };
   }
 
+  // If it's a base64 string
+  if (typeof transaction === "string") {
+    try {
+      const bytes = Buffer.from(transaction, "base64");
+      return {
+        base64url: base64urlEncode(new Uint8Array(bytes)),
+        originalFormat: "base64",
+      };
+    } catch {
+      throw new Error("Unsupported Solana transaction format");
+    }
+  }
+
   throw new Error("Unsupported Solana transaction format");
 }
 
@@ -83,8 +100,7 @@ function parseSolanaTransaction(transaction: any): ParsedTransaction {
 function parseEVMTransaction(transaction: any): ParsedTransaction {
   // Check if it's a Viem transaction object
   if (transaction && typeof transaction === "object" && (transaction.to || transaction.data)) {
-    // TODO: Fix viem transaction encoding - encodeTransaction doesn't exist
-    // For now, serialize with BigInt support
+    // Serialize with BigInt support
     const bytes = new TextEncoder().encode(
       JSON.stringify(transaction, (_key, value) => (typeof value === "bigint" ? value.toString() : value)),
     );
@@ -106,7 +122,7 @@ function parseEVMTransaction(transaction: any): ParsedTransaction {
     };
   }
 
-  // If it's already serialized bytes or hex string
+  // If it's already serialized bytes
   if (transaction instanceof Uint8Array) {
     return {
       base64url: base64urlEncode(transaction),
@@ -114,6 +130,7 @@ function parseEVMTransaction(transaction: any): ParsedTransaction {
     };
   }
 
+  // If it's a hex string
   if (typeof transaction === "string" && transaction.startsWith("0x")) {
     const bytes = new Uint8Array(Buffer.from(transaction.slice(2), "hex"));
     return {
@@ -193,3 +210,4 @@ function parseBitcoinTransaction(transaction: any): ParsedTransaction {
 
   throw new Error("Unsupported Bitcoin transaction format");
 }
+

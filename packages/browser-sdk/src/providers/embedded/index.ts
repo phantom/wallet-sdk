@@ -11,7 +11,7 @@ import type {
 } from "../../types";
 import { IndexedDBStorage } from "./storage";
 import { IframeAuth } from "./auth";
-import { parseMessage, parseTransaction } from "../../parsers";
+import { parseMessage, parseTransaction } from "@phantom/parsers";
 
 export interface EmbeddedProviderConfig {
   apiBaseUrl: string;
@@ -134,7 +134,11 @@ export class EmbeddedProvider implements Provider {
     // Parse message to base64url format for client
     const parsedMessage = parseMessage(params.message);
 
-    return await this.client.signMessage(this.walletId, parsedMessage.base64url, params.networkId);
+    return await this.client.signMessage({
+      walletId: this.walletId,
+      message: parsedMessage.base64url,
+      networkId: params.networkId,
+    });
   }
 
   async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<SignedTransaction> {
@@ -145,7 +149,11 @@ export class EmbeddedProvider implements Provider {
     // Parse transaction to base64url format for client based on network
     const parsedTransaction = await parseTransaction(params.transaction, params.networkId);
 
-    return await this.client.signAndSendTransaction(this.walletId, parsedTransaction.base64url, params.networkId);
+    return await this.client.signAndSendTransaction({
+      walletId: this.walletId,
+      transaction: parsedTransaction.base64url,
+      networkId: params.networkId,
+    });
   }
 
   getAddresses(): WalletAddress[] {

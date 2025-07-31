@@ -2439,6 +2439,7 @@ __metadata:
     "@phantom/base64url": "workspace:^"
     "@phantom/browser-injected-sdk": "workspace:^"
     "@phantom/client": "workspace:^"
+    "@phantom/parsers": "workspace:^"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
     axios: "npm:^1.10.0"
@@ -2488,6 +2489,7 @@ __metadata:
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
     bs58: "npm:^5.0.0"
+    buffer: "npm:^6.0.3"
     eslint: "npm:8.53.0"
     jest: "npm:^29.7.0"
     prettier: "npm:^3.5.2"
@@ -2507,6 +2509,25 @@ __metadata:
   checksum: 10c0/ee43ce99ea8fa6db4cfd7d353dba8cfc33d5b2225077a9be05019d76a7330885edfad981ce3e7f3f96fa36526880cfa6e125b7c4c16d9c5f3308d75c9ee8a6a0
   languageName: node
   linkType: hard
+
+"@phantom/parsers@workspace:^, @phantom/parsers@workspace:packages/parsers":
+  version: 0.0.0-use.local
+  resolution: "@phantom/parsers@workspace:packages/parsers"
+  dependencies:
+    "@phantom/base64url": "workspace:^"
+    "@phantom/client": "workspace:^"
+    "@types/jest": "npm:^29.5.12"
+    "@types/node": "npm:^20.11.0"
+    buffer: "npm:^6.0.3"
+    eslint: "npm:8.53.0"
+    jest: "npm:^29.7.0"
+    prettier: "npm:^3.5.2"
+    rimraf: "npm:^6.0.1"
+    ts-jest: "npm:^29.1.2"
+    tsup: "npm:^6.7.0"
+    typescript: "npm:^5.0.4"
+  languageName: unknown
+  linkType: soft
 
 "@phantom/react-sdk-demo-app@workspace:examples/react-sdk-demo-app":
   version: 0.0.0-use.local
@@ -2621,6 +2642,7 @@ __metadata:
     "@phantom/api-key-stamper": "workspace:^"
     "@phantom/client": "workspace:^"
     "@phantom/openapi-wallet-service": "npm:^0.1.7"
+    "@phantom/parsers": "workspace:^"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
     dotenv: "npm:^16.4.1"

@@ -1,6 +1,7 @@
 import { generateKeyPair, createKeyPairFromSecret, signWithSecret } from "./index";
 import bs58 from "bs58";
 import nacl from "tweetnacl";
+import { Buffer } from "buffer";
 
 describe("Crypto Utils", () => {
   describe("generateKeyPair", () => {

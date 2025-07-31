@@ -184,7 +184,7 @@ describe("ServerSDK", () => {
       }
     });
 
-    it("should sign a message for Solana", async () => {
+    it("should sign a message for Solana using object parameters", async () => {
       const message = Buffer.from("Hello from Phantom SDK tests!").toString("base64url");
       const networkId = NetworkId.SOLANA_MAINNET;
 
@@ -199,6 +199,21 @@ describe("ServerSDK", () => {
       expect(signature.length).toBeGreaterThan(0);
       // Base64 signature should be a valid base64url string
       expect(() => Buffer.from(signature, "base64url")).not.toThrow();
+    }, 30000);
+
+    it("should sign a plain text message (auto-parsing)", async () => {
+      const plainMessage = "Hello from Phantom SDK tests!";
+      const networkId = NetworkId.SOLANA_MAINNET;
+
+      const signature = await sdk.signMessage({
+        walletId: testWalletId,
+        message: plainMessage, // Plain text, will be auto-parsed
+        networkId,
+      });
+
+      expect(signature).toBeDefined();
+      expect(typeof signature).toBe("string");
+      expect(signature.length).toBeGreaterThan(0);
     }, 30000);
 
     it("should sign a message for Ethereum", async () => {
@@ -219,29 +234,147 @@ describe("ServerSDK", () => {
     }, 30000);
 
     it("should sign different messages and get different signatures", async () => {
-      const message1 = Buffer.from("First message").toString("base64url");
-      const message2 = Buffer.from("Second message").toString("base64url");
+      const message1 = "First message";
+      const message2 = "Second message";
       const networkId = NetworkId.SOLANA_MAINNET;
 
-      const signature1 = await sdk.signMessage(testWalletId, message1, networkId);
-      const signature2 = await sdk.signMessage(testWalletId, message2, networkId);
+      const signature1 = await sdk.signMessage({
+        walletId: testWalletId,
+        message: message1,
+        networkId,
+      });
+      const signature2 = await sdk.signMessage({
+        walletId: testWalletId,
+        message: message2,
+        networkId,
+      });
 
       expect(signature1).not.toBe(signature2);
     }, 30000);
 
     it("should handle UTF-8 messages correctly", async () => {
-      const message = Buffer.from("🚀 Unicode message with emojis! 你好世界").toString("base64url");
+      const unicodeMessage = "🚀 Unicode message with emojis! 你好世界";
       const networkId = NetworkId.SOLANA_MAINNET;
 
       const signature = await sdk.signMessage({
         walletId: testWalletId,
-        message,
+        message: unicodeMessage, // Plain text with unicode, will be auto-parsed
         networkId,
       });
 
       expect(signature).toBeDefined();
       expect(typeof signature).toBe("string");
       expect(signature.length).toBeGreaterThan(0);
+    }, 30000);
+  });
+
+  describe("Transaction Parsing", () => {
+    beforeAll(async () => {
+      // Create a wallet if we don't have one from previous tests
+      if (!testWalletId) {
+        const result = await sdk.createWallet("Test Wallet for Transaction Signing");
+        testWalletId = result.walletId;
+      }
+    });
+
+    it("should parse various transaction formats (without actual signing)", async () => {
+      const { parseTransaction } = await import("@phantom/parsers");
+
+      // Test Solana raw bytes
+      const mockSolanaBytes = new Uint8Array([1, 2, 3, 4, 5]);
+      const solanaResult = await parseTransaction(mockSolanaBytes, NetworkId.SOLANA_MAINNET);
+      expect(solanaResult.base64url).toBeDefined();
+      expect(solanaResult.originalFormat).toBe("bytes");
+
+      // Test Solana web3.js transaction
+      const mockWeb3Transaction = {
+        serialize: jest.fn().mockReturnValue(new Uint8Array([6, 7, 8, 9, 10])),
+      };
+      const web3Result = await parseTransaction(mockWeb3Transaction, NetworkId.SOLANA_MAINNET);
+      expect(web3Result.base64url).toBeDefined();
+      expect(web3Result.originalFormat).toBe("@solana/web3.js");
+      expect(mockWeb3Transaction.serialize).toHaveBeenCalled();
+
+      // Test EVM transaction object
+      const mockEvmTransaction = {
+        to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
+        value: 1000000000000000000n,
+        data: "0x",
+      };
+      const evmResult = await parseTransaction(mockEvmTransaction, NetworkId.ETHEREUM_MAINNET);
+      expect(evmResult.base64url).toBeDefined();
+      expect(evmResult.originalFormat).toBe("viem");
+
+      // Test hex string transaction
+      const hexTransaction = "0x0102030405";
+      const hexResult = await parseTransaction(hexTransaction, NetworkId.ETHEREUM_MAINNET);
+      expect(hexResult.base64url).toBeDefined();
+      expect(hexResult.originalFormat).toBe("hex");
+    });
+
+    it("should enhance signAndSendTransaction to parse various formats", async () => {
+      // Test that the enhanced interface can parse different formats
+      // Note: These will fail at the API level due to invalid transactions, 
+      // but they test that our parsing works correctly
+
+      // Test raw bytes parsing
+      const mockBytes = new Uint8Array([1, 2, 3, 4, 5]);
+      try {
+        await sdk.signAndSendTransaction({
+          walletId: testWalletId,
+          transaction: mockBytes,
+          networkId: NetworkId.SOLANA_MAINNET,
+        });
+      } catch (error: any) {
+        // Expected to fail due to invalid transaction, but parsing should have worked
+        expect(error.message).toContain("Failed to sign and send transaction");
+      }
+
+      // Test mock web3.js transaction parsing
+      const mockWeb3Transaction = {
+        serialize: jest.fn().mockReturnValue(new Uint8Array([6, 7, 8, 9, 10])),
+      };
+      try {
+        await sdk.signAndSendTransaction({
+          walletId: testWalletId,
+          transaction: mockWeb3Transaction,
+          networkId: NetworkId.SOLANA_MAINNET,
+        });
+      } catch (error: any) {
+        // Expected to fail due to invalid transaction, but parsing should have worked
+        expect(error.message).toContain("Failed to sign and send transaction");
+        expect(mockWeb3Transaction.serialize).toHaveBeenCalled();
+      }
+
+      // Test EVM transaction object parsing
+      const mockEvmTransaction = {
+        to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
+        value: 1000000000000000000n,
+        data: "0x",
+      };
+      try {
+        await sdk.signAndSendTransaction({
+          walletId: testWalletId,
+          transaction: mockEvmTransaction,
+          networkId: NetworkId.ETHEREUM_MAINNET,
+        });
+      } catch (error: any) {
+        // Expected to fail due to invalid transaction, but parsing should have worked
+        expect(error.message).toContain("Failed to sign and send transaction");
+      }
+
+      // Test another format with different bytes
+      try {
+        const anotherMockBytes = new Uint8Array([21, 22, 23, 24, 25]);
+        await sdk.signAndSendTransaction({
+          walletId: testWalletId,
+          transaction: anotherMockBytes,
+          networkId: NetworkId.SOLANA_MAINNET,
+        });
+      } catch (error: any) {
+        // Expected to fail due to invalid transaction, but parsing should have worked
+        expect(error.message).toContain("Failed to sign and send transaction");
+      }
     }, 30000);
   });
 

@@ -87,12 +87,42 @@ const sdk = new ServerSDK({
   apiBaseUrl: process.env.API_URL,
 });
 
+// Create wallet
 const wallet = await sdk.createWallet("User Wallet");
-const message = Buffer.from("Hello from Phantom!").toString("base64url"); // base64url encode
+
+// Sign messages
 const signature = await sdk.signMessage({
   walletId: wallet.walletId,
-  message,
+  message: "Hello from Phantom!", 
   networkId: NetworkId.SOLANA_MAINNET,
+});
+
+// Sign transactions - supports multiple formats
+// Solana Web3.js Transaction
+const solanaTransaction = new Transaction().add(/* instructions */);
+await sdk.signAndSendTransaction({
+  walletId: wallet.walletId,
+  transaction: solanaTransaction, // Native Solana transaction object
+  networkId: NetworkId.SOLANA_MAINNET,
+});
+
+// Ethereum/EVM transaction object
+const evmTransaction = {
+  to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
+  value: 1000000000000000000n,
+  data: "0x",
+};
+await sdk.signAndSendTransaction({
+  walletId: wallet.walletId,
+  transaction: evmTransaction, // Viem/Ethers transaction object
+  networkId: NetworkId.ETHEREUM_MAINNET,
+});
+
+// Raw bytes or hex strings
+await sdk.signAndSendTransaction({
+  walletId: wallet.walletId,
+  transaction: "0x01020304", // Hex string
+  networkId: NetworkId.ETHEREUM_MAINNET,
 });
 ```
 
