@@ -1,5 +1,17 @@
 # @phantom/react-ui
 
+## 1.1.0
+
+### Minor Changes
+
+- f361c9d: Updated to new interface and trying to fix the deployment versions
+
+### Patch Changes
+
+- Updated dependencies [f361c9d]
+  - @phantom/client@0.1.0
+  - @phantom/react-sdk@0.2.0
+
 ## 1.0.2
 
 ### Patch Changes

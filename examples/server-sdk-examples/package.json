@@ -1,6 +1,6 @@
 {
   "name": "@phantom/server-sdk-examples",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Scripts for demonstrating Phantom SDK capabilities",
   "private": true,
   "scripts": {

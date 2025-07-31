@@ -1,5 +1,11 @@
 # @phantom/crypto
 
+## 0.1.0
+
+### Minor Changes
+
+- f361c9d: Updated to new interface and trying to fix the deployment versions
+
 ## 0.0.2
 
 ### Patch Changes
