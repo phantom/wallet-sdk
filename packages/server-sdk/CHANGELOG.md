@@ -1,5 +1,19 @@
 # @phantom/server-sdk
 
+## 0.1.0
+
+### Minor Changes
+
+- 9edb046: Updated to latest version for server-sdk
+
+### Patch Changes
+
+- ba7355b: Update docs
+- 73fd08f: Updated with stamper
+- Updated dependencies [9edb046]
+  - @phantom/api-key-stamper@0.0.2
+  - @phantom/client@0.0.2
+
 ## 0.0.4
 
 ### Patch Changes
