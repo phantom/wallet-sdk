@@ -1,5 +1,11 @@
 # @phantom/crypto
 
+## 0.1.1
+
+### Patch Changes
+
+- 3860924: Support new interface
+
 ## 0.1.0
 
 ### Minor Changes

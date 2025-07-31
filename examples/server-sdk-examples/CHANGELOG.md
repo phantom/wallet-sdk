@@ -1,5 +1,12 @@
 # @phantom/server-sdk-examples
 
+## 1.0.4
+
+### Patch Changes
+
+- Updated dependencies [3860924]
+  - @phantom/server-sdk@0.1.2
+
 ## 1.0.3
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@phantom/api-key-stamper",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "API key stamper for Phantom Wallet SDK",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

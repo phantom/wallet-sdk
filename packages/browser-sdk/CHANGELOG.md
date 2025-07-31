@@ -1,5 +1,14 @@
 # @phantom/browser-sdk
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [3860924]
+  - @phantom/client@0.1.1
+  - @phantom/parsers@0.0.2
+  - @phantom/api-key-stamper@0.1.1
+
 ## 0.2.0
 
 ### Minor Changes

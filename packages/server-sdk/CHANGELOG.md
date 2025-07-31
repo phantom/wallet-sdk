@@ -1,5 +1,15 @@
 # @phantom/server-sdk
 
+## 0.1.2
+
+### Patch Changes
+
+- 3860924: Support new interface
+- Updated dependencies [3860924]
+  - @phantom/client@0.1.1
+  - @phantom/parsers@0.0.2
+  - @phantom/api-key-stamper@0.1.1
+
 ## 0.1.1
 
 ### Patch Changes
