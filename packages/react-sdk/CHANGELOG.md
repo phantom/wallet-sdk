@@ -1,5 +1,15 @@
 # @phantom/react-sdk
 
+## 0.1.0
+
+### Minor Changes
+
+- dfdd1cd: New react-sdk interface with embedded wallets
+
+### Patch Changes
+
+- @phantom/browser-sdk@0.1.0
+
 ## 0.0.10
 
 ### Patch Changes

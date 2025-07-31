@@ -1,6 +1,6 @@
 {
   "name": "@phantom/browser-sdk",
-  "version": "0.0.10",
+  "version": "0.1.0",
   "description": "Browser SDK for Phantom Wallet with unified interface",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

@@ -1,5 +1,12 @@
 # @phantom/react-ui
 
+## 1.0.2
+
+### Patch Changes
+
+- Updated dependencies [dfdd1cd]
+  - @phantom/react-sdk@0.1.0
+
 ## 1.0.1
 
 ### Patch Changes
