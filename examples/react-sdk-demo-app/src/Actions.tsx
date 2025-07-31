@@ -7,6 +7,7 @@ import {
   useAccounts,
   usePhantom,
   useCreateUserOrganization,
+  useIsExtensionInstalled,
   NetworkId,
   type ProviderType,
 } from "@phantom/react-sdk";
@@ -28,6 +29,7 @@ export function Actions() {
   const { signMessage, isSigning: isSigningMessage } = useSignMessage();
   const { createUserOrganization, isCreating } = useCreateUserOrganization();
   const { isConnected, isReady, currentProviderType } = usePhantom();
+  const { isInstalled, isLoading } = useIsExtensionInstalled();
   const addresses = useAccounts();
 
   const [solanaAddress, setSolanaAddress] = useState<string | null>(null);
@@ -184,6 +186,10 @@ export function Actions() {
             </label>
           </div>
 
+          {isLoading && <p>Checking if Phantom extension is installed...</p>}
+          {isInstalled && <p>Phantom extension is installed!</p>}
+          {!isInstalled && <p>Phantom extension is not installed. Please install it to continue.</p>}
+
           {selectedProvider === "embedded" && (
             <div className="embedded-options">
               <h3>Embedded Wallet Type</h3>
@@ -231,7 +237,14 @@ export function Actions() {
           <button id="disconnectBtn" onClick={onDisconnect} disabled={!isConnected || isDisconnecting}>
             {isDisconnecting ? "Disconnecting..." : "Disconnect"}
           </button>
-          <button id="createOrgBtn" onClick={onCreateUserOrganization} disabled={isCreating}>
+          <button
+            id="createOrgBtn"
+            onClick={onCreateUserOrganization}
+            disabled={isCreating}
+            style={{
+              display: selectedProvider !== "embedded" ? "none" : "inline-block",
+            }}
+          >
             {isCreating ? "Creating..." : "Create User Organization"}
           </button>
         </div>

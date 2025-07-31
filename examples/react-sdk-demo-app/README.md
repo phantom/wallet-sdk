@@ -33,13 +33,27 @@ This demo application showcases the usage of the `@phantom/react-sdk` with dual 
    yarn build
    ```
 
-3. Start the demo app:
+3. **Configure Environment Variables** (Required for Embedded Wallet):
+
+   ```bash
+   # Copy the example environment file
+   cp .env.example .env
+
+   # Edit .env and fill in your values:
+   # - VITE_ORGANIZATION_ID: Your Phantom organization ID
+   # - VITE_API_BASE_URL: Phantom API URL (https://api.phantom.app)
+   # - Other optional configurations
+   ```
+
+   See [Environment Variables](#environment-variables) section for details.
+
+4. Start the demo app:
 
    ```bash
    yarn workspace @phantom/react-sdk-demo-app dev
    ```
 
-4. Open your browser to http://localhost:5174
+5. Open your browser to http://localhost:5174
 
 ## Usage
 
@@ -62,15 +76,36 @@ This demo uses:
 - **Provider Persistence**: Automatically remembers your provider choice across sessions
 - Base64url encoding - All messages and transactions are encoded in base64url format
 
+## Environment Variables
+
+The demo app uses environment variables for configuration. Copy `.env.example` to `.env` and configure:
+
+### Required for Embedded Wallet
+
+- `VITE_ORGANIZATION_ID` - Your Phantom organization ID (get from Phantom developer dashboard)
+- `VITE_API_BASE_URL` - Phantom API URL (`https://api.phantom.app` for production)
+
+### Optional Configuration
+
+- `VITE_APP_NAME` - App name displayed in wallet (default: "React SDK Demo App")
+- `VITE_PROVIDER_TYPE` - Default provider type: `"injected"` or `"embedded"` (default: "injected")
+- `VITE_EMBEDDED_WALLET_TYPE` - Embedded wallet type: `"app-wallet"` or `"user-wallet"` (default: "user-wallet")
+- `VITE_AUTH_URL` - Custom auth URL (optional)
+- `VITE_SERVER_URL` - Backend API endpoint (optional)
+- `VITE_SOLANA_RPC_URL` - Custom Solana RPC endpoint (optional)
+- `VITE_DEFAULT_NETWORK` - Default network: `"mainnet"`, `"devnet"`, or `"testnet"` (default: "mainnet")
+
 ## Configuration
 
-The app is configured in `App.tsx`:
+The app is configured in `App.tsx` using environment variables:
 
 ```typescript
 const config = {
-  appName: "React SDK Demo App",
-  serverUrl: "http://localhost:3000/api", // Required for embedded provider
-  // Provider selection happens dynamically in the UI
+  appName: import.meta.env.VITE_APP_NAME || "React SDK Demo App",
+  providerType: import.meta.env.VITE_PROVIDER_TYPE || "injected",
+  organizationId: import.meta.env.VITE_ORGANIZATION_ID, // Required for embedded
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL, // Required for embedded
+  // ... other optional configurations
 };
 ```
 

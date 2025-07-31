@@ -19,6 +19,7 @@ interface PhantomContextValue {
   error: Error | null;
   currentProviderType: "injected" | "embedded" | null;
   isPhantomAvailable: boolean;
+  updateConnectionState: () => Promise<void>;
 }
 
 const PhantomContext = createContext<PhantomContextValue | undefined>(undefined);
@@ -109,6 +110,7 @@ export function PhantomProvider({ children, config }: PhantomProviderProps) {
     sdk,
     isConnected,
     addresses,
+    updateConnectionState,
     walletId,
     isReady,
     error,
