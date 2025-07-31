@@ -220,6 +220,43 @@ function WalletAddresses() {
 }
 ```
 
+### useIsExtensionInstalled
+
+Check if the Phantom browser extension is installed (for injected provider):
+
+```tsx
+import { useIsExtensionInstalled } from "@phantom/react-sdk";
+
+function ExtensionStatus() {
+  const { isLoading, isInstalled } = useIsExtensionInstalled();
+
+  if (isLoading) {
+    return <div>Checking for Phantom extension...</div>;
+  }
+
+  return (
+    <div>
+      {isInstalled ? (
+        <p>✅ Phantom extension is installed!</p>
+      ) : (
+        <p>❌ Phantom extension not found. <a href="https://phantom.app/download" target="_blank">Install here</a></p>
+      )}
+    </div>
+  );
+}
+```
+
+**Features:**
+- **Session-based caching**: Result is cached during the browser session to avoid redundant checks
+- **Automatic detection**: Runs automatically when the hook is first used
+- **Loading states**: Provides `isLoading` during the initial check
+- **Performance optimized**: Subsequent calls return cached result instantly
+
+**Use cases:**
+- Show installation prompts for users without the extension
+- Conditionally render UI based on extension availability
+- Provide fallback options when extension is not installed
+
 ### useDisconnect
 
 Disconnect from wallet:
@@ -530,6 +567,21 @@ function MultiChainWallet() {
   );
 }
 ```
+
+## Hooks Reference
+
+Quick reference of all available hooks:
+
+| Hook | Purpose | Returns |
+|------|---------|---------|
+| `useConnect` | Connect to wallet | `{ connect, isConnecting, error }` |
+| `useAccounts` | Get wallet addresses | `WalletAddress[]` or `null` |
+| `useIsExtensionInstalled` | Check extension status | `{ isLoading, isInstalled }` |
+| `useDisconnect` | Disconnect from wallet | `{ disconnect, isDisconnecting }` |
+| `useSignMessage` | Sign text messages | `{ signMessage, isSigning, error }` |
+| `useSignAndSendTransaction` | Sign and send transactions | `{ signAndSendTransaction, isSigning, error }` |
+| `useCreateUserOrganization` | Create user organization (embedded) | `{ createUserOrganization, isCreating, error }` |
+| `usePhantom` | Get provider context | `{ isConnected, isReady, currentProviderType }` |
 
 ## Configuration Reference
 
