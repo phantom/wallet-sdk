@@ -7,6 +7,7 @@ import type {
   CreateUserOrganizationParams,
   CreateUserOrganizationResult,
   SignMessageParams,
+  AuthOptions,
 } from "./types";
 import { ProviderManager, type SwitchProviderOptions, type ProviderPreference } from "./ProviderManager";
 import { isPhantomExtensionInstalled } from "@phantom/browser-injected-sdk";
@@ -41,6 +42,7 @@ export class BrowserSDK {
   async connect(options?: {
     providerType?: "injected" | "embedded" | (string & Record<never, never>);
     embeddedWalletType?: "app-wallet" | "user-wallet" | (string & Record<never, never>);
+    authOptions?: AuthOptions;
   }): Promise<ConnectResult> {
     // Switch provider if requested
     if (options?.providerType) {
@@ -61,7 +63,7 @@ export class BrowserSDK {
       });
     }
 
-    return this.providerManager.connect();
+    return this.providerManager.connect(options?.authOptions);
   }
 
   /**
