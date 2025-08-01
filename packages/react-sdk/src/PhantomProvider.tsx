@@ -1,13 +1,14 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { BrowserSDK } from "@phantom/browser-sdk";
-import type { BrowserSDKConfig, WalletAddress } from "@phantom/browser-sdk";
+import type { BrowserSDKConfig, WalletAddress, AuthOptions } from "@phantom/browser-sdk";
 
 export interface PhantomSDKConfig extends BrowserSDKConfig {}
 
 export interface ConnectOptions {
   providerType?: "injected" | "embedded";
   embeddedWalletType?: "app-wallet" | "user-wallet";
+  authOptions?: AuthOptions;
 }
 
 interface PhantomContextValue {

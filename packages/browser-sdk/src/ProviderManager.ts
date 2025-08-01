@@ -6,6 +6,7 @@ import type {
   WalletAddress,
   SignAndSendTransactionParams,
   SignMessageParams,
+  AuthOptions,
 } from "./types";
 import { InjectedProvider } from "./providers/injected";
 import { EmbeddedProvider } from "./providers/embedded";
@@ -85,12 +86,12 @@ export class ProviderManager {
   /**
    * Connect using the current provider
    */
-  async connect(): Promise<ConnectResult> {
+  async connect(authOptions?: AuthOptions): Promise<ConnectResult> {
     if (!this.currentProvider) {
       throw new Error("No provider selected");
     }
 
-    const result = await this.currentProvider.connect();
+    const result = await this.currentProvider.connect(authOptions);
     this.walletId = result.walletId || null;
 
     // Save provider preference after successful connection

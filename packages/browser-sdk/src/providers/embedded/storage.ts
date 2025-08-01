@@ -7,6 +7,10 @@ export interface Session {
   walletId: string;
   organizationId: string;
   keypair: Keypair;
+  authProvider?: string;
+  userInfo?: Record<string, any>;
+  createdAt: number;
+  lastUsed: number;
 }
 
 export class IndexedDBStorage {

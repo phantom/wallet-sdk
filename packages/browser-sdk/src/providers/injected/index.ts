@@ -5,6 +5,7 @@ import type {
   SignAndSendTransactionParams,
   SignedTransaction,
   WalletAddress,
+  AuthOptions,
 } from "../../types";
 import { AddressType } from "@phantom/client";
 import { createPhantom, createExtensionPlugin } from "@phantom/browser-injected-sdk";
@@ -49,7 +50,7 @@ export class InjectedProvider implements Provider {
     this.phantom = createPhantom({ plugins });
   }
 
-  async connect(): Promise<ConnectResult> {
+  async connect(authOptions?: AuthOptions): Promise<ConnectResult> {
     if (!this.phantom.extension.isInstalled()) {
       throw new Error("Phantom wallet not found");
     }

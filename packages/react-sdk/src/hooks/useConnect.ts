@@ -35,26 +35,10 @@ export function useConnect() {
     [context.sdk, context.isReady],
   );
 
-  // Helper function to switch provider without connecting
-  const switchProvider = useCallback(
-    async (type: "injected" | "embedded", options?: { embeddedWalletType?: "app-wallet" | "user-wallet" }) => {
-      if (!context.sdk || !context.isReady) {
-        throw new Error("SDK not initialized");
-      }
 
-      await context.sdk.switchProvider(type, options);
-
-      // Update context state after provider switch
-      if ((context.sdk as any)._updateConnectionState) {
-        await (context.sdk as any)._updateConnectionState();
-      }
-    },
-    [context.sdk, context.isReady],
-  );
 
   return {
     connect,
-    switchProvider,
     isConnecting,
     error,
     currentProviderType: context.currentProviderType,

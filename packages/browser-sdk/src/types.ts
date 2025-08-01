@@ -47,8 +47,15 @@ export interface CreateUserOrganizationResult {
   organizationId: string;
 }
 
+export interface AuthOptions {
+  provider?: "google" | "apple" | "jwt";
+  jwtToken?: string;
+  redirectUrl?: string;
+  customAuthData?: Record<string, any>;
+}
+
 export interface Provider {
-  connect(): Promise<ConnectResult>;
+  connect(authOptions?: AuthOptions): Promise<ConnectResult>;
   disconnect(): Promise<void>;
   signMessage(params: SignMessageParams): Promise<string>;
   signAndSendTransaction(params: SignAndSendTransactionParams): Promise<SignedTransaction>;
