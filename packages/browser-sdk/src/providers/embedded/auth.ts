@@ -1,4 +1,5 @@
-import type { AuthOptions } from "../../types";
+
+import { debug, DebugCategory } from "../../debug";
 
 export interface AuthResult {
   walletId: string;
@@ -12,6 +13,8 @@ export interface PhantomConnectOptions {
   provider?: "google" | "apple";
   redirectUrl?: string;
   customAuthData?: Record<string, any>;
+  authUrl?: string;
+  sessionId: string;
 }
 
 export interface JWTAuthOptions {
@@ -22,37 +25,62 @@ export interface JWTAuthOptions {
 }
 
 export class PhantomConnectAuth {
-  async authenticate(options: PhantomConnectOptions): Promise<AuthResult> {
-    const baseUrl = "https://connect.phantom.app";
+  authenticate(options: PhantomConnectOptions) {
+    debug.info(DebugCategory.PHANTOM_CONNECT_AUTH, 'Starting Phantom Connect authentication', {
+      organizationId: options.organizationId,
+      parentOrganizationId: options.parentOrganizationId,
+      provider: options.provider,
+      authUrl: options.authUrl,
+      hasCustomData: !!options.customAuthData
+    });
+
+    const baseUrl = options.authUrl || "https://connect.phantom.app";
+    debug.debug(DebugCategory.PHANTOM_CONNECT_AUTH, 'Using auth URL', { baseUrl });
+
     const params = new URLSearchParams({
       organizationId: options.organizationId,
       parentOrganizationId: options.parentOrganizationId,
-      redirectUrl: options.redirectUrl || window.location.href,
+      redirect_uri: options.redirectUrl || window.location.href,
+      sessionId: options.sessionId,
+      clear_previous_session: true.toString(),
     });
 
     // Add provider if specified (will skip provider selection)
     if (options.provider) {
+      debug.debug(DebugCategory.PHANTOM_CONNECT_AUTH, 'Provider specified, will skip selection', { provider: options.provider });
       params.append("provider", options.provider);
+    } else {
+      // Default to Google if no provider specified
+      debug.debug(DebugCategory.PHANTOM_CONNECT_AUTH, 'No provider specified, defaulting to Google');
+      // Note: Phantom Connect currently defaults to Google if no provider is specified
+      params.append("provider", "google");
     }
 
     // Add custom auth data if provided
     if (options.customAuthData) {
+      debug.debug(DebugCategory.PHANTOM_CONNECT_AUTH, 'Adding custom auth data');
       params.append("authData", JSON.stringify(options.customAuthData));
     }
 
     // Generate state token for CSRF protection
     const state = this.generateStateToken();
     params.append("state", state);
+    debug.debug(DebugCategory.PHANTOM_CONNECT_AUTH, 'Generated CSRF state token', { state });
 
     // Store state and auth context in session storage
-    sessionStorage.setItem("phantom-auth-state", state);
-    sessionStorage.setItem("phantom-auth-context", JSON.stringify({
+    const authContext = {
       organizationId: options.organizationId,
       parentOrganizationId: options.parentOrganizationId,
       provider: options.provider,
-    }));
+      sessionId: options.sessionId,
+    };
+    
+    sessionStorage.setItem("phantom-auth-state", state);
+    sessionStorage.setItem("phantom-auth-context", JSON.stringify(authContext));
+    debug.debug(DebugCategory.PHANTOM_CONNECT_AUTH, 'Stored auth context in session storage', { authContext });
 
     const authUrl = `${baseUrl}?${params.toString()}`;
+    debug.info(DebugCategory.PHANTOM_CONNECT_AUTH, 'Redirecting to Phantom Connect', { authUrl });
 
     // Redirect to Phantom Connect
     window.location.href = authUrl;
@@ -67,12 +95,18 @@ export class PhantomConnectAuth {
            Math.random().toString(36).substring(2, 15);
   }
 
+  static generateSessionId(): string {
+    return 'session_' + Math.random().toString(36).substring(2, 15) + 
+           Math.random().toString(36).substring(2, 15) + '_' + Date.now();
+  }
+
   static resumeAuthFromRedirect(): AuthResult | null {
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const walletId = urlParams.get("walletId");
       const provider = urlParams.get("provider");
       const state = urlParams.get("state");
+      const sessionId = urlParams.get("sessionId");
       const error = urlParams.get("error");
       const errorDescription = urlParams.get("error_description");
 
@@ -92,7 +126,12 @@ export class PhantomConnectAuth {
         }
       }
 
-      if (!walletId || !state) {
+      if (!walletId || !state || !sessionId) {
+        debug.debug(DebugCategory.PHANTOM_CONNECT_AUTH, 'Missing auth parameters in URL', {
+          hasWalletId: !!walletId,
+          hasState: !!state,
+          hasSessionId: !!sessionId
+        });
         return null; // No auth data in URL
       }
 
@@ -108,18 +147,33 @@ export class PhantomConnectAuth {
 
       // Get stored auth context
       const contextStr = sessionStorage.getItem("phantom-auth-context");
-      let context = {};
+      let context: any = {};
       if (contextStr) {
         try {
           context = JSON.parse(contextStr);
         } catch (parseError) {
-          console.warn("Failed to parse stored auth context:", parseError);
+          debug.warn(DebugCategory.PHANTOM_CONNECT_AUTH, "Failed to parse stored auth context", { error: parseError });
         }
+      }
+
+      // Verify sessionId matches stored context
+      if (context.sessionId && sessionId !== context.sessionId) {
+        debug.error(DebugCategory.PHANTOM_CONNECT_AUTH, 'Session ID mismatch', {
+          urlSessionId: sessionId,
+          storedSessionId: context.sessionId
+        });
+        throw new Error("Session ID mismatch - possible session corruption or replay attack");
       }
 
       // Clean up session storage
       sessionStorage.removeItem("phantom-auth-state");
       sessionStorage.removeItem("phantom-auth-context");
+
+      debug.info(DebugCategory.PHANTOM_CONNECT_AUTH, 'Successfully resumed auth from redirect', {
+        walletId,
+        provider: provider || context.provider,
+        sessionId
+      });
 
       return {
         walletId,

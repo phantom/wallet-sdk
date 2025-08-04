@@ -11,13 +11,33 @@ import type {
 } from "./types";
 import { ProviderManager, type SwitchProviderOptions, type ProviderPreference } from "./ProviderManager";
 import { isPhantomExtensionInstalled } from "@phantom/browser-injected-sdk";
+import { debug, DebugCategory } from "./debug";
 export class BrowserSDK {
   private providerManager: ProviderManager;
   private config: BrowserSDKConfig;
 
   constructor(config: BrowserSDKConfig) {
+    // Initialize debugging if configured
+    if (config.debug?.enabled) {
+      debug.enable();
+      if (config.debug.level !== undefined) {
+        debug.setLevel(config.debug.level);
+      }
+      if (config.debug.callback) {
+        debug.setCallback(config.debug.callback);
+      }
+    }
+
+    debug.info(DebugCategory.BROWSER_SDK, 'Initializing BrowserSDK', { 
+      providerType: config.providerType,
+      embeddedWalletType: config.embeddedWalletType,
+      addressTypes: config.addressTypes,
+      debugEnabled: config.debug?.enabled 
+    });
+
     // Validate providerType
     if (!["injected", "embedded"].includes(config.providerType)) {
+      debug.error(DebugCategory.BROWSER_SDK, 'Invalid providerType', { providerType: config.providerType });
       throw new Error(`Invalid providerType: ${config.providerType}. Must be "injected" or "embedded".`);
     }
 
@@ -25,6 +45,7 @@ export class BrowserSDK {
 
     // Validate embeddedWalletType if provided
     if (config.providerType === "embedded" && !["app-wallet", "user-wallet"].includes(embeddedWalletType)) {
+      debug.error(DebugCategory.BROWSER_SDK, 'Invalid embeddedWalletType', { embeddedWalletType: config.embeddedWalletType });
       throw new Error(
         `Invalid embeddedWalletType: ${config.embeddedWalletType}. Must be "app-wallet" or "user-wallet".`,
       );
@@ -33,7 +54,9 @@ export class BrowserSDK {
     config.embeddedWalletType = embeddedWalletType as "app-wallet" | "user-wallet";
 
     this.config = config;
+    debug.debug(DebugCategory.BROWSER_SDK, 'Creating ProviderManager', { config });
     this.providerManager = new ProviderManager(config);
+    debug.info(DebugCategory.BROWSER_SDK, 'BrowserSDK initialized successfully');
   }
 
   /**
@@ -44,26 +67,46 @@ export class BrowserSDK {
     embeddedWalletType?: "app-wallet" | "user-wallet" | (string & Record<never, never>);
     authOptions?: AuthOptions;
   }): Promise<ConnectResult> {
+    debug.info(DebugCategory.BROWSER_SDK, 'Starting connect process', { options });
+
     // Switch provider if requested
     if (options?.providerType) {
+      debug.debug(DebugCategory.BROWSER_SDK, 'Provider switch requested', { 
+        providerType: options.providerType,
+        embeddedWalletType: options.embeddedWalletType 
+      });
+
       // Validate providerType
       if (!["injected", "embedded"].includes(options.providerType)) {
+        debug.error(DebugCategory.BROWSER_SDK, 'Invalid providerType in connect options', { providerType: options.providerType });
         throw new Error(`Invalid providerType: ${options.providerType}. Must be "injected" or "embedded".`);
       }
 
       // Validate embeddedWalletType if provided
       if (options.embeddedWalletType && !["app-wallet", "user-wallet"].includes(options.embeddedWalletType)) {
+        debug.error(DebugCategory.BROWSER_SDK, 'Invalid embeddedWalletType in connect options', { embeddedWalletType: options.embeddedWalletType });
         throw new Error(
           `Invalid embeddedWalletType: ${options.embeddedWalletType}. Must be "app-wallet" or "user-wallet".`,
         );
       }
+
+      debug.debug(DebugCategory.BROWSER_SDK, 'Switching provider', { 
+        providerType: options.providerType,
+        embeddedWalletType: options.embeddedWalletType 
+      });
 
       await this.providerManager.switchProvider(options.providerType as "injected" | "embedded", {
         embeddedWalletType: options.embeddedWalletType as "app-wallet" | "user-wallet",
       });
     }
 
-    return this.providerManager.connect(options?.authOptions);
+    debug.debug(DebugCategory.BROWSER_SDK, 'Delegating to ProviderManager.connect', { authOptions: options?.authOptions });
+    const result = await this.providerManager.connect(options?.authOptions);
+    debug.info(DebugCategory.BROWSER_SDK, 'Connect completed successfully', { 
+      walletId: result.walletId,
+      addressCount: result.addresses.length 
+    });
+    return result;
   }
 
   /**

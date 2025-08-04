@@ -16,4 +16,12 @@ export default defineConfig({
   optimizeDeps: {
     include: ["buffer"],
   },
+  build: {
+    rollupOptions: {
+      input: {
+        main: "index.html",
+        callback: "auth/callback.html",
+      },
+    },
+  },
 });
