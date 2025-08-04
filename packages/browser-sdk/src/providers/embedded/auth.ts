@@ -38,10 +38,10 @@ export class PhantomConnectAuth {
     debug.debug(DebugCategory.PHANTOM_CONNECT_AUTH, 'Using auth URL', { baseUrl });
 
     const params = new URLSearchParams({
-      organizationId: options.organizationId,
-      parentOrganizationId: options.parentOrganizationId,
+      organization_id: options.organizationId,
+      parent_organization_id: options.parentOrganizationId,
       redirect_uri: options.redirectUrl || window.location.href,
-      sessionId: options.sessionId,
+      session_id: options.sessionId,
       clear_previous_session: true.toString(),
     });
 
@@ -62,12 +62,7 @@ export class PhantomConnectAuth {
       params.append("authData", JSON.stringify(options.customAuthData));
     }
 
-    // Generate state token for CSRF protection
-    const state = this.generateStateToken();
-    params.append("state", state);
-    debug.debug(DebugCategory.PHANTOM_CONNECT_AUTH, 'Generated CSRF state token', { state });
-
-    // Store state and auth context in session storage
+    // Store auth context in session storage for validation after redirect
     const authContext = {
       organizationId: options.organizationId,
       parentOrganizationId: options.parentOrganizationId,
@@ -75,7 +70,6 @@ export class PhantomConnectAuth {
       sessionId: options.sessionId,
     };
     
-    sessionStorage.setItem("phantom-auth-state", state);
     sessionStorage.setItem("phantom-auth-context", JSON.stringify(authContext));
     debug.debug(DebugCategory.PHANTOM_CONNECT_AUTH, 'Stored auth context in session storage', { authContext });
 
@@ -90,10 +84,6 @@ export class PhantomConnectAuth {
     throw new Error("Redirecting to authentication...");
   }
 
-  private generateStateToken(): string {
-    return Math.random().toString(36).substring(2, 15) + 
-           Math.random().toString(36).substring(2, 15);
-  }
 
   static generateSessionId(): string {
     return 'session_' + Math.random().toString(36).substring(2, 15) + 
@@ -103,10 +93,9 @@ export class PhantomConnectAuth {
   static resumeAuthFromRedirect(): AuthResult | null {
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      const walletId = urlParams.get("walletId");
+      const walletId = urlParams.get("wallet_id");
       const provider = urlParams.get("provider");
-      const state = urlParams.get("state");
-      const sessionId = urlParams.get("sessionId");
+      const sessionId = urlParams.get("session_id");
       const error = urlParams.get("error");
       const errorDescription = urlParams.get("error_description");
 
@@ -126,23 +115,12 @@ export class PhantomConnectAuth {
         }
       }
 
-      if (!walletId || !state || !sessionId) {
+      if (!walletId || !sessionId) {
         debug.debug(DebugCategory.PHANTOM_CONNECT_AUTH, 'Missing auth parameters in URL', {
           hasWalletId: !!walletId,
-          hasState: !!state,
           hasSessionId: !!sessionId
         });
         return null; // No auth data in URL
-      }
-
-      // Verify state token
-      const storedState = sessionStorage.getItem("phantom-auth-state");
-      if (!storedState) {
-        throw new Error("No stored authentication state found - session may have expired");
-      }
-      
-      if (state !== storedState) {
-        throw new Error("Invalid state token - possible CSRF attack or expired session");
       }
 
       // Get stored auth context
@@ -166,7 +144,6 @@ export class PhantomConnectAuth {
       }
 
       // Clean up session storage
-      sessionStorage.removeItem("phantom-auth-state");
       sessionStorage.removeItem("phantom-auth-context");
 
       debug.info(DebugCategory.PHANTOM_CONNECT_AUTH, 'Successfully resumed auth from redirect', {
@@ -182,7 +159,6 @@ export class PhantomConnectAuth {
       };
     } catch (error) {
       // Clean up session storage on any error
-      sessionStorage.removeItem("phantom-auth-state");
       sessionStorage.removeItem("phantom-auth-context");
       throw error;
     }
