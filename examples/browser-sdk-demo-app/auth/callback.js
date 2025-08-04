@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 /// <reference types="vite/client" />
-import { BrowserSDK, NetworkId, AddressType, debug, DebugLevel } from "@phantom/browser-sdk";
+import { BrowserSDK, NetworkId, AddressType, debug, DebugLevel, DEFAULT_AUTH_URL, DEFAULT_WALLET_API_URL } from "@phantom/browser-sdk";
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log("Auth callback page loaded, initializing...");

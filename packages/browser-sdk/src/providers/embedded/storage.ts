@@ -39,7 +39,7 @@ export class IndexedDBStorage {
   }
 
   async getSession(): Promise<Session | null> {
-    debug.debug(DebugCategory.STORAGE, 'Getting session from IndexedDB');
+    debug.log(DebugCategory.STORAGE, 'Getting session from IndexedDB');
     const db = await this.getDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], "readonly");
@@ -58,7 +58,7 @@ export class IndexedDBStorage {
             lastUsed: session.lastUsed
           });
         } else {
-          debug.debug(DebugCategory.STORAGE, 'No session found in storage');
+          debug.log(DebugCategory.STORAGE, 'No session found in storage');
         }
         resolve(session);
       };
@@ -70,7 +70,7 @@ export class IndexedDBStorage {
   }
 
   async saveSession(session: Session): Promise<void> {
-    debug.debug(DebugCategory.STORAGE, 'Saving session to IndexedDB', {
+    debug.log(DebugCategory.STORAGE, 'Saving session to IndexedDB', {
       sessionId: session.sessionId,
       walletId: session.walletId,
       authProvider: session.authProvider,

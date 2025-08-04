@@ -29,11 +29,11 @@ export class ProviderManager {
   private config: BrowserSDKConfig;
 
   constructor(config: BrowserSDKConfig) {
-    debug.debug(DebugCategory.PROVIDER_MANAGER, 'Initializing ProviderManager', { config });
+    debug.log(DebugCategory.PROVIDER_MANAGER, 'Initializing ProviderManager', { config });
     this.config = config;
 
     // Initialize default provider based on config
-    debug.debug(DebugCategory.PROVIDER_MANAGER, 'Setting default provider');
+    debug.log(DebugCategory.PROVIDER_MANAGER, 'Setting default provider');
     this.setDefaultProvider();
 
     // Restore previous choice from localStorage if available
@@ -103,11 +103,11 @@ export class ProviderManager {
       throw new Error("No provider selected");
     }
 
-    debug.debug(DebugCategory.PROVIDER_MANAGER, 'Delegating to provider connect method');
+    debug.log(DebugCategory.PROVIDER_MANAGER, 'Delegating to provider connect method');
     const result = await this.currentProvider.connect(authOptions);
     this.walletId = result.walletId || null;
 
-    debug.debug(DebugCategory.PROVIDER_MANAGER, 'Connection successful, saving preferences', {
+    debug.log(DebugCategory.PROVIDER_MANAGER, 'Connection successful, saving preferences', {
       walletId: this.walletId,
       addressCount: result.addresses.length
     });

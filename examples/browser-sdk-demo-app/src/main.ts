@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 /// <reference types="vite/client" />
-import { BrowserSDK, NetworkId, AddressType, debug, DebugLevel } from "@phantom/browser-sdk";
+import { BrowserSDK, NetworkId, AddressType, debug, DebugLevel, DEFAULT_AUTH_URL, DEFAULT_WALLET_API_URL } from "@phantom/browser-sdk";
 import type { DebugMessage } from "@phantom/browser-sdk";
 import { Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL, Connection } from "@solana/web3.js";
 import {
@@ -148,11 +148,11 @@ document.addEventListener("DOMContentLoaded", () => {
       // For demo purposes, use hardcoded embedded config
       return new BrowserSDK({
         providerType: "embedded",
-        apiBaseUrl: import.meta.env.VITE_WALLET_API || "https://api.phantom.app/v1/wallets",
+        apiBaseUrl: import.meta.env.VITE_WALLET_API || DEFAULT_WALLET_API_URL,
         organizationId: import.meta.env.VITE_ORGANIZATION_ID || "your-organization-id",
         embeddedWalletType: "user-wallet",
         authOptions: {
-          authUrl: import.meta.env.VITE_AUTH_URL || "https://connect.phantom.app",
+          authUrl: import.meta.env.VITE_AUTH_URL || DEFAULT_AUTH_URL,
           redirectUrl: import.meta.env.VITE_REDIRECT_URL,
         },
         

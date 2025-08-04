@@ -54,7 +54,7 @@ export class BrowserSDK {
     config.embeddedWalletType = embeddedWalletType as "app-wallet" | "user-wallet";
 
     this.config = config;
-    debug.debug(DebugCategory.BROWSER_SDK, 'Creating ProviderManager', { config });
+    debug.log(DebugCategory.BROWSER_SDK, 'Creating ProviderManager', { config });
     this.providerManager = new ProviderManager(config);
     debug.info(DebugCategory.BROWSER_SDK, 'BrowserSDK initialized successfully');
   }
@@ -71,7 +71,7 @@ export class BrowserSDK {
 
     // Switch provider if requested
     if (options?.providerType) {
-      debug.debug(DebugCategory.BROWSER_SDK, 'Provider switch requested', { 
+      debug.log(DebugCategory.BROWSER_SDK, 'Provider switch requested', { 
         providerType: options.providerType,
         embeddedWalletType: options.embeddedWalletType 
       });
@@ -90,7 +90,7 @@ export class BrowserSDK {
         );
       }
 
-      debug.debug(DebugCategory.BROWSER_SDK, 'Switching provider', { 
+      debug.log(DebugCategory.BROWSER_SDK, 'Switching provider', { 
         providerType: options.providerType,
         embeddedWalletType: options.embeddedWalletType 
       });
@@ -100,7 +100,7 @@ export class BrowserSDK {
       });
     }
 
-    debug.debug(DebugCategory.BROWSER_SDK, 'Delegating to ProviderManager.connect', { authOptions: options?.authOptions });
+    debug.log(DebugCategory.BROWSER_SDK, 'Delegating to ProviderManager.connect', { authOptions: options?.authOptions });
     const result = await this.providerManager.connect(options?.authOptions);
     debug.info(DebugCategory.BROWSER_SDK, 'Connect completed successfully', { 
       walletId: result.walletId,

@@ -46,7 +46,7 @@ export class Debug {
     this.enabled = false;
   }
 
-  private log(level: DebugLevel, category: string, message: string, data?: any) {
+  private writeLog(level: DebugLevel, category: string, message: string, data?: any) {
     if (!this.enabled || level > this.level) {
       return;
     }
@@ -66,19 +66,23 @@ export class Debug {
   }
 
   error(category: string, message: string, data?: any) {
-    this.log(DebugLevel.ERROR, category, message, data);
+    this.writeLog(DebugLevel.ERROR, category, message, data);
   }
 
   warn(category: string, message: string, data?: any) {
-    this.log(DebugLevel.WARN, category, message, data);
+    this.writeLog(DebugLevel.WARN, category, message, data);
   }
 
   info(category: string, message: string, data?: any) {
-    this.log(DebugLevel.INFO, category, message, data);
+    this.writeLog(DebugLevel.INFO, category, message, data);
   }
 
   debug(category: string, message: string, data?: any) {
-    this.log(DebugLevel.DEBUG, category, message, data);
+    this.writeLog(DebugLevel.DEBUG, category, message, data);
+  }
+
+  log(category: string, message: string, data?: any) {
+    this.writeLog(DebugLevel.DEBUG, category, message, data);
   }
 }
 

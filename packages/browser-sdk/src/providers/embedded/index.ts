@@ -35,7 +35,7 @@ export class EmbeddedProvider implements Provider {
   private addresses: WalletAddress[] = [];
 
   constructor(config: EmbeddedProviderConfig) {
-    debug.debug(DebugCategory.EMBEDDED_PROVIDER, 'Initializing EmbeddedProvider', { config });
+    debug.log(DebugCategory.EMBEDDED_PROVIDER, 'Initializing EmbeddedProvider', { config });
     this.config = config;
     this.storage = new IndexedDBStorage();
     // Store solana provider config (unused for now)
@@ -53,7 +53,7 @@ export class EmbeddedProvider implements Provider {
       });
 
       // First, check if we're resuming from a redirect
-      debug.debug(DebugCategory.EMBEDDED_PROVIDER, 'Checking for redirect resume');
+      debug.log(DebugCategory.EMBEDDED_PROVIDER, 'Checking for redirect resume');
       const authResult = PhantomConnectAuth.resumeAuthFromRedirect();
       if (authResult) {
         debug.info(DebugCategory.EMBEDDED_PROVIDER, 'Resuming from redirect', { 
@@ -63,12 +63,12 @@ export class EmbeddedProvider implements Provider {
         return this.completeAuthConnection(authResult);
       }
 
-      debug.debug(DebugCategory.EMBEDDED_PROVIDER, 'Getting existing session');
+      debug.log(DebugCategory.EMBEDDED_PROVIDER, 'Getting existing session');
       let session = await this.storage.getSession();
 
       // Check for session status and URL mismatch
       if (session) {
-        debug.debug(DebugCategory.EMBEDDED_PROVIDER, 'Found existing session, validating', {
+        debug.log(DebugCategory.EMBEDDED_PROVIDER, 'Found existing session, validating', {
           sessionId: session.sessionId,
           status: session.status,
           walletId: session.walletId
@@ -117,12 +117,12 @@ export class EmbeddedProvider implements Provider {
         debug.info(DebugCategory.EMBEDDED_PROVIDER, 'No existing session, creating new one');
         
         // Generate keypair using PhantomClient
-        debug.debug(DebugCategory.EMBEDDED_PROVIDER, 'Generating keypair');
+        debug.log(DebugCategory.EMBEDDED_PROVIDER, 'Generating keypair');
         const keypair = generateKeyPair();
-        debug.debug(DebugCategory.EMBEDDED_PROVIDER, 'Keypair generated', { publicKey: keypair.publicKey });
+        debug.log(DebugCategory.EMBEDDED_PROVIDER, 'Keypair generated', { publicKey: keypair.publicKey });
 
         // Create a temporary client with the keypair
-        debug.debug(DebugCategory.EMBEDDED_PROVIDER, 'Creating temporary PhantomClient');
+        debug.log(DebugCategory.EMBEDDED_PROVIDER, 'Creating temporary PhantomClient');
         const stamper = new ApiKeyStamper({
           apiSecretKey: keypair.secretKey,
         });
@@ -138,7 +138,7 @@ export class EmbeddedProvider implements Provider {
         // organization name is a combination of this organizationId and this userId, which will be a unique identifier
         const uid = Date.now(); // for now
         const organizationName = `${this.config.organizationId}-${uid}`;
-        debug.debug(DebugCategory.EMBEDDED_PROVIDER, 'Creating organization', { organizationName });
+        debug.log(DebugCategory.EMBEDDED_PROVIDER, 'Creating organization', { organizationName });
          const { organizationId } = await tempClient.createOrganization(organizationName, keypair);
         debug.info(DebugCategory.EMBEDDED_PROVIDER, 'Organization created', { organizationId });
 
@@ -160,7 +160,7 @@ export class EmbeddedProvider implements Provider {
             }
 
             const jwtAuth = new JWTAuth();
-            debug.debug(DebugCategory.EMBEDDED_PROVIDER, 'Starting JWT authentication');
+            debug.log(DebugCategory.EMBEDDED_PROVIDER, 'Starting JWT authentication');
             const authResult = await jwtAuth.authenticate({
               organizationId: organizationId,
               parentOrganizationId: this.config.organizationId,
@@ -183,7 +183,7 @@ export class EmbeddedProvider implements Provider {
               createdAt: now,
               lastUsed: now,
             };
-            debug.debug(DebugCategory.EMBEDDED_PROVIDER, 'Saving JWT session');
+            debug.log(DebugCategory.EMBEDDED_PROVIDER, 'Saving JWT session');
             await this.storage.saveSession(session);
           } else {
             debug.info(DebugCategory.EMBEDDED_PROVIDER, 'Using Phantom Connect authentication flow (redirect-based)', {
@@ -207,7 +207,7 @@ export class EmbeddedProvider implements Provider {
               createdAt: now,
               lastUsed: now,
             };
-            debug.debug(DebugCategory.EMBEDDED_PROVIDER, 'Saving temporary session before redirect', { 
+            debug.log(DebugCategory.EMBEDDED_PROVIDER, 'Saving temporary session before redirect', { 
               sessionId: tempSession.sessionId,
               tempWalletId: tempSession.walletId 
             });

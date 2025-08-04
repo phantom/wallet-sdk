@@ -1,5 +1,6 @@
 
 import { debug, DebugCategory } from "../../debug";
+import { DEFAULT_AUTH_URL } from "../../constants";
 
 export interface AuthResult {
   walletId: string;
@@ -34,8 +35,8 @@ export class PhantomConnectAuth {
       hasCustomData: !!options.customAuthData
     });
 
-    const baseUrl = options.authUrl || "https://connect.phantom.app";
-    debug.debug(DebugCategory.PHANTOM_CONNECT_AUTH, 'Using auth URL', { baseUrl });
+    const baseUrl = options.authUrl || DEFAULT_AUTH_URL;
+    debug.log(DebugCategory.PHANTOM_CONNECT_AUTH, 'Using auth URL', { baseUrl });
 
     const params = new URLSearchParams({
       organization_id: options.organizationId,
@@ -47,18 +48,18 @@ export class PhantomConnectAuth {
 
     // Add provider if specified (will skip provider selection)
     if (options.provider) {
-      debug.debug(DebugCategory.PHANTOM_CONNECT_AUTH, 'Provider specified, will skip selection', { provider: options.provider });
+      debug.log(DebugCategory.PHANTOM_CONNECT_AUTH, 'Provider specified, will skip selection', { provider: options.provider });
       params.append("provider", options.provider);
     } else {
       // Default to Google if no provider specified
-      debug.debug(DebugCategory.PHANTOM_CONNECT_AUTH, 'No provider specified, defaulting to Google');
+      debug.log(DebugCategory.PHANTOM_CONNECT_AUTH, 'No provider specified, defaulting to Google');
       // Note: Phantom Connect currently defaults to Google if no provider is specified
       params.append("provider", "google");
     }
 
     // Add custom auth data if provided
     if (options.customAuthData) {
-      debug.debug(DebugCategory.PHANTOM_CONNECT_AUTH, 'Adding custom auth data');
+      debug.log(DebugCategory.PHANTOM_CONNECT_AUTH, 'Adding custom auth data');
       params.append("authData", JSON.stringify(options.customAuthData));
     }
 
@@ -71,7 +72,7 @@ export class PhantomConnectAuth {
     };
     
     sessionStorage.setItem("phantom-auth-context", JSON.stringify(authContext));
-    debug.debug(DebugCategory.PHANTOM_CONNECT_AUTH, 'Stored auth context in session storage', { authContext });
+    debug.log(DebugCategory.PHANTOM_CONNECT_AUTH, 'Stored auth context in session storage', { authContext });
 
     const authUrl = `${baseUrl}?${params.toString()}`;
     debug.info(DebugCategory.PHANTOM_CONNECT_AUTH, 'Redirecting to Phantom Connect', { authUrl });
@@ -79,9 +80,8 @@ export class PhantomConnectAuth {
     // Redirect to Phantom Connect
     window.location.href = authUrl;
 
-    // This method won't return since we're redirecting
+    // The page will redirect, so execution stops here
     // The actual auth result will be processed after redirect back
-    throw new Error("Redirecting to authentication...");
   }
 
 
@@ -116,7 +116,7 @@ export class PhantomConnectAuth {
       }
 
       if (!walletId || !sessionId) {
-        debug.debug(DebugCategory.PHANTOM_CONNECT_AUTH, 'Missing auth parameters in URL', {
+        debug.log(DebugCategory.PHANTOM_CONNECT_AUTH, 'Missing auth parameters in URL', {
           hasWalletId: !!walletId,
           hasSessionId: !!sessionId
         });

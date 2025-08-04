@@ -34,26 +34,26 @@ export class InjectedProvider implements Provider {
   private phantom: any;
 
   constructor(config: InjectedProviderConfig) {
-    debug.debug(DebugCategory.INJECTED_PROVIDER, 'Initializing InjectedProvider', { config });
+    debug.log(DebugCategory.INJECTED_PROVIDER, 'Initializing InjectedProvider', { config });
     
     // Store config values
     this.addressTypes = config.addressTypes || [AddressType.solana, AddressType.ethereum];
-    debug.debug(DebugCategory.INJECTED_PROVIDER, 'Address types configured', { addressTypes: this.addressTypes });
+    debug.log(DebugCategory.INJECTED_PROVIDER, 'Address types configured', { addressTypes: this.addressTypes });
 
     // Initialize phantom instance with plugins based on enabled address types
     const plugins: any[] = [createExtensionPlugin()]; // Always include extension plugin
 
     if (this.addressTypes.includes(AddressType.solana)) {
       plugins.push(createSolanaPlugin());
-      debug.debug(DebugCategory.INJECTED_PROVIDER, 'Solana plugin added');
+      debug.log(DebugCategory.INJECTED_PROVIDER, 'Solana plugin added');
     }
 
     if (this.addressTypes.includes(AddressType.ethereum)) {
       plugins.push(createEthereumPlugin());
-      debug.debug(DebugCategory.INJECTED_PROVIDER, 'Ethereum plugin added');
+      debug.log(DebugCategory.INJECTED_PROVIDER, 'Ethereum plugin added');
     }
 
-    debug.debug(DebugCategory.INJECTED_PROVIDER, 'Creating Phantom instance with plugins', { pluginCount: plugins.length });
+    debug.log(DebugCategory.INJECTED_PROVIDER, 'Creating Phantom instance with plugins', { pluginCount: plugins.length });
     this.phantom = createPhantom({ plugins });
     debug.info(DebugCategory.INJECTED_PROVIDER, 'InjectedProvider initialized');
   }
@@ -68,13 +68,13 @@ export class InjectedProvider implements Provider {
       debug.error(DebugCategory.INJECTED_PROVIDER, 'Phantom wallet extension not found');
       throw new Error("Phantom wallet not found");
     }
-    debug.debug(DebugCategory.INJECTED_PROVIDER, 'Phantom extension detected');
+    debug.log(DebugCategory.INJECTED_PROVIDER, 'Phantom extension detected');
 
     const connectedAddresses: WalletAddress[] = [];
 
     // Try Solana if enabled
     if (this.addressTypes.includes(AddressType.solana)) {
-      debug.debug(DebugCategory.INJECTED_PROVIDER, 'Attempting Solana connection');
+      debug.log(DebugCategory.INJECTED_PROVIDER, 'Attempting Solana connection');
       try {
         const publicKey = await this.phantom.solana.connect();
         if (publicKey) {
