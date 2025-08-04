@@ -87,7 +87,6 @@ export class InjectedProvider implements Provider {
       } catch (err) {
         // Continue to other address types
         debug.warn(DebugCategory.INJECTED_PROVIDER, 'Failed to connect Solana', { error: err });
-        console.error("Failed to connect Solana:", err);
       }
     }
 
@@ -104,8 +103,8 @@ export class InjectedProvider implements Provider {
           );
         }
       } catch (err) {
-        // Continue
-        console.error("Failed to connect Ethereum:", err);
+        // Continue to other address types
+        debug.warn(DebugCategory.INJECTED_PROVIDER, 'Failed to connect Ethereum', { error: err });
       }
     }
 

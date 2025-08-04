@@ -27,12 +27,16 @@ describe("EmbeddedProvider", () => {
   };
 
   const mockSession = {
+    sessionId: "session_abc123_1234567890",
     walletId: "wallet-123",
     organizationId: "org-123",
     keypair: {
       secretKey: "mock-secret-key",
       publicKey: "mock-public-key",
     },
+    status: "completed" as const,
+    createdAt: Date.now(),
+    lastUsed: Date.now(),
   };
 
   const mockWalletAddresses = [
