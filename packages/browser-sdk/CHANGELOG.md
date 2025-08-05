@@ -1,5 +1,15 @@
 # @phantom/browser-sdk
 
+## 0.2.3
+
+### Patch Changes
+
+- 48cb72c: New auth flow
+- Updated dependencies [48cb72c]
+  - @phantom/client@0.1.3
+  - @phantom/embedded-provider-core@0.1.1
+  - @phantom/parsers@0.0.4
+
 ## 0.2.2
 
 ### Patch Changes
