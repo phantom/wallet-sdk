@@ -271,6 +271,8 @@ button:focus-visible {
   line-height: 1.4;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  word-break: break-all;
+  max-width: 100%;
 }
 
 .debug-data {
@@ -278,14 +280,17 @@ button:focus-visible {
   padding: 0.5rem;
   border-radius: 2px;
   font-size: 10px;
-  overflow-x: auto;
+  overflow-x: hidden;
   color: #4b5563;
   margin: 0;
   border: 1px solid #e5e7eb;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  word-break: break-all;
   white-space: pre-wrap;
   max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Responsive Design */
