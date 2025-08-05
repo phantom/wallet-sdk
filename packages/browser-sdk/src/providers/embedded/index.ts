@@ -6,8 +6,8 @@ import type { Provider } from "../../types";
 
 export class EmbeddedProvider extends CoreEmbeddedProvider implements Provider {
   constructor(config: EmbeddedProviderConfig) {
-    debug.log(DebugCategory.EMBEDDED_PROVIDER, 'Initializing Browser EmbeddedProvider', { config });
-    
+    debug.log(DebugCategory.EMBEDDED_PROVIDER, "Initializing Browser EmbeddedProvider", { config });
+
     // Create browser platform adapter
     const urlParamsAccessor = new BrowserURLParamsAccessor();
     const platform: PlatformAdapter = {
@@ -15,11 +15,11 @@ export class EmbeddedProvider extends CoreEmbeddedProvider implements Provider {
       authProvider: new BrowserAuthProvider(urlParamsAccessor),
       urlParamsAccessor,
     };
-    
+
     const logger = new BrowserLogger();
-    
+
     super(config, platform, logger);
-    
-    debug.info(DebugCategory.EMBEDDED_PROVIDER, 'Browser EmbeddedProvider initialized');
+
+    debug.info(DebugCategory.EMBEDDED_PROVIDER, "Browser EmbeddedProvider initialized");
   }
 }

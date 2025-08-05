@@ -85,8 +85,8 @@ const sdk = new BrowserSDK({
   embeddedWalletType: "app-wallet", // or 'user-wallet'
   authOptions: {
     authUrl: "https://auth.phantom.app", // optional, defaults to "https://connect.phantom.app"
-    redirectUrl: "https://yourapp.com/callback" // optional, defaults to current page
-  }
+    redirectUrl: "https://yourapp.com/callback", // optional, defaults to current page
+  },
 });
 ```
 
@@ -204,15 +204,15 @@ const result = await sdk.connect();
 // Phantom Connect with Google authentication (skips provider selection)
 const result = await sdk.connect({
   authOptions: {
-    provider: "google"
-  }
+    provider: "google",
+  },
 });
 
 // Phantom Connect with Apple authentication (skips provider selection)
 const result = await sdk.connect({
   authOptions: {
-    provider: "apple"
-  }
+    provider: "apple",
+  },
 });
 
 // JWT authentication (direct API call)
@@ -220,8 +220,8 @@ const result = await sdk.connect({
   authOptions: {
     provider: "jwt",
     jwtToken: "your-jwt-token",
-    customAuthData: { userId: "user123" }
-  }
+    customAuthData: { userId: "user123" },
+  },
 });
 ```
 
@@ -237,6 +237,7 @@ const result = await sdk.connect({
 **Authentication Flow Types:**
 
 1. **Phantom Connect (Redirect-based)**: Used when `provider` is undefined, `"google"`, or `"apple"`
+
    - Redirects to `https://connect.phantom.app` (or custom `authOptions.authUrl` from config)
    - Handles OAuth flow with selected provider
    - Returns to your app with authentication result using `authOptions.redirectUrl` or current page

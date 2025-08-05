@@ -1,6 +1,6 @@
 import { EmbeddedProvider } from "./embedded-provider";
 import type { EmbeddedProviderConfig } from "./types";
-import {  generateKeyPair } from "@phantom/client";
+import { generateKeyPair } from "@phantom/client";
 import type { PlatformAdapter, DebugLogger } from "./interfaces";
 
 // Mock dependencies

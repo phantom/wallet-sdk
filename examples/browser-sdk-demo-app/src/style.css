@@ -1,5 +1,5 @@
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
   margin: 0;
   padding: 1rem;
   background-color: #f7fafc;
@@ -193,7 +193,7 @@ button:focus-visible {
   border-radius: 4px;
   background-color: #ffffff;
   padding: 0.75rem;
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace;
   font-size: 11px;
   text-align: left;
   max-width: 100%;
@@ -299,18 +299,17 @@ button:focus-visible {
     grid-template-columns: 1fr;
     gap: 1px;
   }
-  
+
   .left-panel {
     border-right: none;
     border-bottom: 1px solid #e2e8f0;
   }
-  
+
   .right-panel {
     background-color: white;
   }
-  
+
   .debug-container {
     height: 300px;
   }
 }
-

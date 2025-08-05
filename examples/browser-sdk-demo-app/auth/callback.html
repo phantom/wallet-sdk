@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -11,7 +11,7 @@
   <body>
     <div id="app">
       <h1>Phantom Authentication</h1>
-      
+
       <div class="main-layout">
         <div class="left-panel">
           <div class="section">
@@ -20,8 +20,8 @@
               <h3 id="status-title">Logging in...</h3>
               <p id="status-message">Please wait while we complete your authentication.</p>
             </div>
-            
-            <div id="auth-success" class="auth-success" style="display: none;">
+
+            <div id="auth-success" class="auth-success" style="display: none">
               <div class="success-icon">✓</div>
               <h3>Authentication Successful!</h3>
               <p>You have been successfully authenticated and connected to your wallet.</p>
@@ -37,8 +37,8 @@
               </div>
               <button id="go-home-btn" class="primary">Go to Main App</button>
             </div>
-            
-            <div id="auth-error" class="auth-error" style="display: none;">
+
+            <div id="auth-error" class="auth-error" style="display: none">
               <div class="error-icon">✗</div>
               <h3>Authentication Failed</h3>
               <p id="error-message">An error occurred during authentication.</p>
@@ -58,7 +58,7 @@
                 <input type="checkbox" id="debugToggle" checked />
                 <span>Show Debug Messages</span>
               </label>
-              
+
               <div class="form-group inline">
                 <label>Level:</label>
                 <select id="debugLevel">
@@ -68,10 +68,10 @@
                   <option value="3">DEBUG</option>
                 </select>
               </div>
-              
+
               <button class="small" id="clearDebugBtn">Clear</button>
             </div>
-            
+
             <div id="debugMessages" class="debug-container">
               <div class="debug-empty">Initializing debug system...</div>
             </div>
@@ -79,7 +79,7 @@
         </div>
       </div>
     </div>
-    
+
     <script type="module" src="./callback.js"></script>
   </body>
 </html>

@@ -1,6 +1,14 @@
 /* eslint-disable no-console */
 /// <reference types="vite/client" />
-import { BrowserSDK, NetworkId, AddressType, debug, DebugLevel, DEFAULT_AUTH_URL, DEFAULT_WALLET_API_URL } from "@phantom/browser-sdk";
+import {
+  BrowserSDK,
+  NetworkId,
+  AddressType,
+  debug,
+  DebugLevel,
+  DEFAULT_AUTH_URL,
+  DEFAULT_WALLET_API_URL,
+} from "@phantom/browser-sdk";
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log("Auth callback page loaded, initializing...");
@@ -28,22 +36,22 @@ document.addEventListener("DOMContentLoaded", () => {
   // Debug callback function
   function handleDebugMessage(message) {
     debugMessages.push(message);
-    
+
     // Keep only last 100 messages to prevent memory issues
     if (debugMessages.length > 100) {
       debugMessages.shift();
     }
-    
+
     updateDebugUI();
   }
 
   // Update debug UI
   function updateDebugUI() {
     if (!debugContainer) return;
-    
+
     const isVisible = debugToggle?.checked ?? true;
-    debugContainer.style.display = isVisible ? 'block' : 'none';
-    
+    debugContainer.style.display = isVisible ? "block" : "none";
+
     if (isVisible) {
       if (debugMessages.length === 0) {
         debugContainer.innerHTML = '<div class="debug-empty">No debug messages yet.</div>';
@@ -55,8 +63,8 @@ document.addEventListener("DOMContentLoaded", () => {
         .map(msg => {
           const levelClass = DebugLevel[msg.level].toLowerCase();
           const timestamp = new Date(msg.timestamp).toLocaleTimeString();
-          const dataStr = msg.data ? JSON.stringify(msg.data, null, 2) : '';
-          
+          const dataStr = msg.data ? JSON.stringify(msg.data, null, 2) : "";
+
           return `
             <div class="debug-message debug-${levelClass}">
               <div class="debug-header">
@@ -65,12 +73,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span class="debug-category">${msg.category}</span>
               </div>
               <div class="debug-content">${msg.message}</div>
-              ${dataStr ? `<pre class="debug-data">${dataStr}</pre>` : ''}
+              ${dataStr ? `<pre class="debug-data">${dataStr}</pre>` : ""}
             </div>
           `;
         })
-        .join('');
-        
+        .join("");
+
       // Scroll to bottom to show latest messages
       debugContainer.scrollTop = debugContainer.scrollHeight;
     }
@@ -93,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
     debugLevel.onchange = () => {
       const level = parseInt(debugLevel.value);
       debug.setLevel(level);
-      console.log('Debug level changed to:', DebugLevel[level]);
+      console.log("Debug level changed to:", DebugLevel[level]);
     };
   }
 
@@ -108,13 +116,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // Navigation handlers
   if (goHomeBtn) {
     goHomeBtn.onclick = () => {
-      window.location.href = '/';
+      window.location.href = "/";
     };
   }
 
   if (goHomeErrorBtn) {
     goHomeErrorBtn.onclick = () => {
-      window.location.href = '/';
+      window.location.href = "/";
     };
   }
 
@@ -127,39 +135,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Show different states
   function showLoading(title = "Logging in...", message = "Please wait while we complete your authentication.") {
-    authStatus.style.display = 'block';
-    authSuccess.style.display = 'none';
-    authError.style.display = 'none';
+    authStatus.style.display = "block";
+    authSuccess.style.display = "none";
+    authError.style.display = "none";
     statusTitle.textContent = title;
     statusMessage.textContent = message;
   }
 
   function showSuccess(walletId, addresses) {
-    authStatus.style.display = 'none';
-    authSuccess.style.display = 'block';
-    authError.style.display = 'none';
-    
-    walletIdSpan.textContent = walletId || 'N/A';
-    
+    authStatus.style.display = "none";
+    authSuccess.style.display = "block";
+    authError.style.display = "none";
+
+    walletIdSpan.textContent = walletId || "N/A";
+
     if (addresses && addresses.length > 0) {
       addressesList.innerHTML = addresses
-        .map(addr => `
+        .map(
+          addr => `
           <div class="address-item">
             <span class="address-type">${addr.addressType}:</span>
             <span class="address-value">${addr.address}</span>
           </div>
-        `)
-        .join('');
+        `,
+        )
+        .join("");
     } else {
       addressesList.innerHTML = '<div class="address-item">No addresses available</div>';
     }
   }
 
   function showError(error) {
-    authStatus.style.display = 'none';
-    authSuccess.style.display = 'none';
-    authError.style.display = 'block';
-    errorMessage.textContent = error.message || 'An unknown error occurred during authentication.';
+    authStatus.style.display = "none";
+    authSuccess.style.display = "none";
+    authError.style.display = "block";
+    errorMessage.textContent = error.message || "An unknown error occurred during authentication.";
   }
 
   // Create SDK instance
@@ -183,7 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
         authUrl: import.meta.env.VITE_AUTH_URL || "https://connect.phantom.app",
         redirectUrl: import.meta.env.VITE_REDIRECT_URL,
       },
-      
+
       ...baseConfig,
     });
   }
@@ -191,29 +201,28 @@ document.addEventListener("DOMContentLoaded", () => {
   // Main authentication flow
   async function handleAuthCallback() {
     try {
-      debug.info('AUTH_CALLBACK', 'Starting auth callback handling');
-      
+      debug.info("AUTH_CALLBACK", "Starting auth callback handling");
+
       showLoading("Processing authentication...", "Validating your authentication and setting up your wallet.");
 
       // Create SDK instance
       const sdk = createSDK();
-      debug.info('AUTH_CALLBACK', 'SDK created, attempting to connect');
+      debug.info("AUTH_CALLBACK", "SDK created, attempting to connect");
 
       showLoading("Connecting to wallet...", "Establishing connection with your authenticated wallet.");
 
       // Connect - this should resume from the redirect
       const result = await sdk.connect();
-      
-      debug.info('AUTH_CALLBACK', 'Connection successful', { 
-        walletId: result.walletId, 
-        addressCount: result.addresses.length 
+
+      debug.info("AUTH_CALLBACK", "Connection successful", {
+        walletId: result.walletId,
+        addressCount: result.addresses.length,
       });
 
       showSuccess(result.walletId, result.addresses);
-
     } catch (error) {
       console.error("Auth callback error:", error);
-      debug.error('AUTH_CALLBACK', 'Authentication failed', { error: error.message });
+      debug.error("AUTH_CALLBACK", "Authentication failed", { error: error.message });
       showError(error);
     }
   }

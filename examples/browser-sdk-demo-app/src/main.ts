@@ -1,6 +1,14 @@
 /* eslint-disable no-console */
 /// <reference types="vite/client" />
-import { BrowserSDK, NetworkId, AddressType, debug, DebugLevel, DEFAULT_AUTH_URL, DEFAULT_WALLET_API_URL } from "@phantom/browser-sdk";
+import {
+  BrowserSDK,
+  NetworkId,
+  AddressType,
+  debug,
+  DebugLevel,
+  DEFAULT_AUTH_URL,
+  DEFAULT_WALLET_API_URL,
+} from "@phantom/browser-sdk";
 import type { DebugMessage } from "@phantom/browser-sdk";
 import { Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL, Connection } from "@solana/web3.js";
 import {
@@ -52,30 +60,30 @@ document.addEventListener("DOMContentLoaded", () => {
   // Debug callback function
   function handleDebugMessage(message: DebugMessage) {
     debugMessages.push(message);
-    
+
     // Keep only last 100 messages to prevent memory issues
     if (debugMessages.length > 100) {
       debugMessages.shift();
     }
-    
+
     updateDebugUI();
   }
 
   // Update debug UI
   function updateDebugUI() {
     if (!debugContainer) return;
-    
+
     const isVisible = debugToggle?.checked ?? true;
-    debugContainer.style.display = isVisible ? 'block' : 'none';
-    
+    debugContainer.style.display = isVisible ? "block" : "none";
+
     if (isVisible) {
       debugContainer.innerHTML = debugMessages
         .slice(-30) // Show last 30 messages for the larger container
         .map(msg => {
           const levelClass = DebugLevel[msg.level].toLowerCase();
           const timestamp = new Date(msg.timestamp).toLocaleTimeString();
-          const dataStr = msg.data ? JSON.stringify(msg.data, null, 2) : '';
-          
+          const dataStr = msg.data ? JSON.stringify(msg.data, null, 2) : "";
+
           return `
             <div class="debug-message debug-${levelClass}">
               <div class="debug-header">
@@ -84,12 +92,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span class="debug-category">${msg.category}</span>
               </div>
               <div class="debug-content">${msg.message}</div>
-              ${dataStr ? `<pre class="debug-data">${dataStr}</pre>` : ''}
+              ${dataStr ? `<pre class="debug-data">${dataStr}</pre>` : ""}
             </div>
           `;
         })
-        .join('');
-        
+        .join("");
+
       // Scroll to bottom to show latest messages
       debugContainer.scrollTop = debugContainer.scrollHeight;
     }
@@ -112,7 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
     debugLevel.onchange = () => {
       const level = parseInt(debugLevel.value) as DebugLevel;
       debug.setLevel(level);
-      console.log('Debug level changed to:', DebugLevel[level]);
+      console.log("Debug level changed to:", DebugLevel[level]);
     };
   }
 
@@ -134,7 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
       addressTypes: [AddressType.solana, AddressType.ethereum],
       debug: {
         enabled: true,
-        level: debugLevel ? parseInt(debugLevel.value) as DebugLevel : DebugLevel.DEBUG,
+        level: debugLevel ? (parseInt(debugLevel.value) as DebugLevel) : DebugLevel.DEBUG,
         callback: handleDebugMessage,
       },
     };
@@ -155,7 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
           authUrl: import.meta.env.VITE_AUTH_URL || DEFAULT_AUTH_URL,
           redirectUrl: import.meta.env.VITE_REDIRECT_URL,
         },
-        
+
         ...baseConfig,
       });
     }

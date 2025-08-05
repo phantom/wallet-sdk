@@ -1,11 +1,11 @@
 import type { AddressType } from "@phantom/client";
-import type { 
+import type {
   WalletAddress,
   ConnectResult,
   SignMessageParams,
   SignAndSendTransactionParams,
   SignedTransaction,
-  AuthOptions
+  AuthOptions,
 } from "@phantom/embedded-provider-core";
 
 import type { DebugCallback, DebugLevel } from "./debug";
@@ -43,13 +43,13 @@ export interface CreateUserOrganizationResult {
 }
 
 // Re-export types from core for convenience
-export type { 
+export type {
   WalletAddress,
   ConnectResult,
   SignMessageParams,
   SignAndSendTransactionParams,
   SignedTransaction,
-  AuthOptions
+  AuthOptions,
 };
 
 export interface Provider {

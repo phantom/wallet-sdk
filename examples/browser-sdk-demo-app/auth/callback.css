@@ -1,6 +1,8 @@
 /* Auth Callback Specific Styles */
 
-.auth-status, .auth-success, .auth-error {
+.auth-status,
+.auth-success,
+.auth-error {
   text-align: center;
   padding: 2rem;
 }
@@ -23,8 +25,12 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .auth-success {
@@ -92,7 +98,7 @@
 
 .info-row .value {
   color: #2d3748;
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace;
   font-size: 0.875rem;
   word-break: break-all;
   text-align: right;
@@ -124,7 +130,7 @@
 }
 
 .address-value {
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace;
   font-size: 0.75rem;
   color: #374151;
   word-break: break-all;
@@ -162,30 +168,32 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .auth-status, .auth-success, .auth-error {
+  .auth-status,
+  .auth-success,
+  .auth-error {
     padding: 1rem;
   }
-  
+
   .wallet-info {
     padding: 1rem;
   }
-  
+
   .info-row {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
-  
+
   .info-row .value {
     text-align: left;
   }
-  
+
   .address-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
-  
+
   .address-value {
     text-align: left;
   }

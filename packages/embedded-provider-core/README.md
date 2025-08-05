@@ -47,18 +47,23 @@ The embedded provider core follows a platform adapter pattern:
 ### Basic Setup
 
 ```typescript
-import { EmbeddedProvider, EmbeddedProviderConfig, PlatformAdapter, DebugLogger } from '@phantom/embedded-provider-core';
+import {
+  EmbeddedProvider,
+  EmbeddedProviderConfig,
+  PlatformAdapter,
+  DebugLogger,
+} from "@phantom/embedded-provider-core";
 
 // 1. Define your configuration
 const config: EmbeddedProviderConfig = {
-  apiBaseUrl: 'https://api.phantom.app',
-  organizationId: 'your-org-id',
-  embeddedWalletType: 'user-wallet', // or 'app-wallet'
-  addressTypes: ['solana', 'ethereum'],
-  solanaProvider: 'web3js',
+  apiBaseUrl: "https://api.phantom.app",
+  organizationId: "your-org-id",
+  embeddedWalletType: "user-wallet", // or 'app-wallet'
+  addressTypes: ["solana", "ethereum"],
+  solanaProvider: "web3js",
   authOptions: {
-    authUrl: 'https://auth.phantom.app',
-    redirectUrl: 'https://your-app.com/callback',
+    authUrl: "https://auth.phantom.app",
+    redirectUrl: "https://your-app.com/callback",
   },
 };
 
@@ -77,7 +82,7 @@ const provider = new EmbeddedProvider(config, platform, logger);
 
 // 5. Use the provider
 const result = await provider.connect();
-console.log('Connected addresses:', result.addresses);
+console.log("Connected addresses:", result.addresses);
 ```
 
 ## Platform Adapter Interfaces
@@ -87,7 +92,7 @@ console.log('Connected addresses:', result.addresses);
 Handles persistent session storage:
 
 ```typescript
-import { EmbeddedStorage, Session } from '@phantom/embedded-provider-core';
+import { EmbeddedStorage, Session } from "@phantom/embedded-provider-core";
 
 export class YourStorageAdapter implements EmbeddedStorage {
   async getSession(): Promise<Session | null> {
@@ -110,7 +115,7 @@ export class YourStorageAdapter implements EmbeddedStorage {
 Handles authentication flows:
 
 ```typescript
-import { AuthProvider, AuthResult, PhantomConnectOptions, JWTAuthOptions } from '@phantom/embedded-provider-core';
+import { AuthProvider, AuthResult, PhantomConnectOptions, JWTAuthOptions } from "@phantom/embedded-provider-core";
 
 export class YourAuthProvider implements AuthProvider {
   async authenticate(options: PhantomConnectOptions | JWTAuthOptions): Promise<void | AuthResult> {
@@ -129,7 +134,7 @@ export class YourAuthProvider implements AuthProvider {
 Handles URL parameter access:
 
 ```typescript
-import { URLParamsAccessor } from '@phantom/embedded-provider-core';
+import { URLParamsAccessor } from "@phantom/embedded-provider-core";
 
 export class YourURLParamsAccessor implements URLParamsAccessor {
   getParam(key: string): string | null {
@@ -144,7 +149,7 @@ export class YourURLParamsAccessor implements URLParamsAccessor {
 Handles logging:
 
 ```typescript
-import { DebugLogger } from '@phantom/embedded-provider-core';
+import { DebugLogger } from "@phantom/embedded-provider-core";
 
 export class YourLogger implements DebugLogger {
   info(category: string, message: string, data?: any): void {
@@ -173,9 +178,9 @@ For server-side authenticated users:
 
 ```typescript
 const authOptions = {
-  provider: 'jwt',
-  jwtToken: 'your-jwt-token',
-  customAuthData: { userId: 'user123' }
+  provider: "jwt",
+  jwtToken: "your-jwt-token",
+  customAuthData: { userId: "user123" },
 };
 
 const result = await provider.connect(authOptions);
@@ -188,15 +193,15 @@ For social login flows:
 ```typescript
 // Google OAuth
 const authOptions = {
-  provider: 'google',
-  customAuthData: { referrer: 'landing-page' }
+  provider: "google",
+  customAuthData: { referrer: "landing-page" },
 };
 
 await provider.connect(authOptions); // Will redirect/deep link
 
 // Apple OAuth
 const authOptions = {
-  provider: 'apple'
+  provider: "apple",
 };
 
 await provider.connect(authOptions); // Will redirect/deep link
@@ -209,7 +214,7 @@ For application-controlled wallets:
 ```typescript
 const config = {
   // ... other config
-  embeddedWalletType: 'app-wallet'
+  embeddedWalletType: "app-wallet",
 };
 
 const result = await provider.connect(); // No auth needed
@@ -223,19 +228,19 @@ Sessions are automatically managed by the core provider:
 // Check connection status
 if (provider.isConnected()) {
   const addresses = provider.getAddresses();
-  console.log('Available addresses:', addresses);
+  console.log("Available addresses:", addresses);
 }
 
 // Sign a message
 const signature = await provider.signMessage({
-  message: 'Hello, world!',
-  networkId: 'solana:mainnet'
+  message: "Hello, world!",
+  networkId: "solana:mainnet",
 });
 
 // Sign and send transaction
 const result = await provider.signAndSendTransaction({
   transaction: transactionBytes,
-  networkId: 'solana:mainnet'
+  networkId: "solana:mainnet",
 });
 
 // Disconnect
@@ -250,11 +255,11 @@ The core provider provides detailed error messages:
 try {
   await provider.connect();
 } catch (error) {
-  if (error.message.includes('JWT')) {
+  if (error.message.includes("JWT")) {
     // Handle JWT authentication errors
-  } else if (error.message.includes('Storage')) {
+  } else if (error.message.includes("Storage")) {
     // Handle storage errors
-  } else if (error.message.includes('Network')) {
+  } else if (error.message.includes("Network")) {
     // Handle network errors
   }
 }
@@ -265,16 +270,16 @@ try {
 ```typescript
 interface EmbeddedProviderConfig {
   // Required
-  apiBaseUrl: string;           // Phantom API base URL
-  organizationId: string;       // Your organization ID
-  embeddedWalletType: 'app-wallet' | 'user-wallet';
-  addressTypes: AddressType[];  // Supported blockchain addresses
+  apiBaseUrl: string; // Phantom API base URL
+  organizationId: string; // Your organization ID
+  embeddedWalletType: "app-wallet" | "user-wallet";
+  addressTypes: AddressType[]; // Supported blockchain addresses
 
   // Optional
-  solanaProvider?: 'web3js' | 'kit';  // Solana library preference
+  solanaProvider?: "web3js" | "kit"; // Solana library preference
   authOptions?: {
-    authUrl?: string;          // Custom auth URL
-    redirectUrl?: string;      // OAuth redirect URL
+    authUrl?: string; // Custom auth URL
+    redirectUrl?: string; // OAuth redirect URL
   };
 }
 ```
@@ -283,18 +288,19 @@ interface EmbeddedProviderConfig {
 
 ```typescript
 interface Session {
-  sessionId: string;           // Unique session identifier
-  walletId: string;           // Phantom wallet ID
-  organizationId: string;     // Organization ID
-  keypair: {                  // Cryptographic keypair
+  sessionId: string; // Unique session identifier
+  walletId: string; // Phantom wallet ID
+  organizationId: string; // Organization ID
+  keypair: {
+    // Cryptographic keypair
     publicKey: string;
     secretKey: string;
   };
-  authProvider: string;       // Auth method used
+  authProvider: string; // Auth method used
   userInfo: Record<string, any>; // User information
-  status: 'pending' | 'completed'; // Session status
-  createdAt: number;          // Creation timestamp
-  lastUsed: number;           // Last access timestamp
+  status: "pending" | "completed"; // Session status
+  createdAt: number; // Creation timestamp
+  lastUsed: number; // Last access timestamp
 }
 ```
 
