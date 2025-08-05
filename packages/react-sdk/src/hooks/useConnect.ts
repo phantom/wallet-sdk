@@ -35,8 +35,6 @@ export function useConnect() {
     [context.sdk, context.isReady],
   );
 
-
-
   return {
     connect,
     isConnecting,

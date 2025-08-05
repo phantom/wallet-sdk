@@ -1,23 +1,23 @@
-import { debug, DebugCategory } from "../../debug";
+import type { EmbeddedStorage, Session } from "@phantom/embedded-provider-core";
+import { debug, DebugCategory } from "../../../debug";
 
-export interface Keypair {
-  publicKey: string;
-  secretKey: string;
-}
-
-export interface Session {
-  sessionId: string;
-  walletId: string;
-  organizationId: string;
-  keypair: Keypair;
-  authProvider?: string;
-  userInfo?: Record<string, any>;
-  status: "pending" | "completed" | "failed";
-  createdAt: number;
-  lastUsed: number;
-}
-
-export class IndexedDBStorage {
+/**
+ * Browser storage implementation using IndexedDB
+ *
+ * This implementation provides persistent storage for wallet sessions using the browser's
+ * IndexedDB API. IndexedDB offers several advantages for wallet applications:
+ *
+ * - **Persistence**: Data survives browser restarts and tab closures
+ * - **Security**: Origin-based isolation prevents cross-site access
+ * - **Capacity**: Much larger storage limits compared to localStorage
+ * - **Structured**: Supports complex objects without JSON serialization
+ * - **Asynchronous**: Non-blocking operations that don't freeze the UI
+ *
+ * Session data includes wallet keypairs, authentication state, and user information.
+ * All sensitive cryptographic material is stored securely within the browser's
+ * sandboxed storage environment.
+ */
+export class BrowserStorage implements EmbeddedStorage {
   private dbName = "phantom-browser-sdk";
   private storeName = "sessions";
   private version = 1;
@@ -39,7 +39,7 @@ export class IndexedDBStorage {
   }
 
   async getSession(): Promise<Session | null> {
-    debug.log(DebugCategory.STORAGE, 'Getting session from IndexedDB');
+    debug.log(DebugCategory.STORAGE, "Getting session from IndexedDB");
     const db = await this.getDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], "readonly");
@@ -48,34 +48,25 @@ export class IndexedDBStorage {
 
       request.onsuccess = () => {
         const session = request.result || null;
-        if (session) {
-          debug.info(DebugCategory.STORAGE, 'Session found', { 
-            sessionId: session.sessionId,
-            walletId: session.walletId,
-            authProvider: session.authProvider,
-            status: session.status,
-            createdAt: session.createdAt,
-            lastUsed: session.lastUsed
-          });
-        } else {
-          debug.log(DebugCategory.STORAGE, 'No session found in storage');
-        }
+        debug.log(DebugCategory.STORAGE, "Retrieved session from IndexedDB", {
+          hasSession: !!session,
+          sessionId: session?.sessionId,
+        });
         resolve(session);
       };
+
       request.onerror = () => {
-        debug.error(DebugCategory.STORAGE, 'Failed to get session', { error: request.error });
+        debug.error(DebugCategory.STORAGE, "Failed to get session from IndexedDB", { error: request.error });
         reject(request.error);
       };
     });
   }
 
   async saveSession(session: Session): Promise<void> {
-    debug.log(DebugCategory.STORAGE, 'Saving session to IndexedDB', {
+    debug.log(DebugCategory.STORAGE, "Saving session to IndexedDB", {
       sessionId: session.sessionId,
       walletId: session.walletId,
-      authProvider: session.authProvider,
       status: session.status,
-      lastUsed: session.lastUsed
     });
     const db = await this.getDB();
     return new Promise((resolve, reject) => {
@@ -84,25 +75,34 @@ export class IndexedDBStorage {
       const request = store.put(session, "currentSession");
 
       request.onsuccess = () => {
-        debug.info(DebugCategory.STORAGE, 'Session saved successfully');
+        debug.log(DebugCategory.STORAGE, "Successfully saved session to IndexedDB");
         resolve();
       };
+
       request.onerror = () => {
-        debug.error(DebugCategory.STORAGE, 'Failed to save session', { error: request.error });
+        debug.error(DebugCategory.STORAGE, "Failed to save session to IndexedDB", { error: request.error });
         reject(request.error);
       };
     });
   }
 
   async clearSession(): Promise<void> {
+    debug.log(DebugCategory.STORAGE, "Clearing session from IndexedDB");
     const db = await this.getDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], "readwrite");
       const store = transaction.objectStore(this.storeName);
       const request = store.delete("currentSession");
 
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        debug.log(DebugCategory.STORAGE, "Successfully cleared session from IndexedDB");
+        resolve();
+      };
+
+      request.onerror = () => {
+        debug.error(DebugCategory.STORAGE, "Failed to clear session from IndexedDB", { error: request.error });
+        reject(request.error);
+      };
     });
   }
 }

@@ -38,7 +38,7 @@ export function Actions() {
   const [solanaAddress, setSolanaAddress] = useState<string | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<ProviderType>("embedded");
   const [selectedEmbeddedType, setSelectedEmbeddedType] = useState<"user-wallet" | "app-wallet">("user-wallet");
-  
+
   // Debug state
   const [debugLevel, setDebugLevel] = useState<DebugLevel>(DebugLevel.INFO);
   const [showDebug, setShowDebug] = useState(true);
@@ -163,7 +163,7 @@ export function Actions() {
   return (
     <div id="app">
       <h1>Phantom React SDK Demo</h1>
-      
+
       <div className="main-layout">
         <div className="left-panel">
           <div className="section">
@@ -232,7 +232,7 @@ export function Actions() {
             <div className="status-card">
               <div className="status-row">
                 <span className="status-label">Status:</span>
-                <span className={`status-value ${isConnected ? 'connected' : 'disconnected'}`}>
+                <span className={`status-value ${isConnected ? "connected" : "disconnected"}`}>
                   {isConnected ? "Connected" : "Not Connected"}
                 </span>
               </div>
@@ -260,9 +260,9 @@ export function Actions() {
           <div className="section">
             <h3>Wallet Operations</h3>
             <div className="button-group">
-              <button 
-                className={`${!isConnected ? 'primary' : ''}`}
-                onClick={onConnect} 
+              <button
+                className={`${!isConnected ? "primary" : ""}`}
+                onClick={onConnect}
                 disabled={isConnected || isConnecting}
               >
                 {isConnecting ? "Connecting..." : "Connect"}
@@ -291,36 +291,31 @@ export function Actions() {
             <h3>Debug Console</h3>
             <div className="debug-controls">
               <label className="checkbox-label">
-                <input 
-                  type="checkbox" 
-                  checked={showDebug} 
-                  onChange={(e) => setShowDebug(e.target.checked)}
-                />
+                <input type="checkbox" checked={showDebug} onChange={e => setShowDebug(e.target.checked)} />
                 <span>Show Debug Messages</span>
               </label>
-              
+
               <div className="form-group inline">
                 <label>Level:</label>
-                <select 
-                  value={debugLevel} 
-                  onChange={(e) => setDebugLevel(parseInt(e.target.value) as DebugLevel)}
-                >
+                <select value={debugLevel} onChange={e => setDebugLevel(parseInt(e.target.value) as DebugLevel)}>
                   <option value={DebugLevel.ERROR}>ERROR</option>
                   <option value={DebugLevel.WARN}>WARN</option>
                   <option value={DebugLevel.INFO}>INFO</option>
                   <option value={DebugLevel.DEBUG}>DEBUG</option>
                 </select>
               </div>
-              
-              <button className="small" onClick={clearDebugMessages}>Clear</button>
+
+              <button className="small" onClick={clearDebugMessages}>
+                Clear
+              </button>
             </div>
-            
-            <div className="debug-container" style={{ display: showDebug ? 'block' : 'none' }}>
+
+            <div className="debug-container" style={{ display: showDebug ? "block" : "none" }}>
               {debugMessages.slice(-30).map((msg, index) => {
                 const levelClass = DebugLevel[msg.level].toLowerCase();
                 const timestamp = new Date(msg.timestamp).toLocaleTimeString();
-                const dataStr = msg.data ? JSON.stringify(msg.data, null, 2) : '';
-                
+                const dataStr = msg.data ? JSON.stringify(msg.data, null, 2) : "";
+
                 return (
                   <div key={index} className={`debug-message debug-${levelClass}`}>
                     <div className="debug-header">

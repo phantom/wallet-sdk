@@ -1,4 +1,12 @@
-import type { NetworkId, AddressType } from "@phantom/client";
+import type { AddressType } from "@phantom/client";
+import type {
+  WalletAddress,
+  ConnectResult,
+  SignMessageParams,
+  SignAndSendTransactionParams,
+  SignedTransaction,
+  AuthOptions,
+} from "@phantom/embedded-provider-core";
 
 import type { DebugCallback, DebugLevel } from "./debug";
 
@@ -25,31 +33,6 @@ export interface BrowserSDKConfig {
   };
 }
 
-export interface WalletAddress {
-  addressType: AddressType;
-  address: string;
-}
-
-export interface ConnectResult {
-  walletId?: string; // Only for embedded
-  addresses: WalletAddress[];
-  status?: "pending" | "completed"; // Session status - pending means redirect in progress, completed means wallet is ready
-}
-
-export interface SignMessageParams {
-  message: string;
-  networkId: NetworkId;
-}
-
-export interface SignAndSendTransactionParams {
-  transaction: any; // Native transaction object (Transaction, VersionedTransaction, etc.)
-  networkId: NetworkId;
-}
-
-export interface SignedTransaction {
-  rawTransaction: string;
-}
-
 export interface CreateUserOrganizationParams {
   userId: string;
   [key: string]: any; // Allow additional options
@@ -59,11 +42,15 @@ export interface CreateUserOrganizationResult {
   organizationId: string;
 }
 
-export interface AuthOptions {
-  provider?: "google" | "apple" | "jwt";
-  jwtToken?: string;
-  customAuthData?: Record<string, any>;
-}
+// Re-export types from core for convenience
+export type {
+  WalletAddress,
+  ConnectResult,
+  SignMessageParams,
+  SignAndSendTransactionParams,
+  SignedTransaction,
+  AuthOptions,
+};
 
 export interface Provider {
   connect(authOptions?: AuthOptions): Promise<ConnectResult>;

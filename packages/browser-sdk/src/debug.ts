@@ -91,12 +91,12 @@ export const debug = Debug.getInstance();
 
 // Category constants for consistency
 export const DebugCategory = {
-  BROWSER_SDK: 'BrowserSDK',
-  PROVIDER_MANAGER: 'ProviderManager',
-  EMBEDDED_PROVIDER: 'EmbeddedProvider',
-  INJECTED_PROVIDER: 'InjectedProvider',
-  PHANTOM_CONNECT_AUTH: 'PhantomConnectAuth',
-  JWT_AUTH: 'JWTAuth',
-  STORAGE: 'Storage',
-  SESSION: 'Session',
+  BROWSER_SDK: "BrowserSDK",
+  PROVIDER_MANAGER: "ProviderManager",
+  EMBEDDED_PROVIDER: "EmbeddedProvider",
+  INJECTED_PROVIDER: "InjectedProvider",
+  PHANTOM_CONNECT_AUTH: "PhantomConnectAuth",
+  JWT_AUTH: "JWTAuth",
+  STORAGE: "Storage",
+  SESSION: "Session",
 } as const;

@@ -28,16 +28,16 @@ export class BrowserSDK {
       }
     }
 
-    debug.info(DebugCategory.BROWSER_SDK, 'Initializing BrowserSDK', { 
+    debug.info(DebugCategory.BROWSER_SDK, "Initializing BrowserSDK", {
       providerType: config.providerType,
       embeddedWalletType: config.embeddedWalletType,
       addressTypes: config.addressTypes,
-      debugEnabled: config.debug?.enabled 
+      debugEnabled: config.debug?.enabled,
     });
 
     // Validate providerType
     if (!["injected", "embedded"].includes(config.providerType)) {
-      debug.error(DebugCategory.BROWSER_SDK, 'Invalid providerType', { providerType: config.providerType });
+      debug.error(DebugCategory.BROWSER_SDK, "Invalid providerType", { providerType: config.providerType });
       throw new Error(`Invalid providerType: ${config.providerType}. Must be "injected" or "embedded".`);
     }
 
@@ -45,7 +45,9 @@ export class BrowserSDK {
 
     // Validate embeddedWalletType if provided
     if (config.providerType === "embedded" && !["app-wallet", "user-wallet"].includes(embeddedWalletType)) {
-      debug.error(DebugCategory.BROWSER_SDK, 'Invalid embeddedWalletType', { embeddedWalletType: config.embeddedWalletType });
+      debug.error(DebugCategory.BROWSER_SDK, "Invalid embeddedWalletType", {
+        embeddedWalletType: config.embeddedWalletType,
+      });
       throw new Error(
         `Invalid embeddedWalletType: ${config.embeddedWalletType}. Must be "app-wallet" or "user-wallet".`,
       );
@@ -54,9 +56,9 @@ export class BrowserSDK {
     config.embeddedWalletType = embeddedWalletType as "app-wallet" | "user-wallet";
 
     this.config = config;
-    debug.log(DebugCategory.BROWSER_SDK, 'Creating ProviderManager', { config });
+    debug.log(DebugCategory.BROWSER_SDK, "Creating ProviderManager", { config });
     this.providerManager = new ProviderManager(config);
-    debug.info(DebugCategory.BROWSER_SDK, 'BrowserSDK initialized successfully');
+    debug.info(DebugCategory.BROWSER_SDK, "BrowserSDK initialized successfully");
   }
 
   /**
@@ -67,32 +69,36 @@ export class BrowserSDK {
     embeddedWalletType?: "app-wallet" | "user-wallet" | (string & Record<never, never>);
     authOptions?: AuthOptions;
   }): Promise<ConnectResult> {
-    debug.info(DebugCategory.BROWSER_SDK, 'Starting connect process', { options });
+    debug.info(DebugCategory.BROWSER_SDK, "Starting connect process", { options });
 
     // Switch provider if requested
     if (options?.providerType) {
-      debug.log(DebugCategory.BROWSER_SDK, 'Provider switch requested', { 
+      debug.log(DebugCategory.BROWSER_SDK, "Provider switch requested", {
         providerType: options.providerType,
-        embeddedWalletType: options.embeddedWalletType 
+        embeddedWalletType: options.embeddedWalletType,
       });
 
       // Validate providerType
       if (!["injected", "embedded"].includes(options.providerType)) {
-        debug.error(DebugCategory.BROWSER_SDK, 'Invalid providerType in connect options', { providerType: options.providerType });
+        debug.error(DebugCategory.BROWSER_SDK, "Invalid providerType in connect options", {
+          providerType: options.providerType,
+        });
         throw new Error(`Invalid providerType: ${options.providerType}. Must be "injected" or "embedded".`);
       }
 
       // Validate embeddedWalletType if provided
       if (options.embeddedWalletType && !["app-wallet", "user-wallet"].includes(options.embeddedWalletType)) {
-        debug.error(DebugCategory.BROWSER_SDK, 'Invalid embeddedWalletType in connect options', { embeddedWalletType: options.embeddedWalletType });
+        debug.error(DebugCategory.BROWSER_SDK, "Invalid embeddedWalletType in connect options", {
+          embeddedWalletType: options.embeddedWalletType,
+        });
         throw new Error(
           `Invalid embeddedWalletType: ${options.embeddedWalletType}. Must be "app-wallet" or "user-wallet".`,
         );
       }
 
-      debug.log(DebugCategory.BROWSER_SDK, 'Switching provider', { 
+      debug.log(DebugCategory.BROWSER_SDK, "Switching provider", {
         providerType: options.providerType,
-        embeddedWalletType: options.embeddedWalletType 
+        embeddedWalletType: options.embeddedWalletType,
       });
 
       await this.providerManager.switchProvider(options.providerType as "injected" | "embedded", {
@@ -100,9 +106,11 @@ export class BrowserSDK {
       });
     }
 
-    debug.log(DebugCategory.BROWSER_SDK, 'Delegating to ProviderManager.connect', { authOptions: options?.authOptions });
+    debug.log(DebugCategory.BROWSER_SDK, "Delegating to ProviderManager.connect", {
+      authOptions: options?.authOptions,
+    });
     const result = await this.providerManager.connect(options?.authOptions);
-    debug.info(DebugCategory.BROWSER_SDK, 'Connect completed successfully', result);
+    debug.info(DebugCategory.BROWSER_SDK, "Connect completed successfully", result);
     return result;
   }
 

@@ -1,0 +1,63 @@
+{
+  "name": "@phantom/embedded-provider-core",
+  "version": "0.1.0",
+  "description": "Platform-agnostic embedded provider core logic for Phantom Wallet SDK",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "?pack-release": "When https://github.com/changesets/changesets/issues/432 has a solution we can remove this trick",
+    "pack-release": "rimraf ./_release && yarn pack && mkdir ./_release && tar zxvf ./package.tgz --directory ./_release && rm ./package.tgz",
+    "build": "rimraf ./dist && tsup",
+    "dev": "rimraf ./dist && tsup --watch",
+    "clean": "rm -rf dist",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "tsc --noEmit && eslint --cache . --ext .ts,.tsx",
+    "type-check": "tsc --noEmit",
+    "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
+  },
+  "keywords": [
+    "phantom",
+    "wallet",
+    "embedded",
+    "crypto",
+    "blockchain",
+    "solana",
+    "ethereum"
+  ],
+  "author": "Phantom",
+  "license": "MIT",
+  "dependencies": {
+    "@phantom/api-key-stamper": "workspace:*",
+    "@phantom/client": "workspace:*",
+    "@phantom/parsers": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.5",
+    "@types/node": "^20.11.0",
+    "eslint": "8.53.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.5.2",
+    "rimraf": "^5.0.5",
+    "ts-jest": "^29.1.1",
+    "tsup": "^7.2.0",
+    "typescript": "^5.2.2"
+  },
+  "peerDependencies": {
+    "typescript": ">=4.5.0"
+  },
+  "publishConfig": {
+    "directory": "_release/package"
+  }
+}
