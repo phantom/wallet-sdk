@@ -1,5 +1,7 @@
 import type { NetworkId, AddressType } from "@phantom/client";
 
+import type { DebugCallback, DebugLevel } from "./debug";
+
 export interface BrowserSDKConfig {
   providerType: "injected" | "embedded" | (string & Record<never, never>);
   appName?: string;
@@ -8,10 +10,19 @@ export interface BrowserSDKConfig {
   // For embedded provider
   apiBaseUrl?: string;
   organizationId?: string;
-  authUrl?: string;
+  authOptions?: {
+    authUrl?: string;
+    redirectUrl?: string;
+  };
   embeddedWalletType?: "app-wallet" | "user-wallet" | (string & Record<never, never>);
   solanaProvider?: "web3js" | "kit"; // Solana library choice (default: 'web3js')
   serverUrl?: string; // URL to your backend API endpoint (e.g., "http://localhost:3000/api")
+  // Debug options
+  debug?: {
+    enabled?: boolean;
+    level?: DebugLevel;
+    callback?: DebugCallback;
+  };
 }
 
 export interface WalletAddress {
@@ -22,6 +33,7 @@ export interface WalletAddress {
 export interface ConnectResult {
   walletId?: string; // Only for embedded
   addresses: WalletAddress[];
+  status?: "pending" | "completed"; // Session status - pending means redirect in progress, completed means wallet is ready
 }
 
 export interface SignMessageParams {
@@ -47,8 +59,14 @@ export interface CreateUserOrganizationResult {
   organizationId: string;
 }
 
+export interface AuthOptions {
+  provider?: "google" | "apple" | "jwt";
+  jwtToken?: string;
+  customAuthData?: Record<string, any>;
+}
+
 export interface Provider {
-  connect(): Promise<ConnectResult>;
+  connect(authOptions?: AuthOptions): Promise<ConnectResult>;
   disconnect(): Promise<void>;
   signMessage(params: SignMessageParams): Promise<string>;
   signAndSendTransaction(params: SignAndSendTransactionParams): Promise<SignedTransaction>;

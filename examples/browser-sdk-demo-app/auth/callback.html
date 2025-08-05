@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Phantom Auth Callback - Browser SDK Demo</title>
+    <link rel="stylesheet" href="../src/style.css" />
+    <link rel="stylesheet" href="./callback.css" />
+  </head>
+  <body>
+    <div id="app">
+      <h1>Phantom Authentication</h1>
+      
+      <div class="main-layout">
+        <div class="left-panel">
+          <div class="section">
+            <div id="auth-status" class="auth-status">
+              <div class="loading-spinner"></div>
+              <h3 id="status-title">Logging in...</h3>
+              <p id="status-message">Please wait while we complete your authentication.</p>
+            </div>
+            
+            <div id="auth-success" class="auth-success" style="display: none;">
+              <div class="success-icon">✓</div>
+              <h3>Authentication Successful!</h3>
+              <p>You have been successfully authenticated and connected to your wallet.</p>
+              <div class="wallet-info">
+                <div class="info-row">
+                  <span class="label">Wallet ID:</span>
+                  <span id="wallet-id" class="value">-</span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Addresses:</span>
+                  <div id="addresses-list" class="addresses"></div>
+                </div>
+              </div>
+              <button id="go-home-btn" class="primary">Go to Main App</button>
+            </div>
+            
+            <div id="auth-error" class="auth-error" style="display: none;">
+              <div class="error-icon">✗</div>
+              <h3>Authentication Failed</h3>
+              <p id="error-message">An error occurred during authentication.</p>
+              <div class="button-group">
+                <button id="retry-btn">Retry Authentication</button>
+                <button id="go-home-error-btn" class="primary">Go to Main App</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="right-panel">
+          <div class="section">
+            <h3>Debug Console</h3>
+            <div class="debug-controls">
+              <label class="checkbox-label">
+                <input type="checkbox" id="debugToggle" checked />
+                <span>Show Debug Messages</span>
+              </label>
+              
+              <div class="form-group inline">
+                <label>Level:</label>
+                <select id="debugLevel">
+                  <option value="0">ERROR</option>
+                  <option value="1">WARN</option>
+                  <option value="2" selected>INFO</option>
+                  <option value="3">DEBUG</option>
+                </select>
+              </div>
+              
+              <button class="small" id="clearDebugBtn">Clear</button>
+            </div>
+            
+            <div id="debugMessages" class="debug-container">
+              <div class="debug-empty">Initializing debug system...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <script type="module" src="./callback.js"></script>
+  </body>
+</html>

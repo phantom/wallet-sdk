@@ -6,9 +6,11 @@ import type {
   WalletAddress,
   SignAndSendTransactionParams,
   SignMessageParams,
+  AuthOptions,
 } from "./types";
 import { InjectedProvider } from "./providers/injected";
 import { EmbeddedProvider } from "./providers/embedded";
+import { debug, DebugCategory } from "./debug";
 
 export interface ProviderPreference {
   type: "injected" | "embedded";
@@ -27,13 +29,18 @@ export class ProviderManager {
   private config: BrowserSDKConfig;
 
   constructor(config: BrowserSDKConfig) {
+    debug.log(DebugCategory.PROVIDER_MANAGER, 'Initializing ProviderManager', { config });
     this.config = config;
 
     // Initialize default provider based on config
+    debug.log(DebugCategory.PROVIDER_MANAGER, 'Setting default provider');
     this.setDefaultProvider();
 
     // Restore previous choice from localStorage if available
     // this.restoreProviderPreference();
+    debug.info(DebugCategory.PROVIDER_MANAGER, 'ProviderManager initialized', {
+      currentProviderKey: this.currentProviderKey
+    });
   }
 
   /**
@@ -85,17 +92,33 @@ export class ProviderManager {
   /**
    * Connect using the current provider
    */
-  async connect(): Promise<ConnectResult> {
+  async connect(authOptions?: AuthOptions): Promise<ConnectResult> {
+    debug.info(DebugCategory.PROVIDER_MANAGER, 'Starting connection', { 
+      currentProviderKey: this.currentProviderKey,
+      authOptions: authOptions ? { provider: authOptions.provider, hasJwtToken: !!authOptions.jwtToken } : undefined
+    });
+
     if (!this.currentProvider) {
+      debug.error(DebugCategory.PROVIDER_MANAGER, 'No provider selected');
       throw new Error("No provider selected");
     }
 
-    const result = await this.currentProvider.connect();
+    debug.log(DebugCategory.PROVIDER_MANAGER, 'Delegating to provider connect method');
+    const result = await this.currentProvider.connect(authOptions);
     this.walletId = result.walletId || null;
+
+    debug.log(DebugCategory.PROVIDER_MANAGER, 'Connection successful, saving preferences', {
+      walletId: this.walletId,
+      addressCount: result.addresses?.length || 0
+    });
 
     // Save provider preference after successful connection
     this.saveProviderPreference();
 
+    debug.info(DebugCategory.PROVIDER_MANAGER, 'Connect completed', { 
+      walletId: this.walletId,
+      addresses: result.addresses 
+    });
     return result;
   }
 
@@ -190,7 +213,7 @@ export class ProviderManager {
       provider = new EmbeddedProvider({
         apiBaseUrl: this.config.apiBaseUrl,
         organizationId: this.config.organizationId,
-        authUrl: this.config.authUrl,
+        authOptions: this.config.authOptions,
         embeddedWalletType: embeddedWalletType || "app-wallet",
         addressTypes: this.config.addressTypes || [],
         solanaProvider: this.config.solanaProvider || "web3js",

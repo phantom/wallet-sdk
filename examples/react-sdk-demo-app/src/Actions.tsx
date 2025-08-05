@@ -9,7 +9,10 @@ import {
   useCreateUserOrganization,
   useIsExtensionInstalled,
   NetworkId,
+  DebugLevel,
+  debug,
   type ProviderType,
+  type DebugMessage,
 } from "@phantom/react-sdk";
 import {
   createSolanaRpc,
@@ -20,7 +23,7 @@ import {
   address,
   compileTransaction,
 } from "@solana/kit";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export function Actions() {
   const { connect, isConnecting, error: connectError } = useConnect();
@@ -33,8 +36,29 @@ export function Actions() {
   const addresses = useAccounts();
 
   const [solanaAddress, setSolanaAddress] = useState<string | null>(null);
-  const [selectedProvider, setSelectedProvider] = useState<ProviderType>("injected");
+  const [selectedProvider, setSelectedProvider] = useState<ProviderType>("embedded");
   const [selectedEmbeddedType, setSelectedEmbeddedType] = useState<"user-wallet" | "app-wallet">("user-wallet");
+  
+  // Debug state
+  const [debugLevel, setDebugLevel] = useState<DebugLevel>(DebugLevel.INFO);
+  const [showDebug, setShowDebug] = useState(true);
+  const [debugMessages, setDebugMessages] = useState<DebugMessage[]>([]);
+
+  // Debug callback function
+  const handleDebugMessage = useCallback((message: DebugMessage) => {
+    setDebugMessages(prev => {
+      const newMessages = [...prev, message];
+      // Keep only last 100 messages to prevent memory issues
+      return newMessages.slice(-100);
+    });
+  }, []);
+
+  // Initialize debug system
+  useEffect(() => {
+    debug.setCallback(handleDebugMessage);
+    debug.setLevel(debugLevel);
+    debug.enable();
+  }, [handleDebugMessage, debugLevel]);
 
   // Extract Solana address when addresses change
   useEffect(() => {
@@ -58,6 +82,10 @@ export function Actions() {
       console.error("Error connecting to Phantom:", error);
       alert(`Error connecting: ${(error as Error).message || error}`);
     }
+  };
+
+  const clearDebugMessages = () => {
+    setDebugMessages([]);
   };
 
   const onDisconnect = async () => {
@@ -129,144 +157,188 @@ export function Actions() {
   };
 
   if (!isReady) {
-    return <div>Loading...</div>;
+    return <div className="loading">Loading...</div>;
   }
 
   return (
     <div id="app">
       <h1>Phantom React SDK Demo</h1>
-      <div className="account-info">
-        <p>
-          <strong>Connection Status:</strong> {isConnected ? "Connected" : "Not Connected"}
-        </p>
-        {isConnected && currentProviderType && (
-          <p>
-            <strong>Current Provider:</strong> {currentProviderType}
-          </p>
-        )}
-        {solanaAddress && (
-          <p>
-            <strong>Solana Address:</strong> {solanaAddress}
-          </p>
-        )}
-        {addresses && addresses.length > 0 && (
-          <div>
-            <p>
-              <strong>All Addresses:</strong>
-            </p>
-            <ul>
-              {addresses.map((addr, index) => (
-                <li key={index}>
-                  <strong>{addr.addressType}:</strong> {addr.address}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-
-      {!isConnected && (
-        <div className="provider-selection">
-          <h2>Provider Selection</h2>
-          <div className="controls">
-            <label>
-              <input
-                type="radio"
-                value="injected"
-                checked={selectedProvider === "injected"}
-                onChange={e => setSelectedProvider(e.target.value as ProviderType)}
-              />
-              Injected Provider (Phantom Extension)
-            </label>
-            <label>
-              <input
-                type="radio"
-                value="embedded"
-                checked={selectedProvider === "embedded"}
-                onChange={e => setSelectedProvider(e.target.value as ProviderType)}
-              />
-              Embedded Provider (Server-based)
-            </label>
-          </div>
-
-          {isLoading && <p>Checking if Phantom extension is installed...</p>}
-          {isInstalled && <p>Phantom extension is installed!</p>}
-          {!isInstalled && <p>Phantom extension is not installed. Please install it to continue.</p>}
-
-          {selectedProvider === "embedded" && (
-            <div className="embedded-options">
-              <h3>Embedded Wallet Type</h3>
-              <div className="controls">
-                <label>
+      
+      <div className="main-layout">
+        <div className="left-panel">
+          <div className="section">
+            <h3>Provider Configuration</h3>
+            <div className="form-group">
+              <label>Provider Type:</label>
+              <div className="radio-group">
+                <label className="radio-label">
                   <input
                     type="radio"
-                    value="user-wallet"
-                    checked={selectedEmbeddedType === "user-wallet"}
-                    onChange={() => setSelectedEmbeddedType("user-wallet")}
+                    value="embedded"
+                    checked={selectedProvider === "embedded"}
+                    onChange={e => setSelectedProvider(e.target.value as ProviderType)}
                   />
-                  User Wallet (Google Auth)
+                  <span>Embedded (Non-Custodial)</span>
                 </label>
-                <label>
+                <label className="radio-label">
                   <input
                     type="radio"
-                    value="app-wallet"
-                    checked={selectedEmbeddedType === "app-wallet"}
-                    onChange={() => setSelectedEmbeddedType("app-wallet")}
+                    value="injected"
+                    checked={selectedProvider === "injected"}
+                    onChange={e => setSelectedProvider(e.target.value as ProviderType)}
                   />
-                  App Wallet (Fresh wallet)
+                  <span>Injected (Browser Extension)</span>
                 </label>
               </div>
             </div>
-          )}
-        </div>
-      )}
 
-      <div className="plugin-section">
-        <h2>Wallet Actions</h2>
-        <div className="controls">
-          <button id="connectBtn" onClick={onConnect} disabled={isConnected || isConnecting}>
-            {isConnecting ? "Connecting..." : "Connect"}
-          </button>
-          <button id="signMessageBtn" onClick={onSignMessage} disabled={!isConnected || isSigningMessage}>
-            {isSigningMessage ? "Signing..." : "Sign Message"}
-          </button>
-          <button
-            id="signAndSendTransactionBtn"
-            onClick={onSignAndSendTransaction}
-            disabled={!isConnected || isSigningTransaction}
-          >
-            {isSigningTransaction ? "Signing..." : "Sign and Send Transaction"}
-          </button>
-          <button id="disconnectBtn" onClick={onDisconnect} disabled={!isConnected || isDisconnecting}>
-            {isDisconnecting ? "Disconnecting..." : "Disconnect"}
-          </button>
-          <button
-            id="createOrgBtn"
-            onClick={onCreateUserOrganization}
-            disabled={isCreating}
-            style={{
-              display: selectedProvider !== "embedded" ? "none" : "inline-block",
-            }}
-          >
-            {isCreating ? "Creating..." : "Create User Organization"}
-          </button>
-        </div>
-        {connectError && <p style={{ color: "red" }}>Connection Error: {connectError.message}</p>}
-      </div>
+            {selectedProvider === "embedded" && (
+              <div className="form-group">
+                <label>Embedded Wallet Type:</label>
+                <div className="radio-group">
+                  <label className="radio-label">
+                    <input
+                      type="radio"
+                      value="user-wallet"
+                      checked={selectedEmbeddedType === "user-wallet"}
+                      onChange={() => setSelectedEmbeddedType("user-wallet")}
+                    />
+                    <span>User Wallet (Google Auth)</span>
+                  </label>
+                  <label className="radio-label">
+                    <input
+                      type="radio"
+                      value="app-wallet"
+                      checked={selectedEmbeddedType === "app-wallet"}
+                      onChange={() => setSelectedEmbeddedType("app-wallet")}
+                    />
+                    <span>App Wallet (Fresh wallet)</span>
+                  </label>
+                </div>
+              </div>
+            )}
 
-      <div className="info-section">
-        <h3>About Dual Provider Support:</h3>
-        <p>
-          <strong>Injected Provider:</strong> Uses the Phantom browser extension. Make sure you have the Phantom wallet
-          extension installed.
-        </p>
-        <p>
-          <strong>Embedded Provider:</strong> Server-based wallet management with Google authentication or fresh wallet
-          creation.
-        </p>
-        <p>Both providers support Solana transactions and message signing.</p>
-        <p>Organization creation requires a backend server at http://localhost:3000/api</p>
-        <p>The SDK automatically persists your provider choice across sessions.</p>
+            {selectedProvider === "injected" && (
+              <div className="extension-status">
+                {isLoading && <p className="status-text">Checking extension...</p>}
+                {!isLoading && isInstalled && <p className="status-success">✓ Phantom extension installed</p>}
+                {!isLoading && !isInstalled && <p className="status-error">✗ Phantom extension not installed</p>}
+              </div>
+            )}
+          </div>
+
+          <div className="section">
+            <h3>Connection Status</h3>
+            <div className="status-card">
+              <div className="status-row">
+                <span className="status-label">Status:</span>
+                <span className={`status-value ${isConnected ? 'connected' : 'disconnected'}`}>
+                  {isConnected ? "Connected" : "Not Connected"}
+                </span>
+              </div>
+              {isConnected && currentProviderType && (
+                <div className="status-row">
+                  <span className="status-label">Provider:</span>
+                  <span className="status-value">{currentProviderType}</span>
+                </div>
+              )}
+              {solanaAddress && (
+                <div className="status-row">
+                  <span className="status-label">Solana:</span>
+                  <span className="status-value address">{solanaAddress}</span>
+                </div>
+              )}
+              {addresses && addresses.length > 1 && (
+                <div className="status-row">
+                  <span className="status-label">Total:</span>
+                  <span className="status-value">{addresses.length} addresses</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="section">
+            <h3>Wallet Operations</h3>
+            <div className="button-group">
+              <button 
+                className={`${!isConnected ? 'primary' : ''}`}
+                onClick={onConnect} 
+                disabled={isConnected || isConnecting}
+              >
+                {isConnecting ? "Connecting..." : "Connect"}
+              </button>
+              <button onClick={onSignMessage} disabled={!isConnected || isSigningMessage}>
+                {isSigningMessage ? "Signing..." : "Sign Message"}
+              </button>
+              <button onClick={onSignAndSendTransaction} disabled={!isConnected || isSigningTransaction}>
+                {isSigningTransaction ? "Signing..." : "Sign & Send Transaction"}
+              </button>
+              {selectedProvider === "embedded" && (
+                <button onClick={onCreateUserOrganization} disabled={isCreating}>
+                  {isCreating ? "Creating..." : "Create Organization"}
+                </button>
+              )}
+              <button onClick={onDisconnect} disabled={!isConnected || isDisconnecting}>
+                {isDisconnecting ? "Disconnecting..." : "Disconnect"}
+              </button>
+            </div>
+            {connectError && <p className="error-text">Error: {connectError.message}</p>}
+          </div>
+        </div>
+
+        <div className="right-panel">
+          <div className="section">
+            <h3>Debug Console</h3>
+            <div className="debug-controls">
+              <label className="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  checked={showDebug} 
+                  onChange={(e) => setShowDebug(e.target.checked)}
+                />
+                <span>Show Debug Messages</span>
+              </label>
+              
+              <div className="form-group inline">
+                <label>Level:</label>
+                <select 
+                  value={debugLevel} 
+                  onChange={(e) => setDebugLevel(parseInt(e.target.value) as DebugLevel)}
+                >
+                  <option value={DebugLevel.ERROR}>ERROR</option>
+                  <option value={DebugLevel.WARN}>WARN</option>
+                  <option value={DebugLevel.INFO}>INFO</option>
+                  <option value={DebugLevel.DEBUG}>DEBUG</option>
+                </select>
+              </div>
+              
+              <button className="small" onClick={clearDebugMessages}>Clear</button>
+            </div>
+            
+            <div className="debug-container" style={{ display: showDebug ? 'block' : 'none' }}>
+              {debugMessages.slice(-30).map((msg, index) => {
+                const levelClass = DebugLevel[msg.level].toLowerCase();
+                const timestamp = new Date(msg.timestamp).toLocaleTimeString();
+                const dataStr = msg.data ? JSON.stringify(msg.data, null, 2) : '';
+                
+                return (
+                  <div key={index} className={`debug-message debug-${levelClass}`}>
+                    <div className="debug-header">
+                      <span className="debug-timestamp">{timestamp}</span>
+                      <span className="debug-level">{DebugLevel[msg.level]}</span>
+                      <span className="debug-category">{msg.category}</span>
+                    </div>
+                    <div className="debug-content">{msg.message}</div>
+                    {dataStr && <pre className="debug-data">{dataStr}</pre>}
+                  </div>
+                );
+              })}
+              {debugMessages.length === 0 && (
+                <div className="debug-empty">No debug messages yet. Try connecting to see debug output.</div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

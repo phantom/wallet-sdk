@@ -5,11 +5,13 @@ import type {
   SignAndSendTransactionParams,
   SignedTransaction,
   WalletAddress,
+  AuthOptions,
 } from "../../types";
 import { AddressType } from "@phantom/client";
 import { createPhantom, createExtensionPlugin } from "@phantom/browser-injected-sdk";
 import { createSolanaPlugin } from "@phantom/browser-injected-sdk/solana";
 import { createEthereumPlugin } from "@phantom/browser-injected-sdk/ethereum";
+import { debug, DebugCategory } from "../../debug";
 
 declare global {
   interface Window {
@@ -32,32 +34,47 @@ export class InjectedProvider implements Provider {
   private phantom: any;
 
   constructor(config: InjectedProviderConfig) {
+    debug.log(DebugCategory.INJECTED_PROVIDER, 'Initializing InjectedProvider', { config });
+    
     // Store config values
     this.addressTypes = config.addressTypes || [AddressType.solana, AddressType.ethereum];
+    debug.log(DebugCategory.INJECTED_PROVIDER, 'Address types configured', { addressTypes: this.addressTypes });
 
     // Initialize phantom instance with plugins based on enabled address types
     const plugins: any[] = [createExtensionPlugin()]; // Always include extension plugin
 
     if (this.addressTypes.includes(AddressType.solana)) {
       plugins.push(createSolanaPlugin());
+      debug.log(DebugCategory.INJECTED_PROVIDER, 'Solana plugin added');
     }
 
     if (this.addressTypes.includes(AddressType.ethereum)) {
       plugins.push(createEthereumPlugin());
+      debug.log(DebugCategory.INJECTED_PROVIDER, 'Ethereum plugin added');
     }
 
+    debug.log(DebugCategory.INJECTED_PROVIDER, 'Creating Phantom instance with plugins', { pluginCount: plugins.length });
     this.phantom = createPhantom({ plugins });
+    debug.info(DebugCategory.INJECTED_PROVIDER, 'InjectedProvider initialized');
   }
 
-  async connect(): Promise<ConnectResult> {
+  async connect(authOptions?: AuthOptions): Promise<ConnectResult> {
+    debug.info(DebugCategory.INJECTED_PROVIDER, 'Starting injected provider connect', { 
+      addressTypes: this.addressTypes,
+      authOptionsIgnored: !!authOptions // Note: authOptions are ignored for injected provider
+    });
+
     if (!this.phantom.extension.isInstalled()) {
+      debug.error(DebugCategory.INJECTED_PROVIDER, 'Phantom wallet extension not found');
       throw new Error("Phantom wallet not found");
     }
+    debug.log(DebugCategory.INJECTED_PROVIDER, 'Phantom extension detected');
 
     const connectedAddresses: WalletAddress[] = [];
 
     // Try Solana if enabled
     if (this.addressTypes.includes(AddressType.solana)) {
+      debug.log(DebugCategory.INJECTED_PROVIDER, 'Attempting Solana connection');
       try {
         const publicKey = await this.phantom.solana.connect();
         if (publicKey) {
@@ -65,10 +82,11 @@ export class InjectedProvider implements Provider {
             addressType: AddressType.solana,
             address: publicKey,
           });
+          debug.info(DebugCategory.INJECTED_PROVIDER, 'Solana connected successfully', { address: publicKey });
         }
       } catch (err) {
         // Continue to other address types
-        console.error("Failed to connect Solana:", err);
+        debug.warn(DebugCategory.INJECTED_PROVIDER, 'Failed to connect Solana', { error: err });
       }
     }
 
@@ -85,8 +103,8 @@ export class InjectedProvider implements Provider {
           );
         }
       } catch (err) {
-        // Continue
-        console.error("Failed to connect Ethereum:", err);
+        // Continue to other address types
+        debug.warn(DebugCategory.INJECTED_PROVIDER, 'Failed to connect Ethereum', { error: err });
       }
     }
 
@@ -99,6 +117,7 @@ export class InjectedProvider implements Provider {
 
     return {
       addresses: this.addresses,
+      status: "completed",
       // walletId is not applicable for injected providers
     };
   }

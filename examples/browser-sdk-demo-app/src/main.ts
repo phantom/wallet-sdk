@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 /// <reference types="vite/client" />
-import { BrowserSDK, NetworkId, AddressType } from "@phantom/browser-sdk";
+import { BrowserSDK, NetworkId, AddressType, debug, DebugLevel, DEFAULT_AUTH_URL, DEFAULT_WALLET_API_URL } from "@phantom/browser-sdk";
+import type { DebugMessage } from "@phantom/browser-sdk";
 import { Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL, Connection } from "@solana/web3.js";
 import {
   createSolanaRpc,
@@ -41,26 +42,121 @@ document.addEventListener("DOMContentLoaded", () => {
   let sdk: BrowserSDK | null = null;
   let connectedAddresses: any[] = [];
 
+  // Debug message storage
+  const debugMessages: DebugMessage[] = [];
+  const debugContainer = document.getElementById("debugMessages") as HTMLDivElement;
+  const debugToggle = document.getElementById("debugToggle") as HTMLInputElement;
+  const debugLevel = document.getElementById("debugLevel") as HTMLSelectElement;
+  const clearDebugBtn = document.getElementById("clearDebugBtn") as HTMLButtonElement;
+
+  // Debug callback function
+  function handleDebugMessage(message: DebugMessage) {
+    debugMessages.push(message);
+    
+    // Keep only last 100 messages to prevent memory issues
+    if (debugMessages.length > 100) {
+      debugMessages.shift();
+    }
+    
+    updateDebugUI();
+  }
+
+  // Update debug UI
+  function updateDebugUI() {
+    if (!debugContainer) return;
+    
+    const isVisible = debugToggle?.checked ?? true;
+    debugContainer.style.display = isVisible ? 'block' : 'none';
+    
+    if (isVisible) {
+      debugContainer.innerHTML = debugMessages
+        .slice(-30) // Show last 30 messages for the larger container
+        .map(msg => {
+          const levelClass = DebugLevel[msg.level].toLowerCase();
+          const timestamp = new Date(msg.timestamp).toLocaleTimeString();
+          const dataStr = msg.data ? JSON.stringify(msg.data, null, 2) : '';
+          
+          return `
+            <div class="debug-message debug-${levelClass}">
+              <div class="debug-header">
+                <span class="debug-timestamp">${timestamp}</span>
+                <span class="debug-level">${DebugLevel[msg.level]}</span>
+                <span class="debug-category">${msg.category}</span>
+              </div>
+              <div class="debug-content">${msg.message}</div>
+              ${dataStr ? `<pre class="debug-data">${dataStr}</pre>` : ''}
+            </div>
+          `;
+        })
+        .join('');
+        
+      // Scroll to bottom to show latest messages
+      debugContainer.scrollTop = debugContainer.scrollHeight;
+    }
+  }
+
+  // Initialize debug system
+  debug.setCallback(handleDebugMessage);
+  debug.setLevel(DebugLevel.INFO);
+  debug.enable();
+
+  // Debug toggle handler
+  if (debugToggle) {
+    debugToggle.onchange = () => {
+      updateDebugUI();
+    };
+  }
+
+  // Debug level handler
+  if (debugLevel) {
+    debugLevel.onchange = () => {
+      const level = parseInt(debugLevel.value) as DebugLevel;
+      debug.setLevel(level);
+      console.log('Debug level changed to:', DebugLevel[level]);
+    };
+  }
+
+  // Clear debug handler
+  if (clearDebugBtn) {
+    clearDebugBtn.onclick = () => {
+      debugMessages.length = 0;
+      updateDebugUI();
+    };
+  }
+
   // Create SDK instance based on current configuration
   function createSDK(): BrowserSDK {
     const providerType = providerTypeSelect.value as "injected" | "embedded";
     const solanaProvider = solanaProviderSelect.value as "web3js" | "kit";
 
+    const baseConfig = {
+      solanaProvider: solanaProvider,
+      addressTypes: [AddressType.solana, AddressType.ethereum],
+      debug: {
+        enabled: true,
+        level: debugLevel ? parseInt(debugLevel.value) as DebugLevel : DebugLevel.DEBUG,
+        callback: handleDebugMessage,
+      },
+    };
+
     if (providerType === "injected") {
       return new BrowserSDK({
         providerType: "injected",
-        solanaProvider: solanaProvider,
-        addressTypes: [AddressType.solana, AddressType.ethereum],
+        ...baseConfig,
       });
     } else {
       // For demo purposes, use hardcoded embedded config
       return new BrowserSDK({
         providerType: "embedded",
-        addressTypes: [AddressType.solana, AddressType.ethereum],
-        apiBaseUrl: import.meta.env.VITE_WALLET_API || "https://api.phantom.app/v1/wallets",
+        apiBaseUrl: import.meta.env.VITE_WALLET_API || DEFAULT_WALLET_API_URL,
         organizationId: import.meta.env.VITE_ORGANIZATION_ID || "your-organization-id",
-        embeddedWalletType: "app-wallet",
-        solanaProvider: solanaProvider,
+        embeddedWalletType: "user-wallet",
+        authOptions: {
+          authUrl: import.meta.env.VITE_AUTH_URL || DEFAULT_AUTH_URL,
+          redirectUrl: import.meta.env.VITE_REDIRECT_URL,
+        },
+        
+        ...baseConfig,
       });
     }
   }
@@ -71,7 +167,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (getAccountBtn) getAccountBtn.disabled = !connected;
     if (signMessageBtn) signMessageBtn.disabled = !connected;
     if (signTransactionBtn) signTransactionBtn.disabled = !connected;
-    if (disconnectBtn) disconnectBtn.disabled = !connected;
+    // Keep disconnect button always enabled for session clearing
+    if (disconnectBtn) disconnectBtn.disabled = false;
     if (testWeb3jsBtn) testWeb3jsBtn.disabled = !connected;
     if (testKitBtn) testKitBtn.disabled = !connected;
     if (testEthereumBtn) testEthereumBtn.disabled = !connected;
@@ -86,7 +183,7 @@ document.addEventListener("DOMContentLoaded", () => {
         connectedAddresses = result.addresses;
 
         console.log("Connected successfully:", result);
-        alert(`Connected! Addresses: ${result.addresses.map(a => `${a.addressType}: ${a.address}`).join(", ")}`);
+        console.log(`Connected! Addresses: ${result.addresses.map(a => `${a.addressType}: ${a.address}`).join(", ")}`);
 
         updateButtonStates(true);
       } catch (error) {

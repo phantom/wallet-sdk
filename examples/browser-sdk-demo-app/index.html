@@ -9,36 +9,71 @@
   <body>
     <div id="app">
       <h1>Phantom Browser SDK Demo</h1>
+      
+      <div class="main-layout">
+        <div class="left-panel">
+          <div class="section">
+            <h3>Provider Configuration</h3>
+            <div class="form-group">
+              <label for="providerType">Provider Type:</label>
+              <select id="providerType">
+                <option value="embedded">Embedded (Non-Custodial)</option>
+                <option value="injected">Injected (Browser Extension)</option>
+              </select>
+            </div>
 
-      <div class="plugin-section">
-        <h2>Wallet Operations</h2>
-        <div class="controls">
-          <button id="connectBtn" disabled>Connect</button>
-          <button id="getAccountBtn">Get Account</button>
-          <button id="signMessageBtn" disabled>Sign Message</button>
-          <button id="signTransactionBtn" disabled>Sign Transaction</button>
-          <button id="disconnectBtn" disabled>Disconnect</button>
+            <div class="form-group">
+              <label for="solanaProvider">Solana Library:</label>
+              <select id="solanaProvider">
+                <option value="web3js">@solana/web3.js</option>
+                <option value="kit">@solana/kit</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="section">
+            <h3>Wallet Operations</h3>
+            <div class="button-group">
+              <button id="connectBtn" class="primary">Connect</button>
+              <button id="getAccountBtn" disabled>Get Account</button>
+              <button id="signMessageBtn" disabled>Sign Message</button>
+              <button id="signTransactionBtn" disabled>Sign Transaction</button>
+              <button id="disconnectBtn" disabled>Disconnect</button>
+            </div>
+          </div>
+
+          <div class="section">
+            <h3>Transaction Tests</h3>
+            <div class="button-group">
+              <button id="testWeb3jsBtn" disabled>Test @solana/web3.js</button>
+              <button id="testKitBtn" disabled>Test @solana/kit</button>
+              <button id="testEthereumBtn" disabled>Test Ethereum</button>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="plugin-section" id="providerConfigSection">
-        <h2>Provider Configuration</h2>
-        <div class="controls">
-          <label for="providerType">Provider Type:</label>
-          <select id="providerType">
-            <option value="injected">Injected (Browser Extension)</option>
-            <option value="embedded">Embedded (Non-Custodial)</option>
-          </select>
-
-          <label for="solanaProvider">Solana Library:</label>
-          <select id="solanaProvider">
-            <option value="web3js">@solana/web3.js</option>
-            <option value="kit">@solana/kit</option>
-          </select>
-
-          <button id="testWeb3jsBtn" disabled>Test @solana/web3.js</button>
-          <button id="testKitBtn" disabled>Test @solana/kit</button>
-          <button id="testEthereumBtn" disabled>Test Ethereum</button>
+        <div class="right-panel">
+          <div class="section">
+            <h3>Debug Console</h3>
+            <div class="debug-controls">
+              <label class="checkbox-label">
+                <input type="checkbox" id="debugToggle" checked> Show Debug Messages
+              </label>
+              
+              <div class="form-group inline">
+                <label for="debugLevel">Level:</label>
+                <select id="debugLevel">
+                  <option value="0">ERROR</option>
+                  <option value="1">WARN</option>
+                  <option value="2" selected>INFO</option>
+                  <option value="3">DEBUG</option>
+                </select>
+              </div>
+              
+              <button id="clearDebugBtn" class="small">Clear</button>
+            </div>
+            <div id="debugMessages" class="debug-container"></div>
+          </div>
         </div>
       </div>
     </div>

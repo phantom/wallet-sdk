@@ -43,13 +43,17 @@ describe("BrowserSDK", () => {
         appName: "Test App",
         apiBaseUrl: "https://api.phantom.com",
         organizationId: "org-123",
-        authUrl: "https://auth.phantom.com",
+        authOptions: {
+          authUrl: "https://auth.phantom.com",
+        },
       });
 
       expect(MockEmbeddedProvider).toHaveBeenCalledWith({
         apiBaseUrl: "https://api.phantom.com",
         organizationId: "org-123",
-        authUrl: "https://auth.phantom.com",
+        authOptions: {
+          authUrl: "https://auth.phantom.com",
+        },
         embeddedWalletType: "app-wallet",
         addressTypes: [],
         solanaProvider: "web3js",
@@ -62,14 +66,18 @@ describe("BrowserSDK", () => {
         providerType: "embedded",
         apiBaseUrl: "https://api.phantom.com",
         organizationId: "org-123",
-        authUrl: "https://auth.phantom.com",
+        authOptions: {
+          authUrl: "https://auth.phantom.com",
+        },
         embeddedWalletType: "user-wallet",
       });
 
       expect(MockEmbeddedProvider).toHaveBeenCalledWith({
         apiBaseUrl: "https://api.phantom.com",
         organizationId: "org-123",
-        authUrl: "https://auth.phantom.com",
+        authOptions: {
+          authUrl: "https://auth.phantom.com",
+        },
         embeddedWalletType: "user-wallet",
         addressTypes: [],
         solanaProvider: "web3js",

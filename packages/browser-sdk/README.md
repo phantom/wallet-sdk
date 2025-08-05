@@ -83,6 +83,10 @@ const sdk = new BrowserSDK({
   apiBaseUrl: "https://api.phantom.com",
   organizationId: "your-org-id",
   embeddedWalletType: "app-wallet", // or 'user-wallet'
+  authOptions: {
+    authUrl: "https://auth.phantom.app", // optional, defaults to "https://connect.phantom.app"
+    redirectUrl: "https://yourapp.com/callback" // optional, defaults to current page
+  }
 });
 ```
 
@@ -170,7 +174,10 @@ interface BrowserSDKConfig {
   addressTypes?: AddressType[]; // Networks to enable
   apiBaseUrl?: string; // Phantom API base URL
   organizationId?: string; // Your organization ID
-  authUrl?: string; // Custom auth URL (optional)
+  authOptions?: {
+    authUrl?: string; // Custom auth URL (default: "https://connect.phantom.app")
+    redirectUrl?: string; // Custom redirect URL after authentication
+  };
   embeddedWalletType?: "app-wallet" | "user-wallet"; // Wallet type
   solanaProvider?: "web3js" | "kit"; // Solana library choice (default: 'web3js')
 }
@@ -187,6 +194,57 @@ const result = await sdk.connect();
 // Returns: { walletId: string, addresses: WalletAddress[] }
 // addresses only includes types from addressTypes config
 ```
+
+For embedded user-wallets, you can specify authentication options:
+
+```typescript
+// Phantom Connect with provider selection (default)
+const result = await sdk.connect();
+
+// Phantom Connect with Google authentication (skips provider selection)
+const result = await sdk.connect({
+  authOptions: {
+    provider: "google"
+  }
+});
+
+// Phantom Connect with Apple authentication (skips provider selection)
+const result = await sdk.connect({
+  authOptions: {
+    provider: "apple"
+  }
+});
+
+// JWT authentication (direct API call)
+const result = await sdk.connect({
+  authOptions: {
+    provider: "jwt",
+    jwtToken: "your-jwt-token",
+    customAuthData: { userId: "user123" }
+  }
+});
+```
+
+**Authentication Options:**
+
+- `provider` - Authentication method: `"google"`, `"apple"`, or `"jwt"`
+  - If not specified: Shows provider selection screen on Phantom Connect
+  - If `"google"` or `"apple"`: Skips provider selection and uses specified provider
+  - If `"jwt"`: Uses JWT authentication flow via API call
+- `jwtToken` - Required when `provider` is `"jwt"`. Your JWT token for authentication
+- `customAuthData` - Additional data to pass to authentication service
+
+**Authentication Flow Types:**
+
+1. **Phantom Connect (Redirect-based)**: Used when `provider` is undefined, `"google"`, or `"apple"`
+   - Redirects to `https://connect.phantom.app` (or custom `authOptions.authUrl` from config)
+   - Handles OAuth flow with selected provider
+   - Returns to your app with authentication result using `authOptions.redirectUrl` or current page
+
+2. **JWT Authentication (API-based)**: Used when `provider` is `"jwt"`
+   - Makes direct API call to `/api/auth/jwt` endpoint
+   - Validates JWT token server-side
+   - Returns wallet immediately without redirect
 
 #### signAndSendTransaction(transaction)
 
