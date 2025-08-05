@@ -1,6 +1,7 @@
 
 import { debug, DebugCategory } from "../../debug";
 import { DEFAULT_AUTH_URL } from "../../constants";
+import { type URLParamsAccessor } from "./url-params";
 
 export interface AuthResult {
   walletId: string;
@@ -26,6 +27,12 @@ export interface JWTAuthOptions {
 }
 
 export class PhantomConnectAuth {
+  private urlParamsAccessor: URLParamsAccessor;
+
+  constructor(urlParamsAccessor: URLParamsAccessor) {
+    this.urlParamsAccessor = urlParamsAccessor;
+  }
+
   authenticate(options: PhantomConnectOptions) {
     debug.info(DebugCategory.PHANTOM_CONNECT_AUTH, 'Starting Phantom Connect authentication', {
       organizationId: options.organizationId,
@@ -41,7 +48,7 @@ export class PhantomConnectAuth {
     const params = new URLSearchParams({
       organization_id: options.organizationId,
       parent_organization_id: options.parentOrganizationId,
-      redirect_uri: options.redirectUrl || window.location.href,
+      redirect_uri: options.redirectUrl || (typeof window !== 'undefined' ? window.location.href : ''),
       session_id: options.sessionId,
       clear_previous_session: true.toString(),
     });
@@ -90,14 +97,12 @@ export class PhantomConnectAuth {
            Math.random().toString(36).substring(2, 15) + '_' + Date.now();
   }
 
-  static resumeAuthFromRedirect(): AuthResult | null {
+  resumeAuthFromRedirect(): AuthResult | null {
     try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const walletId = urlParams.get("wallet_id");
-      const provider = urlParams.get("provider");
-      const sessionId = urlParams.get("session_id");
-      const error = urlParams.get("error");
-      const errorDescription = urlParams.get("error_description");
+      const walletId = this.urlParamsAccessor.getParam("wallet_id");
+      const sessionId = this.urlParamsAccessor.getParam("session_id");
+      const error = this.urlParamsAccessor.getParam("error");
+      const errorDescription = this.urlParamsAccessor.getParam("error_description");
 
       if (error) {
         const errorMsg = errorDescription || error;
@@ -148,13 +153,11 @@ export class PhantomConnectAuth {
 
       debug.info(DebugCategory.PHANTOM_CONNECT_AUTH, 'Successfully resumed auth from redirect', {
         walletId,
-        provider: provider || context.provider,
         sessionId
       });
 
       return {
         walletId,
-        provider: provider || context.provider,
         userInfo: context,
       };
     } catch (error) {

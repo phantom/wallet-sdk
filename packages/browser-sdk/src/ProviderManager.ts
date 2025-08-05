@@ -109,7 +109,7 @@ export class ProviderManager {
 
     debug.log(DebugCategory.PROVIDER_MANAGER, 'Connection successful, saving preferences', {
       walletId: this.walletId,
-      addressCount: result.addresses.length
+      addressCount: result.addresses?.length || 0
     });
 
     // Save provider preference after successful connection

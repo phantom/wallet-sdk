@@ -12,7 +12,7 @@ export interface Session {
   keypair: Keypair;
   authProvider?: string;
   userInfo?: Record<string, any>;
-  status: "started" | "completed" | "failed";
+  status: "pending" | "completed" | "failed";
   createdAt: number;
   lastUsed: number;
 }

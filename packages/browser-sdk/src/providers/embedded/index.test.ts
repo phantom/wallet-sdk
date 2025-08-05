@@ -116,6 +116,7 @@ describe("EmbeddedProvider", () => {
           },
           // Bitcoin address should be filtered out since it's not in config.addressTypes
         ],
+        status: "completed",
       });
 
       // Assert: Check that provider internal state is updated
@@ -158,6 +159,7 @@ describe("EmbeddedProvider", () => {
       expect(result).toEqual({
         walletId: mockSession.walletId,
         addresses: [],
+        status: "completed",
       });
     });
   });

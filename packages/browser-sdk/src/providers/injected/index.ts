@@ -117,6 +117,7 @@ export class InjectedProvider implements Provider {
 
     return {
       addresses: this.addresses,
+      status: "completed",
       // walletId is not applicable for injected providers
     };
   }

@@ -102,10 +102,7 @@ export class BrowserSDK {
 
     debug.log(DebugCategory.BROWSER_SDK, 'Delegating to ProviderManager.connect', { authOptions: options?.authOptions });
     const result = await this.providerManager.connect(options?.authOptions);
-    debug.info(DebugCategory.BROWSER_SDK, 'Connect completed successfully', { 
-      walletId: result.walletId,
-      addressCount: result.addresses.length 
-    });
+    debug.info(DebugCategory.BROWSER_SDK, 'Connect completed successfully', result);
     return result;
   }
 

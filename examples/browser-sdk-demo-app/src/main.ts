@@ -183,7 +183,7 @@ document.addEventListener("DOMContentLoaded", () => {
         connectedAddresses = result.addresses;
 
         console.log("Connected successfully:", result);
-        alert(`Connected! Addresses: ${result.addresses.map(a => `${a.addressType}: ${a.address}`).join(", ")}`);
+        console.log(`Connected! Addresses: ${result.addresses.map(a => `${a.addressType}: ${a.address}`).join(", ")}`);
 
         updateButtonStates(true);
       } catch (error) {

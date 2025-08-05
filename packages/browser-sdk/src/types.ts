@@ -33,6 +33,7 @@ export interface WalletAddress {
 export interface ConnectResult {
   walletId?: string; // Only for embedded
   addresses: WalletAddress[];
+  status?: "pending" | "completed"; // Session status - pending means redirect in progress, completed means wallet is ready
 }
 
 export interface SignMessageParams {
