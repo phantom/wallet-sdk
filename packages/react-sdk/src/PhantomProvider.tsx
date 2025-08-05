@@ -88,11 +88,6 @@ export function PhantomProvider({ children, config }: PhantomProviderProps) {
     updateConnectionState();
   }, [updateConnectionState]);
 
-  // Expose update function to SDK instance for hooks to use
-  useEffect(() => {
-    // Attach update function to SDK instance for hooks to use
-    (sdk as any)._updateConnectionState = updateConnectionState;
-  }, [sdk, updateConnectionState]);
 
   const value: PhantomContextValue = {
     sdk,
