@@ -1,11 +1,8 @@
-import { 
-  EmbeddedProvider as CoreEmbeddedProvider, 
-  EmbeddedProviderConfig,
-  PlatformAdapter
-} from "@phantom/embedded-provider-core";
+import { EmbeddedProvider as CoreEmbeddedProvider } from "@phantom/embedded-provider-core";
+import type { EmbeddedProviderConfig, PlatformAdapter } from "@phantom/embedded-provider-core";
 import { BrowserStorage, BrowserURLParamsAccessor, BrowserAuthProvider, BrowserLogger } from "./adapters";
 import { debug, DebugCategory } from "../../debug";
-import { Provider } from "../../types";
+import type { Provider } from "../../types";
 
 export class EmbeddedProvider extends CoreEmbeddedProvider implements Provider {
   constructor(config: EmbeddedProviderConfig) {

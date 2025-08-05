@@ -1,8 +1,7 @@
 import { EmbeddedProvider } from './index';
-import type { EmbeddedProviderConfig } from '@phantom/embedded-provider-core';
+import type { EmbeddedProviderConfig, Session, AuthResult } from '@phantom/embedded-provider-core';
 import { BrowserStorage, BrowserURLParamsAccessor, BrowserAuthProvider, BrowserLogger } from './adapters';
 import { PhantomClient, generateKeyPair } from '@phantom/client';
-import type { Session, AuthResult } from '@phantom/embedded-provider-core';
 
 // Mock dependencies
 jest.mock('./adapters');

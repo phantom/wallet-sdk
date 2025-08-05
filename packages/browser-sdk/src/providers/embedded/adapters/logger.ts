@@ -1,4 +1,4 @@
-import { DebugLogger } from "@phantom/embedded-provider-core";
+import type { DebugLogger } from "@phantom/embedded-provider-core";
 import { debug } from "../../../debug";
 
 export class BrowserLogger implements DebugLogger {

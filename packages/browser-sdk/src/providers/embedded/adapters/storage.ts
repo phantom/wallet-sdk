@@ -1,4 +1,4 @@
-import { EmbeddedStorage, Session } from "@phantom/embedded-provider-core";
+import type { EmbeddedStorage, Session } from "@phantom/embedded-provider-core";
 import { debug, DebugCategory } from "../../../debug";
 
 /**

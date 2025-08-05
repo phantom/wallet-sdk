@@ -1,4 +1,4 @@
-import { 
+import type { 
   AuthProvider, 
   AuthResult, 
   PhantomConnectOptions, 
@@ -15,13 +15,14 @@ export class BrowserAuthProvider implements AuthProvider {
     this.urlParamsAccessor = urlParamsAccessor;
   }
 
-  async authenticate(options: PhantomConnectOptions | JWTAuthOptions): Promise<void | AuthResult> {
-    // Check if this is JWT auth
-    if ('jwtToken' in options) {
-      throw new Error("JWT authentication should be handled by the core JWTAuth class");
-    }
+  authenticate(options: PhantomConnectOptions | JWTAuthOptions): Promise<void | AuthResult> {
+    return new Promise<void>((resolve) => {
+      // Check if this is JWT auth
+      if ('jwtToken' in options) {
+        throw new Error("JWT authentication should be handled by the core JWTAuth class");
+      }
 
-    const phantomOptions = options as PhantomConnectOptions;
+      const phantomOptions = options as PhantomConnectOptions;
     
     debug.info(DebugCategory.PHANTOM_CONNECT_AUTH, 'Starting Phantom Connect authentication', {
       organizationId: phantomOptions.organizationId,
@@ -73,11 +74,13 @@ export class BrowserAuthProvider implements AuthProvider {
     const authUrl = `${baseUrl}?${params.toString()}`;
     debug.info(DebugCategory.PHANTOM_CONNECT_AUTH, 'Redirecting to Phantom Connect', { authUrl });
 
-    // Redirect to Phantom Connect
-    window.location.href = authUrl;
+      // Redirect to Phantom Connect
+      window.location.href = authUrl;
 
-    // The page will redirect, so execution stops here
-    // The actual auth result will be processed after redirect back
+      // The page will redirect, so execution stops here
+      // The actual auth result will be processed after redirect back
+      resolve();
+    });
   }
 
   resumeAuthFromRedirect(): AuthResult | null {
