@@ -1,27 +1,10 @@
-import { IndexedDBStorage } from "./storage";
-import type _nacl from "tweetnacl";
-import type _bs58 from "bs58";
+import { BrowserStorage } from "./adapters/storage";
 
-// Mock nacl and bs58
-jest.mock("tweetnacl", () => ({
-  default: {
-    sign: {
-      keyPair: jest.fn(),
-    },
-  },
-}));
-
-jest.mock("bs58", () => ({
-  default: {
-    encode: jest.fn(),
-  },
-}));
-
-describe("IndexedDBStorage", () => {
-  let storage: IndexedDBStorage;
+describe("BrowserStorage", () => {
+  let storage: BrowserStorage;
 
   beforeEach(() => {
-    storage = new IndexedDBStorage();
+    storage = new BrowserStorage();
     // Clear IndexedDB
     indexedDB = new IDBFactory();
   });
@@ -52,12 +35,18 @@ describe("IndexedDBStorage", () => {
 
     it("should save and retrieve session", async () => {
       const testSession = {
+        sessionId: "session-123",
         walletId: "wallet-123",
         organizationId: "org-456",
         keypair: {
           publicKey: "publicKey123",
           secretKey: "secretKey456",
         },
+        authProvider: "test-provider",
+        userInfo: {},
+        status: "completed" as const,
+        createdAt: Date.now(),
+        lastUsed: Date.now(),
       };
 
       await storage.saveSession(testSession);
@@ -68,21 +57,33 @@ describe("IndexedDBStorage", () => {
 
     it("should update existing session", async () => {
       const session1 = {
+        sessionId: "session-123",
         walletId: "wallet-123",
         organizationId: "org-456",
         keypair: {
           publicKey: "publicKey123",
           secretKey: "secretKey456",
         },
+        authProvider: "test-provider",
+        userInfo: {},
+        status: "completed" as const,
+        createdAt: Date.now(),
+        lastUsed: Date.now(),
       };
 
       const session2 = {
+        sessionId: "session-789",
         walletId: "wallet-789",
         organizationId: "org-999",
         keypair: {
           publicKey: "publicKey789",
           secretKey: "secretKey999",
         },
+        authProvider: "test-provider-2",
+        userInfo: {},
+        status: "completed" as const,
+        createdAt: Date.now(),
+        lastUsed: Date.now(),
       };
 
       await storage.saveSession(session1);
@@ -94,12 +95,18 @@ describe("IndexedDBStorage", () => {
 
     it("should clear session", async () => {
       const testSession = {
+        sessionId: "session-123",
         walletId: "wallet-123",
         organizationId: "org-456",
         keypair: {
           publicKey: "publicKey123",
           secretKey: "secretKey456",
         },
+        authProvider: "test-provider",
+        userInfo: {},
+        status: "completed" as const,
+        createdAt: Date.now(),
+        lastUsed: Date.now(),
       };
 
       await storage.saveSession(testSession);
@@ -113,12 +120,18 @@ describe("IndexedDBStorage", () => {
   describe("concurrent operations", () => {
     it("should handle concurrent session saves", async () => {
       const sessions = Array.from({ length: 5 }, (_, i) => ({
+        sessionId: `session-${i}`,
         walletId: `wallet-${i}`,
         organizationId: `org-${i}`,
         keypair: {
           publicKey: `publicKey${i}`,
           secretKey: `secretKey${i}`,
         },
+        authProvider: "test-provider",
+        userInfo: {},
+        status: "completed" as const,
+        createdAt: Date.now(),
+        lastUsed: Date.now(),
       }));
 
       // Save all sessions concurrently
@@ -136,12 +149,18 @@ describe("IndexedDBStorage", () => {
 
     it("should handle concurrent reads", async () => {
       const testSession = {
+        sessionId: "session-123",
         walletId: "wallet-123",
         organizationId: "org-456",
         keypair: {
           publicKey: "publicKey123",
           secretKey: "secretKey456",
         },
+        authProvider: "test-provider",
+        userInfo: {},
+        status: "completed" as const,
+        createdAt: Date.now(),
+        lastUsed: Date.now(),
       };
 
       await storage.saveSession(testSession);

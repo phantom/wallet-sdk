@@ -67,6 +67,7 @@ module.exports = defineConfig({
           "**/__mocks__/**",
           "**/vite.config.mts",
           "**/jestSetup.ts",
+          "**/tsup.config.ts",
         ],
         includeTypes: false,
       },
