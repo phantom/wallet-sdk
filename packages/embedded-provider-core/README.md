@@ -13,7 +13,7 @@ The embedded provider core follows a platform adapter pattern:
 ```
 ┌─────────────────────────────────────┐
 │         Platform SDK                │
-│    (browser-sdk, react-native)     │
+│    (browser-sdk, react-native)      │
 └─────────────┬───────────────────────┘
               │
 ┌─────────────▼───────────────────────┐

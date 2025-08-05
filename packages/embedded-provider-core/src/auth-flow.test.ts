@@ -1,10 +1,9 @@
-import { EmbeddedProvider } from './index';
-import type { EmbeddedProviderConfig, Session, AuthResult } from '@phantom/embedded-provider-core';
-import { BrowserStorage, BrowserURLParamsAccessor, BrowserAuthProvider, BrowserLogger } from './adapters';
+import { EmbeddedProvider } from './embedded-provider';
+import type { EmbeddedProviderConfig } from './types';
+import type { PlatformAdapter, DebugLogger, Session, AuthResult, EmbeddedStorage, AuthProvider, URLParamsAccessor } from './interfaces';
 import { PhantomClient, generateKeyPair } from '@phantom/client';
 
 // Mock dependencies
-jest.mock('./adapters');
 jest.mock('@phantom/api-key-stamper');
 jest.mock('@phantom/client');
 
@@ -20,12 +19,13 @@ mockedGenerateKeyPair.mockReturnValue({
 
 describe('EmbeddedProvider Auth Flows', () => {
   let provider: EmbeddedProvider;
-  let mockStorage: jest.Mocked<BrowserStorage>;
-  let mockAuthProvider: jest.Mocked<BrowserAuthProvider>;
-  let mockURLParamsAccessor: jest.Mocked<BrowserURLParamsAccessor>;
-  let mockLogger: jest.Mocked<BrowserLogger>;
-  let mockClient: jest.Mocked<PhantomClient>;
   let config: EmbeddedProviderConfig;
+  let mockPlatform: PlatformAdapter;
+  let mockLogger: DebugLogger;
+  let mockStorage: jest.Mocked<EmbeddedStorage>;
+  let mockAuthProvider: jest.Mocked<AuthProvider>;
+  let mockURLParamsAccessor: jest.Mocked<URLParamsAccessor>;
+  let mockClient: jest.Mocked<PhantomClient>;
 
   beforeEach(() => {
     // Reset mocks
@@ -50,35 +50,38 @@ describe('EmbeddedProvider Auth Flows', () => {
       },
     };
 
-    // Mock BrowserStorage
+    // Mock storage
     mockStorage = {
       getSession: jest.fn(),
       saveSession: jest.fn(),
       clearSession: jest.fn(),
-    } as any;
-    (BrowserStorage as jest.Mock).mockImplementation(() => mockStorage);
+    };
 
-    // Mock BrowserURLParamsAccessor
-    mockURLParamsAccessor = {
-      getParam: jest.fn().mockReturnValue(null),
-    } as any;
-    (BrowserURLParamsAccessor as jest.Mock).mockImplementation(() => mockURLParamsAccessor);
-
-    // Mock BrowserAuthProvider
+    // Mock auth provider
     mockAuthProvider = {
       authenticate: jest.fn(),
       resumeAuthFromRedirect: jest.fn(),
-    } as any;
-    (BrowserAuthProvider as jest.Mock).mockImplementation(() => mockAuthProvider);
+    };
 
-    // Mock BrowserLogger
+    // Mock URL params accessor
+    mockURLParamsAccessor = {
+      getParam: jest.fn().mockReturnValue(null),
+    };
+
+    // Setup mock platform adapter
+    mockPlatform = {
+      storage: mockStorage,
+      authProvider: mockAuthProvider,
+      urlParamsAccessor: mockURLParamsAccessor,
+    };
+
+    // Setup mock logger
     mockLogger = {
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
       log: jest.fn(),
-    } as any;
-    (BrowserLogger as jest.Mock).mockImplementation(() => mockLogger);
+    };
 
     // Mock PhantomClient
     mockClient = {
@@ -90,7 +93,7 @@ describe('EmbeddedProvider Auth Flows', () => {
     } as any;
     mockedPhantomClient.mockImplementation(() => mockClient);
 
-    provider = new EmbeddedProvider(config);
+    provider = new EmbeddedProvider(config, mockPlatform, mockLogger);
   });
 
   describe('Google OAuth Flow', () => {
@@ -365,7 +368,7 @@ describe('EmbeddedProvider Auth Flows', () => {
   describe('App Wallet Flow', () => {
     beforeEach(() => {
       config.embeddedWalletType = 'app-wallet';
-      provider = new EmbeddedProvider(config);
+      provider = new EmbeddedProvider(config, mockPlatform, mockLogger);
     });
 
     it('should create app wallet directly without authentication', async () => {
@@ -443,18 +446,17 @@ describe('EmbeddedProvider Auth Flows', () => {
       mockStorage.getSession.mockResolvedValue(null);
       mockClient.createOrganization.mockResolvedValue({ organizationId: 'new-org-id' });
       
-      // Mock the core provider's JWT auth (since it's handled internally now)
-      const jwtAuthSpy = jest.spyOn(provider as any, 'handleJWTAuth').mockResolvedValue({
-        sessionId: 'jwt-session-id',
-        walletId: 'jwt-wallet-123',
-        organizationId: 'test-org-id',
-        keypair: { publicKey: 'pub', secretKey: 'sec' },
-        authProvider: 'jwt',
-        userInfo: { sub: 'user-123' },
-        status: 'completed',
-        createdAt: Date.now(),
-        lastUsed: Date.now(),
-      });
+      // Mock the core provider's JWT auth by directly mocking the jwtAuth.authenticate call
+      const mockJWTAuth = {
+        authenticate: jest.fn().mockResolvedValue({
+          walletId: 'jwt-wallet-123',
+          provider: 'jwt',
+          userInfo: { sub: 'user-123' },
+        }),
+      };
+      
+      // Replace the jwtAuth instance in the provider
+      (provider as any).jwtAuth = mockJWTAuth;
 
       mockClient.getWalletAddresses.mockResolvedValue([
         { addressType: 'solana', address: 'test-address' },
@@ -465,14 +467,12 @@ describe('EmbeddedProvider Auth Flows', () => {
         jwtToken: 'valid-jwt-token',
       });
 
-      expect(jwtAuthSpy).toHaveBeenCalledWith(
-        'new-org-id',
-        expect.any(Object),
-        expect.objectContaining({
-          provider: 'jwt',
-          jwtToken: 'valid-jwt-token',
-        })
-      );
+      expect(mockJWTAuth.authenticate).toHaveBeenCalledWith({
+        organizationId: 'new-org-id',
+        parentOrganizationId: 'test-org-id',
+        jwtToken: 'valid-jwt-token',
+        customAuthData: undefined,
+      });
       expect(result.walletId).toBe('jwt-wallet-123');
     });
 
@@ -481,18 +481,15 @@ describe('EmbeddedProvider Auth Flows', () => {
       mockStorage.getSession.mockResolvedValue(null);
       mockClient.createOrganization.mockResolvedValue({ organizationId: 'new-org-id' });
       
-      // Mock the core provider's JWT auth
-      jest.spyOn(provider as any, 'handleJWTAuth').mockResolvedValue({
-        sessionId: 'jwt-session-id',
-        walletId: 'jwt-wallet-123',
-        organizationId: 'test-org-id',
-        keypair: { publicKey: 'pub', secretKey: 'sec' },
-        authProvider: 'jwt',
-        userInfo: { sub: 'user-123' },
-        status: 'completed',
-        createdAt: Date.now(),
-        lastUsed: Date.now(),
-      });
+      // Mock JWT auth
+      const mockJWTAuth = {
+        authenticate: jest.fn().mockResolvedValue({
+          walletId: 'jwt-wallet-123',
+          provider: 'jwt',
+          userInfo: { sub: 'user-123' },
+        }),
+      };
+      (provider as any).jwtAuth = mockJWTAuth;
 
       mockClient.getWalletAddresses.mockResolvedValue([]);
 
@@ -540,7 +537,10 @@ describe('EmbeddedProvider Auth Flows', () => {
       mockClient.createOrganization.mockResolvedValue({ organizationId: 'new-org-id' });
       
       // Mock JWT auth to throw error
-      jest.spyOn(provider as any, 'handleJWTAuth').mockRejectedValue(new Error('Invalid JWT token'));
+      const mockJWTAuth = {
+        authenticate: jest.fn().mockRejectedValue(new Error('Invalid JWT token')),
+      };
+      (provider as any).jwtAuth = mockJWTAuth;
 
       await expect(
         provider.connect({
@@ -753,17 +753,14 @@ describe('EmbeddedProvider Auth Flows', () => {
       mockClient.createOrganization.mockResolvedValue({ organizationId: 'new-org-id' });
       
       // Mock JWT auth to succeed but getWalletAddresses to fail
-      jest.spyOn(provider as any, 'handleJWTAuth').mockResolvedValue({
-        sessionId: 'jwt-session-id',
-        walletId: 'jwt-wallet-123',
-        organizationId: 'test-org-id',
-        keypair: { publicKey: 'pub', secretKey: 'sec' },
-        authProvider: 'jwt',
-        userInfo: { sub: 'user-123' },
-        status: 'completed',
-        createdAt: Date.now(),
-        lastUsed: Date.now(),
-      });
+      const mockJWTAuth = {
+        authenticate: jest.fn().mockResolvedValue({
+          walletId: 'jwt-wallet-123',
+          provider: 'jwt',
+          userInfo: { sub: 'user-123' },
+        }),
+      };
+      (provider as any).jwtAuth = mockJWTAuth;
       
       // Make getWalletAddresses fail consistently to trigger cleanup
       mockClient.getWalletAddresses
@@ -845,6 +842,84 @@ describe('EmbeddedProvider Auth Flows', () => {
       expect(mockStorage.clearSession).toHaveBeenCalled();
       expect(provider.isConnected()).toBe(false);
       expect(provider.getAddresses()).toHaveLength(0);
+    });
+  });
+
+  describe('Message and Transaction Signing', () => {
+    beforeEach(async () => {
+      // Set up a connected state
+      mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
+      const completedSession: Session = {
+        sessionId: 'test-session-id',
+        walletId: 'wallet-123',
+        organizationId: 'org-123',
+        keypair: { publicKey: 'pub', secretKey: 'sec' },
+        authProvider: 'jwt',
+        userInfo: {},
+        status: 'completed',
+        createdAt: Date.now(),
+        lastUsed: Date.now(),
+      };
+      mockStorage.getSession.mockResolvedValue(completedSession);
+      mockClient.getWalletAddresses.mockResolvedValue([]);
+      await provider.connect();
+    });
+
+    it('should sign messages when connected', async () => {
+      mockClient.signMessage.mockResolvedValue('signed-message-signature');
+
+      const result = await provider.signMessage({
+        message: 'test message',
+        networkId: 'solana:mainnet',
+      });
+
+      expect(mockClient.signMessage).toHaveBeenCalledWith({
+        walletId: 'wallet-123',
+        message: expect.any(String),
+        networkId: 'solana:mainnet',
+      });
+      expect(result).toBe('signed-message-signature');
+    });
+
+    it('should throw error when signing message while not connected', async () => {
+      await provider.disconnect();
+
+      await expect(
+        provider.signMessage({
+          message: 'test message',
+          networkId: 'solana:mainnet',
+        })
+      ).rejects.toThrow('Not connected');
+    });
+
+    it('should sign and send transactions when connected', async () => {
+      mockClient.signAndSendTransaction.mockResolvedValue({
+        signature: 'transaction-signature',
+        networkId: 'solana:mainnet',
+      });
+
+      const result = await provider.signAndSendTransaction({
+        transaction: 'base64-encoded-transaction',
+        networkId: 'solana:mainnet',
+      });
+
+      expect(mockClient.signAndSendTransaction).toHaveBeenCalledWith({
+        walletId: 'wallet-123',
+        transaction: expect.any(String),
+        networkId: 'solana:mainnet',
+      });
+      expect(result.signature).toBe('transaction-signature');
+    });
+
+    it('should throw error when signing transaction while not connected', async () => {
+      await provider.disconnect();
+
+      await expect(
+        provider.signAndSendTransaction({
+          transaction: 'base64-encoded-transaction',
+          networkId: 'solana:mainnet',
+        })
+      ).rejects.toThrow('Not connected');
     });
   });
 });
