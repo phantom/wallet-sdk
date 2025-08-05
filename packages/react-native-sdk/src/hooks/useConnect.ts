@@ -24,7 +24,7 @@ export function useConnect() {
         if (result.walletId) {
           setWalletId(result.walletId);
         }
-        await updateConnectionState();
+        updateConnectionState();
       }
       
       return result;

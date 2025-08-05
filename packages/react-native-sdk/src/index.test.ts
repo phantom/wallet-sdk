@@ -36,9 +36,10 @@ describe('React Native SDK Exports', () => {
     expect(typeof useSignAndSendTransaction).toBe('function');
   });
 
-  it('should have consistent API structure', () => {
+  it('should have consistent API structure', async () => {
     // Test that our main exports match expected patterns
-    const exports = Object.keys(require('./index'));
+    const indexModule = await import('./index');
+    const exports = Object.keys(indexModule);
     
     expect(exports).toContain('PhantomProvider');
     expect(exports).toContain('usePhantom');

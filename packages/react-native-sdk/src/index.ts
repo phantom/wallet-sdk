@@ -22,5 +22,4 @@ export type {
   SignedTransaction,
 } from './types';
 
-// Re-export AddressType for proper usage in configuration
-export { AddressType } from '@phantom/client';
+// Note: AddressType is available through the WalletAddress interface from embedded-provider-core

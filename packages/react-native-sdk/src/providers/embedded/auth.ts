@@ -77,8 +77,8 @@ export class ExpoAuthProvider implements AuthProvider {
     }
   }
 
-  async isAvailable(): Promise<boolean> {
+  isAvailable(): Promise<boolean> {
     // WebBrowser is always available in Expo
-    return true;
+    return Promise.resolve(true);
   }
 }

@@ -18,7 +18,7 @@ export function useDisconnect() {
       await sdk.disconnect();
       
       // Update connection state after disconnection
-      await updateConnectionState();
+      updateConnectionState();
     } catch (err) {
       const error = err as Error;
       setError(error);

@@ -18,7 +18,7 @@ interface PhantomContextValue {
   addresses: WalletAddress[];
   walletId: string | null;
   error: Error | null;
-  updateConnectionState: () => Promise<void>;
+  updateConnectionState: () => void;
   setWalletId: (walletId: string | null) => void;
 }
 
@@ -69,7 +69,7 @@ export function PhantomProvider({ children, config }: PhantomProviderProps) {
   const [error, setError] = useState<Error | null>(null);
 
   // Function to update connection state
-  const updateConnectionState = useCallback(async () => {
+  const updateConnectionState = useCallback(() => {
     try {
       const connected = sdk.isConnected();
       setIsConnected(connected);
