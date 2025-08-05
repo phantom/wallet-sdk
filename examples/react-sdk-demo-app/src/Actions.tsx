@@ -31,7 +31,7 @@ export function Actions() {
   const { signAndSendTransaction, isSigning: isSigningTransaction } = useSignAndSendTransaction();
   const { signMessage, isSigning: isSigningMessage } = useSignMessage();
   const { createUserOrganization, isCreating } = useCreateUserOrganization();
-  const { isConnected, isReady, currentProviderType } = usePhantom();
+  const { isConnected, currentProviderType } = usePhantom();
   const { isInstalled, isLoading } = useIsExtensionInstalled();
   const addresses = useAccounts();
 
@@ -156,9 +156,6 @@ export function Actions() {
     }
   };
 
-  if (!isReady) {
-    return <div className="loading">Loading...</div>;
-  }
 
   return (
     <div id="app">

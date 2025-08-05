@@ -8,7 +8,7 @@ export function useConnect() {
 
   const connect = useCallback(
     async (options?: ConnectOptions) => {
-      if (!context.sdk || !context.isReady) {
+      if (!context.sdk) {
         throw new Error("SDK not initialized");
       }
 
@@ -32,7 +32,7 @@ export function useConnect() {
         setIsConnecting(false);
       }
     },
-    [context.sdk, context.isReady],
+    [context.sdk],
   );
 
   return {

@@ -304,6 +304,7 @@ button:focus-visible {
 .debug-container {
   height: 450px;
   overflow-y: auto;
+  overflow-x: hidden;
   border: 1px solid #d1d5db;
   border-radius: 4px;
   background-color: #ffffff;
@@ -311,6 +312,11 @@ button:focus-visible {
   font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace;
   font-size: 11px;
   text-align: left;
+  max-width: 100%;
+  width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-all;
 }
 
 .debug-message {
@@ -319,6 +325,12 @@ button:focus-visible {
   border-radius: 3px;
   border-left: 3px solid #e2e8f0;
   background-color: #f8f9fa;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-all;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .debug-error {
@@ -373,6 +385,10 @@ button:focus-visible {
   color: #374151;
   margin-bottom: 0.25rem;
   line-height: 1.4;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-all;
+  max-width: 100%;
 }
 
 .debug-data {
@@ -380,10 +396,17 @@ button:focus-visible {
   padding: 0.5rem;
   border-radius: 2px;
   font-size: 10px;
-  overflow-x: auto;
+  overflow-x: hidden;
   color: #4b5563;
   margin: 0;
   border: 1px solid #e5e7eb;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-all;
+  white-space: pre-wrap;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .debug-empty {
