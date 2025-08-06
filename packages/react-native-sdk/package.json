@@ -44,6 +44,7 @@
     "directory": "packages/react-native-sdk"
   },
   "dependencies": {
+    "@phantom/client": "workspace:*",
     "@phantom/embedded-provider-core": "workspace:*"
   },
   "peerDependencies": {

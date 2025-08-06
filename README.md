@@ -29,7 +29,7 @@ import { PhantomProvider, useConnect, useSignAndSendTransaction, AddressType, Ne
     providerType: "embedded",
     embeddedWalletType: "app-wallet",
     addressTypes: [AddressType.solana],
-    apiBaseUrl: "https://api.phantom.com",
+    apiBaseUrl: "https://api.phantom.app/v1/wallets",
     organizationId: "your-org-id",
   }}
 >
@@ -63,7 +63,7 @@ const sdk = new BrowserSDK({
   providerType: "embedded", // or 'injected' for browser extension
   embeddedWalletType: "app-wallet",
   addressTypes: [AddressType.solana],
-  apiBaseUrl: "https://api.phantom.com",
+  apiBaseUrl: "https://api.phantom.app/v1/wallets",
   organizationId: "your-org-id",
 });
 
@@ -138,7 +138,7 @@ import { PhantomUIProvider, useSignAndSendTransaction } from "@phantom/react-ui"
   config={{
     providerType: "embedded",
     addressTypes: [AddressType.solana],
-    apiBaseUrl: "https://api.phantom.com",
+    apiBaseUrl: "https://api.phantom.app/v1/wallets",
     organizationId: "your-org-id",
   }}
   theme="dark"

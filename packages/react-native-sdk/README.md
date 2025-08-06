@@ -76,6 +76,7 @@ export default function App() {
         scheme: "mywalletapp", // Must match app.json scheme
         embeddedWalletType: "user-wallet",
         addressTypes: [AddressType.solana],
+        apiBaseUrl: "https://api.phantom.app/v1/wallets",
         authOptions: {
           redirectUrl: "mywalletapp://phantom-auth-callback"
         }
@@ -187,6 +188,7 @@ interface PhantomProviderConfig {
   scheme: string;                   // Custom URL scheme for your app
   embeddedWalletType: "user-wallet" | "app-wallet";
   addressTypes: AddressType[];
+  apiBaseUrl: "https://api.phantom.app/v1/wallets",
   authOptions?: {
     authUrl?: string;               // Custom auth URL (optional)
     redirectUrl?: string;           // Custom redirect URL (optional)
@@ -255,7 +257,7 @@ const {
 
 const result = await signAndSendTransaction({
   transaction: 'base64-encoded-transaction',
-  networkId: 'solana:mainnet'
+  networkId: NetworkId.SOLANA_MAINNET
 });
 ```
 
@@ -324,7 +326,8 @@ import { PhantomProvider, AddressType } from '@phantom/react-native-sdk';
     organizationId: "org_123456789",
     scheme: "myapp",
     embeddedWalletType: "user-wallet",
-    addressTypes: [AddressType.solana]
+    addressTypes: [AddressType.solana],
+    apiBaseUrl: "https://api.phantom.app/v1/wallets",
   }}
 >
   <App />
@@ -342,6 +345,7 @@ import { PhantomProvider, AddressType } from '@phantom/react-native-sdk';
     scheme: "mycompany-wallet",
     embeddedWalletType: "user-wallet",
     addressTypes: [AddressType.solana, AddressType.ethereum],
+    apiBaseUrl: "https://api.phantom.app/v1/wallets",
     authOptions: {
       authUrl: "https://auth.yourcompany.com",
       redirectUrl: "mycompany-wallet://auth/success"
@@ -378,7 +382,9 @@ const testConfig = {
   organizationId: "test-org",
   scheme: "testapp",
   embeddedWalletType: "app-wallet" as const,
-  addressTypes: [AddressType.solana]
+  addressTypes: [AddressType.solana],
+  apiBaseUrl: "https://api.phantom.app/v1/wallets",
+
 };
 
 // Use app-wallet for testing (no OAuth required)

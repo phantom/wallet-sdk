@@ -42,7 +42,7 @@ const phantomConfig = {
   providerType: "embedded",
   addressTypes: [AddressType.solana],
   solanaProvider: "web3js", // or 'kit'
-  apiBaseUrl: "https://api.phantom.com",
+  apiBaseUrl: "https://api.phantom.app/v1/wallets",
   organizationId: "your-org-id",
 };
 ```
@@ -71,7 +71,7 @@ const phantomConfig = {
   embeddedWalletType: "user-wallet",
   addressTypes: [AddressType.solana, AddressType.ethereum],
   solanaProvider: "web3js", // or 'kit'
-  apiBaseUrl: "https://api.phantom.com",
+  apiBaseUrl: "https://api.phantom.app/v1/wallets",
   organizationId: "your-org-id",
 };
 

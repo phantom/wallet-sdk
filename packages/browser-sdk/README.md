@@ -37,7 +37,7 @@ import { BrowserSDK, AddressType, NetworkId } from "@phantom/browser-sdk";
 const sdk = new BrowserSDK({
   providerType: "embedded",
   addressTypes: [AddressType.solana, AddressType.ethereum],
-  apiBaseUrl: "https://api.phantom.com",
+  apiBaseUrl: "https://api.phantom.app/v1/wallets",
   organizationId: "your-org-id",
 });
 
@@ -80,7 +80,7 @@ Creates a non-custodial wallet embedded in your application. Requires API config
 const sdk = new BrowserSDK({
   providerType: "embedded",
   addressTypes: [AddressType.solana, AddressType.ethereum],
-  apiBaseUrl: "https://api.phantom.com",
+  apiBaseUrl: "https://api.phantom.app/v1/wallets",
   organizationId: "your-org-id",
   embeddedWalletType: "app-wallet", // or 'user-wallet'
   authOptions: {
@@ -553,7 +553,7 @@ import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 
 const sdk = new BrowserSDK({
   addressTypes: [AddressType.solana, AddressType.ethereum, AddressType.sui],
-  apiBaseUrl: "https://api.phantom.com",
+  apiBaseUrl: "https://api.phantom.app/v1/wallets",
   organizationId: "your-org-id",
 });
 
@@ -728,7 +728,7 @@ For embedded wallets, you need to set up a backend endpoint. Add the `serverUrl`
 const sdk = new BrowserSDK({
   providerType: "embedded",
   addressTypes: [AddressType.solana],
-  apiBaseUrl: "https://api.phantom.com",
+  apiBaseUrl: "https://api.phantom.app/v1/wallets",
   organizationId: "your-org-id",
   serverUrl: "http://localhost:3000/api",
 });
