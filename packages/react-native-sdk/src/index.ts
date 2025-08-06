@@ -23,3 +23,11 @@ export type {
 } from './types';
 
 export { AddressType, NetworkId } from '@phantom/client';
+
+// Platform adapters (for advanced usage or custom implementations)
+export {
+  ReactNativeSecureStorage,
+  ReactNativeAuthProvider,
+  ReactNativeURLParamsAccessor,
+  ReactNativeLogger,
+} from './providers/embedded';

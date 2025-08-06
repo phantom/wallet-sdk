@@ -1,7 +1,7 @@
 import { Linking } from 'react-native';
 import type { URLParamsAccessor } from '@phantom/embedded-provider-core';
 
-export class ExpoURLParamsAccessor implements URLParamsAccessor {
+export class ReactNativeURLParamsAccessor implements URLParamsAccessor {
   private listeners: Set<(params: Record<string, string>) => void> = new Set();
   private subscription: any = null;
   private currentParams: Record<string, string> = {};
@@ -21,7 +21,7 @@ export class ExpoURLParamsAccessor implements URLParamsAccessor {
       this.currentParams = params;
       return params;
     } catch (error) {
-      console.error('[ExpoURLParamsAccessor] Failed to get initial URL', error);
+      console.error('[ReactNativeURLParamsAccessor] Failed to get initial URL', error);
       return null;
     }
   }
@@ -67,7 +67,7 @@ export class ExpoURLParamsAccessor implements URLParamsAccessor {
 
       return params;
     } catch (error) {
-      console.error('[ExpoURLParamsAccessor] Failed to parse URL', url, error);
+      console.error('[ReactNativeURLParamsAccessor] Failed to parse URL', url, error);
       return {};
     }
   }

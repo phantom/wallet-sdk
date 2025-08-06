@@ -1,11 +1,11 @@
 # Phantom React Native SDK
 
-A comprehensive React Native SDK for integrating Phantom Wallet functionality into your mobile applications. Built with Expo compatibility and optimized for both iOS and Android platforms.
+A comprehensive React Native SDK for integrating Phantom Wallet functionality into your mobile applications. Works with both Expo and bare React Native projects, optimized for iOS and Android platforms.
 
 ## Features
 
-- 🔐 **Hardware-backed security** with Expo SecureStore (iOS Keychain + Android Keystore)  
-- 🌐 **OAuth authentication** flows using system browsers for security and UX
+- 🔐 **Hardware-backed security** with iOS Keychain + Android Keystore (via react-native-keychain)
+- 🌐 **OAuth authentication** flows using system browsers or in-app browsers
 - 🔗 **Automatic deep linking** with custom URL schemes
 - ⚛️ **React hooks API** for easy integration
 - 📱 **Cross-platform** support (iOS, Android) 
@@ -24,13 +24,38 @@ npm install @phantom/react-native-sdk
 yarn add @phantom/react-native-sdk
 ```
 
-### Install peer dependencies
-```bash
-# For Expo projects
-npx expo install expo-secure-store expo-web-browser expo-auth-session expo-router
+### Install storage and browser dependencies (choose one option)
 
-# For bare React Native projects (additional setup required)
-npm install expo-secure-store expo-web-browser expo-auth-session
+#### Option 1: Secure storage with react-native-keychain (Recommended)
+```bash
+# Install secure storage
+npm install react-native-keychain
+
+# For iOS, run:
+cd ios && pod install
+```
+
+#### Option 2: Basic storage with AsyncStorage
+```bash
+# Install basic storage (less secure)
+npm install @react-native-async-storage/async-storage
+```
+
+#### Optional: In-app browser for better UX
+```bash
+# Install in-app browser (recommended for better UX)
+npm install react-native-inappbrowser-reborn
+
+# For iOS, run:
+cd ios && pod install
+```
+
+#### For Expo projects
+```bash
+# Expo has built-in support, but you can still use the above for better features
+npx expo install @react-native-async-storage/async-storage
+# or
+npx expo install react-native-keychain
 ```
 
 ## Quick Start
@@ -45,13 +70,7 @@ Add your custom scheme to `app.json`:
   "expo": {
     "name": "My Wallet App",
     "slug": "my-wallet-app",
-    "scheme": "mywalletapp",
-    "plugins": [
-      ["expo-router"],
-      ["expo-secure-store"],
-      ["expo-web-browser"],
-      ["expo-auth-session"]
-    ]
+    "scheme": "mywalletapp"
   }
 }
 ```
@@ -303,15 +322,23 @@ The SDK automatically handles deep link redirects. Ensure your app's URL scheme 
 
 ### Secure Storage
 
+The SDK automatically detects and uses the best available storage option:
+
+**Option 1: react-native-keychain (Recommended)**
 - **iOS**: Uses Keychain Services with hardware security
 - **Android**: Uses Android Keystore with hardware-backed keys
-- **Biometric Protection**: Optional biometric authentication for accessing stored data
+- **Biometric Protection**: Supports biometric authentication for accessing stored data
+
+**Option 2: AsyncStorage (Fallback)**
+- Basic storage with simple encoding (not hardware-secured)
+- Automatically used if react-native-keychain is not available
+- Shows warning about reduced security
 
 ### Authentication Security
 
-- **System Browser**: Uses secure system browsers, not in-app webviews
+- **In-App Browser**: Uses react-native-inappbrowser-reborn when available for better UX
+- **System Browser Fallback**: Falls back to system browser via deep linking
 - **Origin Verification**: Automatic verification of redirect origins
-- **PKCE**: Support for Proof Key for Code Exchange in OAuth flows
 - **Hardware Security**: Private keys stored in secure hardware when available
 
 ## Configuration Examples
@@ -445,6 +472,62 @@ Enable debug logging in development:
 
 - **Documentation**: [phantom.app/docs](https://phantom.app/docs)
 - **GitHub Issues**: [github.com/phantom/wallet-sdk/issues](https://github.com/phantom/wallet-sdk/issues)
+
+## Advanced Usage
+
+### Custom Platform Adapters
+
+For advanced use cases, you can access the platform adapters directly:
+
+```typescript
+import { 
+  ReactNativeSecureStorage,
+  ReactNativeAuthProvider, 
+  ReactNativeURLParamsAccessor,
+  ReactNativeLogger
+} from '@phantom/react-native-sdk';
+
+// Check storage backend being used
+const storage = new ReactNativeSecureStorage();
+const storageInfo = storage.getStorageInfo();
+console.log('Storage type:', storageInfo.type); // 'keychain' | 'asyncstorage' | 'none'
+console.log('Is secure:', storageInfo.isSecure); // boolean
+
+// Check auth provider capabilities
+const authProvider = new ReactNativeAuthProvider();
+const isAvailable = await authProvider.isAvailable();
+console.log('Auth available:', isAvailable);
+```
+
+### Platform Detection
+
+The SDK automatically detects available libraries and chooses the best option:
+
+```typescript
+// Storage priority order:
+// 1. react-native-keychain (most secure)
+// 2. @react-native-async-storage/async-storage (basic)
+
+// Browser priority order: 
+// 1. react-native-inappbrowser-reborn (best UX)
+// 2. React Native Linking (system browser fallback)
+```
+
+### Migration from Expo-only Version
+
+If migrating from an Expo-only setup:
+
+1. **Remove Expo dependencies** (if not using Expo):
+   ```bash
+   npm uninstall expo-secure-store expo-web-browser expo-auth-session
+   ```
+
+2. **Install React Native alternatives**:
+   ```bash
+   npm install react-native-keychain react-native-inappbrowser-reborn
+   ```
+
+3. **No code changes required** - the SDK automatically detects and uses the new libraries
 
 ## License
 

@@ -1,6 +1,6 @@
 import type { DebugLogger } from '@phantom/embedded-provider-core';
 
-export class ExpoLogger implements DebugLogger {
+export class ReactNativeLogger implements DebugLogger {
   private readonly enabled: boolean;
 
   constructor(enabled: boolean = false) {
