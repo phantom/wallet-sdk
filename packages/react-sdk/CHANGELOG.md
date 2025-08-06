@@ -1,5 +1,13 @@
 # @phantom/react-sdk
 
+## 0.2.3
+
+### Patch Changes
+
+- 48cb72c: New auth flow
+- Updated dependencies [48cb72c]
+  - @phantom/browser-sdk@0.2.3
+
 ## 0.2.2
 
 ### Patch Changes

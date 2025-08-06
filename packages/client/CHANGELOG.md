@@ -1,5 +1,11 @@
 # @phantom/client
 
+## 0.1.3
+
+### Patch Changes
+
+- 48cb72c: New auth flow
+
 ## 0.1.2
 
 ### Patch Changes
