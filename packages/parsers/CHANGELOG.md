@@ -1,5 +1,12 @@
 # @phantom/parsers
 
+## 0.0.4
+
+### Patch Changes
+
+- Updated dependencies [48cb72c]
+  - @phantom/client@0.1.3
+
 ## 0.0.3
 
 ### Patch Changes

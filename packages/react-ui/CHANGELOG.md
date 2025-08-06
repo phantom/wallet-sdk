@@ -1,5 +1,13 @@
 # @phantom/react-ui
 
+## 1.1.3
+
+### Patch Changes
+
+- Updated dependencies [48cb72c]
+  - @phantom/react-sdk@0.2.3
+  - @phantom/client@0.1.3
+
 ## 1.1.2
 
 ### Patch Changes
