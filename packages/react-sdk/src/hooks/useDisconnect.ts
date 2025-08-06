@@ -2,12 +2,12 @@ import { useCallback, useState } from "react";
 import { usePhantom } from "../PhantomProvider";
 
 export function useDisconnect() {
-  const { sdk, isReady, updateConnectionState } = usePhantom();
+  const { sdk, updateConnectionState } = usePhantom();
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const disconnect = useCallback(async () => {
-    if (!sdk || !isReady) {
+    if (!sdk) {
       throw new Error("SDK not initialized");
     }
 
@@ -26,7 +26,7 @@ export function useDisconnect() {
     } finally {
       setIsDisconnecting(false);
     }
-  }, [sdk, isReady, updateConnectionState]);
+  }, [sdk, updateConnectionState]);
 
   return {
     disconnect,
