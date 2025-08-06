@@ -19,7 +19,7 @@ interface AuthState {
 export function AuthCallback() {
   const navigate = useNavigate();
   const { connect, isConnecting, error: connectError } = useConnect();
-  const { isConnected, walletId } = usePhantom();
+  const { walletId } = usePhantom();
   const addresses = useAccounts();
   
   const [authState, setAuthState] = useState<AuthState>({
@@ -51,38 +51,7 @@ export function AuthCallback() {
   }, [handleDebugMessage, debugLevel]);
 
   // Handle authentication callback
-  useEffect(() => {
-    if (!hasStartedAuth.current) {
-      hasStartedAuth.current = true;
-      handleAuthCallback();
-    }
-  }, []);
-
-  // Monitor connection status
-  useEffect(() => {
-    if (isConnected && walletId && addresses && addresses.length > 0) {
-      setAuthState({
-        status: 'success',
-        title: 'Authentication Successful!',
-        message: 'You have been successfully authenticated and connected to your wallet.'
-      });
-    }
-  }, [isConnected, walletId, addresses]);
-
-  // Monitor connect error
-  useEffect(() => {
-    if (connectError) {
-      console.error('Auth callback error:', connectError);
-      debug.error('AUTH_CALLBACK', 'Authentication failed', { error: connectError.message });
-      setAuthState({
-        status: 'error',
-        title: 'Authentication Failed',
-        message: connectError.message || 'An unknown error occurred during authentication.'
-      });
-    }
-  }, [connectError]);
-
-  async function handleAuthCallback() {
+  const handleAuthCallback = useCallback(async () => {
     try {
       debug.info('AUTH_CALLBACK', 'Starting auth callback handling');
       
@@ -96,9 +65,24 @@ export function AuthCallback() {
 
       // Connect - this should resume from the redirect
       // The React SDK should automatically handle the callback URL params
-      await connect({ providerType: 'embedded' });
+      const result = await connect({ providerType: 'embedded' });
 
-      debug.info('AUTH_CALLBACK', 'Connection initiated');
+      debug.info('AUTH_CALLBACK', 'Connection completed', { result });
+
+      // Check if connection was successful
+      if (result.status === 'completed' && result.addresses && result.addresses.length > 0) {
+        setAuthState({
+          status: 'success',
+          title: 'Authentication Successful!',
+          message: 'You have been successfully authenticated and connected to your wallet.'
+        });
+        debug.info('AUTH_CALLBACK', 'Authentication successful');
+      } else if (result.status === 'pending') {
+        // Handle pending status if needed
+        debug.warn('AUTH_CALLBACK', 'Connection still pending');
+      } else {
+        throw new Error('Connection completed but no addresses found');
+      }
 
     } catch (error) {
       console.error('Auth callback error:', error);
@@ -109,7 +93,27 @@ export function AuthCallback() {
         message: (error as Error).message || 'An unknown error occurred during authentication.'
       });
     }
-  }
+  }, [connect]);
+
+  useEffect(() => {
+    if (!hasStartedAuth.current) {
+      hasStartedAuth.current = true;
+      handleAuthCallback();
+    }
+  }, [handleAuthCallback]);
+
+  // Monitor connect error
+  useEffect(() => {
+    if (connectError) {
+      console.error('Auth callback error:', connectError);
+      debug.error('AUTH_CALLBACK', 'Authentication failed', { error: connectError.message });
+      setAuthState({
+        status: 'error',
+        title: 'Authentication Failed',
+        message: connectError.message || 'An unknown error occurred during authentication.'
+      });
+    }
+  }, [connectError]);
 
   const handleGoHome = () => {
     navigate('/');
