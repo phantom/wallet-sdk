@@ -17,7 +17,7 @@ module.exports = defineConfig({
   ],
   settings: {
     react: {
-      version: "18.2.0"
+      version: "19.1.1"
     }
   },
   rules: {

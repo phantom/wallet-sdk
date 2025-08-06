@@ -22,7 +22,7 @@ export default function WalletScreen() {
   const router = useRouter();
   const { isConnected, addresses, walletId } = useAccounts();
   const { signMessage, isSigning: isSigningMessage, error: signError } = useSignMessage();
-  const { signAndSendTransaction, isSigning: isSigningTx, error: txError } = useSignAndSendTransaction();
+  const {  isSigning: isSigningTx, error: txError } = useSignAndSendTransaction();
   const { disconnect, isDisconnecting } = useDisconnect();
 
   const [messageToSign, setMessageToSign] = useState('Hello from Phantom React Native SDK Demo!');
@@ -54,7 +54,7 @@ export default function WalletScreen() {
     }
   };
 
-  const handleSignTransaction = async () => {
+  const handleSignTransaction = () => {
     Alert.alert(
       'Demo Transaction', 
       'This would sign and send a transaction. In a real app, you would provide a transaction object.',
@@ -62,7 +62,7 @@ export default function WalletScreen() {
         { text: 'Cancel', style: 'cancel' },
         { 
           text: 'Simulate', 
-          onPress: async () => {
+          onPress: () => {
             try {
               // This is a demo - in a real app you'd have a proper transaction
               Alert.alert('Demo', 'Transaction signing simulation - not implemented in this demo');
@@ -75,7 +75,7 @@ export default function WalletScreen() {
     );
   };
 
-  const handleDisconnect = async () => {
+  const handleDisconnect = () => {
     Alert.alert(
       'Disconnect Wallet',
       'Are you sure you want to disconnect your wallet?',
@@ -162,7 +162,7 @@ export default function WalletScreen() {
           
           <TouchableOpacity
             style={[styles.button, styles.primaryButton]}
-            onPress={handleSignMessage}
+            onPress={() => handleSignMessage()}
             disabled={isSigningMessage}
           >
             <Text style={styles.buttonText}>
@@ -195,7 +195,7 @@ export default function WalletScreen() {
           
           <TouchableOpacity
             style={[styles.button, styles.secondaryButton]}
-            onPress={handleSignTransaction}
+            onPress={() => handleSignTransaction()}
             disabled={isSigningTx}
           >
             <Text style={[styles.buttonText, { color: '#6366f1' }]}>
@@ -216,7 +216,7 @@ export default function WalletScreen() {
           
           <TouchableOpacity
             style={[styles.button, styles.dangerButton]}
-            onPress={handleDisconnect}
+            onPress={() => handleDisconnect() }
             disabled={isDisconnecting}
           >
             <Text style={styles.buttonText}>

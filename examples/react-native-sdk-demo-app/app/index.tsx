@@ -138,7 +138,7 @@ export default function HomeScreen() {
 
             <TouchableOpacity
               style={[styles.button, styles.dangerButton]}
-              onPress={handleDisconnect}
+              onPress={() => handleDisconnect()}
               disabled={isDisconnecting}
             >
               <Text style={styles.buttonText}>

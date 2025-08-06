@@ -11,8 +11,7 @@ import {
 import { useRouter } from 'expo-router';
 import { 
   useConnect, 
-  useAccounts,
-  usePhantom
+  useAccounts
 } from '@phantom/react-native-sdk';
 
 interface AuthState {
@@ -24,8 +23,7 @@ interface AuthState {
 export default function AuthCallbackScreen() {
   const router = useRouter();
   const { connect, isConnecting, error: connectError } = useConnect();
-  const { isConnected, addresses, walletId } = useAccounts();
-  const phantom = usePhantom();
+  const {  addresses, walletId } = useAccounts();
   
   const [authState, setAuthState] = useState<AuthState>({
     status: 'loading',
@@ -38,7 +36,6 @@ export default function AuthCallbackScreen() {
   // Handle authentication callback
   const handleAuthCallback = useCallback(async () => {
     try {
-      console.log('AUTH_CALLBACK: Starting auth callback handling');
       
       setAuthState({
         status: 'loading',
@@ -46,13 +43,11 @@ export default function AuthCallbackScreen() {
         message: 'Establishing connection with your authenticated wallet.'
       });
 
-      console.log('AUTH_CALLBACK: Attempting to connect');
 
       // Connect - this should resume from the redirect
       // The React Native SDK should automatically handle the callback URL params
       const result = await connect({ provider: 'google' });
 
-      console.log('AUTH_CALLBACK: Connection completed', result);
 
       // Check if connection was successful
       if (result.status === 'completed' && result.addresses && result.addresses.length > 0) {
@@ -61,16 +56,13 @@ export default function AuthCallbackScreen() {
           title: 'Authentication Successful!',
           message: 'You have been successfully authenticated and connected to your wallet.'
         });
-        console.log('AUTH_CALLBACK: Authentication successful');
       } else if (result.status === 'pending') {
         // Handle pending status if needed
-        console.warn('AUTH_CALLBACK: Connection still pending');
       } else {
         throw new Error('Connection completed but no addresses found');
       }
 
     } catch (error) {
-      console.error('Auth callback error:', error);
       setAuthState({
         status: 'error',
         title: 'Authentication Failed',
