@@ -27,12 +27,6 @@ export class ExpoAuthProvider implements AuthProvider {
       await WebBrowser.warmUpAsync();
 
       const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUrl, {
-        // Use system browser (Safari/Chrome Custom Tabs) for better security
-        presentationStyle: WebBrowser.WebBrowserPresentationStyle.FULL_SCREEN,
-        
-        // Automatically dismiss the browser on redirect
-        dismissButtonStyle: WebBrowser.WebBrowserDismissButtonStyle.CLOSE,
-        
         // Use system browser on iOS for ASWebAuthenticationSession
         preferEphemeralSession: false,
       });
