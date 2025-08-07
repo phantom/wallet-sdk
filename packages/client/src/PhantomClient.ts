@@ -204,11 +204,11 @@ export class PhantomClient {
         method: SignTransactionMethodEnum.signTransaction,
         params: signRequest,
         timestampMs: Date.now(),
+
       } as any;
 
       const response = await this.kmsApi.postKmsRpc(request);
       const result = response.data.result as SignedTransactionWithPublicKey;
-
       return {
         rawTransaction: result.transaction as unknown as string, // Base64 encoded signed transaction
       };
