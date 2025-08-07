@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "example",
-    "slug": "example",
+    "name": "Phantom React Native SDK Demo",
+    "slug": "phantom-react-native-sdk-demo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "sdk.example"
+      "bundleIdentifier": "com.phantom.reactnativesdkdemo"
     },
     "android": {
       "adaptiveIcon": {
@@ -22,13 +22,16 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "sdk.example"
+      "package": "com.phantom.reactnativesdkdemo"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "scheme": "phantom-rn-demo",
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-secure-store",
+      "expo-web-browser"
     ]
   }
 }

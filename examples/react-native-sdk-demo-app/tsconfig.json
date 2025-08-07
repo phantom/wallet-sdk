@@ -13,8 +13,8 @@
     "verbatimModuleSyntax": true
   },
   "include": [
-    "src/**/*",
-    "src/__tests__/**/*"
+    "**/*.ts",
+    "**/*.tsx"
   ],
   "exclude": ["node_modules", "lib", "dist"]
 }
