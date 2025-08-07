@@ -2190,7 +2190,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@expo/metro-runtime@npm:5.0.4, @expo/metro-runtime@npm:~5.0.4":
+"@expo/metro-runtime@npm:5.0.4":
   version: 5.0.4
   resolution: "@expo/metro-runtime@npm:5.0.4"
   peerDependencies:
@@ -3318,10 +3318,8 @@ __metadata:
   resolution: "@phantom/react-native-sdk-example@workspace:examples/react-native-sdk-demo-app"
   dependencies:
     "@babel/core": "npm:^7.20.0"
-    "@expo/metro-runtime": "npm:~5.0.4"
     "@expo/vector-icons": "npm:^14.1.0"
     "@phantom/react-native-sdk": "workspace:*"
-    "@types/jest": "npm:^29.5.5"
     "@types/react": "npm:~19.0.10"
     expo: "npm:~53.0.20"
     expo-auth-session: "npm:^6.2.1"

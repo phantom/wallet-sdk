@@ -19,7 +19,7 @@
     "sourceMap": true,
     "strict": true,
     "target": "es2020",
-    "types": ["jest"]
+    "types": ["jest", "node"]
   },
   "exclude": ["dist", "node_modules", "**/__fixtures__", "**/__tests__"]
 }
