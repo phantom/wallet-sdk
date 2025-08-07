@@ -1,8 +1,13 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": [
+    "../../tsconfig.json"
+  ],
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "lib": ["ESNext"],
+    "jsx": "react-native",
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "noEmit": true,
@@ -10,12 +15,18 @@
     "rootDir": ".",
     "skipLibCheck": true,
     "target": "ESNext",
-    "verbatimModuleSyntax": true
+    "verbatimModuleSyntax": true,
+    "customConditions": [
+      "react-native"
+    ]
   },
   "include": [
     "**/*.ts",
     "**/*.tsx"
   ],
-  "exclude": ["node_modules", "lib", "dist"]
+  "exclude": [
+    "node_modules",
+    "lib",
+    "dist"
+  ]
 }
-

@@ -21,6 +21,7 @@
     "pack-release": "rimraf ./_release && yarn pack && mkdir ./_release && tar zxvf ./package.tgz --directory ./_release && rm ./package.tgz",
     "dev": "rimraf ./dist && tsup src/index.ts --format cjs,esm --dts --watch",
     "lint": "tsc --noEmit && eslint --cache . --ext .ts,.tsx",
+    "check-types": "tsc --noEmit",
     "test": "jest",
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
   },

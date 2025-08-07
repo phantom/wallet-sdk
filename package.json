@@ -7,6 +7,7 @@
     "pack-release": "yarn workspaces foreach --all --topological-dev run pack-release",
     "prettier": "prettier . --write",
     "lint": "yarn workspaces foreach -Avpi run lint",
+    "check-types": "yarn workspaces foreach -Avpi run check-types",
     "release": "yarn build && yarn pack-release && yarn changeset publish",
     "test": "jest",
     "watch": "node scripts/develop.mjs"
