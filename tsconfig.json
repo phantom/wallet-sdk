@@ -6,6 +6,7 @@
     "declaration": true,
     "declarationMap": true,
     "esModuleInterop": false, // This is a viral option, do not enable https://www.semver-ts.org/#module-interop
+    "isolatedModules": true,
     "lib": ["es2020", "dom"],
     "module": "esnext",
     "noFallthroughCasesInSwitch": true,
@@ -18,8 +19,7 @@
     "sourceMap": true,
     "strict": true,
     "target": "es2020",
-    "types": ["jest"],
-    "isolatedModules": true
+    "types": ["jest"]
   },
   "exclude": ["dist", "node_modules", "**/__fixtures__", "**/__tests__"]
 }
