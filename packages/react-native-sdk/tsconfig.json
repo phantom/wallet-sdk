@@ -25,6 +25,7 @@
   "exclude": [
     "node_modules",
     "dist",
+    "_release",
     "**/*.test.ts",
     "**/*.test.tsx"
   ]

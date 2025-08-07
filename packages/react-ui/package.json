@@ -11,7 +11,7 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "clean": "rm -rf dist",
-    "typecheck": "tsc --noEmit",
+    "check-types": "tsc --noEmit",
     "lint": "tsc --noEmit && eslint --cache . --ext .ts,.tsx",
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
   },

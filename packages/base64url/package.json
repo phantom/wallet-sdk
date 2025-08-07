@@ -24,6 +24,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "tsc --noEmit && eslint --cache . --ext .ts",
+    "check-types": "tsc --noEmit",
     "prettier": "prettier --write \"src/**/*.{ts}\""
   },
   "devDependencies": {

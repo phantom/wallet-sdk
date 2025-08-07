@@ -6,7 +6,8 @@
   "scripts": {
     "server-sdk-demo": "tsx src/server-sdk-demo.ts",
     "sign-message": "tsx src/sign-message.ts",
-    "list-wallets": "tsx src/list-wallets.ts"
+    "list-wallets": "tsx src/list-wallets.ts",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@phantom/server-sdk": "workspace:*",

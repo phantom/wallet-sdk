@@ -18,8 +18,7 @@
     "noUnusedParameters": true,
     "sourceMap": true,
     "strict": true,
-    "target": "es2020",
-    "types": ["jest", "node"]
+    "target": "es2020"
   },
-  "exclude": ["dist", "node_modules", "**/__fixtures__", "**/__tests__"]
+  "exclude": ["_release", "dist", "node_modules", "**/__fixtures__", "**/__tests__"]
 }

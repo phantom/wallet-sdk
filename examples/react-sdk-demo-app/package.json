@@ -9,6 +9,7 @@
     "prebuild": "yarn workspace @phantom/react-sdk build",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "check-types": "tsc --noEmit",
     "preview": "vite preview"
   },
   "dependencies": {
