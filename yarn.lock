@@ -3105,7 +3105,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@phantom/api-key-stamper@workspace:*, @phantom/api-key-stamper@workspace:^, @phantom/api-key-stamper@workspace:packages/api-key-stamper":
+"@phantom/api-key-stamper@workspace:^, @phantom/api-key-stamper@workspace:packages/api-key-stamper":
   version: 0.0.0-use.local
   resolution: "@phantom/api-key-stamper@workspace:packages/api-key-stamper"
   dependencies:
@@ -3147,7 +3147,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/browser-embedded-sdk-demo-app@workspace:examples/browser-embedded-sdk-demo-app"
   dependencies:
-    "@phantom/wallet-sdk": "workspace:*"
+    "@phantom/wallet-sdk": "workspace:^"
     "@types/react": "npm:^19.1.2"
     "@types/react-dom": "npm:^19.1.2"
     "@types/react-syntax-highlighter": "npm:^15.5.7"
@@ -3182,7 +3182,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/browser-sdk-demo-app@workspace:examples/browser-sdk-demo-app"
   dependencies:
-    "@phantom/browser-sdk": "workspace:*"
+    "@phantom/browser-sdk": "workspace:^"
     "@solana/kit": "npm:^2.1.1"
     "@solana/web3.js": "npm:^1.98.2"
     buffer: "npm:^6.0.3"
@@ -3193,7 +3193,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/browser-sdk@workspace:*, @phantom/browser-sdk@workspace:^, @phantom/browser-sdk@workspace:packages/browser-sdk":
+"@phantom/browser-sdk@workspace:^, @phantom/browser-sdk@workspace:packages/browser-sdk":
   version: 0.0.0-use.local
   resolution: "@phantom/browser-sdk@workspace:packages/browser-sdk"
   dependencies:
@@ -3222,7 +3222,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/client@workspace:*, @phantom/client@workspace:^, @phantom/client@workspace:packages/client":
+"@phantom/client@workspace:^, @phantom/client@workspace:packages/client":
   version: 0.0.0-use.local
   resolution: "@phantom/client@workspace:packages/client"
   dependencies:
@@ -3264,13 +3264,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/embedded-provider-core@workspace:*, @phantom/embedded-provider-core@workspace:^, @phantom/embedded-provider-core@workspace:packages/embedded-provider-core":
+"@phantom/embedded-provider-core@workspace:^, @phantom/embedded-provider-core@workspace:packages/embedded-provider-core":
   version: 0.0.0-use.local
   resolution: "@phantom/embedded-provider-core@workspace:packages/embedded-provider-core"
   dependencies:
-    "@phantom/api-key-stamper": "workspace:*"
-    "@phantom/client": "workspace:*"
-    "@phantom/parsers": "workspace:*"
+    "@phantom/api-key-stamper": "workspace:^"
+    "@phantom/client": "workspace:^"
+    "@phantom/parsers": "workspace:^"
     "@types/jest": "npm:^29.5.5"
     "@types/node": "npm:^20.11.0"
     eslint: "npm:8.53.0"
@@ -3294,7 +3294,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@phantom/parsers@workspace:*, @phantom/parsers@workspace:^, @phantom/parsers@workspace:packages/parsers":
+"@phantom/parsers@workspace:^, @phantom/parsers@workspace:packages/parsers":
   version: 0.0.0-use.local
   resolution: "@phantom/parsers@workspace:packages/parsers"
   dependencies:
@@ -3319,7 +3319,7 @@ __metadata:
   dependencies:
     "@babel/core": "npm:^7.20.0"
     "@expo/vector-icons": "npm:^14.1.0"
-    "@phantom/react-native-sdk": "workspace:*"
+    "@phantom/react-native-sdk": "workspace:^"
     "@types/react": "npm:~19.0.10"
     expo: "npm:~53.0.20"
     expo-auth-session: "npm:^6.2.1"
@@ -3339,12 +3339,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/react-native-sdk@workspace:*, @phantom/react-native-sdk@workspace:packages/react-native-sdk":
+"@phantom/react-native-sdk@workspace:^, @phantom/react-native-sdk@workspace:packages/react-native-sdk":
   version: 0.0.0-use.local
   resolution: "@phantom/react-native-sdk@workspace:packages/react-native-sdk"
   dependencies:
-    "@phantom/client": "workspace:*"
-    "@phantom/embedded-provider-core": "workspace:*"
+    "@phantom/client": "workspace:^"
+    "@phantom/embedded-provider-core": "workspace:^"
     "@types/jest": "npm:^29.5.14"
     "@types/react": "npm:~19.0.10"
     "@types/react-native": "npm:^0.72.0"
@@ -3379,9 +3379,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/react-sdk-demo-app@workspace:examples/react-sdk-demo-app"
   dependencies:
-    "@phantom/browser-sdk": "workspace:*"
-    "@phantom/client": "workspace:*"
-    "@phantom/react-sdk": "workspace:*"
+    "@phantom/browser-sdk": "workspace:^"
+    "@phantom/client": "workspace:^"
+    "@phantom/react-sdk": "workspace:^"
     "@solana/kit": "npm:^2.1.1"
     "@types/react": "npm:^19.1.2"
     "@types/react-dom": "npm:^19.1.2"
@@ -3395,7 +3395,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/react-sdk@workspace:*, @phantom/react-sdk@workspace:^, @phantom/react-sdk@workspace:packages/react-sdk":
+"@phantom/react-sdk@workspace:^, @phantom/react-sdk@workspace:packages/react-sdk":
   version: 0.0.0-use.local
   resolution: "@phantom/react-sdk@workspace:packages/react-sdk"
   dependencies:
@@ -3424,6 +3424,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/react-ui@workspace:packages/react-ui"
   dependencies:
+    "@phantom/browser-sdk": "workspace:^"
     "@phantom/client": "workspace:^"
     "@phantom/react-sdk": "workspace:^"
     "@types/react": "npm:^19.1.2"
@@ -3471,7 +3472,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/server-sdk-examples@workspace:examples/server-sdk-examples"
   dependencies:
-    "@phantom/server-sdk": "workspace:*"
+    "@phantom/server-sdk": "workspace:^"
     "@solana/web3.js": "npm:^1.87.6"
     "@types/node": "npm:^24.0.14"
     bs58: "npm:^6.0.0"
@@ -3482,7 +3483,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/server-sdk@workspace:*, @phantom/server-sdk@workspace:packages/server-sdk":
+"@phantom/server-sdk@workspace:^, @phantom/server-sdk@workspace:packages/server-sdk":
   version: 0.0.0-use.local
   resolution: "@phantom/server-sdk@workspace:packages/server-sdk"
   dependencies:
@@ -3503,7 +3504,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/wallet-sdk@workspace:*, @phantom/wallet-sdk@workspace:packages/browser-embedded-sdk":
+"@phantom/wallet-sdk@workspace:^, @phantom/wallet-sdk@workspace:packages/browser-embedded-sdk":
   version: 0.0.0-use.local
   resolution: "@phantom/wallet-sdk@workspace:packages/browser-embedded-sdk"
   dependencies:

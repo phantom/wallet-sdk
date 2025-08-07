@@ -39,9 +39,9 @@
   "author": "Phantom",
   "license": "MIT",
   "dependencies": {
-    "@phantom/api-key-stamper": "workspace:*",
-    "@phantom/client": "workspace:*",
-    "@phantom/parsers": "workspace:*"
+    "@phantom/api-key-stamper": "workspace:^",
+    "@phantom/client": "workspace:^",
+    "@phantom/parsers": "workspace:^"
   },
   "devDependencies": {
     "@types/jest": "^29.5.5",

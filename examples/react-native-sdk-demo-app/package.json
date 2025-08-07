@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
-    "@phantom/react-native-sdk": "workspace:*",
+    "@phantom/react-native-sdk": "workspace:^",
     "expo": "~53.0.20",
     "expo-auth-session": "^6.2.1",
     "expo-constants": "~17.1.7",
