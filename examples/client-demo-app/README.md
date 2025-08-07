@@ -1,47 +1,43 @@
-# Phantom Client Demo App
+# Phantom Client Setup Tool
 
-This example demonstrates how to use the Phantom Client and Crypto packages to:
+This tool helps you set up your Phantom wallet infrastructure by generating the necessary credentials and creating your organization. It uses the Phantom Client and Crypto packages to:
 
-1. Generate an Ed25519 key pair
-2. Save the key pair to a JSON file
-3. Instantiate the Phantom client with API key stamper and private key
-4. Create an organization using the client
-5. Save organization data to the JSON file
-6. Set the organization ID and create a wallet
+1. Generate a cryptographic Ed25519 key pair for your organization
+2. Save credentials to a secure JSON file
+3. Create your organization using the Phantom API
+4. Generate a test wallet to verify functionality
+5. Create comprehensive Server SDK documentation with your credentials
 
 ## Setup
 
-1. Install dependencies:
+1. Install dependencies from the workspace root:
 ```bash
 yarn install
 ```
 
-2. Set up environment variables:
+2. Run the setup tool:
 ```bash
-export PHANTOM_API_KEY_ID="your_api_key_id"
-export PHANTOM_API_KEY_SECRET="your_api_key_secret"
-```
-
-3. Run the demo:
-```bash
+cd examples/client-demo-app
 yarn dev
 ```
 
+No environment variables needed - the tool generates everything for you!
+
 ## What it does
 
-The demo script will:
+The setup script will:
 - Generate a new Ed25519 key pair using `@phantom/crypto`
-- Save the key pair to `demo-data.json`
-- Initialize a Phantom client with your API credentials and the generated private key
-- Create a new organization
-- Update `demo-data.json` with the organization details
-- Set the organization ID on the client
-- Create a Solana wallet within the organization
-- Display all the generated data
+- Save the key pair to `demo-data.json` 
+- Initialize a Phantom client with the generated private key
+- Create your organization on Phantom's platform
+- Update `demo-data.json` with organization details
+- Create a test wallet with addresses for Solana, Ethereum, Bitcoin, and Sui
+- Generate `SERVER_SDK_USAGE.md` with complete integration instructions
 
-## Output
+## Output Files
 
-The script creates a `demo-data.json` file containing:
+### `demo-data.json`
+Contains your organization credentials:
 ```json
 {
   "keyPair": {
@@ -55,6 +51,22 @@ The script creates a `demo-data.json` file containing:
 }
 ```
 
-## API Credentials
+### `SERVER_SDK_USAGE.md`
+A comprehensive guide for integrating with the Phantom Server SDK, including:
+- Your specific credentials and organization ID
+- Installation and setup instructions
+- Complete code examples for wallet creation, message signing, and transactions
+- Multi-chain wallet management
+- Security best practices
 
-You'll need to obtain API credentials from Phantom to run this demo. Set the `PHANTOM_API_KEY_ID` and `PHANTOM_API_KEY_SECRET` environment variables before running the script.
+## Next Steps
+
+After running this setup tool:
+
+1. **Secure your credentials**: Store the private key from `demo-data.json` securely
+2. **Follow the Server SDK guide**: Use the generated `SERVER_SDK_USAGE.md` for integration
+3. **Build your application**: Integrate wallet functionality using the Server SDK
+
+## Security
+
+⚠️ **Important**: The generated private key is your organization's master key. Keep it secure and never commit it to version control.
