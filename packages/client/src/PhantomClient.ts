@@ -108,7 +108,6 @@ export class PhantomClient {
       };
 
       // Creating wallet with request
-
       const request: CreateWallet = {
         method: CreateWalletMethodEnum.createWallet,
         params: walletRequest,
