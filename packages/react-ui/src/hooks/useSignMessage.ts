@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 // import { useSignMessage as useBaseSignMessage } from "@phantom/react-sdk";
 import { usePhantomUI } from "../PhantomUIProvider";
-import type { SignMessageParams } from "@phantom/browser-sdk";
+import type { SignMessageParams } from "@phantom/react-sdk";
 
 export interface UseSignMessageResult {
   signMessage: (params: SignMessageParams) => Promise<string>;
