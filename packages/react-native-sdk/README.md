@@ -31,7 +31,24 @@ npx expo install expo-secure-store expo-web-browser expo-auth-session expo-route
 
 # For bare React Native projects (additional setup required)
 npm install expo-secure-store expo-web-browser expo-auth-session
+
+# Required polyfill for cryptographic operations
+npm install react-native-get-random-values
 ```
+
+### Required Polyfill
+
+You must polyfill random byte generation to ensure cryptographic operations work properly. Add this import **at the very top** of your app's entry point (before any other imports):
+
+```tsx
+// index.js, App.tsx, or _layout.tsx - MUST be the first import
+import 'react-native-get-random-values';
+
+import { PhantomProvider } from '@phantom/react-native-sdk';
+// ... other imports
+```
+
+> **⚠️ Important**: The polyfill import must be the first import in your application entry point to ensure proper initialization of cryptographic functions.
 
 ## Quick Start
 

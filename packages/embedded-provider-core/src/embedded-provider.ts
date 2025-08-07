@@ -356,6 +356,7 @@ export class EmbeddedProvider {
       const tempClient = new PhantomClient(
         {
           apiBaseUrl: this.config.apiBaseUrl,
+          organizationId: organizationId,
         },
         new ApiKeyStamper({ apiSecretKey: keypair.secretKey }),
       );
@@ -368,7 +369,7 @@ export class EmbeddedProvider {
       const session = {
         sessionId: generateSessionId(),
         walletId: walletId,
-        organizationId: this.config.organizationId,
+        organizationId: organizationId,
         keypair,
         authProvider: "app-wallet",
         userInfo: { embeddedWalletType: this.config.embeddedWalletType },
@@ -409,7 +410,7 @@ export class EmbeddedProvider {
     const session = {
       sessionId: generateSessionId(),
       walletId: walletId,
-      organizationId: this.config.organizationId,
+      organizationId: organizationId,
       keypair,
       authProvider: authResult.provider,
       userInfo: authResult.userInfo,

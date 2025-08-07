@@ -1,3 +1,5 @@
+import 'react-native-get-random-values';
+
 import { Stack } from 'expo-router';
 import { PhantomProvider, AddressType } from '@phantom/react-native-sdk';
 import { StatusBar } from 'expo-status-bar';
