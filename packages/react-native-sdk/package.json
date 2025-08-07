@@ -45,8 +45,8 @@
     "directory": "packages/react-native-sdk"
   },
   "dependencies": {
-    "@phantom/client": "workspace:*",
-    "@phantom/embedded-provider-core": "workspace:*"
+    "@phantom/client": "workspace:^",
+    "@phantom/embedded-provider-core": "workspace:^"
   },
   "peerDependencies": {
     "expo": ">=53.0.0",
