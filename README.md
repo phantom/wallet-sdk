@@ -2,6 +2,27 @@
 
 A comprehensive suite of SDKs for integrating Phantom Wallet across different platforms and use cases, supporting both Phantom browser extension and embedded non-custodial wallets.
 
+## Choose Your Wallet Type
+
+Choose based on your integration model:
+
+### 🔐 Server-Controlled Wallets
+**Use [Server SDK](./packages/server-sdk/README.md)** - App developers can programmatically create wallets and execute transactions from backend
+
+### 👤 User Wallets (Phantom Users)  
+**Use Frontend SDKs** - Connect to existing Phantom user wallets (funded, with history)
+
+### 🆕 App Wallets (New Unfunded)
+**Use Frontend SDKs** - Create fresh wallets per app (empty, app-specific)
+
+### Frontend SDK Options:
+- **[React SDK](./packages/react-sdk/README.md)** - React hooks and components
+- **[React UI](./packages/react-ui/README.md)** - Complete UI solution with pre-built modals  
+- **[Browser SDK](./packages/browser-sdk/README.md)** - Vanilla JavaScript/TypeScript
+- **[React Native SDK](./packages/react-native-sdk/README.md)** - Mobile app integration
+
+
+
 ## Packages
 
 All packages with links to documentation:
