@@ -1,19 +1,19 @@
 # Phantom React Native SDK Demo App
 
-This demo application showcases the usage of the `@phantom/react-native-sdk` with embedded provider support for React Native/Expo applications.
+This demo application showcases the usage of the `@phantom/react-native-sdk` with embedded provider support. Built with Expo, it uses local development builds with `expo run:ios/android` to handle native dependencies.
 
 ## Features
 
 - **Embedded Provider Support**: Server-based wallet management with secure authentication
 - **Multiple Authentication Methods**: Support for Google, Apple, and JWT authentication
-- **Cross-Platform**: Works on both iOS and Android using Expo
-- **Secure Storage**: Hardware-backed secure storage using Expo SecureStore
-- **OAuth Authentication**: Secure web-based authentication flows using Expo WebBrowser
+- **Cross-Platform**: Works on both iOS and Android using Expo with local development builds
+- **Secure Storage**: Hardware-backed secure storage
+- **OAuth Authentication**: Secure in-app browser authentication flows
 - Display connected wallet addresses (Solana and other supported chains)
 - Sign messages with base64url encoding
 - Sign and send Solana transactions
 - Disconnect from wallet
-- **Deep Link Handling**: Automatic handling of authentication callbacks via deep links
+- **Deep Link Handling**: Automatic handling of authentication callbacks
 
 ## Prerequisites
 
@@ -36,32 +36,49 @@ This demo application showcases the usage of the `@phantom/react-native-sdk` wit
    yarn build
    ```
 
-3. **Configure Environment Variables**:
-
+3. **Configure environment variables**:
+   
+   Copy `.env.example` to `.env` and fill in your configuration:
+   
    ```bash
-   # Copy the example environment file
    cp .env.example .env
-
-   # Edit .env and fill in your values:
-   # - EXPO_PUBLIC_ORGANIZATION_ID: Your Phantom organization ID
-   # - EXPO_PUBLIC_WALLET_API: Phantom API URL
-   # - Other optional configurations
+   ```
+   
+   Edit the `.env` file with your actual values:
+   
+   ```bash
+   # Required - Your Phantom organization ID
+   EXPO_PUBLIC_ORGANIZATION_ID=your-organization-id-here
+   
+   # Required - Your app's custom URL scheme
+   EXPO_PUBLIC_APP_SCHEME=your-app-scheme
+   
+   # Required - Redirect URL after authentication
+   EXPO_PUBLIC_REDIRECT_URL=your-app-scheme://phantom-auth-callback
+   
+   # Optional - Embedded wallet type (default: user-wallet)
+   EXPO_PUBLIC_EMBEDDED_WALLET_TYPE=user-wallet
+   
+   # Optional - API base URL (default: production)
+   EXPO_PUBLIC_WALLET_API=https://api.phantom.app/v1/wallets
+   
+   # Optional - Enable debug logging in development
+   EXPO_PUBLIC_DEBUG=false
    ```
 
-   See [Environment Variables](#environment-variables) section for details.
-
-4. Start the demo app:
+4. **Build and run the development build**:
 
    ```bash
-   # Start the development server
-   yarn start
-
-   # Or run directly on iOS/Android
-   yarn ios
-   yarn android
+   # For iOS (requires Xcode and iOS Simulator)
+   npx expo run:ios
+   
+   # For Android (requires Android Studio and emulator/device)
+   npx expo run:android
    ```
 
-5. The app will open in Expo Go or your simulator/emulator
+   This will automatically build the native code, install dependencies, and run the app on your simulator/device.
+
+5. The app will open in your simulator/emulator or connected device
 
 ## Usage
 
@@ -81,90 +98,62 @@ This demo uses:
 
 - `@phantom/react-native-sdk` - The React Native SDK with hooks for wallet interactions
 - **Embedded Provider**: Server-based wallet management with multiple authentication options
-- **Expo Router**: File-based routing system for navigation
-- **Platform Adapters**:
-  - **ExpoSecureStorage**: Hardware-backed secure storage for session management
-  - **ExpoAuthProvider**: OAuth authentication flows using Expo WebBrowser
-  - **ExpoURLParamsAccessor**: Deep link parameter handling for authentication callbacks
+- **React Native Navigation**: Stack-based navigation system
+- **Native Dependencies**: Uses react-native-keychain and react-native-inappbrowser-reborn for secure operations
 - Base64url encoding - All messages and transactions are encoded in base64url format
-
-## Environment Variables
-
-The demo app uses environment variables for configuration. Copy `.env.example` to `.env` and configure:
-
-### Required Configuration
-
-- `EXPO_PUBLIC_ORGANIZATION_ID` - Your Phantom organization ID (get from Phantom developer dashboard)
-- `EXPO_PUBLIC_WALLET_API` - Phantom API URL (`https://api.phantom.app/v1/wallets` for production)
-
-### App Configuration
-
-- `EXPO_PUBLIC_APP_SCHEME` - Deep link scheme for your app (default: "phantom-rn-demo")
-- `EXPO_PUBLIC_EMBEDDED_WALLET_TYPE` - Embedded wallet type: `"app-wallet"` or `"user-wallet"` (default: "app-wallet")
-
-### Authentication URLs
-
-- `EXPO_PUBLIC_AUTH_URL` - Authentication URL (default: production auth URL)
-- `EXPO_PUBLIC_REDIRECT_URL` - Deep link URL for authentication callbacks
-
-### Debug Settings
-
-- `EXPO_PUBLIC_DEBUG` - Enable debug logging (default: "true")
 
 ## Configuration
 
-The app is configured in `app/_layout.tsx` using environment variables:
+The app is configured in the main App component with your organization details:
 
 ```typescript
 const config = {
-  organizationId: process.env.EXPO_PUBLIC_ORGANIZATION_ID || "your-org-id",
-  scheme: process.env.EXPO_PUBLIC_APP_SCHEME || "phantom-rn-demo",
-  embeddedWalletType: (process.env.EXPO_PUBLIC_EMBEDDED_WALLET_TYPE || "app-wallet") as const,
+  organizationId: "your-organization-id", // Replace with your actual organization ID
+  scheme: "phantom-rn-demo",
+  embeddedWalletType: "app-wallet" as const,
   addressTypes: [AddressType.solana],
   authOptions: {
-    authUrl: process.env.EXPO_PUBLIC_AUTH_URL,
-    redirectUrl: process.env.EXPO_PUBLIC_REDIRECT_URL || "phantom-rn-demo://phantom-auth-callback",
+    redirectUrl: "phantom-rn-demo://phantom-auth-callback",
   },
-  apiBaseUrl: process.env.EXPO_PUBLIC_WALLET_API || "https://api.phantom.app/v1/wallets",
-  debug: process.env.EXPO_PUBLIC_DEBUG === "true",
+  apiBaseUrl: "https://api.phantom.app/v1/wallets",
+  debug: true,
 };
 ```
 
 ## App Structure
 
 ```
-app/
-├── _layout.tsx          # Root layout with PhantomProvider
-├── index.tsx            # Home screen with connection UI
-├── wallet.tsx           # Wallet operations screen
-└── auth-callback.tsx    # Authentication callback handler
+src/
+├── App.tsx              # Root component with PhantomProvider
+├── screens/
+│   ├── HomeScreen.tsx   # Home screen with connection UI
+│   ├── WalletScreen.tsx # Wallet operations screen
+│   └── AuthCallback.tsx # Authentication callback handler
+└── navigation/
+    └── AppNavigator.tsx # Navigation configuration
 ```
 
 ### Screen Flow
 
-1. **Home Screen (`index.tsx`)**:
+1. **Home Screen (`HomeScreen.tsx`)**:
    - Display connection status
    - Provide authentication options (Google, Apple, JWT)
    - Handle initial wallet connection
 
-2. **Wallet Operations Screen (`wallet.tsx`)**:
+2. **Wallet Operations Screen (`WalletScreen.tsx`)**:
    - Display connected wallet information
    - Message signing functionality
    - Transaction signing (demo)
    - Disconnect functionality
 
-3. **Auth Callback Screen (`auth-callback.tsx`)**:
+3. **Auth Callback Screen (`AuthCallback.tsx`)**:
    - Handle authentication redirects
    - Complete wallet connection process
    - Display success/error states
 
 ## Deep Link Configuration
 
-The app uses deep links for authentication callbacks. The scheme is configured in:
-
-- `app.json`: Expo configuration with the app scheme
-- `.env`: Environment variables for redirect URLs
-- Platform adapters handle the URL parameter parsing
+The app uses deep links for authentication callbacks. Deep link configuration is handled automatically by the SDK.
 
 ## Network Support
 
@@ -175,11 +164,10 @@ The app uses deep links for authentication callbacks. The scheme is configured i
 
 The demo app uses:
 
-- React Native with Expo SDK 52
+- Expo ~53.0.20
+- React Native 0.79.5
 - TypeScript
 - Expo Router for navigation
-- Expo SecureStore for secure storage
-- Expo WebBrowser for OAuth flows
 - @phantom/react-native-sdk for wallet integration
 
 ## Platform-Specific Features
@@ -187,21 +175,19 @@ The demo app uses:
 ### iOS
 
 - Hardware Security Module (HSM) backed secure storage
-- Native authentication flows
-- Deep link handling through iOS URL schemes
+- Native authentication flows with system browser
 
 ### Android
 
 - Android Keystore backed secure storage
-- Chrome Custom Tabs for authentication
-- Intent-based deep link handling
+- In-app browser for secure authentication
 
 ## Troubleshooting
 
 ### Connection Issues
 
 1. **Deep link not working**:
-   - Ensure the app scheme in `app.json` matches your environment variables
+   - Ensure you're using a development build (built with `expo run:ios/android`, not Expo Go)
    - Check that the redirect URL is properly formatted
    - Clear app data and reinstall if necessary
 
@@ -218,8 +204,8 @@ The demo app uses:
 ### Build Issues
 
 1. **SDK build errors**: Make sure all packages are built with `yarn build`
-2. **Metro bundler issues**: Clear Metro cache with `npx expo start -c`
-3. **Platform-specific issues**: Check Expo documentation for platform requirements
+2. **Expo development build issues**: Clean and rebuild with `npx expo run:ios --clear` or `npx expo run:android --clear`
+3. **Native dependency issues**: Native modules like react-native-keychain are automatically linked when using `expo run:ios/android`
 
 ### Runtime Issues
 
@@ -230,6 +216,6 @@ The demo app uses:
 ## Learn More
 
 - [Phantom React Native SDK Documentation](../../packages/react-native-sdk/README.md)
-- [Expo Documentation](https://docs.expo.dev)
+- [React Native Documentation](https://reactnative.dev/docs/getting-started)
 - [Phantom Wallet](https://phantom.app)
 - [Solana Documentation](https://docs.solana.com)

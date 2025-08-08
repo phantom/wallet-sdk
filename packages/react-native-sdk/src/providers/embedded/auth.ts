@@ -1,7 +1,7 @@
-import * as WebBrowser from "expo-web-browser";
+import { InAppBrowser } from "react-native-inappbrowser-reborn";
 import type { AuthProvider, AuthResult, PhantomConnectOptions, JWTAuthOptions } from "@phantom/embedded-provider-core";
 
-export class ExpoAuthProvider implements AuthProvider {
+export class ReactNativeAuthProvider implements AuthProvider {
   async authenticate(options: PhantomConnectOptions | JWTAuthOptions): Promise<void | AuthResult> {
     // Handle JWT authentication
     if ("jwtToken" in options) {
@@ -18,20 +18,26 @@ export class ExpoAuthProvider implements AuthProvider {
     }
 
     try {
-      console.log("[ExpoAuthProvider] Starting authentication", {
+      console.log("[ReactNativeAuthProvider] Starting authentication", {
         authUrl: authUrl.substring(0, 50) + "...",
         redirectUrl,
       });
 
-      // Configure the web browser for better UX
-      await WebBrowser.warmUpAsync();
+      const isAvailable = await InAppBrowser.isAvailable();
+      if (!isAvailable) {
+        throw new Error("InAppBrowser is not available on this device");
+      }
 
-      const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUrl, {
-        // Use system browser on iOS for ASWebAuthenticationSession
-        preferEphemeralSession: false,
+      const result = await InAppBrowser.openAuth(authUrl, redirectUrl, {
+        // iOS options
+        ephemeralWebSession: false,
+        // Android options
+        showTitle: true,
+        enableUrlBarHiding: true,
+        enableDefaultShare: false,
       });
 
-      console.log("[ExpoAuthProvider] Authentication result", {
+      console.log("[ReactNativeAuthProvider] Authentication result", {
         type: result.type,
         url: result.type === "success" && result.url ? result.url.substring(0, 100) + "..." : undefined,
       });
@@ -63,16 +69,17 @@ export class ExpoAuthProvider implements AuthProvider {
         throw new Error("Authentication failed");
       }
     } catch (error) {
-      console.error("[ExpoAuthProvider] Authentication error", error);
+      console.error("[ReactNativeAuthProvider] Authentication error", error);
       throw error;
-    } finally {
-      // Clean up browser warming
-      await WebBrowser.coolDownAsync();
     }
   }
 
-  isAvailable(): Promise<boolean> {
-    // WebBrowser is always available in Expo
-    return Promise.resolve(true);
+  async isAvailable(): Promise<boolean> {
+    try {
+      return await InAppBrowser.isAvailable();
+    } catch (error) {
+      console.error("[ReactNativeAuthProvider] Failed to check InAppBrowser availability", error);
+      return false;
+    }
   }
 }

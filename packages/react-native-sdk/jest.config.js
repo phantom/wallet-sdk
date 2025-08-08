@@ -19,10 +19,8 @@ module.exports = {
   setupFilesAfterEnv: ["<rootDir>/src/test/setup.ts"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
-    "^expo-secure-store$": "<rootDir>/src/test/mocks/expo-secure-store.js",
-    "^expo-web-browser$": "<rootDir>/src/test/mocks/expo-web-browser.js",
-    "^expo-auth-session$": "<rootDir>/src/test/mocks/expo-auth-session.js",
-    "^expo-router$": "<rootDir>/src/test/mocks/expo-router.js",
+    "^react-native-keychain$": "<rootDir>/src/test/mocks/react-native-keychain.js",
+    "^react-native-inappbrowser-reborn$": "<rootDir>/src/test/mocks/react-native-inappbrowser-reborn.js",
     "^react-native$": "<rootDir>/src/test/mocks/react-native.js",
   },
   testPathIgnorePatterns: ["/node_modules/", "/dist/"],

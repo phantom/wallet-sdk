@@ -28,6 +28,6 @@
       "favicon": "./assets/favicon.png"
     },
     "scheme": "phantom-rn-demo",
-    "plugins": ["expo-router", "expo-secure-store", "expo-web-browser"]
+    "plugins": ["expo-router"]
   }
 }
