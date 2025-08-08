@@ -1,4 +1,4 @@
-import { usePhantom } from '../PhantomProvider';
+import { usePhantom } from "../PhantomProvider";
 
 export function useAccounts() {
   const { addresses, isConnected, walletId, error } = usePhantom();

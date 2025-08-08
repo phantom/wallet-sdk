@@ -1,19 +1,7 @@
-import React from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  SafeAreaView,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { 
-  useConnect, 
-  useAccounts,
-  useDisconnect
-} from '@phantom/react-native-sdk';
+import React from "react";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, SafeAreaView } from "react-native";
+import { useRouter } from "expo-router";
+import { useConnect, useAccounts, useDisconnect } from "@phantom/react-native-sdk";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -21,27 +9,27 @@ export default function HomeScreen() {
   const { isConnected, addresses, walletId, error } = useAccounts();
   const { disconnect, isDisconnecting } = useDisconnect();
 
-  const handleConnect = async (provider: 'google' | 'apple' | 'jwt') => {
+  const handleConnect = async (provider: "google" | "apple" | "jwt") => {
     try {
       const result = await connect({ provider });
-      
-      if (result.status === 'completed') {
-        Alert.alert('Success', 'Wallet connected successfully!');
-        router.push('/wallet');
-      } else if (result.status === 'pending') {
-        Alert.alert('Redirecting', 'Opening browser for authentication...');
+
+      if (result.status === "completed") {
+        Alert.alert("Success", "Wallet connected successfully!");
+        router.push("/wallet");
+      } else if (result.status === "pending") {
+        Alert.alert("Redirecting", "Opening browser for authentication...");
       }
     } catch (error) {
-      Alert.alert('Error', `Failed to connect: ${(error as Error).message}`);
+      Alert.alert("Error", `Failed to connect: ${(error as Error).message}`);
     }
   };
 
   const handleDisconnect = async () => {
     try {
       await disconnect();
-      Alert.alert('Disconnected', 'Wallet has been disconnected');
+      Alert.alert("Disconnected", "Wallet has been disconnected");
     } catch (error) {
-      Alert.alert('Error', `Failed to disconnect: ${(error as Error).message}`);
+      Alert.alert("Error", `Failed to disconnect: ${(error as Error).message}`);
     }
   };
 
@@ -57,19 +45,22 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Connection Status</Text>
           <View style={styles.statusContainer}>
-            <View style={[styles.statusIndicator, { 
-              backgroundColor: isConnected ? '#10b981' : '#ef4444' 
-            }]} />
-            <Text style={styles.statusText}>
-              {isConnected ? 'Connected' : 'Disconnected'}
-            </Text>
+            <View
+              style={[
+                styles.statusIndicator,
+                {
+                  backgroundColor: isConnected ? "#10b981" : "#ef4444",
+                },
+              ]}
+            />
+            <Text style={styles.statusText}>{isConnected ? "Connected" : "Disconnected"}</Text>
           </View>
-          
+
           {isConnected && (
             <View style={styles.walletInfo}>
               <Text style={styles.infoLabel}>Wallet ID:</Text>
-              <Text style={styles.infoValue}>{walletId || 'N/A'}</Text>
-              
+              <Text style={styles.infoValue}>{walletId || "N/A"}</Text>
+
               <Text style={styles.infoLabel}>Addresses:</Text>
               {addresses && addresses.length > 0 ? (
                 addresses.map((addr, index) => (
@@ -91,48 +82,37 @@ export default function HomeScreen() {
         {!isConnected ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Connect Wallet</Text>
-            <Text style={styles.description}>
-              Choose an authentication method to connect your Phantom wallet:
-            </Text>
-            
+            <Text style={styles.description}>Choose an authentication method to connect your Phantom wallet:</Text>
+
             <TouchableOpacity
               style={[styles.button, styles.googleButton]}
-              onPress={() => handleConnect('google')}
+              onPress={() => handleConnect("google")}
               disabled={isConnecting}
             >
-              <Text style={styles.buttonText}>
-                {isConnecting ? 'Connecting...' : 'Connect with Google'}
-              </Text>
+              <Text style={styles.buttonText}>{isConnecting ? "Connecting..." : "Connect with Google"}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.button, styles.appleButton]}
-              onPress={() => handleConnect('apple')}
+              onPress={() => handleConnect("apple")}
               disabled={isConnecting}
             >
-              <Text style={styles.buttonText}>
-                {isConnecting ? 'Connecting...' : 'Connect with Apple'}
-              </Text>
+              <Text style={styles.buttonText}>{isConnecting ? "Connecting..." : "Connect with Apple"}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.button, styles.jwtButton]}
-              onPress={() => handleConnect('jwt')}
+              onPress={() => handleConnect("jwt")}
               disabled={isConnecting}
             >
-              <Text style={styles.buttonText}>
-                {isConnecting ? 'Connecting...' : 'Connect with JWT (Demo)'}
-              </Text>
+              <Text style={styles.buttonText}>{isConnecting ? "Connecting..." : "Connect with JWT (Demo)"}</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Wallet Actions</Text>
-            
-            <TouchableOpacity
-              style={[styles.button, styles.primaryButton]}
-              onPress={() => router.push('/wallet')}
-            >
+
+            <TouchableOpacity style={[styles.button, styles.primaryButton]} onPress={() => router.push("/wallet")}>
               <Text style={styles.buttonText}>Open Wallet Operations</Text>
             </TouchableOpacity>
 
@@ -141,9 +121,7 @@ export default function HomeScreen() {
               onPress={() => handleDisconnect()}
               disabled={isDisconnecting}
             >
-              <Text style={styles.buttonText}>
-                {isDisconnecting ? 'Disconnecting...' : 'Disconnect Wallet'}
-              </Text>
+              <Text style={styles.buttonText}>{isDisconnecting ? "Disconnecting..." : "Disconnect Wallet"}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -153,9 +131,7 @@ export default function HomeScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Error</Text>
             <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>
-                {error?.message || connectError?.message}
-              </Text>
+              <Text style={styles.errorText}>{error?.message || connectError?.message}</Text>
             </View>
           </View>
         )}
@@ -164,9 +140,8 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>About</Text>
           <Text style={styles.description}>
-            This demo app showcases the Phantom React Native SDK integration. 
-            It demonstrates wallet connection, authentication flows, message signing, 
-            and transaction handling in a React Native/Expo environment.
+            This demo app showcases the Phantom React Native SDK integration. It demonstrates wallet connection,
+            authentication flows, message signing, and transaction handling in a React Native/Expo environment.
           </Text>
         </View>
       </ScrollView>
@@ -177,32 +152,32 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: "#f8fafc",
   },
   scrollContent: {
     padding: 20,
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 30,
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "#1f2937",
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
-    color: '#6b7280',
+    color: "#6b7280",
     marginTop: 5,
   },
   section: {
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     borderRadius: 12,
     padding: 20,
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -213,19 +188,19 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: '600',
-    color: '#1f2937',
+    fontWeight: "600",
+    color: "#1f2937",
     marginBottom: 15,
   },
   description: {
     fontSize: 14,
-    color: '#6b7280',
+    color: "#6b7280",
     lineHeight: 20,
     marginBottom: 15,
   },
   statusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 15,
   },
   statusIndicator: {
@@ -236,37 +211,37 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#1f2937',
+    fontWeight: "500",
+    color: "#1f2937",
   },
   walletInfo: {
     marginTop: 10,
   },
   infoLabel: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
+    fontWeight: "600",
+    color: "#374151",
     marginTop: 10,
   },
   infoValue: {
     fontSize: 14,
-    color: '#6b7280',
+    color: "#6b7280",
     marginTop: 2,
-    fontFamily: 'monospace',
+    fontFamily: "monospace",
   },
   addressItem: {
     marginTop: 5,
   },
   addressType: {
     fontSize: 12,
-    fontWeight: '500',
-    color: '#6366f1',
-    textTransform: 'uppercase',
+    fontWeight: "500",
+    color: "#6366f1",
+    textTransform: "uppercase",
   },
   addressValue: {
     fontSize: 12,
-    color: '#374151',
-    fontFamily: 'monospace',
+    color: "#374151",
+    fontFamily: "monospace",
     marginTop: 2,
   },
   button: {
@@ -274,37 +249,37 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 20,
     marginBottom: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   primaryButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: "#6366f1",
   },
   googleButton: {
-    backgroundColor: '#dc2626',
+    backgroundColor: "#dc2626",
   },
   appleButton: {
-    backgroundColor: '#1f2937',
+    backgroundColor: "#1f2937",
   },
   jwtButton: {
-    backgroundColor: '#059669',
+    backgroundColor: "#059669",
   },
   dangerButton: {
-    backgroundColor: '#ef4444',
+    backgroundColor: "#ef4444",
   },
   buttonText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   errorContainer: {
-    backgroundColor: '#fef2f2',
-    borderColor: '#fecaca',
+    backgroundColor: "#fef2f2",
+    borderColor: "#fecaca",
     borderWidth: 1,
     borderRadius: 6,
     padding: 10,
   },
   errorText: {
-    color: '#dc2626',
+    color: "#dc2626",
     fontSize: 14,
   },
 });

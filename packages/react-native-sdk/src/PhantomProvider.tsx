@@ -1,16 +1,13 @@
-import type { ReactNode } from 'react';
-import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { EmbeddedProvider } from '@phantom/embedded-provider-core';
-import type { 
-  PhantomProviderConfig,
-  WalletAddress
-} from './types';
+import type { ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
+import { EmbeddedProvider } from "@phantom/embedded-provider-core";
+import type { PhantomProviderConfig, WalletAddress } from "./types";
 
 // Platform adapters for React Native/Expo
-import { ExpoSecureStorage } from './providers/embedded/storage';
-import { ExpoAuthProvider } from './providers/embedded/auth';
-import { ExpoURLParamsAccessor } from './providers/embedded/url-params';
-import { ExpoLogger } from './providers/embedded/logger';
+import { ExpoSecureStorage } from "./providers/embedded/storage";
+import { ExpoAuthProvider } from "./providers/embedded/auth";
+import { ExpoURLParamsAccessor } from "./providers/embedded/url-params";
+import { ExpoLogger } from "./providers/embedded/logger";
 
 interface PhantomContextValue {
   sdk: EmbeddedProvider;
@@ -45,7 +42,7 @@ export function PhantomProvider({ children, config }: PhantomProviderProps) {
       },
       embeddedWalletType: config.embeddedWalletType,
       addressTypes: config.addressTypes,
-      solanaProvider: config.solanaProvider || 'web3js',
+      solanaProvider: config.solanaProvider || "web3js",
     };
 
     // Create platform adapters
@@ -84,7 +81,7 @@ export function PhantomProvider({ children, config }: PhantomProviderProps) {
         setWalletId(null);
       }
     } catch (err) {
-      console.error('[PhantomProvider] Error updating connection state', err);
+      console.error("[PhantomProvider] Error updating connection state", err);
       setError(err as Error);
     }
   }, [sdk]);
@@ -114,7 +111,7 @@ export function PhantomProvider({ children, config }: PhantomProviderProps) {
 export function usePhantom(): PhantomContextValue {
   const context = useContext(PhantomContext);
   if (!context) {
-    throw new Error('usePhantom must be used within a PhantomProvider');
+    throw new Error("usePhantom must be used within a PhantomProvider");
   }
   return context;
 }

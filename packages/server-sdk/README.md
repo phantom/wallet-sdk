@@ -45,7 +45,6 @@ pnpm add @phantom/server-sdk
 Before using the SDK, you need:
 
 1. **Phantom Organization Credentials**
-
    - Organization ID
    - Organization Private Key (base58 encoded)
    - API Base URL

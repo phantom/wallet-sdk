@@ -13,16 +13,6 @@ module.exports = defineConfig({
     tsconfigRootDir: __dirname,
     project: "./tsconfig.json",
   },
-  extends: [
-    ...rootConfig.extends,
-    "@react-native",
-  ],
-  ignorePatterns: [
-    "node_modules/",
-    "lib/",
-    "dist/",
-    ".eslintrc.js",
-    "babel.config.js",
-    "*.config.js"
-  ],
+  extends: [...rootConfig.extends, "@react-native"],
+  ignorePatterns: ["node_modules/", "lib/", "dist/", ".eslintrc.js", "babel.config.js", "*.config.js"],
 });

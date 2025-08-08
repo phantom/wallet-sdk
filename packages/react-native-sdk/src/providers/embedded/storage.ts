@@ -1,8 +1,8 @@
-import * as SecureStore from 'expo-secure-store';
-import type { EmbeddedStorage, Session } from '@phantom/embedded-provider-core';
+import * as SecureStore from "expo-secure-store";
+import type { EmbeddedStorage, Session } from "@phantom/embedded-provider-core";
 
 export class ExpoSecureStorage implements EmbeddedStorage {
-  private readonly sessionKey = 'phantom_session';
+  private readonly sessionKey = "phantom_session";
   private readonly requireAuth: boolean;
 
   constructor(requireAuth: boolean = false) {
@@ -16,7 +16,7 @@ export class ExpoSecureStorage implements EmbeddedStorage {
         keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
       });
     } catch (error) {
-      console.error('[ExpoSecureStorage] Failed to save session', { error: (error as Error).message });
+      console.error("[ExpoSecureStorage] Failed to save session", { error: (error as Error).message });
       throw new Error(`Failed to save session: ${(error as Error).message}`);
     }
   }
@@ -26,14 +26,14 @@ export class ExpoSecureStorage implements EmbeddedStorage {
       const sessionData = await SecureStore.getItemAsync(this.sessionKey, {
         requireAuthentication: this.requireAuth,
       });
-      
+
       if (!sessionData) {
         return null;
       }
 
       return JSON.parse(sessionData) as Session;
     } catch (error) {
-      console.error('[ExpoSecureStorage] Failed to load session', { error: (error as Error).message });
+      console.error("[ExpoSecureStorage] Failed to load session", { error: (error as Error).message });
       return null;
     }
   }
@@ -42,7 +42,7 @@ export class ExpoSecureStorage implements EmbeddedStorage {
     try {
       await SecureStore.deleteItemAsync(this.sessionKey);
     } catch (error) {
-      console.error('[ExpoSecureStorage] Failed to clear session', { error: (error as Error).message });
+      console.error("[ExpoSecureStorage] Failed to clear session", { error: (error as Error).message });
       // Don't throw here, clearing should be resilient
     }
   }
@@ -55,6 +55,6 @@ export class ExpoSecureStorage implements EmbeddedStorage {
   setRequireAuth(_requireAuth: boolean): void {
     // Note: this.requireAuth is readonly, so we can't actually change it
     // This would require recreating the storage instance
-    console.warn('[ExpoSecureStorage] Cannot change requireAuth after initialization');
+    console.warn("[ExpoSecureStorage] Cannot change requireAuth after initialization");
   }
 }

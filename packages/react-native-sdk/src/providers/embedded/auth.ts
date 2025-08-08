@@ -1,10 +1,10 @@
-import * as WebBrowser from 'expo-web-browser';
-import type { AuthProvider, AuthResult, PhantomConnectOptions, JWTAuthOptions } from '@phantom/embedded-provider-core';
+import * as WebBrowser from "expo-web-browser";
+import type { AuthProvider, AuthResult, PhantomConnectOptions, JWTAuthOptions } from "@phantom/embedded-provider-core";
 
 export class ExpoAuthProvider implements AuthProvider {
   async authenticate(options: PhantomConnectOptions | JWTAuthOptions): Promise<void | AuthResult> {
     // Handle JWT authentication
-    if ('jwtToken' in options) {
+    if ("jwtToken" in options) {
       // JWT authentication doesn't require web browser flow
       // Return void to indicate the auth provider handled the authentication
       return;
@@ -12,14 +12,14 @@ export class ExpoAuthProvider implements AuthProvider {
 
     // Handle redirect-based authentication
     const { authUrl, redirectUrl } = options;
-    
+
     if (!authUrl || !redirectUrl) {
-      throw new Error('authUrl and redirectUrl are required for web browser authentication');
+      throw new Error("authUrl and redirectUrl are required for web browser authentication");
     }
 
     try {
-      console.log('[ExpoAuthProvider] Starting authentication', {
-        authUrl: authUrl.substring(0, 50) + '...',
+      console.log("[ExpoAuthProvider] Starting authentication", {
+        authUrl: authUrl.substring(0, 50) + "...",
         redirectUrl,
       });
 
@@ -31,19 +31,19 @@ export class ExpoAuthProvider implements AuthProvider {
         preferEphemeralSession: false,
       });
 
-      console.log('[ExpoAuthProvider] Authentication result', {
+      console.log("[ExpoAuthProvider] Authentication result", {
         type: result.type,
-        url: result.type === 'success' && result.url ? result.url.substring(0, 100) + '...' : undefined,
+        url: result.type === "success" && result.url ? result.url.substring(0, 100) + "..." : undefined,
       });
 
-      if (result.type === 'success' && result.url) {
+      if (result.type === "success" && result.url) {
         // Parse the URL to extract parameters
         const url = new URL(result.url);
-        const walletId = url.searchParams.get('walletId');
-        const provider = url.searchParams.get('provider');
-        
+        const walletId = url.searchParams.get("walletId");
+        const provider = url.searchParams.get("provider");
+
         if (!walletId) {
-          throw new Error('Authentication failed: no walletId in redirect URL');
+          throw new Error("Authentication failed: no walletId in redirect URL");
         }
 
         // Convert URLSearchParams to Record<string, string>
@@ -57,13 +57,13 @@ export class ExpoAuthProvider implements AuthProvider {
           provider: provider || undefined,
           userInfo,
         };
-      } else if (result.type === 'cancel') {
-        throw new Error('User cancelled authentication');
+      } else if (result.type === "cancel") {
+        throw new Error("User cancelled authentication");
       } else {
-        throw new Error('Authentication failed');
+        throw new Error("Authentication failed");
       }
     } catch (error) {
-      console.error('[ExpoAuthProvider] Authentication error', error);
+      console.error("[ExpoAuthProvider] Authentication error", error);
       throw error;
     } finally {
       // Clean up browser warming

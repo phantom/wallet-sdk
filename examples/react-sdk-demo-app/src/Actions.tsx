@@ -156,7 +156,6 @@ export function Actions() {
     }
   };
 
-
   return (
     <div id="app">
       <h1>Phantom React SDK Demo</h1>

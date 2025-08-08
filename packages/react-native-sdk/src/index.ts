@@ -1,14 +1,8 @@
 // Main provider and context
-export { PhantomProvider, usePhantom } from './PhantomProvider';
+export { PhantomProvider, usePhantom } from "./PhantomProvider";
 
 // Individual hooks
-export {
-  useConnect,
-  useDisconnect,
-  useAccounts,
-  useSignMessage,
-  useSignAndSendTransaction,
-} from './hooks';
+export { useConnect, useDisconnect, useAccounts, useSignMessage, useSignAndSendTransaction } from "./hooks";
 
 // Types
 export type {
@@ -20,6 +14,6 @@ export type {
   SignMessageParams,
   SignAndSendTransactionParams,
   SignedTransaction,
-} from './types';
+} from "./types";
 
-export { AddressType, NetworkId } from '@phantom/client';
+export { AddressType, NetworkId } from "@phantom/client";

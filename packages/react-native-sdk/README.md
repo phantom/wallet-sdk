@@ -4,27 +4,30 @@ A comprehensive React Native SDK for integrating Phantom Wallet functionality in
 
 ## Features
 
-- 🔐 **Hardware-backed security** with Expo SecureStore (iOS Keychain + Android Keystore)  
+- 🔐 **Hardware-backed security** with Expo SecureStore (iOS Keychain + Android Keystore)
 - 🌐 **OAuth authentication** flows using system browsers for security and UX
 - 🔗 **Automatic deep linking** with custom URL schemes
 - ⚛️ **React hooks API** for easy integration
-- 📱 **Cross-platform** support (iOS, Android) 
+- 📱 **Cross-platform** support (iOS, Android)
 - 🛡️ **Biometric authentication** for accessing stored wallet data
 - 🎯 **TypeScript support** with full type safety
 
 ## Installation
 
 ### Using npm
+
 ```bash
 npm install @phantom/react-native-sdk
 ```
 
 ### Using yarn
+
 ```bash
 yarn add @phantom/react-native-sdk
 ```
 
 ### Install peer dependencies
+
 ```bash
 # For Expo projects
 npx expo install expo-secure-store expo-web-browser expo-auth-session expo-router
@@ -42,9 +45,9 @@ You must polyfill random byte generation to ensure cryptographic operations work
 
 ```tsx
 // index.js, App.tsx, or _layout.tsx - MUST be the first import
-import 'react-native-get-random-values';
+import "react-native-get-random-values";
 
-import { PhantomProvider } from '@phantom/react-native-sdk';
+import { PhantomProvider } from "@phantom/react-native-sdk";
 // ... other imports
 ```
 
@@ -55,6 +58,7 @@ import { PhantomProvider } from '@phantom/react-native-sdk';
 ### 1. Configure your app scheme
 
 #### For Expo projects
+
 Add your custom scheme to `app.json`:
 
 ```json
@@ -63,17 +67,13 @@ Add your custom scheme to `app.json`:
     "name": "My Wallet App",
     "slug": "my-wallet-app",
     "scheme": "mywalletapp",
-    "plugins": [
-      ["expo-router"],
-      ["expo-secure-store"],
-      ["expo-web-browser"],
-      ["expo-auth-session"]
-    ]
+    "plugins": [["expo-router"], ["expo-secure-store"], ["expo-web-browser"], ["expo-auth-session"]]
   }
 }
 ```
 
 #### For bare React Native projects
+
 - **iOS**: Configure URL schemes in `Info.plist`
 - **Android**: Add intent filters to `AndroidManifest.xml`
 
@@ -83,11 +83,11 @@ Wrap your app with `PhantomProvider`:
 
 ```tsx
 // App.tsx or _layout.tsx (for Expo Router)
-import { PhantomProvider, AddressType } from '@phantom/react-native-sdk';
+import { PhantomProvider, AddressType } from "@phantom/react-native-sdk";
 
 export default function App() {
   return (
-    <PhantomProvider 
+    <PhantomProvider
       config={{
         organizationId: "your-organization-id",
         scheme: "mywalletapp", // Must match app.json scheme
@@ -95,8 +95,8 @@ export default function App() {
         addressTypes: [AddressType.solana],
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
         authOptions: {
-          redirectUrl: "mywalletapp://phantom-auth-callback"
-        }
+          redirectUrl: "mywalletapp://phantom-auth-callback",
+        },
       }}
     >
       <YourAppContent />
@@ -109,14 +109,9 @@ export default function App() {
 
 ```tsx
 // WalletScreen.tsx
-import React from 'react';
-import { View, Button, Text, Alert } from 'react-native';
-import { 
-  useConnect, 
-  useAccounts, 
-  useSignMessage,
-  useDisconnect 
-} from '@phantom/react-native-sdk';
+import React from "react";
+import { View, Button, Text, Alert } from "react-native";
+import { useConnect, useAccounts, useSignMessage, useDisconnect } from "@phantom/react-native-sdk";
 
 export function WalletScreen() {
   const { connect, isConnecting, error: connectError } = useConnect();
@@ -126,38 +121,34 @@ export function WalletScreen() {
 
   const handleConnect = async () => {
     try {
-      await connect({ provider: 'google' });
-      Alert.alert('Success', 'Wallet connected!');
+      await connect({ provider: "google" });
+      Alert.alert("Success", "Wallet connected!");
     } catch (error) {
-      Alert.alert('Error', `Failed to connect: ${error.message}`);
+      Alert.alert("Error", `Failed to connect: ${error.message}`);
     }
   };
 
   const handleSignMessage = async () => {
     try {
       const signature = await signMessage({
-        message: 'Hello from my React Native app!',
-        networkId: 'solana:mainnet'
+        message: "Hello from my React Native app!",
+        networkId: "solana:mainnet",
       });
-      Alert.alert('Signed!', `Signature: ${signature.slice(0, 10)}...`);
+      Alert.alert("Signed!", `Signature: ${signature.slice(0, 10)}...`);
     } catch (error) {
-      Alert.alert('Error', `Failed to sign: ${error.message}`);
+      Alert.alert("Error", `Failed to sign: ${error.message}`);
     }
   };
 
   if (!isConnected) {
     return (
       <View style={{ padding: 20 }}>
-        <Button 
+        <Button
           title={isConnecting ? "Connecting..." : "Connect Wallet"}
           onPress={handleConnect}
           disabled={isConnecting}
         />
-        {connectError && (
-          <Text style={{ color: 'red', marginTop: 10 }}>
-            Error: {connectError.message}
-          </Text>
-        )}
+        {connectError && <Text style={{ color: "red", marginTop: 10 }}>Error: {connectError.message}</Text>}
       </View>
     );
   }
@@ -167,19 +158,15 @@ export function WalletScreen() {
       <Text style={{ fontSize: 18, marginBottom: 10 }}>Wallet Connected</Text>
       <Text>Wallet ID: {walletId}</Text>
       <Text>Address: {addresses[0]?.address}</Text>
-      
-      <Button 
+
+      <Button
         title={isSigning ? "Signing..." : "Sign Message"}
         onPress={handleSignMessage}
         disabled={isSigning}
         style={{ marginTop: 10 }}
       />
-      
-      <Button 
-        title="Disconnect"
-        onPress={disconnect}
-        style={{ marginTop: 10 }}
-      />
+
+      <Button title="Disconnect" onPress={disconnect} style={{ marginTop: 10 }} />
     </View>
   );
 }
@@ -201,14 +188,14 @@ The main provider component that initializes the SDK and provides context to all
 
 ```typescript
 interface PhantomProviderConfig {
-  organizationId: string;           // Your Phantom organization ID
-  scheme: string;                   // Custom URL scheme for your app
+  organizationId: string; // Your Phantom organization ID
+  scheme: string; // Custom URL scheme for your app
   embeddedWalletType: "user-wallet" | "app-wallet";
   addressTypes: AddressType[];
-  apiBaseUrl: "https://api.phantom.app/v1/wallets",
+  apiBaseUrl: "https://api.phantom.app/v1/wallets";
   authOptions?: {
-    authUrl?: string;               // Custom auth URL (optional)
-    redirectUrl?: string;           // Custom redirect URL (optional)
+    authUrl?: string; // Custom auth URL (optional)
+    redirectUrl?: string; // Custom redirect URL (optional)
   };
 }
 ```
@@ -220,16 +207,12 @@ interface PhantomProviderConfig {
 Manages wallet connection functionality.
 
 ```typescript
-const { 
-  connect, 
-  isConnecting, 
-  error,
-} = useConnect();
+const { connect, isConnecting, error } = useConnect();
 
 // Connect with specific provider
-await connect({ provider: 'google' });
-await connect({ provider: 'apple' });
-await connect({ provider: 'jwt', jwtToken: 'your-jwt-token' });
+await connect({ provider: "google" });
+await connect({ provider: "apple" });
+await connect({ provider: "jwt", jwtToken: "your-jwt-token" });
 ```
 
 #### useAccounts
@@ -237,10 +220,10 @@ await connect({ provider: 'jwt', jwtToken: 'your-jwt-token' });
 Provides access to connected wallet information.
 
 ```typescript
-const { 
-  addresses,     // Array of wallet addresses
-  isConnected,   // Connection status
-  walletId       // Phantom wallet ID
+const {
+  addresses, // Array of wallet addresses
+  isConnected, // Connection status
+  walletId, // Phantom wallet ID
 } = useAccounts();
 ```
 
@@ -249,15 +232,11 @@ const {
 Handles message signing operations.
 
 ```typescript
-const { 
-  signMessage, 
-  isSigning, 
-  error 
-} = useSignMessage();
+const { signMessage, isSigning, error } = useSignMessage();
 
 const signature = await signMessage({
-  message: 'Message to sign',
-  networkId: 'solana:mainnet' // or 'ethereum:1'
+  message: "Message to sign",
+  networkId: "solana:mainnet", // or 'ethereum:1'
 });
 ```
 
@@ -266,15 +245,11 @@ const signature = await signMessage({
 Handles transaction signing and sending.
 
 ```typescript
-const { 
-  signAndSendTransaction, 
-  isSigning, 
-  error 
-} = useSignAndSendTransaction();
+const { signAndSendTransaction, isSigning, error } = useSignAndSendTransaction();
 
 const result = await signAndSendTransaction({
-  transaction: 'base64-encoded-transaction',
-  networkId: NetworkId.SOLANA_MAINNET
+  transaction: "base64-encoded-transaction",
+  networkId: NetworkId.SOLANA_MAINNET,
 });
 ```
 
@@ -283,10 +258,7 @@ const result = await signAndSendTransaction({
 Manages wallet disconnection.
 
 ```typescript
-const { 
-  disconnect, 
-  isDisconnecting 
-} = useDisconnect();
+const { disconnect, isDisconnecting } = useDisconnect();
 
 await disconnect();
 ```
@@ -298,7 +270,7 @@ await disconnect();
 The SDK supports multiple OAuth providers:
 
 - **Google** (`provider: 'google'`)
-- **Apple** (`provider: 'apple'`)  
+- **Apple** (`provider: 'apple'`)
 - **JWT** (`provider: 'jwt'`) - For custom authentication
 
 ### Authentication Process
@@ -336,9 +308,9 @@ The SDK automatically handles deep link redirects. Ensure your app's URL scheme 
 ### Basic Configuration
 
 ```tsx
-import { PhantomProvider, AddressType } from '@phantom/react-native-sdk';
+import { PhantomProvider, AddressType } from "@phantom/react-native-sdk";
 
-<PhantomProvider 
+<PhantomProvider
   config={{
     organizationId: "org_123456789",
     scheme: "myapp",
@@ -348,15 +320,15 @@ import { PhantomProvider, AddressType } from '@phantom/react-native-sdk';
   }}
 >
   <App />
-</PhantomProvider>
+</PhantomProvider>;
 ```
 
 ### Advanced Configuration
 
 ```tsx
-import { PhantomProvider, AddressType } from '@phantom/react-native-sdk';
+import { PhantomProvider, AddressType } from "@phantom/react-native-sdk";
 
-<PhantomProvider 
+<PhantomProvider
   config={{
     organizationId: "org_123456789",
     scheme: "mycompany-wallet",
@@ -365,12 +337,12 @@ import { PhantomProvider, AddressType } from '@phantom/react-native-sdk';
     apiBaseUrl: "https://api.phantom.app/v1/wallets",
     authOptions: {
       authUrl: "https://auth.yourcompany.com",
-      redirectUrl: "mycompany-wallet://auth/success"
-    }
+      redirectUrl: "mycompany-wallet://auth/success",
+    },
   }}
 >
   <App />
-</PhantomProvider>
+</PhantomProvider>;
 ```
 
 ## Platform Setup
@@ -418,7 +390,7 @@ Test deep links in development builds (not Expo Go):
 # iOS Simulator
 xcrun simctl openurl booted "myapp://phantom-auth-callback?wallet_id=test"
 
-# Android Emulator  
+# Android Emulator
 adb shell am start -W -a android.intent.action.VIEW -d "myapp://phantom-auth-callback?wallet_id=test" com.yourcompany.myapp
 ```
 
@@ -448,7 +420,7 @@ adb shell am start -W -a android.intent.action.VIEW -d "myapp://phantom-auth-cal
 Enable debug logging in development:
 
 ```typescript
-<PhantomProvider 
+<PhantomProvider
   config={{
     ...config,
     debug: true  // Enable debug logging

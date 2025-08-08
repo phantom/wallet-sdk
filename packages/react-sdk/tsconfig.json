@@ -3,16 +3,9 @@
   "compilerOptions": {
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "lib": [
-      "dom",
-      "esnext"
-    ],
+    "lib": ["dom", "esnext"],
     "moduleResolution": "bundler",
     "outDir": "dist/esm"
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "_release",
-  ]
+  "exclude": ["node_modules", "dist", "_release"]
 }

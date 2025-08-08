@@ -1,3 +1,3 @@
 module.exports = {
-  makeRedirectUri: jest.fn((config) => `${config?.scheme || 'exp'}://auth-callback`),
+  makeRedirectUri: jest.fn(config => `${config?.scheme || "exp"}://auth-callback`),
 };

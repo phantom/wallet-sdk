@@ -16,7 +16,7 @@ interface DemoData {
 
 async function main() {
   console.log("🚀 Starting Phantom Client Demo");
-  
+
   const dataPath = path.join(process.cwd(), "demo-data.json");
   let demoData: DemoData = {};
 
@@ -33,7 +33,7 @@ async function main() {
   console.log("\n🔑 Generating key pair...");
   const keyPair = generateKeyPair();
   demoData.keyPair = keyPair;
-  
+
   await fs.writeFile(dataPath, JSON.stringify(demoData, null, 2));
   console.log(`✅ Key pair generated and saved:`);
   console.log(`   Public Key: ${keyPair.publicKey}`);
@@ -42,15 +42,15 @@ async function main() {
   // Step 2: Instantiate client with API key stamper using the generated key pair
   console.log("\n🔧 Initializing Phantom Client...");
 
-  const stamper = new ApiKeyStamper({ 
-    apiSecretKey: keyPair.secretKey 
+  const stamper = new ApiKeyStamper({
+    apiSecretKey: keyPair.secretKey,
   });
 
   const client = new PhantomClient(
     {
-      apiBaseUrl: "https://staging-api.phantom.app/v1/wallets"
+      apiBaseUrl: "https://staging-api.phantom.app/v1/wallets",
     },
-    stamper
+    stamper,
   );
 
   console.log("✅ Phantom Client initialized");
@@ -59,12 +59,12 @@ async function main() {
   console.log("\n🏢 Creating organization...");
   try {
     const organization = await client.createOrganization("Demo Organization", keyPair);
-    
+
     demoData.organization = {
       organizationId: organization.organizationId,
-      name: organization.organizationName
+      name: organization.organizationName,
     };
-    
+
     await fs.writeFile(dataPath, JSON.stringify(demoData, null, 2));
     console.log(`✅ Organization created:`);
     console.log(`   ID: ${organization.organizationId}`);
@@ -73,13 +73,12 @@ async function main() {
     // Step 4: Set organization ID and create wallet
     console.log("\n💰 Setting organization and creating wallet...");
     client.setOrganizationId(organization.organizationId);
-    
+
     const wallet = await client.createWallet("Demo Wallet");
 
     console.log(`✅ Wallet created successfully:`);
     console.log(`   Wallet ID: ${wallet.walletId}`);
     console.log(`   Full wallet data:`, JSON.stringify(wallet, null, 2));
-
   } catch (error) {
     console.error("❌ Error during demo:", error);
     process.exit(1);
@@ -94,7 +93,7 @@ async function main() {
 
 async function generateServerSDKDoc(demoData: DemoData) {
   console.log("\n📚 Generating Server SDK documentation...");
-  
+
   const docContent = `# Using Phantom Server SDK with Your Credentials
 
 This guide shows how to use the Phantom Server SDK with your generated credentials.
@@ -255,12 +254,12 @@ ${JSON.stringify(demoData, null, 2)}
 
   const docPath = path.join(process.cwd(), "SERVER_SDK_USAGE.md");
   await fs.writeFile(docPath, docContent);
-  
+
   console.log(`✅ Server SDK documentation generated: ${docPath}`);
 }
 
 // Run the demo
-main().catch((error) => {
+main().catch(error => {
   console.error("💥 Demo failed:", error);
   process.exit(1);
 });

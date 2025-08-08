@@ -237,7 +237,6 @@ const result = await sdk.connect({
 **Authentication Flow Types:**
 
 1. **Phantom Connect (Redirect-based)**: Used when `provider` is undefined, `"google"`, or `"apple"`
-
    - Redirects to `https://connect.phantom.app` (or custom `authOptions.authUrl` from config)
    - Handles OAuth flow with selected provider
    - Returns to your app with authentication result using `authOptions.redirectUrl` or current page

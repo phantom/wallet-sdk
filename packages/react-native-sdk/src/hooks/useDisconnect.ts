@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { usePhantom } from '../PhantomProvider';
+import { useState, useCallback } from "react";
+import { usePhantom } from "../PhantomProvider";
 
 export function useDisconnect() {
   const { sdk, updateConnectionState } = usePhantom();
@@ -8,7 +8,7 @@ export function useDisconnect() {
 
   const disconnect = useCallback(async (): Promise<void> => {
     if (!sdk) {
-      throw new Error('SDK not initialized');
+      throw new Error("SDK not initialized");
     }
 
     setIsDisconnecting(true);
@@ -16,7 +16,7 @@ export function useDisconnect() {
 
     try {
       await sdk.disconnect();
-      
+
       // Update connection state after disconnection
       updateConnectionState();
     } catch (err) {

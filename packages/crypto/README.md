@@ -60,8 +60,8 @@ console.log("Signature:", signature);
 
 ```typescript
 interface Keypair {
-  publicKey: string;  // Base58-encoded public key
-  secretKey: string;  // Base58-encoded secret key
+  publicKey: string; // Base58-encoded public key
+  secretKey: string; // Base58-encoded secret key
 }
 ```
 
@@ -78,6 +78,7 @@ Generates a new Ed25519 key pair with cryptographically secure random keys.
 Reconstructs a key pair from an existing base58-encoded secret key.
 
 **Parameters:**
+
 - `b58PrivateKey`: Base58-encoded private key string
 
 **Returns:** A `Keypair` object with the corresponding public key derived from the secret key.
@@ -87,6 +88,7 @@ Reconstructs a key pair from an existing base58-encoded secret key.
 Signs data using Ed25519 with a secret key, producing a detached signature.
 
 **Parameters:**
+
 - `secretKey`: Base58-encoded secret key string or raw Uint8Array
 - `data`: Data to sign (accepts string, Uint8Array, or Buffer)
 
@@ -102,6 +104,7 @@ Signs data using Ed25519 with a secret key, producing a detached signature.
 ## Dependencies
 
 This package uses:
+
 - **TweetNaCl**: Cryptographic library for Ed25519 operations
 - **bs58**: Base58 encoding/decoding
 - **buffer**: Buffer polyfill for cross-platform compatibility

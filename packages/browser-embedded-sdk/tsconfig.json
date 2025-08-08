@@ -5,10 +5,5 @@
     "moduleResolution": "bundler",
     "isolatedModules": true
   },
-  "exclude": [
-    "_release",
-    "dist",
-    "node_modules",
-    "**/*.test.ts"
-  ]
+  "exclude": ["_release", "dist", "node_modules", "**/*.test.ts"]
 }

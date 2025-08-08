@@ -1,5 +1,5 @@
-import { Linking } from 'react-native';
-import type { URLParamsAccessor } from '@phantom/embedded-provider-core';
+import { Linking } from "react-native";
+import type { URLParamsAccessor } from "@phantom/embedded-provider-core";
 
 export class ExpoURLParamsAccessor implements URLParamsAccessor {
   private listeners: Set<(params: Record<string, string>) => void> = new Set();
@@ -21,7 +21,7 @@ export class ExpoURLParamsAccessor implements URLParamsAccessor {
       this.currentParams = params;
       return params;
     } catch (error) {
-      console.error('[ExpoURLParamsAccessor] Failed to get initial URL', error);
+      console.error("[ExpoURLParamsAccessor] Failed to get initial URL", error);
       return null;
     }
   }
@@ -31,7 +31,7 @@ export class ExpoURLParamsAccessor implements URLParamsAccessor {
       return; // Already listening
     }
 
-    this.subscription = Linking.addEventListener('url', ({ url }) => {
+    this.subscription = Linking.addEventListener("url", ({ url }) => {
       const params = this.parseURLParams(url);
       if (params && Object.keys(params).length > 0) {
         this.currentParams = { ...this.currentParams, ...params };
@@ -49,7 +49,7 @@ export class ExpoURLParamsAccessor implements URLParamsAccessor {
 
   addListener(callback: (params: Record<string, string>) => void): () => void {
     this.listeners.add(callback);
-    
+
     // Return cleanup function
     return () => {
       this.listeners.delete(callback);
@@ -60,14 +60,14 @@ export class ExpoURLParamsAccessor implements URLParamsAccessor {
     try {
       const parsed = new URL(url);
       const params: Record<string, string> = {};
-      
+
       parsed.searchParams.forEach((value, key) => {
         params[key] = value;
       });
 
       return params;
     } catch (error) {
-      console.error('[ExpoURLParamsAccessor] Failed to parse URL', url, error);
+      console.error("[ExpoURLParamsAccessor] Failed to parse URL", url, error);
       return {};
     }
   }

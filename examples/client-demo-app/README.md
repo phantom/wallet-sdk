@@ -11,11 +11,13 @@ This tool helps you set up your Phantom wallet infrastructure by generating the 
 ## Setup
 
 1. Install dependencies from the workspace root:
+
 ```bash
 yarn install
 ```
 
 2. Run the setup tool:
+
 ```bash
 cd examples/client-demo-app
 yarn dev
@@ -26,8 +28,9 @@ No environment variables needed - the tool generates everything for you!
 ## What it does
 
 The setup script will:
+
 - Generate a new Ed25519 key pair using `@phantom/crypto`
-- Save the key pair to `demo-data.json` 
+- Save the key pair to `demo-data.json`
 - Initialize a Phantom client with the generated private key
 - Create your organization on Phantom's platform
 - Update `demo-data.json` with organization details
@@ -37,7 +40,9 @@ The setup script will:
 ## Output Files
 
 ### `demo-data.json`
+
 Contains your organization credentials:
+
 ```json
 {
   "keyPair": {
@@ -52,7 +57,9 @@ Contains your organization credentials:
 ```
 
 ### `SERVER_SDK_USAGE.md`
+
 A comprehensive guide for integrating with the Phantom Server SDK, including:
+
 - Your specific credentials and organization ID
 - Installation and setup instructions
 - Complete code examples for wallet creation, message signing, and transactions

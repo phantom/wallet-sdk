@@ -1,9 +1,6 @@
-import type { 
-  EmbeddedProviderConfig, 
-  AuthOptions as CoreAuthOptions
-} from '@phantom/embedded-provider-core';
+import type { EmbeddedProviderConfig, AuthOptions as CoreAuthOptions } from "@phantom/embedded-provider-core";
 
-export interface PhantomProviderConfig extends Omit<EmbeddedProviderConfig, 'authOptions'> {
+export interface PhantomProviderConfig extends Omit<EmbeddedProviderConfig, "authOptions"> {
   /** Custom URL scheme for your app (e.g., "myapp") */
   scheme: string;
   /** Authentication options */
@@ -19,7 +16,7 @@ export interface ReactNativeAuthOptions extends CoreAuthOptions {
 
 export interface ConnectOptions {
   /** OAuth provider to use */
-  provider?: 'google' | 'apple' | 'jwt';
+  provider?: "google" | "apple" | "jwt";
   /** JWT token for JWT authentication */
   jwtToken?: string;
   /** Custom authentication data */
@@ -27,11 +24,11 @@ export interface ConnectOptions {
 }
 
 // Re-export core types for convenience
-export type { 
-  WalletAddress, 
-  SignMessageParams, 
-  SignAndSendTransactionParams, 
+export type {
+  WalletAddress,
+  SignMessageParams,
+  SignAndSendTransactionParams,
   SignedTransaction,
   AuthOptions,
-  ConnectResult
-} from '@phantom/embedded-provider-core';
+  ConnectResult,
+} from "@phantom/embedded-provider-core";

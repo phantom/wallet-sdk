@@ -70,10 +70,10 @@ This demo application showcases the usage of the `@phantom/react-native-sdk` wit
 3. **Authentication Flow**: The app will open a web browser for secure authentication
 4. **Callback Handling**: After successful authentication, you'll be redirected back to the app
 5. **Wallet Operations**: Once connected, you can:
-    - View your wallet addresses
-    - Sign messages
-    - Sign transactions (demo implementation)
-    - Disconnect from the wallet
+   - View your wallet addresses
+   - Sign messages
+   - Sign transactions (demo implementation)
+   - Disconnect from the wallet
 
 ## Architecture
 
@@ -83,9 +83,9 @@ This demo uses:
 - **Embedded Provider**: Server-based wallet management with multiple authentication options
 - **Expo Router**: File-based routing system for navigation
 - **Platform Adapters**:
-    - **ExpoSecureStorage**: Hardware-backed secure storage for session management
-    - **ExpoAuthProvider**: OAuth authentication flows using Expo WebBrowser
-    - **ExpoURLParamsAccessor**: Deep link parameter handling for authentication callbacks
+  - **ExpoSecureStorage**: Hardware-backed secure storage for session management
+  - **ExpoAuthProvider**: OAuth authentication flows using Expo WebBrowser
+  - **ExpoURLParamsAccessor**: Deep link parameter handling for authentication callbacks
 - Base64url encoding - All messages and transactions are encoded in base64url format
 
 ## Environment Variables
@@ -123,10 +123,10 @@ const config = {
   addressTypes: [AddressType.solana],
   authOptions: {
     authUrl: process.env.EXPO_PUBLIC_AUTH_URL,
-    redirectUrl: process.env.EXPO_PUBLIC_REDIRECT_URL || "phantom-rn-demo://phantom-auth-callback"
+    redirectUrl: process.env.EXPO_PUBLIC_REDIRECT_URL || "phantom-rn-demo://phantom-auth-callback",
   },
   apiBaseUrl: process.env.EXPO_PUBLIC_WALLET_API || "https://api.phantom.app/v1/wallets",
-  debug: process.env.EXPO_PUBLIC_DEBUG === 'true'
+  debug: process.env.EXPO_PUBLIC_DEBUG === "true",
 };
 ```
 
@@ -143,20 +143,20 @@ app/
 ### Screen Flow
 
 1. **Home Screen (`index.tsx`)**:
-    - Display connection status
-    - Provide authentication options (Google, Apple, JWT)
-    - Handle initial wallet connection
+   - Display connection status
+   - Provide authentication options (Google, Apple, JWT)
+   - Handle initial wallet connection
 
 2. **Wallet Operations Screen (`wallet.tsx`)**:
-    - Display connected wallet information
-    - Message signing functionality
-    - Transaction signing (demo)
-    - Disconnect functionality
+   - Display connected wallet information
+   - Message signing functionality
+   - Transaction signing (demo)
+   - Disconnect functionality
 
 3. **Auth Callback Screen (`auth-callback.tsx`)**:
-    - Handle authentication redirects
-    - Complete wallet connection process
-    - Display success/error states
+   - Handle authentication redirects
+   - Complete wallet connection process
+   - Display success/error states
 
 ## Deep Link Configuration
 
@@ -185,11 +185,13 @@ The demo app uses:
 ## Platform-Specific Features
 
 ### iOS
+
 - Hardware Security Module (HSM) backed secure storage
 - Native authentication flows
 - Deep link handling through iOS URL schemes
 
 ### Android
+
 - Android Keystore backed secure storage
 - Chrome Custom Tabs for authentication
 - Intent-based deep link handling
@@ -199,19 +201,19 @@ The demo app uses:
 ### Connection Issues
 
 1. **Deep link not working**:
-    - Ensure the app scheme in `app.json` matches your environment variables
-    - Check that the redirect URL is properly formatted
-    - Clear app data and reinstall if necessary
+   - Ensure the app scheme in `app.json` matches your environment variables
+   - Check that the redirect URL is properly formatted
+   - Clear app data and reinstall if necessary
 
 2. **Authentication failures**:
-    - Verify your organization ID is correct
-    - Check browser popup blockers aren't interfering
-    - Ensure your device has internet connectivity
+   - Verify your organization ID is correct
+   - Check browser popup blockers aren't interfering
+   - Ensure your device has internet connectivity
 
 3. **Secure storage errors**:
-    - On iOS: Ensure device passcode/biometric is enabled
-    - On Android: Check device security settings
-    - Clear app data if encountering storage conflicts
+   - On iOS: Ensure device passcode/biometric is enabled
+   - On Android: Check device security settings
+   - Clear app data if encountering storage conflicts
 
 ### Build Issues
 

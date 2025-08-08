@@ -1,9 +1,9 @@
 // Type declarations for Expo modules that are peer dependencies
 // These modules are provided by the consumer of this package
 
-declare module 'expo-secure-store' {
+declare module "expo-secure-store" {
   export const WHEN_UNLOCKED_THIS_DEVICE_ONLY: string;
-  
+
   export interface SecureStoreOptions {
     requireAuthentication?: boolean;
     keychainAccessible?: string;
@@ -15,9 +15,9 @@ declare module 'expo-secure-store' {
   export function isAvailableAsync(): Promise<boolean>;
 }
 
-declare module 'expo-web-browser' {
+declare module "expo-web-browser" {
   export interface WebBrowserResult {
-    type: 'success' | 'cancel' | 'dismiss' | 'locked';
+    type: "success" | "cancel" | "dismiss" | "locked";
     url?: string;
   }
 
@@ -38,7 +38,7 @@ declare module 'expo-web-browser' {
   export function openAuthSessionAsync(
     authUrl: string,
     redirectUrl: string,
-    options?: WebBrowserAuthSessionOptions
+    options?: WebBrowserAuthSessionOptions,
   ): Promise<WebBrowserResult>;
 
   export function warmUpAsync(): Promise<void>;

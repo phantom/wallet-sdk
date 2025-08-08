@@ -5,7 +5,9 @@ import {
   useSignMessage as useBaseSignMessage,
   usePhantom,
   type ConnectOptions as _ConnectOptions,
-  SignAndSendTransactionParams, SignedTransaction, SignMessageParams
+  type SignAndSendTransactionParams,
+  type SignedTransaction,
+  type SignMessageParams,
 } from "@phantom/react-sdk";
 
 export interface PhantomUIProviderProps {

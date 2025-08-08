@@ -1,4 +1,4 @@
-import type { DebugLogger } from '@phantom/embedded-provider-core';
+import type { DebugLogger } from "@phantom/embedded-provider-core";
 
 export class ExpoLogger implements DebugLogger {
   private readonly enabled: boolean;

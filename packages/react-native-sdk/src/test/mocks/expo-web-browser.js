@@ -3,9 +3,9 @@ module.exports = {
   warmUpAsync: jest.fn(),
   coolDownAsync: jest.fn(),
   WebBrowserPresentationStyle: {
-    FULL_SCREEN: 'fullScreen',
+    FULL_SCREEN: "fullScreen",
   },
   WebBrowserDismissButtonStyle: {
-    CLOSE: 'close',
+    CLOSE: "close",
   },
 };

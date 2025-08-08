@@ -591,7 +591,7 @@ Quick reference of all available hooks:
 | `useSignMessage`            | Sign text messages                  | `{ signMessage, isSigning, error }`             |
 | `useSignAndSendTransaction` | Sign and send transactions          | `{ signAndSendTransaction, isSigning, error }`  |
 | `useCreateUserOrganization` | Create user organization (embedded) | `{ createUserOrganization, isCreating, error }` |
-| `usePhantom`                | Get provider context                | `{ isConnected, isReady }` |
+| `usePhantom`                | Get provider context                | `{ isConnected, isReady }`                      |
 
 ## Configuration Reference
 

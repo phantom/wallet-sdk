@@ -4,15 +4,8 @@
     "outDir": "dist/esm",
     "moduleResolution": "bundler",
     "rootDir": "src",
-    "lib": [
-      "dom",
-      "esnext"
-    ],
+    "lib": ["dom", "esnext"],
     "isolatedModules": true
   },
-  "include": [
-    "src/**/*",
-    "src/**/*.test.ts",
-    "src/**/*.spec.ts"
-  ]
+  "include": ["src/**/*", "src/**/*.test.ts", "src/**/*.spec.ts"]
 }

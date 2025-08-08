@@ -203,7 +203,6 @@ export class PhantomClient {
         method: SignTransactionMethodEnum.signTransaction,
         params: signRequest,
         timestampMs: Date.now(),
-
       } as any;
 
       const response = await this.kmsApi.postKmsRpc(request);
