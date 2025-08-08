@@ -33,13 +33,13 @@ export default function WalletScreen() {
     }
 
     try {
-      const signature = await signMessage({
+      const result = await signMessage({
         message: messageToSign,
         networkId: NetworkId.SOLANA_MAINNET,
       });
 
-      setSignedMessage(signature);
-      Alert.alert("Success", `Message signed successfully!\n\nSignature: ${signature.slice(0, 20)}...`);
+      setSignedMessage(result.signature);
+      Alert.alert("Success", `Message signed successfully!\n\nSignature: ${result.signature.slice(0, 20)}...${result.blockExplorer ? `\n\nView on explorer: ${result.blockExplorer}` : ''}`);
     } catch (error) {
       Alert.alert("Error", `Failed to sign message: ${(error as Error).message}`);
     }

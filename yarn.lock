@@ -3220,6 +3220,7 @@ __metadata:
     "@phantom/base64url": "workspace:^"
     "@phantom/browser-injected-sdk": "workspace:^"
     "@phantom/client": "workspace:^"
+    "@phantom/constants": "workspace:^"
     "@phantom/embedded-provider-core": "workspace:^"
     "@phantom/parsers": "workspace:^"
     "@types/jest": "npm:^29.5.12"
@@ -3247,6 +3248,7 @@ __metadata:
   dependencies:
     "@phantom/api-key-stamper": "workspace:^"
     "@phantom/base64url": "workspace:^"
+    "@phantom/constants": "workspace:^"
     "@phantom/crypto": "workspace:^"
     "@phantom/openapi-wallet-service": "npm:^0.1.7"
     "@types/jest": "npm:^29.5.12"
@@ -3254,6 +3256,23 @@ __metadata:
     axios: "npm:^1.10.0"
     bs58: "npm:^6.0.0"
     eslint: "npm:8.53.0"
+    jest: "npm:^29.7.0"
+    prettier: "npm:^3.5.2"
+    rimraf: "npm:^6.0.1"
+    ts-jest: "npm:^29.1.2"
+    tsup: "npm:^6.7.0"
+    typescript: "npm:^5.0.4"
+  languageName: unknown
+  linkType: soft
+
+"@phantom/constants@workspace:^, @phantom/constants@workspace:packages/constants":
+  version: 0.0.0-use.local
+  resolution: "@phantom/constants@workspace:packages/constants"
+  dependencies:
+    "@types/jest": "npm:^29.5.12"
+    "@types/node": "npm:^20.11.0"
+    eslint: "npm:8.53.0"
+    eslint-define-config: "npm:^1.24.1"
     jest: "npm:^29.7.0"
     prettier: "npm:^3.5.2"
     rimraf: "npm:^6.0.1"
@@ -3289,6 +3308,7 @@ __metadata:
   dependencies:
     "@phantom/api-key-stamper": "workspace:^"
     "@phantom/client": "workspace:^"
+    "@phantom/constants": "workspace:^"
     "@phantom/parsers": "workspace:^"
     "@types/jest": "npm:^29.5.5"
     "@types/node": "npm:^20.11.0"
@@ -3318,9 +3338,10 @@ __metadata:
   resolution: "@phantom/parsers@workspace:packages/parsers"
   dependencies:
     "@phantom/base64url": "workspace:^"
-    "@phantom/client": "workspace:^"
+    "@phantom/constants": "workspace:^"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
+    bs58: "npm:^6.0.0"
     buffer: "npm:^6.0.3"
     eslint: "npm:8.53.0"
     jest: "npm:^29.7.0"
@@ -3364,6 +3385,7 @@ __metadata:
   resolution: "@phantom/react-native-sdk@workspace:packages/react-native-sdk"
   dependencies:
     "@phantom/client": "workspace:^"
+    "@phantom/constants": "workspace:^"
     "@phantom/embedded-provider-core": "workspace:^"
     "@types/jest": "npm:^29.5.14"
     "@types/react": "npm:~19.0.10"
@@ -3509,6 +3531,7 @@ __metadata:
   dependencies:
     "@phantom/api-key-stamper": "workspace:^"
     "@phantom/client": "workspace:^"
+    "@phantom/constants": "workspace:^"
     "@phantom/openapi-wallet-service": "npm:^0.1.7"
     "@phantom/parsers": "workspace:^"
     "@types/jest": "npm:^29.5.12"

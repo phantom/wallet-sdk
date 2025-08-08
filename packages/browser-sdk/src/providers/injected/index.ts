@@ -3,6 +3,7 @@ import type {
   ConnectResult,
   SignMessageParams,
   SignAndSendTransactionParams,
+  SignMessageResult,
   SignedTransaction,
   WalletAddress,
   AuthOptions,
@@ -12,6 +13,7 @@ import { createPhantom, createExtensionPlugin } from "@phantom/browser-injected-
 import { createSolanaPlugin } from "@phantom/browser-injected-sdk/solana";
 import { createEthereumPlugin } from "@phantom/browser-injected-sdk/ethereum";
 import { debug, DebugCategory } from "../../debug";
+import { parseSignMessageResponse } from "@phantom/parsers";
 
 declare global {
   interface Window {
@@ -149,21 +151,21 @@ export class InjectedProvider implements Provider {
     this.addresses = [];
   }
 
-  async signMessage(params: SignMessageParams): Promise<string> {
+  async signMessage(params: SignMessageParams): Promise<SignMessageResult> {
     if (!this.connected) {
       throw new Error("Wallet not connected");
     }
 
     const networkPrefix = params.networkId.split(":")[0].toLowerCase();
+    let rawSignature: string;
 
     if (networkPrefix === "solana") {
       // Sign with Solana provider using browser-injected-sdk - message is already a native string
       const { signature } = await this.phantom.solana.signMessage(new TextEncoder().encode(params.message));
 
-      // Return signature as hex string or base58 depending on provider
-      return Array.from(signature)
-        .map((b: any) => b.toString(16).padStart(2, "0"))
-        .join("");
+      // Convert signature to base64url for consistency with server responses
+      const uint8Array = new Uint8Array(signature);
+      rawSignature = Buffer.from(uint8Array).toString("base64url");
     } else if (networkPrefix === "ethereum" || networkPrefix === "polygon" || networkPrefix === "eip155") {
       // Get the first address
       const address = this.addresses.find(addr => addr.addressType === AddressType.ethereum)?.address;
@@ -176,10 +178,15 @@ export class InjectedProvider implements Provider {
       // Sign with Ethereum provider using browser-injected-sdk - message is already a native string
       const signature = await this.phantom.ethereum.signPersonalMessage(params.message, address);
 
-      return signature;
+      // Convert signature to base64url for consistency with server responses
+      const hexSignature = signature.startsWith("0x") ? signature.slice(2) : signature;
+      rawSignature = Buffer.from(hexSignature, "hex").toString("base64url");
+    } else {
+      throw new Error(`Network ${params.networkId} is not supported for injected wallets`);
     }
 
-    throw new Error(`Network ${params.networkId} is not supported for injected wallets`);
+    // Parse the signature using the unified parser to get consistent response format
+    return parseSignMessageResponse(rawSignature, params.networkId);
   }
 
   async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<SignedTransaction> {

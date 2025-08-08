@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "@phantom/client": "workspace:^",
+    "@phantom/constants": "workspace:^",
     "@phantom/embedded-provider-core": "workspace:^"
   },
   "peerDependencies": {

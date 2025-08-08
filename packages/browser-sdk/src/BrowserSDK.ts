@@ -7,6 +7,7 @@ import type {
   CreateUserOrganizationParams,
   CreateUserOrganizationResult,
   SignMessageParams,
+  SignMessageResult,
   AuthOptions,
 } from "./types";
 import { ProviderManager, type SwitchProviderOptions, type ProviderPreference } from "./ProviderManager";
@@ -169,7 +170,7 @@ export class BrowserSDK {
    * @param networkId - Network identifier
    * @returns Signature string
    */
-  async signMessage(params: SignMessageParams): Promise<string> {
+  async signMessage(params: SignMessageParams): Promise<SignMessageResult> {
     return this.providerManager.signMessage(params);
   }
 

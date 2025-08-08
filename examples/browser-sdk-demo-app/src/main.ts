@@ -233,10 +233,10 @@ document.addEventListener("DOMContentLoaded", () => {
         // Use devnet by default for demo, but could be configurable
         const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL || "https://api.devnet.solana.com";
         const networkId = rpcUrl.includes("mainnet") ? NetworkId.SOLANA_MAINNET : NetworkId.SOLANA_DEVNET;
-        const signature = await sdk.signMessage({ message, networkId });
+        const result = await sdk.signMessage({ message, networkId });
 
-        console.log("Message signed:", signature);
-        alert(`Message signed: ${signature}`);
+        console.log("Message signed:", result);
+        alert(`Message signed: ${result.signature}${result.blockExplorer ? `\n\nView on explorer: ${result.blockExplorer}` : ''}`);
       } catch (error) {
         console.error("Error signing message:", error);
         alert(`Error signing message: ${(error as Error).message || error}`);

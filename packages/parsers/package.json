@@ -29,7 +29,8 @@
   },
   "dependencies": {
     "@phantom/base64url": "workspace:^",
-    "@phantom/client": "workspace:^",
+    "@phantom/constants": "workspace:^",
+    "bs58": "^6.0.0",
     "buffer": "^6.0.3"
   },
   "devDependencies": {

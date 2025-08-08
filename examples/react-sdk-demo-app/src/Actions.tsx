@@ -103,11 +103,11 @@ export function Actions() {
       return;
     }
     try {
-      const signature = await signMessage({
+      const result = await signMessage({
         message: "Hello from Phantom React SDK Demo!",
         networkId: NetworkId.SOLANA_MAINNET,
       });
-      alert(`Message Signed! Signature: ${signature}`);
+      alert(`Message Signed! Signature: ${result.signature}${result.blockExplorer ? `\n\nView on explorer: ${result.blockExplorer}` : ''}`);
     } catch (error) {
       console.error("Error signing message:", error);
       alert(`Error signing message: ${(error as Error).message || error}`);

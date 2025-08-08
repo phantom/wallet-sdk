@@ -1,5 +1,4 @@
-// Removed unused AxiosInstance import
-import { type NetworkId } from "./caip2-mappings";
+import { type NetworkId } from "@phantom/constants";
 
 export interface PhantomClientConfig {
   apiBaseUrl: string;
