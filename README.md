@@ -2,15 +2,19 @@
 
 A comprehensive suite of SDKs for integrating Phantom Wallet across different platforms and use cases, supporting both Phantom browser extension and embedded non-custodial wallets.
 
-## ⚠️ Deprecation Notice
+## Packages
 
-**@phantom/wallet-sdk** (the embedded wallet SDK) is now deprecated. Future development and support will focus on the following packages:
+All packages with links to documentation:
 
-- [@phantom/browser-sdk](https://www.npmjs.com/package/@phantom/browser-sdk): Core browser SDK for Phantom wallet integration (no UI components).
-- [@phantom/react-sdk](https://www.npmjs.com/package/@phantom/react-sdk): Invisible SDK for non custodial client wallets
-- [@phantom/react-ui](https://www.npmjs.com/package/@phantom/react-ui): SDK with React UI components
-- [@phantom/server-sdk](https://www.npmjs.com/package/@phantom/server-sdk): Server SDK for custodial server wallets
-- [@phantom/browser-injected-sdk](https://www.npmjs.com/package/@phantom/browser-injected-sdk): Direct SDK to interface with the Phantom browser extension
+- **[@phantom/react-sdk](./packages/react-sdk/README.md)** - React hooks and components ([NPM](https://www.npmjs.com/package/@phantom/react-sdk))
+- **[@phantom/browser-sdk](./packages/browser-sdk/README.md)** - Core browser SDK ([NPM](https://www.npmjs.com/package/@phantom/browser-sdk))
+- **[@phantom/server-sdk](./packages/server-sdk/README.md)** - Server-side SDK ([NPM](https://www.npmjs.com/package/@phantom/server-sdk))
+- **[@phantom/react-ui](./packages/react-ui/README.md)** - React UI components
+- **[@phantom/client](./packages/client/README.md)** - HTTP client library
+- **[@phantom/api-key-stamper](./packages/api-key-stamper/README.md)** - API authentication
+- **[@phantom/browser-injected-sdk](./packages/browser-injected-sdk/README.md)** - Browser extension integration
+- **@phantom/wallet-sdk (DEPRECATED)** - Legacy embedded wallet SDK
+- **@phantom/browser-embedded-sdk (DEPRECATED)** - Legacy browser embedded SDK
 
 ## SDK Overview
 
@@ -173,20 +177,6 @@ function SendTransaction() {
 ### 🔌 Browser Injected SDK
 
 **[@phantom/browser-injected-sdk](./packages/browser-injected-sdk/README.md)** - Direct integration with Phantom browser extension.
-
-## Packages
-
-All packages with links to documentation:
-
-- **[@phantom/react-sdk](./packages/react-sdk/README.md)** - React hooks and components ([NPM](https://www.npmjs.com/package/@phantom/react-sdk))
-- **[@phantom/browser-sdk](./packages/browser-sdk/README.md)** - Core browser SDK ([NPM](https://www.npmjs.com/package/@phantom/browser-sdk))
-- **[@phantom/server-sdk](./packages/server-sdk/README.md)** - Server-side SDK ([NPM](https://www.npmjs.com/package/@phantom/server-sdk))
-- **[@phantom/react-ui](./packages/react-ui/README.md)** - React UI components
-- **[@phantom/client](./packages/client/README.md)** - HTTP client library
-- **[@phantom/api-key-stamper](./packages/api-key-stamper/README.md)** - API authentication
-- **[@phantom/browser-injected-sdk](./packages/browser-injected-sdk/README.md)** - Browser extension integration
-- **@phantom/wallet-sdk (DEPRECATED)** - Legacy embedded wallet SDK
-- **@phantom/browser-embedded-sdk (DEPRECATED)** - Legacy browser embedded SDK
 
 ## Examples
 
