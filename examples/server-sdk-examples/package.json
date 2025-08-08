@@ -12,7 +12,6 @@
   "dependencies": {
     "@phantom/server-sdk": "workspace:^",
     "@solana/web3.js": "^1.87.6",
-    "bs58": "^6.0.0",
     "dotenv": "^16.4.1"
   },
   "devDependencies": {

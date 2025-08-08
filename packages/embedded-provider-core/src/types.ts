@@ -1,4 +1,6 @@
-import type { AddressType, NetworkId } from "@phantom/client";
+import type { AddressType } from "@phantom/client";
+import type { NetworkId } from "@phantom/constants";
+import type { ParsedSignatureResult, ParsedTransactionResult } from "@phantom/parsers";
 
 export interface WalletAddress {
   addressType: AddressType;
@@ -16,14 +18,16 @@ export interface SignMessageParams {
   networkId: NetworkId;
 }
 
+// Use the parsed signature result
+export interface SignMessageResult extends ParsedSignatureResult {}
+
 export interface SignAndSendTransactionParams {
   transaction: any; // Native transaction object (Transaction, VersionedTransaction, etc.)
   networkId: NetworkId;
 }
 
-export interface SignedTransaction {
-  rawTransaction: string;
-}
+// Use the parsed transaction result instead of raw transaction
+export interface SignedTransaction extends ParsedTransactionResult {}
 
 export interface AuthOptions {
   provider?: "google" | "apple" | "jwt";

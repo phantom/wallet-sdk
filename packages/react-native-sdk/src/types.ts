@@ -27,6 +27,7 @@ export interface ConnectOptions {
 export type {
   WalletAddress,
   SignMessageParams,
+  SignMessageResult,
   SignAndSendTransactionParams,
   SignedTransaction,
   AuthOptions,

@@ -1,5 +1,5 @@
 import { DerivationInfoCurveEnum, DerivationInfoAddressFormatEnum, Algorithm } from "@phantom/openapi-wallet-service";
-import { type NetworkId } from "./caip2-mappings";
+import { type NetworkId } from "@phantom/constants";
 
 /**
  * Default derivation paths for different blockchain networks

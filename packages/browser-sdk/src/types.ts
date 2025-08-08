@@ -4,6 +4,7 @@ import type {
   ConnectResult,
   SignMessageParams,
   SignAndSendTransactionParams,
+  SignMessageResult,
   SignedTransaction,
   AuthOptions,
 } from "@phantom/embedded-provider-core";
@@ -48,6 +49,7 @@ export type {
   ConnectResult,
   SignMessageParams,
   SignAndSendTransactionParams,
+  SignMessageResult,
   SignedTransaction,
   AuthOptions,
 };
@@ -55,7 +57,7 @@ export type {
 export interface Provider {
   connect(authOptions?: AuthOptions): Promise<ConnectResult>;
   disconnect(): Promise<void>;
-  signMessage(params: SignMessageParams): Promise<string>;
+  signMessage(params: SignMessageParams): Promise<SignMessageResult>;
   signAndSendTransaction(params: SignAndSendTransactionParams): Promise<SignedTransaction>;
   getAddresses(): WalletAddress[];
   isConnected(): boolean;

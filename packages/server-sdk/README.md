@@ -216,7 +216,6 @@ const unicodeSignature = await sdk.signMessage({
   networkId: NetworkId.SOLANA_MAINNET,
 });
 
-const ethMessage = Buffer.from().toString("base64url");
 const ethSignature = await sdk.signMessage({
   walletId: wallet.walletId,
   message: "Sign in to our dApp",

@@ -43,7 +43,6 @@ export function Actions() {
   const [debugLevel, setDebugLevel] = useState<DebugLevel>(DebugLevel.INFO);
   const [showDebug, setShowDebug] = useState(true);
   const [debugMessages, setDebugMessages] = useState<DebugMessage[]>([]);
-
   // Debug callback function
   const handleDebugMessage = useCallback((message: DebugMessage) => {
     setDebugMessages(prev => {
@@ -103,11 +102,11 @@ export function Actions() {
       return;
     }
     try {
-      const signature = await signMessage({
+      const result = await signMessage({
         message: "Hello from Phantom React SDK Demo!",
         networkId: NetworkId.SOLANA_MAINNET,
       });
-      alert(`Message Signed! Signature: ${signature}`);
+      alert(`Message Signed! Signature: ${result.signature}${result.blockExplorer ? `\n\nView on explorer: ${result.blockExplorer}` : ''}`);
     } catch (error) {
       console.error("Error signing message:", error);
       alert(`Error signing message: ${(error as Error).message || error}`);

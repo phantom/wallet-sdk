@@ -41,6 +41,7 @@
   "dependencies": {
     "@phantom/api-key-stamper": "workspace:^",
     "@phantom/client": "workspace:^",
+    "@phantom/constants": "workspace:^",
     "@phantom/parsers": "workspace:^"
   },
   "devDependencies": {

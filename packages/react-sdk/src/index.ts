@@ -15,4 +15,5 @@ export type {
   SignAndSendTransactionParams,
   SignedTransaction,
   SignMessageParams,
+  SignMessageResult,
 } from "@phantom/browser-sdk";

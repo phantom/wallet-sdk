@@ -157,7 +157,12 @@ describe("InjectedProvider", () => {
       });
 
       expect(mockSolanaPlugin.signMessage).toHaveBeenCalledWith(new TextEncoder().encode(message));
-      expect(result).toBe("0102030405");
+      expect(result).toEqual({
+        signature: expect.any(String),
+        rawSignature: expect.any(String),
+        blockExplorer: undefined,
+      });
+      expect(result.rawSignature).toBe("AQIDBAU");
     });
 
     it("should sign message with Ethereum", async () => {
@@ -174,7 +179,11 @@ describe("InjectedProvider", () => {
         message,
         "0x742d35Cc6634C0532925a3b844Bc9e7595f6cE65",
       );
-      expect(result).toBe(mockSignature);
+      expect(result).toEqual({
+        signature: mockSignature,
+        rawSignature: expect.any(String),
+        blockExplorer: undefined,
+      });
     });
 
     it("should throw error when not connected", async () => {
@@ -207,7 +216,7 @@ describe("InjectedProvider", () => {
       });
 
       expect(mockSolanaPlugin.signAndSendTransaction).toHaveBeenCalledWith(mockTransaction);
-      expect(result).toEqual({ rawTransaction: mockSignature });
+      expect(result).toEqual({ hash: mockSignature, rawTransaction: mockSignature });
     });
 
     it("should sign and send Ethereum transaction", async () => {
@@ -233,7 +242,7 @@ describe("InjectedProvider", () => {
         maxPriorityFeePerGas: undefined,
         data: "0x",
       });
-      expect(result).toEqual({ rawTransaction: mockTxHash });
+      expect(result).toEqual({ hash: mockTxHash, rawTransaction: mockTxHash });
     });
 
     it("should throw error when not connected", async () => {
