@@ -3216,11 +3216,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/browser-sdk@workspace:packages/browser-sdk"
   dependencies:
-    "@phantom/api-key-stamper": "workspace:^"
     "@phantom/base64url": "workspace:^"
     "@phantom/browser-injected-sdk": "workspace:^"
     "@phantom/client": "workspace:^"
     "@phantom/embedded-provider-core": "workspace:^"
+    "@phantom/indexed-db-stamper": "workspace:^"
     "@phantom/parsers": "workspace:^"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
@@ -3304,6 +3304,27 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@phantom/indexed-db-stamper@workspace:^, @phantom/indexed-db-stamper@workspace:packages/indexed-db-stamper":
+  version: 0.0.0-use.local
+  resolution: "@phantom/indexed-db-stamper@workspace:packages/indexed-db-stamper"
+  dependencies:
+    "@phantom/base64url": "workspace:^"
+    "@phantom/crypto": "workspace:^"
+    "@types/jest": "npm:^29.5.12"
+    "@types/node": "npm:^20.11.0"
+    buffer: "npm:^6.0.3"
+    eslint: "npm:8.53.0"
+    fake-indexeddb: "npm:^6.0.0"
+    jest: "npm:^29.7.0"
+    jest-environment-jsdom: "npm:^29.7.0"
+    prettier: "npm:^3.5.2"
+    rimraf: "npm:^6.0.1"
+    ts-jest: "npm:^29.1.2"
+    tsup: "npm:^6.7.0"
+    typescript: "npm:^5.0.4"
+  languageName: unknown
+  linkType: soft
+
 "@phantom/openapi-wallet-service@npm:^0.1.7":
   version: 0.1.7
   resolution: "@phantom/openapi-wallet-service@npm:0.1.7"
@@ -3363,7 +3384,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/react-native-sdk@workspace:packages/react-native-sdk"
   dependencies:
+    "@phantom/api-key-stamper": "workspace:^"
+    "@phantom/base64url": "workspace:^"
     "@phantom/client": "workspace:^"
+    "@phantom/crypto": "workspace:^"
     "@phantom/embedded-provider-core": "workspace:^"
     "@types/jest": "npm:^29.5.14"
     "@types/react": "npm:~19.0.10"
@@ -8705,6 +8729,13 @@ __metadata:
   dependencies:
     realistic-structured-clone: "npm:^3.0.0"
   checksum: 10c0/5d3f46768d443df006625ceccb33b18a1fb0d9e18d134d638f395e7f4ed6945f9733e3f12f9daa80eaab4c6e9a46ba0c9509fbdf747e04c72a63ca3f000bee3f
+  languageName: node
+  linkType: hard
+
+"fake-indexeddb@npm:^6.0.0":
+  version: 6.0.1
+  resolution: "fake-indexeddb@npm:6.0.1"
+  checksum: 10c0/60f4ccdfd5ecb37bb98019056c688366847840cce7146e0005c5ca54823238455403b0a8803b898a11cf80f6147b1bb553457c6af427a644a6e64566cdbe42ec
   languageName: node
   linkType: hard
 

@@ -3,11 +3,17 @@ export interface Keypair {
   secretKey: string;
 }
 
+export interface StamperInfo {
+  keyId: string;
+  publicKey: string;
+}
+
 export interface Session {
   sessionId: string;
   walletId: string;
   organizationId: string;
-  keypair: Keypair;
+  stamperInfo: StamperInfo;
+  keypair?: Keypair; // Keep for backward compatibility during migration
   authProvider?: string;
   userInfo?: Record<string, any>;
   status: "pending" | "completed" | "failed";

@@ -59,6 +59,14 @@ describe("EmbeddedProvider Core", () => {
       urlParamsAccessor: {
         getParam: jest.fn().mockReturnValue(null),
       },
+      stamper: {
+        init: jest.fn().mockResolvedValue({ keyId: "test-key-id", publicKey: "test-public-key" }),
+        sign: jest.fn().mockResolvedValue("mock-signature"),
+        stamp: jest.fn().mockResolvedValue("mock-stamp"),
+        getKeyInfo: jest.fn().mockReturnValue({ keyId: "test-key-id", publicKey: "test-public-key" }),
+        resetKeyPair: jest.fn().mockResolvedValue({ keyId: "test-key-id", publicKey: "test-public-key" }),
+        clear: jest.fn().mockResolvedValue(undefined),
+      },
     };
 
     // Setup mock logger
@@ -96,6 +104,10 @@ describe("EmbeddedProvider Core", () => {
 
     it("should use platform URL params accessor", () => {
       expect(mockPlatform.urlParamsAccessor).toBeDefined();
+    });
+
+    it("should use platform stamper", () => {
+      expect(mockPlatform.stamper).toBeDefined();
     });
 
     it("should use provided logger", () => {

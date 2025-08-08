@@ -1,8 +1,6 @@
 import axios, { type AxiosInstance } from "axios";
 import bs58 from "bs58";
 import { base64urlEncode } from "@phantom/base64url";
-import { type Keypair } from "@phantom/crypto";
-import { ApiKeyStamper } from "@phantom/api-key-stamper";
 import {
   Configuration,
   KMSRPCApi,
@@ -343,20 +341,25 @@ export class PhantomClient {
     }
   }
 
-  async getOrCreateOrganization(tag: string, keyPair: Keypair): Promise<ExternalKmsOrganization> {
+  async getOrCreateOrganization(tag: string, publicKey: string): Promise<ExternalKmsOrganization> {
     try {
       // First, try to get the organization
       // Since there's no explicit getOrganization method, we'll create it
       // This assumes the API returns existing org if it already exists
-      return await this.createOrganization(tag, keyPair);
+      return await this.createOrganization(tag, publicKey);
     } catch (error: any) {
       console.error("Failed to get or create organization:", error.response?.data || error.message);
       throw new Error(`Failed to get or create organization: ${error.response?.data?.message || error.message}`);
     }
   }
 
-  async internalCreateOrganization(name: string, keyPair: Keypair): Promise<ExternalKmsOrganization> {
+
+  async createOrganization(name: string, publicKey: string): Promise<ExternalKmsOrganization> {
     try {
+      if (!name) {
+        throw new Error("Organization name is required");
+      }
+ 
       const params: CreateOrganizationRequest = {
         organizationName: name,
         users: [
@@ -366,7 +369,7 @@ export class PhantomClient {
               {
                 algorithm: Algorithm.ed25519,
                 authenticatorKind: "keypair" as any,
-                publicKey: base64urlEncode(bs58.decode(keyPair.publicKey)) as any,
+                publicKey: base64urlEncode(bs58.decode(publicKey)) as any,
                 authenticatorName: `KeyPair ${Date.now()}`,
               },
             ] as any,
@@ -387,28 +390,7 @@ export class PhantomClient {
       const result = response.data.result as ExternalKmsOrganization;
 
       return result;
-    } catch (error: any) {
-      console.error("Failed to create organization:", error.response?.data || error.message);
-      throw new Error(`Failed to create organization: ${error.response?.data?.message || error.message}`);
-    }
-  }
-
-  async createOrganization(name: string, keyPair: Keypair): Promise<ExternalKmsOrganization> {
-    try {
-      if (!name) {
-        throw new Error("Organization name is required");
-      }
-      // Create a new instance of the client with the provided keyPair
-      const tempClient = new PhantomClient(
-        {
-          apiBaseUrl: this.config.apiBaseUrl,
-        },
-        new ApiKeyStamper({
-          apiSecretKey: keyPair.secretKey,
-        }),
-      );
-
-      return await tempClient.internalCreateOrganization(name, keyPair);
+  
     } catch (error: any) {
       console.error("Failed to create organization:", error.response?.data || error.message);
       throw new Error(`Failed to create organization: ${error.response?.data?.message || error.message}`);
