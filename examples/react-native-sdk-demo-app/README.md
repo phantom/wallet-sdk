@@ -122,34 +122,15 @@ const config = {
 
 ## App Structure
 
-```
-src/
-├── App.tsx              # Root component with PhantomProvider
-├── screens/
-│   ├── HomeScreen.tsx   # Home screen with connection UI
-│   ├── WalletScreen.tsx # Wallet operations screen
-│   └── AuthCallback.tsx # Authentication callback handler
-└── navigation/
-    └── AppNavigator.tsx # Navigation configuration
-```
+The demo app follows Expo Router's file-based routing structure with TypeScript support.
 
-### Screen Flow
+### Key Features
 
-1. **Home Screen (`HomeScreen.tsx`)**:
-   - Display connection status
-   - Provide authentication options (Google, Apple, JWT)
-   - Handle initial wallet connection
-
-2. **Wallet Operations Screen (`WalletScreen.tsx`)**:
-   - Display connected wallet information
-   - Message signing functionality
-   - Transaction signing (demo)
-   - Disconnect functionality
-
-3. **Auth Callback Screen (`AuthCallback.tsx`)**:
-   - Handle authentication redirects
-   - Complete wallet connection process
-   - Display success/error states
+- Authentication with multiple providers (Google, Apple, JWT)
+- Wallet connection and management
+- Message signing functionality
+- Transaction signing demonstrations
+- Secure session handling with deep link callbacks
 
 ## Deep Link Configuration
 
