@@ -5,8 +5,10 @@ import {
   useSignMessage as useBaseSignMessage,
   usePhantom,
   type ConnectOptions as _ConnectOptions,
+  type SignAndSendTransactionParams,
+  type SignedTransaction,
+  type SignMessageParams,
 } from "@phantom/react-sdk";
-import type { SignAndSendTransactionParams, SignedTransaction, SignMessageParams } from "@phantom/browser-sdk";
 
 export interface PhantomUIProviderProps {
   children: ReactNode;

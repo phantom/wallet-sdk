@@ -10,6 +10,8 @@ const config = {
     "<rootDir>/packages/crypto/jest.config.js",
     "<rootDir>/packages/parsers/jest.config.js",
     "<rootDir>/packages/react-sdk/jest.config.js",
+    "<rootDir>/packages/react-native-sdk/jest.config.js",
+    "<rootDir>/packages/embedded-provider-core/jest.config.js",
     "<rootDir>/packages/server-sdk/jest.config.js",
     "<rootDir>/examples/browser-embedded-sdk-demo-app",
     "<rootDir>/examples/react-sdk-demo-app",

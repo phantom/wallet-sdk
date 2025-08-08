@@ -79,7 +79,6 @@ Once the `phantom.solana` object is initialized, you can access the following me
 The SDK also allows you to listen for `connect`, `disconnect`, and `accountChanged` events:
 
 - `addEventListener(event: PhantomEventType, callback: PhantomEventCallback): () => void`
-
   - Registers a callback that will be invoked when the specified event occurs.
   - For the `connect` event, the callback receives the public key (as a string) of the connected account.
   - For the `disconnect` event, the callback receives no arguments.
@@ -110,7 +109,6 @@ The SDK also allows you to listen for `connect`, `disconnect`, and `accountChang
   ```
 
 - `removeEventListener(event: PhantomEventType, callback: PhantomEventCallback): void`
-
   - Unregisters a previously registered callback for the specified event.
 
   **Example:**

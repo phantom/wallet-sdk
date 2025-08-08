@@ -18,11 +18,6 @@ export function useConnect() {
       try {
         const result = await context.sdk.connect(options);
 
-        // Trigger context state update after connection
-        if ((context.sdk as any)._updateConnectionState) {
-          await (context.sdk as any)._updateConnectionState();
-        }
-
         return result;
       } catch (err) {
         console.error("Error connecting to Phantom:", err);

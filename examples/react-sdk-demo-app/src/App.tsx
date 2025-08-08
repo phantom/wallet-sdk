@@ -8,7 +8,7 @@ const config: PhantomSDKConfig = {
   appName: import.meta.env.VITE_APP_NAME || "React SDK Demo App",
   providerType: (import.meta.env.VITE_PROVIDER_TYPE as "injected" | "embedded") || "embedded", // Default to embedded
   addressTypes: [AddressType.solana, AddressType.ethereum, AddressType.bitcoinSegwit, AddressType.sui],
-  
+
   // Solana library choice - matches browser-sdk demo
   solanaProvider: (import.meta.env.VITE_SOLANA_PROVIDER as "web3js" | "kit") || "kit", // Using @solana/kit for better performance
 

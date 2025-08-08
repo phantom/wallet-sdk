@@ -108,7 +108,6 @@ export class PhantomClient {
       };
 
       // Creating wallet with request
-
       const request: CreateWallet = {
         method: CreateWalletMethodEnum.createWallet,
         params: walletRequest,
@@ -208,7 +207,6 @@ export class PhantomClient {
 
       const response = await this.kmsApi.postKmsRpc(request);
       const result = response.data.result as SignedTransactionWithPublicKey;
-
       return {
         rawTransaction: result.transaction as unknown as string, // Base64 encoded signed transaction
       };

@@ -20,6 +20,7 @@
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "lint": "tsc --noEmit && eslint --cache . --ext .ts,.tsx",
     "test": "jest",
+    "check-types": "tsc --noEmit",
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
   },
   "devDependencies": {

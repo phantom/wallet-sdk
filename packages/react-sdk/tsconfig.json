@@ -1,11 +1,11 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "isolatedModules": true,
     "jsx": "react-jsx",
-    "outDir": "dist/esm",
-    "moduleResolution": "bundler",
-    "types": ["node", "jest"],
     "lib": ["dom", "esnext"],
-    "isolatedModules": true
-  }
+    "moduleResolution": "bundler",
+    "outDir": "dist/esm"
+  },
+  "exclude": ["node_modules", "dist", "_release"]
 }

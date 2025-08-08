@@ -31,11 +31,15 @@ export interface PhantomProviderProps {
 
 export function PhantomProvider({ children, config }: PhantomProviderProps) {
   // Instantiate SDK with useMemo to avoid recreation on every render
-  const sdk = useMemo(() => new BrowserSDK({
-    ...config,
-    // Use providerType if provided, default to embedded
-    providerType: config.providerType || "embedded",
-  }), [config]);
+  const sdk = useMemo(
+    () =>
+      new BrowserSDK({
+        ...config,
+        // Use providerType if provided, default to embedded
+        providerType: config.providerType || "embedded",
+      }),
+    [config],
+  );
 
   const [isConnected, setIsConnected] = useState(false);
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
@@ -87,12 +91,6 @@ export function PhantomProvider({ children, config }: PhantomProviderProps) {
   useEffect(() => {
     updateConnectionState();
   }, [updateConnectionState]);
-
-  // Expose update function to SDK instance for hooks to use
-  useEffect(() => {
-    // Attach update function to SDK instance for hooks to use
-    (sdk as any)._updateConnectionState = updateConnectionState;
-  }, [sdk, updateConnectionState]);
 
   const value: PhantomContextValue = {
     sdk,

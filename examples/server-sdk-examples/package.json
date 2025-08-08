@@ -6,10 +6,11 @@
   "scripts": {
     "server-sdk-demo": "tsx src/server-sdk-demo.ts",
     "sign-message": "tsx src/sign-message.ts",
-    "list-wallets": "tsx src/list-wallets.ts"
+    "list-wallets": "tsx src/list-wallets.ts",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@phantom/server-sdk": "workspace:*",
+    "@phantom/server-sdk": "workspace:^",
     "@solana/web3.js": "^1.87.6",
     "bs58": "^6.0.0",
     "dotenv": "^16.4.1"

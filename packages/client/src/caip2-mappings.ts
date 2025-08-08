@@ -64,103 +64,103 @@ interface NetworkMapping {
 
 const CAIP2_NETWORK_MAPPINGS: Record<string, NetworkMapping> = {
   // Solana networks
-  "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp": {
+  [NetworkId.SOLANA_MAINNET]: {
     chain: "solana",
     network: "mainnet",
     description: "Solana Mainnet-Beta",
   },
-  "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1": {
+  [NetworkId.SOLANA_DEVNET]: {
     chain: "solana",
     network: "devnet",
     description: "Solana Devnet",
   },
-  "solana:4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z": {
+  [NetworkId.SOLANA_TESTNET]: {
     chain: "solana",
     network: "testnet",
     description: "Solana Testnet",
   },
 
   // Ethereum/EVM networks
-  "eip155:1": {
+  [NetworkId.ETHEREUM_MAINNET]: {
     chain: "ethereum",
     network: "mainnet",
     description: "Ethereum Mainnet",
   },
-  "eip155:5": {
+  [NetworkId.ETHEREUM_GOERLI]: {
     chain: "ethereum",
     network: "goerli",
     description: "Goerli Testnet",
   },
-  "eip155:11155111": {
+  [NetworkId.ETHEREUM_SEPOLIA]: {
     chain: "ethereum",
     network: "sepolia",
     description: "Sepolia Testnet",
   },
-  "eip155:137": {
+  [NetworkId.POLYGON_MAINNET]: {
     chain: "polygon",
     network: "mainnet",
     description: "Polygon Mainnet",
   },
-  "eip155:80001": {
+  [NetworkId.POLYGON_MUMBAI]: {
     chain: "polygon",
     network: "mumbai",
     description: "Polygon Mumbai Testnet",
   },
-  "eip155:10": {
+  [NetworkId.OPTIMISM_MAINNET]: {
     chain: "optimism",
     network: "mainnet",
     description: "Optimism Mainnet",
   },
-  "eip155:420": {
+  [NetworkId.OPTIMISM_GOERLI]: {
     chain: "optimism",
     network: "goerli",
     description: "Optimism Goerli Testnet",
   },
-  "eip155:42161": {
+  [NetworkId.ARBITRUM_ONE]: {
     chain: "arbitrum",
     network: "mainnet",
     description: "Arbitrum One",
   },
-  "eip155:421613": {
+  [NetworkId.ARBITRUM_GOERLI]: {
     chain: "arbitrum",
     network: "goerli",
     description: "Arbitrum Goerli",
   },
-  "eip155:8453": {
+  [NetworkId.BASE_MAINNET]: {
     chain: "base",
     network: "mainnet",
     description: "Base Mainnet",
   },
-  "eip155:84531": {
+  [NetworkId.BASE_GOERLI]: {
     chain: "base",
     network: "goerli",
     description: "Base Goerli Testnet",
   },
-  "eip155:84532": {
+  [NetworkId.BASE_SEPOLIA]: {
     chain: "base",
     network: "sepolia",
     description: "Base Sepolia Testnet",
   },
 
   // Bitcoin networks (for future support)
-  "bip122:000000000019d6689c085ae165831e93": {
+  [NetworkId.BITCOIN_MAINNET]: {
     chain: "bitcoin",
     network: "mainnet",
     description: "Bitcoin Mainnet",
   },
-  "bip122:000000000933ea01ad0ee984209779ba": {
+  [NetworkId.BITCOIN_TESTNET]: {
     chain: "bitcoin",
     network: "testnet",
     description: "Bitcoin Testnet",
   },
 
   // Sui networks (for future support)
-  "sui:35834a8a": {
+  [NetworkId.SUI_MAINNET]: {
     chain: "sui",
     network: "mainnet",
     description: "Sui Mainnet",
   },
-  "sui:4c78adac": {
+  [NetworkId.SUI_TESTNET]: {
     chain: "sui",
     network: "testnet",
     description: "Sui Testnet",

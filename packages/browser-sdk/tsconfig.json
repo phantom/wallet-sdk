@@ -4,10 +4,9 @@
     "outDir": "dist",
     "rootDir": "src",
     "lib": ["ES2022", "DOM"],
-    "moduleResolution": "bundler",
-    "types": ["jest", "node"]
+    "moduleResolution": "bundler"
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"],
+  "exclude": ["_release", "node_modules", "dist", "**/*.test.ts"],
   "skipLibCheck": true
 }

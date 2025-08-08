@@ -15,7 +15,6 @@ The `server-sdk-demo` script demonstrates the core functionality of the Phantom 
 Before running the demo, you need:
 
 1. **Phantom Organization Credentials**
-
    - Organization ID
    - Organization Private Key (base58 encoded, P256 private key)
    - These are provided when you create an organization with Phantom
@@ -119,17 +118,14 @@ yarn workspace @phantom/server-sdk-examples server-sdk-demo
 ### Troubleshooting
 
 1. **"Missing required environment variables"**
-
    - Ensure `.env` file exists and contains all required values
    - Check that values are not wrapped in quotes
 
 2. **"Wallet has 0 balance"**
-
    - For devnet: Request SOL from https://faucet.solana.com/
    - For mainnet: Send SOL to the displayed address
 
 3. **"Transaction confirmation timeout"**
-
    - Network congestion may cause delays
    - Check the explorer link for manual verification
 

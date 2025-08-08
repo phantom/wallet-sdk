@@ -41,7 +41,7 @@ describe("BrowserSDK", () => {
       sdk = new BrowserSDK({
         providerType: "embedded",
         appName: "Test App",
-        apiBaseUrl: "https://api.phantom.com",
+        apiBaseUrl: "https://api.phantom.app/v1/wallets",
         organizationId: "org-123",
         authOptions: {
           authUrl: "https://auth.phantom.com",
@@ -49,7 +49,7 @@ describe("BrowserSDK", () => {
       });
 
       expect(MockEmbeddedProvider).toHaveBeenCalledWith({
-        apiBaseUrl: "https://api.phantom.com",
+        apiBaseUrl: "https://api.phantom.app/v1/wallets",
         organizationId: "org-123",
         authOptions: {
           authUrl: "https://auth.phantom.com",
@@ -64,7 +64,7 @@ describe("BrowserSDK", () => {
     it("should use custom embeddedWalletType", () => {
       sdk = new BrowserSDK({
         providerType: "embedded",
-        apiBaseUrl: "https://api.phantom.com",
+        apiBaseUrl: "https://api.phantom.app/v1/wallets",
         organizationId: "org-123",
         authOptions: {
           authUrl: "https://auth.phantom.com",
@@ -73,7 +73,7 @@ describe("BrowserSDK", () => {
       });
 
       expect(MockEmbeddedProvider).toHaveBeenCalledWith({
-        apiBaseUrl: "https://api.phantom.com",
+        apiBaseUrl: "https://api.phantom.app/v1/wallets",
         organizationId: "org-123",
         authOptions: {
           authUrl: "https://auth.phantom.com",
@@ -108,14 +108,14 @@ describe("BrowserSDK", () => {
     it("should support custom solanaProvider for embedded", () => {
       sdk = new BrowserSDK({
         providerType: "embedded",
-        apiBaseUrl: "https://api.phantom.com",
+        apiBaseUrl: "https://api.phantom.app/v1/wallets",
         organizationId: "org-123",
         solanaProvider: "kit",
         addressTypes: [AddressType.solana],
       });
 
       expect(MockEmbeddedProvider).toHaveBeenCalledWith({
-        apiBaseUrl: "https://api.phantom.com",
+        apiBaseUrl: "https://api.phantom.app/v1/wallets",
         organizationId: "org-123",
         authUrl: undefined,
         embeddedWalletType: "app-wallet",
@@ -267,7 +267,7 @@ describe("BrowserSDK", () => {
 
       sdk = new BrowserSDK({
         providerType: "embedded",
-        apiBaseUrl: "https://api.phantom.com",
+        apiBaseUrl: "https://api.phantom.app/v1/wallets",
         organizationId: "org-123",
         authUrl: "https://auth.phantom.com",
         embeddedWalletType: "app-wallet",

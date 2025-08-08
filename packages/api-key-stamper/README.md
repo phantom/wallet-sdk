@@ -28,7 +28,7 @@ const stamper = new ApiKeyStamper({
 // Use it with PhantomClient
 const client = new PhantomClient(
   {
-    apiBaseUrl: "https://api.phantom.com",
+    apiBaseUrl: "https://api.phantom.app/v1/wallets",
     organizationId: "your-org-id",
   },
   stamper,
@@ -47,7 +47,7 @@ import { ServerSDK } from "@phantom/server-sdk";
 
 const sdk = new ServerSDK({
   organizationId: "your-org-id",
-  apiBaseUrl: "https://api.phantom.com",
+  apiBaseUrl: "https://api.phantom.app/v1/wallets",
   apiPrivateKey: "your-base58-encoded-secret-key",
 });
 

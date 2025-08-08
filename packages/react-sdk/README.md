@@ -67,7 +67,7 @@ function App() {
         providerType: "embedded",
         embeddedWalletType: "app-wallet", // or 'user-wallet'
         addressTypes: [AddressType.solana, AddressType.ethereum],
-        apiBaseUrl: "https://api.phantom.com",
+        apiBaseUrl: "https://api.phantom.app/v1/wallets",
         organizationId: "your-org-id",
       }}
     >
@@ -109,7 +109,7 @@ Creates non-custodial wallets embedded in your application.
     providerType: "embedded",
     embeddedWalletType: "app-wallet",
     addressTypes: [AddressType.solana],
-    apiBaseUrl: "https://api.phantom.com",
+    apiBaseUrl: "https://api.phantom.app/v1/wallets",
     organizationId: "your-org-id",
   }}
 >
@@ -129,7 +129,7 @@ Creates non-custodial wallets embedded in your application.
     providerType: "embedded",
     embeddedWalletType: "user-wallet",
     addressTypes: [AddressType.solana, AddressType.ethereum],
-    apiBaseUrl: "https://api.phantom.com",
+    apiBaseUrl: "https://api.phantom.app/v1/wallets",
     organizationId: "your-org-id",
   }}
 >
@@ -147,7 +147,7 @@ When using `AddressType.solana`, you can choose between two Solana libraries:
     providerType: "embedded",
     addressTypes: [AddressType.solana],
     solanaProvider: "web3js", // or 'kit'
-    apiBaseUrl: "https://api.phantom.com",
+    apiBaseUrl: "https://api.phantom.app/v1/wallets",
     organizationId: "your-org-id",
   }}
 >
@@ -591,7 +591,7 @@ Quick reference of all available hooks:
 | `useSignMessage`            | Sign text messages                  | `{ signMessage, isSigning, error }`             |
 | `useSignAndSendTransaction` | Sign and send transactions          | `{ signAndSendTransaction, isSigning, error }`  |
 | `useCreateUserOrganization` | Create user organization (embedded) | `{ createUserOrganization, isCreating, error }` |
-| `usePhantom`                | Get provider context                | `{ isConnected, isReady, currentProviderType }` |
+| `usePhantom`                | Get provider context                | `{ isConnected, isReady }`                      |
 
 ## Configuration Reference
 

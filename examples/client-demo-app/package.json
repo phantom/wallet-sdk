@@ -1,0 +1,20 @@
+{
+  "name": "client-demo-app",
+  "version": "1.0.0",
+  "description": "Demo application using Phantom Client and Crypto packages",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "ts-node src/index.ts"
+  },
+  "dependencies": {
+    "@phantom/api-key-stamper": "workspace:^",
+    "@phantom/client": "workspace:^",
+    "@phantom/crypto": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4"
+  }
+}

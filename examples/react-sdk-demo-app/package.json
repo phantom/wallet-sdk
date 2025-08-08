@@ -9,16 +9,17 @@
     "prebuild": "yarn workspace @phantom/react-sdk build",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "check-types": "tsc --noEmit",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@phantom/browser-sdk": "workspace:*",
-    "@phantom/client": "workspace:*",
-    "@phantom/react-sdk": "workspace:*",
+    "@phantom/browser-sdk": "workspace:^",
+    "@phantom/client": "workspace:^",
+    "@phantom/react-sdk": "workspace:^",
     "@solana/kit": "^2.1.1",
     "@vitejs/plugin-react": "^4.4.1",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "react-router-dom": "^7.7.1",
     "vite": "^6.3.5"
   },

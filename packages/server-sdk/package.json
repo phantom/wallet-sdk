@@ -21,6 +21,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "eslint src --ext .ts,.tsx",
+    "check-types": "yarn tsc --noEmit",
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
   },
   "devDependencies": {
