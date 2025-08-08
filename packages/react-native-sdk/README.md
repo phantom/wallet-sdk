@@ -1,12 +1,12 @@
 # Phantom React Native SDK
 
-A comprehensive React Native SDK for integrating Phantom Wallet functionality into your mobile applications. Built with Expo compatibility and optimized for both iOS and Android platforms.
+A comprehensive React Native SDK for integrating Phantom Wallet functionality into your mobile applications. Built for bare React Native projects with native dependencies and optimized for both iOS and Android platforms.
 
 ## Features
 
-- 🔐 **Hardware-backed security** with Expo SecureStore (iOS Keychain + Android Keystore)
-- 🌐 **OAuth authentication** flows using system browsers for security and UX
-- 🔗 **Automatic deep linking** with custom URL schemes
+- 🔐 **Hardware-backed security** with React Native Keychain (iOS Keychain + Android Keystore)
+- 🌐 **OAuth authentication** flows using in-app browsers for security and UX
+- 🔗 **Automatic deep linking** with React Native Linking API
 - ⚛️ **React hooks API** for easy integration
 - 📱 **Cross-platform** support (iOS, Android)
 - 🛡️ **Biometric authentication** for accessing stored wallet data
@@ -29,22 +29,21 @@ yarn add @phantom/react-native-sdk
 ### Install peer dependencies
 
 ```bash
-# For Expo projects
-npx expo install expo-secure-store expo-web-browser expo-auth-session expo-router
-
-# For bare React Native projects (additional setup required)
-npm install expo-secure-store expo-web-browser expo-auth-session
+# Install native dependencies
+npm install [react-native-keychain](https://github.com/oblador/react-native-keychain) [react-native-inappbrowser-reborn](https://github.com/proyecto26/react-native-inappbrowser)
 
 # Required polyfill for cryptographic operations
 npm install react-native-get-random-values
+
 ```
+
 
 ### Required Polyfill
 
 You must polyfill random byte generation to ensure cryptographic operations work properly. Add this import **at the very top** of your app's entry point (before any other imports):
 
 ```tsx
-// index.js, App.tsx, or _layout.tsx - MUST be the first import
+// index.js or App.tsx - MUST be the first import
 import "react-native-get-random-values";
 
 import { PhantomProvider } from "@phantom/react-native-sdk";
@@ -55,34 +54,12 @@ import { PhantomProvider } from "@phantom/react-native-sdk";
 
 ## Quick Start
 
-### 1. Configure your app scheme
-
-#### For Expo projects
-
-Add your custom scheme to `app.json`:
-
-```json
-{
-  "expo": {
-    "name": "My Wallet App",
-    "slug": "my-wallet-app",
-    "scheme": "mywalletapp",
-    "plugins": [["expo-router"], ["expo-secure-store"], ["expo-web-browser"], ["expo-auth-session"]]
-  }
-}
-```
-
-#### For bare React Native projects
-
-- **iOS**: Configure URL schemes in `Info.plist`
-- **Android**: Add intent filters to `AndroidManifest.xml`
-
-### 2. Set up the provider
+### 1. Set up the provider
 
 Wrap your app with `PhantomProvider`:
 
 ```tsx
-// App.tsx or _layout.tsx (for Expo Router)
+// App.tsx
 import { PhantomProvider, AddressType } from "@phantom/react-native-sdk";
 
 export default function App() {
@@ -90,7 +67,7 @@ export default function App() {
     <PhantomProvider
       config={{
         organizationId: "your-organization-id",
-        scheme: "mywalletapp", // Must match app.json scheme
+        scheme: "mywalletapp", // Custom URL scheme for your app
         embeddedWalletType: "user-wallet",
         addressTypes: [AddressType.solana],
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
@@ -278,15 +255,13 @@ The SDK supports multiple OAuth providers:
 1. User taps "Connect Wallet" in your app
 2. System browser opens (Safari on iOS, Chrome Custom Tab on Android)
 3. User authenticates with their chosen provider
-4. Browser redirects back to your app using the custom scheme
+4. Browser redirects back to your app automatically
 5. SDK automatically processes the authentication result
 6. Wallet is connected and ready to use
 
 ### Deep Link Handling
 
-The SDK automatically handles deep link redirects. Ensure your app's URL scheme is properly configured:
-
-**Redirect URL format:** `{scheme}://phantom-auth-callback?wallet_id=...&session_id=...`
+The SDK automatically handles deep link redirects and URL scheme configuration.
 
 ## Security Features
 
@@ -349,15 +324,13 @@ import { PhantomProvider, AddressType } from "@phantom/react-native-sdk";
 
 ### iOS Setup
 
-1. **URL Scheme**: Automatically configured by Expo
-2. **Keychain Access**: Ensure your app has keychain access entitlements
-3. **Associated Domains**: Configure if using universal links
+1. **Keychain Access**: Keychain access is automatically handled by react-native-keychain
+2. **Pod Installation**: Run `cd ios && pod install` after installing dependencies
 
 ### Android Setup
 
-1. **Intent Filters**: Automatically configured by Expo
-2. **Keystore Access**: Ensure your app targets API level 23+
-3. **Network Security**: Configure network security config if needed
+1. **Keystore Access**: Ensure your app targets API level 23+ for Android Keystore
+2. **Permissions**: Required permissions are automatically handled by react-native-keychain
 
 ## Testing
 
@@ -384,26 +357,25 @@ const testConfig = {
 
 ### Deep Link Testing
 
-Test deep links in development builds (not Expo Go):
+Test deep links in development builds:
 
 ```bash
 # iOS Simulator
 xcrun simctl openurl booted "myapp://phantom-auth-callback?wallet_id=test"
 
-# Android Emulator
+# Android Emulator  
 adb shell am start -W -a android.intent.action.VIEW -d "myapp://phantom-auth-callback?wallet_id=test" com.yourcompany.myapp
 ```
 
 ### Common Issues
 
-1. **"Scheme not configured"**
-   - Ensure your app's URL scheme matches the `scheme` in config
-   - Check `app.json` (Expo) or platform-specific configuration
+1. **"Configuration issues"**
+   - Verify your organization ID is correct
 
 2. **"Authentication failed"**
    - Verify your organization ID is correct
    - Check network connectivity
-   - Ensure redirect URL matches your scheme
+   - Check network connectivity
 
 3. **"Storage access denied"**
    - Check device security settings
@@ -411,9 +383,12 @@ adb shell am start -W -a android.intent.action.VIEW -d "myapp://phantom-auth-cal
    - Verify biometric authentication is available
 
 4. **Deep links not working**
-   - Test with development builds, not Expo Go
-   - Verify URL scheme configuration
-   - Check intent filters (Android) or URL schemes (iOS)
+   - Test with development builds on real devices
+   - Check device network connectivity
+
+5. **"Native module not found"**
+   - Ensure you've run `cd ios && pod install` after installing dependencies
+   - For Android, rebuild the app after installing native dependencies
 
 ### Debug Mode
 

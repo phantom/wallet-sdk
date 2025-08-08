@@ -3,11 +3,11 @@ import { createContext, useContext, useState, useEffect, useCallback, useMemo } 
 import { EmbeddedProvider } from "@phantom/embedded-provider-core";
 import type { PhantomProviderConfig, WalletAddress } from "./types";
 
-// Platform adapters for React Native/Expo
-import { ExpoSecureStorage } from "./providers/embedded/storage";
-import { ExpoAuthProvider } from "./providers/embedded/auth";
-import { ExpoURLParamsAccessor } from "./providers/embedded/url-params";
-import { ExpoLogger } from "./providers/embedded/logger";
+// Platform adapters for React Native
+import { ReactNativeSecureStorage } from "./providers/embedded/storage";
+import { ReactNativeAuthProvider } from "./providers/embedded/auth";
+import { ReactNativeURLParamsAccessor } from "./providers/embedded/url-params";
+import { ReactNativeLogger } from "./providers/embedded/logger";
 
 interface PhantomContextValue {
   sdk: EmbeddedProvider;
@@ -46,10 +46,10 @@ export function PhantomProvider({ children, config }: PhantomProviderProps) {
     };
 
     // Create platform adapters
-    const storage = new ExpoSecureStorage();
-    const authProvider = new ExpoAuthProvider();
-    const urlParamsAccessor = new ExpoURLParamsAccessor();
-    const logger = new ExpoLogger(config.debug);
+    const storage = new ReactNativeSecureStorage();
+    const authProvider = new ReactNativeAuthProvider();
+    const urlParamsAccessor = new ReactNativeURLParamsAccessor();
+    const logger = new ReactNativeLogger(config.debug);
 
     const platform = {
       storage,
