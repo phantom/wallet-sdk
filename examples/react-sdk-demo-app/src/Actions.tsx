@@ -43,7 +43,6 @@ export function Actions() {
   const [debugLevel, setDebugLevel] = useState<DebugLevel>(DebugLevel.INFO);
   const [showDebug, setShowDebug] = useState(true);
   const [debugMessages, setDebugMessages] = useState<DebugMessage[]>([]);
-
   // Debug callback function
   const handleDebugMessage = useCallback((message: DebugMessage) => {
     setDebugMessages(prev => {

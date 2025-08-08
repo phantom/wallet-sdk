@@ -202,6 +202,7 @@ export class InjectedProvider implements Provider {
 
       const result = await this.phantom.solana.signAndSendTransaction(transaction);
       return {
+        hash: result.signature,
         rawTransaction: result.signature,
       };
     } else if (networkPrefix === "ethereum" || networkPrefix === "polygon" || networkPrefix === "eip155") {
@@ -230,6 +231,7 @@ export class InjectedProvider implements Provider {
       const txHash = await this.phantom.ethereum.sendTransaction(txRequest);
 
       return {
+        hash: txHash,
         rawTransaction: txHash,
       };
     }

@@ -1,7 +1,6 @@
 import { parseMessage, parseTransaction, parseSignMessageResponse, parseTransactionResponse } from "./index";
 import { base64urlDecode, base64urlDecodeToString, base64urlEncode } from "@phantom/base64url";
 import { NetworkId } from "@phantom/constants";
-import bs58 from "bs58";
 
 describe("Message Parser", () => {
   it("should parse string message to base64url", () => {

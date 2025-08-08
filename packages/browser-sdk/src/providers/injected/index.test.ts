@@ -216,7 +216,7 @@ describe("InjectedProvider", () => {
       });
 
       expect(mockSolanaPlugin.signAndSendTransaction).toHaveBeenCalledWith(mockTransaction);
-      expect(result).toEqual({ rawTransaction: mockSignature });
+      expect(result).toEqual({ hash: mockSignature, rawTransaction: mockSignature });
     });
 
     it("should sign and send Ethereum transaction", async () => {
@@ -242,7 +242,7 @@ describe("InjectedProvider", () => {
         maxPriorityFeePerGas: undefined,
         data: "0x",
       });
-      expect(result).toEqual({ rawTransaction: mockTxHash });
+      expect(result).toEqual({ hash: mockTxHash, rawTransaction: mockTxHash });
     });
 
     it("should throw error when not connected", async () => {
