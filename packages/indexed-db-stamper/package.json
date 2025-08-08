@@ -1,7 +1,7 @@
 {
-  "name": "@phantom/browser-sdk",
-  "version": "0.2.3",
-  "description": "Browser SDK for Phantom Wallet with unified interface",
+  "name": "@phantom/indexed-db-stamper",
+  "version": "0.1.0",
+  "description": "IndexedDB stamper for Phantom Wallet SDK with non-extractable key storage",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -12,14 +12,11 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "?pack-release": "When https://github.com/changesets/changesets/issues/432 has a solution we can remove this trick",
     "pack-release": "rimraf ./_release && yarn pack && mkdir ./_release && tar zxvf ./package.tgz --directory ./_release && rm ./package.tgz",
     "build": "rimraf ./dist && tsup",
-    "dev": "rimraf ./dist && tsup --watch",
+    "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -27,32 +24,27 @@
     "check-types": "tsc --noEmit",
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
   },
-  "dependencies": {
-    "@phantom/base64url": "workspace:^",
-    "@phantom/browser-injected-sdk": "workspace:^",
-    "@phantom/client": "workspace:^",
-    "@phantom/embedded-provider-core": "workspace:^",
-    "@phantom/indexed-db-stamper": "workspace:^",
-    "@phantom/parsers": "workspace:^",
-    "axios": "^1.10.0",
-    "bs58": "^6.0.0",
-    "buffer": "^6.0.3",
-    "jose": "^6.0.12",
-    "tweetnacl": "^1.0.3"
-  },
   "devDependencies": {
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.0",
     "eslint": "8.53.0",
-    "fake-indexeddb": "^4.0.2",
-    "jest": "^30.0.5",
-    "jest-environment-jsdom": "^30.0.5",
+    "fake-indexeddb": "^6.0.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "prettier": "^3.5.2",
     "rimraf": "^6.0.1",
     "ts-jest": "^29.1.2",
     "tsup": "^6.7.0",
     "typescript": "^5.0.4"
   },
+  "dependencies": {
+    "@phantom/base64url": "workspace:^",
+    "@phantom/crypto": "workspace:^",
+    "buffer": "^6.0.3"
+  },
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "directory": "_release/package"
   }
