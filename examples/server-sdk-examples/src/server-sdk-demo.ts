@@ -9,7 +9,6 @@ import {
   LAMPORTS_PER_SOL,
   ComputeBudgetProgram,
 } from "@solana/web3.js";
-import bs58 from "bs58";
 import * as dotenv from "dotenv";
 import * as path from "path";
 
@@ -158,31 +157,31 @@ async function runDemo() {
     // Step 4: Sign and send transaction
     console.log("4️⃣ Signing and sending transaction...");
 
-    // NEW: Use the native Transaction object directly - no manual serialization needed!
+    // The SDK automatically handles transaction serialization and signature extraction!
+    // Just pass the native @solana/web3.js Transaction object
+    // Benefits of the new parsing system:
+    // - Automatically uses @solana/web3.js when available for accurate signature extraction
+    // - Falls back to manual parsing if library is not available
+    // - Returns both human-readable hash and raw transaction for maximum flexibility
     const signedResult = await sdk.signAndSendTransaction({
       walletId: wallet.walletId,
-      transaction, // Native @solana/web3.js Transaction object - automatically parsed!
+      transaction, // Native @solana/web3.js Transaction object - SDK parses it automatically!
       networkId,
     });
 
     console.log("✅ Transaction signed and sent!");
-    console.log(`   Raw transaction (base64): ${signedResult.rawTransaction}`);
+    console.log(`   Transaction Hash: ${signedResult.hash}`);
+    console.log(`   Raw transaction (base64url): ${signedResult.rawTransaction}`);
+    
+    // The SDK now automatically parses the transaction using @solana/web3.js
+    // and extracts the signature for us - no manual parsing needed!
+    const signature = signedResult.hash;
 
-    // Extract signature from the signed transaction
-    const signedTx = Transaction.from(Buffer.from(signedResult.rawTransaction, "base64url"));
-    let signature: string | null = null;
-
-    if (signedTx.signature) {
-      signature = bs58.encode(signedTx.signature);
-    } else if (signedTx.signatures && signedTx.signatures.length > 0 && signedTx.signatures[0].signature) {
-      signature = bs58.encode(signedTx.signatures[0].signature);
+    console.log(`   Signature: ${signature}`);
+    if (signedResult.blockExplorer) {
+      console.log(`   Explorer: ${signedResult.blockExplorer}`);
     }
-
-    if (!signature) {
-      throw new Error("Failed to extract transaction signature");
-    }
-
-    console.log(`   Signature: ${signature}\n`);
+    console.log();
 
     // Step 5: Wait for confirmation
     console.log("5️⃣ Waiting for transaction confirmation...");

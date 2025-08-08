@@ -341,14 +341,14 @@ describe("Response Parsing", () => {
   });
 
   describe("parseTransactionResponse", () => {
-    it("should parse Solana transaction response", () => {
+    it("should parse Solana transaction response", async () => {
       // Create a mock transaction with signature at the beginning (64 bytes)
       const mockTransactionBytes = new Uint8Array(200);
       // Fill first 64 bytes with signature data
       mockTransactionBytes.fill(55, 0, 64);
       const base64Response = base64urlEncode(mockTransactionBytes);
       
-      const result = parseTransactionResponse(base64Response, NetworkId.SOLANA_MAINNET);
+      const result = await parseTransactionResponse(base64Response, NetworkId.SOLANA_MAINNET);
       
       expect(result.hash).toBeDefined();
       expect(result.rawTransaction).toBe(base64Response);
@@ -356,11 +356,11 @@ describe("Response Parsing", () => {
       expect(result.blockExplorer).toContain(result.hash);
     });
 
-    it("should parse EVM transaction response", () => {
+    it("should parse EVM transaction response", async () => {
       const mockTransactionBytes = new Uint8Array(100).fill(77);
       const base64Response = base64urlEncode(mockTransactionBytes);
       
-      const result = parseTransactionResponse(base64Response, NetworkId.ETHEREUM_MAINNET);
+      const result = await parseTransactionResponse(base64Response, NetworkId.ETHEREUM_MAINNET);
       
       expect(result.hash.startsWith("0x")).toBe(true);
       expect(result.rawTransaction).toBe(base64Response);
@@ -368,10 +368,10 @@ describe("Response Parsing", () => {
       expect(result.blockExplorer).toContain(result.hash);
     });
 
-    it("should handle parsing errors gracefully", () => {
+    it("should handle parsing errors gracefully", async () => {
       const invalidBase64 = "invalid-base64!!!";
       
-      const result = parseTransactionResponse(invalidBase64, NetworkId.SOLANA_MAINNET);
+      const result = await parseTransactionResponse(invalidBase64, NetworkId.SOLANA_MAINNET);
       
       // Should fallback to original response
       expect(result.hash).toBeDefined();
@@ -379,7 +379,7 @@ describe("Response Parsing", () => {
       expect(result.blockExplorer).toBeDefined();
     });
 
-    it("should work with all supported networks", () => {
+    it("should work with all supported networks", async () => {
       const mockBytes = new Uint8Array(64).fill(123);
       const base64Response = base64urlEncode(mockBytes);
       
@@ -393,18 +393,18 @@ describe("Response Parsing", () => {
       ];
 
       for (const network of networks) {
-        const result = parseTransactionResponse(base64Response, network);
+        const result = await parseTransactionResponse(base64Response, network);
         expect(result.hash).toBeDefined();
         expect(result.hash).not.toBe("");
         expect(result.rawTransaction).toBe(base64Response);
       }
     });
 
-    it("should include block explorer URLs when available", () => {
+    it("should include block explorer URLs when available", async () => {
       const mockBytes = new Uint8Array(64).fill(99);
       const base64Response = base64urlEncode(mockBytes);
       
-      const result = parseTransactionResponse(base64Response, NetworkId.ETHEREUM_MAINNET);
+      const result = await parseTransactionResponse(base64Response, NetworkId.ETHEREUM_MAINNET);
       
       expect(result.blockExplorer).toBeDefined();
       expect(result.rawTransaction).toBe(base64Response);

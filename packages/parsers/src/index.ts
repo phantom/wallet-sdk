@@ -3,6 +3,12 @@ import { getExplorerUrl } from "@phantom/constants";
 import { base64urlEncode, stringToBase64url, base64urlDecode } from "@phantom/base64url";
 import { Buffer } from "buffer";
 import bs58 from "bs58";
+import { 
+  parseSolanaTransactionSignature,
+  parseEVMTransactionHash,
+  parseBitcoinTransactionHash,
+  parseSuiTransactionDigest 
+} from "./dynamic-imports";
 
 export interface ParsedTransaction {
   base64url: string;
@@ -258,20 +264,20 @@ export function parseSignMessageResponse(base64Response: string, networkId: Netw
 /**
  * Parse a transaction response from base64 rawTransaction to extract hash
  */
-export function parseTransactionResponse(base64RawTransaction: string, networkId: NetworkId): ParsedTransactionResult {
+export async function parseTransactionResponse(base64RawTransaction: string, networkId: NetworkId): Promise<ParsedTransactionResult> {
   const networkPrefix = networkId.split(":")[0].toLowerCase();
 
   switch (networkPrefix) {
     case "solana":
-      return parseSolanaTransactionResponse(base64RawTransaction, networkId);
+      return await parseSolanaTransactionResponse(base64RawTransaction, networkId);
     case "eip155": // EVM chains
     case "ethereum":
-      return parseEVMTransactionResponse(base64RawTransaction, networkId);
+      return await parseEVMTransactionResponse(base64RawTransaction, networkId);
     case "sui":
-      return parseSuiTransactionResponse(base64RawTransaction, networkId);
+      return await parseSuiTransactionResponse(base64RawTransaction, networkId);
     case "bip122": // Bitcoin
     case "bitcoin":
-      return parseBitcoinTransactionResponse(base64RawTransaction, networkId);
+      return await parseBitcoinTransactionResponse(base64RawTransaction, networkId);
     default:
       // Fallback: use the raw transaction as hash
       return {
@@ -308,22 +314,16 @@ function parseSolanaSignatureResponse(base64Response: string, networkId: Network
 }
 
 /**
- * Parse Solana transaction response to extract signature
+ * Parse Solana transaction response to extract signature using dynamic imports
  */
-function parseSolanaTransactionResponse(base64RawTransaction: string, networkId: NetworkId): ParsedTransactionResult {
+async function parseSolanaTransactionResponse(base64RawTransaction: string, networkId: NetworkId): Promise<ParsedTransactionResult> {
   try {
-    // Decode the transaction bytes
-    const transactionBytes = base64urlDecode(base64RawTransaction);
-    
-    // For Solana, the first 64 bytes are typically the signature
-    // This is a simplified approach - in reality, Solana transactions can have multiple signatures
-    const signatureBytes = transactionBytes.slice(0, 64);
-    const hash = bs58.encode(signatureBytes);
+    const result = await parseSolanaTransactionSignature(base64RawTransaction);
     
     return {
-      hash,
+      hash: result.signature,
       rawTransaction: base64RawTransaction,
-      blockExplorer: getExplorerUrl(networkId, 'transaction', hash),
+      blockExplorer: getExplorerUrl(networkId, 'transaction', result.signature),
     };
   } catch (error) {
     return {
@@ -359,23 +359,16 @@ function parseEVMSignatureResponse(base64Response: string, _networkId: NetworkId
 }
 
 /**
- * Parse EVM transaction response to extract hash
+ * Parse EVM transaction response to extract hash using dynamic imports
  */
-function parseEVMTransactionResponse(base64RawTransaction: string, networkId: NetworkId): ParsedTransactionResult {
+async function parseEVMTransactionResponse(base64RawTransaction: string, networkId: NetworkId): Promise<ParsedTransactionResult> {
   try {
-    // For EVM transactions, we need to hash the transaction to get the transaction ID
-    // This is a simplified approach - in reality, you'd need to parse the transaction structure
-    // and compute the Keccak256 hash
-    
-    // For now, we'll extract what we can from the raw transaction
-    // In a full implementation, you'd use a library like ethers or viem to parse this
-    const transactionBytes = base64urlDecode(base64RawTransaction);
-    const hash = "0x" + Buffer.from(transactionBytes).toString("hex").substring(0, 64);
+    const result = await parseEVMTransactionHash(base64RawTransaction);
     
     return {
-      hash,
+      hash: result.hash,
       rawTransaction: base64RawTransaction,
-      blockExplorer: getExplorerUrl(networkId, 'transaction', hash),
+      blockExplorer: getExplorerUrl(networkId, 'transaction', result.hash),
     };
   } catch (error) {
     return {
@@ -408,19 +401,16 @@ function parseSuiSignatureResponse(base64Response: string, _networkId: NetworkId
 }
 
 /**
- * Parse Sui transaction response
+ * Parse Sui transaction response using dynamic imports
  */
-function parseSuiTransactionResponse(base64RawTransaction: string, networkId: NetworkId): ParsedTransactionResult {
+async function parseSuiTransactionResponse(base64RawTransaction: string, networkId: NetworkId): Promise<ParsedTransactionResult> {
   try {
-    // Sui transaction digests are base58 encoded
-    const transactionBytes = base64urlDecode(base64RawTransaction);
-    // This is a simplified approach - you'd typically extract the actual digest from the transaction
-    const hash = bs58.encode(transactionBytes.slice(0, 32)); // Use first 32 bytes as hash
+    const result = await parseSuiTransactionDigest(base64RawTransaction);
     
     return {
-      hash,
+      hash: result.digest,
       rawTransaction: base64RawTransaction,
-      blockExplorer: getExplorerUrl(networkId, 'transaction', hash),
+      blockExplorer: getExplorerUrl(networkId, 'transaction', result.digest),
     };
   } catch (error) {
     return {
@@ -453,19 +443,16 @@ function parseBitcoinSignatureResponse(base64Response: string, _networkId: Netwo
 }
 
 /**
- * Parse Bitcoin transaction response
+ * Parse Bitcoin transaction response using dynamic imports
  */
-function parseBitcoinTransactionResponse(base64RawTransaction: string, networkId: NetworkId): ParsedTransactionResult {
+async function parseBitcoinTransactionResponse(base64RawTransaction: string, networkId: NetworkId): Promise<ParsedTransactionResult> {
   try {
-    // Bitcoin transaction IDs are double SHA256 hash of the transaction, reversed
-    const transactionBytes = base64urlDecode(base64RawTransaction);
-    // This is a simplified approach - you'd typically compute the actual TXID
-    const hash = Buffer.from(transactionBytes).toString("hex").substring(0, 64);
+    const result = await parseBitcoinTransactionHash(base64RawTransaction);
     
     return {
-      hash,
+      hash: result.hash,
       rawTransaction: base64RawTransaction,
-      blockExplorer: getExplorerUrl(networkId, 'transaction', hash),
+      blockExplorer: getExplorerUrl(networkId, 'transaction', result.hash),
     };
   } catch (error) {
     return {
