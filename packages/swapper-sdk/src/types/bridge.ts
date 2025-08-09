@@ -1,16 +1,12 @@
-import type { ChainID, SwapperCaip19 } from "./chains";
+import type { SwapperCaip19 } from "./chains";
+import type { ChainID } from "./networks";
 
 export interface GetBridgeableTokensResponse {
   tokens: SwapperCaip19[];
 }
 
 export interface GetBridgeProvidersResponse {
-  providers: BridgeProviderInfo[];
-}
-
-export interface BridgeProviderInfo {
-  name: string;
-  max: number;
+  providers: string[];
 }
 
 export interface GetIntentsStatusParams {

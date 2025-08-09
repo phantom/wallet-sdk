@@ -1,8 +1,16 @@
 import type { ErrorResponse, Headers, OptionalHeaders } from "../types";
 
+export interface SwapperClientOptions {
+  organizationId?: string;
+  countryCode?: string;
+  anonymousId?: string;
+  version?: string;
+}
+
 export interface SwapperClientConfig {
   apiUrl?: string;
-  headers?: OptionalHeaders;
+  options?: SwapperClientOptions;
+  headers?: OptionalHeaders; // Still available but not documented prominently
   timeout?: number;
 }
 
@@ -12,35 +20,40 @@ export class SwapperAPIClient {
   private readonly timeout: number;
 
   constructor(config: SwapperClientConfig = {}) {
-    this.baseUrl = (config.apiUrl || process.env.PHANTOM_SWAPPER_API_URL || "https://api.phantom.app") + "/swap/v2";
+    this.baseUrl = (config.apiUrl || "https://api.phantom.app") + "/swap/v2";
     this.timeout = config.timeout || 30000;
 
     this.headers = {
       "Content-Type": "application/json",
-      ...this.buildOptionalHeaders(config.headers),
+      ...this.buildHeaders(config.options, config.headers),
     };
   }
 
-  private buildOptionalHeaders(customHeaders?: OptionalHeaders): OptionalHeaders {
+  private buildHeaders(options?: SwapperClientOptions, customHeaders?: OptionalHeaders): OptionalHeaders {
     const headers: OptionalHeaders = {};
 
-    if (process.env.PHANTOM_SERVICE_AUTH_TOKEN) {
-      headers.Authorization = `Bearer ${process.env.PHANTOM_SERVICE_AUTH_TOKEN}`;
+    // Platform is hardcoded to "sdk"
+    headers["X-Phantom-Platform"] = "sdk";
+
+    // Set headers from options
+    if (options?.organizationId) {
+      headers["X-Organization"] = options.organizationId;
     }
 
-    if (process.env.PHANTOM_CLIENT_VERSION) {
-      headers["X-Phantom-Version"] = process.env.PHANTOM_CLIENT_VERSION;
+    if (options?.countryCode) {
+      headers["cf-ipcountry"] = options.countryCode;
+      headers["cloudfront-viewer-country"] = options.countryCode;
     }
 
-    if (process.env.PHANTOM_CLIENT_PLATFORM) {
-      headers["X-Phantom-Platform"] = process.env.PHANTOM_CLIENT_PLATFORM;
+    if (options?.anonymousId) {
+      headers["X-Phantom-AnonymousId"] = options.anonymousId;
     }
 
-    if (process.env.PHANTOM_COUNTRY_CODE) {
-      headers["cf-ipcountry"] = process.env.PHANTOM_COUNTRY_CODE;
-      headers["cloudfront-viewer-country"] = process.env.PHANTOM_COUNTRY_CODE;
+    if (options?.version) {
+      headers["X-Phantom-Version"] = options.version;
     }
 
+    // Allow custom headers to override (but not documented prominently)
     return {
       ...headers,
       ...customHeaders,
@@ -71,6 +84,16 @@ export class SwapperAPIClient {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
+    // Log the outgoing request
+    console.log("=== OUTGOING API REQUEST ===");
+    console.log(`URL: ${url.toString()}`);
+    console.log(`Method: ${method}`);
+    console.log(`Headers:`, JSON.stringify({ ...this.headers, ...headers }, null, 2));
+    if (body) {
+      console.log(`Body:`, JSON.stringify(body, null, 2));
+    }
+    console.log("=============================");
+
     try {
       const response = await fetch(url.toString(), {
         method,
@@ -84,8 +107,14 @@ export class SwapperAPIClient {
 
       clearTimeout(timeoutId);
 
+      console.log("=== API RESPONSE ===");
+      console.log(`Status: ${response.status} ${response.statusText}`);
+      console.log(`Response Headers:`, Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.log(`Error Response Body:`, JSON.stringify(errorData, null, 2));
+        console.log("====================");
         const error: ErrorResponse = {
           code: errorData.code || "UNKNOWN_ERROR",
           message: errorData.message || `Request failed with status ${response.status}`,
@@ -95,7 +124,10 @@ export class SwapperAPIClient {
         throw error;
       }
 
-      return await response.json();
+      const responseData = await response.json();
+      console.log(`Success Response Body:`, JSON.stringify(responseData, null, 2));
+      console.log("====================");
+      return responseData;
     } catch (error: any) {
       clearTimeout(timeoutId);
 

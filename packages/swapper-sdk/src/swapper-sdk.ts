@@ -6,6 +6,7 @@ import {
   StreamingAPI,
   SwapperAPIClient,
   type SwapperClientConfig,
+  type SwapperClientOptions,
 } from "./api";
 import type {
   GenerateAndVerifyAddressParams,
@@ -22,14 +23,21 @@ import type {
   PermissionsResponse,
   SwapperInitializeRequestParams,
   SwapperInitializeResults,
-  SwapperQuotesBody,
   SwapperQuotesDataRepresentation,
   WithdrawalQueueResponse,
 } from "./types";
+import type { GetQuotesParams } from "./types/public-api";
 import type { StreamQuotesOptions } from "./api/streaming";
+import { transformQuotesParams } from "./utils/transformers";
 
-export interface SwapperSDKConfig extends SwapperClientConfig {
+export interface SwapperSDKOptions extends SwapperClientOptions {
   debug?: boolean;
+}
+
+export interface SwapperSDKConfig {
+  apiUrl?: string;
+  options?: SwapperSDKOptions;
+  timeout?: number;
 }
 
 export class SwapperSDK {
@@ -42,8 +50,15 @@ export class SwapperSDK {
   private readonly debug: boolean;
 
   constructor(config: SwapperSDKConfig = {}) {
-    this.debug = config.debug || false;
-    this.client = new SwapperAPIClient(config);
+    this.debug = config.options?.debug || false;
+    
+    const clientConfig: SwapperClientConfig = {
+      apiUrl: config.apiUrl,
+      options: config.options,
+      timeout: config.timeout,
+    };
+    
+    this.client = new SwapperAPIClient(clientConfig);
 
     this.quotes = new QuotesAPI(this.client);
     this.initialize = new InitializeAPI(this.client);
@@ -54,19 +69,30 @@ export class SwapperSDK {
     if (this.debug) {
       console.error("[SwapperSDK] Initialized with config:", {
         baseUrl: this.client.getBaseUrl(),
+        options: config.options,
         debug: this.debug,
       });
     }
   }
 
-  async getQuotes(params: SwapperQuotesBody): Promise<SwapperQuotesDataRepresentation> {
+  async getQuotes(params: GetQuotesParams): Promise<SwapperQuotesDataRepresentation> {
     if (this.debug) {
       console.error("[SwapperSDK] Getting quotes with params:", params);
     }
-    const result = await this.quotes.getQuotes(params);
+    
+    // Transform public API params to internal format
+    const swapperParams = transformQuotesParams(params);
+    
+    if (this.debug) {
+      console.error("[SwapperSDK] Transformed to internal params:", swapperParams);
+    }
+    
+    const result = await this.quotes.getQuotes(swapperParams);
+    
     if (this.debug) {
       console.error("[SwapperSDK] Received quotes:", result);
     }
+    
     return result;
   }
 

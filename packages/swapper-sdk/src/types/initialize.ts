@@ -1,4 +1,4 @@
-import type { ChainID } from "./chains";
+import type { ChainID } from "./networks";
 
 export interface SwapperInitializeRequestParams {
   type: "buy" | "sell" | "swap";

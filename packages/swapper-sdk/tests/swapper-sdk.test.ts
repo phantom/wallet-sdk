@@ -1,5 +1,5 @@
 import { SwapperSDK } from "../src/swapper-sdk";
-import { ChainID } from "../src/types";
+import { NetworkId } from "../src/types/networks";
 
 describe("SwapperSDK", () => {
   let sdk: SwapperSDK;
@@ -8,7 +8,9 @@ describe("SwapperSDK", () => {
   beforeEach(() => {
     sdk = new SwapperSDK({
       apiUrl: "https://api.test.com",
-      debug: false,
+      options: {
+        debug: false,
+      },
     });
   });
 
@@ -21,10 +23,11 @@ describe("SwapperSDK", () => {
     it("should initialize with custom config", () => {
       const customSdk = new SwapperSDK({
         apiUrl: "https://custom.api.com",
-        headers: {
-          "X-Phantom-Version": "1.0.0",
+        options: {
+          organizationId: "test-org",
+          countryCode: "US",
+          debug: true,
         },
-        debug: true,
       });
       expect(customSdk).toBeDefined();
     });
@@ -36,17 +39,17 @@ describe("SwapperSDK", () => {
         type: "solana",
         quotes: [],
         taker: {
-          chainId: ChainID.SolanaMainnet,
+          chainId: "solana:101",
           resourceType: "address" as const,
           address: "test-address",
         },
         buyToken: {
-          chainId: ChainID.SolanaMainnet,
+          chainId: "solana:101",
           resourceType: "address" as const,
           address: "buy-token",
         },
         sellToken: {
-          chainId: ChainID.SolanaMainnet,
+          chainId: "solana:101",
           resourceType: "nativeToken" as const,
           slip44: "501",
         },
@@ -59,22 +62,20 @@ describe("SwapperSDK", () => {
       } as Response);
 
       const result = await sdk.getQuotes({
-        taker: {
-          chainId: ChainID.SolanaMainnet,
-          resourceType: "address",
-          address: "test-address",
+        sellToken: {
+          type: "native",
+          networkId: NetworkId.SOLANA_MAINNET,
         },
         buyToken: {
-          chainId: ChainID.SolanaMainnet,
-          resourceType: "address",
+          type: "address",
           address: "buy-token",
-        },
-        sellToken: {
-          chainId: ChainID.SolanaMainnet,
-          resourceType: "nativeToken",
-          slip44: "501",
+          networkId: NetworkId.SOLANA_MAINNET,
         },
         sellAmount: "1000000000",
+        from: {
+          address: "test-address",
+          networkId: NetworkId.SOLANA_MAINNET,
+        },
       });
 
       expect(result).toEqual(mockResponse);
@@ -93,22 +94,20 @@ describe("SwapperSDK", () => {
 
       await expect(
         sdk.getQuotes({
-          taker: {
-            chainId: ChainID.SolanaMainnet,
-            resourceType: "address",
-            address: "test-address",
+          sellToken: {
+            type: "native",
+            networkId: NetworkId.SOLANA_MAINNET,
           },
           buyToken: {
-            chainId: ChainID.SolanaMainnet,
-            resourceType: "address",
+            type: "address",
             address: "buy-token",
-          },
-          sellToken: {
-            chainId: ChainID.SolanaMainnet,
-            resourceType: "nativeToken",
-            slip44: "501",
+            networkId: NetworkId.SOLANA_MAINNET,
           },
           sellAmount: "1000000000",
+          from: {
+            address: "test-address",
+            networkId: NetworkId.SOLANA_MAINNET,
+          },
         })
       ).rejects.toMatchObject({
         code: "INVALID_TOKEN_PAIR",
@@ -123,7 +122,7 @@ describe("SwapperSDK", () => {
       const mockResponse = {
         buyToken: {
           address: "token-address",
-          chainId: ChainID.SolanaMainnet,
+          chainId: "solana:101",
           symbol: "USDC",
           name: "USD Coin",
           decimals: 6,
@@ -137,7 +136,7 @@ describe("SwapperSDK", () => {
 
       const result = await sdk.initializeSwap({
         type: "swap",
-        network: ChainID.SolanaMainnet,
+        network: "solana:101" as any,
       });
 
       expect(result).toEqual(mockResponse);
@@ -168,12 +167,12 @@ describe("SwapperSDK", () => {
       const mockResponse = {
         tokens: [
           {
-            chainId: ChainID.SolanaMainnet,
+            chainId: "solana:101",
             resourceType: "address" as const,
             address: "token1",
           },
           {
-            chainId: ChainID.EthereumMainnet,
+            chainId: "eip155:1",
             resourceType: "address" as const,
             address: "token2",
           },
@@ -195,8 +194,7 @@ describe("SwapperSDK", () => {
     it("should update headers", () => {
       expect(() => {
         sdk.updateHeaders({
-          "X-Phantom-Version": "2.0.0",
-          "X-Phantom-Platform": "test",
+          "X-Custom-Header": "value",
         });
       }).not.toThrow();
     });

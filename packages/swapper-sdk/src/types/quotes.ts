@@ -1,4 +1,5 @@
-import type { ChainID, FeeType, SwapperCaip19, SwapType } from "./chains";
+import type { FeeType, SwapperCaip19, SwapType } from "./chains";
+import type { ChainID } from "./networks";
 
 export interface SwapperQuotesBody {
   taker: SwapperCaip19;

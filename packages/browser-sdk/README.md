@@ -529,7 +529,6 @@ import { NetworkId } from "@phantom/browser-sdk";
 - `NetworkId.ETHEREUM_SEPOLIA` - Ethereum Sepolia Testnet
 - `NetworkId.POLYGON_MAINNET` - Polygon Mainnet
 - `NetworkId.ARBITRUM_ONE` - Arbitrum One
-- `NetworkId.OPTIMISM_MAINNET` - Optimism Mainnet
 - `NetworkId.BASE_MAINNET` - Base Mainnet
 
 ### Bitcoin

@@ -3249,6 +3249,7 @@ __metadata:
     "@phantom/base64url": "workspace:^"
     "@phantom/crypto": "workspace:^"
     "@phantom/openapi-wallet-service": "npm:^0.1.7"
+    "@phantom/swapper-sdk": "workspace:^"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
     axios: "npm:^1.10.0"
@@ -3515,6 +3516,24 @@ __metadata:
     "@types/node": "npm:^20.11.0"
     dotenv: "npm:^16.4.1"
     eslint: "npm:8.53.0"
+    jest: "npm:^29.7.0"
+    prettier: "npm:^3.5.2"
+    rimraf: "npm:^6.0.1"
+    ts-jest: "npm:^29.1.2"
+    tsup: "npm:^6.7.0"
+    typescript: "npm:^5.0.4"
+  languageName: unknown
+  linkType: soft
+
+"@phantom/swapper-sdk@workspace:^, @phantom/swapper-sdk@workspace:packages/swapper-sdk":
+  version: 0.0.0-use.local
+  resolution: "@phantom/swapper-sdk@workspace:packages/swapper-sdk"
+  dependencies:
+    "@types/jest": "npm:^29.5.12"
+    "@types/node": "npm:^20.11.0"
+    dotenv: "npm:^16.4.1"
+    eslint: "npm:8.53.0"
+    eventsource: "npm:^2.0.2"
     jest: "npm:^29.7.0"
     prettier: "npm:^3.5.2"
     rimraf: "npm:^6.0.1"
@@ -8353,6 +8372,13 @@ __metadata:
   version: 5.0.1
   resolution: "eventemitter3@npm:5.0.1"
   checksum: 10c0/4ba5c00c506e6c786b4d6262cfbce90ddc14c10d4667e5c83ae993c9de88aa856033994dd2b35b83e8dc1170e224e66a319fa80adc4c32adcd2379bbc75da814
+  languageName: node
+  linkType: hard
+
+"eventsource@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "eventsource@npm:2.0.2"
+  checksum: 10c0/0b8c70b35e45dd20f22ff64b001be9d530e33b92ca8bdbac9e004d0be00d957ab02ef33c917315f59bf2f20b178c56af85c52029bc8e6cc2d61c31d87d943573
   languageName: node
   linkType: hard
 

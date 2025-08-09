@@ -13,78 +13,88 @@ yarn add @phantom/swapper-sdk
 ## Quick Start
 
 ```typescript
-import { SwapperSDK, ChainID } from '@phantom/swapper-sdk';
+import { SwapperSDK, NetworkId } from '@phantom/swapper-sdk';
 
 // Initialize the SDK
 const swapper = new SwapperSDK({
   apiUrl: 'https://api.phantom.app', // optional, this is the default
-  headers: {
-    'X-Phantom-Version': '1.0.0',
-    'X-Phantom-Platform': 'web',
+  options: {
+    organizationId: 'your-org-id', // from Phantom Portal
+    countryCode: 'US', // optional, for geo-blocking
+    debug: true, // optional, enables debug logging
   },
-  debug: true, // optional, enables debug logging
 });
 
 // Get swap quotes
 const quotes = await swapper.getQuotes({
-  taker: {
-    chainId: ChainID.SolanaMainnet,
-    address: '8B3fBhkpHFMTdaQSfKVREB5HFKnZkT8rL6zKJfmmWDeZ',
-    resourceType: 'address',
-  },
   sellToken: {
-    chainId: ChainID.SolanaMainnet,
-    slip44: '501',
-    resourceType: 'nativeToken',
+    type: 'native',
+    networkId: NetworkId.SOLANA_MAINNET,
   },
   buyToken: {
-    chainId: ChainID.SolanaMainnet,
+    type: 'address',
     address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-    resourceType: 'address',
+    networkId: NetworkId.SOLANA_MAINNET,
   },
   sellAmount: '1000000000',
+  from: {
+    address: '8B3fBhkpHFMTdaQSfKVREB5HFKnZkT8rL6zKJfmmWDeZ',
+    networkId: NetworkId.SOLANA_MAINNET,
+  },
   slippageTolerance: 0.5,
 });
 ```
 
 ## Configuration
 
-### Environment Variables
+### Default API URL
 
-Create a `.env` file based on `.env.example`:
-
-```env
-# API Base URL (default: https://api.phantom.app)
-PHANTOM_SWAPPER_API_URL=https://api.phantom.app
-
-# Optional: Service authentication token for fee removal
-PHANTOM_SERVICE_AUTH_TOKEN=
-
-# Optional: Client identification
-PHANTOM_CLIENT_VERSION=
-PHANTOM_CLIENT_PLATFORM=
-
-# Optional: Country code for geo-blocking
-PHANTOM_COUNTRY_CODE=
+```
+https://api.phantom.app/swap/v2
 ```
 
 ### SDK Configuration
 
 ```typescript
 interface SwapperSDKConfig {
-  apiUrl?: string;         // API base URL
-  headers?: {              // Optional custom headers
-    'X-Phantom-Version'?: string;
-    'X-Phantom-Platform'?: string;
-    'X-Phantom-AnonymousId'?: string;
-    'cf-ipcountry'?: string;
-    'cloudfront-viewer-country'?: string;
-    Authorization?: string;
-  };
+  apiUrl?: string;         // API base URL (default: https://api.phantom.app)
   timeout?: number;        // Request timeout in ms (default: 30000)
-  debug?: boolean;         // Enable debug logging
+  options?: {
+    organizationId?: string;  // Organization ID from Phantom Portal
+    countryCode?: string;     // Country code for geo-blocking (e.g., 'US')
+    anonymousId?: string;     // Anonymous user ID for analytics
+    version?: string;         // Client version
+    debug?: boolean;          // Enable debug logging
+  };
 }
 ```
+
+**Note:** The `countryCode` option can be used to check if a user is allowed to swap tokens based on their location.
+
+## Token Constants
+
+The SDK provides predefined token constants for easy use. Instead of manually constructing token objects, use the `TOKENS` object:
+
+```typescript
+import { SwapperSDK, TOKENS } from '@phantom/swapper-sdk';
+
+// Use predefined tokens
+console.log(TOKENS.ETHEREUM_MAINNET.ETH);   // Native ETH on Ethereum
+console.log(TOKENS.ETHEREUM_MAINNET.USDC);  // USDC on Ethereum
+console.log(TOKENS.SOLANA_MAINNET.SOL);     // Native SOL on Solana
+console.log(TOKENS.BASE_MAINNET.ETH);       // Native ETH on Base
+console.log(TOKENS.ARBITRUM_ONE.USDC);      // USDC on Arbitrum
+console.log(TOKENS.POLYGON_MAINNET.MATIC);  // Native MATIC on Polygon
+```
+
+### Available Networks
+
+Each network in `TOKENS` contains major tokens:
+- `TOKENS.ETHEREUM_MAINNET`: ETH, USDC, USDT, WETH
+- `TOKENS.BASE_MAINNET`: ETH, USDC, WETH
+- `TOKENS.POLYGON_MAINNET`: MATIC, USDC, USDT, WETH
+- `TOKENS.ARBITRUM_ONE`: ETH, USDC, USDT, WETH
+- `TOKENS.SOLANA_MAINNET`: SOL, USDC, USDT, WSOL
 
 ## API Methods
 
@@ -94,21 +104,69 @@ interface SwapperSDKConfig {
 
 Get quotes for token swaps (same-chain) or bridges (cross-chain).
 
+**Using Token Constants (Recommended):**
+```typescript
+import { SwapperSDK, TOKENS, NetworkId } from '@phantom/swapper-sdk';
+
+// ETH to USDC swap on Ethereum
+const quotes = await swapper.getQuotes({
+  sellToken: TOKENS.ETHEREUM_MAINNET.ETH,
+  buyToken: TOKENS.ETHEREUM_MAINNET.USDC,
+  sellAmount: '1000000000000000000', // 1 ETH in wei
+  from: {
+    address: '0x742d35Cc6634C0532925a3b844Bc9e7595f6D123',
+    networkId: NetworkId.ETHEREUM_MAINNET,
+  },
+  slippageTolerance: 0.5, // 0.5%
+});
+
+// Cross-chain bridge: USDC from Ethereum to Solana
+const bridgeQuotes = await swapper.getQuotes({
+  sellToken: TOKENS.ETHEREUM_MAINNET.USDC,
+  buyToken: TOKENS.SOLANA_MAINNET.USDC,
+  sellAmount: '1000000', // 1 USDC (6 decimals)
+  from: {
+    address: '0x742d35Cc6634C0532925a3b844Bc9e7595f6D123',
+    networkId: NetworkId.ETHEREUM_MAINNET,
+  },
+  to: {
+    address: '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',
+    networkId: NetworkId.SOLANA_MAINNET,
+  },
+  slippageTolerance: 1.0,
+});
+```
+
+**Manual Token Construction:**
 ```typescript
 const quotes = await swapper.getQuotes({
-  taker: SwapperCaip19,
-  buyToken: SwapperCaip19,
-  sellToken: SwapperCaip19,
+  sellToken: {
+    type: 'native' | 'address',
+    address?: string,  // Required if type is 'address'
+    networkId: NetworkId,
+  },
+  buyToken: {
+    type: 'native' | 'address',
+    address?: string,  // Required if type is 'address'
+    networkId: NetworkId,
+  },
   sellAmount: string,
+  from: {
+    address: string,
+    networkId: NetworkId,
+  },
+  to?: {  // Optional, for bridges
+    address: string,
+    networkId: NetworkId,
+  },
   
   // Optional parameters
-  takerDestination?: SwapperCaip19,  // For bridges
-  exactOut?: boolean,
-  base64EncodedTx?: boolean,
-  autoSlippage?: boolean,
   slippageTolerance?: number,
   priorityFee?: number,
   tipAmount?: number,
+  exactOut?: boolean,
+  autoSlippage?: boolean,
+  isLedger?: boolean,
 });
 ```
 
@@ -214,63 +272,91 @@ const permissions = await swapper.getPermissions();
 const queue = await swapper.getWithdrawalQueue();
 ```
 
-#### Update Headers
+## Advanced Configuration
 
-Dynamically update request headers.
+### Custom Headers
+
+While not commonly needed, you can provide custom headers if required:
+
+```typescript
+const swapper = new SwapperSDK({
+  apiUrl: 'https://api.phantom.app',
+  options: {
+    organizationId: 'your-org-id',
+  },
+  // Advanced: custom headers (not typically needed)
+  headers: {
+    'Custom-Header': 'value',
+  },
+});
+```
+
+### Update Headers
+
+Dynamically update request headers:
 
 ```typescript
 swapper.updateHeaders({
-  'X-Phantom-Version': '2.0.0',
-  Authorization: 'Bearer new-token',
+  'X-Custom-Header': 'new-value',
 });
 ```
 
 ## Types
 
-### ChainID
+### NetworkId
 
 Supported blockchain networks:
 
 ```typescript
-enum ChainID {
+enum NetworkId {
   // Solana
-  SolanaMainnet = "solana:101",
-  SolanaTestnet = "solana:102",
-  SolanaDevnet = "solana:103",
+  SOLANA_MAINNET = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+  SOLANA_DEVNET = "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
+  SOLANA_TESTNET = "solana:4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z",
   
   // Ethereum
-  EthereumMainnet = "eip155:1",
-  EthereumSepolia = "eip155:11155111",
+  ETHEREUM_MAINNET = "eip155:1",
+  ETHEREUM_SEPOLIA = "eip155:11155111",
   
   // Polygon
-  PolygonMainnet = "eip155:137",
+  POLYGON_MAINNET = "eip155:137",
   
   // Base
-  BaseMainnet = "eip155:8453",
+  BASE_MAINNET = "eip155:8453",
   
   // Arbitrum
-  ArbitrumMainnet = "eip155:42161",
+  ARBITRUM_ONE = "eip155:42161",
   
   // Sui
-  SuiMainnet = "sui:mainnet",
+  SUI_MAINNET = "sui:35834a8a",
   
   // Bitcoin
-  BitcoinMainnet = "bip122:000000000019d6689c085ae165831e93",
+  BITCOIN_MAINNET = "bip122:000000000019d6689c085ae165831e93",
   
   // ... and more
 }
 ```
 
-### SwapperCaip19
+### Token
 
-Universal token/address format:
+Token specification:
 
 ```typescript
-interface SwapperCaip19 {
-  chainId: ChainID;
-  resourceType: "address" | "nativeToken";
-  address?: string;    // Required if resourceType = "address"
-  slip44?: string;     // Required if resourceType = "nativeToken"
+interface Token {
+  type: 'native' | 'address';
+  address?: string;      // Required if type is 'address'
+  networkId: NetworkId;
+}
+```
+
+### UserAddress
+
+User address with network:
+
+```typescript
+interface UserAddress {
+  address: string;
+  networkId: NetworkId;
 }
 ```
 
@@ -390,22 +476,20 @@ yarn prettier
 
 ```typescript
 const quotes = await swapper.getQuotes({
-  taker: {
-    chainId: ChainID.SolanaMainnet,
-    address: '8B3fBhkpHFMTdaQSfKVREB5HFKnZkT8rL6zKJfmmWDeZ',
-    resourceType: 'address',
-  },
   sellToken: {
-    chainId: ChainID.SolanaMainnet,
-    slip44: '501',
-    resourceType: 'nativeToken',
+    type: 'native',
+    networkId: NetworkId.SOLANA_MAINNET,
   },
   buyToken: {
-    chainId: ChainID.SolanaMainnet,
+    type: 'address',
     address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-    resourceType: 'address',
+    networkId: NetworkId.SOLANA_MAINNET,
   },
   sellAmount: '1000000000',
+  from: {
+    address: '8B3fBhkpHFMTdaQSfKVREB5HFKnZkT8rL6zKJfmmWDeZ',
+    networkId: NetworkId.SOLANA_MAINNET,
+  },
   slippageTolerance: 0.5,
 });
 
@@ -419,27 +503,25 @@ const transaction = bestQuote.transactionData[0];
 
 ```typescript
 const quotes = await swapper.getQuotes({
-  taker: {
-    chainId: ChainID.EthereumMainnet,
-    address: '0x742d35Cc6634C0532925a3b844Bc9e7595f6D123',
-    resourceType: 'address',
-  },
-  takerDestination: {
-    chainId: ChainID.SolanaMainnet,
-    address: '8B3fBhkpHFMTdaQSfKVREB5HFKnZkT8rL6zKJfmmWDeZ',
-    resourceType: 'address',
-  },
   sellToken: {
-    chainId: ChainID.EthereumMainnet,
-    address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-    resourceType: 'address',
+    type: 'address',
+    address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // USDC
+    networkId: NetworkId.ETHEREUM_MAINNET,
   },
   buyToken: {
-    chainId: ChainID.SolanaMainnet,
-    address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-    resourceType: 'address',
+    type: 'address',
+    address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC on Solana
+    networkId: NetworkId.SOLANA_MAINNET,
   },
   sellAmount: '1000000000',
+  from: {
+    address: '0x742d35Cc6634C0532925a3b844Bc9e7595f6D123',
+    networkId: NetworkId.ETHEREUM_MAINNET,
+  },
+  to: {
+    address: '8B3fBhkpHFMTdaQSfKVREB5HFKnZkT8rL6zKJfmmWDeZ',
+    networkId: NetworkId.SOLANA_MAINNET,
+  },
   slippageTolerance: 1.0,
 });
 ```

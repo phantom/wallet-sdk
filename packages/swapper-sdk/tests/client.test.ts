@@ -19,26 +19,24 @@ describe("SwapperAPIClient", () => {
     it("should initialize with custom config", () => {
       const customClient = new SwapperAPIClient({
         apiUrl: "https://custom.api.com",
-        headers: {
-          "X-Phantom-Version": "1.0.0",
+        options: {
+          organizationId: "test-org",
+          version: "1.0.0",
         },
       });
       expect(customClient.getBaseUrl()).toBe("https://custom.api.com/swap/v2");
     });
 
-    it("should use environment variables for headers", () => {
-      process.env.PHANTOM_SERVICE_AUTH_TOKEN = "test-token";
-      process.env.PHANTOM_CLIENT_VERSION = "1.0.0";
-      process.env.PHANTOM_CLIENT_PLATFORM = "test-platform";
-      process.env.PHANTOM_COUNTRY_CODE = "US";
-
-      const envClient = new SwapperAPIClient();
-      expect(envClient).toBeDefined();
-
-      delete process.env.PHANTOM_SERVICE_AUTH_TOKEN;
-      delete process.env.PHANTOM_CLIENT_VERSION;
-      delete process.env.PHANTOM_CLIENT_PLATFORM;
-      delete process.env.PHANTOM_COUNTRY_CODE;
+    it("should use options for headers", () => {
+      const optionsClient = new SwapperAPIClient({
+        options: {
+          organizationId: "test-org",
+          countryCode: "US",
+          anonymousId: "anon-123",
+          version: "1.0.0",
+        },
+      });
+      expect(optionsClient).toBeDefined();
     });
   });
 
@@ -173,7 +171,7 @@ describe("SwapperAPIClient", () => {
     it("should update headers", () => {
       expect(() => {
         client.updateHeaders({
-          "X-Phantom-Version": "2.0.0",
+          "X-Custom-Header": "value",
           Authorization: "Bearer new-token",
         });
       }).not.toThrow();

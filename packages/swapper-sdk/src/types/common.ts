@@ -6,9 +6,11 @@ export interface OptionalHeaders {
   "X-Phantom-Version"?: string;
   "X-Phantom-Platform"?: string;
   "X-Phantom-AnonymousId"?: string;
+  "X-Organization"?: string;
   "cf-ipcountry"?: string;
   "cloudfront-viewer-country"?: string;
   Authorization?: string;
+  [key: string]: any; // Allow additional headers
 }
 
 export type Headers = RequiredHeaders & OptionalHeaders;

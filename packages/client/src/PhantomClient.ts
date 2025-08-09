@@ -36,6 +36,7 @@ import {
   KmsUserRole,
   Algorithm,
   type ExternalKmsOrganization,
+  type DerivationInfoAddressFormatEnum as AddressType,
 } from "@phantom/openapi-wallet-service";
 import { DerivationPath, getNetworkConfig } from "./constants";
 import { deriveSubmissionConfig } from "./caip2-mappings";
@@ -219,7 +220,7 @@ export class PhantomClient {
   async getWalletAddresses(
     walletId: string,
     derivationPaths?: string[],
-  ): Promise<{ addressType: string; address: string }[]> {
+  ): Promise<{ addressType: AddressType; address: string }[]> {
     try {
       const paths = derivationPaths || [
         DerivationPath.Solana,

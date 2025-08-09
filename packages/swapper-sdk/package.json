@@ -20,6 +20,8 @@
     "clean": "rm -rf dist",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:integration": "jest tests/integration.test.ts --verbose",
+    "test:unit": "jest --testPathIgnorePatterns='integration.test.ts'",
     "lint": "eslint src --ext .ts,.tsx",
     "check-types": "yarn tsc --noEmit",
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
@@ -37,7 +39,6 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "@phantom/parsers": "workspace:^",
     "eventsource": "^2.0.2"
   },
   "files": [

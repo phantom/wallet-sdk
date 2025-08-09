@@ -25,15 +25,15 @@ export class BridgeAPI {
   }
 
   async getIntentsStatus(params: GetIntentsStatusParams): Promise<GetIntentsStatusResponse> {
-    return this.client.get<GetIntentsStatusResponse>("/spot/get-intents-status", params);
+    return this.client.get<GetIntentsStatusResponse>("/spot/get-intents-status", params as any);
   }
 
   async bridgeInitialize(params: GenerateAndVerifyAddressParams): Promise<GenerateAndVerifyAddressResponse> {
-    return this.client.get<GenerateAndVerifyAddressResponse>("/spot/bridge-initialize", params);
+    return this.client.get<GenerateAndVerifyAddressResponse>("/spot/bridge-initialize", params as any);
   }
 
   async getBridgeOperations(params: OperationsParams): Promise<OperationsResponse> {
-    return this.client.get<OperationsResponse>("/spot/bridge-operations", params);
+    return this.client.get<OperationsResponse>("/spot/bridge-operations", params as any);
   }
 
   async initializeFunding(params: InitializeFundingParams): Promise<InitializeFundingResponse> {

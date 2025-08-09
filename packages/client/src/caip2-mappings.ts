@@ -23,10 +23,6 @@ export enum NetworkId {
   POLYGON_MAINNET = "eip155:137",
   POLYGON_MUMBAI = "eip155:80001",
 
-  // Optimism Networks
-  OPTIMISM_MAINNET = "eip155:10",
-  OPTIMISM_GOERLI = "eip155:420",
-
   // Arbitrum Networks
   ARBITRUM_ONE = "eip155:42161",
   ARBITRUM_GOERLI = "eip155:421613",
@@ -106,16 +102,7 @@ const CAIP2_NETWORK_MAPPINGS: Record<string, NetworkMapping> = {
     network: "mumbai",
     description: "Polygon Mumbai Testnet",
   },
-  [NetworkId.OPTIMISM_MAINNET]: {
-    chain: "optimism",
-    network: "mainnet",
-    description: "Optimism Mainnet",
-  },
-  [NetworkId.OPTIMISM_GOERLI]: {
-    chain: "optimism",
-    network: "goerli",
-    description: "Optimism Goerli Testnet",
-  },
+
   [NetworkId.ARBITRUM_ONE]: {
     chain: "arbitrum",
     network: "mainnet",
