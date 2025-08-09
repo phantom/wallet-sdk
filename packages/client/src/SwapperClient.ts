@@ -7,7 +7,7 @@ import SwapperSDK, {
   type GetBridgeableTokensResponse,
   type GetIntentsStatusResponse,
   type Token,
-  type SwapperNetworkId,
+  type NetworkId as SwapperNetworkId,
 } from "@phantom/swapper-sdk";
 import { getNetworkConfig } from "./constants";
 import type { SignedTransaction } from "./types";
@@ -97,11 +97,11 @@ export class SwapperClient {
     return networkId.startsWith("eip155:");
   }
 
-  private async approveTokenIfNeeded(
+  private approveTokenIfNeeded(
     walletId: string,
     quote: SwapperEvmQuoteRepresentation,
-    networkId: NetworkId,
-  ): Promise<void> {
+    _networkId: NetworkId,
+  ): void {
     if (!quote.approvalExactAmount || quote.approvalExactAmount === "0") {
       return;
     }
@@ -122,7 +122,6 @@ export class SwapperClient {
   }
 
   async swap(params: SwapParams): Promise<SignedTransaction> {
-    try {
       // Get all wallet addresses (uses default derivation paths)
       const addresses = await this.phantomClient.getWalletAddresses(params.walletId);
       
@@ -201,15 +200,9 @@ export class SwapperClient {
       });
 
       return result;
-    } catch (error) {
-      // Log swap failure
-      // console.error("Swap failed:", error);
-      throw error;
-    }
   }
 
   async bridge(params: BridgeParams): Promise<SignedTransaction> {
-    try {
       // Get all wallet addresses
       const addresses = await this.phantomClient.getWalletAddresses(params.walletId);
       
@@ -314,18 +307,13 @@ export class SwapperClient {
       });
 
       return result;
-    } catch (error) {
-      // Log bridge failure  
-      // console.error("Bridge failed:", error);
-      throw error;
-    }
   }
 
-  async getBridgeableTokens(): Promise<GetBridgeableTokensResponse> {
+  getBridgeableTokens(): Promise<GetBridgeableTokensResponse> {
     return this.swapperSDK.getBridgeableTokens();
   }
 
-  async getBridgeStatus(requestId: string): Promise<GetIntentsStatusResponse> {
+  getBridgeStatus(requestId: string): Promise<GetIntentsStatusResponse> {
     return this.swapperSDK.getIntentsStatus({ requestId });
   }
 

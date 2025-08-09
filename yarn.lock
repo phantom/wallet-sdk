@@ -2663,7 +2663,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jest/globals@npm:30.0.5":
+"@jest/globals@npm:30.0.5, @jest/globals@npm:^30.0.5":
   version: 30.0.5
   resolution: "@jest/globals@npm:30.0.5"
   dependencies:
@@ -3245,6 +3245,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/client@workspace:packages/client"
   dependencies:
+    "@jest/globals": "npm:^30.0.5"
     "@phantom/api-key-stamper": "workspace:^"
     "@phantom/base64url": "workspace:^"
     "@phantom/crypto": "workspace:^"

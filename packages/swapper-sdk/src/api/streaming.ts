@@ -1,4 +1,4 @@
-import type { EventType, SSEEvent, SwapperQuery, SwapperQuotesDataRepresentation } from "../types";
+import type { SwapperQuery, SwapperQuotesDataRepresentation } from "../types";
 import type { SwapperAPIClient } from "./client";
 
 export interface StreamQuotesOptions extends SwapperQuery {

@@ -85,14 +85,14 @@ export class SwapperAPIClient {
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
     // Log the outgoing request
-    console.log("=== OUTGOING API REQUEST ===");
-    console.log(`URL: ${url.toString()}`);
-    console.log(`Method: ${method}`);
-    console.log(`Headers:`, JSON.stringify({ ...this.headers, ...headers }, null, 2));
-    if (body) {
-      console.log(`Body:`, JSON.stringify(body, null, 2));
-    }
-    console.log("=============================");
+    // console.log("=== OUTGOING API REQUEST ===");
+    // console.log(`URL: ${url.toString()}`);
+    // console.log(`Method: ${method}`);
+    // console.log(`Headers:`, JSON.stringify({ ...this.headers, ...headers }, null, 2));
+    // if (body) {
+    //   console.log(`Body:`, JSON.stringify(body, null, 2));
+    // }
+    // console.log("=============================");
 
     try {
       const response = await fetch(url.toString(), {
@@ -107,14 +107,14 @@ export class SwapperAPIClient {
 
       clearTimeout(timeoutId);
 
-      console.log("=== API RESPONSE ===");
-      console.log(`Status: ${response.status} ${response.statusText}`);
-      console.log(`Response Headers:`, Object.fromEntries(response.headers.entries()));
+      // console.log("=== API RESPONSE ===");
+      // console.log(`Status: ${response.status} ${response.statusText}`);
+      // console.log(`Response Headers:`, Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.log(`Error Response Body:`, JSON.stringify(errorData, null, 2));
-        console.log("====================");
+        // console.log(`Error Response Body:`, JSON.stringify(errorData, null, 2));
+        // console.log("====================");
         const error: ErrorResponse = {
           code: errorData.code || "UNKNOWN_ERROR",
           message: errorData.message || `Request failed with status ${response.status}`,
@@ -125,8 +125,8 @@ export class SwapperAPIClient {
       }
 
       const responseData = await response.json();
-      console.log(`Success Response Body:`, JSON.stringify(responseData, null, 2));
-      console.log("====================");
+      // console.log(`Success Response Body:`, JSON.stringify(responseData, null, 2));
+      // console.log("====================");
       return responseData;
     } catch (error: any) {
       clearTimeout(timeoutId);

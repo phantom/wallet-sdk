@@ -1,6 +1,6 @@
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
 import { SwapperClient } from "../src/SwapperClient";
-import { PhantomClient } from "../src/PhantomClient";
+import type { PhantomClient } from "../src/PhantomClient";
 import { NetworkId } from "../src/caip2-mappings";
 import { AddressType } from "../src";
 import type { SignedTransaction } from "../src/types";

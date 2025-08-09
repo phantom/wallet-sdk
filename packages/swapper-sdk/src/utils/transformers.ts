@@ -1,6 +1,7 @@
 import type { GetQuotesParams, Token, UserAddress } from "../types/public-api";
 import type { SwapperCaip19, SwapperQuotesBody, SwapperInitializeRequestParams } from "../types";
-import { ChainID, NATIVE_TOKEN_SLIP44, NATIVE_TOKEN_SLIP44_BY_CHAIN, NETWORK_TO_CHAIN_MAP, NetworkId } from "../types/networks";
+import { NATIVE_TOKEN_SLIP44, NATIVE_TOKEN_SLIP44_BY_CHAIN, NETWORK_TO_CHAIN_MAP } from "../types/networks";
+import type { NetworkId } from "../types/networks";
 
 /**
  * Convert a Token to SwapperCaip19 format
