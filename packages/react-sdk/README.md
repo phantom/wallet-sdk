@@ -404,7 +404,6 @@ The SDK automatically determines the transaction type from the NetworkId:
 - `NetworkId.ETHEREUM_SEPOLIA`
 - `NetworkId.POLYGON_MAINNET`
 - `NetworkId.ARBITRUM_ONE`
-- `NetworkId.OPTIMISM_MAINNET`
 - `NetworkId.BASE_MAINNET`
 
 #### Bitcoin

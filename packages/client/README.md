@@ -139,7 +139,6 @@ await client.signAndSendTransaction({
 
 // Other supported networks
 NetworkId.POLYGON_MAINNET;
-NetworkId.OPTIMISM_MAINNET;
 NetworkId.ARBITRUM_ONE;
 NetworkId.BASE_MAINNET;
 // ... and more
