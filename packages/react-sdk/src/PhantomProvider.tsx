@@ -48,22 +48,7 @@ export function PhantomProvider({ children, config }: PhantomProviderProps) {
   const [currentProviderType, setCurrentProviderType] = useState<"injected" | "embedded" | null>(null);
   const [isPhantomAvailable, setIsPhantomAvailable] = useState(false);
 
-  // Check if Phantom extension is available (only for injected provider)
-  useEffect(() => {
-    const checkPhantomExtension = async () => {
-      try {
-        const available = await sdk.waitForPhantomExtension(1000);
-        setIsPhantomAvailable(available);
-      } catch (err) {
-        console.error("Error checking Phantom extension:", err);
-        setIsPhantomAvailable(false);
-      }
-    };
-
-    checkPhantomExtension();
-  }, [sdk]);
-
-  // Function to update connection state and provider info
+    // Function to update connection state and provider info
   const updateConnectionState = useCallback(async () => {
     try {
       const connected = sdk.isConnected();
@@ -86,6 +71,24 @@ export function PhantomProvider({ children, config }: PhantomProviderProps) {
       setError(err as Error);
     }
   }, [sdk]);
+  
+  // Check if Phantom extension is available (only for injected provider)
+  useEffect(() => {
+    const checkPhantomExtension = async () => {
+      try {
+        const available = await sdk.waitForPhantomExtension(1000);
+        setIsPhantomAvailable(available);
+      } catch (err) {
+        console.error("Error checking Phantom extension:", err);
+        setIsPhantomAvailable(false);
+      }
+    };
+
+    checkPhantomExtension();
+    updateConnectionState();
+  }, [sdk, updateConnectionState]);
+
+
 
   // Initialize connection state
   useEffect(() => {

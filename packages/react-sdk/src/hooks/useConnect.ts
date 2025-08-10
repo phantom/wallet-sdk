@@ -17,6 +17,7 @@ export function useConnect() {
 
       try {
         const result = await context.sdk.connect(options);
+        await context.updateConnectionState();
 
         return result;
       } catch (err) {
@@ -35,6 +36,5 @@ export function useConnect() {
     isConnecting,
     error,
     currentProviderType: context.currentProviderType,
-    isPhantomAvailable: context.isPhantomAvailable,
   };
 }

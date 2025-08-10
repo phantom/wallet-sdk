@@ -1,0 +1,511 @@
+.app {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 350px;
+  background-color: #1a1a1a;
+  border-right: 1px solid #333;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.header {
+  margin-bottom: 2rem;
+}
+
+.header h1 {
+  margin: 0;
+  color: #646cff;
+  font-size: 2.5rem;
+}
+
+.header p {
+  margin: 0.5rem 0 0 0;
+  color: #888;
+  font-size: 1.1rem;
+}
+
+.connect-section {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.connect-button {
+  background: linear-gradient(135deg, #646cff 0%, #747bff 100%);
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  border-radius: 12px;
+  cursor: pointer;
+  color: white;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.connect-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(116, 123, 255, 0.3);
+}
+
+.wallet-info h3 {
+  margin: 0 0 1rem 0;
+  color: #646cff;
+}
+
+.addresses-list {
+  margin-bottom: 2rem;
+}
+
+.address-item {
+  background: #2a2a2a;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  border: 1px solid #333;
+}
+
+.address-item h4 {
+  margin: 0 0 0.5rem 0;
+  color: #646cff;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.address-item p {
+  margin: 0;
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: #ccc;
+  word-break: break-all;
+}
+
+.swapper-section h3 {
+  margin: 2rem 0 1rem 0;
+  color: #646cff;
+  border-top: 1px solid #333;
+  padding-top: 2rem;
+}
+
+.swap-controls {
+  margin-bottom: 2rem;
+}
+
+.swap-input-group {
+  margin-bottom: 1rem;
+}
+
+.swap-input-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #ccc;
+  font-size: 0.9rem;
+}
+
+.swap-input-group input {
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.swap-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.swap-button {
+  background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+  border: none;
+  padding: 0.8rem;
+  border-radius: 8px;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.swap-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+}
+
+.bridge-section h4 {
+  margin: 2rem 0 1rem 0;
+  color: #ff7b7b;
+  font-size: 1rem;
+}
+
+.bridge-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bridge-button {
+  background: linear-gradient(135deg, #ff7b7b 0%, #ff6b6b 100%);
+  border: none;
+  padding: 0.8rem;
+  border-radius: 8px;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bridge-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+.quote-container {
+  background: #1a1a1a;
+  border-radius: 12px;
+  border: 1px solid #333;
+  padding: 1.5rem;
+}
+
+.quote-container h2 {
+  margin: 0 0 1rem 0;
+  color: #646cff;
+}
+
+.quotes-list {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.quote-item {
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.quote-item h4 {
+  margin: 0 0 0.5rem 0;
+  color: #4ecdc4;
+}
+
+.quote-item p {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.quote-item strong {
+  color: #fff;
+}
+
+.loading {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+}
+
+.error-message {
+  background: #2d1b1b;
+  border: 1px solid #ff6b6b;
+  color: #ff6b6b;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+/* Quote components styles */
+.quotes-list-container {
+  background: #1a1a1a;
+  border-radius: 12px;
+  border: 1px solid #333;
+  padding: 1.5rem;
+}
+
+.quotes-header {
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #333;
+  padding-bottom: 1rem;
+}
+
+.quotes-header h2 {
+  margin: 0 0 0.5rem 0;
+  color: #646cff;
+  font-size: 1.8rem;
+}
+
+.swap-summary p {
+  margin: 0.25rem 0;
+  color: #ccc;
+  font-size: 1rem;
+}
+
+.swap-amount {
+  font-weight: bold;
+  color: #4ecdc4 !important;
+}
+
+.quotes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.quote-card {
+  background: #2a2a2a;
+  border: 2px solid #444;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.quote-card:hover {
+  border-color: #646cff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(100, 108, 255, 0.1);
+}
+
+.quote-card-best {
+  border-color: #4ecdc4;
+  background: linear-gradient(135deg, #2a2a2a 0%, #2d3d3a 100%);
+}
+
+.quote-card-best::before {
+  content: "BEST RATE";
+  position: absolute;
+  top: -8px;
+  right: 16px;
+  background: #4ecdc4;
+  color: #1a1a1a;
+  padding: 4px 12px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.quote-card-selected {
+  border-color: #ff7b7b;
+  background: linear-gradient(135deg, #2a2a2a 0%, #3d2d2d 100%);
+}
+
+.quote-provider {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.quote-provider h4 {
+  margin: 0;
+  color: #4ecdc4;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.quote-provider-badge {
+  background: #333;
+  color: #ccc;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.quote-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.quote-amounts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.quote-amounts .sell-amount,
+.quote-amounts .buy-amount {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.quote-amounts .label {
+  font-size: 0.8rem;
+  color: #888;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.quote-amounts .amount {
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+.sell-amount .amount {
+  color: #ff7b7b;
+}
+
+.buy-amount .amount {
+  color: #4ecdc4;
+}
+
+.quote-info p {
+  margin: 0.25rem 0;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.quote-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.execute-button {
+  background: linear-gradient(135deg, #646cff 0%, #747bff 100%);
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+}
+
+.execute-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(116, 123, 255, 0.3);
+}
+
+.execute-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.quote-debug {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.quote-debug h5 {
+  margin: 0 0 0.5rem 0;
+  color: #888;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.quote-debug pre {
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 4px;
+  padding: 0.5rem;
+  margin: 0;
+  font-size: 0.75rem;
+  color: #ccc;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.quotes-info {
+  text-align: center;
+  padding-top: 1rem;
+  border-top: 1px solid #333;
+}
+
+.quotes-info p {
+  margin: 0;
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.quotes-empty {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #888;
+}
+
+.quotes-empty h3 {
+  margin: 0 0 1rem 0;
+  color: #646cff;
+}
+
+.quotes-empty p {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+/* Success and error cards */
+.card.success {
+  background: linear-gradient(135deg, #1b3d1b 0%, #2d4a2d 100%);
+  border: 1px solid #4ecdc4;
+  color: #4ecdc4;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.card.error {
+  background: linear-gradient(135deg, #3d1b1b 0%, #4a2d2d 100%);
+  border: 1px solid #ff7b7b;
+  color: #ff7b7b;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.card h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+}
+
+.card p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.wallet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .app {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+    height: auto;
+  }
+  
+  .quote-details {
+    grid-template-columns: 1fr;
+  }
+  
+  .quote-actions {
+    flex-direction: column;
+  }
+}
