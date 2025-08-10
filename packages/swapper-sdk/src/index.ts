@@ -31,3 +31,12 @@ export type {
 } from "./types";
 
 export { SwapperSDK as default } from "./swapper-sdk";
+
+// Transaction parsing utilities
+export {
+  getSolanaTransactionFromQuote,
+  getEvmTransactionFromQuote,
+  getXChainTransactionFromQuote,
+  transactionStringToTransaction,
+  inspectSolanaTransaction
+} from "./utils/transaction-parsers";
