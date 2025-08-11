@@ -1,5 +1,17 @@
 # @phantom/react-ui
 
+## 1.2.0
+
+### Minor Changes
+
+- b379ec2: Added new responses for phantom API , including blockexplorer responses
+
+### Patch Changes
+
+- Updated dependencies [b379ec2]
+  - @phantom/react-sdk@0.3.0
+  - @phantom/client@0.1.4
+
 ## 1.1.3
 
 ### Patch Changes

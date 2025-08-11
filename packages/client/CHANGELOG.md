@@ -1,5 +1,14 @@
 # @phantom/client
 
+## 0.1.4
+
+### Patch Changes
+
+- b379ec2: Added new responses for phantom API , including blockexplorer responses
+- Updated dependencies [b379ec2]
+  - @phantom/api-key-stamper@0.1.2
+  - @phantom/constants@0.0.2
+
 ## 0.1.3
 
 ### Patch Changes

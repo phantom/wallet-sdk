@@ -1,5 +1,16 @@
 # @phantom/react-sdk
 
+## 0.3.0
+
+### Minor Changes
+
+- b379ec2: Added new responses for phantom API , including blockexplorer responses
+
+### Patch Changes
+
+- Updated dependencies [b379ec2]
+  - @phantom/browser-sdk@0.3.0
+
 ## 0.2.3
 
 ### Patch Changes
