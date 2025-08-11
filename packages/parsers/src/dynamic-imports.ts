@@ -71,13 +71,13 @@ export async function parseSolanaTransactionSignature(base64RawTransaction: stri
   fallback: boolean;
 }> {
   const web3 = await getSolanaWeb3();
-  
+
   if (web3) {
     try {
       // Use @solana/web3.js to properly parse the transaction
       const transactionBytes = Buffer.from(base64RawTransaction, "base64url");
       const transaction = web3.Transaction.from(transactionBytes);
-      
+
       let signature: string | null = null;
 
       // Extract signature from the signed transaction
@@ -103,7 +103,7 @@ export async function parseSolanaTransactionSignature(base64RawTransaction: stri
     const transactionBytes = Buffer.from(base64RawTransaction, "base64url");
     const signatureBytes = transactionBytes.slice(0, 64);
     const signature = bs58.encode(signatureBytes);
-    
+
     return {
       signature,
       fallback: true,
@@ -125,12 +125,12 @@ export async function parseEVMTransactionHash(base64RawTransaction: string): Pro
   fallback: boolean;
 }> {
   const ethers = await getEthers();
-  
+
   if (ethers) {
     try {
       const transactionBytes = Buffer.from(base64RawTransaction, "base64url");
       const hexTransaction = "0x" + transactionBytes.toString("hex");
-      
+
       // Parse with ethers
       const parsedTx = ethers.Transaction.from(hexTransaction);
       if (parsedTx.hash) {
@@ -143,14 +143,14 @@ export async function parseEVMTransactionHash(base64RawTransaction: string): Pro
       // Fall through to viem
     }
   }
-  
+
   const viem = await getViem();
-  
+
   if (viem) {
     try {
       const transactionBytes = Buffer.from(base64RawTransaction, "base64url");
       const hexTransaction = `0x${transactionBytes.toString("hex")}` as const;
-      
+
       // Use viem to compute transaction hash
       const hash = viem.keccak256(hexTransaction);
       return {
@@ -166,7 +166,7 @@ export async function parseEVMTransactionHash(base64RawTransaction: string): Pro
   try {
     const transactionBytes = Buffer.from(base64RawTransaction, "base64url");
     const hash = "0x" + transactionBytes.toString("hex").substring(0, 64);
-    
+
     return {
       hash,
       fallback: true,
@@ -187,12 +187,12 @@ export async function parseBitcoinTransactionHash(base64RawTransaction: string):
   fallback: boolean;
 }> {
   const bitcoin = await getBitcoinLib();
-  
+
   if (bitcoin) {
     try {
       const transactionBytes = Buffer.from(base64RawTransaction, "base64url");
       const transaction = bitcoin.Transaction.fromBuffer(transactionBytes);
-      
+
       if (transaction.getId) {
         return {
           hash: transaction.getId(),
@@ -208,7 +208,7 @@ export async function parseBitcoinTransactionHash(base64RawTransaction: string):
   try {
     const transactionBytes = Buffer.from(base64RawTransaction, "base64url");
     const hash = transactionBytes.toString("hex").substring(0, 64);
-    
+
     return {
       hash,
       fallback: true,
@@ -229,16 +229,16 @@ export async function parseSuiTransactionDigest(base64RawTransaction: string): P
   fallback: boolean;
 }> {
   const sui = await getSuiSDK();
-  
+
   if (sui) {
     try {
       // Use Sui SDK to parse transaction and extract digest
       const transactionBytes = Buffer.from(base64RawTransaction, "base64url");
-      
+
       // This would need specific Sui SDK implementation
       // For now, we'll use a simplified approach
       const digest = bs58.encode(transactionBytes.slice(0, 32));
-      
+
       return {
         digest,
         fallback: false,
@@ -252,7 +252,7 @@ export async function parseSuiTransactionDigest(base64RawTransaction: string): P
   try {
     const transactionBytes = Buffer.from(base64RawTransaction, "base64url");
     const digest = bs58.encode(transactionBytes.slice(0, 32));
-    
+
     return {
       digest,
       fallback: true,

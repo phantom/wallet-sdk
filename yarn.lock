@@ -3448,12 +3448,14 @@ __metadata:
     "@mysten/sui.js": "npm:^0.50.0"
     "@phantom/base64url": "workspace:^"
     "@phantom/constants": "workspace:^"
+    "@solana/kit": "npm:^2.1.1"
     "@solana/web3.js": "npm:^1.95.0"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
     bitcoinjs-lib: "npm:^6.1.0"
     bs58: "npm:^6.0.0"
     buffer: "npm:^6.0.3"
+    dotenv: "npm:^16.4.5"
     eslint: "npm:8.53.0"
     ethers: "npm:^6.0.0"
     jest: "npm:^29.7.0"
@@ -3465,6 +3467,8 @@ __metadata:
     viem: "npm:^2.0.0"
   dependenciesMeta:
     "@mysten/sui.js":
+      optional: true
+    "@solana/kit":
       optional: true
     "@solana/web3.js":
       optional: true

@@ -202,7 +202,7 @@ describe("ServerSDK", () => {
       // Base64 signature should be a valid base64url string
       expect(() => Buffer.from(signature.signature, "base64url")).not.toThrow();
       // Block explorer URL should be defined for supported networks
-      expect(typeof signature.blockExplorer === 'string' || signature.blockExplorer === undefined).toBe(true);
+      expect(typeof signature.blockExplorer === "string" || signature.blockExplorer === undefined).toBe(true);
     }, 30000);
 
     it("should sign a plain text message (auto-parsing)", async () => {
@@ -221,7 +221,7 @@ describe("ServerSDK", () => {
       expect(typeof signature.signature).toBe("string");
       expect(signature.signature.length).toBeGreaterThan(0);
       // Block explorer URL should be defined for supported networks
-      expect(typeof signature.blockExplorer === 'string' || signature.blockExplorer === undefined).toBe(true);
+      expect(typeof signature.blockExplorer === "string" || signature.blockExplorer === undefined).toBe(true);
     }, 30000);
 
     it("should sign a message for Ethereum", async () => {
@@ -242,7 +242,7 @@ describe("ServerSDK", () => {
       // Base64 signature should be a valid base64url string
       expect(() => Buffer.from(signature.signature, "base64url")).not.toThrow();
       // Block explorer URL should be defined for supported networks
-      expect(typeof signature.blockExplorer === 'string' || signature.blockExplorer === undefined).toBe(true);
+      expect(typeof signature.blockExplorer === "string" || signature.blockExplorer === undefined).toBe(true);
     }, 30000);
 
     it("should sign different messages and get different signatures", async () => {
@@ -280,7 +280,7 @@ describe("ServerSDK", () => {
       expect(typeof signature.signature).toBe("string");
       expect(signature.signature.length).toBeGreaterThan(0);
       // Block explorer URL should be defined for supported networks
-      expect(typeof signature.blockExplorer === 'string' || signature.blockExplorer === undefined).toBe(true);
+      expect(typeof signature.blockExplorer === "string" || signature.blockExplorer === undefined).toBe(true);
     }, 30000);
   });
 

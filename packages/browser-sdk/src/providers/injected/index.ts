@@ -13,7 +13,9 @@ import { createPhantom, createExtensionPlugin } from "@phantom/browser-injected-
 import { createSolanaPlugin } from "@phantom/browser-injected-sdk/solana";
 import { createEthereumPlugin } from "@phantom/browser-injected-sdk/ethereum";
 import { debug, DebugCategory } from "../../debug";
-import { parseSignMessageResponse } from "@phantom/parsers";
+import { base64urlEncode } from "@phantom/base64url";
+import { getExplorerUrl } from "@phantom/constants";
+import bs58 from "bs58";
 
 declare global {
   interface Window {
@@ -157,15 +159,14 @@ export class InjectedProvider implements Provider {
     }
 
     const networkPrefix = params.networkId.split(":")[0].toLowerCase();
-    let rawSignature: string;
+    let signatureResult: string;
 
     if (networkPrefix === "solana") {
       // Sign with Solana provider using browser-injected-sdk - message is already a native string
       const { signature } = await this.phantom.solana.signMessage(new TextEncoder().encode(params.message));
 
-      // Convert signature to base64url for consistency with server responses
-      const uint8Array = new Uint8Array(signature);
-      rawSignature = Buffer.from(uint8Array).toString("base64url");
+      // Convert Uint8Array signature to base58 string (standard Solana format)
+      signatureResult = bs58.encode(signature);
     } else if (networkPrefix === "ethereum" || networkPrefix === "polygon" || networkPrefix === "eip155") {
       // Get the first address
       const address = this.addresses.find(addr => addr.addressType === AddressType.ethereum)?.address;
@@ -178,15 +179,16 @@ export class InjectedProvider implements Provider {
       // Sign with Ethereum provider using browser-injected-sdk - message is already a native string
       const signature = await this.phantom.ethereum.signPersonalMessage(params.message, address);
 
-      // Convert signature to base64url for consistency with server responses
-      const hexSignature = signature.startsWith("0x") ? signature.slice(2) : signature;
-      rawSignature = Buffer.from(hexSignature, "hex").toString("base64url");
+      signatureResult = signature;
     } else {
       throw new Error(`Network ${params.networkId} is not supported for injected wallets`);
     }
 
     // Parse the signature using the unified parser to get consistent response format
-    return parseSignMessageResponse(rawSignature, params.networkId);
+    return {
+      signature: signatureResult,
+      rawSignature: base64urlEncode(signatureResult),
+    };
   }
 
   async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<SignedTransaction> {
@@ -203,7 +205,8 @@ export class InjectedProvider implements Provider {
       const result = await this.phantom.solana.signAndSendTransaction(transaction);
       return {
         hash: result.signature,
-        rawTransaction: result.signature,
+        rawTransaction: base64urlEncode(result.signature),
+        blockExplorer: getExplorerUrl(params.networkId, "transaction", result.signature),
       };
     } else if (networkPrefix === "ethereum" || networkPrefix === "polygon" || networkPrefix === "eip155") {
       // Helper function to ensure hex format
@@ -232,7 +235,8 @@ export class InjectedProvider implements Provider {
 
       return {
         hash: txHash,
-        rawTransaction: txHash,
+        rawTransaction: base64urlEncode(txHash),
+        blockExplorer: getExplorerUrl(params.networkId, "transaction", txHash),
       };
     }
 

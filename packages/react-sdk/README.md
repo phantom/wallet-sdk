@@ -318,25 +318,43 @@ function SignMessage() {
 
 ```tsx
 import { useSignAndSendTransaction, NetworkId } from "@phantom/react-sdk";
-import { Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import {
+  VersionedTransaction,
+  TransactionMessage,
+  SystemProgram,
+  PublicKey,
+  LAMPORTS_PER_SOL,
+  Connection,
+} from "@solana/web3.js";
 
 function SendSolanaTransaction() {
   const { signAndSendTransaction, isLoading, error } = useSignAndSendTransaction();
 
   const handleSend = async () => {
-    // Create native Solana transaction - no encoding needed!
-    const transaction = new Transaction().add(
-      SystemProgram.transfer({
-        fromPubkey: new PublicKey(fromAddress),
-        toPubkey: new PublicKey(toAddress),
-        lamports: 0.001 * LAMPORTS_PER_SOL,
-      }),
-    );
+    // Get recent blockhash
+    const connection = new Connection("https://api.mainnet-beta.solana.com");
+    const { blockhash } = await connection.getLatestBlockhash();
+
+    // Create transfer instruction
+    const transferInstruction = SystemProgram.transfer({
+      fromPubkey: new PublicKey(fromAddress),
+      toPubkey: new PublicKey(toAddress),
+      lamports: 0.001 * LAMPORTS_PER_SOL,
+    });
+
+    // Create VersionedTransaction
+    const messageV0 = new TransactionMessage({
+      payerKey: new PublicKey(fromAddress),
+      recentBlockhash: blockhash,
+      instructions: [transferInstruction],
+    }).compileToV0Message();
+
+    const transaction = new VersionedTransaction(messageV0);
 
     try {
       const result = await signAndSendTransaction({
         networkId: NetworkId.SOLANA_MAINNET,
-        transaction: transaction, // Native Transaction object!
+        transaction: transaction, // Native VersionedTransaction object!
       });
       console.log("Transaction sent:", result.rawTransaction);
     } catch (err) {
@@ -430,20 +448,32 @@ The SDK automatically determines the transaction type from the NetworkId:
 ### Solana with @solana/web3.js
 
 ```tsx
-import { Transaction, SystemProgram, PublicKey } from "@solana/web3.js";
+import { VersionedTransaction, TransactionMessage, SystemProgram, PublicKey, Connection } from "@solana/web3.js";
 import { useSignAndSendTransaction, NetworkId } from "@phantom/react-sdk";
 
 function SolanaExample() {
   const { signAndSendTransaction } = useSignAndSendTransaction();
 
   const sendTransaction = async () => {
-    const transaction = new Transaction().add(
-      SystemProgram.transfer({
-        fromPubkey: new PublicKey(fromAddress),
-        toPubkey: new PublicKey(toAddress),
-        lamports: 1000000, // 0.001 SOL
-      }),
-    );
+    // Get recent blockhash
+    const connection = new Connection("https://api.mainnet-beta.solana.com");
+    const { blockhash } = await connection.getLatestBlockhash();
+
+    // Create transfer instruction
+    const transferInstruction = SystemProgram.transfer({
+      fromPubkey: new PublicKey(fromAddress),
+      toPubkey: new PublicKey(toAddress),
+      lamports: 1000000, // 0.001 SOL
+    });
+
+    // Create VersionedTransaction
+    const messageV0 = new TransactionMessage({
+      payerKey: new PublicKey(fromAddress),
+      recentBlockhash: blockhash,
+      instructions: [transferInstruction],
+    }).compileToV0Message();
+
+    const transaction = new VersionedTransaction(messageV0);
 
     // No serialization or encoding needed!
     const result = await signAndSendTransaction({
@@ -537,20 +567,32 @@ function EthereumExample() {
 
 ```tsx
 import { useSignAndSendTransaction, NetworkId } from "@phantom/react-sdk";
-import { Transaction, SystemProgram, PublicKey } from "@solana/web3.js";
+import { VersionedTransaction, TransactionMessage, SystemProgram, PublicKey, Connection } from "@solana/web3.js";
 import { parseEther } from "viem";
 
 function MultiChainWallet() {
   const { signAndSendTransaction } = useSignAndSendTransaction();
 
   const sendSolana = async () => {
-    const transaction = new Transaction().add(
-      SystemProgram.transfer({
-        fromPubkey: new PublicKey(solanaAddress),
-        toPubkey: new PublicKey(recipient),
-        lamports: 1000000,
-      }),
-    );
+    // Get recent blockhash
+    const connection = new Connection("https://api.mainnet-beta.solana.com");
+    const { blockhash } = await connection.getLatestBlockhash();
+
+    // Create transfer instruction
+    const transferInstruction = SystemProgram.transfer({
+      fromPubkey: new PublicKey(solanaAddress),
+      toPubkey: new PublicKey(recipient),
+      lamports: 1000000,
+    });
+
+    // Create VersionedTransaction
+    const messageV0 = new TransactionMessage({
+      payerKey: new PublicKey(solanaAddress),
+      recentBlockhash: blockhash,
+      instructions: [transferInstruction],
+    }).compileToV0Message();
+
+    const transaction = new VersionedTransaction(messageV0);
 
     return await signAndSendTransaction({
       networkId: NetworkId.SOLANA_MAINNET,

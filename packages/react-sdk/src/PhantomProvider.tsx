@@ -3,7 +3,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useMemo } 
 import { BrowserSDK } from "@phantom/browser-sdk";
 import type { BrowserSDKConfig, WalletAddress, AuthOptions } from "@phantom/browser-sdk";
 
-export interface PhantomSDKConfig extends BrowserSDKConfig { }
+export interface PhantomSDKConfig extends BrowserSDKConfig {}
 
 export interface ConnectOptions {
   providerType?: "injected" | "embedded";

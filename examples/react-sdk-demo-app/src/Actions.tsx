@@ -96,17 +96,19 @@ export function Actions() {
     }
   };
 
-  const onSignMessage = async () => {
+  const onSignMessage = async (type: "solana" | "evm") => {
     if (!isConnected || !solanaAddress) {
       alert("Please connect your wallet first.");
       return;
     }
     try {
       const result = await signMessage({
-        message: "Hello from Phantom React SDK Demo!",
-        networkId: NetworkId.SOLANA_MAINNET,
+        message: "Hello, World!",
+        networkId: type === "solana" ? NetworkId.SOLANA_MAINNET : NetworkId.ETHEREUM_MAINNET,
       });
-      alert(`Message Signed! Signature: ${result.signature}${result.blockExplorer ? `\n\nView on explorer: ${result.blockExplorer}` : ''}`);
+      alert(
+        `Message Signed! Signature: ${result.signature}${result.blockExplorer ? `\n\nView on explorer: ${result.blockExplorer}` : ""}`,
+      );
     } catch (error) {
       console.error("Error signing message:", error);
       alert(`Error signing message: ${(error as Error).message || error}`);
@@ -119,7 +121,7 @@ export function Actions() {
       return;
     }
     try {
-      const rpc = createSolanaRpc("https://solana-mainnet.g.alchemy.com/v2/Pnb7lrjdZw6df2yXSKDiG");
+      const rpc = createSolanaRpc(import.meta.env.VITE_SOLANA_RPC_URL_MAINNET);
 
       const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
 
@@ -262,8 +264,11 @@ export function Actions() {
               >
                 {isConnecting ? "Connecting..." : "Connect"}
               </button>
-              <button onClick={onSignMessage} disabled={!isConnected || isSigningMessage}>
+              <button onClick={() => onSignMessage("solana")} disabled={!isConnected || isSigningMessage}>
                 {isSigningMessage ? "Signing..." : "Sign Message"}
+              </button>
+              <button onClick={() => onSignMessage("evm")} disabled={!isConnected || isSigningMessage}>
+                {isSigningMessage ? "Signing..." : "Sign Message EVM"}
               </button>
               <button onClick={onSignAndSendTransaction} disabled={!isConnected || isSigningTransaction}>
                 {isSigningTransaction ? "Signing..." : "Sign & Send Transaction"}
@@ -309,7 +314,13 @@ export function Actions() {
               {debugMessages.slice(-30).map((msg, index) => {
                 const levelClass = DebugLevel[msg.level].toLowerCase();
                 const timestamp = new Date(msg.timestamp).toLocaleTimeString();
-                const dataStr = msg.data ? JSON.stringify(msg.data, null, 2) : "";
+                // Debug message rendering
+                let dataStr = "";
+                try {
+                  dataStr = msg.data ? JSON.stringify(msg.data, null, 2) : "";
+                } catch (error) {
+                  console.error("Error stringifying debug message data:", error);
+                }
 
                 return (
                   <div key={index} className={`debug-message debug-${levelClass}`}>

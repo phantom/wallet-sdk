@@ -1,4 +1,4 @@
-import { NetworkId } from './network-ids';
+import { NetworkId } from "./network-ids";
 
 export interface NetworkConfig {
   name: string;
@@ -7,7 +7,7 @@ export interface NetworkConfig {
   explorer?: {
     name: string;
     transactionUrl: string; // Template with {hash} placeholder
-    addressUrl: string;     // Template with {address} placeholder
+    addressUrl: string; // Template with {address} placeholder
   };
 }
 
@@ -223,13 +223,17 @@ export function getNetworkConfig(networkId: NetworkId): NetworkConfig | undefine
   return NETWORK_CONFIGS[networkId];
 }
 
-export function getExplorerUrl(networkId: NetworkId, type: 'transaction' | 'address', value: string): string | undefined {
+export function getExplorerUrl(
+  networkId: NetworkId,
+  type: "transaction" | "address",
+  value: string,
+): string | undefined {
   const config = getNetworkConfig(networkId);
   if (!config?.explorer) return undefined;
-  
-  const template = type === 'transaction' ? config.explorer.transactionUrl : config.explorer.addressUrl;
-  const placeholder = type === 'transaction' ? '{hash}' : '{address}';
-  
+
+  const template = type === "transaction" ? config.explorer.transactionUrl : config.explorer.addressUrl;
+  const placeholder = type === "transaction" ? "{hash}" : "{address}";
+
   return template.replace(placeholder, value);
 }
 

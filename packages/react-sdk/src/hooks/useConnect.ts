@@ -28,7 +28,7 @@ export function useConnect() {
         setIsConnecting(false);
       }
     },
-    [context.sdk],
+    [context],
   );
 
   return {

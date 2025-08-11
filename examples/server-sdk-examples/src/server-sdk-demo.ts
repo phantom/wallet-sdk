@@ -172,7 +172,7 @@ async function runDemo() {
     console.log("✅ Transaction signed and sent!");
     console.log(`   Transaction Hash: ${signedResult.hash}`);
     console.log(`   Raw transaction (base64url): ${signedResult.rawTransaction}`);
-    
+
     // The SDK now automatically parses the transaction using @solana/web3.js
     // and extracts the signature for us - no manual parsing needed!
     const signature = signedResult.hash;

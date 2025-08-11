@@ -872,7 +872,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         networkId: NetworkId.SOLANA_MAINNET,
       });
       expect(result.signature).toBeDefined();
-      expect(typeof result.blockExplorer === 'string' || result.blockExplorer === undefined).toBe(true);
+      expect(typeof result.blockExplorer === "string" || result.blockExplorer === undefined).toBe(true);
     });
 
     it("should throw error when signing message while not connected", async () => {
@@ -902,7 +902,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         networkId: NetworkId.SOLANA_MAINNET,
       });
       expect(result.hash).toBeDefined();
-      expect(typeof result.blockExplorer === 'string' || result.blockExplorer === undefined).toBe(true);
+      expect(typeof result.blockExplorer === "string" || result.blockExplorer === undefined).toBe(true);
     });
 
     it("should throw error when signing transaction while not connected", async () => {

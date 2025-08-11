@@ -10,7 +10,7 @@ import {
   DEFAULT_WALLET_API_URL,
 } from "@phantom/browser-sdk";
 import type { DebugMessage } from "@phantom/browser-sdk";
-import { Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL, Connection } from "@solana/web3.js";
+import { SystemProgram, PublicKey, Connection, VersionedTransaction, TransactionMessage } from "@solana/web3.js";
 import {
   createSolanaRpc,
   pipe,
@@ -29,6 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const connectBtn = document.getElementById("connectBtn") as HTMLButtonElement;
   const getAccountBtn = document.getElementById("getAccountBtn") as HTMLButtonElement;
   const signMessageBtn = document.getElementById("signMessageBtn") as HTMLButtonElement;
+  const signMessageEvmBtn = document.getElementById("signMessageEvmBtn") as HTMLButtonElement;
   const signTransactionBtn = document.getElementById("signTransactionBtn") as HTMLButtonElement;
   const disconnectBtn = document.getElementById("disconnectBtn") as HTMLButtonElement;
 
@@ -36,6 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
     connectBtn: !!connectBtn,
     getAccountBtn: !!getAccountBtn,
     signMessageBtn: !!signMessageBtn,
+    signMessageEvmBtn: !!signMessageEvmBtn,
     signTransactionBtn: !!signTransactionBtn,
     disconnectBtn: !!disconnectBtn,
   });
@@ -174,6 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (connectBtn) connectBtn.disabled = connected;
     if (getAccountBtn) getAccountBtn.disabled = !connected;
     if (signMessageBtn) signMessageBtn.disabled = !connected;
+    if (signMessageEvmBtn) signMessageEvmBtn.disabled = !connected;
     if (signTransactionBtn) signTransactionBtn.disabled = !connected;
     // Keep disconnect button always enabled for session clearing
     if (disconnectBtn) disconnectBtn.disabled = false;
@@ -230,16 +233,42 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const message = "Hello from Phantom Browser SDK!";
-        // Use devnet by default for demo, but could be configurable
-        const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL || "https://api.devnet.solana.com";
-        const networkId = rpcUrl.includes("mainnet") ? NetworkId.SOLANA_MAINNET : NetworkId.SOLANA_DEVNET;
+        const networkId = NetworkId.SOLANA_MAINNET;
         const result = await sdk.signMessage({ message, networkId });
 
         console.log("Message signed:", result);
-        alert(`Message signed: ${result.signature}${result.blockExplorer ? `\n\nView on explorer: ${result.blockExplorer}` : ''}`);
+        alert(
+          `Message signed: ${result.signature}${result.blockExplorer ? `\n\nView on explorer: ${result.blockExplorer}` : ""}`,
+        );
       } catch (error) {
         console.error("Error signing message:", error);
         alert(`Error signing message: ${(error as Error).message || error}`);
+      }
+    };
+  }
+
+  // Sign Message EVM button
+  if (signMessageEvmBtn) {
+    signMessageEvmBtn.onclick = async () => {
+      try {
+        if (!sdk) {
+          alert("Please connect first");
+          return;
+        }
+
+        const message = "Hello from Phantom Browser SDK (EVM)!";
+        const result = await sdk.signMessage({
+          message,
+          networkId: NetworkId.ETHEREUM_MAINNET,
+        });
+
+        console.log("EVM Message signed:", result);
+        alert(
+          `EVM Message signed: ${result.signature}${result.blockExplorer ? `\n\nView on explorer: ${result.blockExplorer}` : ""}`,
+        );
+      } catch (error) {
+        console.error("Error signing EVM message:", error);
+        alert(`Error signing EVM message: ${(error as Error).message || error}`);
       }
     };
   }
@@ -284,29 +313,30 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Create connection to get recent blockhash (using environment RPC URL)
-    const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL || "https://api.devnet.solana.com";
+    const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL_MAINNET || "https://api.mainnet-beta.solana.com";
+    console.log("Using RPC URL:", rpcUrl);
     const connection = new Connection(rpcUrl);
 
     // Get recent blockhash
     const { blockhash } = await connection.getLatestBlockhash();
 
-    // Create a simple transfer transaction with blockhash
-    const transaction = new Transaction({
-      recentBlockhash: blockhash,
-      feePayer: new PublicKey(solanaAddress.address),
-    }).add(
-      SystemProgram.transfer({
-        fromPubkey: new PublicKey(solanaAddress.address),
-        toPubkey: new PublicKey(solanaAddress.address), // Self-transfer for demo
-        lamports: 0.001 * LAMPORTS_PER_SOL,
-      }),
-    );
+    // Create a versioned transaction message
+    const transferInstruction = SystemProgram.transfer({
+      fromPubkey: new PublicKey(solanaAddress.address),
+      toPubkey: new PublicKey(solanaAddress.address), // Self-transfer for demo
+      lamports: 1000, // Very small amount: 0.000001 SOL
+    });
 
-    // Determine network based on RPC URL
-    const networkId = rpcUrl.includes("mainnet") ? NetworkId.SOLANA_MAINNET : NetworkId.SOLANA_DEVNET;
+    const messageV0 = new TransactionMessage({
+      payerKey: new PublicKey(solanaAddress.address),
+      recentBlockhash: blockhash,
+      instructions: [transferInstruction],
+    }).compileToV0Message();
+
+    const transaction = new VersionedTransaction(messageV0);
 
     const result = await sdk!.signAndSendTransaction({
-      networkId: networkId,
+      networkId: NetworkId.SOLANA_MAINNET,
       transaction: transaction,
     });
 
@@ -322,7 +352,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL || "https://api.devnet.solana.com";
+    const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL_MAINNET;
     const rpc = createSolanaRpc(rpcUrl);
     const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
 
@@ -334,11 +364,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const transaction = compileTransaction(transactionMessage);
 
-    // Determine network based on RPC URL
-    const networkId = rpcUrl.includes("mainnet") ? NetworkId.SOLANA_MAINNET : NetworkId.SOLANA_DEVNET;
-
     const result = await sdk!.signAndSendTransaction({
-      networkId: networkId,
+      networkId: NetworkId.SOLANA_MAINNET,
       transaction: transaction,
     });
 

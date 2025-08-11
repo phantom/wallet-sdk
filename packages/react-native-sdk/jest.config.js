@@ -10,7 +10,7 @@ module.exports = {
         tsconfig: {
           jsx: "react-jsx",
           esModuleInterop: true,
-          allowSyntheticDefaultImports: true
+          allowSyntheticDefaultImports: true,
         },
       },
     ],
