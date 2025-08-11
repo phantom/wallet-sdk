@@ -10,6 +10,7 @@ import type {
   URLParamsAccessor,
 } from "./interfaces";
 import { PhantomClient, generateKeyPair } from "@phantom/client";
+import { NetworkId } from "@phantom/constants";
 
 // Mock dependencies
 jest.mock("@phantom/api-key-stamper");
@@ -862,15 +863,16 @@ describe("EmbeddedProvider Auth Flows", () => {
 
       const result = await provider.signMessage({
         message: "test message",
-        networkId: "solana:mainnet",
+        networkId: NetworkId.SOLANA_MAINNET,
       });
 
       expect(mockClient.signMessage).toHaveBeenCalledWith({
         walletId: "wallet-123",
         message: expect.any(String),
-        networkId: "solana:mainnet",
+        networkId: NetworkId.SOLANA_MAINNET,
       });
-      expect(result).toBe("signed-message-signature");
+      expect(result.signature).toBeDefined();
+      expect(typeof result.blockExplorer === "string" || result.blockExplorer === undefined).toBe(true);
     });
 
     it("should throw error when signing message while not connected", async () => {
@@ -879,28 +881,28 @@ describe("EmbeddedProvider Auth Flows", () => {
       await expect(
         provider.signMessage({
           message: "test message",
-          networkId: "solana:mainnet",
+          networkId: NetworkId.SOLANA_MAINNET,
         }),
       ).rejects.toThrow("Not connected");
     });
 
     it("should sign and send transactions when connected", async () => {
       mockClient.signAndSendTransaction.mockResolvedValue({
-        signature: "transaction-signature",
-        networkId: "solana:mainnet",
+        rawTransaction: "base64url-raw-transaction-data",
       });
 
       const result = await provider.signAndSendTransaction({
         transaction: "base64-encoded-transaction",
-        networkId: "solana:mainnet",
+        networkId: NetworkId.SOLANA_MAINNET,
       });
 
       expect(mockClient.signAndSendTransaction).toHaveBeenCalledWith({
         walletId: "wallet-123",
         transaction: expect.any(String),
-        networkId: "solana:mainnet",
+        networkId: NetworkId.SOLANA_MAINNET,
       });
-      expect(result.signature).toBe("transaction-signature");
+      expect(result.hash).toBeDefined();
+      expect(typeof result.blockExplorer === "string" || result.blockExplorer === undefined).toBe(true);
     });
 
     it("should throw error when signing transaction while not connected", async () => {
@@ -909,7 +911,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       await expect(
         provider.signAndSendTransaction({
           transaction: "base64-encoded-transaction",
-          networkId: "solana:mainnet",
+          networkId: NetworkId.SOLANA_MAINNET,
         }),
       ).rejects.toThrow("Not connected");
     });

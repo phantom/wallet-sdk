@@ -8,6 +8,7 @@ import {
   type SignAndSendTransactionParams,
   type SignedTransaction,
   type SignMessageParams,
+  type SignMessageResult,
 } from "@phantom/react-sdk";
 
 export interface PhantomUIProviderProps {
@@ -55,7 +56,7 @@ interface PhantomUIContextValue {
   // Message state
   messageState: MessageUIState;
   showMessageModal: (params: SignMessageParams) => void;
-  signMessage: (params: SignMessageParams) => Promise<string>;
+  signMessage: (params: SignMessageParams) => Promise<SignMessageResult>;
 
   // Internal methods for modals
   _internal: {
@@ -211,7 +212,7 @@ export function PhantomUIProvider({ children, theme = "light", customTheme }: Ph
 
   // Enhanced sign message with UI
   const signMessage = useCallback(
-    async (params: SignMessageParams): Promise<string> => {
+    async (params: SignMessageParams): Promise<SignMessageResult> => {
       // Show message modal
       setMessageState({
         isVisible: true,

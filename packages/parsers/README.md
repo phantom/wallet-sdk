@@ -220,7 +220,27 @@ yarn build
 
 # Run tests
 yarn test
+
+# Run integration tests (requires RPC access)
+yarn test:integration
 ```
+
+### Integration Tests
+
+The package includes comprehensive integration tests that create real transactions using actual Solana libraries:
+
+- **VersionedTransaction** parsing with `@solana/web3.js`
+- **Legacy Transaction** parsing with `@solana/web3.js`
+- **@solana/kit** transaction parsing
+- Error handling and network resilience
+
+To run integration tests:
+
+1. Copy `.env.example` to `.env`
+2. Set `SOLANA_RPC_URL` to your preferred Solana RPC endpoint
+3. Run `yarn test:integration`
+
+**Note**: Integration tests make real network calls to fetch recent blockhashes but only create local test transactions (no funds required).
 
 ## License
 
