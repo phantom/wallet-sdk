@@ -2,7 +2,6 @@ import {
   PhantomClient,
   type SignMessageParams,
   type SignAndSendTransactionParams,
-  type SignedTransaction,
   type NetworkId,
   type CreateWalletResult,
   type GetWalletsResult,

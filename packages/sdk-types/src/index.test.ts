@@ -1,10 +1,13 @@
-import { Stamper, StamperWithKeyManagement, StamperKeyInfo } from './index';
+import type { Stamper, StamperWithKeyManagement, StamperKeyInfo } from './index';
+import { Algorithm } from './index';
 
 describe('SDK Types', () => {
   it('should export Stamper interface', () => {
     // This is a type-only test - if it compiles, the types are working
     const stamper: Stamper = {
-      stamp: async (params: any) => {
+      algorithm: Algorithm.ed25519,
+      stamp: async (_params: any) => {
+        await Promise.resolve(); // Add await to satisfy linter
         return 'mock-stamp';
       }
     };
@@ -15,10 +18,13 @@ describe('SDK Types', () => {
   it('should export StamperWithKeyManagement interface', () => {
     // This is a type-only test - if it compiles, the types are working
     const stamperWithKeyManagement: StamperWithKeyManagement = {
-      stamp: async (params: any) => {
+      algorithm: Algorithm.ed25519,
+      stamp: async (_params: any) => {
+        await Promise.resolve(); // Add await to satisfy linter
         return 'mock-stamp';
       },
       init: async () => {
+        await Promise.resolve(); // Add await to satisfy linter
         return { keyId: 'test', publicKey: 'test' };
       },
       getKeyInfo: () => {
