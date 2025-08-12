@@ -36,6 +36,7 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
+    "@phantom/openapi-wallet-service": "^0.1.7",
     "buffer": "^6.0.3"
   },
   "files": [

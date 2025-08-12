@@ -60,6 +60,7 @@ export class PhantomClient {
   private config: PhantomClientConfig;
   private kmsApi: KMSRPCApi;
   private axiosInstance: AxiosInstance;
+  private stamper?: Stamper;
 
   constructor(config: PhantomClientConfig, stamper?: Stamper) {
     this.config = config;
@@ -72,11 +73,13 @@ export class PhantomClient {
     this.axiosInstance = axios.create();
 
     // If stamper is provided, add it as an interceptor
+    console.log("Initializing PhantomClient with stamper:", !!stamper);
     if (stamper) {
       // Add stamper interceptor to axios instance
       this.axiosInstance.interceptors.request.use(async config => {
         return await this.stampRequest(config, stamper);
       });
+      this.stamper = stamper;
     }
 
     // Configure the KMS API client
@@ -368,7 +371,7 @@ export class PhantomClient {
       if (!name) {
         throw new Error("Organization name is required");
       }
- 
+
       const params: CreateOrganizationRequest = {
         organizationName: name,
         users: [
@@ -376,7 +379,7 @@ export class PhantomClient {
             role: KmsUserRole.admin,
             authenticators: [
               {
-                algorithm: Algorithm.ed25519,
+                algorithm: this.stamper?.algorithm || Algorithm.ed25519,
                 authenticatorKind: "keypair" as any,
                 publicKey: base64urlEncode(bs58.decode(publicKey)) as any,
                 authenticatorName: authenticatorName || `KeyPair ${Date.now()}`,
@@ -394,7 +397,7 @@ export class PhantomClient {
       } as any;
 
       // Creating organization with request
-
+      console.log("Creating organization with params:", params);
       const response = await this.kmsApi.postKmsRpc(request);
       const result = response.data.result as ExternalKmsOrganization;
 

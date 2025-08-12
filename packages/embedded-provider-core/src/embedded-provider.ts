@@ -150,7 +150,7 @@ export class EmbeddedProvider {
     // Initialize stamper (generates keypair in IndexedDB)
     this.logger.log("EMBEDDED_PROVIDER", "Initializing stamper");
     const stamperInfo = await this.stamper.init();
-    this.logger.log("EMBEDDED_PROVIDER", "Stamper initialized", { publicKey: stamperInfo.publicKey, keyId: stamperInfo.keyId });
+    this.logger.log("EMBEDDED_PROVIDER", "Stamper initialized", { publicKey: stamperInfo.publicKey, keyId: stamperInfo.keyId, algorithm: this.stamper.algorithm });
 
     // Create a temporary client with the stamper
     this.logger.log("EMBEDDED_PROVIDER", "Creating temporary PhantomClient");

@@ -14,7 +14,7 @@ export class EmbeddedProvider extends CoreEmbeddedProvider implements Provider {
     const urlParamsAccessor = new BrowserURLParamsAccessor();
     const stamper = new IndexedDbStamper({
       dbName: `phantom-browser-sdk-${config.organizationId}`,
-      storeName: "crypto-keys",
+      storeName: "crypto-keys-app",
       keyName: "signing-key",
     });
 

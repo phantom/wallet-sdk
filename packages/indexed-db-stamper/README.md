@@ -4,7 +4,7 @@ A secure IndexedDB-based key stamper for the Phantom Wallet SDK that stores cryp
 
 ## Features
 
-- **Maximum Security**: Uses non-extractable ECDSA P-256 keys that never exist in JavaScript memory
+- **Maximum Security**: Uses non-extractable ECDSA P-256 (secp256r1) keys that never exist in JavaScript memory
 - **Web Crypto API**: Leverages browser's native cryptographic secure context
 - **Secure Storage**: Keys stored as non-extractable CryptoKey objects in IndexedDB
 - **DER Signatures**: Converts Web Crypto IEEE P1363 signatures to standard DER format

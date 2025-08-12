@@ -1,7 +1,7 @@
 import { base64urlEncode } from "@phantom/base64url";
 import type { Buffer } from "buffer";
 import bs58 from "bs58";
-import type { StamperWithKeyManagement, StamperKeyInfo } from "@phantom/sdk-types";
+import { type StamperWithKeyManagement, type StamperKeyInfo, Algorithm } from "@phantom/sdk-types";
 
 export type IndexedDbStamperConfig = {
   dbName?: string;
@@ -9,15 +9,12 @@ export type IndexedDbStamperConfig = {
   keyName?: string;
 };
 
-// Re-export for backwards compatibility
-export type { StamperKeyInfo };
-
 /**
  * IndexedDB-based key manager that stores cryptographic keys securely in IndexedDB
  * and performs signing operations without ever exposing private key material.
  * 
  * Security model:
- * - Generates non-extractable ECDSA P-256 keypairs using Web Crypto API
+ * - Generates non-extractable ECDSA P-256 (secp256r1) keypairs using Web Crypto API
  * - Stores keys entirely within Web Crypto API secure context
  * - Private keys NEVER exist in JavaScript memory
  * - Provides signing methods without exposing private keys
@@ -30,6 +27,7 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
   private db: IDBDatabase | null = null;
   private keyInfo: StamperKeyInfo | null = null;
   private cryptoKeyPair: CryptoKeyPair | null = null;
+  algorithm = Algorithm.secp256r1; // Use ECDSA P-256 (secp256r1) for maximum browser compatibility
 
   constructor(config: IndexedDbStamperConfig = {}) {
     if (typeof window === "undefined" || !window.indexedDB) {
@@ -103,7 +101,8 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
     // Sign using Web Crypto API with non-extractable private key
     const signature = await crypto.subtle.sign(
       {
-        name: "Ed25519",
+        name: "ECDSA",
+        hash: "SHA-256",
       },
       this.cryptoKeyPair.privateKey,
       dataBytes as BufferSource
@@ -119,18 +118,19 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
       publicKey: base64urlEncode(bs58.decode(this.keyInfo.publicKey)),
       signature: signatureBase64url,
       kind: "PKI" as const,
+      algorithm: this.algorithm,
     } :  {
       kind: "OIDC",
       idToken: (params as any).idToken,
       publicKey: base64urlEncode(bs58.decode(this.keyInfo.publicKey)),
       salt: (params as any).salt,
-      algorithm: "Ed25519",
+      algorithm: this.algorithm,
       signature: signatureBase64url
     };
 
     // Encode the entire stamp as base64url JSON
     const stampJson = JSON.stringify(stampData);
-    return base64urlEncode(new TextEncoder().encode(stampJson));
+    return base64urlEncode(stampJson);
   }
 
 

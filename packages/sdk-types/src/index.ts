@@ -1,5 +1,6 @@
 import type { Buffer } from "buffer";
-
+import { Algorithm } from "@phantom/openapi-wallet-service";
+export { Algorithm } from "@phantom/openapi-wallet-service";
 // Stamper interface - takes Buffer data and returns complete X-Phantom-Stamp header value
 export interface Stamper {
   stamp(params: {
@@ -14,6 +15,7 @@ export interface Stamper {
     idToken: string;
     salt: string;
   }): Promise<string>;
+  algorithm: Algorithm; 
 }
 
 // Key information structure returned by stampers

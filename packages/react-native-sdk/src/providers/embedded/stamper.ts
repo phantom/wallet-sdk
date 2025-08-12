@@ -3,6 +3,7 @@ import { ApiKeyStamper } from "@phantom/api-key-stamper";
 import { generateKeyPair } from "@phantom/crypto";
 import { base64urlEncode } from "@phantom/base64url";
 import type { StamperWithKeyManagement, StamperKeyInfo } from "@phantom/sdk-types";
+import { Algorithm } from "@phantom/sdk-types";
 import type { Buffer } from "buffer";
 
 export interface ReactNativeStamperConfig {
@@ -21,6 +22,7 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
   private keyPrefix: string;
   private organizationId: string;
   private keyInfo: StamperKeyInfo | null = null;
+  algorithm= Algorithm.ed25519;
 
   constructor(config: ReactNativeStamperConfig = {}) {
     this.keyPrefix = config.keyPrefix || "phantom-rn-stamper";
