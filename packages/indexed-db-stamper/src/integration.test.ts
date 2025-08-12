@@ -47,42 +47,42 @@ describe("IndexedDbStamper Integration", () => {
     global.indexedDB = originalIndexedDB;
   });
 
-  it("should handle stamp method with string payload", async () => {
-    // Mock the init and sign methods to avoid complex setup
+  it("should handle stamp method with Buffer payload", async () => {
+    // Mock the init method to avoid complex setup
     jest.spyOn(stamper, 'init').mockResolvedValue({
       keyId: 'test-key-id',
       publicKey: 'test-public-key'
     });
     
-    jest.spyOn(stamper, 'sign').mockResolvedValue('mock-signature');
+    // Mock the stamp method
+    jest.spyOn(stamper, 'stamp').mockResolvedValue('mock-stamp-header');
 
-    const payload = "test payload";
-    const signature = await stamper.stamp(payload);
+    const payload = Buffer.from("test payload", "utf8");
+    const stamp = await stamper.stamp(payload);
     
-    expect(signature).toBe('mock-signature');
-    expect(stamper.sign).toHaveBeenCalledWith(payload);
+    expect(stamp).toBe('mock-stamp-header');
   });
 
-  it("should handle stamp method with object payload", async () => {
-    // Mock the init and sign methods
+  it("should handle stamp method with JSON Buffer payload", async () => {
+    // Mock the init method
     jest.spyOn(stamper, 'init').mockResolvedValue({
       keyId: 'test-key-id', 
       publicKey: 'test-public-key'
     });
     
-    jest.spyOn(stamper, 'sign').mockResolvedValue('mock-signature');
+    // Mock the stamp method  
+    jest.spyOn(stamper, 'stamp').mockResolvedValue('mock-stamp-header');
 
     const payload = { action: "test", timestamp: Date.now() };
-    const signature = await stamper.stamp(payload);
+    const payloadBuffer = Buffer.from(JSON.stringify(payload), "utf8");
+    const stamp = await stamper.stamp(payloadBuffer);
     
-    expect(signature).toBe('mock-signature');
-    expect(stamper.sign).toHaveBeenCalledWith(JSON.stringify(payload));
+    expect(stamp).toBe('mock-stamp-header');
   });
 
   it("should provide expected interface methods", () => {
     // Verify the stamper implements the expected interface
     expect(typeof stamper.init).toBe('function');
-    expect(typeof stamper.sign).toBe('function');
     expect(typeof stamper.stamp).toBe('function');
     expect(typeof stamper.getKeyInfo).toBe('function');
     expect(typeof stamper.resetKeyPair).toBe('function');

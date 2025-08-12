@@ -10,7 +10,7 @@ import type {
   EmbeddedStorage,
   AuthProvider,
   URLParamsAccessor,
-  Stamper,
+  StamperWithKeyManagement,
   StamperInfo,
 } from "./interfaces";
 import type {
@@ -32,7 +32,7 @@ export class EmbeddedProvider {
   private storage: EmbeddedStorage;
   private authProvider: AuthProvider;
   private urlParamsAccessor: URLParamsAccessor;
-  private stamper: Stamper;
+  private stamper: StamperWithKeyManagement;
   private logger: DebugLogger;
   private client: PhantomClient | null = null;
   private walletId: string | null = null;

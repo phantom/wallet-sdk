@@ -1,13 +1,15 @@
 // Removed unused AxiosInstance import
 import { type NetworkId } from "./caip2-mappings";
+import type { Buffer } from "buffer";
 
 export interface PhantomClientConfig {
   apiBaseUrl: string;
   organizationId?: string;
 }
 
+// Stamper interface - takes Buffer data and returns complete X-Phantom-Stamp header value
 export interface Stamper {
-  stamp: (request: any) => Promise<any>;
+  stamp(data: Buffer): string;
 }
 
 export interface CreateWalletResult {

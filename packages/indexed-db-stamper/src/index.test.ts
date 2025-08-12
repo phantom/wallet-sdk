@@ -155,12 +155,12 @@ describe("IndexedDbStamper", () => {
       _keyInfo = await stamper.init();
     });
 
-    it("should sign string data", async () => {
-      const testData = "test message to sign";
-      const signature = await stamper.sign(testData);
+    it("should create stamp from Buffer data", async () => {
+      const testData = Buffer.from("test message to sign", "utf8");
+      const stamp = await stamper.stamp(testData);
 
-      expect(typeof signature).toBe("string");
-      expect(signature.length).toBeGreaterThan(0);
+      expect(typeof stamp).toBe("string");
+      expect(stamp.length).toBeGreaterThan(0);
       expect(mockSign).toHaveBeenCalledWith(
         { name: "ECDSA", hash: "SHA-256" },
         expect.any(Object),
@@ -168,36 +168,24 @@ describe("IndexedDbStamper", () => {
       );
     });
 
-    it("should sign Uint8Array data", async () => {
-      const testData = new Uint8Array([1, 2, 3, 4, 5]);
-      const signature = await stamper.sign(testData);
+    it("should create stamp with proper structure", async () => {
+      const testData = Buffer.from(JSON.stringify({ action: "test", timestamp: Date.now() }), "utf8");
+      const stamp = await stamper.stamp(testData);
 
-      expect(typeof signature).toBe("string");
-      expect(signature.length).toBeGreaterThan(0);
+      expect(typeof stamp).toBe("string");
+      expect(stamp.length).toBeGreaterThan(0);
+      
+      // The stamp should be base64url encoded JSON
+      expect(stamp).toMatch(/^[A-Za-z0-9_-]+$/);
     });
 
-    it("should sign Buffer data", async () => {
-      const testData = Buffer.from("test buffer");
-      const signature = await stamper.sign(testData);
-
-      expect(typeof signature).toBe("string");
-      expect(signature.length).toBeGreaterThan(0);
-    });
-
-    it("should create stamp from payload", async () => {
-      const payload = { action: "test", timestamp: Date.now() };
-      const signature = await stamper.stamp(payload);
-
-      expect(typeof signature).toBe("string");
-      expect(signature.length).toBeGreaterThan(0);
-    });
-
-    it("should throw error when signing without initialization", async () => {
+    it("should throw error when stamping without initialization", async () => {
       const uninitializedStamper = new IndexedDbStamper({
         dbName: "uninitialized-test",
       });
 
-      await expect(uninitializedStamper.sign("test")).rejects.toThrow(
+      const testData = Buffer.from("test", "utf8");
+      await expect(uninitializedStamper.stamp(testData)).rejects.toThrow(
         "Stamper not initialized. Call init() first."
       );
     });
@@ -205,7 +193,8 @@ describe("IndexedDbStamper", () => {
     it("should handle signing errors", async () => {
       mockSign.mockRejectedValue(new Error("Signing failed"));
 
-      await expect(stamper.sign("test")).rejects.toThrow("Signing failed");
+      const testData = Buffer.from("test", "utf8");
+      await expect(stamper.stamp(testData)).rejects.toThrow("Signing failed");
     });
   });
 
@@ -292,7 +281,8 @@ describe("IndexedDbStamper", () => {
       mockSign.mockResolvedValue(mockP1363Signature);
 
       await stamper.init();
-      const signature = await stamper.sign("test");
+      const testData = Buffer.from("test", "utf8");
+      const signature = await stamper.stamp(testData);
 
       // DER signatures should be different from IEEE P1363 and be base64url encoded
       expect(typeof signature).toBe("string");
@@ -350,8 +340,9 @@ describe("IndexedDbStamper", () => {
       // @ts-ignore - accessing private property for testing
       stamper.keyInfo = { keyId: "test", publicKey: "test" };
 
-      await expect(stamper.sign("test")).rejects.toThrow(
-        "Private key not found in storage"
+      const testData = Buffer.from("test", "utf8");
+      await expect(stamper.stamp(testData)).rejects.toThrow(
+        "Stamper not initialized. Call init() first."
       );
     });
   });

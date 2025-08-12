@@ -110,7 +110,7 @@ export function parseBrowserFromUserAgent(userAgent: string, hasBraveAPI?: boole
     }
   } catch (error) {
     // Fallback to unknown if any error occurs
-    console.warn("Browser parsing failed:", error);
+    // Browser parsing failed, continuing with fallback
   }
 
   return { name, version };

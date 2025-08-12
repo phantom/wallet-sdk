@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
-import { EmbeddedProvider, PlatformAdapter } from "@phantom/embedded-provider-core";
+import { EmbeddedProvider } from "@phantom/embedded-provider-core";
+import type { PlatformAdapter } from "@phantom/embedded-provider-core";
 import type { PhantomProviderConfig, WalletAddress } from "./types";
 
 // Platform adapters for React Native/Expo

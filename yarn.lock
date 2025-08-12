@@ -3253,6 +3253,7 @@ __metadata:
     "@types/node": "npm:^20.11.0"
     axios: "npm:^1.10.0"
     bs58: "npm:^6.0.0"
+    buffer: "npm:^6.0.3"
     eslint: "npm:8.53.0"
     jest: "npm:^29.7.0"
     prettier: "npm:^3.5.2"
@@ -3389,9 +3390,12 @@ __metadata:
     "@phantom/client": "workspace:^"
     "@phantom/crypto": "workspace:^"
     "@phantom/embedded-provider-core": "workspace:^"
+    "@types/bs58": "npm:^5.0.0"
     "@types/jest": "npm:^29.5.14"
     "@types/react": "npm:~19.0.10"
     "@types/react-native": "npm:^0.72.0"
+    bs58: "npm:^6.0.0"
+    buffer: "npm:^6.0.3"
     eslint: "npm:8.53.0"
     eslint-define-config: "npm:^1.24.1"
     eslint-plugin-react: "npm:^7.33.0"
@@ -5021,6 +5025,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/bs58@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "@types/bs58@npm:5.0.0"
+  dependencies:
+    bs58: "npm:*"
+  checksum: 10c0/056a4b74598bf6501029efe4ab31998130fd1a17c4dab22a8aef9c8da9f595340c8970bca66ab5ff341a883743b398dde05d6203411cf97f51a47ae1d1d3df92
+  languageName: node
+  linkType: hard
+
 "@types/connect@npm:^3.4.33":
   version: 3.4.38
   resolution: "@types/connect@npm:3.4.38"
@@ -6425,6 +6438,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"bs58@npm:*, bs58@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "bs58@npm:6.0.0"
+  dependencies:
+    base-x: "npm:^5.0.0"
+  checksum: 10c0/61910839746625ee4f69369f80e2634e2123726caaa1da6b3bcefcf7efcd9bdca86603360fed9664ffdabe0038c51e542c02581c72ca8d44f60329fe1a6bc8f4
+  languageName: node
+  linkType: hard
+
 "bs58@npm:^4.0.0, bs58@npm:^4.0.1":
   version: 4.0.1
   resolution: "bs58@npm:4.0.1"
@@ -6440,15 +6462,6 @@ __metadata:
   dependencies:
     base-x: "npm:^4.0.0"
   checksum: 10c0/0d1b05630b11db48039421b5975cb2636ae0a42c62f770eec257b2e5c7d94cb5f015f440785f3ec50870a6e9b1132b35bd0a17c7223655b22229f24b2a3491d1
-  languageName: node
-  linkType: hard
-
-"bs58@npm:^6.0.0":
-  version: 6.0.0
-  resolution: "bs58@npm:6.0.0"
-  dependencies:
-    base-x: "npm:^5.0.0"
-  checksum: 10c0/61910839746625ee4f69369f80e2634e2123726caaa1da6b3bcefcf7efcd9bdca86603360fed9664ffdabe0038c51e542c02581c72ca8d44f60329fe1a6bc8f4
   languageName: node
   linkType: hard
 

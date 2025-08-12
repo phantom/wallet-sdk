@@ -1,14 +1,16 @@
 import type { EmbeddedStorage } from "./storage";
 import type { AuthProvider } from "./auth";
 import type { URLParamsAccessor } from "./url-params";
+import type { Stamper } from "@phantom/client";
 
-export interface Stamper {
+// Extended stamper interface for stampers that manage their own keys
+export interface StamperWithKeyManagement extends Stamper {
   init(): Promise<{ keyId: string; publicKey: string }>;
-  sign(data: string | Uint8Array | Buffer): Promise<string>;
-  stamp(payload: any): Promise<string>;
   getKeyInfo(): { keyId: string; publicKey: string } | null;
   resetKeyPair?(): Promise<{ keyId: string; publicKey: string }>;
   clear?(): Promise<void>;
+  // Override to allow async for key managers
+  stamp(data: Buffer): Promise<string>;
 }
 
 export interface PlatformAdapter {
@@ -18,7 +20,7 @@ export interface PlatformAdapter {
   storage: EmbeddedStorage;
   authProvider: AuthProvider;
   urlParamsAccessor: URLParamsAccessor;
-  stamper: Stamper;
+  stamper: StamperWithKeyManagement;
 }
 
 export interface DebugLogger {

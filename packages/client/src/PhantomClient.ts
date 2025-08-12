@@ -1,6 +1,7 @@
 import axios, { type AxiosInstance } from "axios";
 import bs58 from "bs58";
 import { base64urlEncode } from "@phantom/base64url";
+import { Buffer } from "buffer";
 import {
   Configuration,
   KMSRPCApi,
@@ -72,8 +73,7 @@ export class PhantomClient {
     if (stamper) {
       // Add stamper interceptor to axios instance
       this.axiosInstance.interceptors.request.use(async config => {
-        const stampedConfig = await stamper.stamp(config);
-        return stampedConfig;
+        return await this.stampRequest(config, stamper);
       });
     }
 
@@ -92,6 +92,7 @@ export class PhantomClient {
     }
     this.config.organizationId = organizationId;
   }
+
 
   async createWallet(walletName?: string): Promise<CreateWalletResult> {
     try {
@@ -467,5 +468,24 @@ export class PhantomClient {
       console.error("Failed to grant organization access:", error.response?.data || error.message);
       throw new Error(`Failed to grant organization access: ${error.response?.data?.message || error.message}`);
     }
+  }
+
+  /**
+   * Stamp an axios request with the provided stamper
+   */
+  private async stampRequest(config: any, stamper: Stamper): Promise<any> {
+    // Convert request body to Buffer for stamper
+    const requestBody =
+      typeof config.data === "string" ? config.data : config.data === undefined ? "" : JSON.stringify(config.data);
+    const dataUtf8 = Buffer.from(requestBody, "utf8");
+    
+    // Get complete stamp from stamper
+    const stamp = stamper.stamp(dataUtf8);
+
+    // Add the stamp header
+    config.headers = config.headers || {};
+    config.headers["X-Phantom-Stamp"] = stamp;
+
+    return config;
   }
 }

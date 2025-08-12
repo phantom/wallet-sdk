@@ -49,7 +49,10 @@
     "@phantom/base64url": "workspace:^",
     "@phantom/client": "workspace:^",
     "@phantom/crypto": "workspace:^",
-    "@phantom/embedded-provider-core": "workspace:^"
+    "@phantom/embedded-provider-core": "workspace:^",
+    "@types/bs58": "^5.0.0",
+    "bs58": "^6.0.0",
+    "buffer": "^6.0.3"
   },
   "peerDependencies": {
     "expo": ">=53.0.0",

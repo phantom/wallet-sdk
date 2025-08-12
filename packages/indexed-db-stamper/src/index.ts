@@ -1,4 +1,5 @@
 import { base64urlEncode } from "@phantom/base64url";
+import type { Buffer } from "buffer";
 
 export type IndexedDbStamperConfig = {
   dbName?: string;
@@ -12,7 +13,7 @@ export type StamperKeyInfo = {
 };
 
 /**
- * IndexedDB-based key stamper that stores cryptographic keys securely in IndexedDB
+ * IndexedDB-based key manager that stores cryptographic keys securely in IndexedDB
  * and performs signing operations without ever exposing private key material.
  * 
  * Security model:
@@ -76,25 +77,17 @@ export class IndexedDbStamper {
   }
 
   /**
-   * Sign data using the stored private key
-   * @param data - Data to sign (string, Uint8Array, or Buffer)
-   * @returns Base64url-encoded DER signature
+   * Create X-Phantom-Stamp header value using stored private key
+   * @param data - Data to sign (Buffer)
+   * @returns Complete X-Phantom-Stamp header value
    */
-  async sign(data: string | Uint8Array | Buffer): Promise<string> {
+  async stamp(data: Buffer): Promise<string> {
     if (!this.keyInfo || !this.cryptoKeyPair) {
       throw new Error("Stamper not initialized. Call init() first.");
     }
 
-    // Convert data to Uint8Array
-    let dataBytes: Uint8Array;
-    if (typeof data === "string") {
-      dataBytes = new TextEncoder().encode(data);
-    } else if (data instanceof Uint8Array) {
-      dataBytes = data;
-    } else {
-      // Buffer case
-      dataBytes = new Uint8Array(data);
-    }
+    // Convert Buffer to Uint8Array
+    const dataBytes = new Uint8Array(data);
 
     // Sign using Web Crypto API with non-extractable private key
     const signature = await crypto.subtle.sign(
@@ -108,18 +101,21 @@ export class IndexedDbStamper {
 
     // Convert IEEE P1363 signature to DER format
     const derSignature = this.convertP1363ToDer(new Uint8Array(signature));
+    const signatureBase64url = base64urlEncode(derSignature);
     
-    // Return base64url encoded DER signature
-    return base64urlEncode(derSignature);
+    // Create the stamp structure
+    const stampData = {
+      // For IndexedDB stamper, we use the raw public key (already base64url encoded)
+      publicKey: this.keyInfo.publicKey,
+      signature: signatureBase64url,
+      kind: "PKI" as const,
+    };
+
+    // Encode the entire stamp as base64url JSON
+    const stampJson = JSON.stringify(stampData);
+    return base64urlEncode(new TextEncoder().encode(stampJson));
   }
 
-  /**
-   * Create a signature for API requests (compatible with ApiKeyStamper interface)
-   */
-  async stamp(payload: any): Promise<string> {
-    const payloadString = typeof payload === "string" ? payload : JSON.stringify(payload);
-    return await this.sign(payloadString);
-  }
 
   /**
    * Clear all stored keys

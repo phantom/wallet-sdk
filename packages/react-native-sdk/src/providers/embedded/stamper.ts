@@ -1,8 +1,9 @@
 import * as SecureStore from "expo-secure-store";
 import { ApiKeyStamper } from "@phantom/api-key-stamper";
-import { generateKeyPair, signWithSecret } from "@phantom/crypto";
+import { generateKeyPair } from "@phantom/crypto";
 import { base64urlEncode } from "@phantom/base64url";
-import type { Stamper } from "@phantom/embedded-provider-core";
+import type { StamperWithKeyManagement } from "@phantom/embedded-provider-core";
+import type { Buffer } from "buffer";
 
 export interface ReactNativeStamperConfig {
   keyPrefix?: string;
@@ -15,14 +16,13 @@ export interface StamperKeyInfo {
 }
 
 /**
- * React Native stamper that uses ApiKeyStamper with SecureStore.
- * This gets the private key from SecureStore and uses ApiKeyStamper for signing.
+ * React Native key manager that generates and stores cryptographic keys in SecureStore.
+ * Provides full key lifecycle management including generation, storage, and signing.
  */
-export class ReactNativeStamper implements Stamper {
+export class ReactNativeStamper implements StamperWithKeyManagement {
   private keyPrefix: string;
   private organizationId: string;
   private keyInfo: StamperKeyInfo | null = null;
-  private apiKeyStamper: ApiKeyStamper | null = null;
 
   constructor(config: ReactNativeStamperConfig = {}) {
     this.keyPrefix = config.keyPrefix || "phantom-rn-stamper";
@@ -35,18 +35,17 @@ export class ReactNativeStamper implements Stamper {
   async init(): Promise<StamperKeyInfo> {
     // Try to load existing key pair
     const storedSecretKey = await this.getStoredSecretKey();
-    
+
     if (storedSecretKey) {
       // Load existing key pair
       const keyInfo = await this.getStoredKeyInfo();
-      
+
       if (keyInfo) {
         this.keyInfo = keyInfo;
-        this.apiKeyStamper = new ApiKeyStamper({ apiSecretKey: storedSecretKey });
         return keyInfo;
       }
     }
-    
+
     // Generate new key pair if none exists or data is corrupted
     const keyInfo = await this.generateAndStoreKeyPair();
     this.keyInfo = keyInfo;
@@ -71,45 +70,24 @@ export class ReactNativeStamper implements Stamper {
   }
 
   /**
-   * Sign data using ApiKeyStamper
-   * @param data - Data to sign (string, Uint8Array, or Buffer)
-   * @returns Base64url-encoded signature
+   * Create X-Phantom-Stamp header value using stored secret key
+   * @param data - Data to sign (Buffer)
+   * @returns Complete X-Phantom-Stamp header value
    */
-  async sign(data: string | Uint8Array | Buffer): Promise<string> {
-    if (!this.keyInfo || !this.apiKeyStamper) {
+  async stamp(data: Buffer): Promise<string> {
+    if (!this.keyInfo) {
       throw new Error("Stamper not initialized. Call init() first.");
     }
 
-    // Get the secret key and sign directly using our crypto package
-    // This is more efficient than going through ApiKeyStamper's HTTP-focused interface
+    // Get the secret key from secure storage
     const storedSecretKey = await this.getStoredSecretKey();
     if (!storedSecretKey) {
       throw new Error("Secret key not found in secure storage");
     }
 
-    const signature = signWithSecret(storedSecretKey, data);
-    
-    // Return base64url encoded signature
-    return base64urlEncode(signature);
-  }
-
-  /**
-   * Create a signature for API requests using ApiKeyStamper
-   */
-  async stamp(payload: any): Promise<string> {
-    if (!this.apiKeyStamper) {
-      throw new Error("Stamper not initialized. Call init() first.");
-    }
-
-    // For API stamping, we can use ApiKeyStamper's stamp method
-    // Create a mock axios config since that's what ApiKeyStamper expects
-    const mockConfig = {
-      data: payload,
-      headers: {},
-    };
-
-    const stampedConfig = await this.apiKeyStamper.stamp(mockConfig);
-    return stampedConfig.headers!["X-Phantom-Stamp"] as string;
+    // Use ApiKeyStamper to create the stamp
+    const apiKeyStamper = new ApiKeyStamper({ apiSecretKey: storedSecretKey });
+    return await apiKeyStamper.stamp(data);
   }
 
   /**
@@ -118,27 +96,26 @@ export class ReactNativeStamper implements Stamper {
   async clear(): Promise<void> {
     const infoKey = this.getInfoKey();
     const secretKey = this.getSecretKey();
-    
+
     try {
       await SecureStore.deleteItemAsync(infoKey);
     } catch (error) {
       // Key might not exist, continue
     }
-    
+
     try {
       await SecureStore.deleteItemAsync(secretKey);
     } catch (error) {
       // Key might not exist, continue
     }
-    
+
     this.keyInfo = null;
-    this.apiKeyStamper = null;
   }
 
   private async generateAndStoreKeyPair(): Promise<StamperKeyInfo> {
     // Generate Ed25519 keypair using our crypto package
     const keypair = generateKeyPair();
-    
+
     // Create a deterministic key ID from the public key
     const keyId = this.createKeyId(keypair.publicKey);
 
@@ -150,8 +127,7 @@ export class ReactNativeStamper implements Stamper {
     // Store the keypair in SecureStore
     await this.storeKeyPair(keypair.secretKey, keyInfo);
 
-    // Initialize ApiKeyStamper with the secret key
-    this.apiKeyStamper = new ApiKeyStamper({ apiSecretKey: keypair.secretKey });
+    // Key pair is now stored securely
 
     return keyInfo;
   }
@@ -180,14 +156,14 @@ export class ReactNativeStamper implements Stamper {
     try {
       const infoKey = this.getInfoKey();
       const storedInfo = await SecureStore.getItemAsync(infoKey);
-      
+
       if (storedInfo) {
         return JSON.parse(storedInfo) as StamperKeyInfo;
       }
     } catch (error) {
       // If we can't read the key info, assume it doesn't exist
     }
-    
+
     return null;
   }
 

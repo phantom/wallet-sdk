@@ -36,13 +36,10 @@ const keyInfo = await stamper.init();
 console.log('Key ID:', keyInfo.keyId);
 console.log('Public Key:', keyInfo.publicKey);
 
-// Sign data
-const signature = await stamper.sign('Hello, World!');
-console.log('Signature:', signature);
-
-// Create API request signature
-const payload = { action: 'transfer', amount: 100 };
-const stamp = await stamper.stamp(payload);
+// Create X-Phantom-Stamp header value for API requests
+const requestData = Buffer.from(JSON.stringify({ action: 'transfer', amount: 100 }), 'utf8');
+const stamp = await stamper.stamp(requestData);
+console.log('X-Phantom-Stamp:', stamp);
 ```
 
 ### Advanced Usage
@@ -58,10 +55,14 @@ if (stamper.getKeyInfo()) {
 // Reset keys (generate new keypair)
 const newKeyInfo = await stamper.resetKeyPair();
 
-// Sign different data types
-await stamper.sign('string data');
-await stamper.sign(new Uint8Array([1, 2, 3]));
-await stamper.sign(Buffer.from('buffer data'));
+// Stamp different data types
+const stringData = Buffer.from('string data', 'utf8');
+const binaryData = Buffer.from([1, 2, 3]);
+const jsonData = Buffer.from(JSON.stringify({ key: 'value' }), 'utf8');
+
+await stamper.stamp(stringData);
+await stamper.stamp(binaryData);
+await stamper.stamp(jsonData);
 
 // Clear all stored keys
 await stamper.clear();
@@ -93,13 +94,13 @@ Get current key information without async operation.
 #### `resetKeyPair(): Promise<StamperKeyInfo>`  
 Generate and store a new key pair, replacing any existing keys.
 
-#### `sign(data: string | Uint8Array | Buffer): Promise<string>`
-Sign data using the stored private key.
+#### `stamp(data: Buffer): Promise<string>`
+Create X-Phantom-Stamp header value using the stored private key.
 
-**Returns:** Base64url-encoded DER signature
+**Parameters:**
+- `data: Buffer` - Data to sign (typically JSON stringified request body)
 
-#### `stamp(payload: any): Promise<string>`
-Create a signature for API requests (compatible with other stamper interfaces).
+**Returns:** Complete X-Phantom-Stamp header value (base64url-encoded JSON with publicKey, signature, and kind fields)
 
 #### `clear(): Promise<void>`
 Remove all stored keys from IndexedDB.
