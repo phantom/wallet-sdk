@@ -10,7 +10,6 @@ import type {
   EmbeddedStorage,
   AuthProvider,
   URLParamsAccessor,
-  StamperWithKeyManagement,
   StamperInfo,
 } from "./interfaces";
 import type {
@@ -26,7 +25,7 @@ import type {
 import { JWTAuth } from "./auth/jwt-auth";
 import { generateSessionId } from "./utils/session";
 import { retryWithBackoff } from "./utils/retry";
-
+import type { StamperWithKeyManagement } from "@phantom/sdk-types";
 export class EmbeddedProvider {
   private config: EmbeddedProviderConfig;
   private platform: PlatformAdapter;

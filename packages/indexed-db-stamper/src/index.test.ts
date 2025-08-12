@@ -157,12 +157,12 @@ describe("IndexedDbStamper", () => {
 
     it("should create stamp from Buffer data", async () => {
       const testData = Buffer.from("test message to sign", "utf8");
-      const stamp = await stamper.stamp(testData);
+      const stamp = await stamper.stamp({data: testData});
 
       expect(typeof stamp).toBe("string");
       expect(stamp.length).toBeGreaterThan(0);
       expect(mockSign).toHaveBeenCalledWith(
-        { name: "ECDSA", hash: "SHA-256" },
+        { name: "Ed25519" },
         expect.any(Object),
         expect.anything()
       );
@@ -170,7 +170,7 @@ describe("IndexedDbStamper", () => {
 
     it("should create stamp with proper structure", async () => {
       const testData = Buffer.from(JSON.stringify({ action: "test", timestamp: Date.now() }), "utf8");
-      const stamp = await stamper.stamp(testData);
+      const stamp = await stamper.stamp({data: testData});
 
       expect(typeof stamp).toBe("string");
       expect(stamp.length).toBeGreaterThan(0);
@@ -185,7 +185,7 @@ describe("IndexedDbStamper", () => {
       });
 
       const testData = Buffer.from("test", "utf8");
-      await expect(uninitializedStamper.stamp(testData)).rejects.toThrow(
+      await expect(uninitializedStamper.stamp({data: testData})).rejects.toThrow(
         "Stamper not initialized. Call init() first."
       );
     });
@@ -194,7 +194,9 @@ describe("IndexedDbStamper", () => {
       mockSign.mockRejectedValue(new Error("Signing failed"));
 
       const testData = Buffer.from("test", "utf8");
-      await expect(stamper.stamp(testData)).rejects.toThrow("Signing failed");
+      await expect(stamper.stamp({
+        data: testData,
+      })).rejects.toThrow("Signing failed");
     });
   });
 
@@ -282,7 +284,9 @@ describe("IndexedDbStamper", () => {
 
       await stamper.init();
       const testData = Buffer.from("test", "utf8");
-      const signature = await stamper.stamp(testData);
+      const signature = await stamper.stamp({
+        data: testData,
+      });
 
       // DER signatures should be different from IEEE P1363 and be base64url encoded
       expect(typeof signature).toBe("string");
@@ -303,7 +307,9 @@ describe("IndexedDbStamper", () => {
       });
       
       const testData = Buffer.from("test", "utf8");
-      await expect(uninitializedStamper.stamp(testData)).rejects.toThrow(
+      await expect(uninitializedStamper.stamp({
+        data: testData,
+      })).rejects.toThrow(
         "Stamper not initialized. Call init() first."
       );
     });

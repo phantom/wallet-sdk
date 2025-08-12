@@ -51,6 +51,7 @@
     "@phantom/constants": "workspace:^",
     "@phantom/crypto": "workspace:^",
     "@phantom/embedded-provider-core": "workspace:^",
+    "@phantom/sdk-types": "workspace:^",
     "@types/bs58": "^5.0.0",
     "bs58": "^6.0.0",
     "buffer": "^6.0.3"

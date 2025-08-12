@@ -8,8 +8,8 @@ import type {
   EmbeddedStorage,
   AuthProvider,
   URLParamsAccessor,
-  Stamper,
 } from "./interfaces";
+import type { StamperWithKeyManagement } from "@phantom/sdk-types";
 import { PhantomClient, generateKeyPair } from "@phantom/client";
 import { NetworkId } from "@phantom/constants";
 
@@ -35,7 +35,7 @@ describe("EmbeddedProvider Auth Flows", () => {
   let mockStorage: jest.Mocked<EmbeddedStorage>;
   let mockAuthProvider: jest.Mocked<AuthProvider>;
   let mockURLParamsAccessor: jest.Mocked<URLParamsAccessor>;
-  let mockStamper: jest.Mocked<Stamper>;
+  let mockStamper: jest.Mocked<StamperWithKeyManagement>;
   let mockClient: jest.Mocked<PhantomClient>;
 
   beforeEach(() => {

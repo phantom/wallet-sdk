@@ -41,13 +41,14 @@ import { DerivationPath, getNetworkConfig } from "./constants";
 import { deriveSubmissionConfig } from "./caip2-mappings";
 import {
   type PhantomClientConfig,
-  type Stamper,
   type CreateWalletResult,
   type SignedTransaction,
   type GetWalletsResult,
   type SignMessageParams,
   type SignAndSendTransactionParams,
 } from "./types";
+
+import type {Stamper} from "@phantom/sdk-types";
 
 // TODO(napas): Auto generate this from the OpenAPI spec
 export interface SubmissionConfig {
@@ -482,7 +483,7 @@ export class PhantomClient {
     
     // Get complete stamp from stamper
 
-    const stamp = await stamper.stamp(dataUtf8);
+    const stamp = await stamper.stamp({ data: dataUtf8 });
 
     // Add the stamp header
     config.headers = config.headers || {};

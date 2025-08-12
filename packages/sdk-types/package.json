@@ -1,7 +1,7 @@
 {
-  "name": "@phantom/api-key-stamper",
-  "version": "0.1.2",
-  "description": "API key stamper for Phantom Wallet SDK",
+  "name": "@phantom/sdk-types",
+  "version": "0.1.0",
+  "description": "Common types for Phantom SDK packages",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -15,7 +15,7 @@
   "scripts": {
     "?pack-release": "When https://github.com/changesets/changesets/issues/432 has a solution we can remove this trick",
     "pack-release": "rimraf ./_release && yarn pack && mkdir ./_release && tar zxvf ./package.tgz --directory ./_release && rm ./package.tgz",
-    "build": "rimraf ./dist && tsup src/index.ts --format cjs,esm --dts --external buffer,@phantom/base64url,@phantom/crypto",
+    "build": "rimraf ./dist && tsup src/index.ts --format cjs,esm --dts --external buffer",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "test": "jest",
@@ -25,7 +25,6 @@
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
   },
   "devDependencies": {
-    "@types/bs58": "^4.0.1",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.0",
     "eslint": "8.53.0",
@@ -37,11 +36,6 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "@phantom/base64url": "workspace:^",
-    "@phantom/crypto": "workspace:^",
-    "@phantom/sdk-types": "workspace:^",
-    "axios": "^1.10.0",
-    "bs58": "^6.0.0",
     "buffer": "^6.0.3"
   },
   "files": [

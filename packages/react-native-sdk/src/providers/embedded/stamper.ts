@@ -2,7 +2,7 @@ import * as SecureStore from "expo-secure-store";
 import { ApiKeyStamper } from "@phantom/api-key-stamper";
 import { generateKeyPair } from "@phantom/crypto";
 import { base64urlEncode } from "@phantom/base64url";
-import type { StamperWithKeyManagement } from "@phantom/embedded-provider-core";
+import type { StamperWithKeyManagement, StamperKeyInfo } from "@phantom/sdk-types";
 import type { Buffer } from "buffer";
 
 export interface ReactNativeStamperConfig {
@@ -10,10 +10,8 @@ export interface ReactNativeStamperConfig {
   organizationId?: string;
 }
 
-export interface StamperKeyInfo {
-  keyId: string;
-  publicKey: string;
-}
+// Re-export for backwards compatibility
+export type { StamperKeyInfo };
 
 /**
  * React Native key manager that generates and stores cryptographic keys in SecureStore.
@@ -74,7 +72,11 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
    * @param data - Data to sign (Buffer)
    * @returns Complete X-Phantom-Stamp header value
    */
-  async stamp(data: Buffer): Promise<string> {
+  async stamp({
+    data
+  }: {
+    data: Buffer;
+  }): Promise<string> {
     if (!this.keyInfo) {
       throw new Error("Stamper not initialized. Call init() first.");
     }
@@ -87,7 +89,7 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
 
     // Use ApiKeyStamper to create the stamp
     const apiKeyStamper = new ApiKeyStamper({ apiSecretKey: storedSecretKey });
-    return await apiKeyStamper.stamp(data);
+    return await apiKeyStamper.stamp({ data });
   }
 
   /**

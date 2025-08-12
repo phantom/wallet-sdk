@@ -58,7 +58,9 @@ describe("IndexedDbStamper Integration", () => {
     jest.spyOn(stamper, 'stamp').mockResolvedValue('mock-stamp-header');
 
     const payload = Buffer.from("test payload", "utf8");
-    const stamp = await stamper.stamp(payload);
+    const stamp = await stamper.stamp({
+      data: payload,
+    });
     
     expect(stamp).toBe('mock-stamp-header');
   });
@@ -75,7 +77,9 @@ describe("IndexedDbStamper Integration", () => {
 
     const payload = { action: "test", timestamp: Date.now() };
     const payloadBuffer = Buffer.from(JSON.stringify(payload), "utf8");
-    const stamp = await stamper.stamp(payloadBuffer);
+    const stamp = await stamper.stamp({
+      data: payloadBuffer,
+    });
     
     expect(stamp).toBe('mock-stamp-header');
   });

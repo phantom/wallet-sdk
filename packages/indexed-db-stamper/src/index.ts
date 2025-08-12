@@ -1,5 +1,7 @@
 import { base64urlEncode } from "@phantom/base64url";
 import type { Buffer } from "buffer";
+import bs58 from "bs58";
+import type { StamperWithKeyManagement, StamperKeyInfo } from "@phantom/sdk-types";
 
 export type IndexedDbStamperConfig = {
   dbName?: string;
@@ -7,10 +9,8 @@ export type IndexedDbStamperConfig = {
   keyName?: string;
 };
 
-export type StamperKeyInfo = {
-  keyId: string;
-  publicKey: string;
-};
+// Re-export for backwards compatibility
+export type { StamperKeyInfo };
 
 /**
  * IndexedDB-based key manager that stores cryptographic keys securely in IndexedDB
@@ -23,7 +23,7 @@ export type StamperKeyInfo = {
  * - Provides signing methods without exposing private keys
  * - Maximum security using browser's native cryptographic isolation
  */
-export class IndexedDbStamper {
+export class IndexedDbStamper implements StamperWithKeyManagement {
   private dbName: string;
   private storeName: string;
   private keyName: string;
@@ -78,10 +78,21 @@ export class IndexedDbStamper {
 
   /**
    * Create X-Phantom-Stamp header value using stored private key
-   * @param data - Data to sign (Buffer)
+   * @param params - Parameters object with data and optional type/options
    * @returns Complete X-Phantom-Stamp header value
    */
-  async stamp(data: Buffer): Promise<string> {
+  async stamp(params: {
+    data: Buffer;
+    type?: 'PKI';
+    idToken?: never;
+    salt?: never;
+  } | {
+    data: Buffer;
+    type: 'OIDC';
+    idToken: string;
+    salt: string;
+  }): Promise<string> {
+    const { data, type = "PKI" } = params;
     if (!this.keyInfo || !this.cryptoKeyPair) {
       throw new Error("Stamper not initialized. Call init() first.");
     }
@@ -92,8 +103,7 @@ export class IndexedDbStamper {
     // Sign using Web Crypto API with non-extractable private key
     const signature = await crypto.subtle.sign(
       {
-        name: "ECDSA",
-        hash: "SHA-256",
+        name: "Ed25519",
       },
       this.cryptoKeyPair.privateKey,
       dataBytes as BufferSource
@@ -104,11 +114,18 @@ export class IndexedDbStamper {
     const signatureBase64url = base64urlEncode(derSignature);
     
     // Create the stamp structure
-    const stampData = {
-      // For IndexedDB stamper, we use the raw public key (already base64url encoded)
-      publicKey: this.keyInfo.publicKey,
+    const stampData = type === "PKI" ?  {
+      // Decode base58 public key to bytes, then encode as base64url (consistent with ApiKeyStamper)
+      publicKey: base64urlEncode(bs58.decode(this.keyInfo.publicKey)),
       signature: signatureBase64url,
       kind: "PKI" as const,
+    } :  {
+      kind: "OIDC",
+      idToken: (params as any).idToken,
+      publicKey: base64urlEncode(bs58.decode(this.keyInfo.publicKey)),
+      salt: (params as any).salt,
+      algorithm: "Ed25519",
+      signature: signatureBase64url
     };
 
     // Encode the entire stamp as base64url JSON
@@ -189,7 +206,9 @@ export class IndexedDbStamper {
 
     // Export public key for storage and API use
     const publicKeyBuffer = await crypto.subtle.exportKey("spki", this.cryptoKeyPair.publicKey);
-    const publicKeyBase64url = base64urlEncode(new Uint8Array(publicKeyBuffer));
+    
+    // Store public key as base58 (consistent with other stampers)
+    const publicKeyBase58 = bs58.encode(new Uint8Array(publicKeyBuffer));
     
     // Create a deterministic key ID from the public key
     const keyIdBuffer = await crypto.subtle.digest("SHA-256", publicKeyBuffer);
@@ -197,7 +216,7 @@ export class IndexedDbStamper {
 
     const keyInfo: StamperKeyInfo = {
       keyId,
-      publicKey: publicKeyBase64url,
+      publicKey: publicKeyBase58,
     };
 
     // Store the non-extractable key pair and info in IndexedDB

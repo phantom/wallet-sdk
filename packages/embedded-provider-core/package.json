@@ -42,7 +42,8 @@
     "@phantom/api-key-stamper": "workspace:^",
     "@phantom/client": "workspace:^",
     "@phantom/constants": "workspace:^",
-    "@phantom/parsers": "workspace:^"
+    "@phantom/parsers": "workspace:^",
+    "@phantom/sdk-types": "workspace:^"
   },
   "devDependencies": {
     "@types/jest": "^29.5.5",

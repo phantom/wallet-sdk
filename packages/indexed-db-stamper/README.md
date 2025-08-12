@@ -38,7 +38,7 @@ console.log('Public Key:', keyInfo.publicKey);
 
 // Create X-Phantom-Stamp header value for API requests
 const requestData = Buffer.from(JSON.stringify({ action: 'transfer', amount: 100 }), 'utf8');
-const stamp = await stamper.stamp(requestData);
+const stamp = await stamper.stamp({ data: requestData });
 console.log('X-Phantom-Stamp:', stamp);
 ```
 
@@ -55,14 +55,22 @@ if (stamper.getKeyInfo()) {
 // Reset keys (generate new keypair)
 const newKeyInfo = await stamper.resetKeyPair();
 
-// Stamp different data types
+// Stamp different data types with PKI (default)
 const stringData = Buffer.from('string data', 'utf8');
 const binaryData = Buffer.from([1, 2, 3]);
 const jsonData = Buffer.from(JSON.stringify({ key: 'value' }), 'utf8');
 
-await stamper.stamp(stringData);
-await stamper.stamp(binaryData);
-await stamper.stamp(jsonData);
+await stamper.stamp({ data: stringData });
+await stamper.stamp({ data: binaryData, type: 'PKI' }); // explicit PKI type
+await stamper.stamp({ data: jsonData });
+
+// OIDC type stamping (requires idToken and salt)
+const oidcStamp = await stamper.stamp({ 
+  data: requestData, 
+  type: 'OIDC', 
+  idToken: 'your-id-token',
+  salt: 'your-salt-value'
+});
 
 // Clear all stored keys
 await stamper.clear();
@@ -94,13 +102,18 @@ Get current key information without async operation.
 #### `resetKeyPair(): Promise<StamperKeyInfo>`  
 Generate and store a new key pair, replacing any existing keys.
 
-#### `stamp(data: Buffer): Promise<string>`
+#### `stamp(params: { data: Buffer; type?: 'PKI'; idToken?: never; salt?: never; } | { data: Buffer; type: 'OIDC'; idToken: string; salt: string; }): Promise<string>`
 Create X-Phantom-Stamp header value using the stored private key.
 
 **Parameters:**
-- `data: Buffer` - Data to sign (typically JSON stringified request body)
+- `params.data: Buffer` - Data to sign (typically JSON stringified request body)
+- `params.type?: 'PKI' | 'OIDC'` - Stamp type (defaults to 'PKI')
+- `params.idToken?: string` - Required for OIDC type
+- `params.salt?: string` - Required for OIDC type
 
-**Returns:** Complete X-Phantom-Stamp header value (base64url-encoded JSON with publicKey, signature, and kind fields)
+**Returns:** Complete X-Phantom-Stamp header value (base64url-encoded JSON with base64url-encoded publicKey, signature, and kind fields)
+
+**Note:** The public key is stored internally in base58 format but converted to base64url when creating stamps for API compatibility.
 
 #### `clear(): Promise<void>`
 Remove all stored keys from IndexedDB.
