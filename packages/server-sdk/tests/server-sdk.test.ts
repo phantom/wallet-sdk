@@ -195,10 +195,14 @@ describe("ServerSDK", () => {
       });
 
       expect(signature).toBeDefined();
-      expect(typeof signature).toBe("string");
-      expect(signature.length).toBeGreaterThan(0);
+      expect(typeof signature).toBe("object");
+      expect(signature.signature).toBeDefined();
+      expect(typeof signature.signature).toBe("string");
+      expect(signature.signature.length).toBeGreaterThan(0);
       // Base64 signature should be a valid base64url string
-      expect(() => Buffer.from(signature, "base64url")).not.toThrow();
+      expect(() => Buffer.from(signature.signature, "base64url")).not.toThrow();
+      // Block explorer URL should be defined for supported networks
+      expect(typeof signature.blockExplorer === "string" || signature.blockExplorer === undefined).toBe(true);
     }, 30000);
 
     it("should sign a plain text message (auto-parsing)", async () => {
@@ -212,8 +216,12 @@ describe("ServerSDK", () => {
       });
 
       expect(signature).toBeDefined();
-      expect(typeof signature).toBe("string");
-      expect(signature.length).toBeGreaterThan(0);
+      expect(typeof signature).toBe("object");
+      expect(signature.signature).toBeDefined();
+      expect(typeof signature.signature).toBe("string");
+      expect(signature.signature.length).toBeGreaterThan(0);
+      // Block explorer URL should be defined for supported networks
+      expect(typeof signature.blockExplorer === "string" || signature.blockExplorer === undefined).toBe(true);
     }, 30000);
 
     it("should sign a message for Ethereum", async () => {
@@ -227,10 +235,14 @@ describe("ServerSDK", () => {
       });
 
       expect(signature).toBeDefined();
-      expect(typeof signature).toBe("string");
-      expect(signature.length).toBeGreaterThan(0);
+      expect(typeof signature).toBe("object");
+      expect(signature.signature).toBeDefined();
+      expect(typeof signature.signature).toBe("string");
+      expect(signature.signature.length).toBeGreaterThan(0);
       // Base64 signature should be a valid base64url string
-      expect(() => Buffer.from(signature, "base64url")).not.toThrow();
+      expect(() => Buffer.from(signature.signature, "base64url")).not.toThrow();
+      // Block explorer URL should be defined for supported networks
+      expect(typeof signature.blockExplorer === "string" || signature.blockExplorer === undefined).toBe(true);
     }, 30000);
 
     it("should sign different messages and get different signatures", async () => {
@@ -249,7 +261,7 @@ describe("ServerSDK", () => {
         networkId,
       });
 
-      expect(signature1).not.toBe(signature2);
+      expect(signature1.signature).not.toBe(signature2.signature);
     }, 30000);
 
     it("should handle UTF-8 messages correctly", async () => {
@@ -263,8 +275,12 @@ describe("ServerSDK", () => {
       });
 
       expect(signature).toBeDefined();
-      expect(typeof signature).toBe("string");
-      expect(signature.length).toBeGreaterThan(0);
+      expect(typeof signature).toBe("object");
+      expect(signature.signature).toBeDefined();
+      expect(typeof signature.signature).toBe("string");
+      expect(signature.signature.length).toBeGreaterThan(0);
+      // Block explorer URL should be defined for supported networks
+      expect(typeof signature.blockExplorer === "string" || signature.blockExplorer === undefined).toBe(true);
     }, 30000);
   });
 

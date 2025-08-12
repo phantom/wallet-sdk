@@ -6,6 +6,7 @@ import type {
   WalletAddress,
   SignAndSendTransactionParams,
   SignMessageParams,
+  SignMessageResult,
   AuthOptions,
 } from "./types";
 import { InjectedProvider } from "./providers/injected";
@@ -135,7 +136,7 @@ export class ProviderManager {
   /**
    * Sign a message using current provider
    */
-  async signMessage(params: SignMessageParams): Promise<string> {
+  async signMessage(params: SignMessageParams): Promise<SignMessageResult> {
     if (!this.currentProvider) {
       throw new Error("No provider connected");
     }

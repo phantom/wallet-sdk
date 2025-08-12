@@ -7,6 +7,7 @@ import type {
   CreateUserOrganizationParams,
   CreateUserOrganizationResult,
   SignMessageParams,
+  SignMessageResult,
   AuthOptions,
 } from "./types";
 import { ProviderManager, type SwitchProviderOptions, type ProviderPreference } from "./ProviderManager";
@@ -169,8 +170,18 @@ export class BrowserSDK {
    * @param networkId - Network identifier
    * @returns Signature string
    */
-  async signMessage(params: SignMessageParams): Promise<string> {
-    return this.providerManager.signMessage(params);
+  async signMessage(params: SignMessageParams): Promise<SignMessageResult> {
+    debug.info(DebugCategory.BROWSER_SDK, "Signing message", {
+      message: params.message,
+      networkId: params.networkId,
+    });
+    const result = await this.providerManager.signMessage(params);
+    debug.info(DebugCategory.BROWSER_SDK, "Message signed successfully", {
+      message: params.message,
+      networkId: params.networkId,
+      result: result,
+    });
+    return result;
   }
 
   /**
@@ -179,7 +190,15 @@ export class BrowserSDK {
    * @returns Transaction result
    */
   async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<SignedTransaction> {
-    return this.providerManager.signAndSendTransaction(params);
+    debug.info(DebugCategory.BROWSER_SDK, "Signing and sending transaction", {
+      networkId: params.networkId,
+    });
+    const result = await this.providerManager.signAndSendTransaction(params);
+    debug.info(DebugCategory.BROWSER_SDK, "Transaction signed and sent successfully", {
+      networkId: params.networkId,
+      result: result,
+    });
+    return result;
   }
 
   /**

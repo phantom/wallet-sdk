@@ -17,6 +17,7 @@ export function useConnect() {
 
       try {
         const result = await context.sdk.connect(options);
+        await context.updateConnectionState();
 
         return result;
       } catch (err) {
@@ -27,7 +28,7 @@ export function useConnect() {
         setIsConnecting(false);
       }
     },
-    [context.sdk],
+    [context],
   );
 
   return {

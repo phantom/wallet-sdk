@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { usePhantom } from "../PhantomProvider";
-import type { SignMessageParams } from "@phantom/browser-sdk";
+import type { SignMessageParams, SignMessageResult } from "@phantom/browser-sdk";
 
 export function useSignMessage() {
   const { sdk, isConnected } = usePhantom();
@@ -8,7 +8,7 @@ export function useSignMessage() {
   const [error, setError] = useState<Error | null>(null);
 
   const signMessage = useCallback(
-    async (params: SignMessageParams): Promise<string> => {
+    async (params: SignMessageParams): Promise<SignMessageResult> => {
       if (!sdk) {
         throw new Error("SDK not initialized");
       }

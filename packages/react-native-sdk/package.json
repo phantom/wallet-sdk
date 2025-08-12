@@ -1,6 +1,6 @@
 {
   "name": "@phantom/react-native-sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Phantom Wallet SDK for React Native and Expo applications",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -48,6 +48,7 @@
     "@phantom/api-key-stamper": "workspace:^",
     "@phantom/base64url": "workspace:^",
     "@phantom/client": "workspace:^",
+    "@phantom/constants": "workspace:^",
     "@phantom/crypto": "workspace:^",
     "@phantom/embedded-provider-core": "workspace:^",
     "@types/bs58": "^5.0.0",

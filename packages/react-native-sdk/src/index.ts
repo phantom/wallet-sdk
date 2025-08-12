@@ -12,8 +12,10 @@ export type {
   ConnectResult,
   WalletAddress,
   SignMessageParams,
+  SignMessageResult,
   SignAndSendTransactionParams,
   SignedTransaction,
 } from "./types";
 
-export { AddressType, NetworkId } from "@phantom/client";
+export { AddressType } from "@phantom/client";
+export { NetworkId } from "@phantom/constants";

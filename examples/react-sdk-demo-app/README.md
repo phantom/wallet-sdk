@@ -87,13 +87,8 @@ The demo app uses environment variables for configuration. Copy `.env.example` t
 
 ### Optional Configuration
 
-- `VITE_APP_NAME` - App name displayed in wallet (default: "React SDK Demo App")
-- `VITE_PROVIDER_TYPE` - Default provider type: `"injected"` or `"embedded"` (default: "injected")
-- `VITE_EMBEDDED_WALLET_TYPE` - Embedded wallet type: `"app-wallet"` or `"user-wallet"` (default: "user-wallet")
 - `VITE_AUTH_URL` - Custom auth URL (optional)
-- `VITE_SERVER_URL` - Backend API endpoint (optional)
 - `VITE_SOLANA_RPC_URL` - Custom Solana RPC endpoint (optional)
-- `VITE_DEFAULT_NETWORK` - Default network: `"mainnet"`, `"devnet"`, or `"testnet"` (default: "mainnet")
 
 ## Configuration
 
@@ -101,8 +96,8 @@ The app is configured in `App.tsx` using environment variables:
 
 ```typescript
 const config = {
-  appName: import.meta.env.VITE_APP_NAME || "React SDK Demo App",
-  providerType: import.meta.env.VITE_PROVIDER_TYPE || "injected",
+  appName: "React SDK Demo App",
+  providerType: "injected",
   organizationId: import.meta.env.VITE_ORGANIZATION_ID, // Required for embedded
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL, // Required for embedded
   // ... other optional configurations

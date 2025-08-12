@@ -1,6 +1,7 @@
 import { PhantomClient } from "@phantom/client";
 import type { AddressType } from "@phantom/client";
-import { parseMessage, parseTransaction } from "@phantom/parsers";
+import { ApiKeyStamper } from "@phantom/api-key-stamper";
+import { parseMessage, parseTransaction, parseSignMessageResponse, parseTransactionResponse } from "@phantom/parsers";
 
 import type {
   PlatformAdapter,
@@ -17,6 +18,7 @@ import type {
   EmbeddedProviderConfig,
   ConnectResult,
   SignMessageParams,
+  SignMessageResult,
   SignAndSendTransactionParams,
   SignedTransaction,
   WalletAddress,
@@ -302,7 +304,7 @@ export class EmbeddedProvider {
     this.addresses = [];
   }
 
-  async signMessage(params: SignMessageParams): Promise<string> {
+  async signMessage(params: SignMessageParams): Promise<SignMessageResult> {
     if (!this.client || !this.walletId) {
       throw new Error("Not connected");
     }
@@ -310,11 +312,15 @@ export class EmbeddedProvider {
     // Parse message to base64url format for client
     const parsedMessage = parseMessage(params.message);
 
-    return await this.client.signMessage({
+    // Get raw response from client
+    const rawResponse = await this.client.signMessage({
       walletId: this.walletId,
       message: parsedMessage.base64url,
       networkId: params.networkId,
     });
+
+    // Parse the response to get human-readable signature and explorer URL
+    return parseSignMessageResponse(rawResponse, params.networkId);
   }
 
   async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<SignedTransaction> {
@@ -325,11 +331,15 @@ export class EmbeddedProvider {
     // Parse transaction to base64url format for client based on network
     const parsedTransaction = await parseTransaction(params.transaction, params.networkId);
 
-    return await this.client.signAndSendTransaction({
+    // Get raw response from client
+    const rawResponse = await this.client.signAndSendTransaction({
       walletId: this.walletId,
       transaction: parsedTransaction.base64url,
       networkId: params.networkId,
     });
+
+    // Parse the response to get transaction hash and explorer URL
+    return await parseTransactionResponse(rawResponse.rawTransaction, params.networkId);
   }
 
   getAddresses(): WalletAddress[] {

@@ -7,10 +7,17 @@ import {
   type CreateWalletResult,
   type GetWalletsResult,
   type AddressType,
+  type Organization
 } from "@phantom/client";
-import type { ExternalKmsOrganization } from "@phantom/openapi-wallet-service";
 import { ApiKeyStamper } from "@phantom/api-key-stamper";
-import { parseMessage, parseTransaction } from "@phantom/parsers";
+import {
+  parseMessage,
+  parseTransaction,
+  parseSignMessageResponse,
+  parseTransactionResponse,
+  type ParsedSignatureResult,
+  type ParsedTransactionResult,
+} from "@phantom/parsers";
 
 export interface ServerSDKConfig {
   organizationId: string;
@@ -54,9 +61,9 @@ export class ServerSDK  {
   /**
    * Sign a message - supports plain text and automatically converts to base64url
    * @param params - Message parameters with plain text message
-   * @returns Promise<string> - Base64 encoded signature
+   * @returns Promise<ParsedSignatureResult> - Parsed signature with explorer URL
    */
-  signMessage(params: ServerSignMessageParams): Promise<string> {
+  async signMessage(params: ServerSignMessageParams): Promise<ParsedSignatureResult> {
     // Parse the message to base64url format
     const parsedMessage = parseMessage(params.message);
 
@@ -67,15 +74,19 @@ export class ServerSDK  {
       networkId: params.networkId,
     };
 
-    return this.client.signMessage(signMessageParams);
+    // Get raw response from client
+    const rawResponse = await this.client.signMessage(signMessageParams);
+
+    // Parse the response to get human-readable signature and explorer URL
+    return parseSignMessageResponse(rawResponse, params.networkId);
   }
 
   /**
    * Sign and send a transaction - supports various transaction formats and automatically parses them
    * @param params - Transaction parameters with flexible transaction format
-   * @returns Promise<SignedTransaction> - Signed transaction result
+   * @returns Promise<ParsedTransactionResult> - Parsed transaction result with hash and explorer URL
    */
-  async signAndSendTransaction(params: ServerSignAndSendTransactionParams): Promise<SignedTransaction> {
+  async signAndSendTransaction(params: ServerSignAndSendTransactionParams): Promise<ParsedTransactionResult> {
     // Parse the transaction to base64url format
     const parsedTransaction = await parseTransaction(params.transaction, params.networkId);
 
@@ -85,15 +96,19 @@ export class ServerSDK  {
       transaction: parsedTransaction.base64url,
       networkId: params.networkId,
     };
+        // Get raw response from client
+    const rawResponse = await this.client.signAndSendTransaction(signAndSendParams);
 
-    return this.client.signAndSendTransaction(signAndSendParams);
+    // Parse the response to get transaction hash and explorer URL
+    return await parseTransactionResponse(rawResponse.rawTransaction, params.networkId);
+  
   }
 
   createOrganization(
     name: string,
     keyPair: { publicKey: string; secretKey: string },
     authenticatorName?: string,
-  ): Promise<ExternalKmsOrganization> {
+  ): Promise<Organization> {
     // Create a temporary PhantomClient instance with the stamper
     const tempClient = new PhantomClient(
       {
@@ -124,7 +139,6 @@ export class ServerSDK  {
 // Re-export specific items from client
 export {
   PhantomClient,
-  NetworkId,
   deriveSubmissionConfig,
   supportsTransactionSubmission,
   getNetworkDescription,
@@ -142,6 +156,18 @@ export {
   generateKeyPair,
 } from "@phantom/client";
 
+// Re-export NetworkId from constants
+export { NetworkId } from "@phantom/constants";
+
 export { ApiKeyStamper } from "@phantom/api-key-stamper";
-export { parseMessage, parseTransaction, type ParsedMessage, type ParsedTransaction } from "@phantom/parsers";
+export {
+  parseMessage,
+  parseTransaction,
+  parseSignMessageResponse,
+  parseTransactionResponse,
+  type ParsedMessage,
+  type ParsedTransaction,
+  type ParsedSignatureResult,
+  type ParsedTransactionResult,
+} from "@phantom/parsers";
 export * from "./types";
