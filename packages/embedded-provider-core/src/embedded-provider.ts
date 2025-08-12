@@ -1,6 +1,5 @@
 import { PhantomClient } from "@phantom/client";
 import type { AddressType } from "@phantom/client";
-import { ApiKeyStamper } from "@phantom/api-key-stamper";
 import { parseMessage, parseTransaction, parseSignMessageResponse, parseTransactionResponse } from "@phantom/parsers";
 
 import type {
