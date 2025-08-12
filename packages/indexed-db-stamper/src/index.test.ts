@@ -1,5 +1,5 @@
 import { IndexedDbStamper } from "./index";
-import type { StamperKeyInfo } from "./index";
+import type { StamperKeyInfo } from "@phantom/sdk-types";
 
 // Mock crypto.subtle methods
 const mockGenerateKey = jest.fn();
@@ -162,7 +162,7 @@ describe("IndexedDbStamper", () => {
       expect(typeof stamp).toBe("string");
       expect(stamp.length).toBeGreaterThan(0);
       expect(mockSign).toHaveBeenCalledWith(
-        { name: "Ed25519" },
+        { name: "ECDSA", hash: "SHA-256" },
         expect.any(Object),
         expect.anything()
       );

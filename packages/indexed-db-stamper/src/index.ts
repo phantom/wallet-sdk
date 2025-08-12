@@ -207,10 +207,14 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
     // Export public key for storage and API use
     const publicKeyBuffer = await crypto.subtle.exportKey("spki", this.cryptoKeyPair.publicKey);
     
-    // Store public key as base58 (consistent with other stampers)
-    const publicKeyBase58 = bs58.encode(new Uint8Array(publicKeyBuffer));
+    // For ECDSA P-256, we need to extract the raw public key from SPKI format
+    // SPKI format has metadata, but we want just the raw key like Ed25519
+    const rawPublicKey = this.extractRawPublicKeyFromSPKI(new Uint8Array(publicKeyBuffer));
     
-    // Create a deterministic key ID from the public key
+    // Store raw public key as base58 (consistent with other stampers)
+    const publicKeyBase58 = bs58.encode(rawPublicKey);
+    
+    // Create a deterministic key ID from the full SPKI buffer
     const keyIdBuffer = await crypto.subtle.digest("SHA-256", publicKeyBuffer);
     const keyId = base64urlEncode(new Uint8Array(keyIdBuffer)).substring(0, 16);
 
@@ -273,6 +277,21 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
     result.set(sDer, 2 + rDer.length);
     
     return result;
+  }
+
+  /**
+   * Extract raw public key bytes from SPKI format
+   * For ECDSA P-256, the raw public key is at the end of the SPKI structure
+   */
+  private extractRawPublicKeyFromSPKI(spkiBytes: Uint8Array): Uint8Array {
+    // For ECDSA P-256 SPKI, the raw public key (65 bytes) is at the end
+    // Format: 0x04 (uncompressed) + 32 bytes (x) + 32 bytes (y)
+    if (spkiBytes.length < 65) {
+      throw new Error("Invalid SPKI format: too short for P-256 public key");
+    }
+    
+    // Extract the last 65 bytes which contain the raw public key
+    return spkiBytes.slice(-65);
   }
 
   private async storeKeyPair(keyPair: CryptoKeyPair, keyInfo: StamperKeyInfo): Promise<void> {
