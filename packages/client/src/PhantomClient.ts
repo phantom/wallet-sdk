@@ -73,7 +73,6 @@ export class PhantomClient {
     this.axiosInstance = axios.create();
 
     // If stamper is provided, add it as an interceptor
-    console.log("Initializing PhantomClient with stamper:", !!stamper);
     if (stamper) {
       // Add stamper interceptor to axios instance
       this.axiosInstance.interceptors.request.use(async config => {
@@ -397,7 +396,6 @@ export class PhantomClient {
       } as any;
 
       // Creating organization with request
-      console.log("Creating organization with params:", params);
       const response = await this.kmsApi.postKmsRpc(request);
       const result = response.data.result as ExternalKmsOrganization;
 

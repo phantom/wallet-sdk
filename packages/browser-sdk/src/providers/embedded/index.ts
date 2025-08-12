@@ -13,7 +13,7 @@ export class EmbeddedProvider extends CoreEmbeddedProvider implements Provider {
     // Create browser platform adapter
     const urlParamsAccessor = new BrowserURLParamsAccessor();
     const stamper = new IndexedDbStamper({
-      dbName: `phantom-browser-test-sdk-${config.organizationId}`,
+      dbName: `phantom-browser-test-test-sdk-${config.organizationId}`,
       storeName: "crypto-keys",
       keyName: "signing-key",
     });
