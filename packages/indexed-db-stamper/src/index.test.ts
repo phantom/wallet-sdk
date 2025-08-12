@@ -291,7 +291,7 @@ describe("IndexedDbStamper", () => {
   });
 
   describe("error handling", () => {
-    it("should handle IndexedDB errors gracefully", async () => {
+    it("should handle IndexedDB errors gracefully", () => {
       // This test is complex due to IndexedDB async nature
       // For now, just test that the method exists and can be called
       expect(typeof stamper.init).toBe('function');
