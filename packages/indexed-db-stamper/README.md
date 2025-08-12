@@ -113,7 +113,7 @@ The stamper generates ECDSA P-256 CryptoKey objects with `extractable: false`, m
 Keys are generated and stored entirely within the browser's secure cryptographic context:
 - Private keys never exist in JavaScript memory at any point
 - Signing operations happen within Web Crypto API secure boundaries
-- Hardware security modules used when available by the browser
+- Secure elements used when available by the browser
 - Origin-based security isolation through IndexedDB
 
 ### Signature Format Compatibility
