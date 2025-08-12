@@ -2,8 +2,13 @@ import {
   PhantomClient,
   type SignMessageParams,
   type SignAndSendTransactionParams,
+  type SignedTransaction,
   type NetworkId,
+  type CreateWalletResult,
+  type GetWalletsResult,
+  type AddressType,
 } from "@phantom/client";
+import type { ExternalKmsOrganization } from "@phantom/openapi-wallet-service";
 import { ApiKeyStamper } from "@phantom/api-key-stamper";
 import { parseMessage, parseTransaction } from "@phantom/parsers";
 
@@ -25,15 +30,19 @@ export interface ServerSignAndSendTransactionParams {
   networkId: NetworkId;
 }
 
-export class ServerSDK extends PhantomClient {
+export class ServerSDK  {
+  private config: ServerSDKConfig;
+  client: PhantomClient;
+  
   constructor(config: ServerSDKConfig) {
+    this.config = config;
     // Create the API key stamper
     const stamper = new ApiKeyStamper({
       apiSecretKey: config.apiPrivateKey,
     });
 
     // Initialize the parent PhantomClient with the stamper
-    super(
+    this.client = new PhantomClient(
       {
         apiBaseUrl: config.apiBaseUrl,
         organizationId: config.organizationId,
@@ -58,7 +67,7 @@ export class ServerSDK extends PhantomClient {
       networkId: params.networkId,
     };
 
-    return super.signMessage(signMessageParams);
+    return this.client.signMessage(signMessageParams);
   }
 
   /**
@@ -66,7 +75,7 @@ export class ServerSDK extends PhantomClient {
    * @param params - Transaction parameters with flexible transaction format
    * @returns Promise<SignedTransaction> - Signed transaction result
    */
-  async signAndSendTransaction(params: ServerSignAndSendTransactionParams): Promise<any> {
+  async signAndSendTransaction(params: ServerSignAndSendTransactionParams): Promise<SignedTransaction> {
     // Parse the transaction to base64url format
     const parsedTransaction = await parseTransaction(params.transaction, params.networkId);
 
@@ -77,7 +86,38 @@ export class ServerSDK extends PhantomClient {
       networkId: params.networkId,
     };
 
-    return super.signAndSendTransaction(signAndSendParams);
+    return this.client.signAndSendTransaction(signAndSendParams);
+  }
+
+  createOrganization(
+    name: string,
+    keyPair: { publicKey: string; secretKey: string },
+    authenticatorName?: string,
+  ): Promise<ExternalKmsOrganization> {
+    // Create a temporary PhantomClient instance with the stamper
+    const tempClient = new PhantomClient(
+      {
+        apiBaseUrl: this.config.apiBaseUrl,
+        organizationId: this.config.organizationId,
+      },
+      new ApiKeyStamper({
+        apiSecretKey: keyPair.secretKey,
+      }),
+    );
+
+    // Call the createOrganization method with the provided parameters
+    return tempClient.createOrganization(name, keyPair.publicKey, authenticatorName);
+  }
+  getWallets(limit?: number, offset?: number): Promise<GetWalletsResult> {
+    return this.client.getWallets(limit, offset);
+  }
+  
+  createWallet(name: string): Promise<CreateWalletResult> {
+    return this.client.createWallet(name);
+  }
+  
+  getWalletAddresses(walletId: string, derivationPaths?: string[]): Promise<{ addressType: AddressType; address: string }[]> {
+    return this.client.getWalletAddresses(walletId, derivationPaths);
   }
 }
 

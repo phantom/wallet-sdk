@@ -418,7 +418,7 @@ describe("ServerSDK", () => {
       const organizationName = `Test Organization ${Date.now()}`;
       const authorizedKeyPair = generateKeyPair();
 
-      const result = await sdk.createOrganization(organizationName, authorizedKeyPair.publicKey);
+      const result = await sdk.createOrganization(organizationName, authorizedKeyPair);
       expect(result).toBeDefined();
       expect(result.organizationId).toBeDefined();
       expect(typeof result.organizationId).toBe("string");
@@ -427,7 +427,7 @@ describe("ServerSDK", () => {
 
     it("should throw error when creating organization with invalid name", async () => {
       const authorizedKeyPair = generateKeyPair();
-      await expect(sdk.createOrganization("", authorizedKeyPair.publicKey)).rejects.toThrow("Organization name is required");
+      await expect(sdk.createOrganization("", authorizedKeyPair)).rejects.toThrow("Organization name is required");
     });
   });
 });

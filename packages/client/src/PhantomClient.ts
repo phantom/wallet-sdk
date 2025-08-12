@@ -35,6 +35,7 @@ import {
   KmsUserRole,
   Algorithm,
   type ExternalKmsOrganization,
+  type DerivationInfoAddressFormatEnum
 } from "@phantom/openapi-wallet-service";
 import { DerivationPath, getNetworkConfig } from "./constants";
 import { deriveSubmissionConfig } from "./caip2-mappings";
@@ -72,8 +73,8 @@ export class PhantomClient {
     // If stamper is provided, add it as an interceptor
     if (stamper) {
       // Add stamper interceptor to axios instance
-      this.axiosInstance.interceptors.request.use(config => {
-        return this.stampRequest(config, stamper);
+      this.axiosInstance.interceptors.request.use(async config => {
+        return await this.stampRequest(config, stamper);
       });
     }
 
@@ -218,7 +219,7 @@ export class PhantomClient {
   async getWalletAddresses(
     walletId: string,
     derivationPaths?: string[],
-  ): Promise<{ addressType: string; address: string }[]> {
+  ): Promise<{ addressType: DerivationInfoAddressFormatEnum; address: string }[]> {
     try {
       const paths = derivationPaths || [
         DerivationPath.Solana,
@@ -473,19 +474,19 @@ export class PhantomClient {
   /**
    * Stamp an axios request with the provided stamper
    */
-  private stampRequest(config: any, stamper: Stamper): any {
+  private async stampRequest(config: any, stamper: Stamper) {
     // Convert request body to Buffer for stamper
     const requestBody =
       typeof config.data === "string" ? config.data : config.data === undefined ? "" : JSON.stringify(config.data);
     const dataUtf8 = Buffer.from(requestBody, "utf8");
     
     // Get complete stamp from stamper
-    const stamp = stamper.stamp(dataUtf8);
+
+    const stamp = await stamper.stamp(dataUtf8);
 
     // Add the stamp header
     config.headers = config.headers || {};
     config.headers["X-Phantom-Stamp"] = stamp;
-
     return config;
   }
 }

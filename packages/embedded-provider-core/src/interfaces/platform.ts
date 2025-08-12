@@ -9,8 +9,6 @@ export interface StamperWithKeyManagement extends Stamper {
   getKeyInfo(): { keyId: string; publicKey: string } | null;
   resetKeyPair?(): Promise<{ keyId: string; publicKey: string }>;
   clear?(): Promise<void>;
-  // Override to allow async for key managers
-  stamp(data: Buffer): Promise<string>;
 }
 
 export interface PlatformAdapter {

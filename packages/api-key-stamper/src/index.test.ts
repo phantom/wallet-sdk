@@ -26,10 +26,10 @@ describe("ApiKeyStamper", () => {
   });
 
   describe("stamp", () => {
-    it("should return complete X-Phantom-Stamp header value", () => {
+    it("should return complete X-Phantom-Stamp header value", async () => {
       const testData = Buffer.from("test message", "utf8");
       
-      const stamp = stamper.stamp(testData);
+      const stamp = await stamper.stamp(testData);
       
       expect(typeof stamp).toBe("string");
       expect(stamp.length).toBeGreaterThan(0);
@@ -44,10 +44,10 @@ describe("ApiKeyStamper", () => {
       expect(stampData.kind).toBe("PKI");
     });
 
-    it("should create valid stamp with verifiable signature", () => {
+    it("should create valid stamp with verifiable signature", async () => {
       const testData = Buffer.from("test message for verification", "utf8");
       
-      const stamp = stamper.stamp(testData);
+      const stamp = await stamper.stamp(testData);
       
       // Decode the stamp
       const stampJson = base64urlDecodeToString(stamp);
@@ -60,22 +60,22 @@ describe("ApiKeyStamper", () => {
       expect(signature).toEqual(expectedSignature);
     });
 
-    it("should create different stamps for different data", () => {
+    it("should create different stamps for different data", async () => {
       const data1 = Buffer.from("first message", "utf8");
       const data2 = Buffer.from("second message", "utf8");
       
-      const stamp1 = stamper.stamp(data1);
-      const stamp2 = stamper.stamp(data2);
+      const stamp1 = await stamper.stamp(data1);
+      const stamp2 = await stamper.stamp(data2);
       
       expect(stamp1).not.toBe(stamp2);
     });
 
-    it("should create consistent stamps for the same data", () => {
+    it("should create consistent stamps for the same data", async () => {
       const testData = Buffer.from("consistent message", "utf8");
-      
-      const stamp1 = stamper.stamp(testData);
-      const stamp2 = stamper.stamp(testData);
-      
+
+      const stamp1 = await stamper.stamp(testData);
+      const stamp2 = await stamper.stamp(testData);
+
       // The stamps should be the same for the same data and same key
       expect(stamp1).toBe(stamp2);
     });

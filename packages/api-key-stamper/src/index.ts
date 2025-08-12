@@ -23,7 +23,7 @@ export class ApiKeyStamper {
    * @param data - Data to sign (Buffer)
    * @returns Complete X-Phantom-Stamp header value
    */
-  stamp(data: Buffer): string {
+  async stamp(data: Buffer): Promise<string> {
     // Sign the data
     const signature = signWithSecret(this.keypair.secretKey, data);
     const signatureBase64url = base64urlEncode(signature);
@@ -37,6 +37,6 @@ export class ApiKeyStamper {
 
     // Encode the entire stamp as base64url JSON
     const stampJson = JSON.stringify(stampData);
-    return base64urlEncode(new TextEncoder().encode(stampJson));
+    return Promise.resolve(base64urlEncode(new TextEncoder().encode(stampJson)));
   }
 }
