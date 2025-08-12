@@ -72,8 +72,8 @@ export class PhantomClient {
     // If stamper is provided, add it as an interceptor
     if (stamper) {
       // Add stamper interceptor to axios instance
-      this.axiosInstance.interceptors.request.use(async config => {
-        return await this.stampRequest(config, stamper);
+      this.axiosInstance.interceptors.request.use(config => {
+        return this.stampRequest(config, stamper);
       });
     }
 
@@ -473,7 +473,7 @@ export class PhantomClient {
   /**
    * Stamp an axios request with the provided stamper
    */
-  private async stampRequest(config: any, stamper: Stamper): Promise<any> {
+  private stampRequest(config: any, stamper: Stamper): any {
     // Convert request body to Buffer for stamper
     const requestBody =
       typeof config.data === "string" ? config.data : config.data === undefined ? "" : JSON.stringify(config.data);
