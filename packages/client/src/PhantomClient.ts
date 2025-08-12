@@ -341,12 +341,12 @@ export class PhantomClient {
     }
   }
 
-  async getOrCreateOrganization(tag: string, publicKey: string): Promise<ExternalKmsOrganization> {
+  async getOrCreateOrganization(tag: string, publicKey: string, authenticatorName?: string): Promise<ExternalKmsOrganization> {
     try {
       // First, try to get the organization
       // Since there's no explicit getOrganization method, we'll create it
       // This assumes the API returns existing org if it already exists
-      return await this.createOrganization(tag, publicKey);
+      return await this.createOrganization(tag, publicKey, authenticatorName);
     } catch (error: any) {
       console.error("Failed to get or create organization:", error.response?.data || error.message);
       throw new Error(`Failed to get or create organization: ${error.response?.data?.message || error.message}`);
@@ -354,7 +354,13 @@ export class PhantomClient {
   }
 
 
-  async createOrganization(name: string, publicKey: string): Promise<ExternalKmsOrganization> {
+  /**
+   * Create a new organization with the specified name and public key
+   * @param name Organization name
+   * @param publicKey Base58 encoded public key for the admin user
+   * @param authenticatorName Optional custom name for the authenticator. If not provided, defaults to "KeyPair {timestamp}"
+   */
+  async createOrganization(name: string, publicKey: string, authenticatorName?: string): Promise<ExternalKmsOrganization> {
     try {
       if (!name) {
         throw new Error("Organization name is required");
@@ -370,7 +376,7 @@ export class PhantomClient {
                 algorithm: Algorithm.ed25519,
                 authenticatorKind: "keypair" as any,
                 publicKey: base64urlEncode(bs58.decode(publicKey)) as any,
-                authenticatorName: `KeyPair ${Date.now()}`,
+                authenticatorName: authenticatorName || `KeyPair ${Date.now()}`,
               },
             ] as any,
             username: `user-${Date.now()}`,

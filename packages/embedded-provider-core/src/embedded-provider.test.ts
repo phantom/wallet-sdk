@@ -55,6 +55,7 @@ describe("EmbeddedProvider Core", () => {
 
     // Setup mock platform adapter
     mockPlatform = {
+      name: "test-platform",
       storage: {
         getSession: jest.fn(),
         saveSession: jest.fn(),
@@ -191,6 +192,24 @@ describe("EmbeddedProvider Core", () => {
       expect(MockedPhantomClient).toHaveBeenCalledWith(
         expect.any(Object), // config object
         mockPlatform.stamper // stamper should be passed as second argument
+      );
+    });
+
+    it("should create authenticator name with platform info and public key", async () => {
+      mockPlatform.storage.getSession.mockResolvedValue(null); // No existing session
+      mockPlatform.authProvider.resumeAuthFromRedirect.mockReturnValue(null);
+
+      try {
+        await provider.connect();
+      } catch (error) {
+        // Connection will fail, but createOrganization should be called with authenticatorName
+      }
+
+      // Verify createOrganization was called with platform-specific authenticatorName
+      expect(mockCreateOrganization).toHaveBeenCalledWith(
+        expect.stringMatching(/^test-org-id-\d+$/), // organization name
+        "test-public-key", // public key
+        expect.stringMatching(/^test-platform-test-pub-\d+$/) // authenticatorName with platform name and short pubkey
       );
     });
 

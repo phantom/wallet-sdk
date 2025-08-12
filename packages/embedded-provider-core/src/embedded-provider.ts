@@ -28,6 +28,7 @@ import { retryWithBackoff } from "./utils/retry";
 
 export class EmbeddedProvider {
   private config: EmbeddedProviderConfig;
+  private platform: PlatformAdapter;
   private storage: EmbeddedStorage;
   private authProvider: AuthProvider;
   private urlParamsAccessor: URLParamsAccessor;
@@ -43,6 +44,7 @@ export class EmbeddedProvider {
     this.logger.log("EMBEDDED_PROVIDER", "Initializing EmbeddedProvider", { config });
 
     this.config = config;
+    this.platform = platform;
     this.storage = platform.storage;
     this.authProvider = platform.authProvider;
     this.urlParamsAccessor = platform.urlParamsAccessor;
@@ -163,10 +165,20 @@ export class EmbeddedProvider {
     // organization name is a combination of this organizationId and this userId, which will be a unique identifier
     const uid = Date.now(); // for now
     const organizationName = `${this.config.organizationId}-${uid}`;
-    this.logger.log("EMBEDDED_PROVIDER", "Creating organization", { organizationName });
+    
+    // Create authenticator name with platform info and public key for identification
+    const platformName = this.platform.name || "unknown";
+    const shortPubKey = stamperInfo.publicKey.slice(0, 8); // First 8 chars of public key
+    const authenticatorName = `${platformName}-${shortPubKey}-${uid}`;
+    
+    this.logger.log("EMBEDDED_PROVIDER", "Creating organization", { 
+      organizationName, 
+      authenticatorName, 
+      platform: platformName 
+    });
    
-    const { organizationId } = await tempClient.createOrganization(organizationName, stamperInfo.publicKey);
-    this.logger.info("EMBEDDED_PROVIDER", "Organization created", { organizationId });
+    const { organizationId } = await tempClient.createOrganization(organizationName, stamperInfo.publicKey, authenticatorName);
+    this.logger.info("EMBEDDED_PROVIDER", "Organization created", { organizationId, authenticatorName });
 
     return { organizationId, stamperInfo };
   }

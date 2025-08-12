@@ -90,6 +90,7 @@ describe("EmbeddedProvider Auth Flows", () => {
 
     // Setup mock platform adapter
     mockPlatform = {
+      name: "test-platform",
       storage: mockStorage,
       authProvider: mockAuthProvider,
       urlParamsAccessor: mockURLParamsAccessor,
@@ -412,7 +413,8 @@ describe("EmbeddedProvider Auth Flows", () => {
 
       expect(mockClient.createOrganization).toHaveBeenCalledWith(
         expect.stringContaining("test-org-id-"),
-        "test-public-key"
+        "test-public-key",
+        expect.stringMatching(/^test-platform-test-pub-\d+$/) // authenticatorName with platform name and short pubkey
       );
     });
 

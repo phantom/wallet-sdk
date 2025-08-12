@@ -12,6 +12,9 @@ export interface Stamper {
 }
 
 export interface PlatformAdapter {
+  name: string; // Platform identifier like "web", "ios", "android", "react-native", etc.
+               // This is used to create identifiable authenticator names in the format:
+               // "{platformName}-{shortPubKey}-{timestamp}"
   storage: EmbeddedStorage;
   authProvider: AuthProvider;
   urlParamsAccessor: URLParamsAccessor;
