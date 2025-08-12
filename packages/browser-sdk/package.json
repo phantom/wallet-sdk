@@ -28,12 +28,12 @@
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
   },
   "dependencies": {
-    "@phantom/api-key-stamper": "workspace:^",
     "@phantom/base64url": "workspace:^",
     "@phantom/browser-injected-sdk": "workspace:^",
     "@phantom/client": "workspace:^",
     "@phantom/constants": "workspace:^",
     "@phantom/embedded-provider-core": "workspace:^",
+    "@phantom/indexed-db-stamper": "workspace:^",
     "@phantom/parsers": "workspace:^",
     "axios": "^1.10.0",
     "bs58": "^6.0.0",

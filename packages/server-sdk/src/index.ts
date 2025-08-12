@@ -1,5 +1,14 @@
-import { PhantomClient, type SignMessageParams, type SignAndSendTransactionParams } from "@phantom/client";
-import { type NetworkId } from "@phantom/constants";
+import {
+  PhantomClient,
+  type SignMessageParams,
+  type SignAndSendTransactionParams,
+  type SignedTransaction,
+  type NetworkId,
+  type CreateWalletResult,
+  type GetWalletsResult,
+  type AddressType,
+  type Organization
+} from "@phantom/client";
 import { ApiKeyStamper } from "@phantom/api-key-stamper";
 import {
   parseMessage,
@@ -28,16 +37,18 @@ export interface ServerSignAndSendTransactionParams {
   networkId: NetworkId;
 }
 
-export class ServerSDK {
-  private client: PhantomClient;
-
+export class ServerSDK  {
+  private config: ServerSDKConfig;
+  client: PhantomClient;
+  
   constructor(config: ServerSDKConfig) {
+    this.config = config;
     // Create the API key stamper
     const stamper = new ApiKeyStamper({
       apiSecretKey: config.apiPrivateKey,
     });
 
-    // Initialize the PhantomClient with the stamper
+    // Initialize the parent PhantomClient with the stamper
     this.client = new PhantomClient(
       {
         apiBaseUrl: config.apiBaseUrl,
@@ -85,29 +96,43 @@ export class ServerSDK {
       transaction: parsedTransaction.base64url,
       networkId: params.networkId,
     };
-
-    // Get raw response from client
+        // Get raw response from client
     const rawResponse = await this.client.signAndSendTransaction(signAndSendParams);
 
     // Parse the response to get transaction hash and explorer URL
     return await parseTransactionResponse(rawResponse.rawTransaction, params.networkId);
+  
   }
 
-  // Proxy methods for other PhantomClient functionality
-  async createOrganization(organizationId: string, keypair: any) {
-    return await this.client.createOrganization(organizationId, keypair);
-  }
+  createOrganization(
+    name: string,
+    keyPair: { publicKey: string; secretKey: string },
+    authenticatorName?: string,
+  ): Promise<Organization> {
+    // Create a temporary PhantomClient instance with the stamper
+    const tempClient = new PhantomClient(
+      {
+        apiBaseUrl: this.config.apiBaseUrl,
+        organizationId: this.config.organizationId,
+      },
+      new ApiKeyStamper({
+        apiSecretKey: keyPair.secretKey,
+      }),
+    );
 
-  async createWallet(walletType: string = "user-wallet") {
-    return await this.client.createWallet(walletType);
+    // Call the createOrganization method with the provided parameters
+    return tempClient.createOrganization(name, keyPair.publicKey, authenticatorName);
   }
-
-  async getWalletAddresses(walletId: string, derivationPaths?: string[]) {
-    return await this.client.getWalletAddresses(walletId, derivationPaths);
+  getWallets(limit?: number, offset?: number): Promise<GetWalletsResult> {
+    return this.client.getWallets(limit, offset);
   }
-
-  async getWallets(limit?: number, offset?: number) {
-    return await this.client.getWallets(limit, offset);
+  
+  createWallet(name: string): Promise<CreateWalletResult> {
+    return this.client.createWallet(name);
+  }
+  
+  getWalletAddresses(walletId: string, derivationPaths?: string[]): Promise<{ addressType: AddressType; address: string }[]> {
+    return this.client.getWalletAddresses(walletId, derivationPaths);
   }
 }
 

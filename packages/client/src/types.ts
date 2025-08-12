@@ -1,3 +1,4 @@
+import type { Buffer } from "buffer";
 import { type NetworkId } from "@phantom/constants";
 
 export interface PhantomClientConfig {
@@ -5,8 +6,9 @@ export interface PhantomClientConfig {
   organizationId?: string;
 }
 
+// Stamper interface - takes Buffer data and returns complete X-Phantom-Stamp header value
 export interface Stamper {
-  stamp: (request: any) => Promise<any>;
+  stamp(data: Buffer): Promise<string>;
 }
 
 export interface CreateWalletResult {

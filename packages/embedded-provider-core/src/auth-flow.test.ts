@@ -8,6 +8,7 @@ import type {
   EmbeddedStorage,
   AuthProvider,
   URLParamsAccessor,
+  Stamper,
 } from "./interfaces";
 import { PhantomClient, generateKeyPair } from "@phantom/client";
 import { NetworkId } from "@phantom/constants";
@@ -34,6 +35,7 @@ describe("EmbeddedProvider Auth Flows", () => {
   let mockStorage: jest.Mocked<EmbeddedStorage>;
   let mockAuthProvider: jest.Mocked<AuthProvider>;
   let mockURLParamsAccessor: jest.Mocked<URLParamsAccessor>;
+  let mockStamper: jest.Mocked<Stamper>;
   let mockClient: jest.Mocked<PhantomClient>;
 
   beforeEach(() => {
@@ -77,11 +79,23 @@ describe("EmbeddedProvider Auth Flows", () => {
       getParam: jest.fn().mockReturnValue(null),
     };
 
+    // Mock stamper
+    mockStamper = {
+      init: jest.fn().mockResolvedValue({ keyId: "test-key-id", publicKey: "test-public-key" }),
+      sign: jest.fn().mockResolvedValue("mock-signature"),
+      stamp: jest.fn().mockResolvedValue("mock-stamp"),
+      getKeyInfo: jest.fn().mockReturnValue({ keyId: "test-key-id", publicKey: "test-public-key" }),
+      resetKeyPair: jest.fn().mockResolvedValue({ keyId: "test-key-id", publicKey: "test-public-key" }),
+      clear: jest.fn().mockResolvedValue(undefined),
+    };
+
     // Setup mock platform adapter
     mockPlatform = {
+      name: "test-platform",
       storage: mockStorage,
       authProvider: mockAuthProvider,
       urlParamsAccessor: mockURLParamsAccessor,
+      stamper: mockStamper,
     };
 
     // Setup mock logger
@@ -400,10 +414,8 @@ describe("EmbeddedProvider Auth Flows", () => {
 
       expect(mockClient.createOrganization).toHaveBeenCalledWith(
         expect.stringContaining("test-org-id-"),
-        expect.objectContaining({
-          publicKey: "test-public-key",
-          secretKey: "test-secret-key",
-        }),
+        "test-public-key",
+        expect.stringMatching(/^test-platform-test-pub-\d+$/) // authenticatorName with platform name and short pubkey
       );
     });
 
