@@ -9,7 +9,7 @@ export default function HomeScreen() {
   const { isConnected, addresses, walletId, error } = useAccounts();
   const { disconnect, isDisconnecting } = useDisconnect();
 
-  const handleConnect = async (provider: "google" | "apple" | "jwt") => {
+  const handleConnect = async (provider: "google") => {
     try {
       const result = await connect({ provider });
 
@@ -82,7 +82,7 @@ export default function HomeScreen() {
         {!isConnected ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Connect Wallet</Text>
-            <Text style={styles.description}>Choose an authentication method to connect your Phantom wallet:</Text>
+            <Text style={styles.description}>Connect your Phantom wallet using Google authentication:</Text>
 
             <TouchableOpacity
               style={[styles.button, styles.googleButton]}
@@ -90,22 +90,6 @@ export default function HomeScreen() {
               disabled={isConnecting}
             >
               <Text style={styles.buttonText}>{isConnecting ? "Connecting..." : "Connect with Google"}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.button, styles.appleButton]}
-              onPress={() => handleConnect("apple")}
-              disabled={isConnecting}
-            >
-              <Text style={styles.buttonText}>{isConnecting ? "Connecting..." : "Connect with Apple"}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.button, styles.jwtButton]}
-              onPress={() => handleConnect("jwt")}
-              disabled={isConnecting}
-            >
-              <Text style={styles.buttonText}>{isConnecting ? "Connecting..." : "Connect with JWT (Demo)"}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -256,12 +240,6 @@ const styles = StyleSheet.create({
   },
   googleButton: {
     backgroundColor: "#dc2626",
-  },
-  appleButton: {
-    backgroundColor: "#1f2937",
-  },
-  jwtButton: {
-    backgroundColor: "#059669",
   },
   dangerButton: {
     backgroundColor: "#ef4444",

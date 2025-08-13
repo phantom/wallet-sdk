@@ -1,0 +1,52 @@
+{
+  "name": "@phantom/constants",
+  "version": "0.0.2",
+  "description": "Shared constants for Phantom Wallet SDK",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "?pack-release": "When https://github.com/changesets/changesets/issues/432 has a solution we can remove this trick",
+    "pack-release": "rimraf ./_release && yarn pack && mkdir ./_release && tar zxvf ./package.tgz --directory ./_release && rm ./package.tgz",
+    "build": "rimraf ./dist && tsup",
+    "dev": "rimraf ./dist && tsup --watch",
+    "clean": "rm -rf dist",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "tsc --noEmit && eslint --cache . --ext .ts",
+    "check-types": "tsc --noEmit",
+    "prettier": "prettier --write \"src/**/*.{ts}\""
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.0",
+    "eslint": "8.53.0",
+    "eslint-define-config": "^1.24.1",
+    "jest": "^29.7.0",
+    "prettier": "^3.5.2",
+    "rimraf": "^6.0.1",
+    "ts-jest": "^29.1.2",
+    "tsup": "^6.7.0",
+    "typescript": "^5.0.4"
+  },
+  "keywords": [
+    "phantom",
+    "constants",
+    "networks",
+    "blockchain"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "directory": "_release/package"
+  }
+}

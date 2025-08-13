@@ -1,13 +1,8 @@
-// Removed unused AxiosInstance import
-import { type NetworkId } from "./caip2-mappings";
+import { type NetworkId } from "@phantom/constants";
 
 export interface PhantomClientConfig {
   apiBaseUrl: string;
   organizationId?: string;
-}
-
-export interface Stamper {
-  stamp: (request: any) => Promise<any>;
 }
 
 export interface CreateWalletResult {
@@ -22,6 +17,7 @@ export type Transaction = string; // base64url encoded transaction
 
 export interface SignedTransaction {
   rawTransaction: string; // base64url encoded signed transaction
+  hash?: string; // Optional transaction hash if available
 }
 
 export interface GetWalletsResult {

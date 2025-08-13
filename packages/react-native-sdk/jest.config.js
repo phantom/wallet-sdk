@@ -10,7 +10,7 @@ module.exports = {
         tsconfig: {
           jsx: "react-jsx",
           esModuleInterop: true,
-          allowSyntheticDefaultImports: true
+          allowSyntheticDefaultImports: true,
         },
       },
     ],
@@ -19,6 +19,8 @@ module.exports = {
   setupFilesAfterEnv: ["<rootDir>/src/test/setup.ts"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
+    "^@phantom/crypto$": "<rootDir>/src/test/mocks/@phantom/crypto.js",
+    "^@phantom/base64url$": "<rootDir>/src/test/mocks/@phantom/base64url.js",
     "^expo-secure-store$": "<rootDir>/src/test/mocks/expo-secure-store.js",
     "^expo-web-browser$": "<rootDir>/src/test/mocks/expo-web-browser.js",
     "^expo-auth-session$": "<rootDir>/src/test/mocks/expo-auth-session.js",

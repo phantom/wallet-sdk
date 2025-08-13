@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { EmbeddedProvider } from "@phantom/embedded-provider-core";
+import type { PlatformAdapter } from "@phantom/embedded-provider-core";
 import type { PhantomProviderConfig, WalletAddress } from "./types";
 
 // Platform adapters for React Native/Expo
@@ -8,6 +9,8 @@ import { ExpoSecureStorage } from "./providers/embedded/storage";
 import { ExpoAuthProvider } from "./providers/embedded/auth";
 import { ExpoURLParamsAccessor } from "./providers/embedded/url-params";
 import { ExpoLogger } from "./providers/embedded/logger";
+import { ReactNativeStamper } from "./providers/embedded/stamper";
+import { Platform } from "react-native";
 
 interface PhantomContextValue {
   sdk: EmbeddedProvider;
@@ -50,11 +53,17 @@ export function PhantomProvider({ children, config }: PhantomProviderProps) {
     const authProvider = new ExpoAuthProvider();
     const urlParamsAccessor = new ExpoURLParamsAccessor();
     const logger = new ExpoLogger(config.debug);
+    const stamper = new ReactNativeStamper({
+      keyPrefix: `phantom-rn-${config.organizationId}`,
+      organizationId: config.organizationId,
+    });
 
-    const platform = {
+    const platform: PlatformAdapter = {
       storage,
       authProvider,
       urlParamsAccessor,
+      stamper,
+      name: `${Platform.OS}-${Platform.Version}`,
     };
 
     return new EmbeddedProvider(embeddedConfig, platform, logger);

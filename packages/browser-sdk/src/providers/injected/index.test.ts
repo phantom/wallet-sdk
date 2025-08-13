@@ -1,5 +1,6 @@
 import { InjectedProvider } from "./index";
 import { AddressType } from "@phantom/client";
+import { NetworkId } from "@phantom/constants";
 
 // Mock the browser-injected-sdk modules
 jest.mock("@phantom/browser-injected-sdk", () => ({
@@ -153,11 +154,18 @@ describe("InjectedProvider", () => {
 
       const result = await provider.signMessage({
         message,
-        networkId: "solana:mainnet",
+        networkId: NetworkId.SOLANA_MAINNET,
       });
 
       expect(mockSolanaPlugin.signMessage).toHaveBeenCalledWith(new TextEncoder().encode(message));
-      expect(result).toBe("0102030405");
+      expect(result).toEqual({
+        signature: expect.any(String),
+        rawSignature: expect.any(String),
+      });
+      // Signature should be base58 encoded
+      expect(result.signature).toBe("7bWpTW"); // base58 of [1,2,3,4,5]
+      // Raw signature should be base64url encoded base58
+      expect(result.rawSignature).toBe("N2JXcFRX"); // base64url of "7bWpTW"
     });
 
     it("should sign message with Ethereum", async () => {
@@ -167,14 +175,17 @@ describe("InjectedProvider", () => {
 
       const result = await provider.signMessage({
         message,
-        networkId: "ethereum:mainnet",
+        networkId: NetworkId.ETHEREUM_MAINNET,
       });
 
       expect(mockEthereumPlugin.signPersonalMessage).toHaveBeenCalledWith(
         message,
         "0x742d35Cc6634C0532925a3b844Bc9e7595f6cE65",
       );
-      expect(result).toBe(mockSignature);
+      expect(result).toEqual({
+        signature: mockSignature,
+        rawSignature: expect.any(String),
+      });
     });
 
     it("should throw error when not connected", async () => {
@@ -183,7 +194,7 @@ describe("InjectedProvider", () => {
       await expect(
         provider.signMessage({
           message: "test",
-          networkId: "solana:mainnet",
+          networkId: NetworkId.SOLANA_MAINNET,
         }),
       ).rejects.toThrow("Wallet not connected");
     });
@@ -203,11 +214,15 @@ describe("InjectedProvider", () => {
 
       const result = await provider.signAndSendTransaction({
         transaction: mockTransaction,
-        networkId: "solana:mainnet",
+        networkId: NetworkId.SOLANA_MAINNET,
       });
 
       expect(mockSolanaPlugin.signAndSendTransaction).toHaveBeenCalledWith(mockTransaction);
-      expect(result).toEqual({ rawTransaction: mockSignature });
+      expect(result).toEqual({
+        hash: mockSignature,
+        rawTransaction: expect.any(String),
+        blockExplorer: expect.stringContaining("https://"),
+      });
     });
 
     it("should sign and send Ethereum transaction", async () => {
@@ -221,7 +236,7 @@ describe("InjectedProvider", () => {
 
       const result = await provider.signAndSendTransaction({
         transaction: mockTransaction,
-        networkId: "ethereum:mainnet",
+        networkId: NetworkId.ETHEREUM_MAINNET,
       });
 
       expect(mockEthereumPlugin.sendTransaction).toHaveBeenCalledWith({
@@ -233,7 +248,11 @@ describe("InjectedProvider", () => {
         maxPriorityFeePerGas: undefined,
         data: "0x",
       });
-      expect(result).toEqual({ rawTransaction: mockTxHash });
+      expect(result).toEqual({
+        hash: mockTxHash,
+        rawTransaction: expect.any(String),
+        blockExplorer: expect.stringContaining("https://"),
+      });
     });
 
     it("should throw error when not connected", async () => {
@@ -242,7 +261,7 @@ describe("InjectedProvider", () => {
       await expect(
         provider.signAndSendTransaction({
           transaction: { messageBytes: new Uint8Array([1, 2, 3]) },
-          networkId: "solana:mainnet",
+          networkId: NetworkId.SOLANA_MAINNET,
         }),
       ).rejects.toThrow("Wallet not connected");
     });

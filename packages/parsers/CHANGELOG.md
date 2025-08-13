@@ -1,5 +1,13 @@
 # @phantom/parsers
 
+## 0.0.5
+
+### Patch Changes
+
+- b379ec2: Added new responses for phantom API , including blockexplorer responses
+- Updated dependencies [b379ec2]
+  - @phantom/constants@0.0.2
+
 ## 0.0.4
 
 ### Patch Changes

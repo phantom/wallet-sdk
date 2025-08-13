@@ -1,5 +1,11 @@
 # @phantom/api-key-stamper
 
+## 0.1.2
+
+### Patch Changes
+
+- b379ec2: Added new responses for phantom API , including blockexplorer responses
+
 ## 0.1.1
 
 ### Patch Changes

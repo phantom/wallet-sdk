@@ -1,6 +1,6 @@
 {
   "name": "@phantom/api-key-stamper",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "API key stamper for Phantom Wallet SDK",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -39,6 +39,7 @@
   "dependencies": {
     "@phantom/base64url": "workspace:^",
     "@phantom/crypto": "workspace:^",
+    "@phantom/sdk-types": "workspace:^",
     "axios": "^1.10.0",
     "bs58": "^6.0.0",
     "buffer": "^6.0.3"

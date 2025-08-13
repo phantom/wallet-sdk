@@ -166,7 +166,7 @@ async function signMessage() {
     // Sign the message
     console.log(`\n🖊️  Signing message with Solana network...`);
 
-    const signature = await sdk.signMessage({
+    const result = await sdk.signMessage({
       walletId: wallet.walletId,
       message, // Plain text message - automatically parsed to base64url!
       networkId: NetworkId.SOLANA_MAINNET,
@@ -175,11 +175,15 @@ async function signMessage() {
     // Display results
     console.log(`\n✅ Message signed successfully!`);
     console.log(`\n📊 Signature Details:`);
-    console.log(`   Base64: ${signature}`);
-    console.log(`   Length: ${signature.length} characters`);
+    console.log(`   Human-readable: ${result.signature}`);
+    console.log(`   Raw (base64url): ${result.rawSignature}`);
+    console.log(`   Length: ${result.rawSignature.length} characters`);
+    if (result.blockExplorer) {
+      console.log(`   Block Explorer: ${result.blockExplorer}`);
+    }
 
-    // Convert to other formats
-    const signatureBuffer = Buffer.from(signature, "base64url");
+    // Convert raw signature to other formats
+    const signatureBuffer = Buffer.from(result.rawSignature, "base64url");
     const signatureHex = signatureBuffer.toString("hex");
     const signatureBytes = Array.from(signatureBuffer);
 
@@ -191,7 +195,7 @@ async function signMessage() {
     console.log(`   To verify this signature:`);
     console.log(`   - Public Key: ${wallet.solanaAddress}`);
     console.log(`   - Message: "${message}"`);
-    console.log(`   - Signature (base64): ${signature}`);
+    console.log(`   - Signature (base64): ${result.rawSignature}`);
 
     // Different network example
     console.log(`\n💡 Tips:`);

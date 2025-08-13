@@ -58,7 +58,7 @@ async function main() {
   // Step 3: Create organization using the create organization method
   console.log("\n🏢 Creating organization...");
   try {
-    const organization = await client.createOrganization("Demo Organization", keyPair);
+    const organization = await client.createOrganization("Demo Organization", keyPair.publicKey, "Demo Authenticator");
 
     demoData.organization = {
       organizationId: organization.organizationId,
@@ -145,12 +145,14 @@ async function main() {
     console.log("Addresses:", wallet.addresses);
 
     // Sign a message (ServerSDK accepts plain text)
-    const messageSignature = await sdk.signMessage({
+    const messageResult = await sdk.signMessage({
       walletId: wallet.walletId,
       message: "Hello from Phantom!",
       networkId: NetworkId.SOLANA_MAINNET,
     });
-    console.log("Message signature:", messageSignature);
+    console.log("Message signature result:", messageResult);
+    console.log("Human-readable signature:", messageResult.signature);
+    console.log("Raw signature:", messageResult.rawSignature);
 
     // Example: Sign a transaction (you'll need actual transaction data)
     // const signedTx = await sdk.signAndSendTransaction({
@@ -189,13 +191,13 @@ console.log("Ethereum:", ethereumAddress);
 console.log("Bitcoin:", bitcoinAddress);
 
 // Sign messages on different networks (ServerSDK accepts plain text)
-const solanaSignature = await sdk.signMessage({
+const solanaResult = await sdk.signMessage({
   walletId: wallet.walletId,
   message: "Solana message",
   networkId: NetworkId.SOLANA_MAINNET,
 });
 
-const ethereumSignature = await sdk.signMessage({
+const ethereumResult = await sdk.signMessage({
   walletId: wallet.walletId,
   message: "Ethereum message", 
   networkId: NetworkId.ETHEREUM_MAINNET,

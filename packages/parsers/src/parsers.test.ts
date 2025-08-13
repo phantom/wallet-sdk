@@ -63,6 +63,44 @@ describe("Solana Transaction Parser", () => {
     expect(decoded).toEqual(new Uint8Array([6, 7, 8, 9, 10]));
   });
 
+  it("should parse @solana/web3.js legacy Transaction", async () => {
+    const mockLegacyTransaction = {
+      serialize: jest.fn().mockReturnValue(new Uint8Array([1, 2, 3, 4, 5])),
+    };
+
+    const result = await parseTransaction(mockLegacyTransaction, "solana:mainnet");
+
+    expect(result.originalFormat).toBe("@solana/web3.js");
+    expect(result.base64url).toBeDefined();
+    expect(mockLegacyTransaction.serialize).toHaveBeenCalledWith({
+      requireAllSignatures: false,
+      verifySignatures: false,
+    });
+
+    // Verify the encoded data matches
+    const decoded = base64urlDecode(result.base64url);
+    expect(decoded).toEqual(new Uint8Array([1, 2, 3, 4, 5]));
+  });
+
+  it("should parse @solana/web3.js VersionedTransaction", async () => {
+    const mockVersionedTransaction = {
+      serialize: jest.fn().mockReturnValue(new Uint8Array([10, 20, 30, 40, 50])),
+    };
+
+    const result = await parseTransaction(mockVersionedTransaction, "solana:mainnet");
+
+    expect(result.originalFormat).toBe("@solana/web3.js");
+    expect(result.base64url).toBeDefined();
+    expect(mockVersionedTransaction.serialize).toHaveBeenCalledWith({
+      requireAllSignatures: false,
+      verifySignatures: false,
+    });
+
+    // Verify the encoded data matches
+    const decoded = base64urlDecode(result.base64url);
+    expect(decoded).toEqual(new Uint8Array([10, 20, 30, 40, 50]));
+  });
+
   it("should parse Solana transaction as raw bytes", async () => {
     const mockBytes = new Uint8Array([11, 12, 13, 14, 15]);
 
@@ -290,3 +328,4 @@ describe("Network Support", () => {
     }
   });
 });
+
