@@ -6,8 +6,11 @@
 import { Buffer } from "buffer";
 import bs58 from "bs58";
 
+
 // Cache for dynamically imported modules
 const moduleCache = new Map<string, any>();
+
+
 
 /**
  * Try to dynamically import a module, return null if not available
@@ -22,6 +25,7 @@ async function tryImport<T = any>(moduleName: string): Promise<T | null> {
     moduleCache.set(moduleName, module);
     return module;
   } catch (error) {
+    // Cache the failure to avoid repeated attempts
     moduleCache.set(moduleName, null);
     return null;
   }
@@ -261,6 +265,205 @@ export async function parseSuiTransactionDigest(base64RawTransaction: string): P
     return {
       digest: base64RawTransaction,
       fallback: true,
+    };
+  }
+}
+
+// ===== ARCHIVED RESPONSE PARSING FUNCTIONS =====
+// These functions were moved here to avoid dynamic import issues in React Native
+// but preserved in case we need to restore this functionality later
+
+import type { NetworkId } from "@phantom/constants";
+import { getExplorerUrl } from "@phantom/constants";
+import { base64urlDecode } from "@phantom/base64url";
+
+// Import the interfaces we need
+export interface ArchivedParsedSignatureResult {
+  signature: string; // Human-readable signature (hex/base58)
+  rawSignature: string; // Original base64url signature from server
+  blockExplorer?: string; // Explorer link (if supported)
+}
+
+export interface ArchivedParsedTransactionResult {
+  hash?: string; // Transaction hash/signature
+  rawTransaction: string; // Original base64url transaction from server
+  blockExplorer?: string; // Explorer link to transaction
+}
+
+/**
+ * ARCHIVED: Parse Solana signature response
+ */
+export function archivedParseSolanaSignatureResponse(base64Response: string): ArchivedParsedSignatureResult {
+  try {
+    // Solana signatures are typically 64 bytes, base58 encoded
+    // The response might be base64url encoded signature bytes
+    const signatureBytes = base64urlDecode(base64Response);
+    const signature = bs58.encode(signatureBytes);
+
+    return {
+      signature,
+      rawSignature: base64Response,
+    };
+  } catch (error) {
+    // Fallback: assume it's already a base58 signature
+    return {
+      signature: base64Response,
+      rawSignature: base64Response,
+    };
+  }
+}
+
+/**
+ * ARCHIVED: Parse Solana transaction response to extract signature using dynamic imports
+ */
+export async function archivedParseSolanaTransactionResponse(
+  base64RawTransaction: string,
+  networkId: NetworkId,
+): Promise<ArchivedParsedTransactionResult> {
+  try {
+   
+    const result = await parseSolanaTransactionSignature(base64RawTransaction);
+
+    return {
+      hash: result.signature,
+      rawTransaction: base64RawTransaction,
+      blockExplorer: getExplorerUrl(networkId, "transaction", result.signature),
+    };
+  } catch (error) {
+    return {
+      rawTransaction: base64RawTransaction,
+    };
+  }
+}
+
+/**
+ * ARCHIVED: Parse EVM signature response
+ */
+export function archivedParseEVMSignatureResponse(base64Response: string): ArchivedParsedSignatureResult {
+  try {
+    // EVM signatures are typically 65 bytes (r + s + v)
+    const signatureBytes = base64urlDecode(base64Response);
+    const signature = "0x" + Buffer.from(signatureBytes).toString("hex");
+
+    return {
+      signature,
+      rawSignature: base64Response,
+      // Note: Most block explorers don't have direct signature lookup, only transaction lookup
+    };
+  } catch (error) {
+    // Fallback: assume it's already hex format
+    const signature = base64Response.startsWith("0x") ? base64Response : "0x" + base64Response;
+    return {
+      signature,
+      rawSignature: base64Response,
+    };
+  }
+}
+
+/**
+ * ARCHIVED: Parse EVM transaction response to extract hash using dynamic imports
+ */
+export async function archivedParseEVMTransactionResponse(
+  base64RawTransaction: string,
+  networkId: NetworkId,
+): Promise<ArchivedParsedTransactionResult> {
+  try {
+    const result = await parseEVMTransactionHash(base64RawTransaction);
+
+    return {
+      hash: result.hash,
+      rawTransaction: base64RawTransaction,
+      blockExplorer: getExplorerUrl(networkId, "transaction", result.hash),
+    };
+  } catch (error) {
+    return {
+      rawTransaction: base64RawTransaction,
+    };
+  }
+}
+
+/**
+ * ARCHIVED: Parse Sui signature response
+ */
+export function archivedParseSuiSignatureResponse(base64Response: string): ArchivedParsedSignatureResult {
+  try {
+    // Sui uses base64 encoded signatures
+    const signatureBytes = base64urlDecode(base64Response);
+    const signature = Buffer.from(signatureBytes).toString("base64");
+
+    return {
+      signature,
+      rawSignature: base64Response,
+    };
+  } catch (error) {
+    return {
+      signature: base64Response,
+      rawSignature: base64Response,
+    };
+  }
+}
+
+/**
+ * ARCHIVED: Parse Sui transaction response using dynamic imports
+ */
+export async function archivedParseSuiTransactionResponse(
+  base64RawTransaction: string,
+  networkId: NetworkId,
+): Promise<ArchivedParsedTransactionResult> {
+  try {
+    const result = await parseSuiTransactionDigest(base64RawTransaction);
+
+    return {
+      hash: result.digest,
+      rawTransaction: base64RawTransaction,
+      blockExplorer: getExplorerUrl(networkId, "transaction", result.digest),
+    };
+  } catch (error) {
+    return {
+      rawTransaction: base64RawTransaction,
+    };
+  }
+}
+
+/**
+ * ARCHIVED: Parse Bitcoin signature response
+ */
+export function archivedParseBitcoinSignatureResponse(base64Response: string): ArchivedParsedSignatureResult {
+  try {
+    // Bitcoin signatures are DER encoded
+    const signatureBytes = base64urlDecode(base64Response);
+    const signature = Buffer.from(signatureBytes).toString("hex");
+
+    return {
+      signature,
+      rawSignature: base64Response,
+    };
+  } catch (error) {
+    return {
+      signature: base64Response,
+      rawSignature: base64Response,
+    };
+  }
+}
+
+/**
+ * ARCHIVED: Parse Bitcoin transaction response using dynamic imports
+ */
+export async function archivedParseBitcoinTransactionResponse(
+  base64RawTransaction: string,
+  networkId: NetworkId,
+): Promise<ArchivedParsedTransactionResult> {
+  try {
+    const result = await parseBitcoinTransactionHash(base64RawTransaction);
+
+    return {
+      hash: result.hash,
+      rawTransaction: base64RawTransaction,
+      blockExplorer: getExplorerUrl(networkId, "transaction", result.hash),
+    };
+  } catch (error) {
+    return {
+      rawTransaction: base64RawTransaction,
     };
   }
 }

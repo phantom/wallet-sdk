@@ -901,6 +901,7 @@ describe("EmbeddedProvider Auth Flows", () => {
     it("should sign and send transactions when connected", async () => {
       mockClient.signAndSendTransaction.mockResolvedValue({
         rawTransaction: "base64url-raw-transaction-data",
+        hash: "transaction-hash",
       });
 
       const result = await provider.signAndSendTransaction({

@@ -1,6 +1,6 @@
 import { PhantomClient } from "@phantom/client";
 import type { AddressType } from "@phantom/client";
-import { parseMessage, parseTransaction, parseSignMessageResponse, parseTransactionResponse } from "@phantom/parsers";
+import { parseMessage, parseTransaction, parseSignMessageResponse, parseTransactionResponse,type ParsedTransactionResult, type ParsedSignatureResult } from "@phantom/parsers";
 
 import type {
   PlatformAdapter,
@@ -16,9 +16,7 @@ import type {
   EmbeddedProviderConfig,
   ConnectResult,
   SignMessageParams,
-  SignMessageResult,
   SignAndSendTransactionParams,
-  SignedTransaction,
   WalletAddress,
   AuthOptions,
 } from "./types";
@@ -302,7 +300,7 @@ export class EmbeddedProvider {
     this.addresses = [];
   }
 
-  async signMessage(params: SignMessageParams): Promise<SignMessageResult> {
+  async signMessage(params: SignMessageParams): Promise<ParsedSignatureResult> {
     if (!this.client || !this.walletId) {
       throw new Error("Not connected");
     }
@@ -321,7 +319,7 @@ export class EmbeddedProvider {
     return parseSignMessageResponse(rawResponse, params.networkId);
   }
 
-  async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<SignedTransaction> {
+  async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<ParsedTransactionResult> {
     if (!this.client || !this.walletId) {
       throw new Error("Not connected");
     }
