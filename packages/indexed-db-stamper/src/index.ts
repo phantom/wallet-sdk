@@ -1,5 +1,7 @@
 import { base64urlEncode } from "@phantom/base64url";
 import type { Buffer } from "buffer";
+import bs58 from "bs58";
+import { type StamperWithKeyManagement, type StamperKeyInfo, Algorithm } from "@phantom/sdk-types";
 
 export type IndexedDbStamperConfig = {
   dbName?: string;
@@ -7,29 +9,25 @@ export type IndexedDbStamperConfig = {
   keyName?: string;
 };
 
-export type StamperKeyInfo = {
-  keyId: string;
-  publicKey: string;
-};
-
 /**
  * IndexedDB-based key manager that stores cryptographic keys securely in IndexedDB
  * and performs signing operations without ever exposing private key material.
  * 
  * Security model:
- * - Generates non-extractable ECDSA P-256 keypairs using Web Crypto API
+ * - Generates non-extractable Ed25519 keypairs using Web Crypto API
  * - Stores keys entirely within Web Crypto API secure context
  * - Private keys NEVER exist in JavaScript memory
  * - Provides signing methods without exposing private keys
  * - Maximum security using browser's native cryptographic isolation
  */
-export class IndexedDbStamper {
+export class IndexedDbStamper implements StamperWithKeyManagement {
   private dbName: string;
   private storeName: string;
   private keyName: string;
   private db: IDBDatabase | null = null;
   private keyInfo: StamperKeyInfo | null = null;
   private cryptoKeyPair: CryptoKeyPair | null = null;
+  algorithm = Algorithm.ed25519; // Use Ed25519 for maximum security and performance
 
   constructor(config: IndexedDbStamperConfig = {}) {
     if (typeof window === "undefined" || !window.indexedDB) {
@@ -78,10 +76,21 @@ export class IndexedDbStamper {
 
   /**
    * Create X-Phantom-Stamp header value using stored private key
-   * @param data - Data to sign (Buffer)
+   * @param params - Parameters object with data and optional type/options
    * @returns Complete X-Phantom-Stamp header value
    */
-  async stamp(data: Buffer): Promise<string> {
+  async stamp(params: {
+    data: Buffer;
+    type?: 'PKI';
+    idToken?: never;
+    salt?: never;
+  } | {
+    data: Buffer;
+    type: 'OIDC';
+    idToken: string;
+    salt: string;
+  }): Promise<string> {
+    const { data, type = "PKI" } = params;
     if (!this.keyInfo || !this.cryptoKeyPair) {
       throw new Error("Stamper not initialized. Call init() first.");
     }
@@ -92,28 +101,34 @@ export class IndexedDbStamper {
     // Sign using Web Crypto API with non-extractable private key
     const signature = await crypto.subtle.sign(
       {
-        name: "ECDSA",
+        name:this.algorithm,
         hash: "SHA-256",
       },
       this.cryptoKeyPair.privateKey,
       dataBytes as BufferSource
     );
 
-    // Convert IEEE P1363 signature to DER format
-    const derSignature = this.convertP1363ToDer(new Uint8Array(signature));
-    const signatureBase64url = base64urlEncode(derSignature);
+    const signatureBase64url = base64urlEncode(new Uint8Array(signature));
     
     // Create the stamp structure
-    const stampData = {
-      // For IndexedDB stamper, we use the raw public key (already base64url encoded)
-      publicKey: this.keyInfo.publicKey,
+    const stampData = type === "PKI" ?  {
+      // Decode base58 public key to bytes, then encode as base64url (consistent with ApiKeyStamper)
+      publicKey: base64urlEncode(bs58.decode(this.keyInfo.publicKey)),
       signature: signatureBase64url,
       kind: "PKI" as const,
+      algorithm:this.algorithm,
+    } :  {
+      kind: "OIDC",
+      idToken: (params as any).idToken,
+      publicKey: base64urlEncode(bs58.decode(this.keyInfo.publicKey)),
+      salt: (params as any).salt,
+      algorithm:this.algorithm,
+      signature: signatureBase64url
     };
 
     // Encode the entire stamp as base64url JSON
     const stampJson = JSON.stringify(stampData);
-    return base64urlEncode(new TextEncoder().encode(stampJson));
+    return base64urlEncode(stampJson);
   }
 
 
@@ -177,83 +192,34 @@ export class IndexedDbStamper {
   }
 
   private async generateAndStoreKeyPair(): Promise<StamperKeyInfo> {
-    // Generate non-extractable ECDSA P-256 key pair using Web Crypto API
+    // Generate non-extractable Ed25519 key pair using Web Crypto API
     this.cryptoKeyPair = await crypto.subtle.generateKey(
       {
-        name: "ECDSA",
-        namedCurve: "P-256",
+        name: "Ed25519",
+
       },
       false, // non-extractable - private key can never be exported
       ["sign", "verify"]
     );
 
-    // Export public key for storage and API use
-    const publicKeyBuffer = await crypto.subtle.exportKey("spki", this.cryptoKeyPair.publicKey);
-    const publicKeyBase64url = base64urlEncode(new Uint8Array(publicKeyBuffer));
+    // Export public key in raw format (no ASN.1/DER wrapper)
+    const rawPublicKeyBuffer = await crypto.subtle.exportKey("raw", this.cryptoKeyPair.publicKey);
+    // Store raw public key as base58 (consistent with other stampers)
+    const publicKeyBase58 = bs58.encode(new Uint8Array(rawPublicKeyBuffer));
     
-    // Create a deterministic key ID from the public key
-    const keyIdBuffer = await crypto.subtle.digest("SHA-256", publicKeyBuffer);
+    // Create a deterministic key ID from the raw public key
+    const keyIdBuffer = await crypto.subtle.digest("SHA-256", rawPublicKeyBuffer);
     const keyId = base64urlEncode(new Uint8Array(keyIdBuffer)).substring(0, 16);
 
     const keyInfo: StamperKeyInfo = {
       keyId,
-      publicKey: publicKeyBase64url,
+      publicKey: publicKeyBase58,
     };
 
     // Store the non-extractable key pair and info in IndexedDB
     await this.storeKeyPair(this.cryptoKeyPair, keyInfo);
 
     return keyInfo;
-  }
-
-  /**
-   * Convert IEEE P1363 signature format to DER format
-   * Web Crypto API returns signatures in IEEE P1363 format (r||s)
-   * but many systems expect DER format
-   */
-  private convertP1363ToDer(p1363Signature: Uint8Array): Uint8Array {
-    // For P-256, signature is 64 bytes: 32 bytes r + 32 bytes s
-    if (p1363Signature.length !== 64) {
-      throw new Error("Invalid P1363 signature length for P-256");
-    }
-
-    const r = p1363Signature.slice(0, 32);
-    const s = p1363Signature.slice(32, 64);
-
-    // Helper to encode integer for DER
-    const encodeInteger = (bytes: Uint8Array): Uint8Array => {
-      // Remove leading zeros, but keep at least one byte
-      let start = 0;
-      while (start < bytes.length - 1 && bytes[start] === 0) {
-        start++;
-      }
-      const trimmed = bytes.slice(start);
-      
-      // If high bit is set, prepend 0x00 to indicate positive number
-      const needsPadding = (trimmed[0] & 0x80) !== 0;
-      const padded = needsPadding ? new Uint8Array([0, ...trimmed]) : trimmed;
-      
-      // DER integer: 0x02 (INTEGER) + length + data
-      const result = new Uint8Array(2 + padded.length);
-      result[0] = 0x02; // INTEGER tag
-      result[1] = padded.length; // length
-      result.set(padded, 2); // data
-      
-      return result;
-    };
-
-    const rDer = encodeInteger(r);
-    const sDer = encodeInteger(s);
-    
-    // DER sequence: 0x30 (SEQUENCE) + length + rDer + sDer
-    const contentLength = rDer.length + sDer.length;
-    const result = new Uint8Array(2 + contentLength);
-    result[0] = 0x30; // SEQUENCE tag
-    result[1] = contentLength; // length
-    result.set(rDer, 2);
-    result.set(sDer, 2 + rDer.length);
-    
-    return result;
   }
 
   private async storeKeyPair(keyPair: CryptoKeyPair, keyInfo: StamperKeyInfo): Promise<void> {

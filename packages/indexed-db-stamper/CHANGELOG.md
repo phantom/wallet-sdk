@@ -6,6 +6,6 @@
 
 - Initial release of IndexedDB stamper
 - Secure non-extractable key storage in IndexedDB
-- ECDSA P-256 signature support with DER format conversion
+- Ed25519 signature support with native format
 - Compatible interface with other Phantom SDK stampers
 - Comprehensive test suite with browser environment mocking

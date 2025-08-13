@@ -41,13 +41,14 @@ import { DerivationPath, getNetworkConfig } from "./constants";
 import { deriveSubmissionConfig } from "./caip2-mappings";
 import {
   type PhantomClientConfig,
-  type Stamper,
   type CreateWalletResult,
   type SignedTransaction,
   type GetWalletsResult,
   type SignMessageParams,
   type SignAndSendTransactionParams,
 } from "./types";
+
+import type {Stamper} from "@phantom/sdk-types";
 
 // TODO(napas): Auto generate this from the OpenAPI spec
 export interface SubmissionConfig {
@@ -59,6 +60,7 @@ export class PhantomClient {
   private config: PhantomClientConfig;
   private kmsApi: KMSRPCApi;
   private axiosInstance: AxiosInstance;
+  private stamper?: Stamper;
 
   constructor(config: PhantomClientConfig, stamper?: Stamper) {
     this.config = config;
@@ -76,6 +78,7 @@ export class PhantomClient {
       this.axiosInstance.interceptors.request.use(async config => {
         return await this.stampRequest(config, stamper);
       });
+      this.stamper = stamper;
     }
 
     // Configure the KMS API client
@@ -207,8 +210,11 @@ export class PhantomClient {
 
       const response = await this.kmsApi.postKmsRpc(request);
       const result = response.data.result as SignedTransactionWithPublicKey;
+      const rpcSubmissionResult = (response.data as any)["rpc_submission_result"];
+      const hash = rpcSubmissionResult ? rpcSubmissionResult.result : null;
       return {
         rawTransaction: result.transaction as unknown as string, // Base64 encoded signed transaction
+        hash
       };
     } catch (error: any) {
       console.error("Failed to sign and send transaction:", error.response?.data || error.message);
@@ -367,7 +373,7 @@ export class PhantomClient {
       if (!name) {
         throw new Error("Organization name is required");
       }
- 
+
       const params: CreateOrganizationRequest = {
         organizationName: name,
         users: [
@@ -375,7 +381,7 @@ export class PhantomClient {
             role: KmsUserRole.admin,
             authenticators: [
               {
-                algorithm: Algorithm.ed25519,
+                algorithm: this.stamper?.algorithm || Algorithm.ed25519,
                 authenticatorKind: "keypair" as any,
                 publicKey: base64urlEncode(bs58.decode(publicKey)) as any,
                 authenticatorName: authenticatorName || `KeyPair ${Date.now()}`,
@@ -393,7 +399,6 @@ export class PhantomClient {
       } as any;
 
       // Creating organization with request
-
       const response = await this.kmsApi.postKmsRpc(request);
       const result = response.data.result as ExternalKmsOrganization;
 
@@ -482,7 +487,7 @@ export class PhantomClient {
     
     // Get complete stamp from stamper
 
-    const stamp = await stamper.stamp(dataUtf8);
+    const stamp = await stamper.stamp({ data: dataUtf8 });
 
     // Add the stamp header
     config.headers = config.headers || {};

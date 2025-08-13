@@ -25,6 +25,7 @@
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
   },
   "devDependencies": {
+    "@types/bs58": "^5.0.0",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.0",
     "eslint": "8.53.0",
@@ -40,6 +41,9 @@
   "dependencies": {
     "@phantom/base64url": "workspace:^",
     "@phantom/crypto": "workspace:^",
+    "@phantom/embedded-provider-core": "workspace:^",
+    "@phantom/sdk-types": "workspace:^",
+    "bs58": "^6.0.0",
     "buffer": "^6.0.3"
   },
   "files": [

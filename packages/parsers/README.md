@@ -169,6 +169,10 @@ The parsers automatically detect the input format and handle conversion appropri
 - **Hex strings** - "0x"-prefixed hex-encoded transaction data
 - **Base64/Base64url** - Already encoded transaction data
 
+## Cross-Platform Compatibility
+
+The parsers package is designed to work across different JavaScript environments including browsers, Node.js, and React Native. The package gracefully handles missing dependencies and provides consistent parsing functionality across all supported platforms.
+
 ## Error Handling
 
 The parsers will throw descriptive errors for:

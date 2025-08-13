@@ -1,6 +1,6 @@
 import { PhantomClient } from "@phantom/client";
 import type { AddressType } from "@phantom/client";
-import { parseMessage, parseTransaction, parseSignMessageResponse, parseTransactionResponse } from "@phantom/parsers";
+import { parseMessage, parseTransaction, parseSignMessageResponse, parseTransactionResponse,type ParsedTransactionResult, type ParsedSignatureResult } from "@phantom/parsers";
 
 import type {
   PlatformAdapter,
@@ -10,23 +10,20 @@ import type {
   EmbeddedStorage,
   AuthProvider,
   URLParamsAccessor,
-  StamperWithKeyManagement,
   StamperInfo,
 } from "./interfaces";
 import type {
   EmbeddedProviderConfig,
   ConnectResult,
   SignMessageParams,
-  SignMessageResult,
   SignAndSendTransactionParams,
-  SignedTransaction,
   WalletAddress,
   AuthOptions,
 } from "./types";
 import { JWTAuth } from "./auth/jwt-auth";
 import { generateSessionId } from "./utils/session";
 import { retryWithBackoff } from "./utils/retry";
-
+import type { StamperWithKeyManagement } from "@phantom/sdk-types";
 export class EmbeddedProvider {
   private config: EmbeddedProviderConfig;
   private platform: PlatformAdapter;
@@ -151,7 +148,7 @@ export class EmbeddedProvider {
     // Initialize stamper (generates keypair in IndexedDB)
     this.logger.log("EMBEDDED_PROVIDER", "Initializing stamper");
     const stamperInfo = await this.stamper.init();
-    this.logger.log("EMBEDDED_PROVIDER", "Stamper initialized", { publicKey: stamperInfo.publicKey, keyId: stamperInfo.keyId });
+    this.logger.log("EMBEDDED_PROVIDER", "Stamper initialized", { publicKey: stamperInfo.publicKey, keyId: stamperInfo.keyId, algorithm: this.stamper.algorithm });
 
     // Create a temporary client with the stamper
     this.logger.log("EMBEDDED_PROVIDER", "Creating temporary PhantomClient");
@@ -303,7 +300,7 @@ export class EmbeddedProvider {
     this.addresses = [];
   }
 
-  async signMessage(params: SignMessageParams): Promise<SignMessageResult> {
+  async signMessage(params: SignMessageParams): Promise<ParsedSignatureResult> {
     if (!this.client || !this.walletId) {
       throw new Error("Not connected");
     }
@@ -322,7 +319,7 @@ export class EmbeddedProvider {
     return parseSignMessageResponse(rawResponse, params.networkId);
   }
 
-  async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<SignedTransaction> {
+  async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<ParsedTransactionResult> {
     if (!this.client || !this.walletId) {
       throw new Error("Not connected");
     }
@@ -338,7 +335,7 @@ export class EmbeddedProvider {
     });
 
     // Parse the response to get transaction hash and explorer URL
-    return await parseTransactionResponse(rawResponse.rawTransaction, params.networkId);
+    return await parseTransactionResponse(rawResponse.rawTransaction, params.networkId, rawResponse.hash);
   }
 
   getAddresses(): WalletAddress[] {
