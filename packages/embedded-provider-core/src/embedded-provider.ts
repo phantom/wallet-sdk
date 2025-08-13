@@ -337,7 +337,7 @@ export class EmbeddedProvider {
     });
 
     // Parse the response to get transaction hash and explorer URL
-    return await parseTransactionResponse(rawResponse.rawTransaction, params.networkId);
+    return await parseTransactionResponse(rawResponse.rawTransaction, params.networkId, rawResponse.hash);
   }
 
   getAddresses(): WalletAddress[] {

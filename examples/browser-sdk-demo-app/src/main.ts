@@ -33,6 +33,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const signTransactionBtn = document.getElementById("signTransactionBtn") as HTMLButtonElement;
   const disconnectBtn = document.getElementById("disconnectBtn") as HTMLButtonElement;
 
+  // Address display elements
+  const addressesSection = document.getElementById("addressesSection") as HTMLDivElement;
+  const addressesList = document.getElementById("addressesList") as HTMLDivElement;
+
   console.log("Found buttons:", {
     connectBtn: !!connectBtn,
     getAccountBtn: !!getAccountBtn,
@@ -171,6 +175,41 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Update addresses display
+  function updateAddressesDisplay(addresses: any[]) {
+    if (!addressesSection || !addressesList) return;
+
+    if (addresses.length === 0) {
+      addressesSection.style.display = "none";
+      return;
+    }
+
+    // Show the section
+    addressesSection.style.display = "block";
+
+    // Clear existing content
+    addressesList.innerHTML = "";
+
+    // Add each address
+    addresses.forEach(address => {
+      const addressItem = document.createElement("div");
+      addressItem.className = "address-item";
+      
+      const addressType = document.createElement("div");
+      addressType.className = "address-type";
+      addressType.textContent = address.addressType;
+      
+      const addressValue = document.createElement("div");
+      addressValue.className = "address-value";
+      addressValue.textContent = address.address;
+      addressValue.title = `Click to select ${address.addressType} address`;
+      
+      addressItem.appendChild(addressType);
+      addressItem.appendChild(addressValue);
+      addressesList.appendChild(addressItem);
+    });
+  }
+
   // Update button states
   function updateButtonStates(connected: boolean) {
     if (connectBtn) connectBtn.disabled = connected;
@@ -196,6 +235,8 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Connected successfully:", result);
         console.log(`Connected! Addresses: ${result.addresses.map(a => `${a.addressType}: ${a.address}`).join(", ")}`);
 
+        // Update UI with addresses and button states
+        updateAddressesDisplay(connectedAddresses);
         updateButtonStates(true);
       } catch (error) {
         console.error("Error connecting:", error);
@@ -214,7 +255,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const addresses = await sdk.getAddresses();
+        connectedAddresses = addresses;
         console.log("Current addresses:", addresses);
+        
+        // Update the display with refreshed addresses
+        updateAddressesDisplay(addresses);
         alert(`Addresses: ${addresses.map(a => `${a.addressType}: ${a.address}`).join(", ")}`);
       } catch (error) {
         console.error("Error getting addresses:", error);
@@ -441,6 +486,7 @@ document.addEventListener("DOMContentLoaded", () => {
           sdk = null;
           connectedAddresses = [];
           alert("Disconnected successfully");
+          updateAddressesDisplay([]);
           updateButtonStates(false);
         }
       } catch (error) {

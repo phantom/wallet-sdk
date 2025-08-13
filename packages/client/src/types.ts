@@ -17,6 +17,7 @@ export type Transaction = string; // base64url encoded transaction
 
 export interface SignedTransaction {
   rawTransaction: string; // base64url encoded signed transaction
+  hash?: string; // Optional transaction hash if available
 }
 
 export interface GetWalletsResult {

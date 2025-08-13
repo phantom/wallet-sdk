@@ -210,8 +210,11 @@ export class PhantomClient {
 
       const response = await this.kmsApi.postKmsRpc(request);
       const result = response.data.result as SignedTransactionWithPublicKey;
+      const rpcSubmissionResult = (response.data as any)["rpc_submission_result"];
+      const hash = rpcSubmissionResult ? rpcSubmissionResult.result : null;
       return {
         rawTransaction: result.transaction as unknown as string, // Base64 encoded signed transaction
+        hash
       };
     } catch (error: any) {
       console.error("Failed to sign and send transaction:", error.response?.data || error.message);

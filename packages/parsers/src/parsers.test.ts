@@ -341,7 +341,8 @@ describe("Response Parsing", () => {
 
       expect(result.signature).toBeDefined();
       expect(result.rawSignature).toBe(base64Response);
-      expect(result.blockExplorer).toContain("solscan.io");
+      // Solana signature responses don't include block explorer URLs
+      expect(result.blockExplorer).toBeUndefined();
     });
 
     it("should parse EVM signature response", () => {
@@ -373,7 +374,8 @@ describe("Response Parsing", () => {
       // Should fallback to original response
       expect(result.signature).toBeDefined();
       expect(result.rawSignature).toBe(invalidBase64);
-      expect(result.blockExplorer).toContain("solscan.io");
+      // Solana signature responses don't include block explorer URLs
+      expect(result.blockExplorer).toBeUndefined();
     });
   });
 
@@ -393,6 +395,19 @@ describe("Response Parsing", () => {
       expect(result.blockExplorer).toContain(result.hash);
     });
 
+    it("should use provided hash when passed", async () => {
+      const mockTransactionBytes = new Uint8Array(100).fill(123);
+      const base64Response = base64urlEncode(mockTransactionBytes);
+      const providedHash = "custom-hash-123";
+
+      const result = await parseTransactionResponse(base64Response, NetworkId.SOLANA_MAINNET, providedHash);
+
+      expect(result.hash).toBe(providedHash);
+      expect(result.rawTransaction).toBe(base64Response);
+      expect(result.blockExplorer).toContain("solscan.io");
+      expect(result.blockExplorer).toContain(providedHash);
+    });
+
     it("should parse EVM transaction response", async () => {
       const mockTransactionBytes = new Uint8Array(100).fill(77);
       const base64Response = base64urlEncode(mockTransactionBytes);
@@ -403,6 +418,19 @@ describe("Response Parsing", () => {
       expect(result.rawTransaction).toBe(base64Response);
       expect(result.blockExplorer).toContain("etherscan.io");
       expect(result.blockExplorer).toContain(result.hash);
+    });
+
+    it("should use provided hash for EVM networks", async () => {
+      const mockTransactionBytes = new Uint8Array(100).fill(88);
+      const base64Response = base64urlEncode(mockTransactionBytes);
+      const providedHash = "0xabcdef123456789";
+
+      const result = await parseTransactionResponse(base64Response, NetworkId.ETHEREUM_MAINNET, providedHash);
+
+      expect(result.hash).toBe(providedHash);
+      expect(result.rawTransaction).toBe(base64Response);
+      expect(result.blockExplorer).toContain("etherscan.io");
+      expect(result.blockExplorer).toContain(providedHash);
     });
 
     it("should handle parsing errors gracefully", async () => {
@@ -434,6 +462,28 @@ describe("Response Parsing", () => {
         expect(result.hash).toBeDefined();
         expect(result.hash).not.toBe("");
         expect(result.rawTransaction).toBe(base64Response);
+      }
+    });
+
+    it("should work with all supported networks when hash is provided", async () => {
+      const mockBytes = new Uint8Array(64).fill(99);
+      const base64Response = base64urlEncode(mockBytes);
+      const providedHash = "test-hash-123";
+
+      const networks = [
+        NetworkId.SOLANA_MAINNET,
+        NetworkId.ETHEREUM_MAINNET,
+        NetworkId.POLYGON_MAINNET,
+        NetworkId.BASE_MAINNET,
+        NetworkId.SUI_MAINNET,
+        NetworkId.BITCOIN_MAINNET,
+      ];
+
+      for (const network of networks) {
+        const result = await parseTransactionResponse(base64Response, network, providedHash);
+        expect(result.hash).toBe(providedHash);
+        expect(result.rawTransaction).toBe(base64Response);
+        expect(result.blockExplorer).toContain(providedHash);
       }
     });
 

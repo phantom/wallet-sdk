@@ -14,7 +14,7 @@ export type IndexedDbStamperConfig = {
  * and performs signing operations without ever exposing private key material.
  * 
  * Security model:
- * - Generates non-extractable ECDSA P-256 (secp256r1) keypairs using Web Crypto API
+ * - Generates non-extractable Ed25519 keypairs using Web Crypto API
  * - Stores keys entirely within Web Crypto API secure context
  * - Private keys NEVER exist in JavaScript memory
  * - Provides signing methods without exposing private keys
@@ -27,7 +27,7 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
   private db: IDBDatabase | null = null;
   private keyInfo: StamperKeyInfo | null = null;
   private cryptoKeyPair: CryptoKeyPair | null = null;
-  algorithm = Algorithm.secp256r1; // Use ECDSA P-256 (secp256r1) for maximum browser compatibility
+  algorithm = Algorithm.ed25519; // Use Ed25519 for maximum security and performance
 
   constructor(config: IndexedDbStamperConfig = {}) {
     if (typeof window === "undefined" || !window.indexedDB) {
@@ -101,7 +101,7 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
     // Sign using Web Crypto API with non-extractable private key
     const signature = await crypto.subtle.sign(
       {
-        name: "ECDSA",
+        name:this.algorithm,
         hash: "SHA-256",
       },
       this.cryptoKeyPair.privateKey,
@@ -116,13 +116,13 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
       publicKey: base64urlEncode(bs58.decode(this.keyInfo.publicKey)),
       signature: signatureBase64url,
       kind: "PKI" as const,
-      algorithm: this.algorithm,
+      algorithm:this.algorithm,
     } :  {
       kind: "OIDC",
       idToken: (params as any).idToken,
       publicKey: base64urlEncode(bs58.decode(this.keyInfo.publicKey)),
       salt: (params as any).salt,
-      algorithm: this.algorithm,
+      algorithm:this.algorithm,
       signature: signatureBase64url
     };
 
@@ -192,11 +192,11 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
   }
 
   private async generateAndStoreKeyPair(): Promise<StamperKeyInfo> {
-    // Generate non-extractable ECDSA P-256 key pair using Web Crypto API
+    // Generate non-extractable Ed25519 key pair using Web Crypto API
     this.cryptoKeyPair = await crypto.subtle.generateKey(
       {
-        name: "ECDSA",
-        namedCurve: "P-256",
+        name: "Ed25519",
+
       },
       false, // non-extractable - private key can never be exported
       ["sign", "verify"]
@@ -221,57 +221,6 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
 
     return keyInfo;
   }
-
-  /**
-   * Convert IEEE P1363 signature format to DER format
-   * Web Crypto API returns signatures in IEEE P1363 format (r||s)
-   * but many systems expect DER format
-   */
-  private convertP1363ToDer(p1363Signature: Uint8Array): Uint8Array {
-    // For P-256, signature is 64 bytes: 32 bytes r + 32 bytes s
-    if (p1363Signature.length !== 64) {
-      throw new Error("Invalid P1363 signature length for P-256");
-    }
-
-    const r = p1363Signature.slice(0, 32);
-    const s = p1363Signature.slice(32, 64);
-
-    // Helper to encode integer for DER
-    const encodeInteger = (bytes: Uint8Array): Uint8Array => {
-      // Remove leading zeros, but keep at least one byte
-      let start = 0;
-      while (start < bytes.length - 1 && bytes[start] === 0) {
-        start++;
-      }
-      const trimmed = bytes.slice(start);
-      
-      // If high bit is set, prepend 0x00 to indicate positive number
-      const needsPadding = (trimmed[0] & 0x80) !== 0;
-      const padded = needsPadding ? new Uint8Array([0, ...trimmed]) : trimmed;
-      
-      // DER integer: 0x02 (INTEGER) + length + data
-      const result = new Uint8Array(2 + padded.length);
-      result[0] = 0x02; // INTEGER tag
-      result[1] = padded.length; // length
-      result.set(padded, 2); // data
-      
-      return result;
-    };
-
-    const rDer = encodeInteger(r);
-    const sDer = encodeInteger(s);
-    
-    // DER sequence: 0x30 (SEQUENCE) + length + rDer + sDer
-    const contentLength = rDer.length + sDer.length;
-    const result = new Uint8Array(2 + contentLength);
-    result[0] = 0x30; // SEQUENCE tag
-    result[1] = contentLength; // length
-    result.set(rDer, 2);
-    result.set(sDer, 2 + rDer.length);
-    
-    return result;
-  }
-
 
   private async storeKeyPair(keyPair: CryptoKeyPair, keyInfo: StamperKeyInfo): Promise<void> {
     if (!this.db) {

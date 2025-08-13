@@ -109,7 +109,7 @@ describe("IndexedDbStamper", () => {
       expect(keyInfo.keyId.length).toBe(16);
 
       expect(mockGenerateKey).toHaveBeenCalledWith(
-        { name: "ECDSA", namedCurve: "P-256" },
+        { name: "Ed25519" },
         false,
         ["sign", "verify"]
       );
@@ -145,7 +145,7 @@ describe("IndexedDbStamper", () => {
 
       const mockPublicKeyBuffer = new ArrayBuffer(91);
       const mockKeyIdBuffer = new ArrayBuffer(32);
-      const mockSignature = new ArrayBuffer(64); // P-256 signature length
+      const mockSignature = new ArrayBuffer(64); // Ed25519 signature length
 
       mockGenerateKey.mockResolvedValue(mockKeyPair);
       mockExportKey.mockResolvedValue(mockPublicKeyBuffer);
@@ -162,7 +162,9 @@ describe("IndexedDbStamper", () => {
       expect(typeof stamp).toBe("string");
       expect(stamp.length).toBeGreaterThan(0);
       expect(mockSign).toHaveBeenCalledWith(
-        { name: "ECDSA", hash: "SHA-256" },
+        expect.objectContaining({
+          name: "Ed25519"
+        }),
         expect.any(Object),
         expect.anything()
       );
@@ -258,8 +260,8 @@ describe("IndexedDbStamper", () => {
     });
   });
 
-  describe("signature format conversion", () => {
-    it("should convert IEEE P1363 to DER format", async () => {
+  describe("signature format", () => {
+    it("should handle Ed25519 signatures", async () => {
       // Setup stamper
       const mockKeyPair = {
         privateKey: {} as CryptoKey,
@@ -269,18 +271,18 @@ describe("IndexedDbStamper", () => {
       const mockPublicKeyBuffer = new ArrayBuffer(91);
       const mockKeyIdBuffer = new ArrayBuffer(32);
 
-      // Create a mock P-256 signature in IEEE P1363 format (64 bytes)
-      const mockP1363Signature = new ArrayBuffer(64);
-      const mockP1363View = new Uint8Array(mockP1363Signature);
+      // Create a mock Ed25519 signature (64 bytes)
+      const mockEd25519Signature = new ArrayBuffer(64);
+      const mockEd25519View = new Uint8Array(mockEd25519Signature);
       // Fill with test data
       for (let i = 0; i < 64; i++) {
-        mockP1363View[i] = i % 256;
+        mockEd25519View[i] = i % 256;
       }
 
       mockGenerateKey.mockResolvedValue(mockKeyPair);
       mockExportKey.mockResolvedValue(mockPublicKeyBuffer);
       mockDigest.mockResolvedValue(mockKeyIdBuffer);
-      mockSign.mockResolvedValue(mockP1363Signature);
+      mockSign.mockResolvedValue(mockEd25519Signature);
 
       await stamper.init();
       const testData = Buffer.from("test", "utf8");
@@ -288,7 +290,7 @@ describe("IndexedDbStamper", () => {
         data: testData,
       });
 
-      // DER signatures should be different from IEEE P1363 and be base64url encoded
+      // Ed25519 signatures should be base64url encoded
       expect(typeof signature).toBe("string");
       expect(signature).toMatch(/^[A-Za-z0-9_-]+$/); // base64url pattern
     });

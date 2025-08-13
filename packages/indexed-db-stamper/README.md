@@ -4,10 +4,10 @@ A secure IndexedDB-based key stamper for the Phantom Wallet SDK that stores cryp
 
 ## Features
 
-- **Maximum Security**: Uses non-extractable ECDSA P-256 (secp256r1) keys that never exist in JavaScript memory
+- **Maximum Security**: Uses non-extractable Ed25519 keys that never exist in JavaScript memory
 - **Web Crypto API**: Leverages browser's native cryptographic secure context
 - **Secure Storage**: Keys stored as non-extractable CryptoKey objects in IndexedDB
-- **DER Signatures**: Converts Web Crypto IEEE P1363 signatures to standard DER format
+- **Raw Signatures**: Uses Ed25519 raw signature format for maximum efficiency
 - **Hardware Integration**: Utilizes browser's hardware-backed cryptographic isolation when available
 - **Compatible Interface**: Drop-in replacement for other stamper implementations
 
@@ -121,7 +121,7 @@ Remove all stored keys from IndexedDB.
 ## Security Features
 
 ### Non-Extractable Keys
-The stamper generates ECDSA P-256 CryptoKey objects with `extractable: false`, meaning private keys cannot be exported, extracted, or accessed outside of Web Crypto API signing operations. This provides the strongest possible security in browser environments.
+The stamper generates Ed25519 CryptoKey objects with `extractable: false`, meaning private keys cannot be exported, extracted, or accessed outside of Web Crypto API signing operations. This provides the strongest possible security in browser environments.
 
 ### Cryptographic Isolation  
 Keys are generated and stored entirely within the browser's secure cryptographic context:
@@ -130,8 +130,8 @@ Keys are generated and stored entirely within the browser's secure cryptographic
 - Secure elements used when available by the browser
 - Origin-based security isolation through IndexedDB
 
-### Signature Format Compatibility
-The stamper automatically converts ECDSA signatures from IEEE P1363 format (64 bytes for P-256) to DER format for broader compatibility with cryptographic libraries and standards.
+### Signature Format
+The stamper uses Ed25519 signatures in their native 64-byte format, providing efficient and secure signing operations.
 
 ## Error Handling
 
