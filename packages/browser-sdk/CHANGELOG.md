@@ -1,5 +1,14 @@
 # @phantom/browser-sdk
 
+## 0.3.1
+
+### Patch Changes
+
+- 7c86fef: Add support for the newest stamper
+- Updated dependencies [7c86fef]
+  - @phantom/indexed-db-stamper@0.1.1
+  - @phantom/client@0.1.5
+
 ## 0.3.0
 
 ### Minor Changes

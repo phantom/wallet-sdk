@@ -1,5 +1,14 @@
 # @phantom/react-ui
 
+## 1.2.1
+
+### Patch Changes
+
+- 7c86fef: Add support for the newest stamper
+- Updated dependencies [7c86fef]
+  - @phantom/react-sdk@0.3.1
+  - @phantom/client@0.1.5
+
 ## 1.2.0
 
 ### Minor Changes
