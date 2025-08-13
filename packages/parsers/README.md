@@ -169,24 +169,9 @@ The parsers automatically detect the input format and handle conversion appropri
 - **Hex strings** - "0x"-prefixed hex-encoded transaction data
 - **Base64/Base64url** - Already encoded transaction data
 
-## React Native Compatibility
+## Cross-Platform Compatibility
 
-The parsers package uses dynamic imports to optionally load blockchain libraries without requiring them as dependencies. However, React Native has limited support for dynamic imports. To prevent errors in React Native environments:
-
-### Automatic Fallback Handling
-
-The package gracefully handles environments where dynamic imports are not available, automatically falling back to basic parsing functionality.
-
-### Fallback Behavior
-
-When dynamic imports are disabled or unavailable:
-
-- **Solana**: Uses simple byte extraction for transaction signatures
-- **EVM**: Uses basic hash generation for transaction hashes  
-- **Bitcoin**: Uses simple hex-based hash extraction
-- **Sui**: Uses basic digest extraction from transaction bytes
-
-This ensures the parsers remain functional even without access to the full blockchain libraries.
+The parsers package is designed to work across different JavaScript environments including browsers, Node.js, and React Native. The package gracefully handles missing dependencies and provides consistent parsing functionality across all supported platforms.
 
 ## Error Handling
 
