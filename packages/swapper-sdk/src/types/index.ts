@@ -3,4 +3,4 @@ export * from "./quotes";
 export * from "./initialize";
 export * from "./bridge";
 export * from "./common";
-export { ChainID } from "./networks";
+// ChainID is now internal to constants package

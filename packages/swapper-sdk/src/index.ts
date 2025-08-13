@@ -1,5 +1,5 @@
 export * from "./swapper-sdk";
-export { NetworkId } from "./types/networks";
+export { NetworkId, SwapType, FeeType } from "@phantom/constants";
 export { TOKENS } from "./constants/tokens";
 export type {
   // Public API types
@@ -26,8 +26,6 @@ export type {
   InitializeFundingResponse,
   WithdrawalQueueResponse,
   RelayExecutionStatus,
-  SwapType,
-  FeeType,
 } from "./types";
 
 export { SwapperSDK as default } from "./swapper-sdk";

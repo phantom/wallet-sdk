@@ -157,7 +157,7 @@ describe("SwapperAPIClient", () => {
         json: async () => {
           throw new Error("Invalid JSON");
         },
-      } as Response);
+      } as unknown as Response);
 
       await expect(client.get("/test")).rejects.toMatchObject({
         code: "UNKNOWN_ERROR",

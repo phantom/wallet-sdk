@@ -1,4 +1,4 @@
-import { NetworkId } from "../types/networks";
+import { NetworkId } from "@phantom/constants";
 import type { Token } from "../types/public-api";
 
 /**

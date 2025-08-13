@@ -1,5 +1,5 @@
 import { SwapperSDK } from "../src/swapper-sdk";
-import { NetworkId } from "../src/types/networks";
+import { NetworkId } from "@phantom/constants";
 
 describe("SwapperSDK", () => {
   let sdk: SwapperSDK;

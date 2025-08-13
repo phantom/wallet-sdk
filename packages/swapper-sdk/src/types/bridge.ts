@@ -1,5 +1,5 @@
 import type { SwapperCaip19 } from "./chains";
-import type { ChainID } from "./networks";
+// ChainID is now internal to constants package
 
 export interface GetBridgeableTokensResponse {
   tokens: SwapperCaip19[];
@@ -99,7 +99,7 @@ export enum OperationState {
 export interface InitializeFundingParams {
   type: "deposit" | "withdraw";
   taker: string;
-  originChain: ChainID;
+  originChain: string;
 }
 
 export interface InitializeFundingResponse {

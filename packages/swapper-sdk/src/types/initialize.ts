@@ -1,16 +1,16 @@
-import type { ChainID } from "./networks";
+// ChainID is now internal to constants package (replaced with string)
 
 export interface SwapperInitializeRequestParams {
   type: "buy" | "sell" | "swap";
 
-  network?: ChainID;
+  network?: string; // ChainID
   buyCaip19?: string;
   sellCaip19?: string;
 
   address?: string;
-  addresses?: Record<ChainID, string>;
+  addresses?: Record<string, string>; // Record<ChainID, string>
   cashAddress?: string;
-  cashAddresses?: Record<ChainID, string>;
+  cashAddresses?: Record<string, string>; // Record<ChainID, string>
   takerCaip19?: string;
   takerDestinationCaip19?: string;
   settings?: SwapperSettings;
@@ -31,7 +31,7 @@ export interface SwapperInitializeResults {
 
 export interface FungibleMetadata {
   address: string;
-  chainId: ChainID;
+  chainId: string; // ChainID
   symbol: string;
   name: string;
   decimals: number;

@@ -1,4 +1,4 @@
-import type { NetworkId } from "./networks";
+import type { NetworkId } from "@phantom/constants";
 
 /**
  * Token type for swaps

@@ -1,13 +1,14 @@
 import type { GetQuotesParams, Token, UserAddress } from "../types/public-api";
 import type { SwapperCaip19, SwapperQuotesBody, SwapperInitializeRequestParams } from "../types";
-import { NATIVE_TOKEN_SLIP44, NATIVE_TOKEN_SLIP44_BY_CHAIN, NETWORK_TO_CHAIN_MAP } from "../types/networks";
-import type { NetworkId } from "../types/networks";
+import { NATIVE_TOKEN_SLIP44_FALLBACK, getNativeTokenSlip44ByChain, getNetworkToChainMapping } from "@phantom/constants";
+import type { NetworkId } from "@phantom/constants";
 
 /**
  * Convert a Token to SwapperCaip19 format
  */
 export function tokenToSwapperCaip19(token: Token): SwapperCaip19 {
-  const chainId = NETWORK_TO_CHAIN_MAP[token.networkId];
+  const chainIdMapping = getNetworkToChainMapping();
+  const chainId = chainIdMapping[token.networkId];
   
   if (!chainId) {
     throw new Error(`Unsupported network: ${token.networkId}`);
@@ -15,11 +16,12 @@ export function tokenToSwapperCaip19(token: Token): SwapperCaip19 {
 
   if (token.type === "native") {
     // Try to get chain-specific SLIP-44 first, then fallback to namespace
-    let slip44 = NATIVE_TOKEN_SLIP44_BY_CHAIN[chainId];
+    const slip44ByChain = getNativeTokenSlip44ByChain();
+    let slip44 = slip44ByChain[chainId];
     
     if (!slip44) {
       const namespace = chainId.split(":")[0];
-      slip44 = NATIVE_TOKEN_SLIP44[namespace];
+      slip44 = NATIVE_TOKEN_SLIP44_FALLBACK[namespace];
     }
     
     if (!slip44) {
@@ -48,7 +50,8 @@ export function tokenToSwapperCaip19(token: Token): SwapperCaip19 {
  * Convert a UserAddress to SwapperCaip19 format
  */
 export function userAddressToSwapperCaip19(userAddress: UserAddress): SwapperCaip19 {
-  const chainId = NETWORK_TO_CHAIN_MAP[userAddress.networkId];
+  const chainIdMapping = getNetworkToChainMapping();
+  const chainId = chainIdMapping[userAddress.networkId];
   
   if (!chainId) {
     throw new Error(`Unsupported network: ${userAddress.networkId}`);
@@ -109,8 +112,9 @@ export function transformInitializeParams(params: SwapperInitializeRequestParams
   // Convert network NetworkId to ChainID if present
   if (params.network) {
     const networkId = params.network as string;
-    if (networkId in NETWORK_TO_CHAIN_MAP) {
-      const chainId = NETWORK_TO_CHAIN_MAP[networkId as NetworkId];
+    const chainIdMapping = getNetworkToChainMapping();
+    if (networkId in chainIdMapping) {
+      const chainId = chainIdMapping[networkId as NetworkId];
       if (chainId) {
         transformedParams.network = chainId;
       }

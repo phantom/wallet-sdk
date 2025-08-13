@@ -11,7 +11,7 @@ import SwapperSDK, {
 } from "@phantom/swapper-sdk";
 import { getNetworkConfig } from "./constants";
 import type { SignedTransaction } from "./types";
-import type { NetworkId } from "./caip2-mappings";
+import type { NetworkId } from "@phantom/constants";
 
 // Re-export types that users will need
 export type { Token } from "@phantom/swapper-sdk";

@@ -3734,6 +3734,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/swapper-sdk@workspace:packages/swapper-sdk"
   dependencies:
+    "@phantom/constants": "workspace:^"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
     dotenv: "npm:^16.4.1"

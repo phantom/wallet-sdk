@@ -1,5 +1,5 @@
-import type { FeeType, SwapperCaip19, SwapType } from "./chains";
-import type { ChainID } from "./networks";
+import type { SwapperCaip19 } from "./chains";
+import type { FeeType, SwapType } from "@phantom/constants";
 
 export interface SwapperQuotesBody {
   taker: SwapperCaip19;
@@ -106,7 +106,7 @@ export interface SwapperXChainStep {
   includedFees: string;
   feeCosts: BridgeFee[];
   includedFeeCosts: BridgeFee[];
-  chainId: ChainID;
+  chainId: string;
   tool: BridgeTool;
   value?: string;
   allowanceTarget?: string;
