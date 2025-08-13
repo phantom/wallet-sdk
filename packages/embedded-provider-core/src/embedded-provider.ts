@@ -365,9 +365,15 @@ export class EmbeddedProvider {
       if (authOptions?.provider === "jwt") {
         return await this.handleJWTAuth(organizationId, stamperInfo, authOptions);
       } else {
-        // This will redirect, so we don't return a session
-        await this.handleRedirectAuth(organizationId, stamperInfo, authOptions);
-        return null;
+        // This will redirect in browser, so we don't return a session
+        // In react-native this will return an auth result
+        this.logger.info("EMBEDDED_PROVIDER", "Starting redirect-based authentication flow", {
+          organizationId,
+          parentOrganizationId: this.config.organizationId,
+          provider: authOptions?.provider,
+        });
+        return await this.handleRedirectAuth(organizationId, stamperInfo, authOptions);
+       
       }
     } else {
       // Create app-wallet directly
@@ -446,7 +452,7 @@ export class EmbeddedProvider {
    * It saves a temporary session before redirecting to prevent losing state during the redirect flow.
    * Session timestamp is updated before redirect to prevent race conditions.
    */
-  private async handleRedirectAuth(organizationId: string, stamperInfo: StamperInfo, authOptions?: AuthOptions): Promise<void> {
+  private async handleRedirectAuth(organizationId: string, stamperInfo: StamperInfo, authOptions?: AuthOptions): Promise<Session | null> {
     this.logger.info("EMBEDDED_PROVIDER", "Using Phantom Connect authentication flow (redirect-based)", {
       provider: authOptions?.provider,
       hasRedirectUrl: !!this.config.authOptions?.redirectUrl,
@@ -457,7 +463,7 @@ export class EmbeddedProvider {
     // Store session before redirect so we can restore it after redirect
     const now = Date.now();
     const sessionId = generateSessionId();
-    const tempSession = {
+    const tempSession: Session = {
       sessionId: sessionId,
       walletId: `temp-${now}`, // Temporary ID, will be updated after redirect
       organizationId: organizationId,
@@ -484,8 +490,8 @@ export class EmbeddedProvider {
       authUrl: this.config.authOptions?.authUrl,
     });
 
-    // Start the authentication flow (this will redirect the user)
-    await this.authProvider.authenticate({
+    // Start the authentication flow (this will redirect the user in the browser, or handle it in React Native)
+    const authResult = await this.authProvider.authenticate({
       organizationId: organizationId,
       parentOrganizationId: this.config.organizationId,
       provider: authOptions?.provider as "google" | "apple" | undefined,
@@ -494,6 +500,27 @@ export class EmbeddedProvider {
       authUrl: this.config.authOptions?.authUrl,
       sessionId: sessionId,
     });
+
+    if (authResult && "walletId" in authResult) {
+      // If we got an auth result, we need to update the session with actual wallet ID
+      this.logger.info("EMBEDDED_PROVIDER", "Authentication completed after redirect", {
+        walletId: authResult.walletId,
+        provider: authResult.provider,
+      });
+
+      // Update the temporary session with actual wallet ID and auth info
+      tempSession.walletId = authResult.walletId;
+      tempSession.authProvider = authResult.provider || tempSession.authProvider;
+      tempSession.status = "completed";
+      tempSession.lastUsed = Date.now();
+      await this.storage.saveSession(tempSession);
+
+      return tempSession; // Return the auth result for further processing
+    }
+    // If we don't have an auth result, it means we're in a redirect flow
+    this.logger.info("EMBEDDED_PROVIDER", "Redirect authentication initiated, waiting for redirect completion");
+    // In this case, we don't return anything as the redirect will handle the rest
+    return null;
   }
 
   private async completeAuthConnection(authResult: AuthResult): Promise<ConnectResult> {
@@ -507,7 +534,6 @@ export class EmbeddedProvider {
     // Update session with actual wallet ID and auth info from redirect
     session.walletId = authResult.walletId;
     session.authProvider = authResult.provider || session.authProvider;
-    session.userInfo = { ...session.userInfo, ...authResult.userInfo };
     session.status = "completed";
     session.lastUsed = Date.now();
     await this.storage.saveSession(session);
