@@ -1,5 +1,13 @@
 # @phantom/server-sdk
 
+## 0.2.1
+
+### Patch Changes
+
+- 7c86fef: Add support for the newest stamper
+- Updated dependencies [7c86fef]
+  - @phantom/client@0.1.5
+
 ## 0.2.0
 
 ### Minor Changes
