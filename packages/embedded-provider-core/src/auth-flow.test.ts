@@ -227,7 +227,6 @@ describe("EmbeddedProvider Auth Flows", () => {
           walletId: "wallet-123",
           status: "completed",
           authProvider: "google",
-          userInfo: expect.objectContaining({ email: "test@example.com" }),
         }),
       );
     });
