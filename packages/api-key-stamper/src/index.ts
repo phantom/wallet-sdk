@@ -3,7 +3,7 @@ import { base64urlEncode } from "@phantom/base64url";
 import { createKeyPairFromSecret, signWithSecret } from "@phantom/crypto";
 import bs58 from "bs58";
 import type { Stamper } from "@phantom/sdk-types";
-import {Algorithm} from "@phantom/sdk-types"
+import { Algorithm } from "@phantom/sdk-types";
 export interface ApiKeyStamperConfig {
   apiSecretKey: string;
 }
@@ -25,15 +25,11 @@ export class ApiKeyStamper implements Stamper {
    * @param params - Parameters object with data to sign
    * @returns Complete X-Phantom-Stamp header value
    */
-  async stamp({
-    data
-  }: {
-    data: Buffer  
-  }): Promise<string> {
+  async stamp({ data }: { data: Buffer }): Promise<string> {
     // Sign the data
     const signature = signWithSecret(this.keypair.secretKey, data);
     const signatureBase64url = base64urlEncode(signature);
-    
+
     // Create the stamp structure
     const stampData = {
       publicKey: base64urlEncode(bs58.decode(this.keypair.publicKey)),

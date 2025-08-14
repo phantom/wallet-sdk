@@ -12,9 +12,13 @@ export { debug, DebugLevel, DebugCategory } from "./debug";
 export type { DebugMessage, DebugCallback } from "./debug";
 
 // Utility functions
-export { detectBrowser, parseBrowserFromUserAgent, getPlatformName, getBrowserDisplayName } from "./utils/browser-detection";
+export {
+  detectBrowser,
+  parseBrowserFromUserAgent,
+  getPlatformName,
+  getBrowserDisplayName,
+} from "./utils/browser-detection";
 export type { BrowserInfo } from "./utils/browser-detection";
-
 
 // Re-export useful types from constants and client
 export { NetworkId } from "@phantom/constants";

@@ -12,7 +12,7 @@ export type IndexedDbStamperConfig = {
 /**
  * IndexedDB-based key manager that stores cryptographic keys securely in IndexedDB
  * and performs signing operations without ever exposing private key material.
- * 
+ *
  * Security model:
  * - Generates non-extractable Ed25519 keypairs using Web Crypto API
  * - Stores keys entirely within Web Crypto API secure context
@@ -44,7 +44,7 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
    */
   async init(): Promise<StamperKeyInfo> {
     await this.openDB();
-    
+
     let keyInfo = await this.getStoredKeyInfo();
     if (!keyInfo) {
       keyInfo = await this.generateAndStoreKeyPair();
@@ -52,7 +52,7 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
       // Load existing key pair
       await this.loadKeyPair();
     }
-    
+
     this.keyInfo = keyInfo;
     return keyInfo;
   }
@@ -79,17 +79,21 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
    * @param params - Parameters object with data and optional type/options
    * @returns Complete X-Phantom-Stamp header value
    */
-  async stamp(params: {
-    data: Buffer;
-    type?: 'PKI';
-    idToken?: never;
-    salt?: never;
-  } | {
-    data: Buffer;
-    type: 'OIDC';
-    idToken: string;
-    salt: string;
-  }): Promise<string> {
+  async stamp(
+    params:
+      | {
+          data: Buffer;
+          type?: "PKI";
+          idToken?: never;
+          salt?: never;
+        }
+      | {
+          data: Buffer;
+          type: "OIDC";
+          idToken: string;
+          salt: string;
+        },
+  ): Promise<string> {
     const { data, type = "PKI" } = params;
     if (!this.keyInfo || !this.cryptoKeyPair) {
       throw new Error("Stamper not initialized. Call init() first.");
@@ -101,36 +105,38 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
     // Sign using Web Crypto API with non-extractable private key
     const signature = await crypto.subtle.sign(
       {
-        name:this.algorithm,
+        name: this.algorithm,
         hash: "SHA-256",
       },
       this.cryptoKeyPair.privateKey,
-      dataBytes as BufferSource
+      dataBytes as BufferSource,
     );
 
     const signatureBase64url = base64urlEncode(new Uint8Array(signature));
-    
+
     // Create the stamp structure
-    const stampData = type === "PKI" ?  {
-      // Decode base58 public key to bytes, then encode as base64url (consistent with ApiKeyStamper)
-      publicKey: base64urlEncode(bs58.decode(this.keyInfo.publicKey)),
-      signature: signatureBase64url,
-      kind: "PKI" as const,
-      algorithm:this.algorithm,
-    } :  {
-      kind: "OIDC",
-      idToken: (params as any).idToken,
-      publicKey: base64urlEncode(bs58.decode(this.keyInfo.publicKey)),
-      salt: (params as any).salt,
-      algorithm:this.algorithm,
-      signature: signatureBase64url
-    };
+    const stampData =
+      type === "PKI"
+        ? {
+            // Decode base58 public key to bytes, then encode as base64url (consistent with ApiKeyStamper)
+            publicKey: base64urlEncode(bs58.decode(this.keyInfo.publicKey)),
+            signature: signatureBase64url,
+            kind: "PKI" as const,
+            algorithm: this.algorithm,
+          }
+        : {
+            kind: "OIDC",
+            idToken: (params as any).idToken,
+            publicKey: base64urlEncode(bs58.decode(this.keyInfo.publicKey)),
+            salt: (params as any).salt,
+            algorithm: this.algorithm,
+            signature: signatureBase64url,
+          };
 
     // Encode the entire stamp as base64url JSON
     const stampJson = JSON.stringify(stampData);
     return base64urlEncode(stampJson);
   }
-
 
   /**
    * Clear all stored keys
@@ -149,7 +155,7 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction([this.storeName], "readwrite");
       const store = transaction.objectStore(this.storeName);
-      
+
       // Clear specific keys for this stamper instance
       const deleteKeyPair = store.delete(`${this.keyName}-keypair`);
       const deleteKeyInfo = store.delete(`${this.keyName}-info`);
@@ -182,7 +188,7 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
         resolve();
       };
 
-      request.onupgradeneeded = (event) => {
+      request.onupgradeneeded = event => {
         const db = (event.target as IDBOpenDBRequest).result;
         if (!db.objectStoreNames.contains(this.storeName)) {
           db.createObjectStore(this.storeName);
@@ -196,17 +202,16 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
     this.cryptoKeyPair = await crypto.subtle.generateKey(
       {
         name: "Ed25519",
-
       },
       false, // non-extractable - private key can never be exported
-      ["sign", "verify"]
+      ["sign", "verify"],
     );
 
     // Export public key in raw format (no ASN.1/DER wrapper)
     const rawPublicKeyBuffer = await crypto.subtle.exportKey("raw", this.cryptoKeyPair.publicKey);
     // Store raw public key as base58 (consistent with other stampers)
     const publicKeyBase58 = bs58.encode(new Uint8Array(rawPublicKeyBuffer));
-    
+
     // Create a deterministic key ID from the raw public key
     const keyIdBuffer = await crypto.subtle.digest("SHA-256", rawPublicKeyBuffer);
     const keyId = base64urlEncode(new Uint8Array(keyIdBuffer)).substring(0, 16);
@@ -272,8 +277,6 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
     });
   }
 
-
-
   private async getStoredKeyInfo(): Promise<StamperKeyInfo | null> {
     if (!this.db) {
       return null;
@@ -288,5 +291,4 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
       request.onerror = () => reject(request.error);
     });
   }
-
 }

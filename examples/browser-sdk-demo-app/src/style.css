@@ -359,3 +359,20 @@ button:focus-visible {
     height: 300px;
   }
 }
+
+/* Balance display styles */
+.balance-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.balance-display {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2563eb;
+}
+
+.balance-display span {
+  font-family: monospace;
+}

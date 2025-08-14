@@ -6,8 +6,6 @@ export type {
   SignedTransaction,
   SignMessageParams,
   SignAndSendTransactionParams,
-  CreateUserOrganizationParams,
-  CreateUserOrganizationResult,
 } from "@phantom/browser-sdk";
 
 export type ProviderType = "injected" | "embedded";

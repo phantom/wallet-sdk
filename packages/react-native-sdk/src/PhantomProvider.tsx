@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { EmbeddedProvider } from "@phantom/embedded-provider-core";
 import type { PlatformAdapter } from "@phantom/embedded-provider-core";
-import type { PhantomProviderConfig, WalletAddress } from "./types";
+import type { PhantomSDKConfig, WalletAddress } from "./types";
 
 // Platform adapters for React Native/Expo
 import { ExpoSecureStorage } from "./providers/embedded/storage";
@@ -26,7 +26,7 @@ const PhantomContext = createContext<PhantomContextValue | undefined>(undefined)
 
 export interface PhantomProviderProps {
   children: ReactNode;
-  config: PhantomProviderConfig;
+  config: PhantomSDKConfig;
 }
 
 export function PhantomProvider({ children, config }: PhantomProviderProps) {
@@ -46,6 +46,8 @@ export function PhantomProvider({ children, config }: PhantomProviderProps) {
       embeddedWalletType: config.embeddedWalletType,
       addressTypes: config.addressTypes,
       solanaProvider: config.solanaProvider || "web3js",
+      appName: config.appName,
+      appLogo: config.appLogo, // Optional app logo URL
     };
 
     // Create platform adapters

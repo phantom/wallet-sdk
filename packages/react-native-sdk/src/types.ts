@@ -1,17 +1,10 @@
-import type { EmbeddedProviderConfig, AuthOptions as CoreAuthOptions } from "@phantom/embedded-provider-core";
+import type { EmbeddedProviderConfig } from "@phantom/embedded-provider-core";
 
-export interface PhantomProviderConfig extends Omit<EmbeddedProviderConfig, "authOptions"> {
+export interface PhantomSDKConfig extends EmbeddedProviderConfig {
   /** Custom URL scheme for your app (e.g., "myapp") */
   scheme: string;
-  /** Authentication options */
-  authOptions?: ReactNativeAuthOptions;
   /** Enable debug logging */
   debug?: boolean;
-}
-
-export interface ReactNativeAuthOptions extends CoreAuthOptions {
-  /** Custom redirect URL - defaults to {scheme}://phantom-auth-callback */
-  redirectUrl?: string;
 }
 
 export interface ConnectOptions {

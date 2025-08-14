@@ -414,7 +414,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       expect(mockClient.createOrganization).toHaveBeenCalledWith(
         expect.stringContaining("test-org-id-"),
         "test-public-key",
-        expect.stringMatching(/^test-platform-test-pub-\d+$/) // authenticatorName with platform name and short pubkey
+        expect.stringMatching(/^test-platform-test-pub-\d+$/), // authenticatorName with platform name and short pubkey
       );
     });
 

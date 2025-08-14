@@ -127,7 +127,7 @@ export function detectBrowser(): BrowserInfo {
 
   const userAgent = window.navigator.userAgent;
   const hasBraveAPI = !!(navigator as any).brave;
-  
+
   return parseBrowserFromUserAgent(userAgent, hasBraveAPI);
 }
 

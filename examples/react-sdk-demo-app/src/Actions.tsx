@@ -6,7 +6,6 @@ import {
   useSignMessage,
   useAccounts,
   usePhantom,
-  useCreateUserOrganization,
   useIsExtensionInstalled,
   NetworkId,
   DebugLevel,
@@ -24,13 +23,13 @@ import {
   compileTransaction,
 } from "@solana/kit";
 import { useState, useEffect, useCallback } from "react";
+import { useBalance } from "./hooks/useBalance";
 
 export function Actions() {
   const { connect, isConnecting, error: connectError } = useConnect();
   const { disconnect, isDisconnecting } = useDisconnect();
   const { signAndSendTransaction, isSigning: isSigningTransaction } = useSignAndSendTransaction();
   const { signMessage, isSigning: isSigningMessage } = useSignMessage();
-  const { createUserOrganization, isCreating } = useCreateUserOrganization();
   const { isConnected, currentProviderType } = usePhantom();
   const { isInstalled, isLoading } = useIsExtensionInstalled();
   const addresses = useAccounts();
@@ -38,6 +37,10 @@ export function Actions() {
   const [solanaAddress, setSolanaAddress] = useState<string | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<ProviderType>("embedded");
   const [selectedEmbeddedType, setSelectedEmbeddedType] = useState<"user-wallet" | "app-wallet">("user-wallet");
+
+  // Use balance hook
+  const { balance, loading: balanceLoading, error: balanceError, refetch: refetchBalance } = useBalance(solanaAddress);
+  const hasBalance = balance !== null && balance > 0;
 
   // Debug state
   const [debugLevel, setDebugLevel] = useState<DebugLevel>(DebugLevel.INFO);
@@ -145,18 +148,6 @@ export function Actions() {
     }
   };
 
-  const onCreateUserOrganization = async () => {
-    try {
-      const result = await createUserOrganization({
-        userId: "demo-user-123",
-      });
-      alert(`Organization created! ID: ${result.organizationId}`);
-    } catch (error) {
-      console.error("Error creating organization:", error);
-      alert(`Error creating organization: ${(error as Error).message || error}`);
-    }
-  };
-
   return (
     <div id="app">
       <h1>Phantom React SDK Demo</h1>
@@ -254,6 +245,30 @@ export function Actions() {
             </div>
           </div>
 
+          {isConnected && solanaAddress && (
+            <div className="section">
+              <h3>SOL Balance</h3>
+              <div className="balance-card">
+                <div className="balance-row">
+                  <span className="balance-label">Balance:</span>
+                  <span className="balance-value">
+                    {balanceLoading
+                      ? "Loading..."
+                      : balanceError
+                        ? "Error"
+                        : balance !== null
+                          ? `${balance.toFixed(4)} SOL`
+                          : "--"}
+                  </span>
+                </div>
+                <button className="small" onClick={() => refetchBalance()} disabled={balanceLoading}>
+                  {balanceLoading ? "Loading..." : "Refresh"}
+                </button>
+              </div>
+              {balanceError && <p className="error-text">Balance error: {balanceError}</p>}
+            </div>
+          )}
+
           <div className="section">
             <h3>Wallet Operations</h3>
             <div className="button-group">
@@ -270,14 +285,10 @@ export function Actions() {
               <button onClick={() => onSignMessage("evm")} disabled={!isConnected || isSigningMessage}>
                 {isSigningMessage ? "Signing..." : "Sign Message EVM"}
               </button>
-              <button onClick={onSignAndSendTransaction} disabled={!isConnected || isSigningTransaction}>
-                {isSigningTransaction ? "Signing..." : "Sign & Send Transaction"}
+              <button onClick={onSignAndSendTransaction} disabled={!isConnected || isSigningTransaction || !hasBalance}>
+                {isSigningTransaction ? "Signing..." : !hasBalance ? "Insufficient Balance" : "Sign & Send Transaction"}
               </button>
-              {selectedProvider === "embedded" && (
-                <button onClick={onCreateUserOrganization} disabled={isCreating}>
-                  {isCreating ? "Creating..." : "Create Organization"}
-                </button>
-              )}
+
               <button onClick={onDisconnect} disabled={!isConnected || isDisconnecting}>
                 {isDisconnecting ? "Disconnecting..." : "Disconnect"}
               </button>

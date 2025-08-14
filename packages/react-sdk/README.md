@@ -624,30 +624,41 @@ function MultiChainWallet() {
 
 Quick reference of all available hooks:
 
-| Hook                        | Purpose                             | Returns                                         |
-| --------------------------- | ----------------------------------- | ----------------------------------------------- |
-| `useConnect`                | Connect to wallet                   | `{ connect, isConnecting, error }`              |
-| `useAccounts`               | Get wallet addresses                | `WalletAddress[]` or `null`                     |
-| `useIsExtensionInstalled`   | Check extension status              | `{ isLoading, isInstalled }`                    |
-| `useDisconnect`             | Disconnect from wallet              | `{ disconnect, isDisconnecting }`               |
-| `useSignMessage`            | Sign text messages                  | `{ signMessage, isSigning, error }`             |
-| `useSignAndSendTransaction` | Sign and send transactions          | `{ signAndSendTransaction, isSigning, error }`  |
-| `useCreateUserOrganization` | Create user organization (embedded) | `{ createUserOrganization, isCreating, error }` |
-| `usePhantom`                | Get provider context                | `{ isConnected, isReady }`                      |
+| Hook                        | Purpose                    | Returns                                        |
+| --------------------------- | -------------------------- | ---------------------------------------------- |
+| `useConnect`                | Connect to wallet          | `{ connect, isConnecting, error }`             |
+| `useAccounts`               | Get wallet addresses       | `WalletAddress[]` or `null`                    |
+| `useIsExtensionInstalled`   | Check extension status     | `{ isLoading, isInstalled }`                   |
+| `useDisconnect`             | Disconnect from wallet     | `{ disconnect, isDisconnecting }`              |
+| `useSignMessage`            | Sign text messages         | `{ signMessage, isSigning, error }`            |
+| `useSignAndSendTransaction` | Sign and send transactions | `{ signAndSendTransaction, isSigning, error }` |
+| `usePhantom`                | Get provider context       | `{ isConnected, isReady }`                     |
 
 ## Configuration Reference
 
 ```typescript
 interface PhantomSDKConfig {
   providerType: "injected" | "embedded";
+  appName?: string; // Optional app name for branding
+  appLogo?: string; // Optional app logo URL for branding
+  addressTypes?: AddressType[]; // Networks to enable (e.g., [AddressType.solana])
 
   // Required for embedded provider only
-  addressTypes?: AddressType[]; // Networks to enable
   apiBaseUrl?: string; // Phantom API base URL
   organizationId?: string; // Your organization ID
-  authUrl?: string; // Custom auth URL (optional)
+  authOptions?: {
+    authUrl?: string; // Custom auth URL (optional)
+    redirectUrl?: string; // Custom redirect URL (optional)
+  };
   embeddedWalletType?: "app-wallet" | "user-wallet"; // Wallet type
   solanaProvider?: "web3js" | "kit"; // Solana library choice (default: 'web3js')
+
+  // Debug options
+  debug?: {
+    enabled?: boolean; // Enable debug logging
+    level?: "info" | "warn" | "error"; // Debug level
+    callback?: (level: string, message: string, data?: any) => void; // Custom debug callback
+  };
 }
 ```
 

@@ -31,7 +31,7 @@ describe("IndexedDbStamper", () => {
   beforeEach(() => {
     // Reset mocks
     jest.clearAllMocks();
-    
+
     // Create new stamper instance
     stamper = new IndexedDbStamper({
       dbName: "test-phantom-stamper",
@@ -67,14 +67,14 @@ describe("IndexedDbStamper", () => {
     it("should throw error in non-browser environment", () => {
       const originalWindow = global.window;
       const originalIndexedDB = global.indexedDB;
-      
+
       // @ts-ignore
       delete global.window;
       // @ts-ignore
       delete global.indexedDB;
 
       expect(() => new IndexedDbStamper()).toThrow(
-        "IndexedDbStamper requires a browser environment with IndexedDB support"
+        "IndexedDbStamper requires a browser environment with IndexedDB support",
       );
 
       // Restore
@@ -108,20 +108,16 @@ describe("IndexedDbStamper", () => {
       expect(typeof keyInfo.publicKey).toBe("string");
       expect(keyInfo.keyId.length).toBe(16);
 
-      expect(mockGenerateKey).toHaveBeenCalledWith(
-        { name: "Ed25519" },
-        false,
-        ["sign", "verify"]
-      );
+      expect(mockGenerateKey).toHaveBeenCalledWith({ name: "Ed25519" }, false, ["sign", "verify"]);
     });
 
     it("should return existing key info if already initialized", async () => {
       // First initialization
       const keyInfo1 = await stamper.init();
-      
+
       // Second initialization should return same key info
       const keyInfo2 = await stamper.init();
-      
+
       expect(keyInfo1).toEqual(keyInfo2);
       expect(stamper.getKeyInfo()).toEqual(keyInfo1);
     });
@@ -157,26 +153,26 @@ describe("IndexedDbStamper", () => {
 
     it("should create stamp from Buffer data", async () => {
       const testData = Buffer.from("test message to sign", "utf8");
-      const stamp = await stamper.stamp({data: testData});
+      const stamp = await stamper.stamp({ data: testData });
 
       expect(typeof stamp).toBe("string");
       expect(stamp.length).toBeGreaterThan(0);
       expect(mockSign).toHaveBeenCalledWith(
         expect.objectContaining({
-          name: "Ed25519"
+          name: "Ed25519",
         }),
         expect.any(Object),
-        expect.anything()
+        expect.anything(),
       );
     });
 
     it("should create stamp with proper structure", async () => {
       const testData = Buffer.from(JSON.stringify({ action: "test", timestamp: Date.now() }), "utf8");
-      const stamp = await stamper.stamp({data: testData});
+      const stamp = await stamper.stamp({ data: testData });
 
       expect(typeof stamp).toBe("string");
       expect(stamp.length).toBeGreaterThan(0);
-      
+
       // The stamp should be base64url encoded JSON
       expect(stamp).toMatch(/^[A-Za-z0-9_-]+$/);
     });
@@ -187,8 +183,8 @@ describe("IndexedDbStamper", () => {
       });
 
       const testData = Buffer.from("test", "utf8");
-      await expect(uninitializedStamper.stamp({data: testData})).rejects.toThrow(
-        "Stamper not initialized. Call init() first."
+      await expect(uninitializedStamper.stamp({ data: testData })).rejects.toThrow(
+        "Stamper not initialized. Call init() first.",
       );
     });
 
@@ -196,9 +192,11 @@ describe("IndexedDbStamper", () => {
       mockSign.mockRejectedValue(new Error("Signing failed"));
 
       const testData = Buffer.from("test", "utf8");
-      await expect(stamper.stamp({
-        data: testData,
-      })).rejects.toThrow("Signing failed");
+      await expect(
+        stamper.stamp({
+          data: testData,
+        }),
+      ).rejects.toThrow("Signing failed");
     });
   });
 
@@ -221,14 +219,14 @@ describe("IndexedDbStamper", () => {
 
     it("should reset key pair", async () => {
       const originalKeyInfo = stamper.getKeyInfo();
-      
+
       // Set up different mock data for the reset operation
       const newMockKeyIdBuffer = new ArrayBuffer(32);
       const newView = new Uint8Array(newMockKeyIdBuffer);
       for (let i = 0; i < newView.length; i++) {
         newView[i] = (i + 100) % 256; // Different pattern from original
       }
-      
+
       const newMockKeyPair = {
         privateKey: {} as CryptoKey,
         publicKey: {} as CryptoKey,
@@ -238,7 +236,7 @@ describe("IndexedDbStamper", () => {
       mockGenerateKey.mockResolvedValueOnce(newMockKeyPair);
       mockExportKey.mockResolvedValueOnce(newMockPublicKeyBuffer);
       mockDigest.mockResolvedValueOnce(newMockKeyIdBuffer);
-      
+
       const newKeyInfo = await stamper.resetKeyPair();
 
       expect(newKeyInfo).toHaveProperty("keyId");
@@ -300,20 +298,20 @@ describe("IndexedDbStamper", () => {
     it("should handle IndexedDB errors gracefully", () => {
       // This test is complex due to IndexedDB async nature
       // For now, just test that the method exists and can be called
-      expect(typeof stamper.init).toBe('function');
+      expect(typeof stamper.init).toBe("function");
     });
 
     it("should handle uninitialized stamper", async () => {
       const uninitializedStamper = new IndexedDbStamper({
-        dbName: "uninitialized-test-db"
+        dbName: "uninitialized-test-db",
       });
-      
+
       const testData = Buffer.from("test", "utf8");
-      await expect(uninitializedStamper.stamp({
-        data: testData,
-      })).rejects.toThrow(
-        "Stamper not initialized. Call init() first."
-      );
+      await expect(
+        uninitializedStamper.stamp({
+          data: testData,
+        }),
+      ).rejects.toThrow("Stamper not initialized. Call init() first.");
     });
   });
 });

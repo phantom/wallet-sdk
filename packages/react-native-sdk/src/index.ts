@@ -6,8 +6,7 @@ export { useConnect, useDisconnect, useAccounts, useSignMessage, useSignAndSendT
 
 // Types
 export type {
-  PhantomProviderConfig,
-  ReactNativeAuthOptions,
+  PhantomSDKConfig,
   ConnectOptions,
   ConnectResult,
   WalletAddress,
