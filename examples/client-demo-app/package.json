@@ -1,6 +1,6 @@
 {
   "name": "client-demo-app",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Demo application using Phantom Client and Crypto packages",
   "main": "src/index.js",
   "scripts": {

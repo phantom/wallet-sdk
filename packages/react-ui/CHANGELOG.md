@@ -1,5 +1,15 @@
 # @phantom/react-ui
 
+## 1.2.2
+
+### Patch Changes
+
+- 36af356: Auth flow complete
+- Updated dependencies [36af356]
+- Updated dependencies [3d0c1f9]
+  - @phantom/react-sdk@0.3.2
+  - @phantom/client@0.1.6
+
 ## 1.2.1
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @phantom/react-sdk
 
+## 0.3.2
+
+### Patch Changes
+
+- 36af356: Auth flow complete
+- 3d0c1f9: New phantom client
+- Updated dependencies [36af356]
+- Updated dependencies [3d0c1f9]
+  - @phantom/browser-sdk@0.3.2
+
 ## 0.3.1
 
 ### Patch Changes

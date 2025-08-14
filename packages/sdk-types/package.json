@@ -1,6 +1,6 @@
 {
   "name": "@phantom/sdk-types",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Common types for Phantom SDK packages",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
