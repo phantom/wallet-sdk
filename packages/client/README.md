@@ -67,17 +67,15 @@ const wallet = await client.createWallet("My Wallet");
 - `signAndSendTransaction(params)` - Sign and optionally submit a transaction to the blockchain
 - `signMessage(params)` - Sign a message with a wallet's private key
 
-**Object Parameters:**
-
 ```typescript
-// Sign message with object parameters
+// Sign message
 await client.signMessage({
   walletId: "wallet_123",
   message: "base64url_encoded_message",
   networkId: NetworkId.SOLANA_MAINNET,
 });
 
-// Sign transaction with object parameters
+// Sign transaction
 await client.signAndSendTransaction({
   walletId: "wallet_123",
   transaction: "base64url_encoded_transaction",
@@ -85,18 +83,12 @@ await client.signAndSendTransaction({
 });
 ```
 
-**Legacy API (still supported):**
-
-```typescript
-// Legacy individual parameters (deprecated but still works)
-await client.signMessage(walletId, message, networkId);
-await client.signAndSendTransaction(walletId, transaction, networkId);
-```
-
 #### Organization Management
 
-- `getOrCreateOrganization(params)` - Get an existing organization or create a new one if it doesn't exist
-- `createOrganization(params)` - Create a new organization
+- `getOrganization(organizationId)` - Get organization details by ID
+- `getOrCreateOrganization(tag, publicKey)` - Get an existing organization or create a new one if it doesn't exist
+- `createOrganization(name, publicKey, authenticators?)` - Create a new organization with optional multiple authenticators
+- `getWalletWithTag(params)` - Get a wallet by tag from an organization
 - `grantOrganizationAccess(params)` - Grant access permissions to an organization
 
 #### Authentication Management
@@ -165,33 +157,57 @@ const client = new PhantomClient(config, new CustomStamper());
 ### Organization and Authentication Examples
 
 ```typescript
-// Create or get an organization
-const organization = await client.createOrganization({
-  name: "My Organization",
-  // ... other organization parameters
-});
+// Get organization details
+const organization = await client.getOrganization("org-id");
 
-// Grant access to an organization
-await client.grantOrganizationAccess({
+// Create organization with multiple authenticators
+const newOrg = await client.createOrganization(
+  "My Organization", 
+  "base58-public-key",
+  [
+    {
+      authenticatorName: "Primary Auth",
+      authenticatorKind: "keypair",
+      publicKey: "base64url-encoded-public-key",
+      algorithm: "Ed25519"
+    },
+    {
+      authenticatorName: "OIDC Auth",
+      authenticatorKind: "oidc",
+      jwksUrl: "https://issuer.com/.well-known/jwks.json",
+      idTokenClaims: {
+        sub: "user-subject-id",
+        iss: "https://issuer.com"
+      }
+    }
+  ]
+);
+
+// Get wallet by tag
+const taggedWallet = await client.getWalletWithTag({
   organizationId: "org-id",
-  userId: "user-id",
-  role: "admin",
-  // ... other access parameters
+  tag: "demo-wallet",
+  derivationPaths: ["m/44'/501'/0'/0'"]
 });
 
 // Create an authenticator for a user
 const authenticator = await client.createAuthenticator({
   organizationId: "org-id",
-  userId: "user-id",
-  type: "passkey",
-  // ... other authenticator parameters
+  username: "user-123",
+  authenticatorName: "New Auth",
+  authenticator: {
+    authenticatorName: "New Auth",
+    authenticatorKind: "keypair",
+    publicKey: "base64url-encoded-public-key",
+    algorithm: "Ed25519"
+  }
 });
 
 // Delete an authenticator
 await client.deleteAuthenticator({
   organizationId: "org-id",
-  authenticatorId: "auth-id",
-  // ... other parameters
+  username: "user-123",
+  authenticatorId: "auth-id"
 });
 ```
 
