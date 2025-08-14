@@ -1,5 +1,16 @@
 # @phantom/indexed-db-stamper
 
+## 0.1.2
+
+### Patch Changes
+
+- 36af356: Auth flow complete
+- Updated dependencies [36af356]
+- Updated dependencies [3d0c1f9]
+  - @phantom/embedded-provider-core@0.1.3
+  - @phantom/sdk-types@0.1.2
+  - @phantom/crypto@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes

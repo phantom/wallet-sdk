@@ -1,5 +1,17 @@
 # @phantom/server-sdk
 
+## 0.2.2
+
+### Patch Changes
+
+- 36af356: Auth flow complete
+- 3d0c1f9: New phantom client
+- Updated dependencies [36af356]
+- Updated dependencies [3d0c1f9]
+  - @phantom/api-key-stamper@0.1.3
+  - @phantom/parsers@0.0.6
+  - @phantom/client@0.1.6
+
 ## 0.2.1
 
 ### Patch Changes

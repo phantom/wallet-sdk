@@ -1,6 +1,6 @@
 {
   "name": "@phantom/indexed-db-stamper",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "IndexedDB stamper for Phantom Wallet SDK with non-extractable key storage",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
