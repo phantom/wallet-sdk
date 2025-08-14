@@ -20,7 +20,7 @@ const mockedGenerateKeyPair = jest.mocked(generateKeyPair);
 
 // Set up generateKeyPair mock
 mockedGenerateKeyPair.mockReturnValue({
-  publicKey: "test-public-key",
+  publicKey: "11111111111111111111111111111111",
   secretKey: "test-secret-key",
 });
 
@@ -36,7 +36,7 @@ describe("EmbeddedProvider Core", () => {
 
     // Reset generateKeyPair mock
     mockedGenerateKeyPair.mockReturnValue({
-      publicKey: "test-public-key",
+      publicKey: "11111111111111111111111111111111",
       secretKey: "test-secret-key",
     });
 
@@ -69,11 +69,11 @@ describe("EmbeddedProvider Core", () => {
         getParam: jest.fn().mockReturnValue(null),
       },
       stamper: {
-        init: jest.fn().mockResolvedValue({ keyId: "test-key-id", publicKey: "test-public-key" }),
+        init: jest.fn().mockResolvedValue({ keyId: "test-key-id", publicKey: "11111111111111111111111111111111" }),
         sign: jest.fn().mockResolvedValue("mock-signature"),
         stamp: jest.fn().mockResolvedValue("mock-stamp"),
-        getKeyInfo: jest.fn().mockReturnValue({ keyId: "test-key-id", publicKey: "test-public-key" }),
-        resetKeyPair: jest.fn().mockResolvedValue({ keyId: "test-key-id", publicKey: "test-public-key" }),
+        getKeyInfo: jest.fn().mockReturnValue({ keyId: "test-key-id", publicKey: "11111111111111111111111111111111" }),
+        resetKeyPair: jest.fn().mockResolvedValue({ keyId: "test-key-id", publicKey: "11111111111111111111111111111111" }),
         clear: jest.fn().mockResolvedValue(undefined),
       },
     };
@@ -205,10 +205,23 @@ describe("EmbeddedProvider Core", () => {
         // Connection will fail, but createOrganization should be called with authenticatorName
       }
 
-      // Verify createOrganization was called with organization name and public key
+      // Verify createOrganization was called with organization name and users array
       expect(mockCreateOrganization).toHaveBeenCalledWith(
-        expect.stringMatching(/^test-org-id-test-platform-test-pub$/), // organization name with platform info
-        "test-public-key", // public key
+        expect.stringMatching(/^test-org-id-test-platform-11111111$/), // organization name with platform info
+        expect.arrayContaining([
+          expect.objectContaining({
+            username: expect.stringContaining("user-"),
+            role: 'admin',
+            authenticators: expect.arrayContaining([
+              expect.objectContaining({
+                authenticatorName: expect.stringContaining("auth-"),
+                authenticatorKind: 'keypair',
+                publicKey: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                algorithm: 'Ed25519',
+              })
+            ])
+          })
+        ])
       );
     });
 

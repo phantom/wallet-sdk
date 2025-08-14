@@ -1,5 +1,7 @@
 import { PhantomClient } from "@phantom/client";
 import type { AddressType } from "@phantom/client";
+import { base64urlEncode } from "@phantom/base64url";
+import bs58 from "bs58";
 import {
   parseMessage,
   parseTransaction,
@@ -183,9 +185,21 @@ export class EmbeddedProvider {
       platform: platformName,
     });
 
+    // Convert base58 public key to base64url format as required by the API
+    const base64urlPublicKey = base64urlEncode(bs58.decode(stamperInfo.publicKey));
+    
     const { organizationId } = await tempClient.createOrganization(
       organizationName,
-      stamperInfo.publicKey
+      [{
+        username: `user-${shortPubKey}`,
+        role: 'admin',
+        authenticators: [{
+          authenticatorName: `auth-${shortPubKey}`,
+          authenticatorKind: 'keypair',
+          publicKey: base64urlPublicKey,
+          algorithm: 'Ed25519',
+        }]
+      }]
     );
     this.logger.info("EMBEDDED_PROVIDER", "Organization created", { organizationId });
 

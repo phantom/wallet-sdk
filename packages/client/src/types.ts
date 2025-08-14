@@ -80,3 +80,9 @@ export interface AuthenticatorConfig {
     iss: string;
   }; // required for oidc
 }
+
+export interface UserConfig {
+  username?: string; // Optional, will generate default if not provided
+  role?: 'admin' | 'user'; // Optional, defaults to 'admin'
+  authenticators: AuthenticatorConfig[];
+}

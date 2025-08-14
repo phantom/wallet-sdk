@@ -1,5 +1,7 @@
 const { PhantomClient, generateKeyPair } = require("@phantom/client");
 const { ApiKeyStamper } = require("@phantom/api-key-stamper");
+const { base64urlEncode } = require("@phantom/base64url");
+const bs58 = require("bs58");
 const fs = require("fs").promises;
 const path = require("path");
 
@@ -58,7 +60,19 @@ async function main() {
   // Step 3: Create organization using the create organization method
   console.log("\n🏢 Creating organization...");
   try {
-    const organization = await client.createOrganization("Demo Organization", keyPair.publicKey);
+    // Convert base58 public key to base64url format as required by the API
+    const base64urlPublicKey = base64urlEncode(bs58.decode(keyPair.publicKey));
+    
+    const organization = await client.createOrganization("Demo Organization", [{
+      username: `demo-user-${Date.now()}`,
+      role: 'admin',
+      authenticators: [{
+        authenticatorName: `demo-auth-${Date.now()}`,
+        authenticatorKind: 'keypair',
+        publicKey: base64urlPublicKey,
+        algorithm: 'Ed25519',
+      }]
+    }]);
 
     demoData.organization = {
       organizationId: organization.organizationId,

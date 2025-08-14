@@ -9,6 +9,8 @@ import {
   type Organization,
 } from "@phantom/client";
 import { ApiKeyStamper } from "@phantom/api-key-stamper";
+import { base64urlEncode } from "@phantom/base64url";
+import bs58 from "bs58";
 import {
   parseMessage,
   parseTransaction,
@@ -117,8 +119,20 @@ export class ServerSDK {
       }),
     );
 
-    // Call the createOrganization method with the provided parameters
-    return tempClient.createOrganization(name, keyPair.publicKey);
+    // Call the createOrganization method with the provided parameters using new signature
+    // Convert base58 public key to base64url format as required by the API
+    const base64urlPublicKey = base64urlEncode(bs58.decode(keyPair.publicKey));
+    
+    return tempClient.createOrganization(name, [{
+      username: `user-${Date.now()}`,
+      role: 'admin',
+      authenticators: [{
+        authenticatorName: `auth-${Date.now()}`,
+        authenticatorKind: 'keypair',
+        publicKey: base64urlPublicKey,
+        algorithm: 'Ed25519',
+      }]
+    }]);
   }
   getWallets(limit?: number, offset?: number): Promise<GetWalletsResult> {
     return this.client.getWallets(limit, offset);

@@ -1,6 +1,4 @@
 import axios, { type AxiosInstance } from "axios";
-import bs58 from "bs58";
-import { base64urlEncode } from "@phantom/base64url";
 import { Buffer } from "buffer";
 import {
   Configuration,
@@ -33,7 +31,6 @@ import {
   GetAccountsMethodEnum,
   type ExternalDerivedAccount,
   KmsUserRole,
-  Algorithm,
   type ExternalKmsOrganization,
   type DerivationInfoAddressFormatEnum,
 } from "@phantom/openapi-wallet-service";
@@ -49,7 +46,7 @@ import {
   type GetWalletWithTagParams,
   type CreateAuthenticatorParams,
   type DeleteAuthenticatorParams,
-  type AuthenticatorConfig,
+  type UserConfig,
 } from "./types";
 
 import type { Stamper } from "@phantom/sdk-types";
@@ -382,7 +379,16 @@ export class PhantomClient {
       // First, try to get the organization
       // Since there's no explicit getOrganization method, we'll create it
       // This assumes the API returns existing org if it already exists
-      return await this.createOrganization(tag, publicKey);
+      return await this.createOrganization(tag, [{
+        username: `user-${Date.now()}`,
+        role: 'admin',
+        authenticators: [{
+          authenticatorName: `auth-${Date.now()}`,
+          authenticatorKind: 'keypair',
+          publicKey: publicKey,
+          algorithm: 'Ed25519',
+        }]
+      }]);
     } catch (error: any) {
       console.error("Failed to get or create organization:", error.response?.data || error.message);
       throw new Error(`Failed to get or create organization: ${error.response?.data?.message || error.message}`);
@@ -390,40 +396,30 @@ export class PhantomClient {
   }
 
   /**
-   * Create a new organization with the specified name and public key
+   * Create a new organization with the specified name and users
    * @param name Organization name
-   * @param publicKey Base58 encoded public key for the admin user
-   * @param authenticators Optional array of authenticators. If not provided, creates a default keypair authenticator
+   * @param users Array of users with their authenticators
    */
   async createOrganization(
     name: string,
-    publicKey: string,
-    authenticators?: AuthenticatorConfig[],
+    users: UserConfig[],
   ): Promise<ExternalKmsOrganization> {
     try {
       if (!name) {
         throw new Error("Organization name is required");
       }
 
-      // If no authenticators provided, create a default keypair authenticator
-      const authConfigs = authenticators || [
-        {
-          authenticatorName: `KeyPair-${name}-${Date.now()}`,
-          authenticatorKind: "keypair" as const,
-          publicKey: base64urlEncode(bs58.decode(publicKey)),
-          algorithm: Algorithm.ed25519 as const,
-        },
-      ];
+      if (!users || users.length === 0) {
+        throw new Error("At least one user is required");
+      }
 
       const params: CreateOrganizationRequest = {
         organizationName: name,
-        users: [
-          {
-            role: KmsUserRole.admin,
-            authenticators: authConfigs as any,
-            username: `user-${Date.now()}`,
-          },
-        ],
+        users: users.map(userConfig => ({
+          role: (userConfig.role || 'admin') === 'admin' ? KmsUserRole.admin : KmsUserRole.user,
+          username: userConfig.username || `user-${Date.now()}`,
+          authenticators: userConfig.authenticators as any,
+        })),
       };
 
       const request: CreateOrganization = {

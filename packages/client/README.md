@@ -87,7 +87,7 @@ await client.signAndSendTransaction({
 
 - `getOrganization(organizationId)` - Get organization details by ID
 - `getOrCreateOrganization(tag, publicKey)` - Get an existing organization or create a new one if it doesn't exist
-- `createOrganization(name, publicKey, authenticators?)` - Create a new organization with optional multiple authenticators
+- `createOrganization(name, users)` - Create a new organization with custom users
 - `getWalletWithTag(params)` - Get a wallet by tag from an organization
 - `grantOrganizationAccess(params)` - Grant access permissions to an organization
 
@@ -160,25 +160,30 @@ const client = new PhantomClient(config, new CustomStamper());
 // Get organization details
 const organization = await client.getOrganization("org-id");
 
-// Create organization with multiple authenticators
+// Create organization with custom users
 const newOrg = await client.createOrganization(
   "My Organization", 
-  "base58-public-key",
   [
     {
-      authenticatorName: "Primary Auth",
-      authenticatorKind: "keypair",
-      publicKey: "base64url-encoded-public-key",
-      algorithm: "Ed25519"
-    },
-    {
-      authenticatorName: "OIDC Auth",
-      authenticatorKind: "oidc",
-      jwksUrl: "https://issuer.com/.well-known/jwks.json",
-      idTokenClaims: {
-        sub: "user-subject-id",
-        iss: "https://issuer.com"
-      }
+      username: "admin-user",
+      role: "admin",
+      authenticators: [
+        {
+          authenticatorName: "Primary Auth",
+          authenticatorKind: "keypair",
+          publicKey: "base64url-encoded-public-key",
+          algorithm: "Ed25519"
+        },
+        {
+          authenticatorName: "OIDC Auth",
+          authenticatorKind: "oidc",
+          jwksUrl: "https://issuer.com/.well-known/jwks.json",
+          idTokenClaims: {
+            sub: "user-subject-id",
+            iss: "https://issuer.com"
+          }
+        }
+      ]
     }
   ]
 );

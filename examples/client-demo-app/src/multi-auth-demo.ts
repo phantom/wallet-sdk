@@ -39,31 +39,38 @@ async function main() {
   const organizationName = `Test Org ${Date.now()}`;
   const primaryAuthName = `Primary-Auth-${Date.now()}`;
   const secondaryAuthName = `Secondary-Auth-${Date.now()}`;
+  const customUsername = `test-user-${Date.now()}`;
 
-  // Define the authenticator configurations
-  const authenticators = [
+  // Define the user configuration with multiple authenticators
+  const users = [
     {
-      authenticatorName: primaryAuthName,
-      authenticatorKind: "keypair" as const,
-      publicKey: base64urlEncode(bs58.decode(primaryKeyPair.publicKey)),
-      algorithm: "Ed25519" as const,
-    },
-    {
-      authenticatorName: secondaryAuthName,
-      authenticatorKind: "keypair" as const,
-      publicKey: base64urlEncode(bs58.decode(secondaryKeyPair.publicKey)),
-      algorithm: "Ed25519" as const,
+      username: customUsername,
+      role: 'admin' as const,
+      authenticators: [
+        {
+          authenticatorName: primaryAuthName,
+          authenticatorKind: "keypair" as const,
+          publicKey: base64urlEncode(bs58.decode(primaryKeyPair.publicKey)),
+          algorithm: "Ed25519" as const,
+        },
+        {
+          authenticatorName: secondaryAuthName,
+          authenticatorKind: "keypair" as const,
+          publicKey: base64urlEncode(bs58.decode(secondaryKeyPair.publicKey)),
+          algorithm: "Ed25519" as const,
+        }
+      ]
     }
   ];
 
   try {
     console.log(`Creating organization: ${organizationName}`);
-    console.log(`With ${authenticators.length} authenticators`);
+    console.log(`With custom username: ${customUsername}`);
+    console.log(`With ${users[0].authenticators.length} authenticators`);
 
     const organization = await client.createOrganization(
       organizationName,
-      primaryKeyPair.publicKey,
-      authenticators
+      users
     );
     
     console.log(`✅ Organization created successfully!`);
@@ -73,7 +80,6 @@ async function main() {
     // Step 4: Test getOrganization method
     console.log("\n🔍 Step 4: Test getOrganization Method");
     
-    let actualUsername = "";
     let firstAuthenticatorId = "";
     
     try {
@@ -84,12 +90,10 @@ async function main() {
       console.log(`   Authenticators: ${retrievedOrg.users?.[0]?.authenticators?.length || 0}`);
       console.log(`   Response:`, JSON.stringify(retrievedOrg, null, 2));
       
-      // Get actual username and authenticator ID for subsequent tests
-      if (retrievedOrg.users && retrievedOrg.users.length > 0) {
-        actualUsername = retrievedOrg.users[0].username;
-        if (retrievedOrg.users[0].authenticators && retrievedOrg.users[0].authenticators.length > 0) {
-          firstAuthenticatorId = retrievedOrg.users[0].authenticators[0].id;
-        }
+      // Get authenticator ID for subsequent tests (we already know the username)
+      if (retrievedOrg.users && retrievedOrg.users.length > 0 && 
+          retrievedOrg.users[0].authenticators && retrievedOrg.users[0].authenticators.length > 0) {
+        firstAuthenticatorId = retrievedOrg.users[0].authenticators[0].id;
       }
     } catch (error) {
       console.error("❌ getOrganization failed:", error instanceof Error ? error.message : String(error));
@@ -138,41 +142,37 @@ async function main() {
     // Step 8: Test createAuthenticator method
     console.log("\n🔐 Step 8: Test createAuthenticator Method");
     
-    if (actualUsername) {
-      try {
-        const thirdKeyPair = generateKeyPair();
-        const thirdAuthName = `Third-Auth-${Date.now()}`;
-        
-        const createAuthResult = await client.createAuthenticator({
-          organizationId: organization.organizationId,
-          username: actualUsername, // Using actual username from organization
+    try {
+      const thirdKeyPair = generateKeyPair();
+      const thirdAuthName = `Third-Auth-${Date.now()}`;
+      
+      const createAuthResult = await client.createAuthenticator({
+        organizationId: organization.organizationId,
+        username: customUsername, // Using our custom username
+        authenticatorName: thirdAuthName,
+        authenticator: {
           authenticatorName: thirdAuthName,
-          authenticator: {
-            authenticatorName: thirdAuthName,
-            authenticatorKind: "keypair",
-            publicKey: base64urlEncode(bs58.decode(thirdKeyPair.publicKey)),
-            algorithm: "Ed25519",
-          }
-        });
-        
-        console.log(`✅ createAuthenticator works`);
-        console.log(`   Response:`, JSON.stringify(createAuthResult, null, 2));
+          authenticatorKind: "keypair",
+          publicKey: base64urlEncode(bs58.decode(thirdKeyPair.publicKey)),
+          algorithm: "Ed25519",
+        }
+      });
+      
+      console.log(`✅ createAuthenticator works`);
+      console.log(`   Response:`, JSON.stringify(createAuthResult, null, 2));
 
-      } catch (error) {
-        console.log(`ℹ️ createAuthenticator method error:`, error instanceof Error ? error.message : String(error));
-      }
-    } else {
-      console.log(`ℹ️ createAuthenticator skipped (no username found)`);
+    } catch (error) {
+      console.log(`ℹ️ createAuthenticator method error:`, error instanceof Error ? error.message : String(error));
     }
 
     // Step 9: Test deleteAuthenticator method
     console.log("\n🗑️ Step 9: Test deleteAuthenticator Method");
     
-    if (actualUsername && firstAuthenticatorId) {
+    if (firstAuthenticatorId) {
       try {
         const deleteAuthResult = await client.deleteAuthenticator({
           organizationId: organization.organizationId,
-          username: actualUsername, // Using actual username from organization
+          username: customUsername, // Using our custom username
           authenticatorId: firstAuthenticatorId, // Using actual authenticator ID
         });
         console.log(`✅ deleteAuthenticator works`);
@@ -181,7 +181,7 @@ async function main() {
         console.log(`ℹ️ deleteAuthenticator method error:`, error instanceof Error ? error.message : String(error));
       }
     } else {
-      console.log(`ℹ️ deleteAuthenticator skipped (no username or authenticator ID found)`);
+      console.log(`ℹ️ deleteAuthenticator skipped (no authenticator ID found)`);
     }
 
     // Step 10: Test secondary authenticator access
