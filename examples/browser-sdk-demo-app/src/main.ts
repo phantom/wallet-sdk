@@ -21,6 +21,7 @@ import {
   compileTransaction,
 } from "@solana/kit";
 import { parseEther, parseGwei } from "viem";
+import { getBalance } from "./utils/balance";
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log("Document loaded, setting up Browser SDK Demo...");
@@ -36,6 +37,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // Address display elements
   const addressesSection = document.getElementById("addressesSection") as HTMLDivElement;
   const addressesList = document.getElementById("addressesList") as HTMLDivElement;
+
+  // Balance display elements
+  const balanceSection = document.getElementById("balanceSection") as HTMLDivElement;
+  const balanceValue = document.getElementById("balanceValue") as HTMLSpanElement;
+  const refreshBalanceBtn = document.getElementById("refreshBalanceBtn") as HTMLButtonElement;
 
   console.log("Found buttons:", {
     connectBtn: !!connectBtn,
@@ -55,6 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let sdk: BrowserSDK | null = null;
   let connectedAddresses: any[] = [];
+  let currentBalance: number | null = null;
 
   // Debug message storage
   const debugMessages: DebugMessage[] = [];
@@ -210,18 +217,48 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Update balance display
+  async function updateBalanceDisplay() {
+    if (!balanceSection || !balanceValue) return;
+    
+    const solanaAddress = connectedAddresses.find(a => a.addressType === AddressType.solana);
+    if (!solanaAddress) {
+      balanceSection.style.display = "none";
+      return;
+    }
+
+    balanceSection.style.display = "block";
+    balanceValue.textContent = "Loading...";
+
+    try {
+      const result = await getBalance(solanaAddress.address);
+      if (result.error) {
+        balanceValue.textContent = "Error";
+        console.error("Balance error:", result.error);
+      } else {
+        currentBalance = result.balance;
+        balanceValue.textContent = result.balance ? result.balance.toFixed(4) : "0";
+      }
+    } catch (error) {
+      balanceValue.textContent = "Error";
+      console.error("Failed to fetch balance:", error);
+    }
+  }
+
   // Update button states
   function updateButtonStates(connected: boolean) {
+    const hasBalance = currentBalance !== null && currentBalance > 0;
+    
     if (connectBtn) connectBtn.disabled = connected;
     if (getAccountBtn) getAccountBtn.disabled = !connected;
     if (signMessageBtn) signMessageBtn.disabled = !connected;
     if (signMessageEvmBtn) signMessageEvmBtn.disabled = !connected;
-    if (signTransactionBtn) signTransactionBtn.disabled = !connected;
+    if (signTransactionBtn) signTransactionBtn.disabled = !connected || !hasBalance;
     // Keep disconnect button always enabled for session clearing
     if (disconnectBtn) disconnectBtn.disabled = false;
-    if (testWeb3jsBtn) testWeb3jsBtn.disabled = !connected;
-    if (testKitBtn) testKitBtn.disabled = !connected;
-    if (testEthereumBtn) testEthereumBtn.disabled = !connected;
+    if (testWeb3jsBtn) testWeb3jsBtn.disabled = !connected || !hasBalance;
+    if (testKitBtn) testKitBtn.disabled = !connected || !hasBalance;
+    if (testEthereumBtn) testEthereumBtn.disabled = !connected || !hasBalance;
   }
 
   // Connect button
@@ -237,6 +274,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Update UI with addresses and button states
         updateAddressesDisplay(connectedAddresses);
+        await updateBalanceDisplay();
         updateButtonStates(true);
       } catch (error) {
         console.error("Error connecting:", error);
@@ -260,6 +298,8 @@ document.addEventListener("DOMContentLoaded", () => {
         
         // Update the display with refreshed addresses
         updateAddressesDisplay(addresses);
+        await updateBalanceDisplay();
+        updateButtonStates(true);
         alert(`Addresses: ${addresses.map(a => `${a.addressType}: ${a.address}`).join(", ")}`);
       } catch (error) {
         console.error("Error getting addresses:", error);
@@ -477,6 +517,14 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
+  // Refresh Balance button
+  if (refreshBalanceBtn) {
+    refreshBalanceBtn.onclick = async () => {
+      await updateBalanceDisplay();
+      updateButtonStates(true);
+    };
+  }
+
   // Disconnect button
   if (disconnectBtn) {
     disconnectBtn.onclick = async () => {
@@ -485,8 +533,10 @@ document.addEventListener("DOMContentLoaded", () => {
           await sdk.disconnect();
           sdk = null;
           connectedAddresses = [];
+          currentBalance = null;
           alert("Disconnected successfully");
           updateAddressesDisplay([]);
+          if (balanceSection) balanceSection.style.display = "none";
           updateButtonStates(false);
         }
       } catch (error) {

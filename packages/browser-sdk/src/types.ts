@@ -34,14 +34,6 @@ export interface BrowserSDKConfig {
   };
 }
 
-export interface CreateUserOrganizationParams {
-  userId: string;
-  [key: string]: any; // Allow additional options
-}
-
-export interface CreateUserOrganizationResult {
-  organizationId: string;
-}
 
 // Re-export types from core for convenience
 export type {

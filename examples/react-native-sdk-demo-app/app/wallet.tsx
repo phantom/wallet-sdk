@@ -8,6 +8,7 @@ import {
   useDisconnect,
   NetworkId,
 } from "@phantom/react-native-sdk";
+import { useBalance } from "../hooks/useBalance";
 
 export default function WalletScreen() {
   const router = useRouter();
@@ -18,6 +19,11 @@ export default function WalletScreen() {
 
   const [messageToSign, setMessageToSign] = useState("Hello from Phantom React Native SDK Demo!");
   const [signedMessage, setSignedMessage] = useState<string | null>(null);
+  
+  // Get Solana address for balance checking
+  const solanaAddress = addresses?.find(addr => addr.addressType === "Solana")?.address || null;
+  const { balance, loading: balanceLoading, error: balanceError, refetch: refetchBalance } = useBalance(solanaAddress);
+  const hasBalance = balance !== null && balance > 0;
 
   // Redirect if not connected
   React.useEffect(() => {
@@ -130,6 +136,36 @@ export default function WalletScreen() {
           )}
         </View>
 
+        {/* SOL Balance Section */}
+        {solanaAddress && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>SOL Balance</Text>
+            <View style={styles.balanceContainer}>
+              <View style={styles.balanceDisplay}>
+                <Text style={styles.balanceValue}>
+                  {balanceLoading ? "Loading..." : 
+                   balanceError ? "Error" : 
+                   balance !== null ? `${balance.toFixed(4)} SOL` : "--"}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.button, styles.refreshButton]}
+                onPress={() => refetchBalance()}
+                disabled={balanceLoading}
+              >
+                <Text style={[styles.buttonText, { color: "#6366f1" }]}>
+                  {balanceLoading ? "Loading..." : "Refresh"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {balanceError && (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>Failed to load balance: {balanceError}</Text>
+              </View>
+            )}
+          </View>
+        )}
+
         {/* Message Signing Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Sign Message</Text>
@@ -174,12 +210,12 @@ export default function WalletScreen() {
           <Text style={styles.description}>This demonstrates transaction signing capabilities:</Text>
 
           <TouchableOpacity
-            style={[styles.button, styles.secondaryButton]}
+            style={[styles.button, styles.secondaryButton, !hasBalance && styles.disabledButton]}
             onPress={() => handleSignTransaction()}
-            disabled={isSigningTx}
+            disabled={isSigningTx || !hasBalance}
           >
-            <Text style={[styles.buttonText, { color: "#6366f1" }]}>
-              {isSigningTx ? "Signing..." : "Demo Transaction Signing"}
+            <Text style={[styles.buttonText, { color: !hasBalance ? "#9ca3af" : "#6366f1" }]}>
+              {isSigningTx ? "Signing..." : !hasBalance ? "Insufficient Balance" : "Demo Transaction Signing"}
             </Text>
           </TouchableOpacity>
 
@@ -306,10 +342,34 @@ const styles = StyleSheet.create({
   dangerButton: {
     backgroundColor: "#ef4444",
   },
+  disabledButton: {
+    backgroundColor: "#f3f4f6",
+    borderColor: "#e5e7eb",
+  },
+  refreshButton: {
+    backgroundColor: "#ffffff",
+    borderColor: "#6366f1",
+    borderWidth: 1,
+    paddingHorizontal: 16,
+  },
   buttonText: {
     color: "#ffffff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  balanceContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  balanceDisplay: {
+    flex: 1,
+  },
+  balanceValue: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#2563eb",
+    fontFamily: "monospace",
   },
   resultContainer: {
     backgroundColor: "#f0fdf4",

@@ -4,8 +4,6 @@ import type {
   SignedTransaction,
   WalletAddress,
   SignAndSendTransactionParams,
-  CreateUserOrganizationParams,
-  CreateUserOrganizationResult,
   SignMessageParams,
   SignMessageResult,
   AuthOptions,
@@ -220,35 +218,5 @@ export class BrowserSDK {
    */
   getWalletId(): string | null {
     return this.providerManager.getWalletId();
-  }
-
-  /**
-   * Create a user organization via your backend API
-   * @param params - Parameters including userId and any additional options
-   * @returns Organization creation result with organizationId
-   */
-  async createUserOrganization(params: CreateUserOrganizationParams): Promise<CreateUserOrganizationResult> {
-    if (!this.config.serverUrl) {
-      throw new Error("serverUrl is required in config to create user organizations");
-    }
-
-    try {
-      const response = await fetch(`${this.config.serverUrl}/organizations`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(params),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to create organization: ${response.status} ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      return result as CreateUserOrganizationResult;
-    } catch (error) {
-      throw new Error(`Error creating user organization: ${error instanceof Error ? error.message : "Unknown error"}`);
-    }
   }
 }

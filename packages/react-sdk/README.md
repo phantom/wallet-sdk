@@ -632,7 +632,6 @@ Quick reference of all available hooks:
 | `useDisconnect`             | Disconnect from wallet              | `{ disconnect, isDisconnecting }`               |
 | `useSignMessage`            | Sign text messages                  | `{ signMessage, isSigning, error }`             |
 | `useSignAndSendTransaction` | Sign and send transactions          | `{ signAndSendTransaction, isSigning, error }`  |
-| `useCreateUserOrganization` | Create user organization (embedded) | `{ createUserOrganization, isCreating, error }` |
 | `usePhantom`                | Get provider context                | `{ isConnected, isReady }`                      |
 
 ## Configuration Reference

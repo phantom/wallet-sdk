@@ -3517,6 +3517,7 @@ __metadata:
     "@babel/core": "npm:^7.20.0"
     "@expo/vector-icons": "npm:^14.1.0"
     "@phantom/react-native-sdk": "workspace:^"
+    "@solana/web3.js": "npm:^1.98.4"
     "@types/react": "npm:~19.0.10"
     expo: "npm:~53.0.20"
     expo-auth-session: "npm:^6.2.1"
@@ -5031,7 +5032,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@solana/web3.js@npm:^1.87.6, @solana/web3.js@npm:^1.95.0, @solana/web3.js@npm:^1.98.2":
+"@solana/web3.js@npm:^1.87.6, @solana/web3.js@npm:^1.95.0, @solana/web3.js@npm:^1.98.2, @solana/web3.js@npm:^1.98.4":
   version: 1.98.4
   resolution: "@solana/web3.js@npm:1.98.4"
   dependencies:

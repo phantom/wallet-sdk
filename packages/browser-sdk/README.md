@@ -662,12 +662,12 @@ try {
 
 2. **Install dependencies based on enabled networks**:
 
-   | AddressType                 | Required Dependencies              | Bundle Size |
-   | --------------------------- | ---------------------------------- | ----------- |
-   | `AddressType.solana`        | `@solana/web3.js` OR `@solana/kit` | ~250KB      |
-   | `AddressType.ethereum`      | `viem`                             | ~300KB      |
-   | `AddressType.bitcoinSegwit` | `bitcoinjs-lib`                    | ~200KB      |
-   | `AddressType.sui`           | `@mysten/sui.js`                   | ~250KB      |
+   | AddressType                 | Required Dependencies              |
+   | --------------------------- | ---------------------------------- | 
+   | `AddressType.solana`        | `@solana/web3.js` OR `@solana/kit` | 
+   | `AddressType.ethereum`      | `viem`                             |
+   | `AddressType.bitcoinSegwit` | `bitcoinjs-lib`                    |
+   | `AddressType.sui`           | `@mysten/sui.js`                   |
 
    **Example package.json for Solana + Ethereum (using @solana/web3.js)**:
 
@@ -742,62 +742,3 @@ try {
      }
    }
    ```
-
-3. **Monitor bundle size**:
-   ```bash
-   # Analyze your bundle
-   npx webpack-bundle-analyzer dist/main.js
-   ```
-
-## Server Setup for Embedded Wallets
-
-For embedded wallets, you need to set up a backend endpoint. Add the `serverUrl` parameter to your SDK configuration:
-
-```typescript
-const sdk = new BrowserSDK({
-  providerType: "embedded",
-  addressTypes: [AddressType.solana],
-  apiBaseUrl: "https://api.phantom.app/v1/wallets",
-  organizationId: "your-org-id",
-  serverUrl: "http://localhost:3000/api",
-});
-```
-
-### Required Backend Endpoint
-
-Your backend needs an endpoint that uses the server-sdk:
-
-```javascript
-// server.js
-const express = require("express");
-const { ServerSDK } = require("@phantom/server-sdk");
-
-const app = express();
-app.use(express.json());
-
-const serverSDK = new ServerSDK({
-  organizationId: process.env.ORGANIZATION_ID,
-  apiPrivateKey: process.env.PRIVATE_KEY,
-  apiBaseUrl: process.env.API_URL,
-});
-
-app.post("/api/organizations", async (req, res) => {
-  try {
-    const { userId } = req.body;
-
-    if (!userId) {
-      return res.status(400).json({ error: "userId is required" });
-    }
-
-    const organization = await serverSDK.getOrCreateChildOrganizationByTag({
-      tag: userId,
-    });
-
-    res.json({ organizationId: organization.id });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to process request" });
-  }
-});
-
-app.listen(3000);
-```
