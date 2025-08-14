@@ -205,11 +205,10 @@ describe("EmbeddedProvider Core", () => {
         // Connection will fail, but createOrganization should be called with authenticatorName
       }
 
-      // Verify createOrganization was called with platform-specific authenticatorName
+      // Verify createOrganization was called with organization name and public key
       expect(mockCreateOrganization).toHaveBeenCalledWith(
-        expect.stringMatching(/^test-org-id-\d+$/), // organization name
+        expect.stringMatching(/^test-org-id-test-platform-test-pub$/), // organization name with platform info
         "test-public-key", // public key
-        expect.stringMatching(/^test-platform-test-pub-\d+$/), // authenticatorName with platform name and short pubkey
       );
     });
 
