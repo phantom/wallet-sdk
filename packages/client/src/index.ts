@@ -1,4 +1,5 @@
 export { PhantomClient } from "./PhantomClient";
+export { SwapperClient } from "./SwapperClient";
 export { generateKeyPair, type Keypair } from "@phantom/crypto";
 export * from "./types";
 export * from "./caip2-mappings";

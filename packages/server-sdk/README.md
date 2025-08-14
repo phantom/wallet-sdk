@@ -262,7 +262,6 @@ The SDK supports multiple blockchain networks through the `NetworkId` enum:
 
 - `NetworkId.POLYGON_MAINNET` - Polygon Mainnet
 - `NetworkId.POLYGON_MUMBAI` - Mumbai Testnet
-- `NetworkId.OPTIMISM_MAINNET` - Optimism Mainnet
 - `NetworkId.ARBITRUM_ONE` - Arbitrum One
 - `NetworkId.BASE_MAINNET` - Base Mainnet
 
