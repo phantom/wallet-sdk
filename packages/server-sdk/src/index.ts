@@ -105,7 +105,6 @@ export class ServerSDK {
   createOrganization(
     name: string,
     keyPair: { publicKey: string; secretKey: string },
-    authenticatorName?: string,
   ): Promise<Organization> {
     // Create a temporary PhantomClient instance with the stamper
     const tempClient = new PhantomClient(
@@ -119,7 +118,7 @@ export class ServerSDK {
     );
 
     // Call the createOrganization method with the provided parameters
-    return tempClient.createOrganization(name, keyPair.publicKey, authenticatorName);
+    return tempClient.createOrganization(name, keyPair.publicKey);
   }
   getWallets(limit?: number, offset?: number): Promise<GetWalletsResult> {
     return this.client.getWallets(limit, offset);

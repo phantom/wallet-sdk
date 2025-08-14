@@ -58,7 +58,7 @@ async function main() {
   // Step 3: Create organization using the create organization method
   console.log("\n🏢 Creating organization...");
   try {
-    const organization = await client.createOrganization("Demo Organization", keyPair.publicKey, "Demo Authenticator");
+    const organization = await client.createOrganization("Demo Organization", keyPair.publicKey);
 
     demoData.organization = {
       organizationId: organization.organizationId,

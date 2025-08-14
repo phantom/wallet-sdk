@@ -48,3 +48,35 @@ export interface SignAndSendTransactionParams {
   transaction: Transaction; // base64url encoded transaction
   networkId: NetworkId;
 }
+
+export interface GetWalletWithTagParams {
+  organizationId: string;
+  tag: string;
+  derivationPaths: string[];
+}
+
+export interface CreateAuthenticatorParams {
+  organizationId: string;
+  username: string;
+  authenticatorName: string;
+  authenticator: AuthenticatorConfig;
+}
+
+export interface DeleteAuthenticatorParams {
+  organizationId: string;
+  username: string;
+  authenticatorId: string;
+}
+
+export interface AuthenticatorConfig {
+  authenticatorName: string;
+  authenticatorKind: 'keypair' | 'passkey'| 'oidc';
+  publicKey?: string; // base64url encoded public key (required for keypair)
+  algorithm?: 'Ed25519'; // required for keypair
+  // OIDC-specific fields
+  jwksUrl?: string; // required for oidc
+  idTokenClaims?: {
+    sub: string;
+    iss: string;
+  }; // required for oidc
+}

@@ -46,6 +46,10 @@ import {
   type GetWalletsResult,
   type SignMessageParams,
   type SignAndSendTransactionParams,
+  type GetWalletWithTagParams,
+  type CreateAuthenticatorParams,
+  type DeleteAuthenticatorParams,
+  type AuthenticatorConfig,
 } from "./types";
 
 import type { Stamper } from "@phantom/sdk-types";
@@ -348,16 +352,37 @@ export class PhantomClient {
     }
   }
 
+  /**
+   * Get organization details by organization ID
+   */
+  async getOrganization(organizationId: string): Promise<ExternalKmsOrganization> {
+    try {
+      const request = {
+        method: "getOrganization",
+        params: {
+          organizationId: organizationId,
+        },
+        timestampMs: Date.now(),
+      };
+
+      const response = await this.kmsApi.postKmsRpc(request as any);
+      const result = response.data.result as ExternalKmsOrganization;
+      return result;
+    } catch (error: any) {
+      console.error("Failed to get organization:", error.response?.data || error.message);
+      throw new Error(`Failed to get organization: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
   async getOrCreateOrganization(
     tag: string,
     publicKey: string,
-    authenticatorName?: string,
   ): Promise<ExternalKmsOrganization> {
     try {
       // First, try to get the organization
       // Since there's no explicit getOrganization method, we'll create it
       // This assumes the API returns existing org if it already exists
-      return await this.createOrganization(tag, publicKey, authenticatorName);
+      return await this.createOrganization(tag, publicKey);
     } catch (error: any) {
       console.error("Failed to get or create organization:", error.response?.data || error.message);
       throw new Error(`Failed to get or create organization: ${error.response?.data?.message || error.message}`);
@@ -368,31 +393,34 @@ export class PhantomClient {
    * Create a new organization with the specified name and public key
    * @param name Organization name
    * @param publicKey Base58 encoded public key for the admin user
-   * @param authenticatorName Optional custom name for the authenticator. If not provided, defaults to "KeyPair {timestamp}"
+   * @param authenticators Optional array of authenticators. If not provided, creates a default keypair authenticator
    */
   async createOrganization(
     name: string,
     publicKey: string,
-    authenticatorName?: string,
+    authenticators?: AuthenticatorConfig[],
   ): Promise<ExternalKmsOrganization> {
     try {
       if (!name) {
         throw new Error("Organization name is required");
       }
 
+      // If no authenticators provided, create a default keypair authenticator
+      const authConfigs = authenticators || [
+        {
+          authenticatorName: `KeyPair-${name}-${Date.now()}`,
+          authenticatorKind: "keypair" as const,
+          publicKey: base64urlEncode(bs58.decode(publicKey)),
+          algorithm: Algorithm.ed25519 as const,
+        },
+      ];
+
       const params: CreateOrganizationRequest = {
         organizationName: name,
         users: [
           {
             role: KmsUserRole.admin,
-            authenticators: [
-              {
-                algorithm: this.stamper?.algorithm || Algorithm.ed25519,
-                authenticatorKind: "keypair" as any,
-                publicKey: base64urlEncode(bs58.decode(publicKey)) as any,
-                authenticatorName: authenticatorName || `KeyPair ${Date.now()}`,
-              },
-            ] as any,
+            authenticators: authConfigs as any,
             username: `user-${Date.now()}`,
           },
         ],
@@ -404,7 +432,6 @@ export class PhantomClient {
         timestampMs: Date.now(),
       } as any;
 
-      // Creating organization with request
       const response = await this.kmsApi.postKmsRpc(request);
       const result = response.data.result as ExternalKmsOrganization;
 
@@ -415,20 +442,26 @@ export class PhantomClient {
     }
   }
 
-  async createAuthenticator(params: CreateAuthenticatorRequest): Promise<any> {
+  /**
+   * Create an authenticator for a user in an organization
+   */
+  async createAuthenticator(params: CreateAuthenticatorParams): Promise<any> {
     try {
+      const requestParams: CreateAuthenticatorRequest = {
+        organizationId: params.organizationId,
+        username: params.username,
+        authenticatorName: params.authenticatorName,
+        authenticator: params.authenticator as any
+      } as any;
+
       const request: CreateAuthenticator = {
         method: CreateAuthenticatorMethodEnum.createAuthenticator,
-        params: params,
+        params: requestParams,
         timestampMs: Date.now(),
       } as any;
 
-      // Creating authenticator with request
-
       const response = await this.kmsApi.postKmsRpc(request);
       const result = response.data.result;
-
-      // Authenticator created successfully
 
       return result;
     } catch (error: any) {
@@ -437,20 +470,25 @@ export class PhantomClient {
     }
   }
 
-  async deleteAuthenticator(params: DeleteAuthenticatorRequest): Promise<any> {
+  /**
+   * Delete an authenticator for a user in an organization
+   */
+  async deleteAuthenticator(params: DeleteAuthenticatorParams): Promise<any> {
     try {
+      const requestParams: DeleteAuthenticatorRequest = {
+        organizationId: params.organizationId,
+        username: params.username,
+        authenticatorId: params.authenticatorId,
+      };
+
       const request: DeleteAuthenticator = {
         method: DeleteAuthenticatorMethodEnum.deleteAuthenticator,
-        params: params,
+        params: requestParams,
         timestampMs: Date.now(),
       } as any;
 
-      // Deleting authenticator with request
-
       const response = await this.kmsApi.postKmsRpc(request);
       const result = response.data.result;
-
-      // Authenticator deleted successfully
 
       return result;
     } catch (error: any) {
@@ -482,6 +520,30 @@ export class PhantomClient {
   }
 
   /**
+   * Get a wallet by tag from the specified organization
+   */
+  async getWalletWithTag(params: GetWalletWithTagParams): Promise<any> {
+    try {
+      const request = {
+        method: "getWalletWithTag",
+        params: {
+          organizationId: params.organizationId,
+          tag: params.tag,
+          derivationPaths: params.derivationPaths,
+        },
+        timestampMs: Date.now(),
+      };
+
+      const response = await this.kmsApi.postKmsRpc(request as any);
+      const result = response.data.result;
+      return result;
+    } catch (error: any) {
+      console.error("Failed to get wallet with tag:", error.response?.data || error.message);
+      throw new Error(`Failed to get wallet with tag: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  /**
    * Stamp an axios request with the provided stamper
    */
   private async stampRequest(config: any, stamper: Stamper) {
@@ -490,9 +552,14 @@ export class PhantomClient {
       typeof config.data === "string" ? config.data : config.data === undefined ? "" : JSON.stringify(config.data);
     const dataUtf8 = Buffer.from(requestBody, "utf8");
 
-    // Get complete stamp from stamper
-
-    const stamp = await stamper.stamp({ data: dataUtf8 });
+    // Check if the stamper supports OIDC stamping (has additional parameters in stamp method)
+    const stampParams: any = { data: dataUtf8 };
+    
+    // For OIDC stampers, you would need to provide idToken and salt
+    // This would typically be configured at the stamper level or passed through context
+    // The current implementation supports PKI stamping by default
+    
+    const stamp = await stamper.stamp(stampParams);
 
     // Add the stamp header
     config.headers = config.headers || {};

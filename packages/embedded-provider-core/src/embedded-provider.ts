@@ -172,26 +172,22 @@ export class EmbeddedProvider {
 
     // Create an organization
     // organization name is a combination of this organizationId and this userId, which will be a unique identifier
-    const uid = Date.now(); // for now
-    const organizationName = `${this.config.organizationId}-${uid}`;
-
-    // Create authenticator name with platform info and public key for identification
     const platformName = this.platform.name || "unknown";
-    const shortPubKey = stamperInfo.publicKey.slice(0, 8); // First 8 chars of public key
-    const authenticatorName = `${platformName}-${shortPubKey}-${uid}`;
+    const shortPubKey = stamperInfo.publicKey.slice(0, 8);
+    const organizationName = `${this.config.organizationId}-${platformName}-${shortPubKey}`;
+
 
     this.logger.log("EMBEDDED_PROVIDER", "Creating organization", {
       organizationName,
-      authenticatorName,
+      publicKey: stamperInfo.publicKey,
       platform: platformName,
     });
 
     const { organizationId } = await tempClient.createOrganization(
       organizationName,
-      stamperInfo.publicKey,
-      authenticatorName,
+      stamperInfo.publicKey
     );
-    this.logger.info("EMBEDDED_PROVIDER", "Organization created", { organizationId, authenticatorName });
+    this.logger.info("EMBEDDED_PROVIDER", "Organization created", { organizationId });
 
     return { organizationId, stamperInfo };
   }

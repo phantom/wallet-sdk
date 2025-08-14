@@ -9,4 +9,7 @@ export { NetworkId } from "@phantom/constants";
 export {
   DerivationInfoAddressFormatEnum as AddressType,
   type ExternalKmsOrganization as Organization,
+  type CreateAuthenticatorRequest,
+  type DeleteAuthenticatorRequest,
+  type CreateOrganizationRequest,
 } from "@phantom/openapi-wallet-service";
