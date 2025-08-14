@@ -23,7 +23,7 @@ const mockedPhantomClient = jest.mocked(PhantomClient);
 
 // Set up generateKeyPair mock
 mockedGenerateKeyPair.mockReturnValue({
-  publicKey: "test-public-key",
+  publicKey: "11111111111111111111111111111111",
   secretKey: "test-secret-key",
 });
 
@@ -44,7 +44,7 @@ describe("EmbeddedProvider Auth Flows", () => {
 
     // Reset generateKeyPair mock
     mockedGenerateKeyPair.mockReturnValue({
-      publicKey: "test-public-key",
+      publicKey: "11111111111111111111111111111111",
       secretKey: "test-secret-key",
     });
 
@@ -81,11 +81,11 @@ describe("EmbeddedProvider Auth Flows", () => {
 
     // Mock stamper
     mockStamper = {
-      init: jest.fn().mockResolvedValue({ keyId: "test-key-id", publicKey: "test-public-key" }),
+      init: jest.fn().mockResolvedValue({ keyId: "test-key-id", publicKey: "11111111111111111111111111111111" }),
       sign: jest.fn().mockResolvedValue("mock-signature"),
       stamp: jest.fn().mockResolvedValue("mock-stamp"),
-      getKeyInfo: jest.fn().mockReturnValue({ keyId: "test-key-id", publicKey: "test-public-key" }),
-      resetKeyPair: jest.fn().mockResolvedValue({ keyId: "test-key-id", publicKey: "test-public-key" }),
+      getKeyInfo: jest.fn().mockReturnValue({ keyId: "test-key-id", publicKey: "11111111111111111111111111111111" }),
+      resetKeyPair: jest.fn().mockResolvedValue({ keyId: "test-key-id", publicKey: "11111111111111111111111111111111" }),
       clear: jest.fn().mockResolvedValue(undefined),
     };
 
@@ -413,8 +413,20 @@ describe("EmbeddedProvider Auth Flows", () => {
 
       expect(mockClient.createOrganization).toHaveBeenCalledWith(
         expect.stringContaining("test-org-id-"),
-        "test-public-key",
-        expect.stringMatching(/^test-platform-test-pub-\d+$/), // authenticatorName with platform name and short pubkey
+        expect.arrayContaining([
+          expect.objectContaining({
+            username: expect.stringContaining("user-"),
+            role: 'admin',
+            authenticators: expect.arrayContaining([
+              expect.objectContaining({
+                authenticatorName: expect.stringContaining("auth-"),
+                authenticatorKind: 'keypair',
+                publicKey: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                algorithm: 'Ed25519',
+              })
+            ])
+          })
+        ])
       );
     });
 

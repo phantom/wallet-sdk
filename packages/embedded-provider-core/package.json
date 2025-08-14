@@ -40,10 +40,12 @@
   "license": "MIT",
   "dependencies": {
     "@phantom/api-key-stamper": "workspace:^",
+    "@phantom/base64url": "workspace:^",
     "@phantom/client": "workspace:^",
     "@phantom/constants": "workspace:^",
     "@phantom/parsers": "workspace:^",
-    "@phantom/sdk-types": "workspace:^"
+    "@phantom/sdk-types": "workspace:^",
+    "bs58": "^6.0.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.5",

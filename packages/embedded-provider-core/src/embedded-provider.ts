@@ -1,5 +1,7 @@
 import { PhantomClient } from "@phantom/client";
 import type { AddressType } from "@phantom/client";
+import { base64urlEncode } from "@phantom/base64url";
+import bs58 from "bs58";
 import {
   parseMessage,
   parseTransaction,
@@ -172,26 +174,34 @@ export class EmbeddedProvider {
 
     // Create an organization
     // organization name is a combination of this organizationId and this userId, which will be a unique identifier
-    const uid = Date.now(); // for now
-    const organizationName = `${this.config.organizationId}-${uid}`;
-
-    // Create authenticator name with platform info and public key for identification
     const platformName = this.platform.name || "unknown";
-    const shortPubKey = stamperInfo.publicKey.slice(0, 8); // First 8 chars of public key
-    const authenticatorName = `${platformName}-${shortPubKey}-${uid}`;
+    const shortPubKey = stamperInfo.publicKey.slice(0, 8);
+    const organizationName = `${this.config.organizationId}-${platformName}-${shortPubKey}`;
+
 
     this.logger.log("EMBEDDED_PROVIDER", "Creating organization", {
       organizationName,
-      authenticatorName,
+      publicKey: stamperInfo.publicKey,
       platform: platformName,
     });
 
+    // Convert base58 public key to base64url format as required by the API
+    const base64urlPublicKey = base64urlEncode(bs58.decode(stamperInfo.publicKey));
+    
     const { organizationId } = await tempClient.createOrganization(
       organizationName,
-      stamperInfo.publicKey,
-      authenticatorName,
+      [{
+        username: `user-${shortPubKey}`,
+        role: 'admin',
+        authenticators: [{
+          authenticatorName: `auth-${shortPubKey}`,
+          authenticatorKind: 'keypair',
+          publicKey: base64urlPublicKey,
+          algorithm: 'Ed25519',
+        }]
+      }]
     );
-    this.logger.info("EMBEDDED_PROVIDER", "Organization created", { organizationId, authenticatorName });
+    this.logger.info("EMBEDDED_PROVIDER", "Organization created", { organizationId });
 
     return { organizationId, stamperInfo };
   }

@@ -69,6 +69,16 @@ export function PhantomProvider({ children, config }: PhantomProviderProps) {
     } catch (err) {
       console.error("Error updating connection state:", err);
       setError(err as Error);
+
+      // Call disconnect to reset state if an error occurs
+      try {
+        await sdk.disconnect();
+        setIsConnected(false);
+        setAddresses([]);
+        setWalletId(null);
+      } catch (err) {
+        console.error("Error disconnecting:", err);
+      }
     }
   }, [sdk]);
 

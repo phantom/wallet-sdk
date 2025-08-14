@@ -48,6 +48,7 @@ export function PhantomProvider({ children, config }: PhantomProviderProps) {
       solanaProvider: config.solanaProvider || "web3js",
       appName: config.appName,
       appLogo: config.appLogo, // Optional app logo URL
+      
     };
 
     // Create platform adapters
@@ -94,6 +95,16 @@ export function PhantomProvider({ children, config }: PhantomProviderProps) {
     } catch (err) {
       console.error("[PhantomProvider] Error updating connection state", err);
       setError(err as Error);
+
+      // Call disconnect to reset state if an error occurs
+      try {
+        sdk.disconnect();
+        setIsConnected(false);
+        setAddresses([]);
+        setWalletId(null);
+      } catch (disconnectErr) {
+        console.error("[PhantomProvider] Error disconnecting after error", disconnectErr);
+      }
     }
   }, [sdk]);
 
