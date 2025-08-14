@@ -1,7 +1,10 @@
 import type { NetworkId } from "@phantom/constants";
 import { base64urlEncode, stringToBase64url } from "@phantom/base64url";
 import { Buffer } from "buffer";
-import { parseSignMessageResponse as _parseSignMessageResponse, parseTransactionResponse as _parseTransactionResponse } from "./response-parsers";
+import {
+  parseSignMessageResponse as _parseSignMessageResponse,
+  parseTransactionResponse as _parseTransactionResponse,
+} from "./response-parsers";
 
 // Re-export response parsers
 export { parseSignMessageResponse, parseTransactionResponse } from "./response-parsers";
@@ -220,4 +223,3 @@ function parseBitcoinTransaction(transaction: any): ParsedTransaction {
 
   throw new Error("Unsupported Bitcoin transaction format");
 }
-

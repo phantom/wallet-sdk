@@ -22,7 +22,7 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
   private keyPrefix: string;
   private organizationId: string;
   private keyInfo: StamperKeyInfo | null = null;
-  algorithm= Algorithm.ed25519;
+  algorithm = Algorithm.ed25519;
 
   constructor(config: ReactNativeStamperConfig = {}) {
     this.keyPrefix = config.keyPrefix || "phantom-rn-stamper";
@@ -74,11 +74,7 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
    * @param data - Data to sign (Buffer)
    * @returns Complete X-Phantom-Stamp header value
    */
-  async stamp({
-    data
-  }: {
-    data: Buffer;
-  }): Promise<string> {
+  async stamp({ data }: { data: Buffer }): Promise<string> {
     if (!this.keyInfo) {
       throw new Error("Stamper not initialized. Call init() first.");
     }

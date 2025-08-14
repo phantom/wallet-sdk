@@ -6,11 +6,8 @@
 import { Buffer } from "buffer";
 import bs58 from "bs58";
 
-
 // Cache for dynamically imported modules
 const moduleCache = new Map<string, any>();
-
-
 
 /**
  * Try to dynamically import a module, return null if not available
@@ -321,7 +318,6 @@ export async function archivedParseSolanaTransactionResponse(
   networkId: NetworkId,
 ): Promise<ArchivedParsedTransactionResult> {
   try {
-   
     const result = await parseSolanaTransactionSignature(base64RawTransaction);
 
     return {

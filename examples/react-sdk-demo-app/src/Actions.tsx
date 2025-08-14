@@ -37,7 +37,7 @@ export function Actions() {
   const [solanaAddress, setSolanaAddress] = useState<string | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<ProviderType>("embedded");
   const [selectedEmbeddedType, setSelectedEmbeddedType] = useState<"user-wallet" | "app-wallet">("user-wallet");
-  
+
   // Use balance hook
   const { balance, loading: balanceLoading, error: balanceError, refetch: refetchBalance } = useBalance(solanaAddress);
   const hasBalance = balance !== null && balance > 0;
@@ -148,7 +148,6 @@ export function Actions() {
     }
   };
 
-
   return (
     <div id="app">
       <h1>Phantom React SDK Demo</h1>
@@ -253,16 +252,16 @@ export function Actions() {
                 <div className="balance-row">
                   <span className="balance-label">Balance:</span>
                   <span className="balance-value">
-                    {balanceLoading ? "Loading..." : 
-                     balanceError ? "Error" : 
-                     balance !== null ? `${balance.toFixed(4)} SOL` : "--"}
+                    {balanceLoading
+                      ? "Loading..."
+                      : balanceError
+                        ? "Error"
+                        : balance !== null
+                          ? `${balance.toFixed(4)} SOL`
+                          : "--"}
                   </span>
                 </div>
-                <button 
-                  className="small" 
-                  onClick={() => refetchBalance()} 
-                  disabled={balanceLoading}
-                >
+                <button className="small" onClick={() => refetchBalance()} disabled={balanceLoading}>
                   {balanceLoading ? "Loading..." : "Refresh"}
                 </button>
               </div>

@@ -1,6 +1,13 @@
 import { PhantomClient } from "@phantom/client";
 import type { AddressType } from "@phantom/client";
-import { parseMessage, parseTransaction, parseSignMessageResponse, parseTransactionResponse,type ParsedTransactionResult, type ParsedSignatureResult } from "@phantom/parsers";
+import {
+  parseMessage,
+  parseTransaction,
+  parseSignMessageResponse,
+  parseTransactionResponse,
+  type ParsedTransactionResult,
+  type ParsedSignatureResult,
+} from "@phantom/parsers";
 
 import type {
   PlatformAdapter,
@@ -148,7 +155,11 @@ export class EmbeddedProvider {
     // Initialize stamper (generates keypair in IndexedDB)
     this.logger.log("EMBEDDED_PROVIDER", "Initializing stamper");
     const stamperInfo = await this.stamper.init();
-    this.logger.log("EMBEDDED_PROVIDER", "Stamper initialized", { publicKey: stamperInfo.publicKey, keyId: stamperInfo.keyId, algorithm: this.stamper.algorithm });
+    this.logger.log("EMBEDDED_PROVIDER", "Stamper initialized", {
+      publicKey: stamperInfo.publicKey,
+      keyId: stamperInfo.keyId,
+      algorithm: this.stamper.algorithm,
+    });
 
     // Create a temporary client with the stamper
     this.logger.log("EMBEDDED_PROVIDER", "Creating temporary PhantomClient");
@@ -163,19 +174,23 @@ export class EmbeddedProvider {
     // organization name is a combination of this organizationId and this userId, which will be a unique identifier
     const uid = Date.now(); // for now
     const organizationName = `${this.config.organizationId}-${uid}`;
-    
+
     // Create authenticator name with platform info and public key for identification
     const platformName = this.platform.name || "unknown";
     const shortPubKey = stamperInfo.publicKey.slice(0, 8); // First 8 chars of public key
     const authenticatorName = `${platformName}-${shortPubKey}-${uid}`;
-    
-    this.logger.log("EMBEDDED_PROVIDER", "Creating organization", { 
-      organizationName, 
-      authenticatorName, 
-      platform: platformName 
+
+    this.logger.log("EMBEDDED_PROVIDER", "Creating organization", {
+      organizationName,
+      authenticatorName,
+      platform: platformName,
     });
-   
-    const { organizationId } = await tempClient.createOrganization(organizationName, stamperInfo.publicKey, authenticatorName);
+
+    const { organizationId } = await tempClient.createOrganization(
+      organizationName,
+      stamperInfo.publicKey,
+      authenticatorName,
+    );
     this.logger.info("EMBEDDED_PROVIDER", "Organization created", { organizationId, authenticatorName });
 
     return { organizationId, stamperInfo };
@@ -295,15 +310,22 @@ export class EmbeddedProvider {
 
   async disconnect(): Promise<void> {
     await this.storage.clearSession();
+
     this.client = null;
     this.walletId = null;
     this.addresses = [];
+    this.logger.info("EMBEDDED_PROVIDER", "Disconnected from embedded wallet");
   }
 
   async signMessage(params: SignMessageParams): Promise<ParsedSignatureResult> {
     if (!this.client || !this.walletId) {
       throw new Error("Not connected");
     }
+
+    this.logger.info("EMBEDDED_PROVIDER", "Signing message", {
+      walletId: this.walletId,
+      message: params.message,
+    });
 
     // Parse message to base64url format for client
     const parsedMessage = parseMessage(params.message);
@@ -315,6 +337,11 @@ export class EmbeddedProvider {
       networkId: params.networkId,
     });
 
+    this.logger.info("EMBEDDED_PROVIDER", "Message signed successfully", {
+      walletId: this.walletId,
+      message: params.message,
+    });
+
     // Parse the response to get human-readable signature and explorer URL
     return parseSignMessageResponse(rawResponse, params.networkId);
   }
@@ -324,14 +351,31 @@ export class EmbeddedProvider {
       throw new Error("Not connected");
     }
 
+    this.logger.info("EMBEDDED_PROVIDER", "Signing and sending transaction", {
+      walletId: this.walletId,
+      networkId: params.networkId,
+    });
+
     // Parse transaction to base64url format for client based on network
     const parsedTransaction = await parseTransaction(params.transaction, params.networkId);
+
+    this.logger.log("EMBEDDED_PROVIDER", "Parsed transaction for signing", {
+      walletId: this.walletId,
+      transaction: parsedTransaction,
+    });
 
     // Get raw response from client
     const rawResponse = await this.client.signAndSendTransaction({
       walletId: this.walletId,
       transaction: parsedTransaction.base64url,
       networkId: params.networkId,
+    });
+
+    this.logger.info("EMBEDDED_PROVIDER", "Transaction signed and sent successfully", {
+      walletId: this.walletId,
+      networkId: params.networkId,
+      hash: rawResponse.hash,
+      rawTransaction: rawResponse.rawTransaction,
     });
 
     // Parse the response to get transaction hash and explorer URL
@@ -373,9 +417,11 @@ export class EmbeddedProvider {
           provider: authOptions?.provider,
         });
         return await this.handleRedirectAuth(organizationId, stamperInfo, authOptions);
-       
       }
     } else {
+      this.logger.info("EMBEDDED_PROVIDER", "Creating app-wallet", {
+        organizationId,
+      });
       // Create app-wallet directly
       const tempClient = new PhantomClient(
         {
@@ -401,7 +447,10 @@ export class EmbeddedProvider {
         createdAt: now,
         lastUsed: now,
       };
+
       await this.storage.saveSession(session);
+
+      this.logger.info("EMBEDDED_PROVIDER", "App-wallet created successfully", { walletId, organizationId });
       return session;
     }
   }
@@ -410,7 +459,11 @@ export class EmbeddedProvider {
    * We use this method to handle JWT-based authentication for user-wallets.
    * It authenticates using the provided JWT token and creates a completed session.
    */
-  private async handleJWTAuth(organizationId: string, stamperInfo: StamperInfo, authOptions: AuthOptions): Promise<Session> {
+  private async handleJWTAuth(
+    organizationId: string,
+    stamperInfo: StamperInfo,
+    authOptions: AuthOptions,
+  ): Promise<Session> {
     this.logger.info("EMBEDDED_PROVIDER", "Using JWT authentication flow");
 
     // Use JWT authentication flow
@@ -452,7 +505,11 @@ export class EmbeddedProvider {
    * It saves a temporary session before redirecting to prevent losing state during the redirect flow.
    * Session timestamp is updated before redirect to prevent race conditions.
    */
-  private async handleRedirectAuth(organizationId: string, stamperInfo: StamperInfo, authOptions?: AuthOptions): Promise<Session | null> {
+  private async handleRedirectAuth(
+    organizationId: string,
+    stamperInfo: StamperInfo,
+    authOptions?: AuthOptions,
+  ): Promise<Session | null> {
     this.logger.info("EMBEDDED_PROVIDER", "Using Phantom Connect authentication flow (redirect-based)", {
       provider: authOptions?.provider,
       hasRedirectUrl: !!this.config.authOptions?.redirectUrl,
@@ -499,6 +556,8 @@ export class EmbeddedProvider {
       customAuthData: authOptions?.customAuthData,
       authUrl: this.config.authOptions?.authUrl,
       sessionId: sessionId,
+      appName: this.config.appName,
+      appLogo: this.config.appLogo,
     });
 
     if (authResult && "walletId" in authResult) {

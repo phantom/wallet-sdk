@@ -6,7 +6,7 @@ import {
   type CreateWalletResult,
   type GetWalletsResult,
   type AddressType,
-  type Organization
+  type Organization,
 } from "@phantom/client";
 import { ApiKeyStamper } from "@phantom/api-key-stamper";
 import {
@@ -36,10 +36,10 @@ export interface ServerSignAndSendTransactionParams {
   networkId: NetworkId;
 }
 
-export class ServerSDK  {
+export class ServerSDK {
   private config: ServerSDKConfig;
   client: PhantomClient;
-  
+
   constructor(config: ServerSDKConfig) {
     this.config = config;
     // Create the API key stamper
@@ -95,12 +95,11 @@ export class ServerSDK  {
       transaction: parsedTransaction.base64url,
       networkId: params.networkId,
     };
-        // Get raw response from client
+    // Get raw response from client
     const rawResponse = await this.client.signAndSendTransaction(signAndSendParams);
 
     // Parse the response to get transaction hash and explorer URL
     return await parseTransactionResponse(rawResponse.rawTransaction, params.networkId, rawResponse.hash);
-  
   }
 
   createOrganization(
@@ -125,12 +124,15 @@ export class ServerSDK  {
   getWallets(limit?: number, offset?: number): Promise<GetWalletsResult> {
     return this.client.getWallets(limit, offset);
   }
-  
+
   createWallet(name: string): Promise<CreateWalletResult> {
     return this.client.createWallet(name);
   }
-  
-  getWalletAddresses(walletId: string, derivationPaths?: string[]): Promise<{ addressType: AddressType; address: string }[]> {
+
+  getWalletAddresses(
+    walletId: string,
+    derivationPaths?: string[],
+  ): Promise<{ addressType: AddressType; address: string }[]> {
     return this.client.getWalletAddresses(walletId, derivationPaths);
   }
 }

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { useState, useEffect, useCallback } from "react";
+import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 interface UseBalanceReturn {
   balance: number | null;
@@ -13,9 +13,9 @@ export function useBalance(address: string | null): UseBalanceReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const rpcUrl = process.env.EXPO_PUBLIC_SOLANA_RPC_URL_MAINNET || 'https://api.mainnet-beta.solana.com';
+  const rpcUrl = process.env.EXPO_PUBLIC_SOLANA_RPC_URL_MAINNET || "https://api.mainnet-beta.solana.com";
 
-  const fetchBalance = async () => {
+  const fetchBalance = useCallback(async () => {
     if (!address) {
       setBalance(null);
       setError(null);
@@ -26,23 +26,23 @@ export function useBalance(address: string | null): UseBalanceReturn {
     setError(null);
 
     try {
-      const connection = new Connection(rpcUrl, 'confirmed');
+      const connection = new Connection(rpcUrl, "confirmed");
       const publicKey = new PublicKey(address);
       const balanceInLamports = await connection.getBalance(publicKey);
       const balanceInSol = balanceInLamports / LAMPORTS_PER_SOL;
       setBalance(balanceInSol);
     } catch (err) {
-      console.error('Failed to fetch balance:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch balance');
+      console.error("Failed to fetch balance:", err);
+      setError(err instanceof Error ? err.message : "Failed to fetch balance");
       setBalance(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, [address, rpcUrl]);
 
   useEffect(() => {
     fetchBalance();
-  }, [address]);
+  }, [fetchBalance]);
 
   return {
     balance,

@@ -6,6 +6,7 @@ import { AuthCallback } from "./AuthCallback";
 // Configuration supporting both embedded and injected providers
 const config: PhantomSDKConfig = {
   appName: "React SDK Demo App",
+  appLogo: "https://picsum.photos/200", // Optional app logo URL
   providerType: "injected", // Default to embedded
   addressTypes: [AddressType.solana, AddressType.ethereum, AddressType.bitcoinSegwit, AddressType.sui],
 
@@ -20,6 +21,7 @@ const config: PhantomSDKConfig = {
     authUrl: import.meta.env.VITE_AUTH_URL || "https://connect.phantom.app",
     redirectUrl: import.meta.env.VITE_REDIRECT_URL,
   },
+
   // Enable debug by default
   debug: {
     enabled: true,

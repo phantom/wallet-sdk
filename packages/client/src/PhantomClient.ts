@@ -35,7 +35,7 @@ import {
   KmsUserRole,
   Algorithm,
   type ExternalKmsOrganization,
-  type DerivationInfoAddressFormatEnum
+  type DerivationInfoAddressFormatEnum,
 } from "@phantom/openapi-wallet-service";
 import { DerivationPath, getNetworkConfig } from "./constants";
 import { deriveSubmissionConfig } from "./caip2-mappings";
@@ -48,7 +48,7 @@ import {
   type SignAndSendTransactionParams,
 } from "./types";
 
-import type {Stamper} from "@phantom/sdk-types";
+import type { Stamper } from "@phantom/sdk-types";
 
 // TODO(napas): Auto generate this from the OpenAPI spec
 export interface SubmissionConfig {
@@ -96,7 +96,6 @@ export class PhantomClient {
     }
     this.config.organizationId = organizationId;
   }
-
 
   async createWallet(walletName?: string): Promise<CreateWalletResult> {
     try {
@@ -214,7 +213,7 @@ export class PhantomClient {
       const hash = rpcSubmissionResult ? rpcSubmissionResult.result : null;
       return {
         rawTransaction: result.transaction as unknown as string, // Base64 encoded signed transaction
-        hash
+        hash,
       };
     } catch (error: any) {
       console.error("Failed to sign and send transaction:", error.response?.data || error.message);
@@ -349,7 +348,11 @@ export class PhantomClient {
     }
   }
 
-  async getOrCreateOrganization(tag: string, publicKey: string, authenticatorName?: string): Promise<ExternalKmsOrganization> {
+  async getOrCreateOrganization(
+    tag: string,
+    publicKey: string,
+    authenticatorName?: string,
+  ): Promise<ExternalKmsOrganization> {
     try {
       // First, try to get the organization
       // Since there's no explicit getOrganization method, we'll create it
@@ -361,14 +364,17 @@ export class PhantomClient {
     }
   }
 
-
   /**
    * Create a new organization with the specified name and public key
    * @param name Organization name
    * @param publicKey Base58 encoded public key for the admin user
    * @param authenticatorName Optional custom name for the authenticator. If not provided, defaults to "KeyPair {timestamp}"
    */
-  async createOrganization(name: string, publicKey: string, authenticatorName?: string): Promise<ExternalKmsOrganization> {
+  async createOrganization(
+    name: string,
+    publicKey: string,
+    authenticatorName?: string,
+  ): Promise<ExternalKmsOrganization> {
     try {
       if (!name) {
         throw new Error("Organization name is required");
@@ -403,7 +409,6 @@ export class PhantomClient {
       const result = response.data.result as ExternalKmsOrganization;
 
       return result;
-  
     } catch (error: any) {
       console.error("Failed to create organization:", error.response?.data || error.message);
       throw new Error(`Failed to create organization: ${error.response?.data?.message || error.message}`);
@@ -484,7 +489,7 @@ export class PhantomClient {
     const requestBody =
       typeof config.data === "string" ? config.data : config.data === undefined ? "" : JSON.stringify(config.data);
     const dataUtf8 = Buffer.from(requestBody, "utf8");
-    
+
     // Get complete stamp from stamper
 
     const stamp = await stamper.stamp({ data: dataUtf8 });

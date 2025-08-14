@@ -1,5 +1,15 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, SafeAreaView, TextInput } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  SafeAreaView,
+  TextInput,
+  Linking,
+} from "react-native";
 import { useRouter } from "expo-router";
 import {
   useAccounts,
@@ -14,12 +24,15 @@ export default function WalletScreen() {
   const router = useRouter();
   const { isConnected, addresses, walletId } = useAccounts();
   const { signMessage, isSigning: isSigningMessage, error: signError } = useSignMessage();
-  const { isSigning: isSigningTx, error: txError } = useSignAndSendTransaction();
+  const { isSigning: isSigningTx, error: txError, signAndSendTransaction } = useSignAndSendTransaction();
   const { disconnect, isDisconnecting } = useDisconnect();
 
   const [messageToSign, setMessageToSign] = useState("Hello from Phantom React Native SDK Demo!");
   const [signedMessage, setSignedMessage] = useState<string | null>(null);
-  
+  const [transactionResult, setTransactionResult] = useState<string | null>(null);
+  const [transactionError, setTransactionError] = useState<string | null>(null);
+  const [transactionExplorer, setTransactionExplorer] = useState<string | null>(null);
+
   // Get Solana address for balance checking
   const solanaAddress = addresses?.find(addr => addr.addressType === "Solana")?.address || null;
   const { balance, loading: balanceLoading, error: balanceError, refetch: refetchBalance } = useBalance(solanaAddress);
@@ -45,34 +58,107 @@ export default function WalletScreen() {
       });
 
       setSignedMessage(result.signature);
-      Alert.alert(
-        "Success",
-        `Message signed successfully!\n\nSignature: ${result.signature.slice(0, 20)}...${result.blockExplorer ? `\n\nView on explorer: ${result.blockExplorer}` : ""}`,
-      );
+      Alert.alert("Success", `Message signed successfully!\n\nSignature: ${result.signature.slice(0, 20)}...`);
     } catch (error) {
       Alert.alert("Error", `Failed to sign message: ${(error as Error).message}`);
     }
   };
 
-  const handleSignTransaction = () => {
+  const handleSignTransaction = async () => {
+    if (!hasBalance) {
+      Alert.alert("Error", "Insufficient balance to send transaction");
+      return;
+    }
+
     Alert.alert(
-      "Demo Transaction",
-      "This would sign and send a transaction. In a real app, you would provide a transaction object.",
+      "Send Transaction",
+      "This will create a small self-transfer transaction (0.000001 SOL) to demonstrate signing and sending.",
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: "Simulate",
-          onPress: () => {
+          text: "Send Transaction",
+          onPress: async () => {
             try {
-              // This is a demo - in a real app you'd have a proper transaction
-              Alert.alert("Demo", "Transaction signing simulation - not implemented in this demo");
+              setTransactionError(null);
+              setTransactionResult(null);
+              await sendTestTransaction();
             } catch (error) {
-              Alert.alert("Error", `Failed to sign transaction: ${(error as Error).message}`);
+              setTransactionError(`Failed to sign transaction: ${(error as Error).message}`);
+              setTransactionResult(null);
             }
           },
         },
       ],
     );
+  };
+
+  const sendTestTransaction = async () => {
+    try {
+      // Find Solana address
+      const solanaAddress = addresses?.find(addr => addr.addressType === "Solana")?.address;
+      if (!solanaAddress) {
+        Alert.alert("Error", "No Solana address found");
+        return;
+      }
+
+      // Import Solana web3.js components
+      const { SystemProgram, PublicKey, Connection, VersionedTransaction, TransactionMessage } = await import(
+        "@solana/web3.js"
+      );
+
+      // Create connection to get recent blockhash using environment variable
+      const rpcUrl = process.env.EXPO_PUBLIC_SOLANA_RPC_URL_MAINNET || "https://api.mainnet-beta.solana.com";
+      const connection = new Connection(rpcUrl);
+
+      // Get recent blockhash
+      const { blockhash } = await connection.getLatestBlockhash();
+
+      // Create a self-transfer instruction (very small amount for demo)
+      const transferInstruction = SystemProgram.transfer({
+        fromPubkey: new PublicKey(solanaAddress),
+        toPubkey: new PublicKey(solanaAddress), // Self-transfer
+        lamports: 1000, // 0.000001 SOL
+      });
+
+      // Create versioned transaction
+      const messageV0 = new TransactionMessage({
+        payerKey: new PublicKey(solanaAddress),
+        recentBlockhash: blockhash,
+        instructions: [transferInstruction],
+      }).compileToV0Message();
+
+      const transaction = new VersionedTransaction(messageV0);
+
+      // Sign and send the transaction
+      const result = await signAndSendTransaction({
+        transaction: transaction,
+        networkId: NetworkId.SOLANA_MAINNET,
+      });
+
+      // Set success state
+      setTransactionResult(`Transaction sent successfully!\n\nSignature: ${result.rawTransaction}`);
+      setTransactionExplorer(result.blockExplorer || null);
+      setTransactionError(null);
+
+      // Refresh balance after successful transaction
+      setTimeout(() => refetchBalance(), 2000);
+    } catch (error) {
+      console.error("Transaction error:", error);
+      throw error;
+    }
+  };
+
+  const handleOpenExplorer = async (url: string) => {
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert("Error", "Cannot open block explorer URL");
+      }
+    } catch (error) {
+      Alert.alert("Error", `Failed to open URL: ${(error as Error).message}`);
+    }
   };
 
   const handleDisconnect = () => {
@@ -143,9 +229,13 @@ export default function WalletScreen() {
             <View style={styles.balanceContainer}>
               <View style={styles.balanceDisplay}>
                 <Text style={styles.balanceValue}>
-                  {balanceLoading ? "Loading..." : 
-                   balanceError ? "Error" : 
-                   balance !== null ? `${balance.toFixed(4)} SOL` : "--"}
+                  {balanceLoading
+                    ? "Loading..."
+                    : balanceError
+                      ? "Error"
+                      : balance !== null
+                        ? `${balance.toFixed(4)} SOL`
+                        : "--"}
                 </Text>
               </View>
               <TouchableOpacity
@@ -222,6 +312,50 @@ export default function WalletScreen() {
           {txError && (
             <View style={styles.errorContainer}>
               <Text style={styles.errorText}>{txError.message}</Text>
+            </View>
+          )}
+
+          {/* Transaction Result Display */}
+          {transactionResult && (
+            <View style={styles.resultContainer}>
+              <Text style={styles.resultLabel}>Transaction Result:</Text>
+              <Text style={styles.resultValue} numberOfLines={6}>
+                {transactionResult}
+              </Text>
+              {transactionExplorer && (
+                <TouchableOpacity
+                  style={[styles.button, styles.explorerButton]}
+                  onPress={() => handleOpenExplorer(transactionExplorer)}
+                >
+                  <Text style={[styles.buttonText, { color: "#059669" }]}>View on Block Explorer</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                style={[styles.button, styles.clearButton]}
+                onPress={() => {
+                  setTransactionResult(null);
+                  setTransactionError(null);
+                  setTransactionExplorer(null);
+                }}
+              >
+                <Text style={[styles.buttonText, { color: "#6366f1" }]}>Clear</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Transaction Error Display */}
+          {transactionError && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{transactionError}</Text>
+              <TouchableOpacity
+                style={[styles.button, styles.clearButton]}
+                onPress={() => {
+                  setTransactionResult(null);
+                  setTransactionError(null);
+                }}
+              >
+                <Text style={[styles.buttonText, { color: "#ef4444" }]}>Clear Error</Text>
+              </TouchableOpacity>
             </View>
           )}
         </View>
@@ -350,6 +484,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     borderColor: "#6366f1",
     borderWidth: 1,
+    paddingHorizontal: 16,
+  },
+  clearButton: {
+    backgroundColor: "#ffffff",
+    borderColor: "#6366f1",
+    borderWidth: 1,
+    marginTop: 10,
+    paddingHorizontal: 16,
+  },
+  explorerButton: {
+    backgroundColor: "#ffffff",
+    borderColor: "#059669",
+    borderWidth: 1,
+    marginTop: 10,
     paddingHorizontal: 16,
   },
   buttonText: {

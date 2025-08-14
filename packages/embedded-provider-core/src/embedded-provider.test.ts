@@ -120,7 +120,7 @@ describe("EmbeddedProvider Core", () => {
     it("should call platform auth provider for redirect authentication", async () => {
       mockPlatform.storage.getSession.mockResolvedValue(null); // No existing session
       mockPlatform.authProvider.resumeAuthFromRedirect.mockReturnValue(null);
-      
+
       const authOptions = { provider: "google" as const };
 
       try {
@@ -133,7 +133,7 @@ describe("EmbeddedProvider Core", () => {
         expect.objectContaining({
           provider: "google",
           parentOrganizationId: config.organizationId,
-        })
+        }),
       );
     });
 
@@ -191,7 +191,7 @@ describe("EmbeddedProvider Core", () => {
       // Verify PhantomClient was called with the stamper as second argument
       expect(MockedPhantomClient).toHaveBeenCalledWith(
         expect.any(Object), // config object
-        mockPlatform.stamper // stamper should be passed as second argument
+        mockPlatform.stamper, // stamper should be passed as second argument
       );
     });
 
@@ -209,39 +209,32 @@ describe("EmbeddedProvider Core", () => {
       expect(mockCreateOrganization).toHaveBeenCalledWith(
         expect.stringMatching(/^test-org-id-\d+$/), // organization name
         "test-public-key", // public key
-        expect.stringMatching(/^test-platform-test-pub-\d+$/) // authenticatorName with platform name and short pubkey
+        expect.stringMatching(/^test-platform-test-pub-\d+$/), // authenticatorName with platform name and short pubkey
       );
     });
 
     it("should call provided logger during provider operations", () => {
       // Verify logger was called during provider initialization
-      expect(mockLogger.log).toHaveBeenCalledWith(
-        "EMBEDDED_PROVIDER",
-        "Initializing EmbeddedProvider",
-        { config }
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        "EMBEDDED_PROVIDER",
-        "EmbeddedProvider initialized"
-      );
+      expect(mockLogger.log).toHaveBeenCalledWith("EMBEDDED_PROVIDER", "Initializing EmbeddedProvider", { config });
+      expect(mockLogger.info).toHaveBeenCalledWith("EMBEDDED_PROVIDER", "EmbeddedProvider initialized");
     });
 
     it("should use platform stamper for signing operations", async () => {
       // Mock connected state
-      provider['client'] = {
+      provider["client"] = {
         signMessage: jest.fn().mockResolvedValue("signed-message"),
       } as any;
-      provider['walletId'] = "test-wallet-id";
+      provider["walletId"] = "test-wallet-id";
 
       const testMessage = "test message to sign";
-      await provider.signMessage({ 
-        message: testMessage, 
-        networkId: "solana:101" 
+      await provider.signMessage({
+        message: testMessage,
+        networkId: "solana:101",
       });
 
       // The stamper won't be called directly for signMessage - the client handles it
       // But we can verify the client's signMessage was called
-      expect(provider['client'].signMessage).toHaveBeenCalled();
+      expect(provider["client"].signMessage).toHaveBeenCalled();
     });
 
     it("should call platform stamper getKeyInfo during client initialization", async () => {
@@ -260,7 +253,7 @@ describe("EmbeddedProvider Core", () => {
 
       mockPlatform.storage.getSession.mockResolvedValue(mockSession);
       mockPlatform.authProvider.resumeAuthFromRedirect.mockReturnValue(null);
-      
+
       // Mock stamper to return null for getKeyInfo to trigger init
       mockPlatform.stamper.getKeyInfo.mockReturnValue(null);
 
@@ -277,30 +270,30 @@ describe("EmbeddedProvider Core", () => {
     it("should call platform stamper clear during reset operations", async () => {
       // Test that we can call stamper.clear if needed for cleanup
       // This would typically be used during error recovery or manual reset
-      
+
       // Simulate a scenario where we need to clear stamper keys
       await mockPlatform.stamper.clear();
-      
+
       expect(mockPlatform.stamper.clear).toHaveBeenCalled();
     });
 
     it("should call platform stamper resetKeyPair during key reset operations", async () => {
       // Test that we can reset stamper keys if needed
       // This would typically be used during error recovery or manual key rotation
-      
+
       // Simulate a scenario where we need to reset stamper keys
       await mockPlatform.stamper.resetKeyPair();
-      
+
       expect(mockPlatform.stamper.resetKeyPair).toHaveBeenCalled();
     });
 
     it("should use platform storage for session persistence during JWT auth", async () => {
       mockPlatform.storage.getSession.mockResolvedValue(null);
       mockPlatform.authProvider.resumeAuthFromRedirect.mockReturnValue(null);
-      
-      const authOptions = { 
-        provider: "jwt" as const, 
-        jwtToken: "test-jwt-token" 
+
+      const authOptions = {
+        provider: "jwt" as const,
+        jwtToken: "test-jwt-token",
       };
 
       // Mock JWT auth and organization creation
@@ -308,10 +301,10 @@ describe("EmbeddedProvider Core", () => {
         authenticate: jest.fn().mockResolvedValue({
           walletId: "wallet-123",
           provider: "jwt",
-          userInfo: { id: "user123" }
-        })
+          userInfo: { id: "user123" },
+        }),
       };
-      provider['jwtAuth'] = mockJwtAuth;
+      provider["jwtAuth"] = mockJwtAuth;
 
       try {
         await provider.connect(authOptions);
@@ -323,8 +316,8 @@ describe("EmbeddedProvider Core", () => {
         expect.objectContaining({
           walletId: "wallet-123",
           authProvider: "jwt",
-          status: "completed"
-        })
+          status: "completed",
+        }),
       );
     });
   });

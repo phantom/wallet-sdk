@@ -153,6 +153,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const baseConfig = {
       solanaProvider: solanaProvider,
       addressTypes: [AddressType.solana, AddressType.ethereum],
+      appName: "Phantom Browser SDK Demo",
+      appLogo: "https://picsum.photos/200", // Optional app logo URL
       debug: {
         enabled: true,
         level: debugLevel ? (parseInt(debugLevel.value) as DebugLevel) : DebugLevel.DEBUG,
@@ -201,16 +203,16 @@ document.addEventListener("DOMContentLoaded", () => {
     addresses.forEach(address => {
       const addressItem = document.createElement("div");
       addressItem.className = "address-item";
-      
+
       const addressType = document.createElement("div");
       addressType.className = "address-type";
       addressType.textContent = address.addressType;
-      
+
       const addressValue = document.createElement("div");
       addressValue.className = "address-value";
       addressValue.textContent = address.address;
       addressValue.title = `Click to select ${address.addressType} address`;
-      
+
       addressItem.appendChild(addressType);
       addressItem.appendChild(addressValue);
       addressesList.appendChild(addressItem);
@@ -220,7 +222,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Update balance display
   async function updateBalanceDisplay() {
     if (!balanceSection || !balanceValue) return;
-    
+
     const solanaAddress = connectedAddresses.find(a => a.addressType === AddressType.solana);
     if (!solanaAddress) {
       balanceSection.style.display = "none";
@@ -248,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Update button states
   function updateButtonStates(connected: boolean) {
     const hasBalance = currentBalance !== null && currentBalance > 0;
-    
+
     if (connectBtn) connectBtn.disabled = connected;
     if (getAccountBtn) getAccountBtn.disabled = !connected;
     if (signMessageBtn) signMessageBtn.disabled = !connected;
@@ -295,7 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const addresses = await sdk.getAddresses();
         connectedAddresses = addresses;
         console.log("Current addresses:", addresses);
-        
+
         // Update the display with refreshed addresses
         updateAddressesDisplay(addresses);
         await updateBalanceDisplay();

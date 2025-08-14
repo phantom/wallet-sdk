@@ -13,7 +13,6 @@ import { isPhantomExtensionInstalled } from "@phantom/browser-injected-sdk";
 import { debug, DebugCategory } from "./debug";
 export class BrowserSDK {
   private providerManager: ProviderManager;
-  private config: BrowserSDKConfig;
 
   constructor(config: BrowserSDKConfig) {
     // Initialize debugging if configured
@@ -54,7 +53,6 @@ export class BrowserSDK {
 
     config.embeddedWalletType = embeddedWalletType as "app-wallet" | "user-wallet";
 
-    this.config = config;
     debug.log(DebugCategory.BROWSER_SDK, "Creating ProviderManager", { config });
     this.providerManager = new ProviderManager(config);
     debug.info(DebugCategory.BROWSER_SDK, "BrowserSDK initialized successfully");

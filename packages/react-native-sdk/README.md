@@ -94,9 +94,12 @@ export default function App() {
         embeddedWalletType: "user-wallet",
         addressTypes: [AddressType.solana],
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
+        solanaProvider: "web3js",
         authOptions: {
           redirectUrl: "mywalletapp://phantom-auth-callback",
         },
+        appName: "My Wallet App", // Optional branding
+        debug: false, // Optional debug logging
       }}
     >
       <YourAppContent />
@@ -115,7 +118,7 @@ import { useConnect, useAccounts, useSignMessage, useDisconnect } from "@phantom
 
 export function WalletScreen() {
   const { connect, isConnecting, error: connectError } = useConnect();
-  const { addresses, isConnected, walletId } = useAccounts();
+  const { addresses, isConnected } = useAccounts();
   const { signMessage, isSigning } = useSignMessage();
   const { disconnect } = useDisconnect();
 
@@ -156,7 +159,6 @@ export function WalletScreen() {
   return (
     <View style={{ padding: 20 }}>
       <Text style={{ fontSize: 18, marginBottom: 10 }}>Wallet Connected</Text>
-      <Text>Wallet ID: {walletId}</Text>
       <Text>Address: {addresses[0]?.address}</Text>
 
       <Button
@@ -187,16 +189,20 @@ The main provider component that initializes the SDK and provides context to all
 #### Configuration Options
 
 ```typescript
-interface PhantomProviderConfig {
+interface PhantomSDKConfig {
   organizationId: string; // Your Phantom organization ID
   scheme: string; // Custom URL scheme for your app
   embeddedWalletType: "user-wallet" | "app-wallet";
-  addressTypes: AddressType[];
-  apiBaseUrl: "https://api.phantom.app/v1/wallets";
+  addressTypes: AddressType[]; // e.g., [AddressType.solana]
+  apiBaseUrl: string; // e.g., "https://api.phantom.app/v1/wallets"
+  solanaProvider: "web3js" | "kit"; // Solana provider to use
   authOptions?: {
     authUrl?: string; // Custom auth URL (optional)
     redirectUrl?: string; // Custom redirect URL (optional)
   };
+  appName?: string; // Optional app name for branding
+  appLogo?: string; // Optional app logo URL for branding
+  debug?: boolean; // Enable debug logging (optional)
 }
 ```
 

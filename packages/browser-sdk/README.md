@@ -87,6 +87,12 @@ const sdk = new BrowserSDK({
     authUrl: "https://auth.phantom.app", // optional, defaults to "https://connect.phantom.app"
     redirectUrl: "https://yourapp.com/callback", // optional, defaults to current page
   },
+  appName: "My DApp", // optional, for branding
+  appLogo: "https://myapp.com/logo.png", // optional, for branding
+  debug: {
+    enabled: true, // optional, enable debug logging
+    level: "info", // optional, debug level
+  },
 });
 ```
 
@@ -169,9 +175,11 @@ new BrowserSDK(config: BrowserSDKConfig)
 ```typescript
 interface BrowserSDKConfig {
   providerType: "injected" | "embedded";
+  appName?: string; // Optional app name for branding
+  appLogo?: string; // Optional app logo URL for branding
+  addressTypes?: AddressType[]; // Networks to enable (e.g., [AddressType.solana])
 
   // Required for embedded provider only
-  addressTypes?: AddressType[]; // Networks to enable
   apiBaseUrl?: string; // Phantom API base URL
   organizationId?: string; // Your organization ID
   authOptions?: {
@@ -180,6 +188,13 @@ interface BrowserSDKConfig {
   };
   embeddedWalletType?: "app-wallet" | "user-wallet"; // Wallet type
   solanaProvider?: "web3js" | "kit"; // Solana library choice (default: 'web3js')
+
+  // Debug options
+  debug?: {
+    enabled?: boolean; // Enable debug logging
+    level?: "info" | "warn" | "error"; // Debug level
+    callback?: (level: string, message: string, data?: any) => void; // Custom debug callback
+  };
 }
 ```
 
@@ -663,8 +678,8 @@ try {
 2. **Install dependencies based on enabled networks**:
 
    | AddressType                 | Required Dependencies              |
-   | --------------------------- | ---------------------------------- | 
-   | `AddressType.solana`        | `@solana/web3.js` OR `@solana/kit` | 
+   | --------------------------- | ---------------------------------- |
+   | `AddressType.solana`        | `@solana/web3.js` OR `@solana/kit` |
    | `AddressType.ethereum`      | `viem`                             |
    | `AddressType.bitcoinSegwit` | `bitcoinjs-lib`                    |
    | `AddressType.sui`           | `@mysten/sui.js`                   |
