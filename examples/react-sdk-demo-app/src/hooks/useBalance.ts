@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createSolanaRpc, address } from "@solana/kit";
 
 interface UseBalanceReturn {
@@ -15,7 +15,7 @@ export function useBalance(addressValue: string | null): UseBalanceReturn {
 
   const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL_MAINNET || "https://api.mainnet-beta.solana.com";
 
-  const fetchBalance = async () => {
+  const fetchBalance = useCallback(async () => {
     if (!addressValue) {
       setBalance(null);
       setError(null);
@@ -38,11 +38,11 @@ export function useBalance(addressValue: string | null): UseBalanceReturn {
     } finally {
       setLoading(false);
     }
-  };
+  }, [addressValue, rpcUrl]);
 
   useEffect(() => {
     fetchBalance();
-  }, [addressValue]);
+  }, [fetchBalance]);
 
   return {
     balance,
