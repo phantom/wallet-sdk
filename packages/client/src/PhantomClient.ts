@@ -548,14 +548,10 @@ export class PhantomClient {
       typeof config.data === "string" ? config.data : config.data === undefined ? "" : JSON.stringify(config.data);
     const dataUtf8 = Buffer.from(requestBody, "utf8");
 
-    // Check if the stamper supports OIDC stamping (has additional parameters in stamp method)
-    const stampParams: any = { data: dataUtf8 };
-    
-    // For OIDC stampers, you would need to provide idToken and salt
-    // This would typically be configured at the stamper level or passed through context
-    // The current implementation supports PKI stamping by default
-    
-    const stamp = await stamper.stamp(stampParams);
+    const stamp = await stamper.stamp({
+      data: dataUtf8,
+    });
+
 
     // Add the stamp header
     config.headers = config.headers || {};

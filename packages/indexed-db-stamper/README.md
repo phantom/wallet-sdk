@@ -28,7 +28,10 @@ import { IndexedDbStamper } from "@phantom/indexed-db-stamper";
 const stamper = new IndexedDbStamper({
   dbName: "my-app-keys", // optional, defaults to 'phantom-indexed-db-stamper'
   storeName: "crypto-keys", // optional, defaults to 'crypto-keys'
-  keyName: "signing-key", // optional, defaults to 'signing-key'
+  keyName: "signing-key", // optional, defaults to 'signing-key',
+  type: "PKI", // optional, defaults to 'PKI', accepts 'PKI' or 'OIDC'
+  idToken?: undefined, // required for OIDC type, optional for PKI
+  salt?: undefined, // required for OIDC type, optional for PKI
 });
 
 // Initialize and generate/load keys
@@ -61,7 +64,7 @@ const binaryData = Buffer.from([1, 2, 3]);
 const jsonData = Buffer.from(JSON.stringify({ key: "value" }), "utf8");
 
 await stamper.stamp({ data: stringData });
-await stamper.stamp({ data: binaryData, type: "PKI" }); // explicit PKI type
+await stamper.stamp({ data: binaryData }); // explicit PKI type
 await stamper.stamp({ data: jsonData });
 
 // OIDC type stamping (requires idToken and salt)

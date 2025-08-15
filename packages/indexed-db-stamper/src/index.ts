@@ -7,6 +7,9 @@ export type IndexedDbStamperConfig = {
   dbName?: string;
   storeName?: string;
   keyName?: string;
+  type?: "PKI" | "OIDC"; // Defaults to "PKI"
+  idToken?: string; // Required for OIDC type, optional for PKI
+  salt?: string; // Required for OIDC type, optional for PKI
 };
 
 /**
@@ -28,6 +31,9 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
   private keyInfo: StamperKeyInfo | null = null;
   private cryptoKeyPair: CryptoKeyPair | null = null;
   algorithm = Algorithm.ed25519; // Use Ed25519 for maximum security and performance
+  type: "PKI" | "OIDC" = "PKI"; // Default to PKI, can be set to OIDC if needed
+  idToken?: string; // Optional for PKI, required for OIDC
+  salt?: string; // Optional for PKI, required for OIDC
 
   constructor(config: IndexedDbStamperConfig = {}) {
     if (typeof window === "undefined" || !window.indexedDB) {
@@ -37,6 +43,9 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
     this.dbName = config.dbName || "phantom-indexed-db-stamper";
     this.storeName = config.storeName || "crypto-keys";
     this.keyName = config.keyName || "signing-key";
+    this.type = config.type || "PKI";
+    this.idToken = config.idToken;
+    this.salt = config.salt;
   }
 
   /**
@@ -81,20 +90,12 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
    */
   async stamp(
     params:
-      | {
-          data: Buffer;
-          type?: "PKI";
-          idToken?: never;
-          salt?: never;
-        }
-      | {
-          data: Buffer;
-          type: "OIDC";
-          idToken: string;
-          salt: string;
-        },
+      {
+        data: Buffer;
+
+      }
   ): Promise<string> {
-    const { data, type = "PKI" } = params;
+    const { data } = params;
     if (!this.keyInfo || !this.cryptoKeyPair) {
       throw new Error("Stamper not initialized. Call init() first.");
     }
@@ -116,22 +117,22 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
 
     // Create the stamp structure
     const stampData =
-      type === "PKI"
+      this.type === "PKI"
         ? {
-            // Decode base58 public key to bytes, then encode as base64url (consistent with ApiKeyStamper)
-            publicKey: base64urlEncode(bs58.decode(this.keyInfo.publicKey)),
-            signature: signatureBase64url,
-            kind: "PKI" as const,
-            algorithm: this.algorithm,
-          }
+          // Decode base58 public key to bytes, then encode as base64url (consistent with ApiKeyStamper)
+          publicKey: base64urlEncode(bs58.decode(this.keyInfo.publicKey)),
+          signature: signatureBase64url,
+          kind: "PKI",
+          algorithm: this.algorithm,
+        }
         : {
-            kind: "OIDC",
-            idToken: (params as any).idToken,
-            publicKey: base64urlEncode(bs58.decode(this.keyInfo.publicKey)),
-            salt: (params as any).salt,
-            algorithm: this.algorithm,
-            signature: signatureBase64url,
-          };
+          kind: "OIDC",
+          idToken: this.idToken,
+          publicKey: base64urlEncode(bs58.decode(this.keyInfo.publicKey)),
+          salt: this.salt,
+          algorithm: this.algorithm,
+          signature: signatureBase64url,
+        };
 
     // Encode the entire stamp as base64url JSON
     const stampJson = JSON.stringify(stampData);

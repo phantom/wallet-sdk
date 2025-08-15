@@ -14,6 +14,7 @@ export interface ApiKeyStamperConfig {
  */
 export class ApiKeyStamper implements Stamper {
   algorithm = Algorithm.ed25519; // Use the same algorithm as the keypair
+  type: "PKI" | "OIDC" = "PKI"; // This stamper only supports PKI type
   private keypair: { publicKey: string; secretKey: string };
 
   constructor(config: ApiKeyStamperConfig) {
@@ -34,7 +35,7 @@ export class ApiKeyStamper implements Stamper {
     const stampData = {
       publicKey: base64urlEncode(bs58.decode(this.keypair.publicKey)),
       signature: signatureBase64url,
-      kind: "PKI" as const,
+      kind: this.type,
     };
 
     // Encode the entire stamp as base64url JSON

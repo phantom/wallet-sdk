@@ -70,7 +70,7 @@ export interface DeleteAuthenticatorParams {
 
 export interface AuthenticatorConfig {
   authenticatorName: string;
-  authenticatorKind: 'keypair' | 'passkey'| 'oidc';
+  authenticatorKind: 'keypair' | 'passkey' | 'oidc';
   publicKey?: string; // base64url encoded public key (required for keypair)
   algorithm?: 'Ed25519'; // required for keypair
   // OIDC-specific fields

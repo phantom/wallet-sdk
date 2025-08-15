@@ -23,6 +23,7 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
   private organizationId: string;
   private keyInfo: StamperKeyInfo | null = null;
   algorithm = Algorithm.ed25519;
+  type: "PKI" | "OIDC" = "PKI"; // Default to PKI, can be set to OIDC if needed
 
   constructor(config: ReactNativeStamperConfig = {}) {
     this.keyPrefix = config.keyPrefix || "phantom-rn-stamper";
