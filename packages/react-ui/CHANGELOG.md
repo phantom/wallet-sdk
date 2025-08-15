@@ -1,5 +1,14 @@
 # @phantom/react-ui
 
+## 1.2.3
+
+### Patch Changes
+
+- 6d6cbf8: New stamper interface
+- Updated dependencies [6d6cbf8]
+  - @phantom/client@0.1.7
+  - @phantom/react-sdk@0.3.3
+
 ## 1.2.2
 
 ### Patch Changes

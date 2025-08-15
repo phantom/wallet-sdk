@@ -1,5 +1,15 @@
 # @phantom/browser-sdk
 
+## 0.3.3
+
+### Patch Changes
+
+- 6d6cbf8: New stamper interface
+- Updated dependencies [6d6cbf8]
+  - @phantom/client@0.1.7
+  - @phantom/embedded-provider-core@0.1.4
+  - @phantom/indexed-db-stamper@0.1.3
+
 ## 0.3.2
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @phantom/sdk-types
 
+## 0.1.3
+
+### Patch Changes
+
+- 6d6cbf8: New stamper interface
+
 ## 0.1.2
 
 ### Patch Changes
