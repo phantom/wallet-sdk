@@ -3,12 +3,8 @@ import { type NetworkId } from "@phantom/constants";
 export interface PhantomClientConfig {
   apiBaseUrl: string;
   organizationId?: string;
-  stampConfig?: StampConfig;
 }
 
-export type StampConfig = 
-  | { type?: "PKI" }
-  | { type: "OIDC"; idToken: string; salt: string };
 
 export interface CreateWalletResult {
   walletId: string;
