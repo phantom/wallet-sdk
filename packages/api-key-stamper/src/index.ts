@@ -15,6 +15,8 @@ export interface ApiKeyStamperConfig {
 export class ApiKeyStamper implements Stamper {
   algorithm = Algorithm.ed25519; // Use the same algorithm as the keypair
   type: "PKI" | "OIDC" = "PKI"; // This stamper only supports PKI type
+  idToken?: string; // Optional for PKI, required for OIDC
+  salt?: string; // Optional for PKI, required for OIDC
   private keypair: { publicKey: string; secretKey: string };
 
   constructor(config: ApiKeyStamperConfig) {
@@ -26,17 +28,36 @@ export class ApiKeyStamper implements Stamper {
    * @param params - Parameters object with data to sign
    * @returns Complete X-Phantom-Stamp header value
    */
-  async stamp({ data }: { data: Buffer }): Promise<string> {
+  async stamp(
+    params:
+      | { data: Buffer; type?: "PKI"; idToken?: never; salt?: never }
+      | { data: Buffer; type: "OIDC"; idToken: string; salt: string }
+  ): Promise<string> {
+    const { data } = params;
     // Sign the data
     const signature = signWithSecret(this.keypair.secretKey, data);
     const signatureBase64url = base64urlEncode(signature);
 
-    // Create the stamp structure
-    const stampData = {
-      publicKey: base64urlEncode(bs58.decode(this.keypair.publicKey)),
-      signature: signatureBase64url,
-      kind: this.type,
-    };
+    // Determine stamp type - use override parameter if provided, otherwise use instance type  
+    const stampType = params.type || this.type;
+    
+    // Create the stamp structure based on stamp type
+    const stampData = 
+      stampType === "PKI"
+        ? {
+            publicKey: base64urlEncode(bs58.decode(this.keypair.publicKey)),
+            signature: signatureBase64url,
+            kind: "PKI",
+            algorithm: this.algorithm,
+          }
+        : {
+            kind: "OIDC",
+            idToken: params.type === "OIDC" ? params.idToken : this.idToken,
+            publicKey: base64urlEncode(bs58.decode(this.keypair.publicKey)),
+            salt: params.type === "OIDC" ? params.salt : this.salt,
+            algorithm: this.algorithm,
+            signature: signatureBase64url,
+          };
 
     // Encode the entire stamp as base64url JSON
     const stampJson = JSON.stringify(stampData);

@@ -47,6 +47,7 @@ import {
   type CreateAuthenticatorParams,
   type DeleteAuthenticatorParams,
   type UserConfig,
+  type StampConfig,
 } from "./types";
 
 import type { Stamper } from "@phantom/sdk-types";
@@ -61,7 +62,7 @@ export class PhantomClient {
   private config: PhantomClientConfig;
   private kmsApi: KMSRPCApi;
   private axiosInstance: AxiosInstance;
-  private stamper?: Stamper;
+  public stamper?: Stamper;
 
   constructor(config: PhantomClientConfig, stamper?: Stamper) {
     this.config = config;
@@ -546,9 +547,26 @@ export class PhantomClient {
       typeof config.data === "string" ? config.data : config.data === undefined ? "" : JSON.stringify(config.data);
     const dataUtf8 = Buffer.from(requestBody, "utf8");
 
-    const stamp = await stamper.stamp({
-      data: dataUtf8,
-    });
+    // Get stamp configuration from client config or use defaults
+    const stampConfig = this.config.stampConfig;
+    
+    let stamp: string;
+    
+    if (stampConfig?.type === "OIDC") {
+      // OIDC stamping with id token and salt from config
+      stamp = await stamper.stamp({
+        data: dataUtf8,
+        type: "OIDC",
+        idToken: stampConfig.idToken,
+        salt: stampConfig.salt
+      });
+    } else {
+      // PKI stamping (default) - let stamper use its configured type
+      stamp = await stamper.stamp({
+        data: dataUtf8,
+        type: stampConfig?.type || undefined // Pass through PKI explicitly or let stamper decide
+      });
+    }
 
     // Add the stamp header
     config.headers = config.headers || {};

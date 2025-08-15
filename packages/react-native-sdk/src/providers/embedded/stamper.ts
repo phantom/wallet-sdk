@@ -24,6 +24,8 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
   private keyInfo: StamperKeyInfo | null = null;
   algorithm = Algorithm.ed25519;
   type: "PKI" | "OIDC" = "PKI"; // Default to PKI, can be set to OIDC if needed
+  idToken?: string; // Optional for PKI, required for OIDC
+  salt?: string; // Optional for PKI, required for OIDC
 
   constructor(config: ReactNativeStamperConfig = {}) {
     this.keyPrefix = config.keyPrefix || "phantom-rn-stamper";
@@ -72,10 +74,14 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
 
   /**
    * Create X-Phantom-Stamp header value using stored secret key
-   * @param data - Data to sign (Buffer)
+   * @param params - Parameters object with data to sign and optional override params
    * @returns Complete X-Phantom-Stamp header value
    */
-  async stamp({ data }: { data: Buffer }): Promise<string> {
+  async stamp(
+    params:
+      | { data: Buffer; type?: "PKI"; idToken?: never; salt?: never }
+      | { data: Buffer; type: "OIDC"; idToken: string; salt: string }
+  ): Promise<string> {
     if (!this.keyInfo) {
       throw new Error("Stamper not initialized. Call init() first.");
     }
@@ -86,9 +92,9 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
       throw new Error("Secret key not found in secure storage");
     }
 
-    // Use ApiKeyStamper to create the stamp
+    // Use ApiKeyStamper to create the stamp, passing through any override parameters
     const apiKeyStamper = new ApiKeyStamper({ apiSecretKey: storedSecretKey });
-    return await apiKeyStamper.stamp({ data });
+    return await apiKeyStamper.stamp(params);
   }
 
   /**
