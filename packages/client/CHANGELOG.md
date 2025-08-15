@@ -1,5 +1,14 @@
 # @phantom/client
 
+## 0.1.7
+
+### Patch Changes
+
+- 6d6cbf8: New stamper interface
+- Updated dependencies [6d6cbf8]
+  - @phantom/api-key-stamper@0.1.4
+  - @phantom/sdk-types@0.1.3
+
 ## 0.1.6
 
 ### Patch Changes

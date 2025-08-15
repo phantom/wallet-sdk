@@ -1,5 +1,13 @@
 # @phantom/react-sdk
 
+## 0.3.3
+
+### Patch Changes
+
+- 6d6cbf8: New stamper interface
+- Updated dependencies [6d6cbf8]
+  - @phantom/browser-sdk@0.3.3
+
 ## 0.3.2
 
 ### Patch Changes
