@@ -161,38 +161,35 @@ const client = new PhantomClient(config, new CustomStamper());
 const organization = await client.getOrganization("org-id");
 
 // Create organization with custom users
-const newOrg = await client.createOrganization(
-  "My Organization", 
-  [
-    {
-      username: "admin-user",
-      role: "admin",
-      authenticators: [
-        {
-          authenticatorName: "Primary Auth",
-          authenticatorKind: "keypair",
-          publicKey: "base64url-encoded-public-key",
-          algorithm: "Ed25519"
+const newOrg = await client.createOrganization("My Organization", [
+  {
+    username: "admin-user",
+    role: "admin",
+    authenticators: [
+      {
+        authenticatorName: "Primary Auth",
+        authenticatorKind: "keypair",
+        publicKey: "base64url-encoded-public-key",
+        algorithm: "Ed25519",
+      },
+      {
+        authenticatorName: "OIDC Auth",
+        authenticatorKind: "oidc",
+        jwksUrl: "https://issuer.com/.well-known/jwks.json",
+        idTokenClaims: {
+          sub: "user-subject-id",
+          iss: "https://issuer.com",
         },
-        {
-          authenticatorName: "OIDC Auth",
-          authenticatorKind: "oidc",
-          jwksUrl: "https://issuer.com/.well-known/jwks.json",
-          idTokenClaims: {
-            sub: "user-subject-id",
-            iss: "https://issuer.com"
-          }
-        }
-      ]
-    }
-  ]
-);
+      },
+    ],
+  },
+]);
 
 // Get wallet by tag
 const taggedWallet = await client.getWalletWithTag({
   organizationId: "org-id",
   tag: "demo-wallet",
-  derivationPaths: ["m/44'/501'/0'/0'"]
+  derivationPaths: ["m/44'/501'/0'/0'"],
 });
 
 // Create an authenticator for a user
@@ -204,15 +201,15 @@ const authenticator = await client.createAuthenticator({
     authenticatorName: "New Auth",
     authenticatorKind: "keypair",
     publicKey: "base64url-encoded-public-key",
-    algorithm: "Ed25519"
-  }
+    algorithm: "Ed25519",
+  },
 });
 
 // Delete an authenticator
 await client.deleteAuthenticator({
   organizationId: "org-id",
   username: "user-123",
-  authenticatorId: "auth-id"
+  authenticatorId: "auth-id",
 });
 ```
 

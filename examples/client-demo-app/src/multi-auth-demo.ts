@@ -10,16 +10,16 @@ async function main() {
 
   // Step 1: Generate two key pairs for different authenticators
   console.log("\n🔑 Step 1: Generate Key Pairs");
-  
+
   const primaryKeyPair = generateKeyPair();
   const secondaryKeyPair = generateKeyPair();
-  
+
   console.log(`✅ Primary key pair: ${primaryKeyPair.publicKey.substring(0, 20)}...`);
   console.log(`✅ Secondary key pair: ${secondaryKeyPair.publicKey.substring(0, 20)}...`);
 
   // Step 2: Create stamper and client using primary key
   console.log("\n🔧 Step 2: Initialize PhantomClient");
-  
+
   const primaryStamper = new ApiKeyStamper({
     apiSecretKey: primaryKeyPair.secretKey,
   });
@@ -35,7 +35,7 @@ async function main() {
 
   // Step 3: Create organization with multiple authenticators
   console.log("\n🏢 Step 3: Test createOrganization with Multiple Authenticators");
-  
+
   const organizationName = `Test Org ${Date.now()}`;
   const primaryAuthName = `Primary-Auth-${Date.now()}`;
   const secondaryAuthName = `Secondary-Auth-${Date.now()}`;
@@ -45,7 +45,7 @@ async function main() {
   const users = [
     {
       username: customUsername,
-      role: 'admin' as const,
+      role: "admin" as const,
       authenticators: [
         {
           authenticatorName: primaryAuthName,
@@ -58,9 +58,9 @@ async function main() {
           authenticatorKind: "keypair" as const,
           publicKey: base64urlEncode(bs58.decode(secondaryKeyPair.publicKey)),
           algorithm: "Ed25519" as const,
-        }
-      ]
-    }
+        },
+      ],
+    },
   ];
 
   try {
@@ -68,20 +68,17 @@ async function main() {
     console.log(`With custom username: ${customUsername}`);
     console.log(`With ${users[0].authenticators.length} authenticators`);
 
-    const organization = await client.createOrganization(
-      organizationName,
-      users
-    );
-    
+    const organization = await client.createOrganization(organizationName, users);
+
     console.log(`✅ Organization created successfully!`);
     console.log(`   ID: ${organization.organizationId}`);
     console.log(`   Name: ${organization.organizationName}`);
 
     // Step 4: Test getOrganization method
     console.log("\n🔍 Step 4: Test getOrganization Method");
-    
+
     let firstAuthenticatorId = "";
-    
+
     try {
       const retrievedOrg = await client.getOrganization(organization.organizationId);
       console.log(`✅ getOrganization works!`);
@@ -89,10 +86,14 @@ async function main() {
       console.log(`   Users: ${retrievedOrg.users?.length || 0}`);
       console.log(`   Authenticators: ${retrievedOrg.users?.[0]?.authenticators?.length || 0}`);
       console.log(`   Response:`, JSON.stringify(retrievedOrg, null, 2));
-      
+
       // Get authenticator ID for subsequent tests (we already know the username)
-      if (retrievedOrg.users && retrievedOrg.users.length > 0 && 
-          retrievedOrg.users[0].authenticators && retrievedOrg.users[0].authenticators.length > 0) {
+      if (
+        retrievedOrg.users &&
+        retrievedOrg.users.length > 0 &&
+        retrievedOrg.users[0].authenticators &&
+        retrievedOrg.users[0].authenticators.length > 0
+      ) {
         firstAuthenticatorId = retrievedOrg.users[0].authenticators[0].id;
       }
     } catch (error) {
@@ -101,7 +102,7 @@ async function main() {
 
     // Step 5: Test secondary authenticator access
     console.log("\n🔄 Step 5: Test Secondary Authenticator Access");
-    
+
     const secondaryStamper = new ApiKeyStamper({
       apiSecretKey: secondaryKeyPair.secretKey,
     });
@@ -118,21 +119,21 @@ async function main() {
 
     // Step 6: Test wallet operations
     console.log("\n💰 Step 6: Test Wallet Creation");
-    
+
     client.setOrganizationId(organization.organizationId);
     const wallet = await client.createWallet("Test Wallet");
-    
+
     console.log(`✅ Wallet created: ${wallet.walletId.substring(0, 20)}...`);
     console.log(`   Response:`, JSON.stringify(wallet, null, 2));
 
     // Step 7: Test getWalletWithTag method
     console.log("\n🏷️ Step 7: Test getWalletWithTag Method");
-    
+
     try {
       await client.getWalletWithTag({
         organizationId: organization.organizationId,
         tag: "test-tag",
-        derivationPaths: ["m/44'/501'/0'/0'"]
+        derivationPaths: ["m/44'/501'/0'/0'"],
       });
       console.log(`✅ getWalletWithTag found tagged wallet`);
     } catch (error) {
@@ -141,11 +142,11 @@ async function main() {
 
     // Step 8: Test createAuthenticator method
     console.log("\n🔐 Step 8: Test createAuthenticator Method");
-    
+
     try {
       const thirdKeyPair = generateKeyPair();
       const thirdAuthName = `Third-Auth-${Date.now()}`;
-      
+
       const createAuthResult = await client.createAuthenticator({
         organizationId: organization.organizationId,
         username: customUsername, // Using our custom username
@@ -155,19 +156,18 @@ async function main() {
           authenticatorKind: "keypair",
           publicKey: base64urlEncode(bs58.decode(thirdKeyPair.publicKey)),
           algorithm: "Ed25519",
-        }
+        },
       });
-      
+
       console.log(`✅ createAuthenticator works`);
       console.log(`   Response:`, JSON.stringify(createAuthResult, null, 2));
-
     } catch (error) {
       console.log(`ℹ️ createAuthenticator method error:`, error instanceof Error ? error.message : String(error));
     }
 
     // Step 9: Test deleteAuthenticator method
     console.log("\n🗑️ Step 9: Test deleteAuthenticator Method");
-    
+
     if (firstAuthenticatorId) {
       try {
         const deleteAuthResult = await client.deleteAuthenticator({
@@ -186,7 +186,7 @@ async function main() {
 
     // Step 10: Test secondary authenticator access
     console.log("\n🔄 Step 10: Test Multi-Authenticator Access");
-    
+
     try {
       const secondaryOrgResult = await secondaryClient.getOrganization(organization.organizationId);
       console.log(`✅ Both authenticators can access the same organization!`);
@@ -196,7 +196,6 @@ async function main() {
     } catch (error) {
       console.log(`❌ Secondary auth failed:`, error instanceof Error ? error.message : String(error));
     }
-
   } catch (error) {
     console.error("❌ Test failed:", error instanceof Error ? error.message : String(error));
     process.exit(1);

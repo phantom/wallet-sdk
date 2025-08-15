@@ -61,7 +61,7 @@ export class PhantomClient {
   private config: PhantomClientConfig;
   private kmsApi: KMSRPCApi;
   private axiosInstance: AxiosInstance;
-  private stamper?: Stamper;
+  public stamper?: Stamper;
 
   constructor(config: PhantomClientConfig, stamper?: Stamper) {
     this.config = config;
@@ -371,24 +371,25 @@ export class PhantomClient {
     }
   }
 
-  async getOrCreateOrganization(
-    tag: string,
-    publicKey: string,
-  ): Promise<ExternalKmsOrganization> {
+  async getOrCreateOrganization(tag: string, publicKey: string): Promise<ExternalKmsOrganization> {
     try {
       // First, try to get the organization
       // Since there's no explicit getOrganization method, we'll create it
       // This assumes the API returns existing org if it already exists
-      return await this.createOrganization(tag, [{
-        username: `user-${Date.now()}`,
-        role: 'admin',
-        authenticators: [{
-          authenticatorName: `auth-${Date.now()}`,
-          authenticatorKind: 'keypair',
-          publicKey: publicKey,
-          algorithm: 'Ed25519',
-        }]
-      }]);
+      return await this.createOrganization(tag, [
+        {
+          username: `user-${Date.now()}`,
+          role: "admin",
+          authenticators: [
+            {
+              authenticatorName: `auth-${Date.now()}`,
+              authenticatorKind: "keypair",
+              publicKey: publicKey,
+              algorithm: "Ed25519",
+            },
+          ],
+        },
+      ]);
     } catch (error: any) {
       console.error("Failed to get or create organization:", error.response?.data || error.message);
       throw new Error(`Failed to get or create organization: ${error.response?.data?.message || error.message}`);
@@ -400,10 +401,7 @@ export class PhantomClient {
    * @param name Organization name
    * @param users Array of users with their authenticators
    */
-  async createOrganization(
-    name: string,
-    users: UserConfig[],
-  ): Promise<ExternalKmsOrganization> {
+  async createOrganization(name: string, users: UserConfig[]): Promise<ExternalKmsOrganization> {
     try {
       if (!name) {
         throw new Error("Organization name is required");
@@ -416,7 +414,7 @@ export class PhantomClient {
       const params: CreateOrganizationRequest = {
         organizationName: name,
         users: users.map(userConfig => ({
-          role: (userConfig.role || 'admin') === 'admin' ? KmsUserRole.admin : KmsUserRole.user,
+          role: (userConfig.role || "admin") === "admin" ? KmsUserRole.admin : KmsUserRole.user,
           username: userConfig.username || `user-${Date.now()}`,
           authenticators: userConfig.authenticators as any,
         })),
@@ -447,7 +445,7 @@ export class PhantomClient {
         organizationId: params.organizationId,
         username: params.username,
         authenticatorName: params.authenticatorName,
-        authenticator: params.authenticator as any
+        authenticator: params.authenticator as any,
       } as any;
 
       const request: CreateAuthenticator = {
@@ -548,14 +546,10 @@ export class PhantomClient {
       typeof config.data === "string" ? config.data : config.data === undefined ? "" : JSON.stringify(config.data);
     const dataUtf8 = Buffer.from(requestBody, "utf8");
 
-    // Check if the stamper supports OIDC stamping (has additional parameters in stamp method)
-    const stampParams: any = { data: dataUtf8 };
-    
-    // For OIDC stampers, you would need to provide idToken and salt
-    // This would typically be configured at the stamper level or passed through context
-    // The current implementation supports PKI stamping by default
-    
-    const stamp = await stamper.stamp(stampParams);
+
+    const stamp = await stamper.stamp({
+      data: dataUtf8,
+    });
 
     // Add the stamp header
     config.headers = config.headers || {};

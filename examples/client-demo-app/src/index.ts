@@ -62,17 +62,21 @@ async function main() {
   try {
     // Convert base58 public key to base64url format as required by the API
     const base64urlPublicKey = base64urlEncode(bs58.decode(keyPair.publicKey));
-    
-    const organization = await client.createOrganization("Demo Organization", [{
-      username: `demo-user-${Date.now()}`,
-      role: 'admin',
-      authenticators: [{
-        authenticatorName: `demo-auth-${Date.now()}`,
-        authenticatorKind: 'keypair',
-        publicKey: base64urlPublicKey,
-        algorithm: 'Ed25519',
-      }]
-    }]);
+
+    const organization = await client.createOrganization("Demo Organization", [
+      {
+        username: `demo-user-${Date.now()}`,
+        role: "admin",
+        authenticators: [
+          {
+            authenticatorName: `demo-auth-${Date.now()}`,
+            authenticatorKind: "keypair",
+            publicKey: base64urlPublicKey,
+            algorithm: "Ed25519",
+          },
+        ],
+      },
+    ]);
 
     demoData.organization = {
       organizationId: organization.organizationId,

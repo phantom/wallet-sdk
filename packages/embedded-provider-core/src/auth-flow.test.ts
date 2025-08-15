@@ -85,7 +85,9 @@ describe("EmbeddedProvider Auth Flows", () => {
       sign: jest.fn().mockResolvedValue("mock-signature"),
       stamp: jest.fn().mockResolvedValue("mock-stamp"),
       getKeyInfo: jest.fn().mockReturnValue({ keyId: "test-key-id", publicKey: "11111111111111111111111111111111" }),
-      resetKeyPair: jest.fn().mockResolvedValue({ keyId: "test-key-id", publicKey: "11111111111111111111111111111111" }),
+      resetKeyPair: jest
+        .fn()
+        .mockResolvedValue({ keyId: "test-key-id", publicKey: "11111111111111111111111111111111" }),
       clear: jest.fn().mockResolvedValue(undefined),
     };
 
@@ -416,17 +418,17 @@ describe("EmbeddedProvider Auth Flows", () => {
         expect.arrayContaining([
           expect.objectContaining({
             username: expect.stringContaining("user-"),
-            role: 'admin',
+            role: "admin",
             authenticators: expect.arrayContaining([
               expect.objectContaining({
                 authenticatorName: expect.stringContaining("auth-"),
-                authenticatorKind: 'keypair',
+                authenticatorKind: "keypair",
                 publicKey: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-                algorithm: 'Ed25519',
-              })
-            ])
-          })
-        ])
+                algorithm: "Ed25519",
+              }),
+            ]),
+          }),
+        ]),
       );
     });
 

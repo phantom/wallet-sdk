@@ -6,6 +6,9 @@ export interface Stamper {
   stamp(params: { data: Buffer; type?: "PKI"; idToken?: never; salt?: never }): Promise<string>;
   stamp(params: { data: Buffer; type: "OIDC"; idToken: string; salt: string }): Promise<string>;
   algorithm: Algorithm;
+  type: "PKI" | "OIDC";
+  idToken?: string;
+  salt?: string;
 }
 
 // Key information structure returned by stampers

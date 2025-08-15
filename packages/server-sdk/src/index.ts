@@ -104,10 +104,7 @@ export class ServerSDK {
     return await parseTransactionResponse(rawResponse.rawTransaction, params.networkId, rawResponse.hash);
   }
 
-  createOrganization(
-    name: string,
-    keyPair: { publicKey: string; secretKey: string },
-  ): Promise<Organization> {
+  createOrganization(name: string, keyPair: { publicKey: string; secretKey: string }): Promise<Organization> {
     // Create a temporary PhantomClient instance with the stamper
     const tempClient = new PhantomClient(
       {
@@ -122,17 +119,21 @@ export class ServerSDK {
     // Call the createOrganization method with the provided parameters using new signature
     // Convert base58 public key to base64url format as required by the API
     const base64urlPublicKey = base64urlEncode(bs58.decode(keyPair.publicKey));
-    
-    return tempClient.createOrganization(name, [{
-      username: `user-${Date.now()}`,
-      role: 'admin',
-      authenticators: [{
-        authenticatorName: `auth-${Date.now()}`,
-        authenticatorKind: 'keypair',
-        publicKey: base64urlPublicKey,
-        algorithm: 'Ed25519',
-      }]
-    }]);
+
+    return tempClient.createOrganization(name, [
+      {
+        username: `user-${Date.now()}`,
+        role: "admin",
+        authenticators: [
+          {
+            authenticatorName: `auth-${Date.now()}`,
+            authenticatorKind: "keypair",
+            publicKey: base64urlPublicKey,
+            algorithm: "Ed25519",
+          },
+        ],
+      },
+    ]);
   }
   getWallets(limit?: number, offset?: number): Promise<GetWalletsResult> {
     return this.client.getWallets(limit, offset);

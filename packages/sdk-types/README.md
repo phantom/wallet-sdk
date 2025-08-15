@@ -20,8 +20,11 @@ Interface for creating X-Phantom-Stamp header values for API authentication.
 
 ```typescript
 interface Stamper {
-  stamp(params: { data: Buffer; type?: "PKI"; idToken?: never; salt?: never }): Promise<string>;
-  stamp(params: { data: Buffer; type: "OIDC"; idToken: string; salt: string }): Promise<string>;
+  stamp(params: { data: Buffer }): Promise<string>;
+  type?: "PKI" | "OIDC"; // Optional, defaults to "PKI"
+  idToken?: string; // Required for OIDC type, optional for PKI
+  salt?: string; // Required for OIDC type, optional for PKI
+  algorithm?: Algorithm; // Optional, defaults to Algorithm.ed25519
 }
 ```
 
@@ -31,7 +34,8 @@ interface Stamper {
 import type { Stamper } from "@phantom/sdk-types";
 
 class MyStamper implements Stamper {
-  async stamp(params: { data: Buffer; type?: "PKI" }): Promise<string> {
+  type = "PKI"; // or "OIDC"
+  async stamp(params: { data: Buffer }): Promise<string> {
     // Implementation for PKI stamping
     return "stamp-value";
   }
@@ -78,7 +82,7 @@ class MyKeyManagedStamper implements StamperWithKeyManagement {
     return { keyId: "key-id", publicKey: "public-key" };
   }
 
-  async stamp(params: { data: Buffer; type?: "PKI" }): Promise<string> {
+  async stamp(params: { data: Buffer }): Promise<string> {
     // Implementation
     return "stamp-value";
   }

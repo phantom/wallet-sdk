@@ -5,6 +5,7 @@ export interface PhantomClientConfig {
   organizationId?: string;
 }
 
+
 export interface CreateWalletResult {
   walletId: string;
   addresses: {
@@ -70,9 +71,9 @@ export interface DeleteAuthenticatorParams {
 
 export interface AuthenticatorConfig {
   authenticatorName: string;
-  authenticatorKind: 'keypair' | 'passkey'| 'oidc';
+  authenticatorKind: "keypair" | "passkey" | "oidc";
   publicKey?: string; // base64url encoded public key (required for keypair)
-  algorithm?: 'Ed25519'; // required for keypair
+  algorithm?: "Ed25519"; // required for keypair
   // OIDC-specific fields
   jwksUrl?: string; // required for oidc
   idTokenClaims?: {
@@ -83,6 +84,6 @@ export interface AuthenticatorConfig {
 
 export interface UserConfig {
   username?: string; // Optional, will generate default if not provided
-  role?: 'admin' | 'user'; // Optional, defaults to 'admin'
+  role?: "admin" | "user"; // Optional, defaults to 'admin'
   authenticators: AuthenticatorConfig[];
 }

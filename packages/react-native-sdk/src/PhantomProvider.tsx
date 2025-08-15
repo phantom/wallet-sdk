@@ -48,7 +48,6 @@ export function PhantomProvider({ children, config }: PhantomProviderProps) {
       solanaProvider: config.solanaProvider || "web3js",
       appName: config.appName,
       appLogo: config.appLogo, // Optional app logo URL
-      
     };
 
     // Create platform adapters
