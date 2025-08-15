@@ -20,7 +20,7 @@ Interface for creating X-Phantom-Stamp header values for API authentication.
 
 ```typescript
 interface Stamper {
-  stamp(params: { data: Buffer  }): Promise<string>;
+  stamp(params: { data: Buffer }): Promise<string>;
   type?: "PKI" | "OIDC"; // Optional, defaults to "PKI"
   idToken?: string; // Required for OIDC type, optional for PKI
   salt?: string; // Required for OIDC type, optional for PKI

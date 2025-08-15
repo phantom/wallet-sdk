@@ -88,13 +88,7 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
    * @param params - Parameters object with data and optional type/options
    * @returns Complete X-Phantom-Stamp header value
    */
-  async stamp(
-    params:
-      {
-        data: Buffer;
-
-      }
-  ): Promise<string> {
+  async stamp(params: { data: Buffer }): Promise<string> {
     const { data } = params;
     if (!this.keyInfo || !this.cryptoKeyPair) {
       throw new Error("Stamper not initialized. Call init() first.");
@@ -119,20 +113,20 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
     const stampData =
       this.type === "PKI"
         ? {
-          // Decode base58 public key to bytes, then encode as base64url (consistent with ApiKeyStamper)
-          publicKey: base64urlEncode(bs58.decode(this.keyInfo.publicKey)),
-          signature: signatureBase64url,
-          kind: "PKI",
-          algorithm: this.algorithm,
-        }
+            // Decode base58 public key to bytes, then encode as base64url (consistent with ApiKeyStamper)
+            publicKey: base64urlEncode(bs58.decode(this.keyInfo.publicKey)),
+            signature: signatureBase64url,
+            kind: "PKI",
+            algorithm: this.algorithm,
+          }
         : {
-          kind: "OIDC",
-          idToken: this.idToken,
-          publicKey: base64urlEncode(bs58.decode(this.keyInfo.publicKey)),
-          salt: this.salt,
-          algorithm: this.algorithm,
-          signature: signatureBase64url,
-        };
+            kind: "OIDC",
+            idToken: this.idToken,
+            publicKey: base64urlEncode(bs58.decode(this.keyInfo.publicKey)),
+            salt: this.salt,
+            algorithm: this.algorithm,
+            signature: signatureBase64url,
+          };
 
     // Encode the entire stamp as base64url JSON
     const stampJson = JSON.stringify(stampData);

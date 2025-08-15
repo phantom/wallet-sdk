@@ -49,6 +49,7 @@ No environment variables needed - the tools generate everything for you!
 ## What the scripts do
 
 ### Basic Setup Script (`yarn dev`)
+
 - Generate a new Ed25519 key pair using `@phantom/crypto`
 - Save the key pair to `demo-data.json`
 - Initialize a Phantom client with the generated private key
@@ -58,6 +59,7 @@ No environment variables needed - the tools generate everything for you!
 - Generate `SERVER_SDK_USAGE.md` with complete integration instructions
 
 ### Multi-Authenticator Demo (`yarn multi-auth`)
+
 - Generate multiple Ed25519 key pairs for different authenticators
 - Create an organization with multiple authenticator configurations
 - Demonstrate the new `createOrganization` method with authenticator array
@@ -70,10 +72,12 @@ No environment variables needed - the tools generate everything for you!
 ## Output Files
 
 ### Basic Setup Script Output
+
 - **`demo-data.json`**: Contains your organization credentials (keyPair, organization details)
 - **`SERVER_SDK_USAGE.md`**: Comprehensive Server SDK integration guide with your credentials
 
 ### Multi-Authenticator Demo Output
+
 The multi-authenticator demo runs all tests in memory without creating any files. All test results are displayed in the console output.
 
 ## Phantom Client Features
@@ -81,6 +85,7 @@ The multi-authenticator demo runs all tests in memory without creating any files
 The multi-authenticator demo showcases PhantomClient capabilities:
 
 ### Multi-Authenticator Organization Creation
+
 ```typescript
 const org = await client.createOrganization(name, publicKey, [
   { authenticatorName: "Auth1", authenticatorKind: "keypair", publicKey: "...", algorithm: "Ed25519" },
@@ -89,30 +94,40 @@ const org = await client.createOrganization(name, publicKey, [
 ```
 
 ### Organization Management
+
 ```typescript
 const org = await client.getOrganization(organizationId);
 ```
 
 ### Tagged Wallet Retrieval
+
 ```typescript
 const wallet = await client.getWalletWithTag({
-  organizationId, tag: "demo-tag", derivationPaths: ["m/44'/501'/0'/0'"]
+  organizationId,
+  tag: "demo-tag",
+  derivationPaths: ["m/44'/501'/0'/0'"],
 });
 ```
 
 ### Authenticator Management
+
 ```typescript
 await client.createAuthenticator({
-  organizationId, username, authenticatorName,
-  authenticator: { publicKey: "base64url-string", authenticatorKind: "keypair", algorithm: "Ed25519" }
+  organizationId,
+  username,
+  authenticatorName,
+  authenticator: { publicKey: "base64url-string", authenticatorKind: "keypair", algorithm: "Ed25519" },
 });
 
 await client.deleteAuthenticator({
-  organizationId, username, authenticatorId
+  organizationId,
+  username,
+  authenticatorId,
 });
 ```
 
 ### OIDC Authenticator Support
+
 ```typescript
 {
   authenticatorKind: "oidc",
