@@ -30,7 +30,7 @@ export interface SignAndSendTransactionParams {
 export interface SignedTransaction extends ParsedTransactionResult {}
 
 export interface AuthOptions {
-  provider?: "google" | "apple" | "jwt";
+  provider?: "google" | "apple" | "jwt" | "external_wallet";
   jwtToken?: string;
   customAuthData?: Record<string, any>;
 }

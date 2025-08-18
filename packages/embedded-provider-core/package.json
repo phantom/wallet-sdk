@@ -44,6 +44,7 @@
     "@phantom/client": "workspace:^",
     "@phantom/constants": "workspace:^",
     "@phantom/parsers": "workspace:^",
+    "@phantom/phantom-wallet-stamper": "workspace:^",
     "@phantom/sdk-types": "workspace:^",
     "bs58": "^6.0.0"
   },

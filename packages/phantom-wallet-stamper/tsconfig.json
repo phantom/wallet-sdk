@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@phantom/*": ["../*/src"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["_release", "node_modules", "dist", "**/*.test.ts"]
+}

@@ -87,3 +87,7 @@ export interface UserConfig {
   role?: "admin" | "user"; // Optional, defaults to 'admin'
   authenticators: AuthenticatorConfig[];
 }
+
+export interface GetOrCreatePhantomOrganizationParams {
+  publicKey: string; // base58 encoded public key from external wallet
+}
