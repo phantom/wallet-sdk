@@ -93,7 +93,7 @@ export type AuthenticatorConfig =
     };
 
 export interface UserConfig {
-  username?: string; // Optional, will generate default if not provided
+  username: string;
   role?: "ADMIN" | "USER"; // Optional, defaults to 'ADMIN'
   authenticators: AuthenticatorConfig[];
 }
