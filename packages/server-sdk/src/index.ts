@@ -123,7 +123,7 @@ export class ServerSDK {
     return tempClient.createOrganization(name, [
       {
         username: `user-${Date.now()}`,
-        role: "admin",
+        role: "ADMIN",
         authenticators: [
           {
             authenticatorName: `auth-${Date.now()}`,

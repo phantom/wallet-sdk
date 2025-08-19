@@ -3359,7 +3359,7 @@ __metadata:
     "@phantom/base64url": "workspace:^"
     "@phantom/constants": "workspace:^"
     "@phantom/crypto": "workspace:^"
-    "@phantom/openapi-wallet-service": "npm:^0.1.7"
+    "@phantom/openapi-wallet-service": "npm:^0.1.9"
     "@phantom/sdk-types": "workspace:^"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
@@ -3463,12 +3463,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/openapi-wallet-service@npm:^0.1.7":
-  version: 0.1.7
-  resolution: "@phantom/openapi-wallet-service@npm:0.1.7"
+"@phantom/openapi-wallet-service@npm:^0.1.9":
+  version: 0.1.9
+  resolution: "@phantom/openapi-wallet-service@npm:0.1.9"
   dependencies:
     axios: "npm:^1.6.1"
-  checksum: 10c0/ee43ce99ea8fa6db4cfd7d353dba8cfc33d5b2225077a9be05019d76a7330885edfad981ce3e7f3f96fa36526880cfa6e125b7c4c16d9c5f3308d75c9ee8a6a0
+  checksum: 10c0/cd4fd5f107e5e58e4b351db8abc62f8f0f1b9106055e45e29dad11fd853b5f542607232cde3621e02aca301e71843e26f8961a37f3e40e9d598f987c4842173c
   languageName: node
   linkType: hard
 
@@ -3681,7 +3681,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/sdk-types@workspace:packages/sdk-types"
   dependencies:
-    "@phantom/openapi-wallet-service": "npm:^0.1.7"
+    "@phantom/openapi-wallet-service": "npm:^0.1.9"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
     buffer: "npm:^6.0.3"
@@ -3717,7 +3717,6 @@ __metadata:
     "@phantom/base64url": "workspace:^"
     "@phantom/client": "workspace:^"
     "@phantom/constants": "workspace:^"
-    "@phantom/openapi-wallet-service": "npm:^0.1.7"
     "@phantom/parsers": "workspace:^"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"

@@ -50,7 +50,7 @@ async function main() {
 
   const client = new PhantomClient(
     {
-      apiBaseUrl: "https://staging-api.phantom.app/v1/wallets",
+      apiBaseUrl: "https://api.phantom.app/v1/wallets",
     },
     stamper,
   );
@@ -66,7 +66,7 @@ async function main() {
     const organization = await client.createOrganization("Demo Organization", [
       {
         username: `demo-user-${Date.now()}`,
-        role: "admin",
+        role: "ADMIN",
         authenticators: [
           {
             authenticatorName: `demo-auth-${Date.now()}`,

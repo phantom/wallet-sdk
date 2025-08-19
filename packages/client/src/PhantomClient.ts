@@ -33,6 +33,7 @@ import {
   KmsUserRole,
   type ExternalKmsOrganization,
   type DerivationInfoAddressFormatEnum,
+  type ExternalKmsAuthenticator
 } from "@phantom/openapi-wallet-service";
 import { DerivationPath, getNetworkConfig } from "./constants";
 import { deriveSubmissionConfig } from "./caip2-mappings";
@@ -118,7 +119,7 @@ export class PhantomClient {
       } as any;
 
       const response = await this.kmsApi.postKmsRpc(request);
-      const walletResult = response.data.result as ExternalKmsWallet;
+      const walletResult = (response.data as any).result as ExternalKmsWallet;
 
       // Wallet created successfully
 
@@ -138,7 +139,7 @@ export class PhantomClient {
       const accountsResponse = await this.kmsApi.postKmsRpc(requestAccounts);
 
       // Accounts fetched successfully
-      const accountsResult = accountsResponse.data.result as (ExternalDerivedAccount & { address: string })[];
+      const accountsResult = (accountsResponse.data as any).result as (ExternalDerivedAccount & { address: string })[];
       return {
         walletId: walletResult.walletId,
         addresses: accountsResult.map(account => ({
@@ -209,7 +210,7 @@ export class PhantomClient {
       } as any;
 
       const response = await this.kmsApi.postKmsRpc(request);
-      const result = response.data.result as SignedTransactionWithPublicKey;
+      const result = (response.data as any).result as SignedTransactionWithPublicKey;
       const rpcSubmissionResult = (response.data as any)["rpc_submission_result"];
       const hash = rpcSubmissionResult ? rpcSubmissionResult.result : null;
       return {
@@ -245,7 +246,7 @@ export class PhantomClient {
       } as any;
 
       const accountsResponse = await this.kmsApi.postKmsRpc(requestAccounts);
-      const accountsResult = accountsResponse.data.result as (ExternalDerivedAccount & { address: string })[];
+      const accountsResult = (accountsResponse.data as any).result as (ExternalDerivedAccount & { address: string })[];
 
       return accountsResult.map(account => ({
         addressType: account.addressFormat,
@@ -300,7 +301,7 @@ export class PhantomClient {
       } as any;
 
       const response = await this.kmsApi.postKmsRpc(request);
-      const result = response.data.result as SignatureWithPublicKey;
+      const result = (response.data as any).result as SignatureWithPublicKey;
 
       // Return the base64 encoded signature
       return result.signature;
@@ -325,7 +326,7 @@ export class PhantomClient {
       // Fetching wallets for organization
 
       const response = await this.kmsApi.postKmsRpc(request as any);
-      const result = response.data.result as {
+      const result = (response.data as any).result as {
         wallets: ExternalKmsWallet[];
         totalCount: number;
         limit: number;
@@ -363,7 +364,7 @@ export class PhantomClient {
       };
 
       const response = await this.kmsApi.postKmsRpc(request as any);
-      const result = response.data.result as ExternalKmsOrganization;
+      const result = (response.data as any).result as ExternalKmsOrganization;
       return result;
     } catch (error: any) {
       console.error("Failed to get organization:", error.response?.data || error.message);
@@ -379,7 +380,7 @@ export class PhantomClient {
       return await this.createOrganization(tag, [
         {
           username: `user-${Date.now()}`,
-          role: "admin",
+          role: KmsUserRole.admin,
           authenticators: [
             {
               authenticatorName: `auth-${Date.now()}`,
@@ -401,7 +402,7 @@ export class PhantomClient {
    * @param name Organization name
    * @param users Array of users with their authenticators
    */
-  async createOrganization(name: string, users: UserConfig[]): Promise<ExternalKmsOrganization> {
+  async createOrganization(name: string, users: UserConfig[], tags?: string[]): Promise<ExternalKmsOrganization> {
     try {
       if (!name) {
         throw new Error("Organization name is required");
@@ -414,10 +415,11 @@ export class PhantomClient {
       const params: CreateOrganizationRequest = {
         organizationName: name,
         users: users.map(userConfig => ({
-          role: (userConfig.role || "admin") === "admin" ? KmsUserRole.admin : KmsUserRole.user,
+          role: (userConfig.role || KmsUserRole.admin) === KmsUserRole.admin ? KmsUserRole.admin : KmsUserRole.user,
           username: userConfig.username || `user-${Date.now()}`,
           authenticators: userConfig.authenticators as any,
         })),
+        tags
       };
 
       const request: CreateOrganization = {
@@ -427,7 +429,7 @@ export class PhantomClient {
       } as any;
 
       const response = await this.kmsApi.postKmsRpc(request);
-      const result = response.data.result as ExternalKmsOrganization;
+      const result = (response.data as any).result as ExternalKmsOrganization;
 
       return result;
     } catch (error: any) {
@@ -439,7 +441,7 @@ export class PhantomClient {
   /**
    * Create an authenticator for a user in an organization
    */
-  async createAuthenticator(params: CreateAuthenticatorParams): Promise<any> {
+  async createAuthenticator(params: CreateAuthenticatorParams): Promise<ExternalKmsAuthenticator> {
     try {
       const requestParams: CreateAuthenticatorRequest = {
         organizationId: params.organizationId,
@@ -455,7 +457,7 @@ export class PhantomClient {
       } as any;
 
       const response = await this.kmsApi.postKmsRpc(request);
-      const result = response.data.result;
+      const result = (response.data as any).result as ExternalKmsAuthenticator
 
       return result;
     } catch (error: any) {
@@ -482,7 +484,7 @@ export class PhantomClient {
       } as any;
 
       const response = await this.kmsApi.postKmsRpc(request);
-      const result = response.data.result;
+      const result = (response.data as any).result;
 
       return result;
     } catch (error: any) {
@@ -502,7 +504,7 @@ export class PhantomClient {
       // Granting organization access with request
 
       const response = await this.kmsApi.postKmsRpc(request);
-      const result = response.data.result;
+      const result = (response.data as any).result;
 
       // Organization access granted successfully
 
@@ -529,7 +531,7 @@ export class PhantomClient {
       };
 
       const response = await this.kmsApi.postKmsRpc(request as any);
-      const result = response.data.result;
+      const result = (response.data as any).result;
       return result;
     } catch (error: any) {
       console.error("Failed to get wallet with tag:", error.response?.data || error.message);

@@ -69,21 +69,31 @@ export interface DeleteAuthenticatorParams {
   authenticatorId: string;
 }
 
-export interface AuthenticatorConfig {
-  authenticatorName: string;
-  authenticatorKind: "keypair" | "passkey" | "oidc";
-  publicKey?: string; // base64url encoded public key (required for keypair)
-  algorithm?: "Ed25519"; // required for keypair
-  // OIDC-specific fields
-  jwksUrl?: string; // required for oidc
-  idTokenClaims?: {
-    sub: string;
-    iss: string;
-  }; // required for oidc
-}
+export type AuthenticatorConfig =
+  | {
+      authenticatorKind: "keypair";
+      authenticatorName: string;
+      publicKey: string; // base64url encoded public key (required for keypair)
+      algorithm: "Ed25519";
+    }
+  | {
+      authenticatorKind: "passkey";
+      authenticatorName: string;
+      publicKey: string; // base64url encoded public key (required for passkey)
+      algorithm: "Ed25519" | "ECDSA";
+    }
+  | {
+      authenticatorKind: "oidc";
+      authenticatorName: string;
+      jwksUrl: string;
+      idTokenClaims: {
+        sub: string;
+        iss: string;
+      };
+    };
 
 export interface UserConfig {
   username?: string; // Optional, will generate default if not provided
-  role?: "admin" | "user"; // Optional, defaults to 'admin'
+  role?: "ADMIN" | "USER"; // Optional, defaults to 'ADMIN'
   authenticators: AuthenticatorConfig[];
 }

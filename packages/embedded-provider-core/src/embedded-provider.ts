@@ -190,7 +190,7 @@ export class EmbeddedProvider {
     const { organizationId } = await tempClient.createOrganization(organizationName, [
       {
         username: `user-${shortPubKey}`,
-        role: "admin",
+        role: "ADMIN",
         authenticators: [
           {
             authenticatorName: `auth-${shortPubKey}`,

@@ -418,7 +418,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         expect.arrayContaining([
           expect.objectContaining({
             username: expect.stringContaining("user-"),
-            role: "admin",
+            role: "ADMIN",
             authenticators: expect.arrayContaining([
               expect.objectContaining({
                 authenticatorName: expect.stringContaining("auth-"),
