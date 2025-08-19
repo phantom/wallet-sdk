@@ -1,4 +1,4 @@
-import { type DerivationInfoAddressFormatEnum } from "@phantom/openapi-wallet-service";
+import { type AddressType } from "@phantom/client";
 
 export interface ServerSDKConfig {
   apiPrivateKey: string;
@@ -8,6 +8,6 @@ export interface ServerSDKConfig {
 }
 
 export interface WalletAddress {
-  addressType: DerivationInfoAddressFormatEnum;
+  addressType: AddressType;
   address: string;
 }

@@ -41,7 +41,6 @@
     "@phantom/base64url": "workspace:^",
     "@phantom/client": "workspace:^",
     "@phantom/constants": "workspace:^",
-    "@phantom/openapi-wallet-service": "^0.1.7",
     "@phantom/parsers": "workspace:^",
     "bs58": "^6.0.0"
   },

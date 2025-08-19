@@ -218,6 +218,8 @@ export class ProviderManager {
         embeddedWalletType: embeddedWalletType || "app-wallet",
         addressTypes: this.config.addressTypes || [],
         solanaProvider: this.config.solanaProvider || "web3js",
+        appLogo: this.config.appLogo, // Optional app logo URL
+        appName: this.config.appName
       });
     }
 

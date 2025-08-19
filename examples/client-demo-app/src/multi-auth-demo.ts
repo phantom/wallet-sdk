@@ -45,7 +45,7 @@ async function main() {
   const users = [
     {
       username: customUsername,
-      role: "admin" as const,
+      role: "ADMIN" as const,
       authenticators: [
         {
           authenticatorName: primaryAuthName,

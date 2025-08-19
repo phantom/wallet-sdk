@@ -164,7 +164,7 @@ const organization = await client.getOrganization("org-id");
 const newOrg = await client.createOrganization("My Organization", [
   {
     username: "admin-user",
-    role: "admin",
+    role: "ADMIN",
     authenticators: [
       {
         authenticatorName: "Primary Auth",

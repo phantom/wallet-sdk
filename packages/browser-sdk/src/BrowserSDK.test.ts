@@ -57,6 +57,8 @@ describe("BrowserSDK", () => {
         embeddedWalletType: "app-wallet",
         addressTypes: [],
         solanaProvider: "web3js",
+        appName: "Test App",
+        appLogo: undefined,
       });
       expect(MockInjectedProvider).not.toHaveBeenCalled();
     });
