@@ -11,6 +11,8 @@ import type {
 import { ProviderManager, type SwitchProviderOptions, type ProviderPreference } from "./ProviderManager";
 import { isPhantomExtensionInstalled } from "@phantom/browser-injected-sdk";
 import { debug, DebugCategory } from "./debug";
+import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-provider-core";
+
 export class BrowserSDK {
   private providerManager: ProviderManager;
 
@@ -216,5 +218,54 @@ export class BrowserSDK {
    */
   getWalletId(): string | null {
     return this.providerManager.getWalletId();
+  }
+
+  /**
+   * Add event listener for provider events (connect, disconnect, error)
+   * Only works with embedded providers
+   */
+  on(event: EmbeddedProviderEvent, callback: EventCallback): void {
+    debug.log(DebugCategory.BROWSER_SDK, "Adding event listener", { event });
+    const currentProvider = this.providerManager.getCurrentProvider();
+    if (currentProvider && 'on' in currentProvider) {
+      (currentProvider as any).on(event, callback);
+    } else {
+      debug.warn(DebugCategory.BROWSER_SDK, "Current provider does not support events", {
+        providerType: this.getCurrentProviderInfo()?.type,
+      });
+    }
+  }
+
+  /**
+   * Remove event listener for provider events
+   * Only works with embedded providers
+   */
+  off(event: EmbeddedProviderEvent, callback: EventCallback): void {
+    debug.log(DebugCategory.BROWSER_SDK, "Removing event listener", { event });
+    const currentProvider = this.providerManager.getCurrentProvider();
+    if (currentProvider && 'off' in currentProvider) {
+      (currentProvider as any).off(event, callback);
+    } else {
+      debug.warn(DebugCategory.BROWSER_SDK, "Current provider does not support events", {
+        providerType: this.getCurrentProviderInfo()?.type,
+      });
+    }
+  }
+
+  /**
+   * Attempt auto-connection using existing session
+   * Should be called after setting up event listeners
+   * Only works with embedded providers
+   */
+  async autoConnect(): Promise<void> {
+    debug.log(DebugCategory.BROWSER_SDK, "Attempting auto-connect");
+    const currentProvider = this.providerManager.getCurrentProvider();
+    if (currentProvider && 'autoConnect' in currentProvider) {
+      await (currentProvider as any).autoConnect();
+    } else {
+      debug.warn(DebugCategory.BROWSER_SDK, "Current provider does not support auto-connect", {
+        providerType: this.getCurrentProviderInfo()?.type,
+      });
+    }
   }
 }

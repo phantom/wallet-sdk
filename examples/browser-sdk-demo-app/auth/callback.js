@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initialize debug system
   debug.setCallback(handleDebugMessage);
-  debug.setLevel(DebugLevel.INFO);
+  debug.setLevel(DebugLevel.DEBUG);
   debug.enable();
 
   // Debug toggle handler
@@ -178,7 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
       addressTypes: [AddressType.solana, AddressType.ethereum],
       debug: {
         enabled: true,
-        level: debugLevel ? parseInt(debugLevel.value) : DebugLevel.INFO,
+        level: debugLevel ? parseInt(debugLevel.value) : DebugLevel.DEBUG,
         callback: handleDebugMessage,
       },
     };

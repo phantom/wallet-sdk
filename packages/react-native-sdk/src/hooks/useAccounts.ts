@@ -1,12 +1,11 @@
 import { usePhantom } from "../PhantomProvider";
 
 export function useAccounts() {
-  const { addresses, isConnected, walletId, error } = usePhantom();
+  const { addresses, isConnected, walletId } = usePhantom();
 
   return {
     addresses,
     isConnected,
     walletId,
-    error,
   };
 }

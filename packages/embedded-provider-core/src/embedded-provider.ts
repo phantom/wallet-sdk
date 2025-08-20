@@ -33,6 +33,10 @@ import { JWTAuth } from "./auth/jwt-auth";
 import { generateSessionId } from "./utils/session";
 import { retryWithBackoff } from "./utils/retry";
 import type { StamperWithKeyManagement } from "@phantom/sdk-types";
+
+export type EmbeddedProviderEvent = 'connect' | 'connect_start' | 'connect_error' | 'disconnect' | 'error';
+export type EventCallback = (data?: any) => void;
+
 export class EmbeddedProvider {
   private config: EmbeddedProviderConfig;
   private platform: PlatformAdapter;
@@ -45,6 +49,7 @@ export class EmbeddedProvider {
   private walletId: string | null = null;
   private addresses: WalletAddress[] = [];
   private jwtAuth: JWTAuth;
+  private eventListeners: Map<EmbeddedProviderEvent, Set<EventCallback>> = new Map();
 
   constructor(config: EmbeddedProviderConfig, platform: PlatformAdapter, logger: DebugLogger) {
     this.logger = logger;
@@ -60,7 +65,43 @@ export class EmbeddedProvider {
 
     // Store solana provider config (unused for now)
     config.solanaProvider;
+    
     this.logger.info("EMBEDDED_PROVIDER", "EmbeddedProvider initialized");
+
+    // Auto-connect is now handled manually via autoConnect() method to avoid race conditions
+  }
+
+  /*
+   * Event system methods for listening to provider state changes
+   */
+  on(event: EmbeddedProviderEvent, callback: EventCallback): void {
+    if (!this.eventListeners.has(event)) {
+      this.eventListeners.set(event, new Set());
+    }
+    this.eventListeners.get(event)!.add(callback);
+    this.logger.log("EMBEDDED_PROVIDER", "Event listener added", { event });
+  }
+
+  off(event: EmbeddedProviderEvent, callback: EventCallback): void {
+    const listeners = this.eventListeners.get(event);
+    if (listeners) {
+      listeners.delete(callback);
+      this.logger.log("EMBEDDED_PROVIDER", "Event listener removed", { event });
+    }
+  }
+
+  private emit(event: EmbeddedProviderEvent, data?: any): void {
+    const listeners = this.eventListeners.get(event);
+    if (listeners && listeners.size > 0) {
+      this.logger.log("EMBEDDED_PROVIDER", "Emitting event", { event, listenerCount: listeners.size, data });
+      listeners.forEach(callback => {
+        try {
+          callback(data);
+        } catch (error) {
+          this.logger.error("EMBEDDED_PROVIDER", "Event callback error", { event, error });
+        }
+      });
+    }
   }
 
   private async getAndFilterWalletAddresses(walletId: string): Promise<WalletAddress[]> {
@@ -150,6 +191,166 @@ export class EmbeddedProvider {
   }
 
   /*
+   * We use this method to validate if a session is still valid and can be used for auto-connect.
+   * This checks session status, expiration, and required fields.
+   */
+  private isSessionValid(session: Session | null): boolean {
+    if (!session) {
+      return false;
+    }
+
+    // Check required fields
+    if (!session.walletId || !session.organizationId || !session.stamperInfo) {
+      this.logger.log("EMBEDDED_PROVIDER", "Session missing required fields", {
+        hasWalletId: !!session.walletId,
+        hasOrganizationId: !!session.organizationId,
+        hasStamperInfo: !!session.stamperInfo,
+      });
+      return false;
+    }
+
+    // Check session status
+    if (session.status !== "completed") {
+      this.logger.log("EMBEDDED_PROVIDER", "Session not completed", { status: session.status });
+      return false;
+    }
+
+    // Check session age (7 days default)
+    const sessionAge = Date.now() - session.lastUsed;
+    const maxSessionAge = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+    if (sessionAge > maxSessionAge) {
+      this.logger.log("EMBEDDED_PROVIDER", "Session expired", {
+        sessionAge,
+        maxSessionAge,
+        lastUsed: new Date(session.lastUsed).toISOString(),
+      });
+      return false;
+    }
+
+    this.logger.log("EMBEDDED_PROVIDER", "Session is valid", {
+      sessionId: session.sessionId,
+      walletId: session.walletId,
+      lastUsed: new Date(session.lastUsed).toISOString(),
+    });
+    return true;
+  }
+
+  /*
+   * Public method to attempt auto-connection using an existing valid session.
+   * This should be called after setting up event listeners to avoid race conditions.
+   * Silently fails if no valid session exists, enabling seamless reconnection.
+   */
+  async autoConnect(): Promise<void> {
+    try {
+      this.logger.log("EMBEDDED_PROVIDER", "Starting auto-connect attempt");
+      
+      // Emit connect_start event for auto-connect
+      this.emit("connect_start", { source: "auto-connect" });
+
+      // First, check for URL parameters (OAuth redirect handling)
+      const urlSessionId = this.platform.urlParamsAccessor?.getParam("session_id");
+      const urlWalletId = this.platform.urlParamsAccessor?.getParam("wallet_id");
+      const urlAuthToken = this.platform.urlParamsAccessor?.getParam("auth_token");
+
+      if (urlSessionId && urlWalletId) {
+        this.logger.info("EMBEDDED_PROVIDER", "Auto-connect from URL parameters", {
+          sessionId: urlSessionId,
+          walletId: urlWalletId,
+          hasAuthToken: !!urlAuthToken,
+        });
+
+        try {
+          // Create session from URL parameters
+          const urlSession: Session = {
+            sessionId: urlSessionId,
+            walletId: urlWalletId,
+            organizationId: this.config.organizationId,
+            stamperInfo: { keyId: "", publicKey: "" }, // Will be populated during initialization
+            status: "completed",
+            createdAt: Date.now(),
+            lastUsed: Date.now(),
+          };
+
+          // Initialize client from URL session
+          await this.initializeClientFromSession(urlSession);
+          
+          // Save the session for future use
+          await this.storage.saveSession(urlSession);
+
+          this.logger.info("EMBEDDED_PROVIDER", "Auto-connect from URL parameters successful", {
+            walletId: this.walletId,
+            addressCount: this.addresses.length,
+          });
+
+          // Emit connect event for URL parameter auto-connect success
+          this.emit("connect", {
+            walletId: this.walletId,
+            addresses: this.addresses,
+            source: "url-redirect",
+          });
+          
+          return;
+        } catch (urlError) {
+          this.logger.error("EMBEDDED_PROVIDER", "URL parameter auto-connect failed", {
+            error: urlError instanceof Error ? urlError.message : String(urlError),
+          });
+          // Continue to stored session fallback
+        }
+      }
+
+      // Fallback: Get existing stored session
+      const session = await this.storage.getSession();
+      
+      // Validate session
+      if (!this.isSessionValid(session)) {
+        this.logger.log("EMBEDDED_PROVIDER", "Auto-connect failed: no valid session found");
+        
+        // Emit connect_error to reset isConnecting state
+        this.emit("connect_error", {
+          error: "No valid session found",
+          source: "auto-connect",
+        });
+        return;
+      }
+
+      // Session is valid, initialize client from it
+      this.logger.info("EMBEDDED_PROVIDER", "Auto-connecting from stored session", {
+        sessionId: session!.sessionId,
+        walletId: session!.walletId,
+      });
+
+      await this.initializeClientFromSession(session!);
+
+      // Update session timestamp
+      session!.lastUsed = Date.now();
+      await this.storage.saveSession(session!);
+
+      this.logger.info("EMBEDDED_PROVIDER", "Auto-connect from stored session successful", {
+        walletId: this.walletId,
+        addressCount: this.addresses.length,
+      });
+
+      // Emit connect event for stored session auto-connect success
+      this.emit("connect", {
+        walletId: this.walletId,
+        addresses: this.addresses,
+        source: "stored-session",
+      });
+    } catch (error) {
+      // Silent fail - user can still call connect() manually if needed
+      this.logger.log("EMBEDDED_PROVIDER", "Auto-connect failed", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+
+      // Emit connect_error event for auto-connect failure
+      this.emit("connect_error", {
+        error: error instanceof Error ? error.message : String(error),
+        source: "auto-connect",
+      });
+    }
+  }
+
+  /*
    * We use this method to initialize the stamper and create an organization for new sessions.
    * This is the first step when no existing session is found and we need to set up a new wallet.
    */
@@ -216,6 +417,12 @@ export class EmbeddedProvider {
             }
           : undefined,
       });
+      
+      // Emit connect_start event for manual connect
+      this.emit("connect_start", { 
+        source: "manual-connect",
+        authOptions: authOptions ? { provider: authOptions.provider } : undefined
+      });
 
       // Get and validate existing session
       this.logger.log("EMBEDDED_PROVIDER", "Getting existing session");
@@ -264,11 +471,20 @@ export class EmbeddedProvider {
       // Initialize client and get addresses
       await this.initializeClientFromSession(session);
 
-      return {
+      const result: ConnectResult = {
         walletId: this.walletId!,
         addresses: this.addresses,
         status: "completed",
       };
+
+      // Emit connect event for manual connect success
+      this.emit("connect", {
+        walletId: this.walletId,
+        addresses: this.addresses,
+        source: "manual",
+      });
+
+      return result;
     } catch (error) {
       // Log the full error details for debugging
       this.logger.error("EMBEDDED_PROVIDER", "Connect failed with error", {
@@ -280,6 +496,12 @@ export class EmbeddedProvider {
                 stack: error.stack,
               }
             : error,
+      });
+
+      // Emit connect_error event for manual connect failure
+      this.emit("connect_error", {
+        error: error instanceof Error ? error.message : String(error),
+        source: "manual-connect",
       });
 
       // Enhanced error handling with specific error types
@@ -319,12 +541,21 @@ export class EmbeddedProvider {
   }
 
   async disconnect(): Promise<void> {
+    const wasConnected = this.client !== null;
+    
     await this.storage.clearSession();
 
     this.client = null;
     this.walletId = null;
     this.addresses = [];
     this.logger.info("EMBEDDED_PROVIDER", "Disconnected from embedded wallet");
+
+    // Emit disconnect event if we were previously connected
+    if (wasConnected) {
+      this.emit("disconnect", {
+        source: "manual",
+      });
+    }
   }
 
   async signMessage(params: SignMessageParams): Promise<ParsedSignatureResult> {

@@ -43,7 +43,7 @@ export function Actions() {
   const hasBalance = balance !== null && balance > 0;
 
   // Debug state
-  const [debugLevel, setDebugLevel] = useState<DebugLevel>(DebugLevel.INFO);
+  const [debugLevel, setDebugLevel] = useState<DebugLevel>(DebugLevel.DEBUG);
   const [showDebug, setShowDebug] = useState(true);
   const [debugMessages, setDebugMessages] = useState<DebugMessage[]>([]);
   // Debug callback function

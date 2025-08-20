@@ -1,4 +1,3 @@
-import type { AddressType } from "@phantom/client";
 import type {
   WalletAddress,
   ConnectResult,
@@ -7,25 +6,19 @@ import type {
   SignMessageResult,
   SignedTransaction,
   AuthOptions,
+  EmbeddedProviderConfig,
 } from "@phantom/embedded-provider-core";
 
 import type { DebugCallback, DebugLevel } from "./debug";
 
-export interface BrowserSDKConfig {
+export interface BrowserSDKConfig extends Partial<EmbeddedProviderConfig> {
   providerType: "injected" | "embedded" | (string & Record<never, never>);
-  appName?: string;
-  appLogo?: string; // URL to app logo
-  // Address types to enable (applies to both injected and embedded providers)
-  addressTypes?: AddressType[];
-  // For embedded provider
+  // Required for embedded provider, optional for injected
   apiBaseUrl?: string;
   organizationId?: string;
-  authOptions?: {
-    authUrl?: string;
-    redirectUrl?: string;
-  };
   embeddedWalletType?: "app-wallet" | "user-wallet" | (string & Record<never, never>);
-  solanaProvider?: "web3js" | "kit"; // Solana library choice (default: 'web3js')
+  // Auto-connect to existing sessions (default: true)
+  autoConnect?: boolean;
   // Debug options
   debug?: {
     enabled?: boolean;

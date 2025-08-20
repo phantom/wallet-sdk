@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useConnect, useAccounts, usePhantom, debug, DebugLevel, type DebugMessage } from "@phantom/react-sdk";
+import { useConnect, useAccounts, debug, DebugLevel, type DebugMessage } from "@phantom/react-sdk";
 import "./AuthCallback.css";
 
 interface AuthState {
@@ -11,8 +11,7 @@ interface AuthState {
 
 export function AuthCallback() {
   const navigate = useNavigate();
-  const { connect, isConnecting, error: connectError } = useConnect();
-  const { walletId } = usePhantom();
+  const { isConnecting, error: connectError } = useConnect();
   const addresses = useAccounts();
 
   const [authState, setAuthState] = useState<AuthState>({
@@ -24,8 +23,7 @@ export function AuthCallback() {
   // Debug state
   const [debugMessages, setDebugMessages] = useState<DebugMessage[]>([]);
   const [showDebug, setShowDebug] = useState(true);
-  const [debugLevel, setDebugLevel] = useState<DebugLevel>(DebugLevel.INFO);
-  const hasStartedAuth = useRef(false);
+  const [debugLevel, setDebugLevel] = useState<DebugLevel>(DebugLevel.DEBUG);
 
   // Debug callback function
   const handleDebugMessage = useCallback((message: DebugMessage) => {
@@ -43,56 +41,6 @@ export function AuthCallback() {
     debug.enable();
   }, [handleDebugMessage, debugLevel]);
 
-  // Handle authentication callback
-  const handleAuthCallback = useCallback(async () => {
-    try {
-      debug.info("AUTH_CALLBACK", "Starting auth callback handling");
-
-      setAuthState({
-        status: "loading",
-        title: "Connecting to wallet...",
-        message: "Establishing connection with your authenticated wallet.",
-      });
-
-      debug.info("AUTH_CALLBACK", "Attempting to connect");
-
-      // Connect - this should resume from the redirect
-      // The React SDK should automatically handle the callback URL params
-      const result = await connect({ providerType: "embedded" });
-
-      debug.info("AUTH_CALLBACK", "Connection completed", { result });
-
-      // Check if connection was successful
-      if (result.status === "completed" && result.addresses && result.addresses.length > 0) {
-        setAuthState({
-          status: "success",
-          title: "Authentication Successful!",
-          message: "You have been successfully authenticated and connected to your wallet.",
-        });
-        debug.info("AUTH_CALLBACK", "Authentication successful");
-      } else if (result.status === "pending") {
-        // Handle pending status if needed
-        debug.warn("AUTH_CALLBACK", "Connection still pending");
-      } else {
-        throw new Error("Connection completed but no addresses found");
-      }
-    } catch (error) {
-      console.error("Auth callback error:", error);
-      debug.error("AUTH_CALLBACK", "Authentication failed", { error: (error as Error).message });
-      setAuthState({
-        status: "error",
-        title: "Authentication Failed",
-        message: (error as Error).message || "An unknown error occurred during authentication.",
-      });
-    }
-  }, [connect]);
-
-  useEffect(() => {
-    if (!hasStartedAuth.current) {
-      hasStartedAuth.current = true;
-      handleAuthCallback();
-    }
-  }, [handleAuthCallback]);
 
   // Monitor connect error
   useEffect(() => {
@@ -143,10 +91,7 @@ export function AuthCallback() {
                 <h3>{authState.title}</h3>
                 <p>{authState.message}</p>
                 <div className="wallet-info">
-                  <div className="info-row">
-                    <span className="label">Wallet ID:</span>
-                    <span className="value">{walletId || "N/A"}</span>
-                  </div>
+                  
                   <div className="info-row">
                     <span className="label">Addresses:</span>
                     <div className="addresses">

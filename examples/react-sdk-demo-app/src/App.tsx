@@ -7,7 +7,7 @@ import { AuthCallback } from "./AuthCallback";
 const config: PhantomSDKConfig = {
   appName: "React SDK Demo App",
   appLogo: "https://picsum.photos/200", // Optional app logo URL
-  providerType: "injected", // Default to embedded
+  providerType: "embedded", // Default to embedded
   addressTypes: [AddressType.solana, AddressType.ethereum, AddressType.bitcoinSegwit, AddressType.sui],
 
   // Solana library choice - matches browser-sdk demo
@@ -21,11 +21,12 @@ const config: PhantomSDKConfig = {
     authUrl: import.meta.env.VITE_AUTH_URL || "https://connect.phantom.app",
     redirectUrl: import.meta.env.VITE_REDIRECT_URL,
   },
+  autoConnect: true, // Automatically connect to existing session
 
   // Enable debug by default
   debug: {
     enabled: true,
-    level: DebugLevel.INFO,
+    level: DebugLevel.DEBUG,
   },
 };
 

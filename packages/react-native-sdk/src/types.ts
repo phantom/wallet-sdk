@@ -5,6 +5,8 @@ export interface PhantomSDKConfig extends EmbeddedProviderConfig {
   scheme: string;
   /** Enable debug logging */
   debug?: boolean;
+  /** Enable auto-connect to existing sessions (default: true) */
+  autoConnect?: boolean;
 }
 
 export interface ConnectOptions {
