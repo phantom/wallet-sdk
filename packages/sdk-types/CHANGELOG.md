@@ -1,5 +1,11 @@
 # @phantom/sdk-types
 
+## 0.1.4
+
+### Patch Changes
+
+- 7d1b22f: Updated libs version
+
 ## 0.1.3
 
 ### Patch Changes
