@@ -55,6 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Get configuration UI elements
   const providerTypeSelect = document.getElementById("providerType") as HTMLSelectElement;
   const solanaProviderSelect = document.getElementById("solanaProvider") as HTMLSelectElement;
+  const externalWalletAuthCheckbox = document.getElementById("externalWalletAuth") as HTMLInputElement;
   const testWeb3jsBtn = document.getElementById("testWeb3jsBtn") as HTMLButtonElement;
   const testKitBtn = document.getElementById("testKitBtn") as HTMLButtonElement;
   const testEthereumBtn = document.getElementById("testEthereumBtn") as HTMLButtonElement;
@@ -268,7 +269,18 @@ document.addEventListener("DOMContentLoaded", () => {
     connectBtn.onclick = async () => {
       try {
         sdk = createSDK();
-        const result = await sdk.connect();
+        
+        // Check if external wallet authentication is selected
+        const useExternalWallet = externalWalletAuthCheckbox?.checked || false;
+        const connectOptions = {
+          embeddedWalletType: useExternalWallet ?  "app-wallet": "user-wallet",
+          authOptions: useExternalWallet ? {
+            provider: "external_wallet" as const,
+          }: undefined
+        }
+        
+        console.log("Connecting with options:", connectOptions);
+        const result = await sdk.connect(connectOptions);
         connectedAddresses = result.addresses;
 
         console.log("Connected successfully:", result);
@@ -547,6 +559,30 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     };
   }
+
+  // Update external wallet auth visibility based on provider type
+  function updateExternalWalletVisibility() {
+    if (externalWalletAuthCheckbox) {
+      const parentDiv = externalWalletAuthCheckbox.closest('.form-group') as HTMLDivElement;
+      if (parentDiv) {
+        const isEmbedded = providerTypeSelect.value === "embedded";
+        parentDiv.style.display = isEmbedded ? "block" : "none";
+        if (!isEmbedded) {
+          externalWalletAuthCheckbox.checked = false;
+        }
+      }
+    }
+  }
+
+  // Provider type change handler
+  if (providerTypeSelect) {
+    providerTypeSelect.onchange = () => {
+      updateExternalWalletVisibility();
+    };
+  }
+
+  // Initialize external wallet visibility
+  updateExternalWalletVisibility();
 
   // Initialize button states
   updateButtonStates(false);

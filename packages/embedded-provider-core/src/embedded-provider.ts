@@ -33,6 +33,7 @@ import { JWTAuth } from "./auth/jwt-auth";
 import { generateSessionId } from "./utils/session";
 import { retryWithBackoff } from "./utils/retry";
 import type { StamperWithKeyManagement } from "@phantom/sdk-types";
+import { PhantomWalletStamper } from "@phantom/phantom-wallet-stamper";
 export class EmbeddedProvider {
   private config: EmbeddedProviderConfig;
   private platform: PlatformAdapter;
@@ -140,13 +141,131 @@ export class EmbeddedProvider {
   private validateAuthOptions(authOptions?: AuthOptions): void {
     if (!authOptions) return;
 
-    if (authOptions.provider && !["google", "apple", "jwt"].includes(authOptions.provider)) {
-      throw new Error(`Invalid auth provider: ${authOptions.provider}. Must be "google", "apple", or "jwt"`);
+    if (authOptions.provider && !["google", "apple", "jwt", "external_wallet"].includes(authOptions.provider)) {
+      throw new Error(`Invalid auth provider: ${authOptions.provider}. Must be "google", "apple", "jwt", or "external_wallet"`);
     }
 
     if (authOptions.provider === "jwt" && !authOptions.jwtToken) {
       throw new Error("JWT token is required when using JWT authentication");
     }
+  }
+
+  /*
+   * We use this method to handle external wallet authentication flow.
+   * It connects to Phantom wallet, gets/creates organization and wallet, then sets up local IndexedDB stamper.
+   */
+  private async handleExternalWalletAuth(
+    _organizationId: string,
+    _stamperInfo: StamperInfo,
+  ): Promise<Session> {
+    this.logger.info("EMBEDDED_PROVIDER", "Starting external wallet authentication flow");
+
+    // Step 1: Create and initialize PhantomWallet stamper
+    this.logger.log("EMBEDDED_PROVIDER", "Creating PhantomWallet stamper");
+    const phantomStamper = new PhantomWalletStamper({
+      platform: "auto",
+      timeout: 30000,
+    });
+
+    const phantomStamperInfo = await phantomStamper.init();
+    this.logger.log("EMBEDDED_PROVIDER", "PhantomWallet stamper initialized", {
+      publicKey: phantomStamperInfo.publicKey,
+      keyId: phantomStamperInfo.keyId,
+    });
+
+    // Step 2: Create temporary client with Phantom stamper to get/create organization
+    this.logger.log("EMBEDDED_PROVIDER", "Creating temporary PhantomClient with Phantom stamper");
+    const phantomClient = new PhantomClient(
+      {
+        apiBaseUrl: this.config.apiBaseUrl,
+      },
+      phantomStamper,
+    );
+
+    // Step 3: Get or create organization using Phantom wallet
+    this.logger.log("EMBEDDED_PROVIDER", "Getting or creating Phantom organization");
+    const base64urlPhantomKey = base64urlEncode(bs58.decode(phantomStamperInfo.publicKey));
+    const phantomOrganization = await phantomClient.getOrCreatePhantomOrganization({
+      publicKey: base64urlPhantomKey,
+    });
+    this.logger.info("EMBEDDED_PROVIDER", "Phantom organization ready", {
+      organizationId: phantomOrganization.organizationId,
+    });
+
+    // Step 4: Get or create wallet by tag using Phantom stamper
+    const walletTag = `external-wallet-${phantomStamperInfo.publicKey.slice(0, 8)}`;
+    this.logger.log("EMBEDDED_PROVIDER", "Getting or creating wallet with tag", { walletTag });
+    const wallet = await phantomClient.getOrCreateWalletWithTag({
+      organizationId: phantomOrganization.organizationId,
+      tag: walletTag,
+      derivationPaths: [
+        "m/44'/501'/0'/0'", // Solana
+        "m/44'/60'/0'/0/0", // Ethereum
+        "m/84'/0'/0'/0/0",  // Bitcoin
+      ],
+      walletName: `External Wallet ${phantomStamperInfo.publicKey.slice(0, 8)}`,
+    });
+    this.logger.info("EMBEDDED_PROVIDER", "External wallet ready", {
+      walletId: wallet.walletId,
+      tag: walletTag,
+    });
+
+    // Step 5: Initialize local platform stamper
+    this.logger.log("EMBEDDED_PROVIDER", "Initializing local platform stamper");
+    const localStamperInfo = await this.stamper.init();
+    this.logger.log("EMBEDDED_PROVIDER", "Local platform stamper initialized", {
+      publicKey: localStamperInfo.publicKey,
+      keyId: localStamperInfo.keyId,
+    });
+
+    // Step 6: Add local stamper as new authenticator on the Phantom organization
+    this.logger.log("EMBEDDED_PROVIDER", "Adding local authenticator to Phantom organization");
+    const base64urlLocalKey = base64urlEncode(bs58.decode(localStamperInfo.publicKey));
+    
+    // Create authenticator for the admin user in the organization
+    const username = `user-phantom-${phantomStamperInfo.publicKey.slice(0, 8)}`;
+    await phantomClient.createAuthenticator({
+      organizationId: phantomOrganization.organizationId,
+      username: username,
+      authenticatorName: `local-${localStamperInfo.keyId}`,
+      authenticator: {
+        authenticatorName: `local-${localStamperInfo.keyId}`,
+        authenticatorKind: "keypair",
+        publicKey: base64urlLocalKey,
+        algorithm: "Ed25519",
+      },
+    });
+    this.logger.info("EMBEDDED_PROVIDER", "Local authenticator added to Phantom organization", {
+      organizationId: phantomOrganization.organizationId,
+      username: username,
+      authenticatorName: `local-${localStamperInfo.keyId}`,
+    });
+
+    // Step 7: Create completed session
+    const now = Date.now();
+    const session: Session = {
+      sessionId: generateSessionId(),
+      walletId: wallet.walletId,
+      organizationId: phantomOrganization.organizationId,
+      stamperInfo: localStamperInfo, // Use local stamper for subsequent operations
+      authProvider: "external-wallet",
+      userInfo: { 
+        embeddedWalletType: "app-wallet", // Creating an app wallet
+        authProvider: "external_wallet", // But using external wallet for auth
+        phantomPublicKey: phantomStamperInfo.publicKey,
+      },
+      status: "completed",
+      createdAt: now,
+      lastUsed: now,
+    };
+
+    await this.storage.saveSession(session);
+    this.logger.info("EMBEDDED_PROVIDER", "External wallet authentication completed", {
+      walletId: wallet.walletId,
+      organizationId: phantomOrganization.organizationId,
+    });
+
+    return session;
   }
 
   /*
@@ -256,7 +375,7 @@ export class EmbeddedProvider {
 
       // Update session last used timestamp (only for non-redirect flows)
       // For redirect flows, timestamp is updated before redirect to prevent race condition
-      if (!authOptions || authOptions.provider === "jwt" || this.config.embeddedWalletType === "app-wallet") {
+      if (!authOptions || authOptions.provider === "jwt" || authOptions.provider === "external_wallet" || this.config.embeddedWalletType === "app-wallet") {
         session.lastUsed = Date.now();
         await this.storage.saveSession(session);
       }
@@ -418,6 +537,12 @@ export class EmbeddedProvider {
       // Route to appropriate authentication flow based on authOptions
       if (authOptions?.provider === "jwt") {
         return await this.handleJWTAuth(organizationId, stamperInfo, authOptions);
+      } else if (authOptions?.provider === "external_wallet") {
+        this.logger.info("EMBEDDED_PROVIDER", "Creating embedded wallet with external wallet authentication", {
+          organizationId,
+        });
+        // Handle external wallet authentication for embedded wallet
+        return await this.handleExternalWalletAuth(organizationId, stamperInfo);
       } else {
         // This will redirect in browser, so we don't return a session
         // In react-native this will return an auth result

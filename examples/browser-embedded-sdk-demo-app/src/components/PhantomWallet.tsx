@@ -68,6 +68,7 @@ export function PhantomWallet() {
     }
   };
 
+
   const handleNavigateBack = () => {
     setCurrentScreen("navigation");
   };

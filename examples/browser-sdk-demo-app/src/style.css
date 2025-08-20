@@ -122,6 +122,13 @@ h3 {
   margin: 0;
 }
 
+.help-text {
+  display: block;
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
 /* Button Styles */
 button {
   padding: 0.625rem 1rem;

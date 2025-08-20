@@ -48,6 +48,7 @@ import {
   type CreateAuthenticatorParams,
   type DeleteAuthenticatorParams,
   type UserConfig,
+  type GetOrCreatePhantomOrganizationParams,
 } from "./types";
 
 import type { Stamper } from "@phantom/sdk-types";
@@ -439,6 +440,29 @@ export class PhantomClient {
   }
 
   /**
+   * Get or create a Phantom organization using an external wallet public key
+   * This method is used for external wallet integration (e.g., browser extension)
+   */
+  async getOrCreatePhantomOrganization(params: GetOrCreatePhantomOrganizationParams): Promise<ExternalKmsOrganization> {
+    try {
+      const request = {
+        method: 'getOrCreatePhantomOrganization',
+        params: {
+          publicKey: params.publicKey
+        },
+        timestampMs: Date.now(),
+      };
+
+      const response = await this.kmsApi.postKmsRpc(request as any);
+      const result = response.data.result as ExternalKmsOrganization;
+      return result;
+    } catch (error: any) {
+      console.error("Failed to get or create Phantom organization:", error.response?.data || error.message);
+      throw new Error(`Failed to get or create Phantom organization: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  /**
    * Create an authenticator for a user in an organization
    */
   async createAuthenticator(params: CreateAuthenticatorParams): Promise<ExternalKmsAuthenticator> {
@@ -536,6 +560,22 @@ export class PhantomClient {
     } catch (error: any) {
       console.error("Failed to get wallet with tag:", error.response?.data || error.message);
       throw new Error(`Failed to get wallet with tag: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  /**
+   * Get a wallet by tag, or create one if it doesn't exist
+   * This is useful for external wallet integration where we want a consistent wallet for a specific tag
+   */
+  async getOrCreateWalletWithTag(params: GetWalletWithTagParams & { walletName?: string }): Promise<any> {
+    try {
+      // First try to get the wallet with the tag
+      return await this.getWalletWithTag(params);
+    } catch (error: any) {
+      // If wallet doesn't exist, create a new one with the tag as the name
+      // Wallet with tag not found, creating new wallet
+      const walletName = params.walletName || params.tag;
+      return await this.createWallet(walletName);
     }
   }
 

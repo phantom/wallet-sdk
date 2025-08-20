@@ -354,7 +354,7 @@ describe("EmbeddedProvider Core", () => {
       };
 
       await expect(provider.connect(invalidAuthOptions)).rejects.toThrow(
-        'Invalid auth provider: invalid-provider. Must be "google", "apple", or "jwt"',
+        'Invalid auth provider: invalid-provider. Must be "google", "apple", "jwt", or "external_wallet"',
       );
     });
   });
