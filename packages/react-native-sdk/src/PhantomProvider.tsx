@@ -112,15 +112,27 @@ export function PhantomProvider({ children, config }: PhantomProviderProps) {
     updateConnectionState();
   }, [updateConnectionState]);
 
-  const value: PhantomContextValue = {
-    sdk,
-    isConnected,
-    addresses,
-    walletId,
-    error,
-    updateConnectionState,
-    setWalletId,
-  };
+  // Memoize context value to prevent unnecessary re-renders
+  const value: PhantomContextValue = useMemo(
+    () => ({
+      sdk,
+      isConnected,
+      addresses,
+      walletId,
+      error,
+      updateConnectionState,
+      setWalletId,
+    }),
+    [
+      sdk,
+      isConnected,
+      addresses,
+      walletId,
+      error,
+      updateConnectionState,
+      setWalletId,
+    ]
+  );
 
   return <PhantomContext.Provider value={value}>{children}</PhantomContext.Provider>;
 }
