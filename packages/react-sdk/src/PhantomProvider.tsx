@@ -82,9 +82,10 @@ export function PhantomProvider({ children, config }: PhantomProviderProps) {
     }
   }, [sdk]);
 
-  // Check if Phantom extension is available (only for injected provider)
+  // Initialize connection state and check Phantom extension
   useEffect(() => {
-    const checkPhantomExtension = async () => {
+    const initialize = async () => {
+      // Check if Phantom extension is available (only for injected provider)
       try {
         const available = await sdk.waitForPhantomExtension(1000);
         setIsPhantomAvailable(available);
@@ -92,27 +93,37 @@ export function PhantomProvider({ children, config }: PhantomProviderProps) {
         console.error("Error checking Phantom extension:", err);
         setIsPhantomAvailable(false);
       }
+
+      // Update connection state once
+      await updateConnectionState();
     };
 
-    checkPhantomExtension();
-    updateConnectionState();
+    initialize();
   }, [sdk, updateConnectionState]);
 
-  // Initialize connection state
-  useEffect(() => {
-    updateConnectionState();
-  }, [updateConnectionState]);
-
-  const value: PhantomContextValue = {
-    sdk,
-    isConnected,
-    addresses,
-    updateConnectionState,
-    walletId,
-    error,
-    currentProviderType,
-    isPhantomAvailable,
-  };
+  // Memoize context value to prevent unnecessary re-renders
+  const value: PhantomContextValue = useMemo(
+    () => ({
+      sdk,
+      isConnected,
+      addresses,
+      updateConnectionState,
+      walletId,
+      error,
+      currentProviderType,
+      isPhantomAvailable,
+    }),
+    [
+      sdk,
+      isConnected,
+      addresses,
+      updateConnectionState,
+      walletId,
+      error,
+      currentProviderType,
+      isPhantomAvailable,
+    ]
+  );
 
   return <PhantomContext.Provider value={value}>{children}</PhantomContext.Provider>;
 }

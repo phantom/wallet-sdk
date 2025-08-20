@@ -2,13 +2,13 @@ import { useCallback, useState } from "react";
 import { usePhantom, type ConnectOptions } from "../PhantomProvider";
 
 export function useConnect() {
-  const context = usePhantom();
+  const { sdk, updateConnectionState, currentProviderType, isPhantomAvailable } = usePhantom();
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const connect = useCallback(
     async (options?: ConnectOptions) => {
-      if (!context.sdk) {
+      if (!sdk) {
         throw new Error("SDK not initialized");
       }
 
@@ -16,8 +16,8 @@ export function useConnect() {
       setError(null);
 
       try {
-        const result = await context.sdk.connect(options);
-        await context.updateConnectionState();
+        const result = await sdk.connect(options);
+        await updateConnectionState();
 
         return result;
       } catch (err) {
@@ -28,14 +28,14 @@ export function useConnect() {
         setIsConnecting(false);
       }
     },
-    [context],
+    [sdk, updateConnectionState],
   );
 
   return {
     connect,
     isConnecting,
     error,
-    currentProviderType: context.currentProviderType,
-    isPhantomAvailable: context.isPhantomAvailable,
+    currentProviderType,
+    isPhantomAvailable,
   };
 }
