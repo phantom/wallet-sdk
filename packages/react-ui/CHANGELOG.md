@@ -1,5 +1,16 @@
 # @phantom/react-ui
 
+## 1.2.4
+
+### Patch Changes
+
+- e41ad19: Fix re-rendering issues
+- 7d1b22f: Updated libs version
+- Updated dependencies [e41ad19]
+- Updated dependencies [7d1b22f]
+  - @phantom/react-sdk@0.3.4
+  - @phantom/client@0.1.8
+
 ## 1.2.3
 
 ### Patch Changes

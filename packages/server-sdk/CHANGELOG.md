@@ -1,5 +1,16 @@
 # @phantom/server-sdk
 
+## 0.2.4
+
+### Patch Changes
+
+- 7d1b22f: Updated libs version
+- Updated dependencies [7d1b22f]
+  - @phantom/client@0.1.8
+  - @phantom/api-key-stamper@0.1.5
+  - @phantom/constants@0.0.3
+  - @phantom/parsers@0.0.7
+
 ## 0.2.3
 
 ### Patch Changes

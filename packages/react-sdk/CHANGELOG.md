@@ -1,5 +1,14 @@
 # @phantom/react-sdk
 
+## 0.3.4
+
+### Patch Changes
+
+- e41ad19: Fix re-rendering issues
+- 7d1b22f: Updated libs version
+- Updated dependencies [7d1b22f]
+  - @phantom/browser-sdk@0.3.4
+
 ## 0.3.3
 
 ### Patch Changes

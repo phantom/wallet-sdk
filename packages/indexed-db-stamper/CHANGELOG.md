@@ -1,5 +1,14 @@
 # @phantom/indexed-db-stamper
 
+## 0.1.4
+
+### Patch Changes
+
+- 7d1b22f: Updated libs version
+- Updated dependencies [7d1b22f]
+  - @phantom/sdk-types@0.1.4
+  - @phantom/embedded-provider-core@0.1.5
+
 ## 0.1.3
 
 ### Patch Changes

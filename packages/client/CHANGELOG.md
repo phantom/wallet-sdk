@@ -1,5 +1,15 @@
 # @phantom/client
 
+## 0.1.8
+
+### Patch Changes
+
+- 7d1b22f: Updated libs version
+- Updated dependencies [7d1b22f]
+  - @phantom/sdk-types@0.1.4
+  - @phantom/api-key-stamper@0.1.5
+  - @phantom/constants@0.0.3
+
 ## 0.1.7
 
 ### Patch Changes
