@@ -192,7 +192,7 @@ interface PhantomSDKConfig {
   organizationId: string; // Your Phantom organization ID
   scheme: string; // Custom URL scheme for your app
   embeddedWalletType: "user-wallet" | "app-wallet";
-  addressTypes: AddressType[]; // e.g., [AddressType.solana]
+  addressTypes: [AddressType, ...AddressType[]]; // e.g., [AddressType.solana]
   apiBaseUrl: string; // e.g., "https://api.phantom.app/v1/wallets"
   solanaProvider: "web3js" | "kit"; // Solana provider to use
   authOptions?: {

@@ -9,7 +9,7 @@ import {
   DEFAULT_AUTH_URL,
   DEFAULT_WALLET_API_URL,
 } from "@phantom/browser-sdk";
-import type { DebugMessage } from "@phantom/browser-sdk";
+import type { BrowserSDKConfig, DebugMessage } from "@phantom/browser-sdk";
 import { SystemProgram, PublicKey, Connection, VersionedTransaction, TransactionMessage } from "@solana/web3.js";
 import {
   createSolanaRpc,
@@ -157,12 +157,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const providerType = providerTypeSelect.value as "injected" | "embedded";
     const solanaProvider = solanaProviderSelect.value as "web3js" | "kit";
 
-    const baseConfig = {
+    const baseConfig: Omit<BrowserSDKConfig, "providerType"> = {
       solanaProvider: solanaProvider,
       addressTypes: [AddressType.solana, AddressType.ethereum],
       appName: "Phantom Browser SDK Demo",
       appLogo: "https://picsum.photos/200", // Optional app logo URL
-      // Note: debug config removed - now handled separately to avoid SDK reinstantiation
     };
 
     if (providerType === "injected") {
