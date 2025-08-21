@@ -29,13 +29,13 @@ declare global {
 
 interface InjectedProviderConfig {
   solanaProvider: "web3js" | "kit";
-  addressTypes: AddressType[];
+  addressTypes: [AddressType, ...AddressType[]];
 }
 
 export class InjectedProvider implements Provider {
   private connected: boolean = false;
   private addresses: WalletAddress[] = [];
-  private addressTypes: AddressType[];
+  private addressTypes: [AddressType, ...AddressType[]];
   private phantom: any;
   
   // Event management
@@ -47,7 +47,7 @@ export class InjectedProvider implements Provider {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Initializing InjectedProvider", { config });
 
     // Store config values
-    this.addressTypes = config.addressTypes || [AddressType.solana, AddressType.ethereum];
+    this.addressTypes = config.addressTypes;
     debug.log(DebugCategory.INJECTED_PROVIDER, "Address types configured", { addressTypes: this.addressTypes });
 
     // Initialize phantom instance with plugins based on enabled address types

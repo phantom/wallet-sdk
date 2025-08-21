@@ -11,11 +11,12 @@ npm install @phantom/browser-sdk
 ### Injected Provider (Browser Extension)
 
 ```typescript
-import { BrowserSDK, NetworkId } from "@phantom/browser-sdk";
+import { BrowserSDK, NetworkId, AddressType } from "@phantom/browser-sdk";
 
 // Connect to Phantom browser extension
 const sdk = new BrowserSDK({
   providerType: "injected",
+  addressTypes: [AddressType.solana],
 });
 
 const { addresses } = await sdk.connect();
@@ -68,6 +69,7 @@ Uses the Phantom browser extension installed by the user. No additional configur
 ```typescript
 const sdk = new BrowserSDK({
   providerType: "injected",
+  addressTypes: [AddressType.solana],
 });
 ```
 
@@ -169,6 +171,7 @@ The SDK can automatically reconnect to existing sessions when instantiated, prov
 ```typescript
 const sdk = new BrowserSDK({
   providerType: "embedded",
+  addressTypes: [AddressType.solana],
   // ... other config
   autoConnect: true, // Default: true for embedded, false for injected
 });
@@ -191,6 +194,7 @@ if (sdk.isConnected()) {
 ```typescript
 const sdk = new BrowserSDK({
   providerType: "embedded",
+  addressTypes: [AddressType.solana],
   // ... other config
   autoConnect: false, // Disable auto-connect
 });
@@ -214,7 +218,7 @@ interface BrowserSDKConfig {
   providerType: "injected" | "embedded";
   appName?: string; // Optional app name for branding
   appLogo?: string; // Optional app logo URL for branding
-  addressTypes?: AddressType[]; // Networks to enable (e.g., [AddressType.solana])
+  addressTypes?: [AddressType, ...AddressType[]]; // Networks to enable (e.g., [AddressType.solana])
 
   // Required for embedded provider only
   apiBaseUrl?: string; // Phantom API base URL
