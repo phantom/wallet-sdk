@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { createSolanaRpc, address } from "@solana/kit";
+import { Connection, PublicKey } from "@solana/web3.js";
 
 interface UseBalanceReturn {
   balance: number | null;
@@ -26,10 +26,10 @@ export function useBalance(addressValue: string | null): UseBalanceReturn {
     setError(null);
 
     try {
-      const rpc = createSolanaRpc(rpcUrl);
-      const publicKey = address(addressValue);
-      const { value: balanceInLamports } = await rpc.getBalance(publicKey).send();
-      const balanceInSol = Number(balanceInLamports) / 1_000_000_000; // Convert lamports to SOL
+      const connection = new Connection(rpcUrl);
+      const publicKey = new PublicKey(addressValue);
+      const balanceInLamports = await connection.getBalance(publicKey);
+      const balanceInSol = balanceInLamports / 1_000_000_000; // Convert lamports to SOL
       setBalance(balanceInSol);
     } catch (err) {
       console.error("Failed to fetch balance:", err);

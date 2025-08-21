@@ -10,8 +10,8 @@ const config: PhantomSDKConfig = {
   providerType: "embedded", // Default to embedded
   addressTypes: [AddressType.solana, AddressType.ethereum, AddressType.bitcoinSegwit, AddressType.sui],
 
-  // Solana library choice - matches browser-sdk demo
-  solanaProvider: "kit", // Using @solana/kit for better performance
+  // Solana library choice - matches browser-sdk demo  
+  solanaProvider: "web3js", // Using @solana/web3.js
 
   // Embedded wallet configuration (only used when providerType is "embedded")
   organizationId: import.meta.env.VITE_ORGANIZATION_ID || "your-organization-id",

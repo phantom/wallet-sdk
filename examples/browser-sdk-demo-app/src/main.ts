@@ -20,8 +20,9 @@ import {
   address,
   compileTransaction,
   appendTransactionMessageInstruction,
-  transferSolInstruction,
+  lamports,
 } from "@solana/kit";
+import { getTransferSolInstruction } from "@solana-program/system";
 import { parseEther, parseGwei } from "viem";
 import { getBalance } from "./utils/balance";
 
@@ -484,10 +485,10 @@ document.addEventListener("DOMContentLoaded", () => {
       tx => setTransactionMessageFeePayer(address(solanaAddress.address), tx),
       tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
       tx => appendTransactionMessageInstruction(
-        transferSolInstruction({
+        getTransferSolInstruction({
           source: address(solanaAddress.address),
           destination: address(solanaAddress.address), // Self-transfer for demo
-          amount: 1000n, // Very small amount: 0.000001 SOL
+          amount: lamports(1000n), // Very small amount: 0.000001 SOL
         }),
         tx
       ),
