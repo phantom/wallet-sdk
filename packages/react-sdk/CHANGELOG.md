@@ -1,5 +1,13 @@
 # @phantom/react-sdk
 
+## 0.3.5
+
+### Patch Changes
+
+- e04d53d: Added autoconnect functionality
+- Updated dependencies [e04d53d]
+  - @phantom/browser-sdk@0.3.5
+
 ## 0.3.4
 
 ### Patch Changes
