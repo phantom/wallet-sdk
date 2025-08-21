@@ -3,7 +3,7 @@ import { usePhantom } from "../PhantomProvider";
 import type { SignedTransaction, SignAndSendTransactionParams } from "@phantom/browser-sdk";
 
 export function useSignAndSendTransaction() {
-  const { sdk, isConnected } = usePhantom();
+  const { sdk } = usePhantom();
   const [isSigning, setIsSigning] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -13,7 +13,7 @@ export function useSignAndSendTransaction() {
         throw new Error("SDK not initialized");
       }
 
-      if (!isConnected) {
+      if (!sdk.isConnected()) {
         throw new Error("Wallet not connected");
       }
 
@@ -30,7 +30,7 @@ export function useSignAndSendTransaction() {
         setIsSigning(false);
       }
     },
-    [sdk, isConnected],
+    [sdk],
   );
 
   return {

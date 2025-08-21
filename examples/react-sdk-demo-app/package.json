@@ -16,7 +16,7 @@
     "@phantom/browser-sdk": "workspace:^",
     "@phantom/client": "workspace:^",
     "@phantom/react-sdk": "workspace:^",
-    "@solana/kit": "^2.1.1",
+    "@solana/web3.js": "^1.98.4",
     "@vitejs/plugin-react": "^4.4.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

@@ -41,8 +41,7 @@ const sdk = new BrowserSDK({
   organizationId: "your-org-id",
 });
 
-const { walletId, addresses } = await sdk.connect();
-console.log("Wallet ID:", walletId);
+const { addresses } = await sdk.connect();
 console.log("Addresses:", addresses);
 
 const result = await sdk.signAndSendTransaction({
@@ -89,6 +88,7 @@ const sdk = new BrowserSDK({
   },
   appName: "My DApp", // optional, for branding
   appLogo: "https://myapp.com/logo.png", // optional, for branding
+  autoConnect: true, // optional, auto-connect to existing session (default: true for embedded)
   debug: {
     enabled: true, // optional, enable debug logging
     level: "info", // optional, debug level
@@ -162,6 +162,43 @@ const sdk = new BrowserSDK({
 - **@solana/web3.js**: Better ecosystem compatibility, wider community support
 - **@solana/kit**: Better TypeScript support, modern architecture, smaller bundle size
 
+### Auto-Connect Feature
+
+The SDK can automatically reconnect to existing sessions when instantiated, providing a seamless user experience.
+
+```typescript
+const sdk = new BrowserSDK({
+  providerType: "embedded",
+  // ... other config
+  autoConnect: true, // Default: true for embedded, false for injected
+});
+
+// SDK will automatically check for existing valid session and connect in background
+// No need to call connect() if user already has a session
+
+// Check if already connected
+if (sdk.isConnected()) {
+  console.log("Already connected!");
+  const addresses = await sdk.getAddresses();
+} else {
+  // First time or session expired, need to connect manually
+  await sdk.connect();
+}
+```
+
+**Disabling Auto-Connect:**
+
+```typescript
+const sdk = new BrowserSDK({
+  providerType: "embedded",
+  // ... other config
+  autoConnect: false, // Disable auto-connect
+});
+
+// Now you must manually call connect() every time
+await sdk.connect();
+```
+
 ## API Reference
 
 ### Constructor
@@ -188,6 +225,7 @@ interface BrowserSDKConfig {
   };
   embeddedWalletType?: "app-wallet" | "user-wallet"; // Wallet type
   solanaProvider?: "web3js" | "kit"; // Solana library choice (default: 'web3js')
+  autoConnect?: boolean; // Enable auto-connect to existing sessions (default: true)
 
   // Debug options
   debug?: {
@@ -314,6 +352,14 @@ Disconnect from wallet and clear session.
 
 ```typescript
 await sdk.disconnect();
+```
+
+#### autoConnect()
+
+Attempt auto-connection using existing session. Should be called after setting up event listeners to avoid race conditions. Only works with embedded providers.
+
+```typescript
+await sdk.autoConnect();
 ```
 
 ## Transaction Examples

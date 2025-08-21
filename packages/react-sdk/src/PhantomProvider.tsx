@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
+import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import { BrowserSDK } from "@phantom/browser-sdk";
 import type { BrowserSDKConfig, WalletAddress, AuthOptions } from "@phantom/browser-sdk";
 
@@ -14,12 +14,12 @@ export interface ConnectOptions {
 interface PhantomContextValue {
   sdk: BrowserSDK;
   isConnected: boolean;
+  isConnecting: boolean;
+  connectError: Error | null;
   addresses: WalletAddress[];
   walletId: string | null;
-  error: Error | null;
   currentProviderType: "injected" | "embedded" | null;
   isPhantomAvailable: boolean;
-  updateConnectionState: () => Promise<void>;
 }
 
 const PhantomContext = createContext<PhantomContextValue | undefined>(undefined);
@@ -29,60 +29,84 @@ export interface PhantomProviderProps {
   config: PhantomSDKConfig;
 }
 
+
 export function PhantomProvider({ children, config }: PhantomProviderProps) {
   // Instantiate SDK with useMemo to avoid recreation on every render
-  const sdk = useMemo(
-    () =>
-      new BrowserSDK({
-        ...config,
-        // Use providerType if provided, default to embedded
-        providerType: config.providerType || "embedded",
-      }),
-    [config],
-  );
+  const memoizedConfig: BrowserSDKConfig = useMemo(() => {
+    return {
+      ...config,
+      // Use providerType if provided, default to embedded
+      providerType: config.providerType || "embedded",
+      
+    };
+  }, [config]);
+  
+  const sdk = useMemo(() => {
+    const sdkInstance = new BrowserSDK(memoizedConfig);
+    
+    // Set up event listeners immediately when SDK is created to avoid race conditions
+    const handleConnectStart = () => {
+      setIsConnecting(true);
+      setConnectError(null);
+    };
+
+    const handleConnect = async () => {
+      try {
+        setIsConnected(true);
+        setIsConnecting(false);
+        
+        // Update current provider type
+        const providerInfo = sdkInstance.getCurrentProviderInfo();
+        setCurrentProviderType(providerInfo?.type || null);
+        
+        const addrs = await sdkInstance.getAddresses();
+        setAddresses(addrs);
+        setWalletId(sdkInstance.getWalletId());
+      } catch (err) {
+        console.error("Error connecting:", err);
+        
+        // Call disconnect to reset state if an error occurs
+        try {
+          await sdkInstance.disconnect();
+        } catch (err) {
+          console.error("Error disconnecting:", err);
+        }
+      }
+    };
+
+    const handleConnectError = (errorData: any) => {
+      setIsConnecting(false);
+      setIsConnected(false);
+      setConnectError(new Error(errorData.error || "Connection failed"));
+    };
+    
+    const handleDisconnect = () => {
+      setIsConnected(false);
+      setIsConnecting(false);
+      setConnectError(null);
+      setAddresses([]);
+      setWalletId(null);
+    };
+    
+    // Add event listeners immediately when SDK is created to avoid race conditions
+    sdkInstance.on("connect_start", handleConnectStart);
+    sdkInstance.on("connect", handleConnect);
+    sdkInstance.on("connect_error", handleConnectError);
+    sdkInstance.on("disconnect", handleDisconnect);
+    
+    return sdkInstance;
+  }, [memoizedConfig]);
 
   const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectError, setConnectError] = useState<Error | null>(null);
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
   const [walletId, setWalletId] = useState<string | null>(null);
-  const [error, setError] = useState<Error | null>(null);
   const [currentProviderType, setCurrentProviderType] = useState<"injected" | "embedded" | null>(null);
   const [isPhantomAvailable, setIsPhantomAvailable] = useState(false);
 
-  // Function to update connection state and provider info
-  const updateConnectionState = useCallback(async () => {
-    try {
-      const connected = sdk.isConnected();
-      setIsConnected(connected);
 
-      // Update current provider type
-      const providerInfo = sdk.getCurrentProviderInfo();
-      setCurrentProviderType(providerInfo?.type || null);
-
-      if (connected) {
-        const addrs = await sdk.getAddresses();
-        setAddresses(addrs);
-        setWalletId(sdk.getWalletId());
-      } else {
-        setAddresses([]);
-        setWalletId(null);
-      }
-    } catch (err) {
-      console.error("Error updating connection state:", err);
-      setError(err as Error);
-
-      // Call disconnect to reset state if an error occurs
-      try {
-        await sdk.disconnect();
-        setIsConnected(false);
-        setAddresses([]);
-        setWalletId(null);
-      } catch (err) {
-        console.error("Error disconnecting:", err);
-      }
-    }
-  }, [sdk]);
-
-  // Initialize connection state and check Phantom extension
+  // Initialize connection state and auto-connect
   useEffect(() => {
     const initialize = async () => {
       // Check if Phantom extension is available (only for injected provider)
@@ -93,33 +117,37 @@ export function PhantomProvider({ children, config }: PhantomProviderProps) {
         console.error("Error checking Phantom extension:", err);
         setIsPhantomAvailable(false);
       }
-
-      // Update connection state once
-      await updateConnectionState();
+      
+      // Attempt auto-connect if enabled
+      if (config.autoConnect !== false) {
+        sdk.autoConnect().catch(() => {
+          // Silent fail - auto-connect is optional and shouldn't break the app
+        });
+      }
     };
 
     initialize();
-  }, [sdk, updateConnectionState]);
+  }, [sdk, config.autoConnect]);
 
   // Memoize context value to prevent unnecessary re-renders
   const value: PhantomContextValue = useMemo(
     () => ({
       sdk,
       isConnected,
+      isConnecting,
+      connectError,
       addresses,
-      updateConnectionState,
       walletId,
-      error,
       currentProviderType,
       isPhantomAvailable,
     }),
     [
       sdk,
       isConnected,
+      isConnecting,
+      connectError,
       addresses,
-      updateConnectionState,
       walletId,
-      error,
       currentProviderType,
       isPhantomAvailable,
     ]

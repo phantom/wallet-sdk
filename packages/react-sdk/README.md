@@ -652,6 +652,7 @@ interface PhantomSDKConfig {
   };
   embeddedWalletType?: "app-wallet" | "user-wallet"; // Wallet type
   solanaProvider?: "web3js" | "kit"; // Solana library choice (default: 'web3js')
+  autoConnect?: boolean; // Auto-connect to existing session on SDK instantiation (default: true for embedded, false for injected)
 
   // Debug options
   debug?: {

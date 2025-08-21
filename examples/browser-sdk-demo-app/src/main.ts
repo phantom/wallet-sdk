@@ -19,7 +19,10 @@ import {
   setTransactionMessageLifetimeUsingBlockhash,
   address,
   compileTransaction,
+  appendTransactionMessageInstruction,
+  lamports,
 } from "@solana/kit";
+import { getTransferSolInstruction } from "@solana-program/system";
 import { parseEther, parseGwei } from "viem";
 import { getBalance } from "./utils/balance";
 
@@ -59,7 +62,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const testKitBtn = document.getElementById("testKitBtn") as HTMLButtonElement;
   const testEthereumBtn = document.getElementById("testEthereumBtn") as HTMLButtonElement;
 
-  let sdk: BrowserSDK | null = null;
   let connectedAddresses: any[] = [];
   let currentBalance: number | null = null;
 
@@ -69,6 +71,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const debugToggle = document.getElementById("debugToggle") as HTMLInputElement;
   const debugLevel = document.getElementById("debugLevel") as HTMLSelectElement;
   const clearDebugBtn = document.getElementById("clearDebugBtn") as HTMLButtonElement;
+  
+  // Instantiate SDK , it will autoconnect
+  let sdk: BrowserSDK | null = createSDK();
 
   // Debug callback function
   function handleDebugMessage(message: DebugMessage) {
@@ -118,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initialize debug system
   debug.setCallback(handleDebugMessage);
-  debug.setLevel(DebugLevel.INFO);
+  debug.setLevel(DebugLevel.DEBUG);
   debug.enable();
 
   // Debug toggle handler
@@ -159,7 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
         enabled: true,
         level: debugLevel ? (parseInt(debugLevel.value) as DebugLevel) : DebugLevel.DEBUG,
         callback: handleDebugMessage,
-      },
+      }
     };
 
     if (providerType === "injected") {
@@ -169,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     } else {
       // For demo purposes, use hardcoded embedded config
-      return new BrowserSDK({
+      const embeddedSdk = new BrowserSDK({
         providerType: "embedded",
         apiBaseUrl: import.meta.env.VITE_WALLET_API || DEFAULT_WALLET_API_URL,
         organizationId: import.meta.env.VITE_ORGANIZATION_ID || "your-organization-id",
@@ -178,9 +183,41 @@ document.addEventListener("DOMContentLoaded", () => {
           authUrl: import.meta.env.VITE_AUTH_URL || DEFAULT_AUTH_URL,
           redirectUrl: import.meta.env.VITE_REDIRECT_URL,
         },
+        autoConnect: true,
 
         ...baseConfig,
       });
+
+      embeddedSdk.on("connect_start", (data) => {
+        console.log("Embedded SDK connect started:", data);
+        // Could show loading state here
+      });
+
+      embeddedSdk.on("connect", () => {
+        console.log("Embedded SDK connected:", embeddedSdk.getAddresses());
+        updateAddressesDisplay(embeddedSdk.getAddresses());
+        updateBalanceDisplay();
+        updateButtonStates(true);
+      });
+
+      embeddedSdk.on("connect_error", (data) => {
+        console.log("Embedded SDK connect error:", data);
+        // Could show error state here
+      });
+
+      embeddedSdk.on("disconnect", () => {
+        console.log("Embedded SDK disconnected");
+        connectedAddresses = [];
+        currentBalance = null;
+        updateAddressesDisplay([]);
+        if (balanceSection) balanceSection.style.display = "none";
+        updateButtonStates(false);
+      });
+
+      // Note: autoConnect is already enabled via config.autoConnect: true
+      // No need to call embeddedSdk.autoConnect() manually
+
+      return embeddedSdk
     }
   }
 
@@ -447,6 +484,14 @@ document.addEventListener("DOMContentLoaded", () => {
       createTransactionMessage({ version: 0 }),
       tx => setTransactionMessageFeePayer(address(solanaAddress.address), tx),
       tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
+      tx => appendTransactionMessageInstruction(
+        getTransferSolInstruction({
+          source: address(solanaAddress.address),
+          destination: address(solanaAddress.address), // Self-transfer for demo
+          amount: lamports(1000n), // Very small amount: 0.000001 SOL
+        }),
+        tx
+      ),
     );
 
     const transaction = compileTransaction(transactionMessage);

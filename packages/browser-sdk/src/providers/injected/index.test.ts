@@ -30,6 +30,7 @@ describe("InjectedProvider", () => {
       disconnect: jest.fn(),
       signMessage: jest.fn(),
       signAndSendTransaction: jest.fn(),
+      addEventListener: jest.fn(() => jest.fn()), // Return cleanup function
     };
 
     mockEthereumPlugin = {
@@ -37,6 +38,7 @@ describe("InjectedProvider", () => {
       disconnect: jest.fn(),
       signPersonalMessage: jest.fn(),
       sendTransaction: jest.fn(),
+      addEventListener: jest.fn(() => jest.fn()), // Return cleanup function
     };
 
     mockExtensionPlugin = {

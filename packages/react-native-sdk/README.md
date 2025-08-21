@@ -202,6 +202,7 @@ interface PhantomSDKConfig {
   };
   appName?: string; // Optional app name for branding
   appLogo?: string; // Optional app logo URL for branding
+  autoConnect?: boolean; // Auto-connect to existing session on SDK instantiation (default: true)
   debug?: boolean; // Enable debug logging (optional)
 }
 ```
