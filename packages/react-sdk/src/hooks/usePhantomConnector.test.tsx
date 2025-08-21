@@ -43,7 +43,7 @@ describe('usePhantomConnector', () => {
   });
 
   it('should throw error when used outside PhantomProvider', () => {
-    mockUsePhantom.mockReturnValue(undefined);
+    mockUsePhantom.mockReturnValue(undefined as any);
 
     expect(() => {
       renderHook(() => usePhantomConnector());
@@ -74,7 +74,7 @@ describe('usePhantomConnector', () => {
       addresses: [],
       walletId: 'mock-wallet-id',
       error: null,
-      currentProviderType: 'embedded',
+      currentProviderType: 'embedded' as const,
       isPhantomAvailable: true,
       updateConnectionState: jest.fn(),
     });
@@ -110,7 +110,7 @@ describe('usePhantomConnector', () => {
         addresses: [],
         walletId: 'mock-wallet-id',
         error: null,
-        currentProviderType: 'embedded',
+        currentProviderType: 'embedded' as const,
         isPhantomAvailable: true,
         updateConnectionState: jest.fn(),
       });
@@ -139,13 +139,13 @@ describe('usePhantomConnector', () => {
 
     it('should throw error when no connector available', async () => {
       mockUsePhantom.mockReturnValue({
-        provider: null,
-        providerType: 'embedded',
-        connect: jest.fn(),
-        disconnect: jest.fn(),
-        signMessage: jest.fn(),
-        signAndSendTransaction: jest.fn(),
-        accounts: [],
+        currentProviderType: 'embedded' as const,
+        sdk: mockSdk,
+        addresses: [],
+        walletId: 'mock-wallet-id',
+        error: null,
+        isPhantomAvailable: true,
+        updateConnectionState: jest.fn(),
         isConnected: false,
       });
 
@@ -165,7 +165,7 @@ describe('usePhantomConnector', () => {
         addresses: [],
         walletId: 'mock-wallet-id',
         error: null,
-        currentProviderType: 'embedded',
+        currentProviderType: 'embedded' as const,
         isPhantomAvailable: true,
         updateConnectionState: jest.fn(),
       });
@@ -194,13 +194,13 @@ describe('usePhantomConnector', () => {
 
     it('should throw error when no connector available', async () => {
       mockUsePhantom.mockReturnValue({
-        provider: null,
-        providerType: 'embedded',
-        connect: jest.fn(),
-        disconnect: jest.fn(),
-        signMessage: jest.fn(),
-        signAndSendTransaction: jest.fn(),
-        accounts: [],
+        currentProviderType: 'embedded' as const,
+        sdk: mockSdk,
+        addresses: [],
+        walletId: 'mock-wallet-id',
+        error: null,
+        isPhantomAvailable: true,
+        updateConnectionState: jest.fn(),
         isConnected: false,
       });
 
@@ -220,7 +220,7 @@ describe('usePhantomConnector', () => {
         addresses: [],
         walletId: 'mock-wallet-id',
         error: null,
-        currentProviderType: 'embedded',
+        currentProviderType: 'embedded' as const,
         isPhantomAvailable: true,
         updateConnectionState: jest.fn(),
       });
@@ -242,13 +242,13 @@ describe('usePhantomConnector', () => {
 
     it('should return empty array when no connector', () => {
       mockUsePhantom.mockReturnValue({
-        provider: null,
-        providerType: 'embedded',
-        connect: jest.fn(),
-        disconnect: jest.fn(),
-        signMessage: jest.fn(),
-        signAndSendTransaction: jest.fn(),
-        accounts: [],
+        currentProviderType: 'embedded' as const,
+        sdk: mockSdk,
+        addresses: [],
+        walletId: 'mock-wallet-id',
+        error: null,
+        isPhantomAvailable: true,
+        updateConnectionState: jest.fn(),
         isConnected: false,
       });
 
@@ -266,7 +266,7 @@ describe('usePhantomConnector', () => {
       addresses: [],
       walletId: 'mock-wallet-id',
       error: null,
-      currentProviderType: 'embedded',
+      currentProviderType: 'embedded' as const,
       isPhantomAvailable: true,
       updateConnectionState: jest.fn(),
     };

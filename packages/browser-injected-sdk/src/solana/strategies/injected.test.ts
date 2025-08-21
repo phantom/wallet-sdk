@@ -1,15 +1,8 @@
-import type { PhantomSolanaProvider, VersionedTransaction } from "../types";
+import type { PhantomSolanaProvider } from "../types";
 import { InjectedSolanaStrategy } from "./injected";
 import type { Transaction } from "@solana/web3.js";
 
 const mockTransaction = {} as Transaction;
-const mockVersionedTransaction = {
-  signatures: [new Uint8Array([1, 2, 3])],
-  message: {
-    deserialize: jest.fn(),
-    serialize: jest.fn(),
-  },
-} as VersionedTransaction;
 
 const createMockProvider = () => ({
   connect: jest.fn().mockResolvedValue({
