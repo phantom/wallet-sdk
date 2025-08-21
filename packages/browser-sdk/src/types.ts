@@ -14,7 +14,7 @@ import type { DebugCallback, DebugLevel } from "./debug";
 
 export interface BrowserSDKConfig extends Partial<EmbeddedProviderConfig> {
   providerType: "injected" | "embedded" | (string & Record<never, never>);
-  addressTypes: Array<AddressType>;
+  addressTypes: [AddressType, ...AddressType[]]
   // Required for embedded provider, optional for injected
   apiBaseUrl?: string;
   organizationId?: string;

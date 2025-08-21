@@ -126,10 +126,6 @@ export class EmbeddedProvider {
     // Filter by enabled address types and return formatted addresses
     return addresses
       .filter(addr => this.config.addressTypes.some(type => type === addr.addressType))
-      .map(addr => ({
-        addressType: addr.addressType as AddressType,
-        address: addr.address,
-      }));
   }
 
   /*
