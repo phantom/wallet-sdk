@@ -1,5 +1,11 @@
 # @phantom/embedded-provider-core
 
+## 0.1.6
+
+### Patch Changes
+
+- e04d53d: Added autoconnect functionality
+
 ## 0.1.5
 
 ### Patch Changes
