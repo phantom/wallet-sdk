@@ -1,5 +1,13 @@
 # @phantom/react-native-sdk
 
+## 0.1.6
+
+### Patch Changes
+
+- 3bdbfbd: Fix debug system
+- Updated dependencies [b5d76b3]
+  - @phantom/embedded-provider-core@0.1.7
+
 ## 0.1.5
 
 ### Patch Changes

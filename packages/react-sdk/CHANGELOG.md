@@ -1,5 +1,14 @@
 # @phantom/react-sdk
 
+## 0.3.6
+
+### Patch Changes
+
+- 3bdbfbd: Fix debug system
+- Updated dependencies [b5d76b3]
+- Updated dependencies [3bdbfbd]
+  - @phantom/browser-sdk@0.3.6
+
 ## 0.3.5
 
 ### Patch Changes
