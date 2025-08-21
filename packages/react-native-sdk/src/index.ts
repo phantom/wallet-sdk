@@ -7,6 +7,7 @@ export { useConnect, useDisconnect, useAccounts, useSignMessage, useSignAndSendT
 // Types
 export type {
   PhantomSDKConfig,
+  PhantomDebugConfig,
   ConnectOptions,
   ConnectResult,
   WalletAddress,

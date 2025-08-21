@@ -11,6 +11,13 @@ import type {
 
 import type { DebugCallback, DebugLevel } from "./debug";
 
+// Debug configuration - separate from SDK config to avoid unnecessary reinstantiation
+export interface DebugConfig {
+  enabled?: boolean;
+  level?: DebugLevel;
+  callback?: DebugCallback;
+}
+
 export interface BrowserSDKConfig extends Partial<EmbeddedProviderConfig> {
   providerType: "injected" | "embedded" | (string & Record<never, never>);
   // Required for embedded provider, optional for injected
@@ -19,12 +26,6 @@ export interface BrowserSDKConfig extends Partial<EmbeddedProviderConfig> {
   embeddedWalletType?: "app-wallet" | "user-wallet" | (string & Record<never, never>);
   // Auto-connect to existing sessions (default: true)
   autoConnect?: boolean;
-  // Debug options
-  debug?: {
-    enabled?: boolean;
-    level?: DebugLevel;
-    callback?: DebugCallback;
-  };
 }
 
 // Re-export types from core for convenience
@@ -36,6 +37,8 @@ export type {
   SignMessageResult,
   SignedTransaction,
   AuthOptions,
+  DebugCallback,
+  DebugLevel,
 };
 
 export interface Provider {
