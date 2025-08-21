@@ -226,10 +226,10 @@ export class ProviderManager implements EventEmitter {
    * Emit event to all registered callbacks
    */
   private emit(event: EmbeddedProviderEvent, data?: any): void {
-    debug.log(DebugCategory.PROVIDER_MANAGER, "Emitting event to stored callbacks", {
-      event,
+    debug.log(DebugCategory.PROVIDER_MANAGER, "Emitting event to stored callbacks", { 
+      event, 
       listenerCount: this.eventListeners.get(event)?.size || 0,
-      data
+      data 
     });
 
     const listeners = this.eventListeners.get(event);
@@ -270,7 +270,6 @@ export class ProviderManager implements EventEmitter {
     // Set up forwarding for each event type
     const eventsToForward: EmbeddedProviderEvent[] = ["connect_start", "connect", "connect_error", "disconnect", "error"];
 
-
     for (const event of eventsToForward) {
       // Set up a single forwarding callback that emits to our listeners
       const forwardingCallback = (data: any) => {
@@ -310,7 +309,7 @@ export class ProviderManager implements EventEmitter {
     if (type === "injected") {
       provider = new InjectedProvider({
         solanaProvider: (this.config.solanaProvider || "web3js") as "web3js" | "kit",
-        addressTypes: this.config.addressTypes,
+        addressTypes: this.config.addressTypes
       });
     } else {
       if (!this.config.apiBaseUrl || !this.config.organizationId) {
