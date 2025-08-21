@@ -34,7 +34,7 @@ export class ProviderManager implements EventEmitter {
   private currentProviderKey: string | null = null;
   private walletId: string | null = null;
   private config: BrowserSDKConfig;
-
+  
   // Event management for forwarding provider events
   private eventListeners: Map<EmbeddedProviderEvent, Set<EventCallback>> = new Map();
   private providerForwardingSetup = new WeakSet<Provider>(); // Track which providers have forwarding set up
@@ -198,12 +198,12 @@ export class ProviderManager implements EventEmitter {
    */
   on(event: EmbeddedProviderEvent, callback: EventCallback): void {
     debug.log(DebugCategory.PROVIDER_MANAGER, "Adding event listener", { event });
-
+    
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, new Set());
     }
     this.eventListeners.get(event)!.add(callback);
-
+    
     // Ensure current provider is set up to forward events to us
     this.ensureProviderEventForwarding();
   }
@@ -213,7 +213,7 @@ export class ProviderManager implements EventEmitter {
    */
   off(event: EmbeddedProviderEvent, callback: EventCallback): void {
     debug.log(DebugCategory.PROVIDER_MANAGER, "Removing event listener", { event });
-
+    
     if (this.eventListeners.has(event)) {
       this.eventListeners.get(event)!.delete(callback);
       if (this.eventListeners.get(event)!.size === 0) {
@@ -231,7 +231,7 @@ export class ProviderManager implements EventEmitter {
       listenerCount: this.eventListeners.get(event)?.size || 0,
       data 
     });
-
+    
     const listeners = this.eventListeners.get(event);
     if (listeners && listeners.size > 0) {
       listeners.forEach(callback => {
@@ -269,14 +269,14 @@ export class ProviderManager implements EventEmitter {
 
     // Set up forwarding for each event type
     const eventsToForward: EmbeddedProviderEvent[] = ["connect_start", "connect", "connect_error", "disconnect", "error"];
-
+    
     for (const event of eventsToForward) {
       // Set up a single forwarding callback that emits to our listeners
       const forwardingCallback = (data: any) => {
         debug.log(DebugCategory.PROVIDER_MANAGER, "Forwarding event from provider", { event, data });
         this.emit(event, data);
       };
-
+      
       debug.log(DebugCategory.PROVIDER_MANAGER, "Attaching forwarding callback for event", { event });
       (this.currentProvider as any).on(event, forwardingCallback);
     }
@@ -309,7 +309,7 @@ export class ProviderManager implements EventEmitter {
     if (type === "injected") {
       provider = new InjectedProvider({
         solanaProvider: (this.config.solanaProvider || "web3js") as "web3js" | "kit",
-        addressTypes: this.config.addressTypes
+        addressTypes: this.config.addressTypes,
       });
     } else {
       if (!this.config.apiBaseUrl || !this.config.organizationId) {
