@@ -218,7 +218,7 @@ interface BrowserSDKConfig {
   providerType: "injected" | "embedded";
   appName?: string; // Optional app name for branding
   appLogo?: string; // Optional app logo URL for branding
-  addressTypes?: AddressType[]; // Networks to enable (e.g., [AddressType.solana])
+  addressTypes?: [AddressType, ...AddressType[]]; // Networks to enable (e.g., [AddressType.solana])
 
   // Required for embedded provider only
   apiBaseUrl?: string; // Phantom API base URL
