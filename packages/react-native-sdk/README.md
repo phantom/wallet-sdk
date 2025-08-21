@@ -99,7 +99,6 @@ export default function App() {
           redirectUrl: "mywalletapp://phantom-auth-callback",
         },
         appName: "My Wallet App", // Optional branding
-        debug: false, // Optional debug logging
       }}
     >
       <YourAppContent />
@@ -203,7 +202,6 @@ interface PhantomSDKConfig {
   appName?: string; // Optional app name for branding
   appLogo?: string; // Optional app logo URL for branding
   autoConnect?: boolean; // Auto-connect to existing session on SDK instantiation (default: true)
-  debug?: boolean; // Enable debug logging (optional)
 }
 ```
 
@@ -422,19 +420,40 @@ adb shell am start -W -a android.intent.action.VIEW -d "myapp://phantom-auth-cal
    - Verify URL scheme configuration
    - Check intent filters (Android) or URL schemes (iOS)
 
-### Debug Mode
+### Debug Configuration
 
-Enable debug logging in development:
+The React Native SDK supports separate debug configuration for better performance and dynamic control:
 
 ```typescript
-<PhantomProvider
-  config={{
-    ...config,
-    debug: true  // Enable debug logging
-  }}
->
-  <App />
-</PhantomProvider>
+import { PhantomProvider, type PhantomSDKConfig, type PhantomDebugConfig } from "@phantom/react-native-sdk";
+
+function App() {
+  // SDK configuration - static, won't change when debug settings change
+  const config: PhantomSDKConfig = {
+    organizationId: "your-org-id",
+    scheme: "mywalletapp",
+    // ... other config
+  };
+
+  // Debug configuration - separate to avoid SDK reinstantiation
+  const debugConfig: PhantomDebugConfig = {
+    enabled: true, // Enable debug logging
+  };
+
+  return (
+    <PhantomProvider config={config} debugConfig={debugConfig}>
+      <App />
+    </PhantomProvider>
+  );
+}
+```
+
+**PhantomDebugConfig Interface:**
+
+```typescript
+interface PhantomDebugConfig {
+  enabled?: boolean; // Enable debug logging (default: false)
+}
 ```
 
 ## Support

@@ -12,6 +12,13 @@ import { AddressType } from "@phantom/client";
 
 import type { DebugCallback, DebugLevel } from "./debug";
 
+// Debug configuration - separate from SDK config to avoid unnecessary reinstantiation
+export interface DebugConfig {
+  enabled?: boolean;
+  level?: DebugLevel;
+  callback?: DebugCallback;
+}
+
 export interface BrowserSDKConfig extends Partial<EmbeddedProviderConfig> {
   providerType: "injected" | "embedded" | (string & Record<never, never>);
   addressTypes: [AddressType, ...AddressType[]]
@@ -21,12 +28,6 @@ export interface BrowserSDKConfig extends Partial<EmbeddedProviderConfig> {
   embeddedWalletType?: "app-wallet" | "user-wallet" | (string & Record<never, never>);
   // Auto-connect to existing sessions (default: true)
   autoConnect?: boolean;
-  // Debug options
-  debug?: {
-    enabled?: boolean;
-    level?: DebugLevel;
-    callback?: DebugCallback;
-  };
 }
 
 // Re-export types from core for convenience
@@ -38,6 +39,8 @@ export type {
   SignMessageResult,
   SignedTransaction,
   AuthOptions,
+  DebugCallback,
+  DebugLevel,
 };
 
 // Re-export enums from client for convenience

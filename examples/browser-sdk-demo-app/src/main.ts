@@ -121,7 +121,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Initialize debug system
+  // Initialize debug system using new separated approach
+  // This avoids SDK reinstantiation when debug settings change
   debug.setCallback(handleDebugMessage);
   debug.setLevel(DebugLevel.DEBUG);
   debug.enable();
@@ -133,12 +134,13 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  // Debug level handler
+  // Debug level handler - now uses direct debug API instead of recreating SDK
   if (debugLevel) {
     debugLevel.onchange = () => {
       const level = parseInt(debugLevel.value) as DebugLevel;
       debug.setLevel(level);
       console.log("Debug level changed to:", DebugLevel[level]);
+      // Note: No SDK reinstantiation needed - debug config is separate now
     };
   }
 
@@ -160,12 +162,7 @@ document.addEventListener("DOMContentLoaded", () => {
       addressTypes: [AddressType.solana, AddressType.ethereum],
       appName: "Phantom Browser SDK Demo",
       appLogo: "https://picsum.photos/200", // Optional app logo URL
-      debug: {
-        enabled: true,
-        level: debugLevel ? (parseInt(debugLevel.value) as DebugLevel) : DebugLevel.DEBUG,
-        callback: handleDebugMessage,
-      }
-    }
+    };
 
     if (providerType === "injected") {
       return new BrowserSDK({
