@@ -27,6 +27,7 @@ describe("BrowserSDK", () => {
     it("should create SDK with injected provider", () => {
       sdk = new BrowserSDK({
         providerType: "injected",
+        addressTypes: [],
         appName: "Test App",
       });
 
@@ -40,6 +41,7 @@ describe("BrowserSDK", () => {
     it("should create SDK with embedded provider", () => {
       sdk = new BrowserSDK({
         providerType: "embedded",
+        addressTypes: [],
         appName: "Test App",
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
         organizationId: "org-123",
@@ -71,6 +73,7 @@ describe("BrowserSDK", () => {
         authOptions: {
           authUrl: "https://auth.phantom.com",
         },
+        addressTypes: [],
         embeddedWalletType: "user-wallet",
       });
 
@@ -98,6 +101,7 @@ describe("BrowserSDK", () => {
     it("should support custom solanaProvider for injected", () => {
       sdk = new BrowserSDK({
         providerType: "injected",
+        addressTypes: [],
         solanaProvider: "kit",
       });
 
@@ -130,6 +134,7 @@ describe("BrowserSDK", () => {
       expect(() => {
         new BrowserSDK({
           providerType: "invalid" as any,
+          addressTypes: [],
         });
       }).toThrow('Invalid providerType: invalid. Must be "injected" or "embedded".');
     });
@@ -152,6 +157,7 @@ describe("BrowserSDK", () => {
 
       sdk = new BrowserSDK({
         providerType: "injected",
+        addressTypes: [],
       });
     });
 
@@ -269,6 +275,7 @@ describe("BrowserSDK", () => {
 
       sdk = new BrowserSDK({
         providerType: "embedded",
+        addressTypes: [],
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
         organizationId: "org-123",
         authUrl: "https://auth.phantom.com",
@@ -384,6 +391,7 @@ describe("BrowserSDK", () => {
 
       sdk = new BrowserSDK({
         providerType: "injected",
+        addressTypes: [],
       });
     });
 
