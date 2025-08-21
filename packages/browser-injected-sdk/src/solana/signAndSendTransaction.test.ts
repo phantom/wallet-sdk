@@ -1,4 +1,4 @@
-import type { Transaction } from "@solana/kit";
+import type { Transaction, VersionedTransaction } from "@solana/web3.js";
 import type { SolanaStrategy } from "./strategies/types";
 import { getProvider } from "./getProvider";
 import { signAndSendTransaction } from "./signAndSendTransaction";
@@ -9,8 +9,8 @@ jest.mock("./getProvider", () => ({
 }));
 
 const mockTransaction = {
-  messageBytes: jest.fn().mockReturnValue(new Uint8Array([])),
-} as any as Transaction;
+  serialize: jest.fn().mockReturnValue(new Uint8Array([])),
+} as any as VersionedTransaction;
 
 describe("signAndSendTransaction", () => {
   let mockProvider: Partial<PhantomSolanaProvider>;

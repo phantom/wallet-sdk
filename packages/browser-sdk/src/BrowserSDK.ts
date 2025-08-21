@@ -7,6 +7,7 @@ import type {
   SignMessageParams,
   SignMessageResult,
   AuthOptions,
+  Provider,
 } from "./types";
 import { ProviderManager, type SwitchProviderOptions, type ProviderPreference } from "./ProviderManager";
 import { isPhantomExtensionInstalled } from "@phantom/browser-injected-sdk";
@@ -131,6 +132,13 @@ export class BrowserSDK {
    */
   getCurrentProviderInfo(): ProviderPreference | null {
     return this.providerManager.getCurrentProviderInfo();
+  }
+
+  /**
+   * Get the current active provider instance
+   */
+  getCurrentProvider(): Provider | null {
+    return this.providerManager.getCurrentProvider();
   }
 
   /**

@@ -1,6 +1,7 @@
 {
-  "name": "@phantom/react-sdk",
-  "version": "0.3.4",
+  "name": "@phantom/phantom-connector",
+  "version": "0.1.0",
+  "description": "Multi-chain connector for Phantom Wallet SDK",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -11,45 +12,40 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": [
-    "dist"
-  ],
-  "license": "MIT",
   "scripts": {
-    "build": "rimraf ./dist && tsup",
     "?pack-release": "When https://github.com/changesets/changesets/issues/432 has a solution we can remove this trick",
     "pack-release": "rimraf ./_release && yarn pack && mkdir ./_release && tar zxvf ./package.tgz --directory ./_release && rm ./package.tgz",
-    "dev": "rimraf ./dist && tsup src/index.ts --format cjs,esm --dts --watch",
+    "build": "rimraf ./dist && tsup src/index.ts --format cjs,esm --dts --external @phantom/browser-sdk,@phantom/constants,@phantom/client,@phantom/embedded-provider-core,@phantom/parsers,@solana/web3.js",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "test": "jest",
+    "test:watch": "jest --watch",
     "lint": "tsc --noEmit && eslint --cache . --ext .ts,.tsx",
     "check-types": "tsc --noEmit",
-    "test": "jest",
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
   },
-  "dependencies": {
-    "@phantom/browser-sdk": "workspace:^",
-    "@phantom/constants": "workspace:^",
-    "@phantom/phantom-connector": "workspace:^"
-  },
   "devDependencies": {
-    "@testing-library/dom": "^10.4.0",
-    "@testing-library/react": "^16.3.0",
-    "@types/jest": "^29.5.14",
-    "@types/react": "^19.1.2",
-    "@types/react-dom": "^19.1.2",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.0",
     "eslint": "8.53.0",
     "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
     "prettier": "^3.5.2",
-    "react": "19.1.1",
-    "react-dom": "19.1.1",
     "rimraf": "^6.0.1",
-    "ts-jest": "^29",
+    "ts-jest": "^29.1.2",
     "tsup": "^6.7.0",
     "typescript": "^5.0.4"
   },
-  "peerDependencies": {
-    "react": ">=19.0.0"
+  "dependencies": {
+    "@phantom/browser-sdk": "workspace:^",
+    "@phantom/client": "workspace:^",
+    "@phantom/constants": "workspace:^",
+    "@phantom/embedded-provider-core": "workspace:^",
+    "@phantom/parsers": "workspace:^",
+    "@solana/web3.js": "^1.95.0"
   },
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "directory": "_release/package"
   }

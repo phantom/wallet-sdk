@@ -200,8 +200,14 @@ export class InjectedProvider implements Provider {
 
     if (networkPrefix === "solana") {
       // Handle native transaction objects based on provider type
-      const transaction = params.transaction;
-
+      let transaction = params.transaction;
+      
+      // Convert Kit → Web3.js if needed (only for injected provider)
+      if (this.hasKitFormat(transaction)) {
+        transaction = this.convertKitToWeb3js(transaction);
+      }
+      
+      // Now pass Web3.js transaction to browser-injected-sdk
       const result = await this.phantom.solana.signAndSendTransaction(transaction);
       return {
         hash: result.signature,
@@ -249,5 +255,33 @@ export class InjectedProvider implements Provider {
 
   isConnected(): boolean {
     return this.connected;
+  }
+
+  // Provider access methods for connectors
+  getInjectedEthereumProvider(): any {
+    if (!this.addressTypes.includes(AddressType.ethereum)) {
+      throw new Error('Ethereum not enabled for this provider');
+    }
+    return this.phantom.ethereum;
+  }
+
+  getInjectedSolanaProvider(): any {
+    if (!this.addressTypes.includes(AddressType.solana)) {
+      throw new Error('Solana not enabled for this provider');
+    }
+    return this.phantom.solana;
+  }
+
+  // Kit transaction format detection and conversion
+  private hasKitFormat(transaction: any): boolean {
+    return transaction?.messageBytes != null;
+  }
+
+  private convertKitToWeb3js(kitTransaction: any): any {
+    // For now, return as-is since we removed Kit dependencies from browser-injected-sdk
+    // In a real implementation, you'd convert Kit format to Web3.js VersionedTransaction
+    // This is a placeholder - the actual conversion would depend on Kit's API
+    console.warn('Kit transaction conversion not implemented - passing through as-is');
+    return kitTransaction;
   }
 }

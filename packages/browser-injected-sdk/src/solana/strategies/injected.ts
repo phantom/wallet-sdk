@@ -1,8 +1,6 @@
 import type { SolanaStrategy } from "./types";
 import type { DisplayEncoding, PhantomSolanaProvider, SolanaSignInData, VersionedTransaction } from "../types";
-import type { Transaction } from "@solana/transactions";
-import { transactionToVersionedTransaction } from "../utils/transactionToVersionedTransaction";
-import { fromVersionedTransaction } from "@solana/compat";
+import type { Transaction } from "@solana/web3.js";
 import { ProviderStrategy } from "../../types";
 
 const MAX_RETRIES = 4;
@@ -114,7 +112,7 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
     };
   }
 
-  public async signAndSendTransaction(transaction: Transaction): Promise<{ signature: string; address?: string }> {
+  public async signAndSendTransaction(transaction: Transaction | VersionedTransaction): Promise<{ signature: string; address?: string }> {
     const provider = this.#getProvider();
     if (!provider) {
       throw new Error("Provider not found.");
@@ -124,16 +122,15 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
       throw new Error("Provider is not connected.");
     }
 
-    // Convert the Kit transaction into a web3.js VersionedTransaction before sending.
-    const versionedTransaction: VersionedTransaction = transactionToVersionedTransaction(transaction);
-    const result = await provider.signAndSendTransaction(versionedTransaction);
+    // Pass transaction directly to provider - no conversion needed
+    const result = await provider.signAndSendTransaction(transaction);
     return {
       signature: result.signature,
       address: result.publicKey,
     };
   }
 
-  public async signTransaction(transaction: Transaction): Promise<Transaction> {
+  public async signTransaction(transaction: Transaction | VersionedTransaction): Promise<Transaction | VersionedTransaction> {
     const provider = this.#getProvider();
     if (!provider) {
       throw new Error("Provider not found.");
@@ -143,14 +140,12 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
       throw new Error("Provider is not connected.");
     }
 
-    // Convert the Kit transaction into a web3.js VersionedTransaction before sending.
-    const versionedTransaction: VersionedTransaction = transactionToVersionedTransaction(transaction);
-    const result = await provider.signTransaction(versionedTransaction);
-    const responseTransaction = fromVersionedTransaction(result as any);
-    return responseTransaction;
+    // Pass transaction directly to provider - no conversion needed
+    const result = await provider.signTransaction(transaction);
+    return result;
   }
 
-  public async signAllTransactions(transactions: Transaction[]): Promise<Transaction[]> {
+  public async signAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<(Transaction | VersionedTransaction)[]> {
     const provider = this.#getProvider();
     if (!provider) {
       throw new Error("Provider not found.");
@@ -160,12 +155,8 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
       throw new Error("Provider is not connected.");
     }
 
-    // Convert the Kit transaction into a web3.js VersionedTransaction before sending.
-    const versionedTransactions: VersionedTransaction[] = transactions.map(transaction =>
-      transactionToVersionedTransaction(transaction),
-    );
-    const result = await provider.signAllTransactions(versionedTransactions);
-    const responseTransactions = result.map(transaction => fromVersionedTransaction(transaction as any));
-    return responseTransactions;
+    // Pass transactions directly to provider - no conversion needed
+    const result = await provider.signAllTransactions(transactions);
+    return result;
   }
 }

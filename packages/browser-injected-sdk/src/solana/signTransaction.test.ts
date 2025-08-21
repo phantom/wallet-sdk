@@ -1,4 +1,4 @@
-import type { Transaction } from "@solana/kit";
+import type { Transaction, VersionedTransaction } from "@solana/web3.js";
 import { signTransaction } from "./signTransaction";
 import type { PhantomSolanaProvider } from "./types";
 import type { SolanaStrategy } from "./strategies/types";
@@ -8,7 +8,7 @@ jest.mock("./getProvider", () => ({
   getProvider: jest.fn(),
 }));
 
-const mockTransaction = {} as Transaction;
+const mockTransaction = {} as VersionedTransaction;
 
 describe("signTransaction", () => {
   let mockProvider: Partial<PhantomSolanaProvider>;

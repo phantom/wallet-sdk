@@ -4,3 +4,4 @@ export { useSignMessage } from "./useSignMessage";
 export { useSignAndSendTransaction } from "./useSignAndSendTransaction";
 export { useAccounts } from "./useAccounts";
 export { useIsExtensionInstalled } from "./useIsExtensionInstalled";
+export { usePhantomConnector } from "./usePhantomConnector";

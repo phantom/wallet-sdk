@@ -1,6 +1,6 @@
 import type { SolanaStrategy } from "./types";
 import type { DisplayEncoding, SolanaSignInData } from "../types";
-import type { Transaction } from "@solana/transactions";
+import type { VersionedTransaction, Transaction } from "@solana/web3.js";
 import { ProviderStrategy } from "../../types";
 
 export class DeepLinkSolanaStrategy implements SolanaStrategy {
@@ -57,8 +57,11 @@ export class DeepLinkSolanaStrategy implements SolanaStrategy {
     });
   }
 
-  public async signAndSendTransaction(transaction: Transaction): Promise<{ signature: string; address?: string }> {
-    const deeplink = `phantom://sign-and-send-transaction?transaction=${transaction}`;
+  public async signAndSendTransaction(transaction: VersionedTransaction | Transaction): Promise<{ signature: string; address?: string }> {
+    // For deeplinks, we need to serialize the transaction
+    const serialized = transaction.serialize ? transaction.serialize() : transaction;
+    const encoded = Buffer.from(serialized).toString("base64");
+    const deeplink = `phantom://sign-and-send-transaction?transaction=${encoded}`;
     window.location.href = deeplink;
     return Promise.resolve({
       signature: "",
@@ -66,14 +69,22 @@ export class DeepLinkSolanaStrategy implements SolanaStrategy {
     });
   }
 
-  public async signTransaction(transaction: Transaction): Promise<Transaction> {
-    const deeplink = `phantom://sign-transaction?transaction=${transaction}`;
+  public async signTransaction(transaction: VersionedTransaction | Transaction): Promise<VersionedTransaction | Transaction> {
+    // For deeplinks, we need to serialize the transaction  
+    const serialized = transaction.serialize ? transaction.serialize() : transaction;
+    const encoded = Buffer.from(serialized).toString("base64");
+    const deeplink = `phantom://sign-transaction?transaction=${encoded}`;
     window.location.href = deeplink;
     return Promise.resolve(transaction);
   }
 
-  public async signAllTransactions(transactions: Transaction[]): Promise<Transaction[]> {
-    const deeplink = `phantom://sign-all-transactions?transactions=${transactions}`;
+  public async signAllTransactions(transactions: (VersionedTransaction | Transaction)[]): Promise<(VersionedTransaction | Transaction)[]> {
+    // For deeplinks, we need to serialize each transaction
+    const serializedTxs = transactions.map(tx => {
+      const serialized = tx.serialize ? tx.serialize() : tx;
+      return Buffer.from(serialized).toString("base64");
+    });
+    const deeplink = `phantom://sign-all-transactions?transactions=${JSON.stringify(serializedTxs)}`;
     window.location.href = deeplink;
     return Promise.resolve(transactions);
   }
