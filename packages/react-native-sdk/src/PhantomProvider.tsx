@@ -77,7 +77,7 @@ export function PhantomProvider({ children, config }: PhantomProviderProps) {
         const addrs = await sdkInstance.getAddresses();
         setAddresses(addrs);
       } catch (err) {
-        console.error("Error updating connection state:", err);
+        console.error("Error connecting:", err);
         
         // Call disconnect to reset state if an error occurs
         try {
