@@ -2,7 +2,7 @@ import { useMemo, useCallback } from 'react';
 import { usePhantom } from '../PhantomProvider';
 import { PhantomConnector } from '@phantom/phantom-connector';
 import type { NetworkId } from '@phantom/constants';
-import type { EthereumProvider, SolanaProvider, ChainInfo, EmbeddedProvider } from '@phantom/phantom-connector';
+import type { EthereumProvider, SolanaProvider, ChainInfo } from '@phantom/phantom-connector';
 
 /**
  * Hook that provides access to the Phantom Connector for multi-chain operations.
@@ -69,7 +69,7 @@ export function usePhantomConnector() {
       throw new Error('No connector available - wallet not connected');
     }
 
-    return connector.getEthereumProvider(chainId);
+    return await connector.getEthereumProvider(chainId);
   }, [connector]);
 
   /**
@@ -85,7 +85,7 @@ export function usePhantomConnector() {
       throw new Error('No connector available - wallet not connected');
     }
 
-    return connector.getSolanaProvider(networkId);
+    return await connector.getSolanaProvider(networkId);
   }, [connector]);
 
   /**

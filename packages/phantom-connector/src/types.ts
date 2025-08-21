@@ -1,5 +1,4 @@
 import type { NetworkId } from '@phantom/constants';
-import { AddressType } from '@phantom/client';
 import type { PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js';
 import type { ConnectResult, SignMessageParams as EmbeddedSignMessageParams, SignAndSendTransactionParams as EmbeddedSignAndSendTransactionParams, WalletAddress as EmbeddedWalletAddress } from '@phantom/embedded-provider-core';
 import type { ParsedSignatureResult, ParsedTransactionResult } from '@phantom/parsers';

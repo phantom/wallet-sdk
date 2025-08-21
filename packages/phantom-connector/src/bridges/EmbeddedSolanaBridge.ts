@@ -84,7 +84,9 @@ export class EmbeddedSolanaBridge implements SolanaProvider {
     });
     this.eventTarget.dispatchEvent(event);
 
-    // console.log(`Switched Solana network from ${oldNetworkId} to ${networkId}`);
+    // For embedded providers, network switching is typically handled internally
+    // This method just updates our local state and dispatches events
+    await Promise.resolve();
   }
 
   // Standard properties

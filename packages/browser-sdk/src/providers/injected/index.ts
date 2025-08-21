@@ -281,7 +281,7 @@ export class InjectedProvider implements Provider {
     // For now, return as-is since we removed Kit dependencies from browser-injected-sdk
     // In a real implementation, you'd convert Kit format to Web3.js VersionedTransaction
     // This is a placeholder - the actual conversion would depend on Kit's API
-    console.warn('Kit transaction conversion not implemented - passing through as-is');
+    // TODO: Implement proper Kit transaction conversion when Kit integration is added
     return kitTransaction;
   }
 }

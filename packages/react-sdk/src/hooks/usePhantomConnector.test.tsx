@@ -1,10 +1,11 @@
 import { renderHook } from '@testing-library/react';
 import { usePhantomConnector } from './usePhantomConnector';
-import { usePhantom } from './usePhantom';
+import { usePhantom } from '../PhantomProvider';
 import { PhantomConnector } from '@phantom/phantom-connector';
+import { NetworkId } from '@phantom/constants';
 
 // Mock dependencies
-jest.mock('./usePhantom');
+jest.mock('../PhantomProvider');
 jest.mock('@phantom/phantom-connector');
 
 const mockUsePhantom = usePhantom as jest.MockedFunction<typeof usePhantom>;
@@ -12,6 +13,7 @@ const MockedPhantomConnector = PhantomConnector as jest.MockedClass<typeof Phant
 
 describe('usePhantomConnector', () => {
   let mockProvider: any;
+  let mockSdk: any;
   let mockConnector: any;
 
   beforeEach(() => {
@@ -20,6 +22,13 @@ describe('usePhantomConnector', () => {
       isConnected: jest.fn(),
       signMessage: jest.fn(),
       signAndSendTransaction: jest.fn(),
+    };
+
+    mockSdk = {
+      getCurrentProvider: jest.fn().mockReturnValue(mockProvider),
+      isConnected: jest.fn().mockReturnValue(true),
+      getAddresses: jest.fn().mockResolvedValue([]),
+      getWalletId: jest.fn().mockReturnValue('mock-wallet-id'),
     };
 
     mockConnector = {
@@ -34,23 +43,23 @@ describe('usePhantomConnector', () => {
   });
 
   it('should throw error when used outside PhantomProvider', () => {
-    mockUsePhantom.mockReturnValue(null);
+    mockUsePhantom.mockReturnValue(undefined);
 
     expect(() => {
       renderHook(() => usePhantomConnector());
     }).toThrow('usePhantomConnector must be used within a PhantomProvider');
   });
 
-  it('should return null connector when no provider', () => {
+  it('should return null connector when no sdk', () => {
     mockUsePhantom.mockReturnValue({
-      provider: null,
-      providerType: 'embedded',
-      connect: jest.fn(),
-      disconnect: jest.fn(),
-      signMessage: jest.fn(),
-      signAndSendTransaction: jest.fn(),
-      accounts: [],
+      sdk: null as any,
       isConnected: false,
+      addresses: [],
+      walletId: null,
+      error: null,
+      currentProviderType: null,
+      isPhantomAvailable: false,
+      updateConnectionState: jest.fn(),
     });
 
     const { result } = renderHook(() => usePhantomConnector());
@@ -60,14 +69,14 @@ describe('usePhantomConnector', () => {
 
   it('should create connector for embedded provider', () => {
     mockUsePhantom.mockReturnValue({
-      provider: mockProvider,
-      providerType: 'embedded',
-      connect: jest.fn(),
-      disconnect: jest.fn(),
-      signMessage: jest.fn(),
-      signAndSendTransaction: jest.fn(),
-      accounts: [],
+      sdk: mockSdk,
       isConnected: true,
+      addresses: [],
+      walletId: 'mock-wallet-id',
+      error: null,
+      currentProviderType: 'embedded',
+      isPhantomAvailable: true,
+      updateConnectionState: jest.fn(),
     });
 
     const { result } = renderHook(() => usePhantomConnector());
@@ -78,17 +87,17 @@ describe('usePhantomConnector', () => {
 
   it('should create connector for injected provider', () => {
     mockUsePhantom.mockReturnValue({
-      provider: mockProvider,
-      providerType: 'injected',
-      connect: jest.fn(),
-      disconnect: jest.fn(),
-      signMessage: jest.fn(),
-      signAndSendTransaction: jest.fn(),
-      accounts: [],
+      sdk: mockSdk,
       isConnected: true,
+      addresses: [],
+      walletId: 'mock-wallet-id',
+      error: null,
+      currentProviderType: 'injected',
+      isPhantomAvailable: true,
+      updateConnectionState: jest.fn(),
     });
 
-    const { result } = renderHook(() => usePhantomConnector());
+    renderHook(() => usePhantomConnector());
 
     expect(MockedPhantomConnector).toHaveBeenCalledWith(mockProvider, 'injected');
   });
@@ -96,14 +105,14 @@ describe('usePhantomConnector', () => {
   describe('getEthereumProvider', () => {
     beforeEach(() => {
       mockUsePhantom.mockReturnValue({
-        provider: mockProvider,
-        providerType: 'embedded',
-        connect: jest.fn(),
-        disconnect: jest.fn(),
-        signMessage: jest.fn(),
-        signAndSendTransaction: jest.fn(),
-        accounts: [],
+        sdk: mockSdk,
         isConnected: true,
+        addresses: [],
+        walletId: 'mock-wallet-id',
+        error: null,
+        currentProviderType: 'embedded',
+        isPhantomAvailable: true,
+        updateConnectionState: jest.fn(),
       });
     });
 
@@ -151,14 +160,14 @@ describe('usePhantomConnector', () => {
   describe('getSolanaProvider', () => {
     beforeEach(() => {
       mockUsePhantom.mockReturnValue({
-        provider: mockProvider,
-        providerType: 'embedded',
-        connect: jest.fn(),
-        disconnect: jest.fn(),
-        signMessage: jest.fn(),
-        signAndSendTransaction: jest.fn(),
-        accounts: [],
+        sdk: mockSdk,
         isConnected: true,
+        addresses: [],
+        walletId: 'mock-wallet-id',
+        error: null,
+        currentProviderType: 'embedded',
+        isPhantomAvailable: true,
+        updateConnectionState: jest.fn(),
       });
     });
 
@@ -167,9 +176,9 @@ describe('usePhantomConnector', () => {
       mockConnector.getSolanaProvider.mockResolvedValue(mockSolProvider);
 
       const { result } = renderHook(() => usePhantomConnector());
-      const solProvider = await result.current.getSolanaProvider('solana:devnet');
+      const solProvider = await result.current.getSolanaProvider(NetworkId.SOLANA_DEVNET);
 
-      expect(mockConnector.getSolanaProvider).toHaveBeenCalledWith('solana:devnet');
+      expect(mockConnector.getSolanaProvider).toHaveBeenCalledWith(NetworkId.SOLANA_DEVNET);
       expect(solProvider).toBe(mockSolProvider);
     });
 
@@ -206,14 +215,14 @@ describe('usePhantomConnector', () => {
   describe('getSupportedChains', () => {
     beforeEach(() => {
       mockUsePhantom.mockReturnValue({
-        provider: mockProvider,
-        providerType: 'embedded',
-        connect: jest.fn(),
-        disconnect: jest.fn(),
-        signMessage: jest.fn(),
-        signAndSendTransaction: jest.fn(),
-        accounts: [],
+        sdk: mockSdk,
         isConnected: true,
+        addresses: [],
+        walletId: 'mock-wallet-id',
+        error: null,
+        currentProviderType: 'embedded',
+        isPhantomAvailable: true,
+        updateConnectionState: jest.fn(),
       });
     });
 
@@ -252,14 +261,14 @@ describe('usePhantomConnector', () => {
 
   it('should memoize connector instance', () => {
     const phantomContext = {
-      provider: mockProvider,
-      providerType: 'embedded',
-      connect: jest.fn(),
-      disconnect: jest.fn(),
-      signMessage: jest.fn(),
-      signAndSendTransaction: jest.fn(),
-      accounts: [],
+      sdk: mockSdk,
       isConnected: true,
+      addresses: [],
+      walletId: 'mock-wallet-id',
+      error: null,
+      currentProviderType: 'embedded',
+      isPhantomAvailable: true,
+      updateConnectionState: jest.fn(),
     };
 
     mockUsePhantom.mockReturnValue(phantomContext);
