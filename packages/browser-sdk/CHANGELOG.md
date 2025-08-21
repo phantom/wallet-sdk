@@ -1,5 +1,14 @@
 # @phantom/browser-sdk
 
+## 0.3.6
+
+### Patch Changes
+
+- b5d76b3: Explicitly require `addressTypes` when instantiating `BrowserSDK`
+- 3bdbfbd: Fix debug system
+- Updated dependencies [b5d76b3]
+  - @phantom/embedded-provider-core@0.1.7
+
 ## 0.3.5
 
 ### Patch Changes

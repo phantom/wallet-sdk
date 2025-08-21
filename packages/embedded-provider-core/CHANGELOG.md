@@ -1,5 +1,11 @@
 # @phantom/embedded-provider-core
 
+## 0.1.7
+
+### Patch Changes
+
+- b5d76b3: Explicitly require `addressTypes` when instantiating `BrowserSDK`
+
 ## 0.1.6
 
 ### Patch Changes
