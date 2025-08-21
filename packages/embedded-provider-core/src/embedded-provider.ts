@@ -1,5 +1,4 @@
 import { PhantomClient } from "@phantom/client";
-import type { AddressType } from "@phantom/client";
 import { base64urlEncode } from "@phantom/base64url";
 import bs58 from "bs58";
 import {
