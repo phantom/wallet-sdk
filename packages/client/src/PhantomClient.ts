@@ -415,7 +415,7 @@ export class PhantomClient {
       const params: CreateOrganizationRequest = {
         organizationName: name,
         users: users.map(userConfig => ({
-          role: (userConfig.role || KmsUserRole.admin) === KmsUserRole.admin ? KmsUserRole.admin : KmsUserRole.user,
+          role: userConfig.role === "ADMIN"  ? KmsUserRole.admin : KmsUserRole.user,
           username: userConfig.username || `user-${Date.now()}`,
           authenticators: userConfig.authenticators as any,
         })),

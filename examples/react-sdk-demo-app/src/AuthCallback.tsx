@@ -1,24 +1,16 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useConnect, useAccounts, debug, DebugLevel, type DebugMessage } from "@phantom/react-sdk";
+import { useConnect, useAccounts, debug, DebugLevel, type DebugMessage, usePhantom } from "@phantom/react-sdk";
 import "./AuthCallback.css";
 
-interface AuthState {
-  status: "loading" | "success" | "error";
-  message: string;
-  title: string;
-}
 
 export function AuthCallback() {
   const navigate = useNavigate();
-  const { isConnecting, error: connectError } = useConnect();
+  const { isConnected} = usePhantom();
+  const { isConnecting,  error: connectError } = useConnect();
   const addresses = useAccounts();
 
-  const [authState, setAuthState] = useState<AuthState>({
-    status: "loading",
-    title: "Processing authentication...",
-    message: "Please wait while we complete your authentication.",
-  });
+ 
 
   // Debug state
   const [debugMessages, setDebugMessages] = useState<DebugMessage[]>([]);
@@ -30,7 +22,7 @@ export function AuthCallback() {
     setDebugMessages(prev => {
       const newMessages = [...prev, message];
       // Keep only last 100 messages to prevent memory issues
-      return newMessages.slice(-100);
+      return newMessages;
     });
   }, []);
 
@@ -47,11 +39,7 @@ export function AuthCallback() {
     if (connectError) {
       console.error("Auth callback error:", connectError);
       debug.error("AUTH_CALLBACK", "Authentication failed", { error: connectError.message });
-      setAuthState({
-        status: "error",
-        title: "Authentication Failed",
-        message: connectError.message || "An unknown error occurred during authentication.",
-      });
+     
     }
   }, [connectError]);
 
@@ -75,21 +63,19 @@ export function AuthCallback() {
         <div className="left-panel">
           <div className="section">
             {/* Loading State */}
-            {authState.status === "loading" && (
+            {isConnecting && (
               <div className="auth-status">
                 <div className="loading-spinner"></div>
-                <h3>{authState.title}</h3>
-                <p>{authState.message}</p>
-                {isConnecting && <p className="connecting-text">Connecting...</p>}
+                <h3>Connecting...</h3>
               </div>
             )}
 
             {/* Success State */}
-            {authState.status === "success" && (
+            {isConnected && (
               <div className="auth-success">
                 <div className="success-icon">✓</div>
-                <h3>{authState.title}</h3>
-                <p>{authState.message}</p>
+                <h3>Authentication Successful</h3>
+                <p>You are now connected to your wallet.</p>
                 <div className="wallet-info">
                   
                   <div className="info-row">
@@ -115,11 +101,11 @@ export function AuthCallback() {
             )}
 
             {/* Error State */}
-            {authState.status === "error" && (
+            {connectError && (
               <div className="auth-error">
                 <div className="error-icon">✗</div>
-                <h3>{authState.title}</h3>
-                <div className="error-message">{authState.message}</div>
+                <h3>Authentication Failed</h3>
+                <div className="error-message">{connectError.message || "An unknown error occurred during authentication."}</div>
                 <div className="button-group">
                   <button onClick={handleRetry}>Retry Authentication</button>
                   <button onClick={handleGoHome} className="primary">
@@ -156,7 +142,7 @@ export function AuthCallback() {
             </div>
 
             <div className="debug-container" style={{ display: showDebug ? "block" : "none" }}>
-              {debugMessages.slice(-30).map((msg, index) => {
+              {debugMessages.map((msg, index) => {
                 const levelClass = DebugLevel[msg.level].toLowerCase();
                 const timestamp = new Date(msg.timestamp).toLocaleTimeString();
                 const dataStr = msg.data ? JSON.stringify(msg.data, null, 2) : "";

@@ -21,6 +21,8 @@ import {
   setTransactionMessageLifetimeUsingBlockhash,
   address,
   compileTransaction,
+  appendTransactionMessageInstruction,
+  transferSolInstruction,
 } from "@solana/kit";
 import { useState, useEffect, useCallback } from "react";
 import { useBalance } from "./hooks/useBalance";
@@ -132,6 +134,14 @@ export function Actions() {
         createTransactionMessage({ version: 0 }),
         tx => setTransactionMessageFeePayer(address(solanaAddress), tx),
         tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
+        tx => appendTransactionMessageInstruction(
+          transferSolInstruction({
+            source: address(solanaAddress),
+            destination: address(solanaAddress), // Self-transfer for demo
+            amount: 1000n, // Very small amount: 0.000001 SOL
+          }),
+          tx
+        ),
       );
 
       const transaction = compileTransaction(transactionMessage);

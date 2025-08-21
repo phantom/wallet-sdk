@@ -76,6 +76,7 @@ export function PhantomProvider({ children, config }: PhantomProviderProps) {
 
     const handleConnectError = (errorData: any) => {
       setIsConnecting(false);
+      setIsConnected(false);
       setConnectError(new Error(errorData.error || "Connection failed"));
     };
     

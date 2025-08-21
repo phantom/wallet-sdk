@@ -19,6 +19,8 @@ import {
   setTransactionMessageLifetimeUsingBlockhash,
   address,
   compileTransaction,
+  appendTransactionMessageInstruction,
+  transferSolInstruction,
 } from "@solana/kit";
 import { parseEther, parseGwei } from "viem";
 import { getBalance } from "./utils/balance";
@@ -481,6 +483,14 @@ document.addEventListener("DOMContentLoaded", () => {
       createTransactionMessage({ version: 0 }),
       tx => setTransactionMessageFeePayer(address(solanaAddress.address), tx),
       tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
+      tx => appendTransactionMessageInstruction(
+        transferSolInstruction({
+          source: address(solanaAddress.address),
+          destination: address(solanaAddress.address), // Self-transfer for demo
+          amount: 1000n, // Very small amount: 0.000001 SOL
+        }),
+        tx
+      ),
     );
 
     const transaction = compileTransaction(transactionMessage);

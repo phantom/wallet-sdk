@@ -221,35 +221,21 @@ export class BrowserSDK {
   }
 
   /**
-   * Add event listener for provider events (connect, disconnect, error)
-   * Only works with embedded providers
+   * Add event listener for provider events (connect, connect_start, connect_error, disconnect, error)
+   * Works with both embedded and injected providers
    */
   on(event: EmbeddedProviderEvent, callback: EventCallback): void {
     debug.log(DebugCategory.BROWSER_SDK, "Adding event listener", { event });
-    const currentProvider = this.providerManager.getCurrentProvider();
-    if (currentProvider && 'on' in currentProvider) {
-      (currentProvider as any).on(event, callback);
-    } else {
-      debug.warn(DebugCategory.BROWSER_SDK, "Current provider does not support events", {
-        providerType: this.getCurrentProviderInfo()?.type,
-      });
-    }
+    this.providerManager.on(event, callback);
   }
 
   /**
    * Remove event listener for provider events
-   * Only works with embedded providers
+   * Works with both embedded and injected providers
    */
   off(event: EmbeddedProviderEvent, callback: EventCallback): void {
     debug.log(DebugCategory.BROWSER_SDK, "Removing event listener", { event });
-    const currentProvider = this.providerManager.getCurrentProvider();
-    if (currentProvider && 'off' in currentProvider) {
-      (currentProvider as any).off(event, callback);
-    } else {
-      debug.warn(DebugCategory.BROWSER_SDK, "Current provider does not support events", {
-        providerType: this.getCurrentProviderInfo()?.type,
-      });
-    }
+    this.providerManager.off(event, callback);
   }
 
   /**

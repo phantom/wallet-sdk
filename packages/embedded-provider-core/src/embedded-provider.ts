@@ -175,6 +175,68 @@ export class EmbeddedProvider {
   }
 
   /*
+   * Shared connection logic for both connect() and autoConnect().
+   * Handles redirect resume, existing session validation, and session initialization.
+   * Returns ConnectResult if connection succeeds, null if should continue with new auth flow.
+   */
+  private async tryExistingConnection(): Promise<ConnectResult | null> {
+    // Get and validate existing session
+    this.logger.log("EMBEDDED_PROVIDER", "Getting existing session");
+    let session = await this.storage.getSession();
+    session = await this.validateAndCleanSession(session);
+
+    // First, check if we're resuming from a redirect
+    this.logger.log("EMBEDDED_PROVIDER", "Checking for redirect resume");
+    if (this.authProvider.resumeAuthFromRedirect) {
+      const authResult = this.authProvider.resumeAuthFromRedirect();
+      if (authResult) {
+        this.logger.info("EMBEDDED_PROVIDER", "Resuming from redirect", {
+          walletId: authResult.walletId,
+          provider: authResult.provider,
+        });
+        return this.completeAuthConnection(authResult);
+      }
+    }
+
+    // If we have a completed session, use it
+    if (session && session.status === "completed") {
+      this.logger.info("EMBEDDED_PROVIDER", "Using existing completed session", {
+        sessionId: session.sessionId,
+        walletId: session.walletId,
+      });
+
+      await this.initializeClientFromSession(session);
+
+      // Update session timestamp
+      session.lastUsed = Date.now();
+      await this.storage.saveSession(session);
+
+      this.logger.info("EMBEDDED_PROVIDER", "Connection from existing session successful", {
+        walletId: this.walletId,
+        addressCount: this.addresses.length,
+      });
+
+      const result: ConnectResult = {
+        walletId: this.walletId!,
+        addresses: this.addresses,
+        status: "completed",
+      };
+
+      // Emit connect event for existing session success
+      this.emit("connect", {
+        walletId: this.walletId,
+        addresses: this.addresses,
+        source: "existing-session",
+      });
+
+      return result;
+    }
+
+    // No existing connection available
+    return null;
+  }
+
+  /*
    * We use this method to validate authentication options before processing them.
    * This ensures only supported auth providers are used and required tokens are present.
    */
@@ -247,104 +309,41 @@ export class EmbeddedProvider {
       // Emit connect_start event for auto-connect
       this.emit("connect_start", { source: "auto-connect" });
 
-      // First, check for URL parameters (OAuth redirect handling)
-      const urlSessionId = this.platform.urlParamsAccessor?.getParam("session_id");
-      const urlWalletId = this.platform.urlParamsAccessor?.getParam("wallet_id");
-      const urlAuthToken = this.platform.urlParamsAccessor?.getParam("auth_token");
-
-      if (urlSessionId && urlWalletId) {
-        this.logger.info("EMBEDDED_PROVIDER", "Auto-connect from URL parameters", {
-          sessionId: urlSessionId,
-          walletId: urlWalletId,
-          hasAuthToken: !!urlAuthToken,
+      // Try to use existing connection (redirect resume or completed session)
+      const result = await this.tryExistingConnection();
+      
+      if (result) {
+        // Successfully connected using existing session or redirect
+        this.logger.info("EMBEDDED_PROVIDER", "Auto-connect successful", {
+          walletId: result.walletId,
+          addressCount: result.addresses.length,
         });
 
-        try {
-          // Create session from URL parameters
-          const urlSession: Session = {
-            sessionId: urlSessionId,
-            walletId: urlWalletId,
-            organizationId: this.config.organizationId,
-            stamperInfo: { keyId: "", publicKey: "" }, // Will be populated during initialization
-            status: "completed",
-            createdAt: Date.now(),
-            lastUsed: Date.now(),
-          };
-
-          // Initialize client from URL session
-          await this.initializeClientFromSession(urlSession);
-          
-          // Save the session for future use
-          await this.storage.saveSession(urlSession);
-
-          this.logger.info("EMBEDDED_PROVIDER", "Auto-connect from URL parameters successful", {
-            walletId: this.walletId,
-            addressCount: this.addresses.length,
-          });
-
-          // Emit connect event for URL parameter auto-connect success
-          this.emit("connect", {
-            walletId: this.walletId,
-            addresses: this.addresses,
-            source: "url-redirect",
-          });
-          
-          return;
-        } catch (urlError) {
-          this.logger.error("EMBEDDED_PROVIDER", "URL parameter auto-connect failed", {
-            error: urlError instanceof Error ? urlError.message : String(urlError),
-          });
-          // Continue to stored session fallback
-        }
-      }
-
-      // Fallback: Get existing stored session
-      const session = await this.storage.getSession();
-      
-      // Validate session
-      if (!this.isSessionValid(session)) {
-        this.logger.log("EMBEDDED_PROVIDER", "Auto-connect failed: no valid session found");
-        
-        // Emit connect_error to reset isConnecting state
-        this.emit("connect_error", {
-          error: "No valid session found",
+        this.emit("connect", {
+          walletId: result.walletId,
+          addresses: result.addresses,
           source: "auto-connect",
         });
         return;
       }
 
-      // Session is valid, initialize client from it
-      this.logger.info("EMBEDDED_PROVIDER", "Auto-connecting from stored session", {
-        sessionId: session!.sessionId,
-        walletId: session!.walletId,
-      });
-
-      await this.initializeClientFromSession(session!);
-
-      // Update session timestamp
-      session!.lastUsed = Date.now();
-      await this.storage.saveSession(session!);
-
-      this.logger.info("EMBEDDED_PROVIDER", "Auto-connect from stored session successful", {
-        walletId: this.walletId,
-        addressCount: this.addresses.length,
-      });
-
-      // Emit connect event for stored session auto-connect success
-      this.emit("connect", {
-        walletId: this.walletId,
-        addresses: this.addresses,
-        source: "stored-session",
-      });
-    } catch (error) {
-      // Silent fail - user can still call connect() manually if needed
-      this.logger.log("EMBEDDED_PROVIDER", "Auto-connect failed", {
-        error: error instanceof Error ? error.message : String(error),
-      });
-
-      // Emit connect_error event for auto-connect failure
+      // No existing connection available - auto-connect should fail silently
+      this.logger.log("EMBEDDED_PROVIDER", "Auto-connect failed: no valid session found");
+      
+      // Emit connect_error to reset isConnecting state
       this.emit("connect_error", {
+        error: "No valid session found",
+        source: "auto-connect",
+      });
+      
+    } catch (error) {
+      this.logger.error("EMBEDDED_PROVIDER", "Auto-connect failed", {
         error: error instanceof Error ? error.message : String(error),
+      });
+      
+      // Emit connect_error to reset isConnecting state
+      this.emit("connect_error", {
+        error: error instanceof Error ? error.message : "Auto-connect failed",
         source: "auto-connect",
       });
     }
@@ -424,33 +423,32 @@ export class EmbeddedProvider {
         authOptions: authOptions ? { provider: authOptions.provider } : undefined
       });
 
-      // Get and validate existing session
-      this.logger.log("EMBEDDED_PROVIDER", "Getting existing session");
-      let session = await this.storage.getSession();
-      session = await this.validateAndCleanSession(session);
-
-      // First, check if we're resuming from a redirect
-      this.logger.log("EMBEDDED_PROVIDER", "Checking for redirect resume");
-      if (this.authProvider.resumeAuthFromRedirect) {
-        const authResult = this.authProvider.resumeAuthFromRedirect();
-        if (authResult) {
-          this.logger.info("EMBEDDED_PROVIDER", "Resuming from redirect", {
-            walletId: authResult.walletId,
-            provider: authResult.provider,
-          });
-          return this.completeAuthConnection(authResult);
-        }
+      // Try to use existing connection (redirect resume or completed session)
+      const existingResult = await this.tryExistingConnection();
+      if (existingResult) {
+        // Successfully connected using existing session or redirect
+        this.logger.info("EMBEDDED_PROVIDER", "Manual connect using existing connection", {
+          walletId: existingResult.walletId,
+          addressCount: existingResult.addresses.length,
+        });
+        
+        // Emit connect event for manual connect success with existing connection
+        this.emit("connect", {
+          walletId: existingResult.walletId,
+          addresses: existingResult.addresses,
+          source: "manual-existing",
+        });
+        
+        return existingResult;
       }
 
-      // Validate auth options
+      // Validate auth options before proceeding with new auth flow
       this.validateAuthOptions(authOptions);
 
-      // If no session exists, create new one
-      if (!session) {
-        this.logger.info("EMBEDDED_PROVIDER", "No existing session, creating new one");
-        const { organizationId, stamperInfo } = await this.createOrganizationAndStamper();
-        session = await this.handleAuthFlow(organizationId, stamperInfo, authOptions);
-      }
+      // No existing connection available, create new one
+      this.logger.info("EMBEDDED_PROVIDER", "No existing connection, creating new auth flow");
+      const { organizationId, stamperInfo } = await this.createOrganizationAndStamper();
+      const session = await this.handleAuthFlow(organizationId, stamperInfo, authOptions);
 
       // If session is null here, it means we're doing a redirect
       if (!session) {
