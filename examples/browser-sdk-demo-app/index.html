@@ -17,18 +17,11 @@
             <div class="form-group">
               <label for="providerType">Provider Type:</label>
               <select id="providerType">
-                <option value="embedded">Embedded (Non-Custodial)</option>
+                <option value="embedded" selected>Embedded (Non-Custodial)</option>
                 <option value="injected">Injected (Browser Extension)</option>
               </select>
             </div>
 
-            <div class="form-group">
-              <label for="solanaProvider">Solana Library:</label>
-              <select id="solanaProvider">
-                <option value="web3js">@solana/web3.js</option>
-                <option value="kit">@solana/kit</option>
-              </select>
-            </div>
           </div>
 
           <div class="section">
@@ -62,7 +55,6 @@
             <h3>Transaction Tests</h3>
             <div class="button-group">
               <button id="testWeb3jsBtn" disabled>Test @solana/web3.js</button>
-              <button id="testKitBtn" disabled>Test @solana/kit</button>
               <button id="testEthereumBtn" disabled>Test Ethereum</button>
             </div>
           </div>
