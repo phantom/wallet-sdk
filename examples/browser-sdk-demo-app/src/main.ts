@@ -9,7 +9,7 @@ import {
   DEFAULT_AUTH_URL,
   DEFAULT_WALLET_API_URL,
 } from "@phantom/browser-sdk";
-import type { BrowserSDKConfig, DebugMessage } from "@phantom/browser-sdk";
+import type { DebugMessage } from "@phantom/browser-sdk";
 import { SystemProgram, PublicKey, Connection, VersionedTransaction, TransactionMessage } from "@solana/web3.js";
 import { parseEther, parseGwei } from "viem";
 import { getBalance } from "./utils/balance";
