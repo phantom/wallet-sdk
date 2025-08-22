@@ -31,12 +31,13 @@
   "dependencies": {
     "@phantom/base64url": "workspace:^",
     "@phantom/constants": "workspace:^",
+    "@solana/kit": "^2.1.1",
+    "@solana/transactions": "^2.0.0",
     "bs58": "^6.0.0",
     "buffer": "^6.0.3"
   },
   "optionalDependencies": {
     "@mysten/sui.js": "^0.50.0",
-    "@solana/kit": "^2.1.1",
     "@solana/web3.js": "^1.95.0",
     "bitcoinjs-lib": "^6.1.0",
     "ethers": "^6.0.0",

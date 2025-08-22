@@ -1,7 +1,7 @@
 {
-  "name": "@phantom/phantom-connector",
+  "name": "@phantom/chains",
   "version": "0.1.0",
-  "description": "Multi-chain connector for Phantom Wallet SDK",
+  "description": "Shared chain interfaces for Phantom SDK",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -12,10 +12,13 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "?pack-release": "When https://github.com/changesets/changesets/issues/432 has a solution we can remove this trick",
     "pack-release": "rimraf ./_release && yarn pack && mkdir ./_release && tar zxvf ./package.tgz --directory ./_release && rm ./package.tgz",
-    "build": "rimraf ./dist && tsup src/index.ts --format cjs,esm --dts --external @phantom/browser-sdk,@phantom/constants,@phantom/client,@phantom/embedded-provider-core,@phantom/parsers,@solana/web3.js",
+    "build": "rimraf ./dist && tsup src/index.ts --format cjs,esm --dts --external @phantom/constants --external @phantom/parsers",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "test": "jest",
@@ -23,6 +26,25 @@
     "lint": "tsc --noEmit && eslint --cache . --ext .ts,.tsx",
     "check-types": "tsc --noEmit",
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
+  },
+  "keywords": [
+    "phantom",
+    "wallet",
+    "solana",
+    "ethereum",
+    "crypto",
+    "web3",
+    "chains"
+  ],
+  "author": "Phantom",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phantom/wallet-sdk.git",
+    "directory": "packages/chains"
+  },
+  "dependencies": {
+    "@phantom/constants": "workspace:^",
+    "@phantom/parsers": "workspace:^"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
@@ -35,17 +57,6 @@
     "tsup": "^6.7.0",
     "typescript": "^5.0.4"
   },
-  "dependencies": {
-    "@phantom/browser-sdk": "workspace:^",
-    "@phantom/client": "workspace:^",
-    "@phantom/constants": "workspace:^",
-    "@phantom/embedded-provider-core": "workspace:^",
-    "@phantom/parsers": "workspace:^",
-    "@solana/web3.js": "^1.95.0"
-  },
-  "files": [
-    "dist"
-  ],
   "publishConfig": {
     "directory": "_release/package"
   }

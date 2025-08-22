@@ -8,7 +8,7 @@ export function useConnect() {
   const [error, setError] = useState<Error | null>(null);
 
   const connect = useCallback(
-    async (options?: ConnectOptions): Promise<ConnectResult> => {
+    async (_options?: ConnectOptions): Promise<ConnectResult> => {
       if (!sdk) {
         throw new Error("SDK not initialized");
       }
@@ -17,7 +17,7 @@ export function useConnect() {
       setError(null);
 
       try {
-        const result = await sdk.connect(options);
+        const result = await sdk.connect();
 
         // Update connection state after successful connection
         if (result.status === "completed") {

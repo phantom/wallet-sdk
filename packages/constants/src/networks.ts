@@ -246,3 +246,33 @@ export function getNetworksByChain(chain: string): NetworkId[] {
     .filter(([_, config]) => config.chain === chain)
     .map(([networkId]) => networkId as NetworkId);
 }
+
+/**
+ * Convert Ethereum chainId to NetworkId
+ */
+export function chainIdToNetworkId(chainId: number): NetworkId | undefined {
+  const chainIdToNetworkMap: Record<number, NetworkId> = {
+    1: NetworkId.ETHEREUM_MAINNET,
+    5: NetworkId.ETHEREUM_GOERLI,
+    11155111: NetworkId.ETHEREUM_SEPOLIA,
+    137: NetworkId.POLYGON_MAINNET,
+    80001: NetworkId.POLYGON_MUMBAI,
+    10: NetworkId.OPTIMISM_MAINNET,
+    420: NetworkId.OPTIMISM_GOERLI,
+    42161: NetworkId.ARBITRUM_ONE,
+    421613: NetworkId.ARBITRUM_GOERLI,
+    8453: NetworkId.BASE_MAINNET,
+    84531: NetworkId.BASE_GOERLI,
+    84532: NetworkId.BASE_SEPOLIA,
+  };
+  
+  return chainIdToNetworkMap[chainId];
+}
+
+/**
+ * Extract chainId from NetworkId (for EIP-155 networks)
+ */
+export function networkIdToChainId(networkId: NetworkId): number | undefined {
+  const match = networkId.match(/^eip155:(\d+)$/);
+  return match ? parseInt(match[1], 10) : undefined;
+}

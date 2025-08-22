@@ -8,6 +8,7 @@ import type {
   SignedTransaction,
   AuthOptions,
 } from "@phantom/embedded-provider-core";
+import type { ISolanaChain, IEthereumChain } from "@phantom/chains";
 
 import type { DebugCallback, DebugLevel } from "./debug";
 
@@ -48,8 +49,10 @@ export type {
 export interface Provider {
   connect(authOptions?: AuthOptions): Promise<ConnectResult>;
   disconnect(): Promise<void>;
-  signMessage(params: SignMessageParams): Promise<SignMessageResult>;
-  signAndSendTransaction(params: SignAndSendTransactionParams): Promise<SignedTransaction>;
   getAddresses(): WalletAddress[];
   isConnected(): boolean;
+  
+  // Chain access - providers expose their chains directly
+  solana: ISolanaChain;
+  ethereum: IEthereumChain;
 }

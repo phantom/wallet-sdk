@@ -2,7 +2,6 @@
 /// <reference types="vite/client" />
 import {
   BrowserSDK,
-  NetworkId,
   AddressType,
   debug,
   DebugLevel,
@@ -320,13 +319,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const message = "Hello from Phantom Browser SDK!";
-        const networkId = NetworkId.SOLANA_MAINNET;
-        const result = await sdk.signMessage({ message, networkId });
+        const result = await sdk.solana.signMessage(message);
 
         console.log("Message signed:", result);
-        alert(
-          `Message signed: ${result.signature}${result.blockExplorer ? `\n\nView on explorer: ${result.blockExplorer}` : ""}`,
-        );
+        alert(`Message signed: ${result.signature}`);
       } catch (error) {
         console.error("Error signing message:", error);
         alert(`Error signing message: ${(error as Error).message || error}`);
@@ -343,16 +339,17 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
+        const ethAddress = connectedAddresses.find(a => a.addressType === AddressType.ethereum);
+        if (!ethAddress) {
+          alert("No Ethereum address found");
+          return;
+        }
+
         const message = "Hello from Phantom Browser SDK (EVM)!";
-        const result = await sdk.signMessage({
-          message,
-          networkId: NetworkId.ETHEREUM_MAINNET,
-        });
+        const result = await sdk.ethereum.signPersonalMessage(message, ethAddress.address);
 
         console.log("EVM Message signed:", result);
-        alert(
-          `EVM Message signed: ${result.signature}${result.blockExplorer ? `\n\nView on explorer: ${result.blockExplorer}` : ""}`,
-        );
+        alert(`EVM Message signed: ${result}`);
       } catch (error) {
         console.error("Error signing EVM message:", error);
         alert(`Error signing EVM message: ${(error as Error).message || error}`);
@@ -422,10 +419,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const transaction = new VersionedTransaction(messageV0);
 
-    const result = await sdk!.signAndSendTransaction({
-      networkId: NetworkId.SOLANA_MAINNET,
-      transaction: transaction,
-    });
+    const result = await sdk!.solana.signAndSendTransaction(transaction);
 
     console.log("Transaction sent (web3.js):", result);
     alert(`Transaction sent: ${result.rawTransaction}`);
@@ -451,10 +445,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const transaction = compileTransaction(transactionMessage);
 
-    const result = await sdk!.signAndSendTransaction({
-      networkId: NetworkId.SOLANA_MAINNET,
-      transaction: transaction,
-    });
+    const result = await sdk!.solana.signAndSendTransaction(transaction);
 
     console.log("Transaction sent (kit):", result);
     alert(`Transaction sent: ${result.rawTransaction}`);
@@ -500,14 +491,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Create simple ETH transfer
-        const result = await sdk.signAndSendTransaction({
-          networkId: NetworkId.ETHEREUM_MAINNET,
-          transaction: {
-            to: ethAddress.address, // Self-transfer for demo
-            value: parseEther("0.001"), // 0.001 ETH
-            gas: 21000n,
-            gasPrice: parseGwei("20"), // 20 gwei
-          },
+        const result = await sdk.ethereum.sendTransaction({
+          to: ethAddress.address, // Self-transfer for demo
+          value: parseEther("0.001").toString(), // 0.001 ETH
+          gas: "21000",
+          gasPrice: parseGwei("20").toString(), // 20 gwei
         });
 
         console.log("Ethereum transaction sent:", result);

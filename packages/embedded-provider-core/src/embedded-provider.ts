@@ -4,7 +4,7 @@ import { base64urlEncode } from "@phantom/base64url";
 import bs58 from "bs58";
 import {
   parseMessage,
-  parseTransaction,
+  parseTransactionToBase64Url,
   parseSignMessageResponse,
   parseTransactionResponse,
   type ParsedTransactionResult,
@@ -33,6 +33,8 @@ import { JWTAuth } from "./auth/jwt-auth";
 import { generateSessionId } from "./utils/session";
 import { retryWithBackoff } from "./utils/retry";
 import type { StamperWithKeyManagement } from "@phantom/sdk-types";
+import { EmbeddedSolanaChain, EmbeddedEthereumChain } from "./chains";
+import type { ISolanaChain, IEthereumChain } from '@phantom/chains';
 export class EmbeddedProvider {
   private config: EmbeddedProviderConfig;
   private platform: PlatformAdapter;
@@ -45,6 +47,10 @@ export class EmbeddedProvider {
   private walletId: string | null = null;
   private addresses: WalletAddress[] = [];
   private jwtAuth: JWTAuth;
+  
+  // Built-in chain instances
+  public readonly solana: ISolanaChain;
+  public readonly ethereum: IEthereumChain;
 
   constructor(config: EmbeddedProviderConfig, platform: PlatformAdapter, logger: DebugLogger) {
     this.logger = logger;
@@ -60,6 +66,11 @@ export class EmbeddedProvider {
 
     // Store solana provider config (unused for now)
     config.solanaProvider;
+    
+    // Initialize chain instances
+    this.solana = new EmbeddedSolanaChain(this);
+    this.ethereum = new EmbeddedEthereumChain(this);
+    
     this.logger.info("EMBEDDED_PROVIDER", "EmbeddedProvider initialized");
   }
 
@@ -367,7 +378,7 @@ export class EmbeddedProvider {
     });
 
     // Parse transaction to base64url format for client based on network
-    const parsedTransaction = await parseTransaction(params.transaction, params.networkId);
+    const parsedTransaction = await parseTransactionToBase64Url(params.transaction, params.networkId);
 
     this.logger.log("EMBEDDED_PROVIDER", "Parsed transaction for signing", {
       walletId: this.walletId,

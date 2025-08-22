@@ -27,8 +27,8 @@
   },
   "dependencies": {
     "@phantom/browser-sdk": "workspace:^",
-    "@phantom/constants": "workspace:^",
-    "@phantom/phantom-connector": "workspace:^"
+    "@phantom/chains": "workspace:^",
+    "@phantom/constants": "workspace:^"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.0",

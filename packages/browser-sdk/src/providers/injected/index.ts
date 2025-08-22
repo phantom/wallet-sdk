@@ -1,21 +1,14 @@
 import type {
   Provider,
   ConnectResult,
-  SignMessageParams,
-  SignAndSendTransactionParams,
-  SignMessageResult,
-  SignedTransaction,
   WalletAddress,
   AuthOptions,
 } from "../../types";
 import { AddressType } from "@phantom/client";
-import { createPhantom, createExtensionPlugin } from "@phantom/browser-injected-sdk";
-import { createSolanaPlugin } from "@phantom/browser-injected-sdk/solana";
-import { createEthereumPlugin } from "@phantom/browser-injected-sdk/ethereum";
+import { isPhantomExtensionInstalled } from "@phantom/browser-injected-sdk";
 import { debug, DebugCategory } from "../../debug";
-import { base64urlEncode } from "@phantom/base64url";
-import { getExplorerUrl } from "@phantom/constants";
-import bs58 from "bs58";
+import { InjectedSolanaChain, InjectedEthereumChain } from "./chains";
+import type { ISolanaChain, IEthereumChain } from "@phantom/chains";
 
 declare global {
   interface Window {
@@ -35,7 +28,10 @@ export class InjectedProvider implements Provider {
   private connected: boolean = false;
   private addresses: WalletAddress[] = [];
   private addressTypes: AddressType[];
-  private phantom: any;
+  
+  // Chain instances
+  private _solanaChain?: ISolanaChain;
+  private _ethereumChain?: IEthereumChain;
 
   constructor(config: InjectedProviderConfig) {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Initializing InjectedProvider", { config });
@@ -43,25 +39,33 @@ export class InjectedProvider implements Provider {
     // Store config values
     this.addressTypes = config.addressTypes || [AddressType.solana, AddressType.ethereum];
     debug.log(DebugCategory.INJECTED_PROVIDER, "Address types configured", { addressTypes: this.addressTypes });
-
-    // Initialize phantom instance with plugins based on enabled address types
-    const plugins: any[] = [createExtensionPlugin()]; // Always include extension plugin
-
-    if (this.addressTypes.includes(AddressType.solana)) {
-      plugins.push(createSolanaPlugin());
-      debug.log(DebugCategory.INJECTED_PROVIDER, "Solana plugin added");
-    }
-
-    if (this.addressTypes.includes(AddressType.ethereum)) {
-      plugins.push(createEthereumPlugin());
-      debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum plugin added");
-    }
-
-    debug.log(DebugCategory.INJECTED_PROVIDER, "Creating Phantom instance with plugins", {
-      pluginCount: plugins.length,
-    });
-    this.phantom = createPhantom({ plugins });
     debug.info(DebugCategory.INJECTED_PROVIDER, "InjectedProvider initialized");
+  }
+
+  /**
+   * Access to Solana chain operations
+   */
+  get solana(): ISolanaChain {
+    if (!this.addressTypes.includes(AddressType.solana)) {
+      throw new Error('Solana not enabled for this provider');
+    }
+    if (!this._solanaChain) {
+      this._solanaChain = new InjectedSolanaChain();
+    }
+    return this._solanaChain;
+  }
+
+  /**
+   * Access to Ethereum chain operations
+   */
+  get ethereum(): IEthereumChain {
+    if (!this.addressTypes.includes(AddressType.ethereum)) {
+      throw new Error('Ethereum not enabled for this provider');
+    }
+    if (!this._ethereumChain) {
+      this._ethereumChain = new InjectedEthereumChain();
+    }
+    return this._ethereumChain;
   }
 
   async connect(authOptions?: AuthOptions): Promise<ConnectResult> {
@@ -70,7 +74,7 @@ export class InjectedProvider implements Provider {
       authOptionsIgnored: !!authOptions, // Note: authOptions are ignored for injected provider
     });
 
-    if (!this.phantom.extension.isInstalled()) {
+    if (!isPhantomExtensionInstalled()) {
       debug.error(DebugCategory.INJECTED_PROVIDER, "Phantom wallet extension not found");
       throw new Error("Phantom wallet not found");
     }
@@ -82,13 +86,13 @@ export class InjectedProvider implements Provider {
     if (this.addressTypes.includes(AddressType.solana)) {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Attempting Solana connection");
       try {
-        const publicKey = await this.phantom.solana.connect();
-        if (publicKey) {
+        const result = await this.solana.connect();
+        if (result.publicKey) {
           connectedAddresses.push({
             addressType: AddressType.solana,
-            address: publicKey,
+            address: result.publicKey,
           });
-          debug.info(DebugCategory.INJECTED_PROVIDER, "Solana connected successfully", { address: publicKey });
+          debug.info(DebugCategory.INJECTED_PROVIDER, "Solana connected successfully", { address: result.publicKey });
         }
       } catch (err) {
         // Continue to other address types
@@ -99,7 +103,7 @@ export class InjectedProvider implements Provider {
     // Try Ethereum if enabled
     if (this.addressTypes.includes(AddressType.ethereum)) {
       try {
-        const accounts = await this.phantom.ethereum.connect();
+        const accounts = await this.ethereum.getAccounts();
         if (accounts && accounts.length > 0) {
           connectedAddresses.push(
             ...accounts.map((address: string) => ({
@@ -132,121 +136,19 @@ export class InjectedProvider implements Provider {
     // Disconnect from Solana if enabled
     if (this.addressTypes.includes(AddressType.solana)) {
       try {
-        await this.phantom.solana.disconnect();
+        await this.solana.disconnect();
       } catch (err) {
         // Ignore errors if Solana wasn't connected
         console.error("Failed to disconnect Solana:", err);
       }
     }
 
-    // Disconnect from Ethereum if enabled (no-op for Ethereum)
-    if (this.addressTypes.includes(AddressType.ethereum)) {
-      try {
-        await this.phantom.ethereum.disconnect();
-      } catch (err) {
-        // Ignore errors if Ethereum wasn't connected
-        console.error("Failed to disconnect Ethereum:", err);
-      }
-    }
+    // Reset chain instances on disconnect
+    this._solanaChain = undefined;
+    this._ethereumChain = undefined;
 
     this.connected = false;
     this.addresses = [];
-  }
-
-  async signMessage(params: SignMessageParams): Promise<SignMessageResult> {
-    if (!this.connected) {
-      throw new Error("Wallet not connected");
-    }
-
-    const networkPrefix = params.networkId.split(":")[0].toLowerCase();
-    let signatureResult: string;
-
-    if (networkPrefix === "solana") {
-      // Sign with Solana provider using browser-injected-sdk - message is already a native string
-      const { signature } = await this.phantom.solana.signMessage(new TextEncoder().encode(params.message));
-
-      // Convert Uint8Array signature to base58 string (standard Solana format)
-      signatureResult = bs58.encode(signature);
-    } else if (networkPrefix === "ethereum" || networkPrefix === "polygon" || networkPrefix === "eip155") {
-      // Get the first address
-      const address = this.addresses.find(addr => addr.addressType === AddressType.ethereum)?.address;
-      if (!address) {
-        throw new Error("No address available");
-      }
-
-      // TODO: Switch to the right chain
-
-      // Sign with Ethereum provider using browser-injected-sdk - message is already a native string
-      const signature = await this.phantom.ethereum.signPersonalMessage(params.message, address);
-
-      signatureResult = signature;
-    } else {
-      throw new Error(`Network ${params.networkId} is not supported for injected wallets`);
-    }
-
-    // Parse the signature using the unified parser to get consistent response format
-    return {
-      signature: signatureResult,
-      rawSignature: base64urlEncode(signatureResult),
-    };
-  }
-
-  async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<SignedTransaction> {
-    if (!this.connected) {
-      throw new Error("Wallet not connected");
-    }
-
-    const networkPrefix = params.networkId.split(":")[0].toLowerCase();
-
-    if (networkPrefix === "solana") {
-      // Handle native transaction objects based on provider type
-      let transaction = params.transaction;
-      
-      // Convert Kit → Web3.js if needed (only for injected provider)
-      if (this.hasKitFormat(transaction)) {
-        transaction = this.convertKitToWeb3js(transaction);
-      }
-      
-      // Now pass Web3.js transaction to browser-injected-sdk
-      const result = await this.phantom.solana.signAndSendTransaction(transaction);
-      return {
-        hash: result.signature,
-        rawTransaction: base64urlEncode(result.signature),
-        blockExplorer: getExplorerUrl(params.networkId, "transaction", result.signature),
-      };
-    } else if (networkPrefix === "ethereum" || networkPrefix === "polygon" || networkPrefix === "eip155") {
-      // Helper function to ensure hex format
-      const toHex = (value: any): string | undefined => {
-        if (!value) return undefined;
-        if (typeof value === "string" && value.startsWith("0x")) return value;
-        if (typeof value === "string") return value; // Assume it's already hex without prefix
-        return "0x" + value.toString(16);
-      };
-
-      // For Ethereum networks, transaction is a native object (Viem format)
-      const txRequest = {
-        to: params.transaction.to,
-        value: params.transaction.value ? toHex(params.transaction.value) : "0x0",
-        gas: toHex(params.transaction.gas),
-        gasPrice: toHex(params.transaction.gasPrice),
-        maxFeePerGas: toHex(params.transaction.maxFeePerGas),
-        maxPriorityFeePerGas: toHex(params.transaction.maxPriorityFeePerGas),
-        data: params.transaction.data || "0x",
-      };
-
-      // TODO: Switch to the right chain
-
-      // Send transaction using browser-injected-sdk
-      const txHash = await this.phantom.ethereum.sendTransaction(txRequest);
-
-      return {
-        hash: txHash,
-        rawTransaction: base64urlEncode(txHash),
-        blockExplorer: getExplorerUrl(params.networkId, "transaction", txHash),
-      };
-    }
-
-    throw new Error(`Network ${params.networkId} is not supported for injected wallets`);
   }
 
   getAddresses(): WalletAddress[] {
@@ -255,33 +157,5 @@ export class InjectedProvider implements Provider {
 
   isConnected(): boolean {
     return this.connected;
-  }
-
-  // Provider access methods for connectors
-  getInjectedEthereumProvider(): any {
-    if (!this.addressTypes.includes(AddressType.ethereum)) {
-      throw new Error('Ethereum not enabled for this provider');
-    }
-    return this.phantom.ethereum;
-  }
-
-  getInjectedSolanaProvider(): any {
-    if (!this.addressTypes.includes(AddressType.solana)) {
-      throw new Error('Solana not enabled for this provider');
-    }
-    return this.phantom.solana;
-  }
-
-  // Kit transaction format detection and conversion
-  private hasKitFormat(transaction: any): boolean {
-    return transaction?.messageBytes != null;
-  }
-
-  private convertKitToWeb3js(kitTransaction: any): any {
-    // For now, return as-is since we removed Kit dependencies from browser-injected-sdk
-    // In a real implementation, you'd convert Kit format to Web3.js VersionedTransaction
-    // This is a placeholder - the actual conversion would depend on Kit's API
-    // TODO: Implement proper Kit transaction conversion when Kit integration is added
-    return kitTransaction;
   }
 }

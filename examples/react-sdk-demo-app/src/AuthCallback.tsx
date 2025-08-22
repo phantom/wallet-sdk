@@ -58,7 +58,7 @@ export function AuthCallback() {
 
       // Connect - this should resume from the redirect
       // The React SDK should automatically handle the callback URL params
-      const result = await connect({ providerType: "embedded" });
+      const result = await connect();
 
       debug.info("AUTH_CALLBACK", "Connection completed", { result });
 

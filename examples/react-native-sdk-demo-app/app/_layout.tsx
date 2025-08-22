@@ -14,7 +14,7 @@ const config: PhantomSDKConfig = {
     redirectUrl: process.env.EXPO_PUBLIC_REDIRECT_URL || "phantom-rn-demo://phantom-auth-callback",
   },
   apiBaseUrl: process.env.EXPO_PUBLIC_WALLET_API || "https://api.phantom.app/v1/wallets",
-  debug: process.env.EXPO_PUBLIC_DEBUG === "true",
+  // debug: process.env.EXPO_PUBLIC_DEBUG === "true",
   solanaProvider: "web3js",
   appName: "Phantom React Native SDK Demo",
   appLogo: "https://picsum.photos/200", // Optional app logo URL

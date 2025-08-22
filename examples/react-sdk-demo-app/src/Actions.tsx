@@ -2,12 +2,11 @@ import "./Actions.css";
 import {
   useConnect,
   useDisconnect,
-  useSignAndSendTransaction,
-  useSignMessage,
+  useSolana,
+  useEthereum,
   useAccounts,
   usePhantom,
   useIsExtensionInstalled,
-  NetworkId,
   DebugLevel,
   debug,
   type ProviderType,
@@ -28,11 +27,13 @@ import { useBalance } from "./hooks/useBalance";
 export function Actions() {
   const { connect, isConnecting, error: connectError } = useConnect();
   const { disconnect, isDisconnecting } = useDisconnect();
-  const { signAndSendTransaction, isSigning: isSigningTransaction } = useSignAndSendTransaction();
-  const { signMessage, isSigning: isSigningMessage } = useSignMessage();
+  const { signMessage: signSolanaMessage, signAndSendTransaction } = useSolana();
+  const { signPersonalMessage: signEthMessage } = useEthereum();
   const { isConnected, currentProviderType } = usePhantom();
   const { isInstalled, isLoading } = useIsExtensionInstalled();
   const addresses = useAccounts();
+  const [isSigningMessage, setIsSigningMessage] = useState(false);
+  const [isSigningTransaction, setIsSigningTransaction] = useState(false);
 
   const [solanaAddress, setSolanaAddress] = useState<string | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<ProviderType>("embedded");
@@ -74,11 +75,9 @@ export function Actions() {
 
   const onConnect = async () => {
     try {
-      const options = {
-        providerType: selectedProvider,
-        ...(selectedProvider === "embedded" && { embeddedWalletType: selectedEmbeddedType }),
-      };
-      await connect(options);
+      // Note: Provider type and embedded wallet type are configured at SDK initialization level
+      // not at connect level in the new architecture
+      await connect();
       // Connection state will be updated in the provider
     } catch (error) {
       console.error("Error connecting to Phantom:", error);
@@ -100,21 +99,29 @@ export function Actions() {
   };
 
   const onSignMessage = async (type: "solana" | "evm") => {
-    if (!isConnected || !solanaAddress) {
+    if (!isConnected || !addresses || addresses.length === 0) {
       alert("Please connect your wallet first.");
       return;
     }
     try {
-      const result = await signMessage({
-        message: "Hello, World!",
-        networkId: type === "solana" ? NetworkId.SOLANA_MAINNET : NetworkId.ETHEREUM_MAINNET,
-      });
-      alert(
-        `Message Signed! Signature: ${result.signature}${result.blockExplorer ? `\n\nView on explorer: ${result.blockExplorer}` : ""}`,
-      );
+      setIsSigningMessage(true);
+      if (type === "solana") {
+        const result = await signSolanaMessage("Hello, World!");
+        alert(`Message Signed! Signature: ${result.signature}`);
+      } else {
+        const ethAddress = addresses.find(addr => addr.addressType === "Ethereum");
+        if (!ethAddress) {
+          alert("No Ethereum address found");
+          return;
+        }
+        const result = await signEthMessage("Hello, World!", ethAddress.address);
+        alert(`Message Signed! Signature: ${result}`);
+      }
     } catch (error) {
       console.error("Error signing message:", error);
       alert(`Error signing message: ${(error as Error).message || error}`);
+    } finally {
+      setIsSigningMessage(false);
     }
   };
 
@@ -124,6 +131,7 @@ export function Actions() {
       return;
     }
     try {
+      setIsSigningTransaction(true);
       const rpc = createSolanaRpc(import.meta.env.VITE_SOLANA_RPC_URL_MAINNET);
 
       const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
@@ -136,15 +144,14 @@ export function Actions() {
 
       const transaction = compileTransaction(transactionMessage);
 
-      const result = await signAndSendTransaction({
-        transaction: transaction,
-        networkId: NetworkId.SOLANA_MAINNET,
-      });
+      const result = await signAndSendTransaction(transaction);
 
-      alert(`Transaction sent! Signature: ${result.rawTransaction}`);
+      alert(`Transaction sent! Signature: ${result.signature}`);
     } catch (error) {
       console.error("Error signing and sending transaction:", error);
       alert(`Error signing and sending transaction: ${(error as Error).message || error}`);
+    } finally {
+      setIsSigningTransaction(false);
     }
   };
 

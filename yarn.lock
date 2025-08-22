@@ -3325,6 +3325,7 @@ __metadata:
   dependencies:
     "@phantom/base64url": "workspace:^"
     "@phantom/browser-injected-sdk": "workspace:^"
+    "@phantom/chains": "workspace:^"
     "@phantom/client": "workspace:^"
     "@phantom/constants": "workspace:^"
     "@phantom/embedded-provider-core": "workspace:^"
@@ -3345,6 +3346,24 @@ __metadata:
     ts-jest: "npm:^29.1.2"
     tsup: "npm:^6.7.0"
     tweetnacl: "npm:^1.0.3"
+    typescript: "npm:^5.0.4"
+  languageName: unknown
+  linkType: soft
+
+"@phantom/chains@workspace:^, @phantom/chains@workspace:packages/chains":
+  version: 0.0.0-use.local
+  resolution: "@phantom/chains@workspace:packages/chains"
+  dependencies:
+    "@phantom/constants": "workspace:^"
+    "@phantom/parsers": "workspace:^"
+    "@types/jest": "npm:^29.5.12"
+    "@types/node": "npm:^20.11.0"
+    eslint: "npm:8.53.0"
+    jest: "npm:^29.7.0"
+    prettier: "npm:^3.5.2"
+    rimraf: "npm:^6.0.1"
+    ts-jest: "npm:^29.1.2"
+    tsup: "npm:^6.7.0"
     typescript: "npm:^5.0.4"
   languageName: unknown
   linkType: soft
@@ -3417,6 +3436,7 @@ __metadata:
   dependencies:
     "@phantom/api-key-stamper": "workspace:^"
     "@phantom/base64url": "workspace:^"
+    "@phantom/chains": "workspace:^"
     "@phantom/client": "workspace:^"
     "@phantom/constants": "workspace:^"
     "@phantom/parsers": "workspace:^"
@@ -3478,6 +3498,7 @@ __metadata:
     "@phantom/base64url": "workspace:^"
     "@phantom/constants": "workspace:^"
     "@solana/kit": "npm:^2.1.1"
+    "@solana/transactions": "npm:^2.0.0"
     "@solana/web3.js": "npm:^1.95.0"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
@@ -3497,8 +3518,6 @@ __metadata:
   dependenciesMeta:
     "@mysten/sui.js":
       optional: true
-    "@solana/kit":
-      optional: true
     "@solana/web3.js":
       optional: true
     bitcoinjs-lib:
@@ -3507,28 +3526,6 @@ __metadata:
       optional: true
     viem:
       optional: true
-  languageName: unknown
-  linkType: soft
-
-"@phantom/phantom-connector@workspace:^, @phantom/phantom-connector@workspace:packages/phantom-connector":
-  version: 0.0.0-use.local
-  resolution: "@phantom/phantom-connector@workspace:packages/phantom-connector"
-  dependencies:
-    "@phantom/browser-sdk": "workspace:^"
-    "@phantom/client": "workspace:^"
-    "@phantom/constants": "workspace:^"
-    "@phantom/embedded-provider-core": "workspace:^"
-    "@phantom/parsers": "workspace:^"
-    "@solana/web3.js": "npm:^1.95.0"
-    "@types/jest": "npm:^29.5.12"
-    "@types/node": "npm:^20.11.0"
-    eslint: "npm:8.53.0"
-    jest: "npm:^29.7.0"
-    prettier: "npm:^3.5.2"
-    rimraf: "npm:^6.0.1"
-    ts-jest: "npm:^29.1.2"
-    tsup: "npm:^6.7.0"
-    typescript: "npm:^5.0.4"
   languageName: unknown
   linkType: soft
 
@@ -3566,11 +3563,12 @@ __metadata:
   dependencies:
     "@phantom/api-key-stamper": "workspace:^"
     "@phantom/base64url": "workspace:^"
+    "@phantom/chains": "workspace:^"
     "@phantom/client": "workspace:^"
     "@phantom/constants": "workspace:^"
     "@phantom/crypto": "workspace:^"
     "@phantom/embedded-provider-core": "workspace:^"
-    "@phantom/phantom-connector": "workspace:^"
+    "@phantom/parsers": "workspace:^"
     "@phantom/sdk-types": "workspace:^"
     "@types/bs58": "npm:^5.0.0"
     "@types/jest": "npm:^29.5.14"
@@ -3631,8 +3629,8 @@ __metadata:
   resolution: "@phantom/react-sdk@workspace:packages/react-sdk"
   dependencies:
     "@phantom/browser-sdk": "workspace:^"
+    "@phantom/chains": "workspace:^"
     "@phantom/constants": "workspace:^"
-    "@phantom/phantom-connector": "workspace:^"
     "@testing-library/dom": "npm:^10.4.0"
     "@testing-library/react": "npm:^16.3.0"
     "@types/jest": "npm:^29.5.14"
@@ -3657,7 +3655,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/react-ui@workspace:packages/react-ui"
   dependencies:
+    "@phantom/browser-sdk": "workspace:^"
     "@phantom/client": "workspace:^"
+    "@phantom/parsers": "workspace:^"
     "@phantom/react-sdk": "workspace:^"
     "@types/react": "npm:^19.1.2"
     "@types/react-dom": "npm:^19.1.2"
@@ -4828,7 +4828,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@solana/transactions@npm:2.3.0":
+"@solana/transactions@npm:2.3.0, @solana/transactions@npm:^2.0.0":
   version: 2.3.0
   resolution: "@solana/transactions@npm:2.3.0"
   dependencies:

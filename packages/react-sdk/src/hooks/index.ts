@@ -1,7 +1,13 @@
+// Connection management
 export { useConnect } from "./useConnect";
 export { useDisconnect } from "./useDisconnect";
-export { useSignMessage } from "./useSignMessage";
-export { useSignAndSendTransaction } from "./useSignAndSendTransaction";
+
+// Account management  
 export { useAccounts } from "./useAccounts";
+
+// Extension detection
 export { useIsExtensionInstalled } from "./useIsExtensionInstalled";
-export { usePhantomConnector } from "./usePhantomConnector";
+
+// Chain-specific hooks
+export { useSolana } from "./useSolana";
+export { useEthereum } from "./useEthereum";
