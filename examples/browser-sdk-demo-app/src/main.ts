@@ -184,13 +184,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function createSDK(): BrowserSDK {
     const providerType = providerTypeSelect.value as "injected" | "embedded";
 
-    const baseConfig: Omit<BrowserSDKConfig, "providerType"> = {
-      solanaProvider: "web3js",
-      addressTypes: [AddressType.solana, AddressType.ethereum],
-      appName: "Phantom Browser SDK Demo",
-      appLogo: "https://picsum.photos/200", // Optional app logo URL
-    };
-
     // Set debug config 
     debug.enable();
     debug.setLevel(DebugLevel.DEBUG);
