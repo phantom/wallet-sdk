@@ -4,17 +4,19 @@ import App from "./App";
 import "./index.css";
 import ErrorBoundary from "./ErrorBoundary";
 
-const rootElement = document.getElementById("root");
+let rootElement = document.getElementById("root");
 
 if (!rootElement) {
-  console.error("Failed to find the root element");
-  document.body.innerHTML = '<div style="color: red; padding: 20px;">Failed to find the root element!</div>';
-} else {
-  ReactDOM.createRoot(rootElement).render(
+  // create a root element
+  rootElement = document.createElement("div");
+  rootElement.id = "root";
+  document.body.appendChild(rootElement);
+}
+
+ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
       <ErrorBoundary>
         <App />
       </ErrorBoundary>
     </React.StrictMode>,
   );
-}

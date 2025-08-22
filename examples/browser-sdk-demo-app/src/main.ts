@@ -9,20 +9,8 @@ import {
   DEFAULT_AUTH_URL,
   DEFAULT_WALLET_API_URL,
 } from "@phantom/browser-sdk";
-import type { BrowserSDKConfig, DebugMessage } from "@phantom/browser-sdk";
+import type { DebugMessage } from "@phantom/browser-sdk";
 import { SystemProgram, PublicKey, Connection, VersionedTransaction, TransactionMessage } from "@solana/web3.js";
-import {
-  createSolanaRpc,
-  pipe,
-  createTransactionMessage,
-  setTransactionMessageFeePayer,
-  setTransactionMessageLifetimeUsingBlockhash,
-  address,
-  compileTransaction,
-  appendTransactionMessageInstruction,
-  lamports,
-} from "@solana/kit";
-import { getTransferSolInstruction } from "@solana-program/system";
 import { parseEther, parseGwei } from "viem";
 import { getBalance } from "./utils/balance";
 
@@ -57,9 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Get configuration UI elements
   const providerTypeSelect = document.getElementById("providerType") as HTMLSelectElement;
-  const solanaProviderSelect = document.getElementById("solanaProvider") as HTMLSelectElement;
   const testWeb3jsBtn = document.getElementById("testWeb3jsBtn") as HTMLButtonElement;
-  const testKitBtn = document.getElementById("testKitBtn") as HTMLButtonElement;
   const testEthereumBtn = document.getElementById("testEthereumBtn") as HTMLButtonElement;
 
   let connectedAddresses: any[] = [];
@@ -71,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const debugToggle = document.getElementById("debugToggle") as HTMLInputElement;
   const debugLevel = document.getElementById("debugLevel") as HTMLSelectElement;
   const clearDebugBtn = document.getElementById("clearDebugBtn") as HTMLButtonElement;
-  
+
   // Instantiate SDK , it will autoconnect
   let sdk: BrowserSDK | null = createSDK();
 
@@ -95,37 +81,60 @@ document.addEventListener("DOMContentLoaded", () => {
     debugContainer.style.display = isVisible ? "block" : "none";
 
     if (isVisible) {
-      debugContainer.innerHTML = debugMessages
-        .slice(-30) // Show last 30 messages for the larger container
-        .map(msg => {
-          const levelClass = DebugLevel[msg.level].toLowerCase();
-          const timestamp = new Date(msg.timestamp).toLocaleTimeString();
-          const dataStr = msg.data ? JSON.stringify(msg.data, null, 2) : "";
+      // Clear existing content safely
+      debugContainer.replaceChildren();
 
-          return `
-            <div class="debug-message debug-${levelClass}">
-              <div class="debug-header">
-                <span class="debug-timestamp">${timestamp}</span>
-                <span class="debug-level">${DebugLevel[msg.level]}</span>
-                <span class="debug-category">${msg.category}</span>
-              </div>
-              <div class="debug-content">${msg.message}</div>
-              ${dataStr ? `<pre class="debug-data">${dataStr}</pre>` : ""}
-            </div>
-          `;
-        })
-        .join("");
+      const messages = debugMessages.slice(-30); // Show last 30 messages for the larger container
+
+      messages.forEach(msg => {
+        const levelClass = DebugLevel[msg.level].toLowerCase();
+        const timestamp = new Date(msg.timestamp).toLocaleTimeString();
+        const dataStr = msg.data ? JSON.stringify(msg.data, null, 2) : "";
+
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `debug-message debug-${levelClass}`;
+
+        const headerDiv = document.createElement("div");
+        headerDiv.className = "debug-header";
+
+        const timestampSpan = document.createElement("span");
+        timestampSpan.className = "debug-timestamp";
+        timestampSpan.textContent = timestamp;
+
+        const levelSpan = document.createElement("span");
+        levelSpan.className = "debug-level";
+        levelSpan.textContent = DebugLevel[msg.level];
+
+        const categorySpan = document.createElement("span");
+        categorySpan.className = "debug-category";
+        categorySpan.textContent = msg.category;
+
+        headerDiv.appendChild(timestampSpan);
+        headerDiv.appendChild(levelSpan);
+        headerDiv.appendChild(categorySpan);
+
+        const contentDiv = document.createElement("div");
+        contentDiv.className = "debug-content";
+        contentDiv.textContent = msg.message;
+
+        messageDiv.appendChild(headerDiv);
+        messageDiv.appendChild(contentDiv);
+
+        if (dataStr) {
+          const dataPre = document.createElement("pre");
+          dataPre.className = "debug-data";
+          dataPre.textContent = dataStr;
+          messageDiv.appendChild(dataPre);
+        }
+
+        debugContainer.appendChild(messageDiv);
+      });
 
       // Scroll to bottom to show latest messages
       debugContainer.scrollTop = debugContainer.scrollHeight;
     }
   }
 
-  // Initialize debug system using new separated approach
-  // This avoids SDK reinstantiation when debug settings change
-  debug.setCallback(handleDebugMessage);
-  debug.setLevel(DebugLevel.DEBUG);
-  debug.enable();
 
   // Debug toggle handler
   if (debugToggle) {
@@ -152,22 +161,41 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
+  // Provider type change handler
+  if (providerTypeSelect) {
+    providerTypeSelect.onchange = () => {
+      console.log("Provider type changed to:", providerTypeSelect.value);
+      // Disconnect current SDK if connected
+      if (sdk) {
+        sdk.disconnect().catch(console.error);
+        connectedAddresses = [];
+        currentBalance = null;
+        updateAddressesDisplay([]);
+        if (balanceSection) balanceSection.style.display = "none";
+        updateButtonStates(false);
+      }
+      // Create new SDK with new provider type
+      sdk = createSDK();
+      console.log("SDK reinstantiated with provider type:", providerTypeSelect.value);
+    };
+  }
+
   // Create SDK instance based on current configuration
   function createSDK(): BrowserSDK {
     const providerType = providerTypeSelect.value as "injected" | "embedded";
-    const solanaProvider = solanaProviderSelect.value as "web3js" | "kit";
 
-    const baseConfig: Omit<BrowserSDKConfig, "providerType"> = {
-      solanaProvider: solanaProvider,
-      addressTypes: [AddressType.solana, AddressType.ethereum],
-      appName: "Phantom Browser SDK Demo",
-      appLogo: "https://picsum.photos/200", // Optional app logo URL
-    };
+    // Set debug config 
+    debug.enable();
+    debug.setLevel(DebugLevel.DEBUG);
+    debug.setCallback(handleDebugMessage);
 
     if (providerType === "injected") {
       return new BrowserSDK({
         providerType: "injected",
-        ...baseConfig,
+        solanaProvider: "web3js",
+        addressTypes: [AddressType.solana, AddressType.ethereum],
+        appName: "Phantom Browser SDK Demo",
+        appLogo: "https://picsum.photos/200", // Optional app logo URL
       });
     } else {
       // For demo purposes, use hardcoded embedded config
@@ -178,12 +206,16 @@ document.addEventListener("DOMContentLoaded", () => {
         embeddedWalletType: "user-wallet",
         authOptions: {
           authUrl: import.meta.env.VITE_AUTH_URL || DEFAULT_AUTH_URL,
-          redirectUrl: import.meta.env.VITE_REDIRECT_URL,
         },
-        autoConnect: true,
-
-        ...baseConfig,
+        solanaProvider: "web3js",
+        addressTypes: [AddressType.solana, AddressType.ethereum],
+        appName: "Phantom Browser SDK Demo",
+        appLogo: "https://picsum.photos/200", // Optional app logo URL
       });
+
+
+
+
 
       embeddedSdk.on("connect_start", (data) => {
         console.log("Embedded SDK connect started:", data);
@@ -211,6 +243,8 @@ document.addEventListener("DOMContentLoaded", () => {
         updateButtonStates(false);
       });
 
+      embeddedSdk.autoConnect();
+
       // Note: autoConnect is already enabled via config.autoConnect: true
       // No need to call embeddedSdk.autoConnect() manually
 
@@ -230,8 +264,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // Show the section
     addressesSection.style.display = "block";
 
-    // Clear existing content
-    addressesList.innerHTML = "";
+    // Clear existing content safely
+    addressesList.replaceChildren();
 
     // Add each address
     addresses.forEach(address => {
@@ -293,7 +327,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Keep disconnect button always enabled for session clearing
     if (disconnectBtn) disconnectBtn.disabled = false;
     if (testWeb3jsBtn) testWeb3jsBtn.disabled = !connected || !hasBalance;
-    if (testKitBtn) testKitBtn.disabled = !connected || !hasBalance;
     if (testEthereumBtn) testEthereumBtn.disabled = !connected || !hasBalance;
   }
 
@@ -301,7 +334,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (connectBtn) {
     connectBtn.onclick = async () => {
       try {
-        sdk = createSDK();
+        if (!sdk) {
+          sdk = createSDK();
+        }
         const result = await sdk.connect();
         connectedAddresses = result.addresses;
 
@@ -410,14 +445,8 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        // Use current Solana provider selection
-        const solanaProvider = solanaProviderSelect.value as "web3js" | "kit";
-
-        if (solanaProvider === "web3js") {
-          await testWeb3jsTransaction();
-        } else {
-          await testKitTransaction();
-        }
+        // Use web3js for transaction
+        await testWeb3jsTransaction();
       } catch (error) {
         console.error("Error signing transaction:", error);
         alert(`Error signing transaction: ${(error as Error).message || error}`);
@@ -465,42 +494,6 @@ document.addEventListener("DOMContentLoaded", () => {
     alert(`Transaction sent: ${result.rawTransaction}`);
   }
 
-  // Test @solana/kit transaction
-  async function testKitTransaction() {
-    const solanaAddress = connectedAddresses.find(a => a.addressType === AddressType.solana);
-    if (!solanaAddress) {
-      alert("No Solana address found");
-      return;
-    }
-
-    const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL_MAINNET;
-    const rpc = createSolanaRpc(rpcUrl);
-    const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
-
-    const transactionMessage = pipe(
-      createTransactionMessage({ version: 0 }),
-      tx => setTransactionMessageFeePayer(address(solanaAddress.address), tx),
-      tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
-      tx => appendTransactionMessageInstruction(
-        getTransferSolInstruction({
-          source: address(solanaAddress.address),
-          destination: address(solanaAddress.address), // Self-transfer for demo
-          amount: lamports(1000n), // Very small amount: 0.000001 SOL
-        }),
-        tx
-      ),
-    );
-
-    const transaction = compileTransaction(transactionMessage);
-
-    const result = await sdk!.signAndSendTransaction({
-      networkId: NetworkId.SOLANA_MAINNET,
-      transaction: transaction,
-    });
-
-    console.log("Transaction sent (kit):", result);
-    alert(`Transaction sent: ${result.rawTransaction}`);
-  }
 
   // Test Web3.js button
   if (testWeb3jsBtn) {
@@ -514,17 +507,6 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  // Test Kit button
-  if (testKitBtn) {
-    testKitBtn.onclick = async () => {
-      try {
-        await testKitTransaction();
-      } catch (error) {
-        console.error("Error with kit transaction:", error);
-        alert(`Error with kit transaction: ${(error as Error).message || error}`);
-      }
-    };
-  }
 
   // Test Ethereum button
   if (testEthereumBtn) {
