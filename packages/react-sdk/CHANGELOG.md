@@ -1,5 +1,13 @@
 # @phantom/react-sdk
 
+## 0.3.7
+
+### Patch Changes
+
+- a126cf3: Bump version
+- Updated dependencies [a126cf3]
+  - @phantom/browser-sdk@0.3.7
+
 ## 0.3.6
 
 ### Patch Changes

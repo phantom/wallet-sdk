@@ -1,5 +1,11 @@
 # @phantom/client
 
+## 0.1.9
+
+### Patch Changes
+
+- a126cf3: Bump version
+
 ## 0.1.8
 
 ### Patch Changes
