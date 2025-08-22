@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/auth-callback.tsx","./src/main.tsx","./src/components/connectiondemo.tsx","./src/components/messagesigningdemo.tsx","./src/components/themedemo.tsx","./src/components/transactiondemo.tsx"],"errors":true,"version":"5.8.3"}
