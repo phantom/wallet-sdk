@@ -1,5 +1,13 @@
 # @phantom/embedded-provider-core
 
+## 0.1.8
+
+### Patch Changes
+
+- a126cf3: Bump version
+- Updated dependencies [a126cf3]
+  - @phantom/client@0.1.9
+
 ## 0.1.7
 
 ### Patch Changes
