@@ -195,15 +195,9 @@ export class InjectedProvider implements Provider {
       }
     }
 
-    // Disconnect from Ethereum if enabled (no-op for Ethereum)
+    // Disconnect from Ethereum if enabled (no-op for Ethereum - it doesn't have a disconnect method)
     if (this.addressTypes.includes(AddressType.ethereum)) {
-      try {
-        await this.ethereum.disconnect();
-        debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum disconnected successfully");
-      } catch (err) {
-        // Ignore errors if Ethereum wasn't connected
-        debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to disconnect Ethereum", { error: err });
-      }
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum disconnected (no-op)");
     }
 
     // Reset chain instances on disconnect
@@ -284,12 +278,12 @@ export class InjectedProvider implements Provider {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Setting up browser-injected-sdk event listeners");
 
     // Set up Solana events if enabled
-    if (this.addressTypes.includes(AddressType.solana) && this.phantom.solana) {
+    if (this.addressTypes.includes(AddressType.solana) && window.phantom?.solana) {
       this.setupSolanaEvents();
     }
 
     // Set up Ethereum events if enabled  
-    if (this.addressTypes.includes(AddressType.ethereum) && this.phantom.ethereum) {
+    if (this.addressTypes.includes(AddressType.ethereum) && window.phantom?.ethereum) {
       this.setupEthereumEvents();
     }
   }
@@ -297,12 +291,16 @@ export class InjectedProvider implements Provider {
   private setupSolanaEvents(): void {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Setting up Solana event listeners");
 
+    const solanaProvider = window.phantom?.solana;
+    if (!solanaProvider) return;
+
     // Map Solana connect event to unified connect event
-    const solanaConnectCleanup = this.phantom.solana.addEventListener("connect", (publicKey: string) => {
-      debug.log(DebugCategory.INJECTED_PROVIDER, "Solana connect event received", { publicKey });
+    const handleSolanaConnect = (publicKey: any) => {
+      const address = publicKey?.toString?.() || publicKey;
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Solana connect event received", { publicKey: address });
       
       // Update our internal state
-      const solanaAddress = { addressType: AddressType.solana, address: publicKey };
+      const solanaAddress = { addressType: AddressType.solana, address };
       if (!this.addresses.find(addr => addr.addressType === AddressType.solana)) {
         this.addresses.push(solanaAddress);
       }
@@ -313,10 +311,10 @@ export class InjectedProvider implements Provider {
         addresses: this.addresses,
         source: "injected-extension",
       });
-    });
+    };
 
     // Map Solana disconnect event to unified disconnect event
-    const solanaDisconnectCleanup = this.phantom.solana.addEventListener("disconnect", () => {
+    const handleSolanaDisconnect = () => {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Solana disconnect event received");
       
       // Update our internal state
@@ -327,18 +325,19 @@ export class InjectedProvider implements Provider {
       this.emit("disconnect", {
         source: "injected-extension",
       });
-    });
+    };
 
     // Map Solana account changed to reconnect event
-    const solanaAccountChangedCleanup = this.phantom.solana.addEventListener("accountChanged", (publicKey: string) => {
-      debug.log(DebugCategory.INJECTED_PROVIDER, "Solana account changed event received", { publicKey });
+    const handleSolanaAccountChanged = (publicKey: any) => {
+      const address = publicKey?.toString?.() || publicKey;
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Solana account changed event received", { publicKey: address });
       
       // Update the Solana address
       const solanaIndex = this.addresses.findIndex(addr => addr.addressType === AddressType.solana);
       if (solanaIndex >= 0) {
-        this.addresses[solanaIndex] = { addressType: AddressType.solana, address: publicKey };
+        this.addresses[solanaIndex] = { addressType: AddressType.solana, address };
       } else {
-        this.addresses.push({ addressType: AddressType.solana, address: publicKey });
+        this.addresses.push({ addressType: AddressType.solana, address });
       }
       
       // Emit as a new connect event (account change = reconnection)
@@ -346,42 +345,55 @@ export class InjectedProvider implements Provider {
         addresses: this.addresses,
         source: "injected-extension-account-change",
       });
-    });
+    };
+
+    // Add event listeners
+    solanaProvider.on("connect", handleSolanaConnect);
+    solanaProvider.on("disconnect", handleSolanaDisconnect);
+    solanaProvider.on("accountChanged", handleSolanaAccountChanged);
 
     // Store cleanup functions
     this.browserInjectedCleanupFunctions.push(
-      solanaConnectCleanup,
-      solanaDisconnectCleanup,
-      solanaAccountChangedCleanup
+      () => solanaProvider.off("connect", handleSolanaConnect),
+      () => solanaProvider.off("disconnect", handleSolanaDisconnect),
+      () => solanaProvider.off("accountChanged", handleSolanaAccountChanged)
     );
   }
 
   private setupEthereumEvents(): void {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Setting up Ethereum event listeners");
 
+    const ethereumProvider = window.phantom?.ethereum;
+    if (!ethereumProvider) return;
+
     // Map Ethereum connect event to unified connect event
-    const ethConnectCleanup = this.phantom.ethereum.addEventListener("connect", (accounts: string[]) => {
-      debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum connect event received", { accounts });
+    const handleEthereumConnect = (connectInfo: { chainId: string }) => {
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum connect event received", { connectInfo });
       
-      // Update our internal state - remove old Ethereum addresses and add new ones
-      this.addresses = this.addresses.filter(addr => addr.addressType !== AddressType.ethereum);
-      if (accounts && accounts.length > 0) {
-        this.addresses.push(...accounts.map(address => ({ 
-          addressType: AddressType.ethereum, 
-          address 
-        })));
-      }
-      this.connected = this.addresses.length > 0;
-      
-      // Emit unified connect event
-      this.emit("connect", {
-        addresses: this.addresses,
-        source: "injected-extension",
+      // For Ethereum connect, we need to fetch accounts
+      this.ethereum.getAccounts().then(accounts => {
+        // Update our internal state - remove old Ethereum addresses and add new ones
+        this.addresses = this.addresses.filter(addr => addr.addressType !== AddressType.ethereum);
+        if (accounts && accounts.length > 0) {
+          this.addresses.push(...accounts.map(address => ({ 
+            addressType: AddressType.ethereum, 
+            address 
+          })));
+        }
+        this.connected = this.addresses.length > 0;
+        
+        // Emit unified connect event
+        this.emit("connect", {
+          addresses: this.addresses,
+          source: "injected-extension",
+        });
+      }).catch(err => {
+        debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to get accounts on connect", { error: err });
       });
-    });
+    };
 
     // Map Ethereum disconnect event to unified disconnect event
-    const ethDisconnectCleanup = this.phantom.ethereum.addEventListener("disconnect", () => {
+    const handleEthereumDisconnect = () => {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum disconnect event received");
       
       // Update our internal state
@@ -392,11 +404,11 @@ export class InjectedProvider implements Provider {
       this.emit("disconnect", {
         source: "injected-extension",
       });
-    });
+    };
 
     // Map Ethereum account changed to reconnect event
-    const ethAccountChangedCleanup = this.phantom.ethereum.addEventListener("accountChanged", (accounts: string[]) => {
-      debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum account changed event received", { accounts });
+    const handleEthereumAccountsChanged = (accounts: string[]) => {
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum accounts changed event received", { accounts });
       
       // Update Ethereum addresses
       this.addresses = this.addresses.filter(addr => addr.addressType !== AddressType.ethereum);
@@ -412,13 +424,18 @@ export class InjectedProvider implements Provider {
         addresses: this.addresses,
         source: "injected-extension-account-change",
       });
-    });
+    };
+
+    // Add event listeners
+    ethereumProvider.on("connect", handleEthereumConnect);
+    ethereumProvider.on("disconnect", handleEthereumDisconnect);
+    ethereumProvider.on("accountsChanged", handleEthereumAccountsChanged);
 
     // Store cleanup functions
     this.browserInjectedCleanupFunctions.push(
-      ethConnectCleanup,
-      ethDisconnectCleanup,
-      ethAccountChangedCleanup
+      () => ethereumProvider.removeListener("connect", handleEthereumConnect),
+      () => ethereumProvider.removeListener("disconnect", handleEthereumDisconnect),
+      () => ethereumProvider.removeListener("accountsChanged", handleEthereumAccountsChanged)
     );
   }
 }
