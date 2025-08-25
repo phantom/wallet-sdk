@@ -28,11 +28,12 @@ export function Actions() {
   const { connect, isConnecting, error: connectError } = useConnect();
   const { disconnect, isDisconnecting } = useDisconnect();
   const { signMessage: signSolanaMessage, signAndSendTransaction } = useSolana();
-  const { signPersonalMessage: signEthMessage } = useEthereum();
+  const { signPersonalMessage: signEthMessage, signTypedData: signEthTypedData } = useEthereum();
   const { isConnected, currentProviderType } = usePhantom();
   const { isInstalled, isLoading } = useIsExtensionInstalled();
   const addresses = useAccounts();
   const [isSigningMessage, setIsSigningMessage] = useState(false);
+  const [isSigningTypedData, setIsSigningTypedData] = useState(false);
   const [isSigningTransaction, setIsSigningTransaction] = useState(false);
 
   const [solanaAddress, setSolanaAddress] = useState<string | null>(null);
@@ -122,6 +123,70 @@ export function Actions() {
       alert(`Error signing message: ${(error as Error).message || error}`);
     } finally {
       setIsSigningMessage(false);
+    }
+  };
+
+  const onSignTypedData = async () => {
+    if (!isConnected || !addresses || addresses.length === 0) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+    
+    const ethAddress = addresses.find(addr => addr.addressType === "Ethereum");
+    if (!ethAddress) {
+      alert("No Ethereum address found");
+      return;
+    }
+
+    try {
+      setIsSigningTypedData(true);
+      
+      // Example typed data structure (EIP-712)
+      const typedData = {
+        types: {
+          EIP712Domain: [
+            { name: "name", type: "string" },
+            { name: "version", type: "string" },
+            { name: "chainId", type: "uint256" },
+            { name: "verifyingContract", type: "address" }
+          ],
+          Person: [
+            { name: "name", type: "string" },
+            { name: "wallet", type: "address" }
+          ],
+          Mail: [
+            { name: "from", type: "Person" },
+            { name: "to", type: "Person" },
+            { name: "contents", type: "string" }
+          ]
+        },
+        primaryType: "Mail",
+        domain: {
+          name: "Ether Mail",
+          version: "1",
+          chainId: 1,
+          verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC"
+        },
+        message: {
+          from: {
+            name: "Cow",
+            wallet: "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826"
+          },
+          to: {
+            name: "Bob", 
+            wallet: ethAddress.address
+          },
+          contents: "Hello, Bob! This is a typed data message from Phantom React SDK Demo."
+        }
+      };
+
+      const result = await signEthTypedData(typedData);
+      alert(`Typed Data Signed! Signature: ${result}`);
+    } catch (error) {
+      console.error("Error signing typed data:", error);
+      alert(`Error signing typed data: ${(error as Error).message || error}`);
+    } finally {
+      setIsSigningTypedData(false);
     }
   };
 
@@ -287,10 +352,13 @@ export function Actions() {
                 {isConnecting ? "Connecting..." : "Connect"}
               </button>
               <button onClick={() => onSignMessage("solana")} disabled={!isConnected || isSigningMessage}>
-                {isSigningMessage ? "Signing..." : "Sign Message"}
+                {isSigningMessage ? "Signing..." : "Sign Message (Solana)"}
               </button>
               <button onClick={() => onSignMessage("evm")} disabled={!isConnected || isSigningMessage}>
-                {isSigningMessage ? "Signing..." : "Sign Message EVM"}
+                {isSigningMessage ? "Signing..." : "Sign Message (EVM)"}
+              </button>
+              <button onClick={onSignTypedData} disabled={!isConnected || isSigningTypedData}>
+                {isSigningTypedData ? "Signing..." : "Sign Typed Data (EVM)"}
               </button>
               <button onClick={onSignAndSendTransaction} disabled={!isConnected || isSigningTransaction || !hasBalance}>
                 {isSigningTransaction ? "Signing..." : !hasBalance ? "Insufficient Balance" : "Sign & Send Transaction"}
