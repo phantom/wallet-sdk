@@ -7,22 +7,12 @@ import {
   useAccounts,
   usePhantom,
   useIsExtensionInstalled,
-  DebugLevel,
-  debug,
   type ProviderType,
-  type DebugMessage,
 } from "@phantom/react-sdk";
-import {
-  createSolanaRpc,
-  pipe,
-  createTransactionMessage,
-  setTransactionMessageFeePayer,
-  setTransactionMessageLifetimeUsingBlockhash,
-  address,
-  compileTransaction,
-} from "@solana/kit";
-import { useState, useEffect, useCallback } from "react";
+import { SystemProgram, PublicKey, Connection, VersionedTransaction, TransactionMessage } from "@solana/web3.js";
+import { useState, useEffect } from "react";
 import { useBalance } from "./hooks/useBalance";
+import { DebugConsole } from "./components/DebugConsole";
 
 export function Actions() {
   const { connect, isConnecting, error: connectError } = useConnect();
@@ -44,25 +34,6 @@ export function Actions() {
   const { balance, loading: balanceLoading, error: balanceError, refetch: refetchBalance } = useBalance(solanaAddress);
   const hasBalance = balance !== null && balance > 0;
 
-  // Debug state
-  const [debugLevel, setDebugLevel] = useState<DebugLevel>(DebugLevel.INFO);
-  const [showDebug, setShowDebug] = useState(true);
-  const [debugMessages, setDebugMessages] = useState<DebugMessage[]>([]);
-  // Debug callback function
-  const handleDebugMessage = useCallback((message: DebugMessage) => {
-    setDebugMessages(prev => {
-      const newMessages = [...prev, message];
-      // Keep only last 100 messages to prevent memory issues
-      return newMessages.slice(-100);
-    });
-  }, []);
-
-  // Initialize debug system
-  useEffect(() => {
-    debug.setCallback(handleDebugMessage);
-    debug.setLevel(debugLevel);
-    debug.enable();
-  }, [handleDebugMessage, debugLevel]);
 
   // Extract Solana address when addresses change
   useEffect(() => {
@@ -86,9 +57,6 @@ export function Actions() {
     }
   };
 
-  const clearDebugMessages = () => {
-    setDebugMessages([]);
-  };
 
   const onDisconnect = async () => {
     try {
@@ -196,18 +164,27 @@ export function Actions() {
       return;
     }
     try {
-      setIsSigningTransaction(true);
-      const rpc = createSolanaRpc(import.meta.env.VITE_SOLANA_RPC_URL_MAINNET);
+      // Create connection to get recent blockhash (using environment RPC URL)
+      const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL_MAINNET || "https://api.mainnet-beta.solana.com";
+      const connection = new Connection(rpcUrl);
 
-      const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
+      // Get recent blockhash
+      const { blockhash } = await connection.getLatestBlockhash();
 
-      const transactionMessage = pipe(
-        createTransactionMessage({ version: 0 }),
-        tx => setTransactionMessageFeePayer(address(solanaAddress), tx),
-        tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
-      );
+      // Create a versioned transaction message
+      const transferInstruction = SystemProgram.transfer({
+        fromPubkey: new PublicKey(solanaAddress),
+        toPubkey: new PublicKey(solanaAddress), // Self-transfer for demo
+        lamports: 1000, // Very small amount: 0.000001 SOL
+      });
 
-      const transaction = compileTransaction(transactionMessage);
+      const messageV0 = new TransactionMessage({
+        payerKey: new PublicKey(solanaAddress),
+        recentBlockhash: blockhash,
+        instructions: [transferInstruction],
+      }).compileToV0Message();
+
+      const transaction = new VersionedTransaction(messageV0);
 
       const result = await signAndSendTransaction(transaction);
 
@@ -373,58 +350,7 @@ export function Actions() {
         </div>
 
         <div className="right-panel">
-          <div className="section">
-            <h3>Debug Console</h3>
-            <div className="debug-controls">
-              <label className="checkbox-label">
-                <input type="checkbox" checked={showDebug} onChange={e => setShowDebug(e.target.checked)} />
-                <span>Show Debug Messages</span>
-              </label>
-
-              <div className="form-group inline">
-                <label>Level:</label>
-                <select value={debugLevel} onChange={e => setDebugLevel(parseInt(e.target.value) as DebugLevel)}>
-                  <option value={DebugLevel.ERROR}>ERROR</option>
-                  <option value={DebugLevel.WARN}>WARN</option>
-                  <option value={DebugLevel.INFO}>INFO</option>
-                  <option value={DebugLevel.DEBUG}>DEBUG</option>
-                </select>
-              </div>
-
-              <button className="small" onClick={clearDebugMessages}>
-                Clear
-              </button>
-            </div>
-
-            <div className="debug-container" style={{ display: showDebug ? "block" : "none" }}>
-              {debugMessages.slice(-30).map((msg, index) => {
-                const levelClass = DebugLevel[msg.level].toLowerCase();
-                const timestamp = new Date(msg.timestamp).toLocaleTimeString();
-                // Debug message rendering
-                let dataStr = "";
-                try {
-                  dataStr = msg.data ? JSON.stringify(msg.data, null, 2) : "";
-                } catch (error) {
-                  console.error("Error stringifying debug message data:", error);
-                }
-
-                return (
-                  <div key={index} className={`debug-message debug-${levelClass}`}>
-                    <div className="debug-header">
-                      <span className="debug-timestamp">{timestamp}</span>
-                      <span className="debug-level">{DebugLevel[msg.level]}</span>
-                      <span className="debug-category">{msg.category}</span>
-                    </div>
-                    <div className="debug-content">{msg.message}</div>
-                    {dataStr && <pre className="debug-data">{dataStr}</pre>}
-                  </div>
-                );
-              })}
-              {debugMessages.length === 0 && (
-                <div className="debug-empty">No debug messages yet. Try connecting to see debug output.</div>
-              )}
-            </div>
-          </div>
+          <DebugConsole />
         </div>
       </div>
     </div>

@@ -1,9 +1,6 @@
 // Main provider and context
 export { PhantomProvider, usePhantom } from "./PhantomProvider";
 
-// ReactNative SDK class (for direct usage)
-export { ReactNativeSDK } from "./ReactNativeSDK";
-
 // Individual hooks
 export * from "./hooks";
 
@@ -11,6 +8,7 @@ export * from "./hooks";
 // Types
 export type {
   PhantomSDKConfig,
+  PhantomDebugConfig,
   ConnectOptions,
   ConnectResult,
   WalletAddress,

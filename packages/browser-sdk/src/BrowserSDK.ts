@@ -6,8 +6,9 @@ import type {
 } from "./types";
 import { ProviderManager, type SwitchProviderOptions, type ProviderPreference } from "./ProviderManager";
 import { isPhantomExtensionInstalled } from "@phantom/browser-injected-sdk";
-import { debug, DebugCategory } from "./debug";
+import { debug, DebugCategory, type DebugLevel, type DebugCallback } from "./debug";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chains";
+import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-provider-core";
 
 /**
  * Browser SDK with chain-specific API
@@ -26,22 +27,10 @@ export class BrowserSDK {
   private providerManager: ProviderManager;
 
   constructor(config: BrowserSDKConfig) {
-    // Initialize debugging if configured
-    if (config.debug?.enabled) {
-      debug.enable();
-      if (config.debug.level !== undefined) {
-        debug.setLevel(config.debug.level);
-      }
-      if (config.debug.callback) {
-        debug.setCallback(config.debug.callback);
-      }
-    }
-
     debug.info(DebugCategory.BROWSER_SDK, "Initializing BrowserSDK", {
       providerType: config.providerType,
       embeddedWalletType: config.embeddedWalletType,
       addressTypes: config.addressTypes,
-      debugEnabled: config.debug?.enabled,
     });
 
     // Validate providerType
@@ -185,5 +174,95 @@ export class BrowserSDK {
     return isPhantomExtensionInstalled();
   }
 
-  // ===== PRIVATE METHODS =====
+  /**
+   * Add event listener for provider events (connect, connect_start, connect_error, disconnect, error)
+   * Works with both embedded and injected providers
+   */
+  on(event: EmbeddedProviderEvent, callback: EventCallback): void {
+    debug.log(DebugCategory.BROWSER_SDK, "Adding event listener", { event });
+    this.providerManager.on(event, callback);
+  }
+
+  /**
+   * Remove event listener for provider events
+   * Works with both embedded and injected providers
+   */
+  off(event: EmbeddedProviderEvent, callback: EventCallback): void {
+    debug.log(DebugCategory.BROWSER_SDK, "Removing event listener", { event });
+    this.providerManager.off(event, callback);
+  }
+
+  /**
+   * Attempt auto-connection using existing session
+   * Should be called after setting up event listeners
+   * Only works with embedded providers
+   */
+  async autoConnect(): Promise<void> {
+    debug.log(DebugCategory.BROWSER_SDK, "Attempting auto-connect");
+    const currentProvider = this.providerManager.getCurrentProvider();
+    if (currentProvider && 'autoConnect' in currentProvider) {
+      await (currentProvider as any).autoConnect();
+    } else {
+      debug.warn(DebugCategory.BROWSER_SDK, "Current provider does not support auto-connect", {
+        providerType: this.getCurrentProviderInfo()?.type,
+      });
+    }
+  }
+
+  /**
+   * Debug configuration methods
+   * These allow dynamic debug configuration without SDK reinstantiation
+   */
+
+  /**
+   * Enable debug logging
+   */
+  enableDebug(): void {
+    debug.enable();
+    debug.info(DebugCategory.BROWSER_SDK, "Debug logging enabled");
+  }
+
+  /**
+   * Disable debug logging
+   */
+  disableDebug(): void {
+    debug.disable();
+  }
+
+  /**
+   * Set debug level
+   */
+  setDebugLevel(level: DebugLevel): void {
+    debug.setLevel(level);
+    debug.info(DebugCategory.BROWSER_SDK, "Debug level updated", { level });
+  }
+
+  /**
+   * Set debug callback function
+   */
+  setDebugCallback(callback: DebugCallback): void {
+    debug.setCallback(callback);
+    debug.info(DebugCategory.BROWSER_SDK, "Debug callback updated");
+  }
+
+  /**
+   * Configure debug settings all at once
+   */
+  configureDebug(config: { enabled?: boolean; level?: DebugLevel; callback?: DebugCallback }): void {
+    if (config.enabled !== undefined) {
+      if (config.enabled) {
+        this.enableDebug();
+      } else {
+        this.disableDebug();
+      }
+    }
+    
+    if (config.level !== undefined) {
+      this.setDebugLevel(config.level);
+    }
+    
+    if (config.callback !== undefined) {
+      this.setDebugCallback(config.callback);
+    }
+  }
 }

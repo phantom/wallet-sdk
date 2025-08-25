@@ -1,10 +1,16 @@
 import type { EmbeddedProviderConfig } from "@phantom/embedded-provider-core";
 
+// Debug configuration - separate from SDK config for consistency with browser/react SDKs
+export interface PhantomDebugConfig {
+  /** Enable debug logging */
+  enabled?: boolean;
+}
+
 export interface PhantomSDKConfig extends EmbeddedProviderConfig {
   /** Custom URL scheme for your app (e.g., "myapp") */
   scheme: string;
-  /** Enable debug logging */
-  debug?: boolean;
+  /** Enable auto-connect to existing sessions (default: true) */
+  autoConnect?: boolean;
 }
 
 export interface ConnectOptions {

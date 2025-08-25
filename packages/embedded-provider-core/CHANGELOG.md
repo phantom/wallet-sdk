@@ -1,5 +1,25 @@
 # @phantom/embedded-provider-core
 
+## 0.1.8
+
+### Patch Changes
+
+- a126cf3: Bump version
+- Updated dependencies [a126cf3]
+  - @phantom/client@0.1.9
+
+## 0.1.7
+
+### Patch Changes
+
+- b5d76b3: Explicitly require `addressTypes` when instantiating `BrowserSDK`
+
+## 0.1.6
+
+### Patch Changes
+
+- e04d53d: Added autoconnect functionality
+
 ## 0.1.5
 
 ### Patch Changes

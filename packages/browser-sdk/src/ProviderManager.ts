@@ -8,6 +8,7 @@ import type {
 import { InjectedProvider } from "./providers/injected";
 import { EmbeddedProvider } from "./providers/embedded";
 import { debug, DebugCategory } from "./debug";
+import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-provider-core";
 
 export interface ProviderPreference {
   type: "injected" | "embedded";
@@ -18,12 +19,21 @@ export interface SwitchProviderOptions {
   embeddedWalletType?: "app-wallet" | "user-wallet" | (string & Record<never, never>);
 }
 
-export class ProviderManager {
+export interface EventEmitter {
+  on(event: EmbeddedProviderEvent, callback: EventCallback): void;
+  off(event: EmbeddedProviderEvent, callback: EventCallback): void;
+}
+
+export class ProviderManager implements EventEmitter {
   private providers = new Map<string, Provider>();
   private currentProvider: Provider | null = null;
   private currentProviderKey: string | null = null;
   private walletId: string | null = null;
   private config: BrowserSDKConfig;
+  
+  // Event management for forwarding provider events
+  private eventListeners: Map<EmbeddedProviderEvent, Set<EventCallback>> = new Map();
+  private providerForwardingSetup = new WeakSet<Provider>(); // Track which providers have forwarding set up
 
   constructor(config: BrowserSDKConfig) {
     debug.log(DebugCategory.PROVIDER_MANAGER, "Initializing ProviderManager", { config });
@@ -62,6 +72,9 @@ export class ProviderManager {
 
     // Reset wallet state when switching providers
     this.walletId = null;
+
+    // Set up event forwarding from the new provider
+    this.ensureProviderEventForwarding();
 
     return this.currentProvider;
   }
@@ -156,6 +169,98 @@ export class ProviderManager {
   }
 
   /**
+   * Add event listener - stores callback and ensures current provider forwards events to ProviderManager
+   */
+  on(event: EmbeddedProviderEvent, callback: EventCallback): void {
+    debug.log(DebugCategory.PROVIDER_MANAGER, "Adding event listener", { event });
+    
+    if (!this.eventListeners.has(event)) {
+      this.eventListeners.set(event, new Set());
+    }
+    this.eventListeners.get(event)!.add(callback);
+    
+    // Ensure current provider is set up to forward events to us
+    this.ensureProviderEventForwarding();
+  }
+
+  /**
+   * Remove event listener
+   */
+  off(event: EmbeddedProviderEvent, callback: EventCallback): void {
+    debug.log(DebugCategory.PROVIDER_MANAGER, "Removing event listener", { event });
+    
+    if (this.eventListeners.has(event)) {
+      this.eventListeners.get(event)!.delete(callback);
+      if (this.eventListeners.get(event)!.size === 0) {
+        this.eventListeners.delete(event);
+      }
+    }
+  }
+
+  /**
+   * Emit event to all registered callbacks
+   */
+  private emit(event: EmbeddedProviderEvent, data?: any): void {
+    debug.log(DebugCategory.PROVIDER_MANAGER, "Emitting event to stored callbacks", { 
+      event, 
+      listenerCount: this.eventListeners.get(event)?.size || 0,
+      data 
+    });
+    
+    const listeners = this.eventListeners.get(event);
+    if (listeners && listeners.size > 0) {
+      listeners.forEach(callback => {
+        try {
+          debug.log(DebugCategory.PROVIDER_MANAGER, "Calling stored callback for event", { event });
+          callback(data);
+        } catch (error) {
+          debug.error(DebugCategory.PROVIDER_MANAGER, "Event callback error", { event, error });
+        }
+      });
+    } else {
+      debug.warn(DebugCategory.PROVIDER_MANAGER, "No stored callbacks for event", { event });
+    }
+  }
+
+  /**
+   * Ensure current provider forwards its events to this ProviderManager
+   * Only sets up forwarding once per provider instance to avoid accumulation
+   */
+  private ensureProviderEventForwarding(): void {
+    if (!this.currentProvider || !('on' in this.currentProvider)) {
+      debug.warn(DebugCategory.PROVIDER_MANAGER, "Current provider does not support events", {
+        providerType: this.getCurrentProviderInfo()?.type,
+      });
+      return;
+    }
+
+    // Check if we've already set up forwarding for this provider instance
+    if (this.providerForwardingSetup.has(this.currentProvider)) {
+      debug.log(DebugCategory.PROVIDER_MANAGER, "Event forwarding already set up for current provider");
+      return;
+    }
+
+    debug.log(DebugCategory.PROVIDER_MANAGER, "Setting up event forwarding from current provider");
+
+    // Set up forwarding for each event type
+    const eventsToForward: EmbeddedProviderEvent[] = ["connect_start", "connect", "connect_error", "disconnect", "error"];
+    
+    for (const event of eventsToForward) {
+      // Set up a single forwarding callback that emits to our listeners
+      const forwardingCallback = (data: any) => {
+        debug.log(DebugCategory.PROVIDER_MANAGER, "Forwarding event from provider", { event, data });
+        this.emit(event, data);
+      };
+      
+      debug.log(DebugCategory.PROVIDER_MANAGER, "Attaching forwarding callback for event", { event });
+      (this.currentProvider as any).on(event, forwardingCallback);
+    }
+
+    // Mark this provider as having forwarding set up
+    this.providerForwardingSetup.add(this.currentProvider);
+  }
+
+  /**
    * Set default provider based on initial config
    */
   private setDefaultProvider(): void {
@@ -178,8 +283,8 @@ export class ProviderManager {
 
     if (type === "injected") {
       provider = new InjectedProvider({
-        solanaProvider: this.config.solanaProvider || "web3js",
-        addressTypes: this.config.addressTypes || [],
+        solanaProvider: (this.config.solanaProvider || "web3js") as "web3js" | "kit",
+        addressTypes: this.config.addressTypes,
       });
     } else {
       if (!this.config.apiBaseUrl || !this.config.organizationId) {
@@ -191,8 +296,8 @@ export class ProviderManager {
         organizationId: this.config.organizationId,
         authOptions: this.config.authOptions,
         embeddedWalletType: embeddedWalletType || "app-wallet",
-        addressTypes: this.config.addressTypes || [],
-        solanaProvider: this.config.solanaProvider || "web3js",
+        addressTypes: this.config.addressTypes,
+        solanaProvider: (this.config.solanaProvider || "web3js") as "web3js" | "kit",
         appLogo: this.config.appLogo, // Optional app logo URL
         appName: this.config.appName
       });

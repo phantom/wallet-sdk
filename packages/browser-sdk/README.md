@@ -48,8 +48,7 @@ const sdk = new BrowserSDK({
   organizationId: "your-org-id",
 });
 
-const { walletId, addresses } = await sdk.connect();
-console.log("Wallet ID:", walletId);
+const { addresses } = await sdk.connect();
 console.log("Addresses:", addresses);
 
 // Use chain-specific APIs
@@ -200,10 +199,7 @@ const sdk = new BrowserSDK({
   },
   appName: "My DApp", // optional, for branding
   appLogo: "https://myapp.com/logo.png", // optional, for branding
-  debug: {
-    enabled: true, // optional, enable debug logging
-    level: DebugLevel.INFO, // optional, debug level
-  },
+  autoConnect: true, // optional, auto-connect to existing session (default: true for embedded)
 });
 ```
 
@@ -271,6 +267,45 @@ const sdk = new BrowserSDK({
 - **@solana/web3.js**: Better ecosystem compatibility, wider community support
 - **@solana/kit**: Better TypeScript support, modern architecture, smaller bundle size
 
+### Auto-Connect Feature
+
+The SDK can automatically reconnect to existing sessions when instantiated, providing a seamless user experience.
+
+```typescript
+const sdk = new BrowserSDK({
+  providerType: "embedded",
+  addressTypes: [AddressType.solana],
+  // ... other config
+  autoConnect: true, // Default: true for embedded, false for injected
+});
+
+// SDK will automatically check for existing valid session and connect in background
+// No need to call connect() if user already has a session
+
+// Check if already connected
+if (sdk.isConnected()) {
+  console.log("Already connected!");
+  const addresses = await sdk.getAddresses();
+} else {
+  // First time or session expired, need to connect manually
+  await sdk.connect();
+}
+```
+
+**Disabling Auto-Connect:**
+
+```typescript
+const sdk = new BrowserSDK({
+  providerType: "embedded",
+  addressTypes: [AddressType.solana],
+  // ... other config
+  autoConnect: false, // Disable auto-connect
+});
+
+// Now you must manually call connect() every time
+await sdk.connect();
+```
+
 ## API Reference
 
 ### Constructor
@@ -286,7 +321,7 @@ interface BrowserSDKConfig {
   providerType: "injected" | "embedded";
   appName?: string; // Optional app name for branding
   appLogo?: string; // Optional app logo URL for branding
-  addressTypes?: AddressType[]; // Networks to enable (e.g., [AddressType.solana])
+  addressTypes?: [AddressType, ...AddressType[]]; // Networks to enable (e.g., [AddressType.solana])
 
   // Required for embedded provider only
   apiBaseUrl?: string; // Phantom API base URL
@@ -297,13 +332,7 @@ interface BrowserSDKConfig {
   };
   embeddedWalletType?: "app-wallet" | "user-wallet"; // Wallet type
   solanaProvider?: "web3js" | "kit"; // Solana library choice (default: 'web3js')
-
-  // Debug options
-  debug?: {
-    enabled?: boolean; // Enable debug logging
-    level?: DebugLevel; // Debug level
-    callback?: DebugCallback; // Custom debug callback
-  };
+  autoConnect?: boolean; // Enable auto-connect to existing sessions (default: true)
 }
 ```
 
@@ -519,6 +548,117 @@ Check if connected to Ethereum wallet.
 ```typescript
 const connected = sdk.ethereum.isConnected();
 // Returns: boolean
+
+#### autoConnect()
+
+Attempt auto-connection using existing session. Should be called after setting up event listeners to avoid race conditions. Only works with embedded providers.
+
+```typescript
+await sdk.autoConnect();
+```
+
+## Debug Configuration
+
+The BrowserSDK provides dynamic debug configuration that can be changed at runtime without reinstantiating the SDK. This provides better performance and cleaner architecture.
+
+### Debug Methods
+
+```typescript
+// Enable debug logging
+sdk.enableDebug();
+
+// Disable debug logging  
+sdk.disableDebug();
+
+// Set debug level
+sdk.setDebugLevel(DebugLevel.INFO);
+
+// Set debug callback function
+sdk.setDebugCallback((message) => {
+  console.log(`[${message.category}] ${message.message}`, message.data);
+});
+
+// Configure all debug settings at once
+sdk.configureDebug({
+  enabled: true,
+  level: DebugLevel.DEBUG,
+  callback: (message) => {
+    // Handle debug messages
+    console.log(`[${message.level}] ${message.category}: ${message.message}`);
+  }
+});
+```
+
+### Debug Levels
+
+```typescript
+import { DebugLevel } from "@phantom/browser-sdk";
+
+// Available debug levels (in order of verbosity)
+DebugLevel.ERROR   // 0 - Only error messages
+DebugLevel.WARN    // 1 - Warning and error messages  
+DebugLevel.INFO    // 2 - Info, warning, and error messages
+DebugLevel.DEBUG   // 3 - All debug messages (most verbose)
+```
+
+### Debug Message Structure
+
+Debug callbacks receive a `DebugMessage` object:
+
+```typescript
+interface DebugMessage {
+  timestamp: number;     // Unix timestamp
+  level: DebugLevel;     // Message level
+  category: string;      // Component category (e.g., "BrowserSDK", "ProviderManager")
+  message: string;       // Debug message text
+  data?: any;           // Additional debug data (optional)
+}
+```
+
+### Example: Debug Console Implementation
+
+```typescript
+import { BrowserSDK, DebugLevel } from "@phantom/browser-sdk";
+
+const sdk = new BrowserSDK({
+  providerType: "embedded",
+  // ... other config
+});
+
+// Store debug messages
+const debugMessages: DebugMessage[] = [];
+
+// Set up debug system
+sdk.configureDebug({
+  enabled: true,
+  level: DebugLevel.INFO,
+  callback: (message) => {
+    debugMessages.push(message);
+    
+    // Keep only last 100 messages
+    if (debugMessages.length > 100) {
+      debugMessages.shift();
+    }
+    
+    // Update UI
+    updateDebugConsole();
+  }
+});
+
+// Dynamic debug level changing
+function changeDebugLevel(newLevel: DebugLevel) {
+  sdk.setDebugLevel(newLevel);
+  console.log(`Debug level changed to: ${DebugLevel[newLevel]}`);
+}
+
+// Toggle debug on/off
+function toggleDebug(enabled: boolean) {
+  if (enabled) {
+    sdk.enableDebug();
+  } else {
+    sdk.disableDebug();
+  }
+}
 ```
 
 ## Transaction Examples

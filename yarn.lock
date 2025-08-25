@@ -3309,6 +3309,7 @@ __metadata:
   resolution: "@phantom/browser-sdk-demo-app@workspace:examples/browser-sdk-demo-app"
   dependencies:
     "@phantom/browser-sdk": "workspace:^"
+    "@solana-program/system": "npm:^0.7.0"
     "@solana/kit": "npm:^2.1.1"
     "@solana/web3.js": "npm:^1.98.2"
     buffer: "npm:^6.0.3"
@@ -3611,7 +3612,7 @@ __metadata:
     "@phantom/browser-sdk": "workspace:^"
     "@phantom/client": "workspace:^"
     "@phantom/react-sdk": "workspace:^"
-    "@solana/kit": "npm:^2.1.1"
+    "@solana/web3.js": "npm:^1.98.4"
     "@types/react": "npm:^19.1.2"
     "@types/react-dom": "npm:^19.1.2"
     "@vitejs/plugin-react": "npm:^4.4.1"
@@ -4313,6 +4314,15 @@ __metadata:
   dependencies:
     "@sinonjs/commons": "npm:^3.0.1"
   checksum: 10c0/a707476efd523d2138ef6bba916c83c4a377a8372ef04fad87499458af9f01afc58f4f245c5fd062793d6d70587309330c6f96947b5bd5697961c18004dc3e26
+  languageName: node
+  linkType: hard
+
+"@solana-program/system@npm:^0.7.0":
+  version: 0.7.0
+  resolution: "@solana-program/system@npm:0.7.0"
+  peerDependencies:
+    "@solana/kit": ^2.1.0
+  checksum: 10c0/0316a6f5359a79b7d070358bf5b7443ff99419f2b7120f78fe625861925b227c7129fa9c2d88c53a8731630032777491e25e8cf6c0711f92fe956d90d40b5662
   languageName: node
   linkType: hard
 

@@ -1,5 +1,31 @@
 # @phantom/browser-sdk
 
+## 0.3.7
+
+### Patch Changes
+
+- a126cf3: Bump version
+- Updated dependencies [a126cf3]
+  - @phantom/client@0.1.9
+  - @phantom/embedded-provider-core@0.1.8
+
+## 0.3.6
+
+### Patch Changes
+
+- b5d76b3: Explicitly require `addressTypes` when instantiating `BrowserSDK`
+- 3bdbfbd: Fix debug system
+- Updated dependencies [b5d76b3]
+  - @phantom/embedded-provider-core@0.1.7
+
+## 0.3.5
+
+### Patch Changes
+
+- e04d53d: Added autoconnect functionality
+- Updated dependencies [e04d53d]
+  - @phantom/embedded-provider-core@0.1.6
+
 ## 0.3.4
 
 ### Patch Changes

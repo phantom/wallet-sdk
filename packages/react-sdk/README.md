@@ -654,7 +654,7 @@ interface PhantomSDKConfig {
   providerType: "injected" | "embedded";
   appName?: string; // Optional app name for branding
   appLogo?: string; // Optional app logo URL for branding
-  addressTypes?: AddressType[]; // Networks to enable (e.g., [AddressType.solana])
+  addressTypes?: [AddressType, ...AddressType[]]; // Networks to enable (e.g., [AddressType.solana])
 
   // Required for embedded provider only
   apiBaseUrl?: string; // Phantom API base URL
@@ -665,13 +665,70 @@ interface PhantomSDKConfig {
   };
   embeddedWalletType?: "app-wallet" | "user-wallet"; // Wallet type
   solanaProvider?: "web3js" | "kit"; // Solana library choice (default: 'web3js')
+  autoConnect?: boolean; // Auto-connect to existing session on SDK instantiation (default: true for embedded, false for injected)
+}
+```
 
-  // Debug options
-  debug?: {
-    enabled?: boolean; // Enable debug logging
-    level?: DebugLevel; // Debug level
-    callback?: DebugCallback; // Custom debug callback
+## Debug Configuration
+
+The React SDK supports separate debug configuration that can be changed without reinstantiating the underlying SDK, providing better performance.
+
+### PhantomDebugConfig Interface
+
+```typescript
+interface PhantomDebugConfig {
+  enabled?: boolean;     // Enable debug logging
+  level?: DebugLevel;    // Debug level (ERROR, WARN, INFO, DEBUG)
+  callback?: DebugCallback; // Custom debug message handler
+}
+```
+
+### Using Debug Configuration
+
+Pass the `debugConfig` as a separate prop to `PhantomProvider`:
+
+```typescript
+import { PhantomProvider, type PhantomSDKConfig, type PhantomDebugConfig, DebugLevel } from "@phantom/react-sdk";
+
+function App() {
+  const [debugLevel, setDebugLevel] = useState(DebugLevel.INFO);
+  const [debugMessages, setDebugMessages] = useState([]);
+
+  // SDK configuration - static, won't change when debug settings change
+  const config: PhantomSDKConfig = {
+    providerType: "embedded",
+    organizationId: "your-org-id",
+    // ... other config
   };
+
+  // Debug configuration - separate to avoid SDK reinstantiation
+  const debugConfig: PhantomDebugConfig = {
+    enabled: true,
+    level: debugLevel,
+    callback: (message) => {
+      setDebugMessages(prev => [...prev, message]);
+    }
+  };
+
+  return (
+    <PhantomProvider config={config} debugConfig={debugConfig}>
+      {/* Your app components */}
+    </PhantomProvider>
+  );
+}
+```
+
+### Debug Message Structure
+
+Debug callbacks receive a `DebugMessage` object:
+
+```typescript
+interface DebugMessage {
+  timestamp: number;     // Unix timestamp
+  level: DebugLevel;     // Message level
+  category: string;      // Component category
+  message: string;       // Debug message text
+  data?: any;           // Additional debug data (optional)
 }
 ```
 

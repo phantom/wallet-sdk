@@ -1,15 +1,24 @@
 import type { ReactNode } from "react";
-import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
-import { ReactNativeSDK } from "./ReactNativeSDK";
-import type { PhantomSDKConfig, WalletAddress } from "./types";
+import { createContext, useContext, useState, useEffect, useMemo } from "react";
+import { EmbeddedProvider } from "@phantom/embedded-provider-core";
+import type { PlatformAdapter } from "@phantom/embedded-provider-core";
+import type { PhantomSDKConfig, PhantomDebugConfig, WalletAddress } from "./types";
+
+// Platform adapters for React Native/Expo
+import { ExpoSecureStorage } from "./providers/embedded/storage";
+import { ExpoAuthProvider } from "./providers/embedded/auth";
+import { ExpoURLParamsAccessor } from "./providers/embedded/url-params";
+import { ReactNativeStamper } from "./providers/embedded/stamper";
+import { ExpoLogger } from "./providers/embedded/logger";
+import { Platform } from "react-native";
 
 interface PhantomContextValue {
-  sdk: ReactNativeSDK;
+  sdk: EmbeddedProvider | null;
   isConnected: boolean;
+  isConnecting: boolean;
+  connectError: Error | null;
   addresses: WalletAddress[];
   walletId: string | null;
-  error: Error | null;
-  updateConnectionState: () => void;
   setWalletId: (walletId: string | null) => void;
 }
 
@@ -18,69 +27,143 @@ const PhantomContext = createContext<PhantomContextValue | undefined>(undefined)
 export interface PhantomProviderProps {
   children: ReactNode;
   config: PhantomSDKConfig;
+  debugConfig?: PhantomDebugConfig;
 }
 
-export function PhantomProvider({ children, config }: PhantomProviderProps) {
-  // Create SDK with useMemo
-  const sdk = useMemo(() => {
-    return new ReactNativeSDK(config);
-  }, [config]);
-
+export function PhantomProvider({ children, config, debugConfig }: PhantomProviderProps) {
   const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectError, setConnectError] = useState<Error | null>(null);
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
   const [walletId, setWalletId] = useState<string | null>(null);
-  const [error, setError] = useState<Error | null>(null);
+  const [sdk, setSdk] = useState<EmbeddedProvider | null>(null);
 
-  // Function to update connection state
-  const updateConnectionState = useCallback(() => {
-    try {
-      const connected = sdk.isConnected();
-      setIsConnected(connected);
+  // Memoized config to avoid unnecessary SDK recreation  
+  const memoizedConfig: PhantomSDKConfig = useMemo(() => {
+    // Build redirect URL if not provided
+    const redirectUrl = config.authOptions?.redirectUrl || `${config.scheme}://phantom-auth-callback`;
 
-      if (connected) {
-        const addrs = sdk.getAddresses();
+    // Merge config with redirect URL
+    return {
+      ...config,
+      authOptions: {
+        ...config.authOptions || {},
+        redirectUrl,
+      },
+    };
+  }, [config]);
+
+  // SDK initialization and cleanup with proper event listener management
+  useEffect(() => {
+    // Create platform adapters
+    const storage = new ExpoSecureStorage();
+    const authProvider = new ExpoAuthProvider();
+    const urlParamsAccessor = new ExpoURLParamsAccessor();
+    const logger = new ExpoLogger(debugConfig?.enabled || false);
+    const stamper = new ReactNativeStamper({
+      keyPrefix: `phantom-rn-${memoizedConfig.organizationId}`,
+      organizationId: memoizedConfig.organizationId,
+    });
+
+    const platform: PlatformAdapter = {
+      storage,
+      authProvider,
+      urlParamsAccessor,
+      stamper,
+      name: `${Platform.OS}-${Platform.Version}`,
+    };
+
+    const sdkInstance = new EmbeddedProvider(memoizedConfig, platform, logger);
+    
+    // Event handlers that need to be referenced for cleanup
+    const handleConnectStart = () => {
+      setIsConnecting(true);
+      setConnectError(null);
+    };
+
+    const handleConnect = async () => {
+      try {
+        setIsConnected(true);
+        setIsConnecting(false);
+        const addrs = await sdkInstance.getAddresses();
         setAddresses(addrs);
-        const wId = sdk.getWalletId();
-        setWalletId(wId);
-      } else {
-        setAddresses([]);
-        setWalletId(null);
+      } catch (err) {
+        console.error("Error connecting:", err);
+        
+        // Call disconnect to reset state if an error occurs
+        try {
+          await sdkInstance.disconnect();
+        } catch (err) {
+          console.error("Error disconnecting:", err);
+        }
       }
-      
-      // Clear error if connection state updated successfully
-      setError(null);
-    } catch (err) {
-      console.error("[PhantomProvider] Error updating connection state", err);
-      setError(err as Error);
+    };
 
-      // Reset state if an error occurs
+    const handleConnectError = (errorData: any) => {
+      setIsConnecting(false);
+      setConnectError(new Error(errorData.error || "Connection failed"));
+    };
+    
+    const handleDisconnect = () => {
       setIsConnected(false);
+      setIsConnecting(false);
+      setConnectError(null);
       setAddresses([]);
       setWalletId(null);
-    }
-  }, [sdk]);
+    };
+    
+    // Add event listeners immediately when SDK is created to avoid race conditions
+    sdkInstance.on("connect_start", handleConnectStart);
+    sdkInstance.on("connect", handleConnect);
+    sdkInstance.on("connect_error", handleConnectError);
+    sdkInstance.on("disconnect", handleDisconnect);
+    
+    setSdk(sdkInstance);
 
-  // Set walletId (used by auth callback)
-  const setWalletIdCallback = useCallback((newWalletId: string | null) => {
-    setWalletId(newWalletId);
-  }, []);
+    // Cleanup function to remove event listeners when SDK is recreated or component unmounts
+    return () => {
+      sdkInstance.off("connect_start", handleConnectStart);
+      sdkInstance.off("connect", handleConnect);
+      sdkInstance.off("connect_error", handleConnectError);
+      sdkInstance.off("disconnect", handleDisconnect);
+    };
+  }, [memoizedConfig, debugConfig]);
 
-  // Update connection state when SDK changes
+  // Initialize auto-connect
   useEffect(() => {
-    updateConnectionState();
-  }, [updateConnectionState]);
+    if (!sdk) return;
 
-  const contextValue: PhantomContextValue = {
-    sdk,
-    isConnected,
-    addresses,
-    walletId,
-    error,
-    updateConnectionState,
-    setWalletId: setWalletIdCallback,
-  };
+    // Attempt auto-connect if enabled
+    if (config.autoConnect !== false) {
+      sdk.autoConnect().catch(() => {
+        // Silent fail - auto-connect is optional and shouldn't break the app
+      });
+    }
+  }, [sdk, config.autoConnect]);
 
-  return <PhantomContext.Provider value={contextValue}>{children}</PhantomContext.Provider>;
+  // Memoize context value to prevent unnecessary re-renders
+  const value: PhantomContextValue = useMemo(
+    () => ({
+      sdk,
+      isConnected,
+      isConnecting,
+      connectError,
+      addresses,
+      walletId,
+      setWalletId,
+    }),
+    [
+      sdk,
+      isConnected,
+      isConnecting,
+      connectError,
+      addresses,
+      walletId,
+      setWalletId,
+    ]
+  );
+
+  return <PhantomContext.Provider value={value}>{children}</PhantomContext.Provider>;
 }
 
 export function usePhantom(): PhantomContextValue {

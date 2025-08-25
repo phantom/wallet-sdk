@@ -1,9 +1,10 @@
 import "react-native-get-random-values";
 
 import { Stack } from "expo-router";
-import { PhantomProvider, AddressType, type PhantomSDKConfig } from "@phantom/react-native-sdk";
+import { PhantomProvider, AddressType, type PhantomSDKConfig, type PhantomDebugConfig } from "@phantom/react-native-sdk";
 import { StatusBar } from "expo-status-bar";
 
+// SDK configuration - static, won't cause SDK reinstantiation when debug changes
 const config: PhantomSDKConfig = {
   organizationId: process.env.EXPO_PUBLIC_ORGANIZATION_ID || "57b8172b-8583-4c13-a800-49f8553eb259",
   scheme: process.env.EXPO_PUBLIC_APP_SCHEME || "phantom-rn-demo", // Must match app.json scheme
@@ -14,15 +15,19 @@ const config: PhantomSDKConfig = {
     redirectUrl: process.env.EXPO_PUBLIC_REDIRECT_URL || "phantom-rn-demo://phantom-auth-callback",
   },
   apiBaseUrl: process.env.EXPO_PUBLIC_WALLET_API || "https://api.phantom.app/v1/wallets",
-  // debug: process.env.EXPO_PUBLIC_DEBUG === "true",
   solanaProvider: "web3js",
   appName: "Phantom React Native SDK Demo",
   appLogo: "https://picsum.photos/200", // Optional app logo URL
 };
 
+// Debug configuration - separate to avoid SDK reinstantiation
+const debugConfig: PhantomDebugConfig = {
+  enabled: process.env.EXPO_PUBLIC_DEBUG === "true",
+};
+
 export default function RootLayout() {
   return (
-    <PhantomProvider config={config}>
+    <PhantomProvider config={config} debugConfig={debugConfig}>
       <Stack
         screenOptions={{
           headerStyle: {
