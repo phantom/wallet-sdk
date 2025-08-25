@@ -8,6 +8,8 @@ import type { ParsedSignatureResult, ParsedTransactionResult } from '@phantom/pa
  * Embedded Solana chain implementation for React Native and web embedded providers
  */
 export class EmbeddedSolanaChain implements ISolanaChain {
+  private currentNetworkId: NetworkId = NetworkId.SOLANA_MAINNET;
+
   constructor(private provider: EmbeddedProvider) {}
 
   private ensureConnected(): void {
@@ -20,9 +22,9 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     this.ensureConnected();
     const result = await this.provider.signMessage({
       message,
-      networkId: NetworkId.SOLANA_MAINNET
+      networkId:this.currentNetworkId
     });
-    return parseSignMessageResponse(result.signature, NetworkId.SOLANA_MAINNET);
+    return parseSignMessageResponse(result.signature,this.currentNetworkId);
   }
 
   signTransaction<T>(_transaction: T): Promise<T> {
@@ -36,9 +38,9 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     this.ensureConnected();
     const result = await this.provider.signAndSendTransaction({
       transaction,
-      networkId: NetworkId.SOLANA_MAINNET
+      networkId:this.currentNetworkId
     });
-    return parseTransactionResponse(result.rawTransaction, NetworkId.SOLANA_MAINNET, result.hash);
+    return parseTransactionResponse(result.rawTransaction,this.currentNetworkId, result.hash);
   }
 
   connect(_options?: { onlyIfTrusted?: boolean }): Promise<{ publicKey: string }> {
@@ -54,8 +56,8 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     return this.provider.disconnect();
   }
 
-  switchNetwork(_network: 'mainnet' | 'devnet'): Promise<void> {
-    // Network switching not yet implemented for embedded provider
+  switchNetwork(network: 'mainnet' | 'devnet'): Promise<void> {
+    this.currentNetworkId = network === 'mainnet' ? NetworkId.SOLANA_MAINNET : NetworkId.SOLANA_DEVNET;
     return Promise.resolve();
   }
 

@@ -1,6 +1,6 @@
 # @phantom/react-sdk
 
-React hooks for integrating Phantom wallet functionality into React applications with native transaction support.
+React hooks for integrating Phantom wallet functionality into React applications with chain-specific operations.
 
 ## Installation
 
@@ -16,8 +16,6 @@ Install additional dependencies based on the networks you want to support:
 | --------------- | ---------------------------------- |
 | Solana          | `@solana/web3.js` OR `@solana/kit` |
 | Ethereum/EVM    | `viem`                             |
-| Bitcoin         | `bitcoinjs-lib`                    |
-| Sui             | `@mysten/sui.js`                   |
 
 **Example for Solana + Ethereum support (using @solana/web3.js):**
 
@@ -31,25 +29,56 @@ npm install @phantom/react-sdk @solana/web3.js viem
 npm install @phantom/react-sdk @solana/kit viem
 ```
 
-For complete dependency information and bundle optimization tips, see the [@phantom/browser-sdk documentation](../browser-sdk/README.md#bundle-optimization-tips).
-
 ## Quick Start
 
-### Basic Setup
+### Basic Setup with Chain-Specific Operations
 
 ```tsx
-import { PhantomProvider } from "@phantom/react-sdk";
-import { AddressType } from "@phantom/client";
+import { PhantomProvider, useConnect, useSolana, useEthereum } from "@phantom/react-sdk";
+import { AddressType } from "@phantom/browser-sdk";
 
 function App() {
   return (
     <PhantomProvider
       config={{
         providerType: "injected", // Uses Phantom browser extension
+        addressTypes: [AddressType.solana, AddressType.ethereum],
       }}
     >
-      <YourApp />
+      <WalletComponent />
     </PhantomProvider>
+  );
+}
+
+function WalletComponent() {
+  const { connect, isConnecting } = useConnect();
+  const solana = useSolana();
+  const ethereum = useEthereum();
+
+  const handleConnect = async () => {
+    const { addresses } = await connect();
+    console.log("Connected addresses:", addresses);
+  };
+
+  const signSolanaMessage = async () => {
+    const signature = await solana.signMessage("Hello Solana!");
+    console.log("Solana signature:", signature);
+  };
+
+  const signEthereumMessage = async () => {
+    const accounts = await ethereum.getAccounts();
+    const signature = await ethereum.signPersonalMessage("Hello Ethereum!", accounts[0]);
+    console.log("Ethereum signature:", signature);
+  };
+
+  return (
+    <div>
+      <button onClick={handleConnect} disabled={isConnecting}>
+        {isConnecting ? "Connecting..." : "Connect Wallet"}
+      </button>
+      <button onClick={signSolanaMessage}>Sign Solana Message</button>
+      <button onClick={signEthereumMessage}>Sign Ethereum Message</button>
+    </div>
   );
 }
 ```
@@ -58,7 +87,7 @@ function App() {
 
 ```tsx
 import { PhantomProvider } from "@phantom/react-sdk";
-import { AddressType } from "@phantom/client";
+import { AddressType } from "@phantom/browser-sdk";
 
 function App() {
   return (
@@ -77,6 +106,61 @@ function App() {
 }
 ```
 
+## Connection Flow
+
+The React SDK follows a clear connection pattern:
+
+1. **Provider Setup**: Wrap your app with `PhantomProvider`
+2. **Connection**: Use `useConnect()` to establish wallet connection
+3. **Chain Operations**: Use chain-specific hooks (`useSolana()`, `useEthereum()`) for transactions and signing
+
+```tsx
+function WalletExample() {
+  const { connect } = useConnect();
+  const solana = useSolana();
+  const ethereum = useEthereum();
+
+  // 1. Connect first
+  const handleConnect = async () => {
+    await connect();
+  };
+
+  // 2. Then use chain-specific operations
+  const sendSolanaTransaction = async () => {
+    const result = await solana.signAndSendTransaction(transaction);
+  };
+
+  const sendEthereumTransaction = async () => {
+    const result = await ethereum.sendTransaction(transaction);
+  };
+}
+```
+
+### Connection Options
+
+For embedded user-wallets, you can specify authentication providers:
+
+```tsx
+const { connect } = useConnect();
+
+// Default: Show provider selection screen
+await connect();
+
+// Google authentication (skips provider selection)
+await connect({
+  authOptions: {
+    provider: "google",
+  },
+});
+
+// Apple authentication (skips provider selection) 
+await connect({
+  authOptions: {
+    provider: "apple",
+  },
+});
+```
+
 ## Provider Types
 
 ### Injected Provider
@@ -87,6 +171,7 @@ Uses the Phantom browser extension installed by the user.
 <PhantomProvider
   config={{
     providerType: "injected",
+    addressTypes: [AddressType.solana, AddressType.ethereum],
   }}
 >
   <YourApp />
@@ -167,7 +252,9 @@ When using `AddressType.solana`, you can choose between two Solana libraries:
 
 ## Available Hooks
 
-### useConnect
+### Core Connection Hooks
+
+#### useConnect
 
 Connect to wallet:
 
@@ -175,7 +262,7 @@ Connect to wallet:
 import { useConnect } from "@phantom/react-sdk";
 
 function ConnectButton() {
-  const { connect, isLoading, error } = useConnect();
+  const { connect, isConnecting, error } = useConnect();
 
   const handleConnect = async () => {
     try {
@@ -187,14 +274,14 @@ function ConnectButton() {
   };
 
   return (
-    <button onClick={handleConnect} disabled={isLoading}>
-      {isLoading ? "Connecting..." : "Connect Wallet"}
+    <button onClick={handleConnect} disabled={isConnecting}>
+      {isConnecting ? "Connecting..." : "Connect Wallet"}
     </button>
   );
 }
 ```
 
-### useAccounts
+#### useAccounts
 
 Get connected wallet addresses:
 
@@ -220,7 +307,25 @@ function WalletAddresses() {
 }
 ```
 
-### useIsExtensionInstalled
+#### useDisconnect
+
+Disconnect from wallet:
+
+```tsx
+import { useDisconnect } from "@phantom/react-sdk";
+
+function DisconnectButton() {
+  const { disconnect, isDisconnecting } = useDisconnect();
+
+  return (
+    <button onClick={disconnect} disabled={isDisconnecting}>
+      {isDisconnecting ? "Disconnecting..." : "Disconnect"}
+    </button>
+  );
+}
+```
+
+#### useIsExtensionInstalled
 
 Check if the Phantom browser extension is installed (for injected provider):
 
@@ -251,98 +356,36 @@ function ExtensionStatus() {
 }
 ```
 
-**Features:**
+### Chain-Specific Hooks
 
-- **Session-based caching**: Result is cached during the browser session to avoid redundant checks
-- **Automatic detection**: Runs automatically when the hook is first used
-- **Loading states**: Provides `isLoading` during the initial check
-- **Performance optimized**: Subsequent calls return cached result instantly
+#### useSolana
 
-**Use cases:**
-
-- Show installation prompts for users without the extension
-- Conditionally render UI based on extension availability
-- Provide fallback options when extension is not installed
-
-### useDisconnect
-
-Disconnect from wallet:
+Hook for Solana chain operations:
 
 ```tsx
-import { useDisconnect } from "@phantom/react-sdk";
+import { useSolana } from "@phantom/react-sdk";
+import { VersionedTransaction, TransactionMessage, SystemProgram, PublicKey, Connection } from "@solana/web3.js";
 
-function DisconnectButton() {
-  const { disconnect, isLoading } = useDisconnect();
+function SolanaOperations() {
+  const solana = useSolana();
 
-  return (
-    <button onClick={disconnect} disabled={isLoading}>
-      {isLoading ? "Disconnecting..." : "Disconnect"}
-    </button>
-  );
-}
-```
-
-### useSignMessage
-
-Sign messages with native string input:
-
-```tsx
-import { useSignMessage, NetworkId } from "@phantom/react-sdk";
-
-function SignMessage() {
-  const { signMessage, isLoading, error } = useSignMessage();
-
-  const handleSign = async () => {
-    try {
-      const signature = await signMessage({
-        message: "Hello from Phantom!",
-        networkId: NetworkId.SOLANA_MAINNET,
-      });
-      console.log("Signature:", signature);
-    } catch (err) {
-      console.error("Failed to sign:", err);
-    }
+  const signMessage = async () => {
+    const signature = await solana.signMessage("Hello Solana!");
+    console.log("Signature:", signature);
   };
 
-  return (
-    <button onClick={handleSign} disabled={isLoading}>
-      {isLoading ? "Signing..." : "Sign Message"}
-    </button>
-  );
-}
-```
-
-### useSignAndSendTransaction
-
-#### Solana Transaction
-
-```tsx
-import { useSignAndSendTransaction, NetworkId } from "@phantom/react-sdk";
-import {
-  VersionedTransaction,
-  TransactionMessage,
-  SystemProgram,
-  PublicKey,
-  LAMPORTS_PER_SOL,
-  Connection,
-} from "@solana/web3.js";
-
-function SendSolanaTransaction() {
-  const { signAndSendTransaction, isLoading, error } = useSignAndSendTransaction();
-
-  const handleSend = async () => {
-    // Get recent blockhash
+  const signAndSendTransaction = async () => {
+    // Create transaction
     const connection = new Connection("https://api.mainnet-beta.solana.com");
     const { blockhash } = await connection.getLatestBlockhash();
-
-    // Create transfer instruction
+    
+    const fromAddress = await solana.getPublicKey();
     const transferInstruction = SystemProgram.transfer({
       fromPubkey: new PublicKey(fromAddress),
       toPubkey: new PublicKey(toAddress),
-      lamports: 0.001 * LAMPORTS_PER_SOL,
+      lamports: 1000000, // 0.001 SOL
     });
 
-    // Create VersionedTransaction
     const messageV0 = new TransactionMessage({
       payerKey: new PublicKey(fromAddress),
       recentBlockhash: blockhash,
@@ -351,97 +394,120 @@ function SendSolanaTransaction() {
 
     const transaction = new VersionedTransaction(messageV0);
 
-    try {
-      const result = await signAndSendTransaction({
-        networkId: NetworkId.SOLANA_MAINNET,
-        transaction: transaction, // Native VersionedTransaction object!
-      });
-      console.log("Transaction sent:", result.rawTransaction);
-    } catch (err) {
-      console.error("Failed to send:", err);
-    }
+    // Sign and send
+    const result = await solana.signAndSendTransaction(transaction);
+    console.log("Transaction sent:", result.hash);
+  };
+
+  const switchNetwork = async () => {
+    await solana.switchNetwork('devnet');
   };
 
   return (
-    <button onClick={handleSend} disabled={isLoading}>
-      {isLoading ? "Sending..." : "Send SOL"}
-    </button>
+    <div>
+      <button onClick={signMessage}>Sign Message</button>
+      <button onClick={signAndSendTransaction}>Send Transaction</button>
+      <button onClick={switchNetwork}>Switch to Devnet</button>
+      <p>Connected: {solana.isConnected ? 'Yes' : 'No'}</p>
+    </div>
   );
 }
 ```
 
-#### Ethereum Transaction (with Viem)
+**Available methods:**
+- `signMessage(message)` - Sign a message
+- `signTransaction(transaction)` - Sign without sending
+- `signAndSendTransaction(transaction)` - Sign and send
+- `switchNetwork(network)` - Switch between mainnet/devnet
+- `getPublicKey()` - Get current public key
+- `isConnected` - Connection status
+- `isAvailable` - Provider availability
+
+#### useEthereum
+
+Hook for Ethereum chain operations:
 
 ```tsx
-import { useSignAndSendTransaction, NetworkId } from "@phantom/react-sdk";
-import { parseEther, parseGwei } from "viem";
+import { useEthereum } from "@phantom/react-sdk";
 
-function SendEthereumTransaction() {
-  const { signAndSendTransaction, isLoading } = useSignAndSendTransaction();
+function EthereumOperations() {
+  const ethereum = useEthereum();
 
-  const handleSend = async () => {
-    try {
-      const result = await signAndSendTransaction({
-        networkId: NetworkId.ETHEREUM_MAINNET,
-        transaction: {
-          to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
-          value: parseEther("0.001"), // 0.001 ETH
-          gas: 21000n,
-          gasPrice: parseGwei("20"), // 20 gwei
-        },
-      });
-      console.log("Transaction sent:", result);
-    } catch (err) {
-      console.error("Failed to send:", err);
-    }
+  const signPersonalMessage = async () => {
+    const accounts = await ethereum.getAccounts();
+    const signature = await ethereum.signPersonalMessage("Hello Ethereum!", accounts[0]);
+    console.log("Signature:", signature);
+  };
+
+  const signTypedData = async () => {
+    const accounts = await ethereum.getAccounts();
+    const typedData = {
+      types: {
+        EIP712Domain: [
+          { name: "name", type: "string" },
+          { name: "version", type: "string" },
+          { name: "chainId", type: "uint256" },
+          { name: "verifyingContract", type: "address" }
+        ],
+        Mail: [
+          { name: "from", type: "string" },
+          { name: "to", type: "string" },
+          { name: "contents", type: "string" }
+        ]
+      },
+      primaryType: "Mail",
+      domain: {
+        name: "Ether Mail",
+        version: "1",
+        chainId: 1,
+        verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC"
+      },
+      message: {
+        from: "Alice",
+        to: "Bob",
+        contents: "Hello!"
+      }
+    };
+
+    const signature = await ethereum.signTypedData(typedData);
+    console.log("Typed data signature:", signature);
+  };
+
+  const sendTransaction = async () => {
+    const result = await ethereum.sendTransaction({
+      to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
+      value: "1000000000000000000", // 1 ETH in wei
+      gas: "21000",
+    });
+    console.log("Transaction sent:", result.hash);
+  };
+
+  const switchChain = async () => {
+    await ethereum.switchChain(137); // Switch to Polygon
   };
 
   return (
-    <button onClick={handleSend} disabled={isLoading}>
-      {isLoading ? "Sending..." : "Send ETH"}
-    </button>
+    <div>
+      <button onClick={signPersonalMessage}>Sign Personal Message</button>
+      <button onClick={signTypedData}>Sign Typed Data</button>
+      <button onClick={sendTransaction}>Send Transaction</button>
+      <button onClick={switchChain}>Switch to Polygon</button>
+      <p>Connected: {ethereum.isConnected ? 'Yes' : 'No'}</p>
+    </div>
   );
 }
 ```
 
-## Network Support
-
-### Supported Networks
-
-The SDK automatically determines the transaction type from the NetworkId:
-
-#### Solana
-
-- `NetworkId.SOLANA_MAINNET`
-- `NetworkId.SOLANA_DEVNET`
-- `NetworkId.SOLANA_TESTNET`
-
-#### Ethereum/EVM
-
-- `NetworkId.ETHEREUM_MAINNET`
-- `NetworkId.ETHEREUM_SEPOLIA`
-- `NetworkId.POLYGON_MAINNET`
-- `NetworkId.ARBITRUM_ONE`
-- `NetworkId.OPTIMISM_MAINNET`
-- `NetworkId.BASE_MAINNET`
-
-#### Bitcoin
-
-- `NetworkId.BITCOIN_MAINNET`
-- `NetworkId.BITCOIN_TESTNET`
-
-#### Sui
-
-- `NetworkId.SUI_MAINNET`
-- `NetworkId.SUI_TESTNET`
-- `NetworkId.SUI_DEVNET`
-
-### Provider Network Support
-
-| Provider Type | Network Support                                 |
-| ------------- | ----------------------------------------------- |
-| **Injected**  | All networks supported by Phantom extension     |
-| **Embedded**  | All networks based on configured `addressTypes` |
+**Available methods:**
+- `request(args)` - EIP-1193 requests
+- `signPersonalMessage(message, address)` - Sign personal message
+- `signTypedData(typedData)` - Sign EIP-712 typed data
+- `sendTransaction(transaction)` - Send transaction
+- `switchChain(chainId)` - Switch chains
+- `getChainId()` - Get current chain ID
+- `getAccounts()` - Get connected accounts
+- `isConnected` - Connection status
+- `isAvailable` - Provider availability
 
 ## Transaction Examples
 
@@ -449,10 +515,10 @@ The SDK automatically determines the transaction type from the NetworkId:
 
 ```tsx
 import { VersionedTransaction, TransactionMessage, SystemProgram, PublicKey, Connection } from "@solana/web3.js";
-import { useSignAndSendTransaction, NetworkId } from "@phantom/react-sdk";
+import { useSolana } from "@phantom/react-sdk";
 
 function SolanaExample() {
-  const { signAndSendTransaction } = useSignAndSendTransaction();
+  const solana = useSolana();
 
   const sendTransaction = async () => {
     // Get recent blockhash
@@ -460,6 +526,7 @@ function SolanaExample() {
     const { blockhash } = await connection.getLatestBlockhash();
 
     // Create transfer instruction
+    const fromAddress = await solana.getPublicKey();
     const transferInstruction = SystemProgram.transfer({
       fromPubkey: new PublicKey(fromAddress),
       toPubkey: new PublicKey(toAddress),
@@ -475,12 +542,12 @@ function SolanaExample() {
 
     const transaction = new VersionedTransaction(messageV0);
 
-    // No serialization or encoding needed!
-    const result = await signAndSendTransaction({
-      networkId: NetworkId.SOLANA_MAINNET,
-      transaction,
-    });
+    // Sign and send using chain-specific hook
+    const result = await solana.signAndSendTransaction(transaction);
+    console.log("Transaction sent:", result.hash);
   };
+
+  return <button onClick={sendTransaction}>Send SOL</button>;
 }
 ```
 
@@ -496,15 +563,16 @@ import {
   address,
   compileTransaction,
 } from "@solana/kit";
-import { useSignAndSendTransaction, NetworkId } from "@phantom/react-sdk";
+import { useSolana } from "@phantom/react-sdk";
 
 function SolanaKitExample() {
-  const { signAndSendTransaction } = useSignAndSendTransaction();
+  const solana = useSolana();
 
   const sendTransaction = async () => {
     const rpc = createSolanaRpc("https://api.mainnet-beta.solana.com");
     const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
 
+    const userPublicKey = await solana.getPublicKey();
     const transactionMessage = pipe(
       createTransactionMessage({ version: 0 }),
       tx => setTransactionMessageFeePayer(address(userPublicKey), tx),
@@ -513,11 +581,12 @@ function SolanaKitExample() {
 
     const transaction = compileTransaction(transactionMessage);
 
-    const result = await signAndSendTransaction({
-      networkId: NetworkId.SOLANA_MAINNET,
-      transaction,
-    });
+    // Sign and send using chain-specific hook
+    const result = await solana.signAndSendTransaction(transaction);
+    console.log("Transaction sent:", result.hash);
   };
+
+  return <button onClick={sendTransaction}>Send SOL</button>;
 }
 ```
 
@@ -525,96 +594,40 @@ function SolanaKitExample() {
 
 ```tsx
 import { parseEther, parseGwei, encodeFunctionData } from "viem";
-import { useSignAndSendTransaction, NetworkId } from "@phantom/react-sdk";
+import { useEthereum } from "@phantom/react-sdk";
 
 function EthereumExample() {
-  const { signAndSendTransaction } = useSignAndSendTransaction();
+  const ethereum = useEthereum();
 
   const sendEth = async () => {
-    const result = await signAndSendTransaction({
-      networkId: NetworkId.ETHEREUM_MAINNET,
-      transaction: {
-        to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
-        value: parseEther("1"), // 1 ETH
-        gas: 21000n,
-        gasPrice: parseGwei("20"), // 20 gwei
-      },
+    const result = await ethereum.sendTransaction({
+      to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
+      value: parseEther("1").toString(), // 1 ETH
+      gas: "21000",
+      gasPrice: parseGwei("20").toString(), // 20 gwei
     });
+    console.log("ETH sent:", result.hash);
   };
 
   const sendToken = async () => {
-    const result = await signAndSendTransaction({
-      networkId: NetworkId.ETHEREUM_MAINNET,
-      transaction: {
-        to: tokenContractAddress,
-        data: encodeFunctionData({
-          abi: erc20Abi,
-          functionName: "transfer",
-          args: [recipientAddress, parseEther("100")],
-        }),
-        gas: 50000n,
-        maxFeePerGas: parseGwei("30"),
-        maxPriorityFeePerGas: parseGwei("2"),
-      },
+    const result = await ethereum.sendTransaction({
+      to: tokenContractAddress,
+      data: encodeFunctionData({
+        abi: erc20Abi,
+        functionName: "transfer",
+        args: [recipientAddress, parseEther("100")],
+      }),
+      gas: "50000",
+      maxFeePerGas: parseGwei("30").toString(),
+      maxPriorityFeePerGas: parseGwei("2").toString(),
     });
-  };
-}
-```
-
-## Advanced Usage
-
-### Multi-Chain Application
-
-```tsx
-import { useSignAndSendTransaction, NetworkId } from "@phantom/react-sdk";
-import { VersionedTransaction, TransactionMessage, SystemProgram, PublicKey, Connection } from "@solana/web3.js";
-import { parseEther } from "viem";
-
-function MultiChainWallet() {
-  const { signAndSendTransaction } = useSignAndSendTransaction();
-
-  const sendSolana = async () => {
-    // Get recent blockhash
-    const connection = new Connection("https://api.mainnet-beta.solana.com");
-    const { blockhash } = await connection.getLatestBlockhash();
-
-    // Create transfer instruction
-    const transferInstruction = SystemProgram.transfer({
-      fromPubkey: new PublicKey(solanaAddress),
-      toPubkey: new PublicKey(recipient),
-      lamports: 1000000,
-    });
-
-    // Create VersionedTransaction
-    const messageV0 = new TransactionMessage({
-      payerKey: new PublicKey(solanaAddress),
-      recentBlockhash: blockhash,
-      instructions: [transferInstruction],
-    }).compileToV0Message();
-
-    const transaction = new VersionedTransaction(messageV0);
-
-    return await signAndSendTransaction({
-      networkId: NetworkId.SOLANA_MAINNET,
-      transaction,
-    });
-  };
-
-  const sendEthereum = async () => {
-    return await signAndSendTransaction({
-      networkId: NetworkId.ETHEREUM_MAINNET,
-      transaction: {
-        to: recipient,
-        value: parseEther("0.1"),
-        gas: 21000n,
-      },
-    });
+    console.log("Token sent:", result.hash);
   };
 
   return (
     <div>
-      <button onClick={sendSolana}>Send SOL</button>
-      <button onClick={sendEthereum}>Send ETH</button>
+      <button onClick={sendEth}>Send ETH</button>
+      <button onClick={sendToken}>Send Token</button>
     </div>
   );
 }
@@ -630,8 +643,8 @@ Quick reference of all available hooks:
 | `useAccounts`               | Get wallet addresses       | `WalletAddress[]` or `null`                    |
 | `useIsExtensionInstalled`   | Check extension status     | `{ isLoading, isInstalled }`                   |
 | `useDisconnect`             | Disconnect from wallet     | `{ disconnect, isDisconnecting }`              |
-| `useSignMessage`            | Sign text messages         | `{ signMessage, isSigning, error }`            |
-| `useSignAndSendTransaction` | Sign and send transactions | `{ signAndSendTransaction, isSigning, error }` |
+| `useSolana`                 | Solana chain operations    | `{ signMessage, signAndSendTransaction, ... }` |
+| `useEthereum`               | Ethereum chain operations  | `{ signPersonalMessage, sendTransaction, ... }`|
 | `usePhantom`                | Get provider context       | `{ isConnected, isReady }`                     |
 
 ## Configuration Reference
@@ -656,10 +669,10 @@ interface PhantomSDKConfig {
   // Debug options
   debug?: {
     enabled?: boolean; // Enable debug logging
-    level?: "info" | "warn" | "error"; // Debug level
-    callback?: (level: string, message: string, data?: any) => void; // Custom debug callback
+    level?: DebugLevel; // Debug level
+    callback?: DebugCallback; // Custom debug callback
   };
 }
 ```
 
-For more details, examples, and bundle optimization tips, see the [@phantom/browser-sdk documentation](../browser-sdk/README.md).
+For more details and examples, see the [@phantom/browser-sdk documentation](../browser-sdk/README.md).

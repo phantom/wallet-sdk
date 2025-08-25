@@ -22,7 +22,6 @@ export class InjectedEthereumChain implements IEthereumChain {
       method: 'personal_sign',
       params: [message, address]
     });
-    
     return {
       signature,
       rawSignature: signature,
