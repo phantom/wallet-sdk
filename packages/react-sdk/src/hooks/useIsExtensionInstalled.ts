@@ -1,5 +1,6 @@
 import * as React from "react";
 import { usePhantom } from "../PhantomProvider";
+import { BrowserSDK } from "@phantom/browser-sdk";
 
 // Session cache for extension installation status
 let cachedIsInstalled: boolean | null = null;
@@ -23,10 +24,10 @@ export function useIsExtensionInstalled() {
     }
 
     // Perform the check
-    const checkExtension = async () => {
+    const checkExtension = () => {
       try {
         setIsLoading(true);
-        const result = await sdk.waitForPhantomExtension(1000);
+        const result = BrowserSDK.isPhantomInstalled();
         cachedIsInstalled = result;
         setIsInstalled(result);
       } catch (error) {

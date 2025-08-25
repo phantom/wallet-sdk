@@ -1,6 +1,10 @@
 // Main SDK
 export { BrowserSDK } from "./BrowserSDK";
 
+
+// Chain interfaces (from shared package)
+export type { ISolanaChain, IEthereumChain, EthTransactionRequest } from "@phantom/chains";
+
 // Types
 export * from "./types";
 

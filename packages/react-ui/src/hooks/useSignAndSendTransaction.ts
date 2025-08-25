@@ -1,10 +1,15 @@
 import { useCallback } from "react";
-// import { useSignAndSendTransaction as useBaseSignAndSendTransaction } from "@phantom/react-sdk";
 import { usePhantomUI } from "../PhantomUIProvider";
-import type { NetworkId } from "@phantom/client";
+import type { ParsedTransactionResult } from "@phantom/parsers";
+
+// Generic transaction params that support both Solana and Ethereum
+interface TransactionParams {
+  chain: 'solana' | 'ethereum';
+  transaction: any;
+}
 
 export interface UseSignAndSendTransactionResult {
-  signAndSendTransaction: (transaction: any, networkId: NetworkId) => Promise<string>;
+  signAndSendTransaction: (params: TransactionParams) => Promise<ParsedTransactionResult>;
   isLoading: boolean;
   error: Error | null;
 }
@@ -13,9 +18,8 @@ export function useSignAndSendTransaction(): UseSignAndSendTransactionResult {
   const ui = usePhantomUI();
 
   const signAndSendTransaction = useCallback(
-    async (transaction: any, networkId: NetworkId): Promise<string> => {
-      const result = await ui.signAndSendTransaction({ transaction, networkId });
-      return result.rawTransaction;
+    async (params: TransactionParams): Promise<ParsedTransactionResult> => {
+      return await ui.signAndSendTransaction(params);
     },
     [ui],
   );

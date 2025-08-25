@@ -2,12 +2,11 @@ import "./Actions.css";
 import {
   useConnect,
   useDisconnect,
-  useSignAndSendTransaction,
-  useSignMessage,
+  useSolana,
+  useEthereum,
   useAccounts,
   usePhantom,
   useIsExtensionInstalled,
-  NetworkId,
   type ProviderType,
 } from "@phantom/react-sdk";
 import { SystemProgram, PublicKey, Connection, VersionedTransaction, TransactionMessage } from "@solana/web3.js";
@@ -18,11 +17,14 @@ import { DebugConsole } from "./components/DebugConsole";
 export function Actions() {
   const { connect, isConnecting, error: connectError } = useConnect();
   const { disconnect, isDisconnecting } = useDisconnect();
-  const { signAndSendTransaction, isSigning: isSigningTransaction } = useSignAndSendTransaction();
-  const { signMessage, isSigning: isSigningMessage } = useSignMessage();
+  const { signMessage: signSolanaMessage, signAndSendTransaction } = useSolana();
+  const { signPersonalMessage: signEthMessage, signTypedData: signEthTypedData } = useEthereum();
   const { isConnected, currentProviderType } = usePhantom();
   const { isInstalled, isLoading } = useIsExtensionInstalled();
   const addresses = useAccounts();
+  const [isSigningMessage, setIsSigningMessage] = useState(false);
+  const [isSigningTypedData, setIsSigningTypedData] = useState(false);
+  const [isSigningTransaction, setIsSigningTransaction] = useState(false);
 
   const [solanaAddress, setSolanaAddress] = useState<string | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<ProviderType>("embedded");
@@ -45,11 +47,9 @@ export function Actions() {
 
   const onConnect = async () => {
     try {
-      const options = {
-        providerType: selectedProvider,
-        ...(selectedProvider === "embedded" && { embeddedWalletType: selectedEmbeddedType }),
-      };
-      await connect(options);
+      // Note: Provider type and embedded wallet type are configured at SDK initialization level
+      // not at connect level in the new architecture
+      await connect();
       // Connection state will be updated in the provider
     } catch (error) {
       console.error("Error connecting to Phantom:", error);
@@ -68,21 +68,93 @@ export function Actions() {
   };
 
   const onSignMessage = async (type: "solana" | "evm") => {
-    if (!isConnected || !solanaAddress) {
+    if (!isConnected || !addresses || addresses.length === 0) {
       alert("Please connect your wallet first.");
       return;
     }
     try {
-      const result = await signMessage({
-        message: "Hello, World!",
-        networkId: type === "solana" ? NetworkId.SOLANA_MAINNET : NetworkId.ETHEREUM_MAINNET,
-      });
-      alert(
-        `Message Signed! Signature: ${result.signature}${result.blockExplorer ? `\n\nView on explorer: ${result.blockExplorer}` : ""}`,
-      );
+      setIsSigningMessage(true);
+      if (type === "solana") {
+        const result = await signSolanaMessage("Hello, World!");
+        alert(`Message Signed! Signature: ${result.signature}`);
+      } else {
+        const ethAddress = addresses.find(addr => addr.addressType === "Ethereum");
+        if (!ethAddress) {
+          alert("No Ethereum address found");
+          return;
+        }
+        const result = await signEthMessage("Hello, World!", ethAddress.address);
+        alert(`Message Signed! Signature: ${result}`);
+      }
     } catch (error) {
       console.error("Error signing message:", error);
       alert(`Error signing message: ${(error as Error).message || error}`);
+    } finally {
+      setIsSigningMessage(false);
+    }
+  };
+
+  const onSignTypedData = async () => {
+    if (!isConnected || !addresses || addresses.length === 0) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+    
+    const ethAddress = addresses.find(addr => addr.addressType === "Ethereum");
+    if (!ethAddress) {
+      alert("No Ethereum address found");
+      return;
+    }
+
+    try {
+      setIsSigningTypedData(true);
+      
+      // Example typed data structure (EIP-712)
+      const typedData = {
+        types: {
+          EIP712Domain: [
+            { name: "name", type: "string" },
+            { name: "version", type: "string" },
+            { name: "chainId", type: "uint256" },
+            { name: "verifyingContract", type: "address" }
+          ],
+          Person: [
+            { name: "name", type: "string" },
+            { name: "wallet", type: "address" }
+          ],
+          Mail: [
+            { name: "from", type: "Person" },
+            { name: "to", type: "Person" },
+            { name: "contents", type: "string" }
+          ]
+        },
+        primaryType: "Mail",
+        domain: {
+          name: "Ether Mail",
+          version: "1",
+          chainId: 1,
+          verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC"
+        },
+        message: {
+          from: {
+            name: "Cow",
+            wallet: "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826"
+          },
+          to: {
+            name: "Bob", 
+            wallet: ethAddress.address
+          },
+          contents: "Hello, Bob! This is a typed data message from Phantom React SDK Demo."
+        }
+      };
+
+      const result = await signEthTypedData(typedData);
+      alert(`Typed Data Signed! Signature: ${result}`);
+    } catch (error) {
+      console.error("Error signing typed data:", error);
+      alert(`Error signing typed data: ${(error as Error).message || error}`);
+    } finally {
+      setIsSigningTypedData(false);
     }
   };
 
@@ -114,15 +186,14 @@ export function Actions() {
 
       const transaction = new VersionedTransaction(messageV0);
 
-      const result = await signAndSendTransaction({
-        transaction: transaction,
-        networkId: NetworkId.SOLANA_MAINNET,
-      });
+      const result = await signAndSendTransaction(transaction);
 
-      alert(`Transaction sent! Signature: ${result.rawTransaction}`);
+      alert(`Transaction sent! Signature: ${result.signature}`);
     } catch (error) {
       console.error("Error signing and sending transaction:", error);
       alert(`Error signing and sending transaction: ${(error as Error).message || error}`);
+    } finally {
+      setIsSigningTransaction(false);
     }
   };
 
@@ -258,10 +329,13 @@ export function Actions() {
                 {isConnecting ? "Connecting..." : "Connect"}
               </button>
               <button onClick={() => onSignMessage("solana")} disabled={!isConnected || isSigningMessage}>
-                {isSigningMessage ? "Signing..." : "Sign Message"}
+                {isSigningMessage ? "Signing..." : "Sign Message (Solana)"}
               </button>
               <button onClick={() => onSignMessage("evm")} disabled={!isConnected || isSigningMessage}>
-                {isSigningMessage ? "Signing..." : "Sign Message EVM"}
+                {isSigningMessage ? "Signing..." : "Sign Message (EVM)"}
+              </button>
+              <button onClick={onSignTypedData} disabled={!isConnected || isSigningTypedData}>
+                {isSigningTypedData ? "Signing..." : "Sign Typed Data (EVM)"}
               </button>
               <button onClick={onSignAndSendTransaction} disabled={!isConnected || isSigningTransaction || !hasBalance}>
                 {isSigningTransaction ? "Signing..." : !hasBalance ? "Insufficient Balance" : "Sign & Send Transaction"}

@@ -13,19 +13,20 @@ import {
 import { useRouter } from "expo-router";
 import {
   useAccounts,
-  useSignMessage,
-  useSignAndSendTransaction,
+  useSolana,
   useDisconnect,
-  NetworkId,
 } from "@phantom/react-native-sdk";
 import { useBalance } from "../hooks/useBalance";
 
 export default function WalletScreen() {
   const router = useRouter();
   const { isConnected, addresses, walletId } = useAccounts();
-  const { signMessage, isSigning: isSigningMessage, error: signError } = useSignMessage();
-  const { isSigning: isSigningTx, error: txError, signAndSendTransaction } = useSignAndSendTransaction();
+  const { signMessage, signAndSendTransaction } = useSolana();
   const { disconnect, isDisconnecting } = useDisconnect();
+  const [isSigningMessage, setIsSigningMessage] = useState(false);
+  const [isSigningTx, setIsSigningTx] = useState(false);
+  const [signError, setSignError] = useState<Error | null>(null);
+  const [txError, setTxError] = useState<Error | null>(null);
 
   const [messageToSign, setMessageToSign] = useState("Hello from Phantom React Native SDK Demo!");
   const [signedMessage, setSignedMessage] = useState<string | null>(null);
@@ -52,15 +53,18 @@ export default function WalletScreen() {
     }
 
     try {
-      const result = await signMessage({
-        message: messageToSign,
-        networkId: NetworkId.SOLANA_MAINNET,
-      });
+      setIsSigningMessage(true);
+      setSignError(null);
+      const result = await signMessage(messageToSign);
 
       setSignedMessage(result.signature);
       Alert.alert("Success", `Message signed successfully!\n\nSignature: ${result.signature.slice(0, 20)}...`);
     } catch (error) {
-      Alert.alert("Error", `Failed to sign message: ${(error as Error).message}`);
+      const err = error as Error;
+      setSignError(err);
+      Alert.alert("Error", `Failed to sign message: ${err.message}`);
+    } finally {
+      setIsSigningMessage(false);
     }
   };
 
@@ -130,20 +134,23 @@ export default function WalletScreen() {
       const transaction = new VersionedTransaction(messageV0);
 
       // Sign and send the transaction
-      const result = await signAndSendTransaction({
-        transaction: transaction,
-        networkId: NetworkId.SOLANA_MAINNET,
-      });
+      setIsSigningTx(true);
+      setTxError(null);
+      const result = await signAndSendTransaction(transaction);
 
       // Set success state
-      setTransactionResult(`Transaction sent successfully!\n\nSignature: ${result.rawTransaction}`);
-      setTransactionExplorer(result.blockExplorer || null);
+      setTransactionResult(`Transaction sent successfully!\n\nSignature: ${result.signature}`);
+      setTransactionExplorer(null);
       setTransactionError(null);
+      setIsSigningTx(false);
 
       // Refresh balance after successful transaction
       setTimeout(() => refetchBalance(), 2000);
     } catch (error) {
       console.error("Transaction error:", error);
+      setIsSigningTx(false);
+      const err = error as Error;
+      setTxError(err);
       throw error;
     }
   };

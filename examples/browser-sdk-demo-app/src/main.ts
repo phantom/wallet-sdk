@@ -2,7 +2,6 @@
 /// <reference types="vite/client" />
 import {
   BrowserSDK,
-  NetworkId,
   AddressType,
   debug,
   DebugLevel,
@@ -13,7 +12,7 @@ import type { DebugMessage } from "@phantom/browser-sdk";
 import { SystemProgram, PublicKey, Connection, VersionedTransaction, TransactionMessage } from "@solana/web3.js";
 import { parseEther, parseGwei } from "viem";
 import { getBalance } from "./utils/balance";
-
+import { Buffer } from "buffer";
 document.addEventListener("DOMContentLoaded", () => {
   console.log("Document loaded, setting up Browser SDK Demo...");
 
@@ -22,6 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const getAccountBtn = document.getElementById("getAccountBtn") as HTMLButtonElement;
   const signMessageBtn = document.getElementById("signMessageBtn") as HTMLButtonElement;
   const signMessageEvmBtn = document.getElementById("signMessageEvmBtn") as HTMLButtonElement;
+  const signTypedDataBtn = document.getElementById("signTypedDataBtn") as HTMLButtonElement;
   const signTransactionBtn = document.getElementById("signTransactionBtn") as HTMLButtonElement;
   const disconnectBtn = document.getElementById("disconnectBtn") as HTMLButtonElement;
 
@@ -39,6 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
     getAccountBtn: !!getAccountBtn,
     signMessageBtn: !!signMessageBtn,
     signMessageEvmBtn: !!signMessageEvmBtn,
+    signTypedDataBtn: !!signTypedDataBtn,
     signTransactionBtn: !!signTransactionBtn,
     disconnectBtn: !!disconnectBtn,
   });
@@ -323,6 +324,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (getAccountBtn) getAccountBtn.disabled = !connected;
     if (signMessageBtn) signMessageBtn.disabled = !connected;
     if (signMessageEvmBtn) signMessageEvmBtn.disabled = !connected;
+    if (signTypedDataBtn) signTypedDataBtn.disabled = !connected;
     if (signTransactionBtn) signTransactionBtn.disabled = !connected || !hasBalance;
     // Keep disconnect button always enabled for session clearing
     if (disconnectBtn) disconnectBtn.disabled = false;
@@ -389,13 +391,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const message = "Hello from Phantom Browser SDK!";
-        const networkId = NetworkId.SOLANA_MAINNET;
-        const result = await sdk.signMessage({ message, networkId });
+        const result = await sdk.solana.signMessage(message);
 
         console.log("Message signed:", result);
-        alert(
-          `Message signed: ${result.signature}${result.blockExplorer ? `\n\nView on explorer: ${result.blockExplorer}` : ""}`,
-        );
+        alert(`Message signed: ${result.signature}`);
       } catch (error) {
         console.error("Error signing message:", error);
         alert(`Error signing message: ${(error as Error).message || error}`);
@@ -412,19 +411,89 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
+        const ethAddress = connectedAddresses.find(a => a.addressType === AddressType.ethereum);
+        if (!ethAddress) {
+          alert("No Ethereum address found");
+          return;
+        }
+
         const message = "Hello from Phantom Browser SDK (EVM)!";
-        const result = await sdk.signMessage({
-          message,
-          networkId: NetworkId.ETHEREUM_MAINNET,
-        });
+        console.log("GOING TO SIGN", message, ethAddress.address);
+        const prefixedMessage = "0x" + Buffer.from(message, "utf8").toString("hex");
+        console.log("Signing", prefixedMessage, ethAddress.address);
+        const result = await sdk.ethereum.signPersonalMessage(prefixedMessage, ethAddress.address);
 
         console.log("EVM Message signed:", result);
-        alert(
-          `EVM Message signed: ${result.signature}${result.blockExplorer ? `\n\nView on explorer: ${result.blockExplorer}` : ""}`,
-        );
+        alert(`EVM Message signed: ${result.signature}`);
       } catch (error) {
         console.error("Error signing EVM message:", error);
         alert(`Error signing EVM message: ${(error as Error).message || error}`);
+      }
+    };
+  }
+
+  // Sign Typed Data EVM button
+  if (signTypedDataBtn) {
+    signTypedDataBtn.onclick = async () => {
+      try {
+        if (!sdk) {
+          alert("Please connect first");
+          return;
+        }
+
+        const ethAddress = connectedAddresses.find(a => a.addressType === AddressType.ethereum);
+        if (!ethAddress) {
+          alert("No Ethereum address found");
+          return;
+        }
+
+        // Example typed data structure (EIP-712)
+        const typedData = {
+          types: {
+            EIP712Domain: [
+              { name: "name", type: "string" },
+              { name: "version", type: "string" },
+              { name: "chainId", type: "uint256" },
+              { name: "verifyingContract", type: "address" }
+            ],
+            Person: [
+              { name: "name", type: "string" },
+              { name: "wallet", type: "address" }
+            ],
+            Mail: [
+              { name: "from", type: "Person" },
+              { name: "to", type: "Person" },
+              { name: "contents", type: "string" }
+            ]
+          },
+          primaryType: "Mail",
+          domain: {
+            name: "Ether Mail",
+            version: "1",
+            chainId: 1,
+            verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC"
+          },
+          message: {
+            from: {
+              name: "Cow",
+              wallet: "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826"
+            },
+            to: {
+              name: "Bob", 
+              wallet: ethAddress.address
+            },
+            contents: "Hello, Bob! This is a typed data message from Phantom Browser SDK."
+          }
+        };
+
+        console.log("Signing typed data:", typedData);
+        const result = await sdk.ethereum.signTypedData(typedData, ethAddress.address);
+
+        console.log("Typed data signed:", result);
+        alert(`Typed data signed: ${result.signature}`);
+      } catch (error) {
+        console.error("Error signing typed data:", error);
+        alert(`Error signing typed data: ${(error as Error).message || error}`);
       }
     };
   }
@@ -485,10 +554,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const transaction = new VersionedTransaction(messageV0);
 
-    const result = await sdk!.signAndSendTransaction({
-      networkId: NetworkId.SOLANA_MAINNET,
-      transaction: transaction,
-    });
+    const result = await sdk!.solana.signAndSendTransaction(transaction);
 
     console.log("Transaction sent (web3.js):", result);
     alert(`Transaction sent: ${result.rawTransaction}`);
@@ -524,14 +590,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Create simple ETH transfer
-        const result = await sdk.signAndSendTransaction({
-          networkId: NetworkId.ETHEREUM_MAINNET,
-          transaction: {
-            to: ethAddress.address, // Self-transfer for demo
-            value: parseEther("0.001"), // 0.001 ETH
-            gas: 21000n,
-            gasPrice: parseGwei("20"), // 20 gwei
-          },
+        const result = await sdk.ethereum.sendTransaction({
+          to: ethAddress.address, // Self-transfer for demo
+          value: parseEther("0.001").toString(), // 0.001 ETH
+          gas: "21000",
+          gasPrice: parseGwei("20").toString(), // 20 gwei
         });
 
         console.log("Ethereum transaction sent:", result);

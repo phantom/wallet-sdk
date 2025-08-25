@@ -157,7 +157,7 @@ export function TransactionModal() {
           <div className="phantom-transaction-container">
             <TransactionPreview
               transaction={transactionState.transaction.transaction}
-              networkId={transactionState.transaction.networkId}
+              networkId={transactionState.transaction.networkId || `${transactionState.transaction.chain}:mainnet`}
             />
           </div>
 

@@ -8,8 +8,8 @@ import type { PhantomSDKConfig, PhantomDebugConfig, WalletAddress } from "./type
 import { ExpoSecureStorage } from "./providers/embedded/storage";
 import { ExpoAuthProvider } from "./providers/embedded/auth";
 import { ExpoURLParamsAccessor } from "./providers/embedded/url-params";
-import { ExpoLogger } from "./providers/embedded/logger";
 import { ReactNativeStamper } from "./providers/embedded/stamper";
+import { ExpoLogger } from "./providers/embedded/logger";
 import { Platform } from "react-native";
 
 interface PhantomContextValue {
@@ -129,7 +129,6 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
     };
   }, [memoizedConfig, debugConfig]);
 
-
   // Initialize auto-connect
   useEffect(() => {
     if (!sdk) return;
@@ -167,13 +166,9 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   return <PhantomContext.Provider value={value}>{children}</PhantomContext.Provider>;
 }
 
-/**
- * Hook to access the Phantom context
- * Must be used within a PhantomProvider
- */
 export function usePhantom(): PhantomContextValue {
   const context = useContext(PhantomContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("usePhantom must be used within a PhantomProvider");
   }
   return context;

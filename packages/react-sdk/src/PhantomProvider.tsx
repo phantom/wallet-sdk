@@ -128,10 +128,10 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   useEffect(() => {
     if (!sdk) return;
 
-    const initialize = async () => {
+    const initialize = () => {
       // Check if Phantom extension is available (only for injected provider)
       try {
-        const available = await sdk.waitForPhantomExtension(1000);
+        const available = BrowserSDK.isPhantomInstalled();
         setIsPhantomAvailable(available);
       } catch (err) {
         console.error("Error checking Phantom extension:", err);

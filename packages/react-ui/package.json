@@ -16,7 +16,9 @@
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
   },
   "dependencies": {
+    "@phantom/browser-sdk": "workspace:^",
     "@phantom/client": "workspace:^",
+    "@phantom/parsers": "workspace:^",
     "@phantom/react-sdk": "workspace:^"
   },
   "peerDependencies": {

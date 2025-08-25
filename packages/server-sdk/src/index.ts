@@ -13,7 +13,7 @@ import { base64urlEncode } from "@phantom/base64url";
 import bs58 from "bs58";
 import {
   parseMessage,
-  parseTransaction,
+  parseTransactionToBase64Url,
   parseSignMessageResponse,
   parseTransactionResponse,
   type ParsedSignatureResult,
@@ -89,7 +89,7 @@ export class ServerSDK {
    */
   async signAndSendTransaction(params: ServerSignAndSendTransactionParams): Promise<ParsedTransactionResult> {
     // Parse the transaction to base64url format
-    const parsedTransaction = await parseTransaction(params.transaction, params.networkId);
+    const parsedTransaction = await parseTransactionToBase64Url(params.transaction, params.networkId);
 
     // Use the parent's signAndSendTransaction method with parsed transaction
     const signAndSendParams: SignAndSendTransactionParams = {
@@ -177,7 +177,7 @@ export { NetworkId } from "@phantom/constants";
 export { ApiKeyStamper } from "@phantom/api-key-stamper";
 export {
   parseMessage,
-  parseTransaction,
+  parseTransactionToBase64Url,
   parseSignMessageResponse,
   parseTransactionResponse,
   type ParsedMessage,
