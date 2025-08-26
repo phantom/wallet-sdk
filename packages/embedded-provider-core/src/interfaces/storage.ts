@@ -6,6 +6,9 @@ export interface Keypair {
 export interface StamperInfo {
   keyId: string;
   publicKey: string;
+  createdAt?: number; // Optional timestamp when key was created
+  expiresAt?: number; // Optional timestamp when key expires
+  authenticatorId?: string; // Optional authenticator ID from server
 }
 
 export interface Session {
@@ -19,6 +22,9 @@ export interface Session {
   status: "pending" | "completed" | "failed";
   createdAt: number;
   lastUsed: number;
+  // New fields for authenticator expiration tracking
+  authenticatorExpiresAt?: number; // When the authenticator expires
+  lastRenewalCheck?: number; // Last time we checked for renewal
 }
 
 export interface EmbeddedStorage {

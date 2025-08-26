@@ -14,6 +14,15 @@ export interface ReactNativeStamperConfig {
 // Re-export for backwards compatibility
 export type { StamperKeyInfo };
 
+interface StoredKeyRecord {
+  keyInfo: StamperKeyInfo;
+  secretKey: string;
+  createdAt: number;
+  expiresAt: number;
+  authenticatorId?: string;
+  status: 'active' | 'pending' | 'expired';
+}
+
 /**
  * React Native key manager that generates and stores cryptographic keys in SecureStore.
  * Provides full key lifecycle management including generation, storage, and signing.
@@ -21,7 +30,8 @@ export type { StamperKeyInfo };
 export class ReactNativeStamper implements StamperWithKeyManagement {
   private keyPrefix: string;
   private organizationId: string;
-  private keyInfo: StamperKeyInfo | null = null;
+  private activeKeyRecord: StoredKeyRecord | null = null;
+  private pendingKeyRecord: StoredKeyRecord | null = null;
   algorithm = Algorithm.ed25519;
   type: "PKI" | "OIDC" = "PKI"; // Default to PKI, can be set to OIDC if needed
   idToken?: string; // Optional for PKI, required for OIDC
@@ -36,30 +46,25 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
    * Initialize the stamper and generate/load cryptographic keys
    */
   async init(): Promise<StamperKeyInfo> {
-    // Try to load existing key pair
-    const storedSecretKey = await this.getStoredSecretKey();
-
-    if (storedSecretKey) {
-      // Load existing key pair
-      const keyInfo = await this.getStoredKeyInfo();
-
-      if (keyInfo) {
-        this.keyInfo = keyInfo;
-        return keyInfo;
-      }
+    // Try to load existing active key record
+    this.activeKeyRecord = await this.loadActiveKeyRecord();
+    
+    if (!this.activeKeyRecord) {
+      // No existing keypair, generate new one
+      this.activeKeyRecord = await this.generateAndStoreNewKeyRecord('active');
     }
 
-    // Generate new key pair if none exists or data is corrupted
-    const keyInfo = await this.generateAndStoreKeyPair();
-    this.keyInfo = keyInfo;
-    return keyInfo;
+    // Check if there's a pending key record from a previous rotation
+    this.pendingKeyRecord = await this.loadPendingKeyRecord();
+
+    return this.activeKeyRecord.keyInfo;
   }
 
   /**
    * Get the current key information
    */
   getKeyInfo(): StamperKeyInfo | null {
-    return this.keyInfo;
+    return this.activeKeyRecord?.keyInfo || null;
   }
 
   /**
@@ -67,9 +72,9 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
    */
   async resetKeyPair(): Promise<StamperKeyInfo> {
     await this.clear();
-    const keyInfo = await this.generateAndStoreKeyPair();
-    this.keyInfo = keyInfo;
-    return keyInfo;
+    this.activeKeyRecord = await this.generateAndStoreNewKeyRecord('active');
+    this.pendingKeyRecord = null;
+    return this.activeKeyRecord.keyInfo;
   }
 
   /**
@@ -82,18 +87,12 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
       | { data: Buffer; type?: "PKI"; idToken?: never; salt?: never }
       | { data: Buffer; type: "OIDC"; idToken: string; salt: string }
   ): Promise<string> {
-    if (!this.keyInfo) {
+    if (!this.activeKeyRecord) {
       throw new Error("Stamper not initialized. Call init() first.");
     }
 
-    // Get the secret key from secure storage
-    const storedSecretKey = await this.getStoredSecretKey();
-    if (!storedSecretKey) {
-      throw new Error("Secret key not found in secure storage");
-    }
-
-    // Use ApiKeyStamper to create the stamp, passing through any override parameters
-    const apiKeyStamper = new ApiKeyStamper({ apiSecretKey: storedSecretKey });
+    // Use ApiKeyStamper to create the stamp with the active secret key
+    const apiKeyStamper = new ApiKeyStamper({ apiSecretKey: this.activeKeyRecord.secretKey });
     return await apiKeyStamper.stamp(params);
   }
 
@@ -101,42 +100,113 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
    * Clear all stored keys from SecureStore
    */
   async clear(): Promise<void> {
-    const infoKey = this.getInfoKey();
-    const secretKey = this.getSecretKey();
+    const activeKey = this.getActiveKeyName();
+    const pendingKey = this.getPendingKeyName();
 
     try {
-      await SecureStore.deleteItemAsync(infoKey);
+      await SecureStore.deleteItemAsync(activeKey);
     } catch (error) {
       // Key might not exist, continue
     }
 
     try {
-      await SecureStore.deleteItemAsync(secretKey);
+      await SecureStore.deleteItemAsync(pendingKey);
     } catch (error) {
       // Key might not exist, continue
     }
 
-    this.keyInfo = null;
+    this.activeKeyRecord = null;
+    this.pendingKeyRecord = null;
   }
 
-  private async generateAndStoreKeyPair(): Promise<StamperKeyInfo> {
+  /**
+   * Generate a new keypair for rotation without making it active
+   */
+  async generateNewKeyPair(): Promise<StamperKeyInfo> {
+    this.pendingKeyRecord = await this.generateAndStoreNewKeyRecord('pending');
+    return this.pendingKeyRecord.keyInfo;
+  }
+
+  /**
+   * Switch to the pending keypair, making it active and cleaning up the old one
+   */
+  async switchToNewKeyPair(authenticatorId: string): Promise<void> {
+    if (!this.pendingKeyRecord) {
+      throw new Error("No pending keypair to switch to");
+    }
+
+    // Remove old active key
+    if (this.activeKeyRecord) {
+      try {
+        await SecureStore.deleteItemAsync(this.getActiveKeyName());
+      } catch (error) {
+        // Key might not exist, continue
+      }
+    }
+
+    // Promote pending to active
+    this.pendingKeyRecord.status = 'active';
+    this.pendingKeyRecord.authenticatorId = authenticatorId;
+    this.pendingKeyRecord.keyInfo.authenticatorId = authenticatorId; // Also set on keyInfo
+    this.activeKeyRecord = this.pendingKeyRecord;
+    this.pendingKeyRecord = null;
+
+    // Store as active and remove pending
+    await this.storeKeyRecord(this.activeKeyRecord, 'active');
+    try {
+      await SecureStore.deleteItemAsync(this.getPendingKeyName());
+    } catch (error) {
+      // Key might not exist, continue
+    }
+  }
+
+  /**
+   * Get expiration information for the active keypair
+   */
+  getExpirationInfo(): { expiresAt: number | null; shouldRenew: boolean; timeUntilExpiry: number | null } {
+    if (!this.activeKeyRecord?.keyInfo.expiresAt) {
+      return { expiresAt: null, shouldRenew: false, timeUntilExpiry: null };
+    }
+
+    const now = Date.now();
+    const expiresAt = this.activeKeyRecord.keyInfo.expiresAt;
+    const timeUntilExpiry = expiresAt - now;
+    const renewalWindow = 2 * 24 * 60 * 60 * 1000; // 2 days
+
+    return {
+      expiresAt,
+      timeUntilExpiry,
+      shouldRenew: timeUntilExpiry <= renewalWindow && timeUntilExpiry > 0
+    };
+  }
+
+  private async generateAndStoreNewKeyRecord(type: 'active' | 'pending'): Promise<StoredKeyRecord> {
     // Generate Ed25519 keypair using our crypto package
     const keypair = generateKeyPair();
 
     // Create a deterministic key ID from the public key
     const keyId = this.createKeyId(keypair.publicKey);
 
+    const now = Date.now();
     const keyInfo: StamperKeyInfo = {
       keyId,
       publicKey: keypair.publicKey,
+      createdAt: now,
+      expiresAt: now + (7 * 24 * 60 * 60 * 1000), // 7 days from now
     };
 
-    // Store the keypair in SecureStore
-    await this.storeKeyPair(keypair.secretKey, keyInfo);
+    const record: StoredKeyRecord = {
+      keyInfo,
+      secretKey: keypair.secretKey,
+      createdAt: now,
+      expiresAt: keyInfo.expiresAt!,
+      status: type,
+    };
 
-    // Key pair is now stored securely
+    // Store the record in SecureStore
+    await this.storeKeyRecord(record, type);
 
-    return keyInfo;
+    return record;
   }
 
   private createKeyId(publicKey: string): string {
@@ -144,51 +214,51 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
     return base64urlEncode(new TextEncoder().encode(publicKey)).substring(0, 16);
   }
 
-  private async storeKeyPair(secretKey: string, keyInfo: StamperKeyInfo): Promise<void> {
-    const infoKey = this.getInfoKey();
-    const secretKeyName = this.getSecretKey();
+  private async storeKeyRecord(record: StoredKeyRecord, type: 'active' | 'pending'): Promise<void> {
+    const keyName = type === 'active' ? this.getActiveKeyName() : this.getPendingKeyName();
 
-    // Store key info as JSON
-    await SecureStore.setItemAsync(infoKey, JSON.stringify(keyInfo), {
-      requireAuthentication: false,
-    });
-
-    // Store secret key with high security
-    await SecureStore.setItemAsync(secretKeyName, secretKey, {
+    // Store the entire record as JSON
+    await SecureStore.setItemAsync(keyName, JSON.stringify(record), {
       requireAuthentication: false,
     });
   }
 
-  private async getStoredKeyInfo(): Promise<StamperKeyInfo | null> {
+  private async loadActiveKeyRecord(): Promise<StoredKeyRecord | null> {
     try {
-      const infoKey = this.getInfoKey();
-      const storedInfo = await SecureStore.getItemAsync(infoKey);
+      const activeKey = this.getActiveKeyName();
+      const storedRecord = await SecureStore.getItemAsync(activeKey);
 
-      if (storedInfo) {
-        return JSON.parse(storedInfo) as StamperKeyInfo;
+      if (storedRecord) {
+        return JSON.parse(storedRecord) as StoredKeyRecord;
       }
     } catch (error) {
-      // If we can't read the key info, assume it doesn't exist
+      // If we can't read the key record, assume it doesn't exist
     }
 
     return null;
   }
 
-  private async getStoredSecretKey(): Promise<string | null> {
+  private async loadPendingKeyRecord(): Promise<StoredKeyRecord | null> {
     try {
-      const secretKeyName = this.getSecretKey();
-      return await SecureStore.getItemAsync(secretKeyName);
+      const pendingKey = this.getPendingKeyName();
+      const storedRecord = await SecureStore.getItemAsync(pendingKey);
+
+      if (storedRecord) {
+        return JSON.parse(storedRecord) as StoredKeyRecord;
+      }
     } catch (error) {
-      return null;
+      // If we can't read the key record, assume it doesn't exist
     }
+
+    return null;
   }
 
-  private getInfoKey(): string {
-    return `${this.keyPrefix}-${this.organizationId}-info`;
+  private getActiveKeyName(): string {
+    return `${this.keyPrefix}-${this.organizationId}-active`;
   }
 
-  private getSecretKey(): string {
-    return `${this.keyPrefix}-${this.organizationId}-secret`;
+  private getPendingKeyName(): string {
+    return `${this.keyPrefix}-${this.organizationId}-pending`;
   }
 }
 
