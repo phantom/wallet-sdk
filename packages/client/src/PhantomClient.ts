@@ -378,7 +378,6 @@ export class PhantomClient {
       // First, try to get the organization
       // Since there's no explicit getOrganization method, we'll create it
       // This assumes the API returns existing org if it already exists
-      const expiresAtMs = Date.now() + (7 * 24 * 60 * 60 * 1000); // 7 days from now
       return await this.createOrganization(tag, [
         {
           username: `user-${Date.now()}`,
@@ -389,7 +388,6 @@ export class PhantomClient {
               authenticatorKind: "keypair",
               publicKey: publicKey,
               algorithm: "Ed25519",
-              expiresAtMs: expiresAtMs,
             },
           ],
         },
