@@ -27,6 +27,48 @@ mockedGenerateKeyPair.mockReturnValue({
   secretKey: "test-secret-key",
 });
 
+// Helper function to create completed sessions with required timing fields
+function createCompletedSession(overrides: Partial<Session> = {}): Session {
+  const now = Date.now();
+  return {
+    sessionId: "test-session-id",
+    walletId: "wallet-123",
+    organizationId: "org-123",
+    stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
+    authProvider: "jwt",
+    userInfo: {},
+    status: "completed",
+    createdAt: now,
+    lastUsed: now,
+    authenticatorCreatedAt: now,
+    authenticatorExpiresAt: now + (7 * 24 * 60 * 60 * 1000), // 7 days from now
+    lastRenewalAttempt: undefined,
+    username: "test-user",
+    ...overrides,
+  };
+}
+
+// Helper function to create pending sessions with required timing fields
+function createPendingSession(overrides: Partial<Session> = {}): Session {
+  const now = Date.now();
+  return {
+    sessionId: "test-session-id",
+    walletId: "temp-wallet",
+    organizationId: "org-123",
+    stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
+    authProvider: "phantom-connect",
+    userInfo: {},
+    status: "pending",
+    createdAt: now,
+    lastUsed: now,
+    authenticatorCreatedAt: now,
+    authenticatorExpiresAt: now + (7 * 24 * 60 * 60 * 1000), // 7 days from now
+    lastRenewalAttempt: undefined,
+    username: "test-user",
+    ...overrides,
+  };
+}
+
 describe("EmbeddedProvider Auth Flows", () => {
   let provider: EmbeddedProvider;
   let config: EmbeddedProviderConfig;
@@ -180,17 +222,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       };
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
 
-      const existingSession: Session = {
-        sessionId: "test-session-id",
-        walletId: "temp-wallet",
-        organizationId: "org-123",
-        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
-        authProvider: "phantom-connect",
-        userInfo: {},
-        status: "pending",
-        createdAt: Date.now(),
-        lastUsed: Date.now(),
-      };
+      const existingSession = createPendingSession();
       mockStorage.getSession.mockResolvedValue(existingSession);
       mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
 
@@ -208,17 +240,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       };
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
 
-      const existingSession: Session = {
-        sessionId: "test-session-id",
-        walletId: "temp-wallet",
-        organizationId: "org-123",
-        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
-        authProvider: "phantom-connect",
-        userInfo: {},
-        status: "pending",
-        createdAt: Date.now(),
-        lastUsed: Date.now(),
-      };
+      const existingSession = createPendingSession();
       mockStorage.getSession.mockResolvedValue(existingSession);
       mockClient.getWalletAddresses.mockResolvedValue([]);
 
@@ -241,17 +263,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       };
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
 
-      const existingSession: Session = {
-        sessionId: "test-session-id",
-        walletId: "temp-wallet",
-        organizationId: "org-123",
-        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
-        authProvider: "phantom-connect",
-        userInfo: {},
-        status: "pending",
-        createdAt: Date.now(),
-        lastUsed: Date.now(),
-      };
+      const existingSession = createPendingSession();
       mockStorage.getSession.mockResolvedValue(existingSession);
       mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
 
@@ -391,10 +403,17 @@ describe("EmbeddedProvider Auth Flows", () => {
 
     it("should create app wallet directly without authentication", async () => {
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
-      mockStorage.getSession.mockResolvedValue(null);
       mockClient.createOrganization.mockResolvedValue({ organizationId: "new-org-id" });
       mockClient.createWallet.mockResolvedValue({ walletId: "app-wallet-123" });
       mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
+
+      // Set up storage mock to return null initially, then return the saved session
+      let savedSession: Session | null = null;
+      mockStorage.getSession.mockImplementation(() => Promise.resolve(savedSession));
+      mockStorage.saveSession.mockImplementation((session: Session) => {
+        savedSession = session;
+        return Promise.resolve();
+      });
 
       const result = await provider.connect();
 
@@ -406,10 +425,17 @@ describe("EmbeddedProvider Auth Flows", () => {
 
     it("should generate keypair and organization for app wallet", async () => {
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
-      mockStorage.getSession.mockResolvedValue(null);
       mockClient.createOrganization.mockResolvedValue({ organizationId: "new-org-id" });
       mockClient.createWallet.mockResolvedValue({ walletId: "app-wallet-123" });
       mockClient.getWalletAddresses.mockResolvedValue([]);
+
+      // Set up storage mock to return null initially, then return the saved session
+      let savedSession: Session | null = null;
+      mockStorage.getSession.mockImplementation(() => Promise.resolve(savedSession));
+      mockStorage.saveSession.mockImplementation((session: Session) => {
+        savedSession = session;
+        return Promise.resolve();
+      });
 
       await provider.connect();
 
@@ -434,10 +460,17 @@ describe("EmbeddedProvider Auth Flows", () => {
 
     it("should save completed session immediately for app wallet", async () => {
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
-      mockStorage.getSession.mockResolvedValue(null);
       mockClient.createOrganization.mockResolvedValue({ organizationId: "new-org-id" });
       mockClient.createWallet.mockResolvedValue({ walletId: "app-wallet-123" });
       mockClient.getWalletAddresses.mockResolvedValue([]);
+
+      // Set up storage mock to return null initially, then return the saved session
+      let savedSession: Session | null = null;
+      mockStorage.getSession.mockImplementation(() => Promise.resolve(savedSession));
+      mockStorage.saveSession.mockImplementation((session: Session) => {
+        savedSession = session;
+        return Promise.resolve();
+      });
 
       await provider.connect();
 
@@ -452,10 +485,17 @@ describe("EmbeddedProvider Auth Flows", () => {
 
     it("should fetch wallet addresses after app wallet creation", async () => {
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
-      mockStorage.getSession.mockResolvedValue(null);
       mockClient.createOrganization.mockResolvedValue({ organizationId: "new-org-id" });
       mockClient.createWallet.mockResolvedValue({ walletId: "app-wallet-123" });
       mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
+
+      // Set up storage mock to return null initially, then return the saved session
+      let savedSession: Session | null = null;
+      mockStorage.getSession.mockImplementation(() => Promise.resolve(savedSession));
+      mockStorage.saveSession.mockImplementation((session: Session) => {
+        savedSession = session;
+        return Promise.resolve();
+      });
 
       const result = await provider.connect();
 
@@ -467,8 +507,15 @@ describe("EmbeddedProvider Auth Flows", () => {
   describe("JWT Authentication Flow", () => {
     it("should authenticate with valid JWT token", async () => {
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
-      mockStorage.getSession.mockResolvedValue(null);
       mockClient.createOrganization.mockResolvedValue({ organizationId: "new-org-id" });
+
+      // Set up storage mock to return null initially, then return the saved session
+      let savedSession: Session | null = null;
+      mockStorage.getSession.mockImplementation(() => Promise.resolve(savedSession));
+      mockStorage.saveSession.mockImplementation((session: Session) => {
+        savedSession = session;
+        return Promise.resolve();
+      });
 
       // Mock the core provider's JWT auth by directly mocking the jwtAuth.authenticate call
       const mockJWTAuth = {
@@ -500,8 +547,15 @@ describe("EmbeddedProvider Auth Flows", () => {
 
     it("should create completed session after successful JWT auth", async () => {
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
-      mockStorage.getSession.mockResolvedValue(null);
       mockClient.createOrganization.mockResolvedValue({ organizationId: "new-org-id" });
+
+      // Set up storage mock to return null initially, then return the saved session
+      let savedSession: Session | null = null;
+      mockStorage.getSession.mockImplementation(() => Promise.resolve(savedSession));
+      mockStorage.saveSession.mockImplementation((session: Session) => {
+        savedSession = session;
+        return Promise.resolve();
+      });
 
       // Mock JWT auth
       const mockJWTAuth = {
@@ -700,17 +754,7 @@ describe("EmbeddedProvider Auth Flows", () => {
     it("should validate existing completed sessions without modification", async () => {
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
 
-      const completedSession: Session = {
-        sessionId: "test-session-id",
-        walletId: "wallet-123",
-        organizationId: "org-123",
-        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
-        authProvider: "jwt",
-        userInfo: {},
-        status: "completed",
-        createdAt: Date.now(),
-        lastUsed: Date.now(),
-      };
+      const completedSession = createCompletedSession();
       mockStorage.getSession.mockResolvedValue(completedSession);
       mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
 
@@ -723,17 +767,7 @@ describe("EmbeddedProvider Auth Flows", () => {
     it("should handle concurrent session operations safely", async () => {
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
 
-      const completedSession: Session = {
-        sessionId: "test-session-id",
-        walletId: "wallet-123",
-        organizationId: "org-123",
-        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
-        authProvider: "jwt",
-        userInfo: {},
-        status: "completed",
-        createdAt: Date.now(),
-        lastUsed: Date.now(),
-      };
+      const completedSession = createCompletedSession();
       mockStorage.getSession.mockResolvedValue(completedSession);
       mockClient.getWalletAddresses.mockResolvedValue([]);
 
@@ -813,17 +847,7 @@ describe("EmbeddedProvider Auth Flows", () => {
     it("should return addresses when connected", async () => {
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
 
-      const completedSession: Session = {
-        sessionId: "test-session-id",
-        walletId: "wallet-123",
-        organizationId: "org-123",
-        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
-        authProvider: "jwt",
-        userInfo: {},
-        status: "completed",
-        createdAt: Date.now(),
-        lastUsed: Date.now(),
-      };
+      const completedSession = createCompletedSession();
       mockStorage.getSession.mockResolvedValue(completedSession);
       mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
 
@@ -837,17 +861,7 @@ describe("EmbeddedProvider Auth Flows", () => {
     it("should clear state on disconnect", async () => {
       // Connect first
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
-      const completedSession: Session = {
-        sessionId: "test-session-id",
-        walletId: "wallet-123",
-        organizationId: "org-123",
-        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
-        authProvider: "jwt",
-        userInfo: {},
-        status: "completed",
-        createdAt: Date.now(),
-        lastUsed: Date.now(),
-      };
+      const completedSession = createCompletedSession();
       mockStorage.getSession.mockResolvedValue(completedSession);
       mockClient.getWalletAddresses.mockResolvedValue([]);
 
@@ -873,17 +887,7 @@ describe("EmbeddedProvider Auth Flows", () => {
     });
 
     it("should connect using existing completed session", async () => {
-      const completedSession: Session = {
-        sessionId: "test-session-id",
-        walletId: "wallet-123",
-        organizationId: "org-123",
-        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
-        authProvider: "jwt",
-        userInfo: {},
-        status: "completed",
-        createdAt: Date.now(),
-        lastUsed: Date.now(),
-      };
+      const completedSession = createCompletedSession();
       mockStorage.getSession.mockResolvedValue(completedSession);
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
       mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
@@ -902,17 +906,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       };
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
 
-      const existingSession: Session = {
-        sessionId: "test-session-id",
-        walletId: "temp-wallet",
-        organizationId: "org-123",
-        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
-        authProvider: "phantom-connect",
-        userInfo: {},
-        status: "pending",
-        createdAt: Date.now(),
-        lastUsed: Date.now(),
-      };
+      const existingSession = createPendingSession();
       mockStorage.getSession.mockResolvedValue(existingSession);
       mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
 
@@ -976,17 +970,10 @@ describe("EmbeddedProvider Auth Flows", () => {
 
     it("should update session timestamp on successful autoConnect", async () => {
       const originalTimestamp = Date.now() - 60000; // 1 minute ago
-      const completedSession: Session = {
-        sessionId: "test-session-id",
-        walletId: "wallet-123",
-        organizationId: "org-123",
-        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
-        authProvider: "jwt",
-        userInfo: {},
-        status: "completed",
+      const completedSession = createCompletedSession({
         createdAt: originalTimestamp,
         lastUsed: originalTimestamp,
-      };
+      });
       mockStorage.getSession.mockResolvedValue(completedSession);
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
       mockClient.getWalletAddresses.mockResolvedValue([]);
@@ -1019,17 +1006,7 @@ describe("EmbeddedProvider Auth Flows", () => {
     });
 
     it("should emit connect event on successful autoConnect with existing session", async () => {
-      const completedSession: Session = {
-        sessionId: "test-session-id",
-        walletId: "wallet-123",
-        organizationId: "org-123",
-        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
-        authProvider: "jwt",
-        userInfo: {},
-        status: "completed",
-        createdAt: Date.now(),
-        lastUsed: Date.now(),
-      };
+      const completedSession = createCompletedSession();
       mockStorage.getSession.mockResolvedValue(completedSession);
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
       mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
@@ -1062,17 +1039,7 @@ describe("EmbeddedProvider Auth Flows", () => {
     });
 
     it("should handle errors during autoConnect gracefully", async () => {
-      const completedSession: Session = {
-        sessionId: "test-session-id",
-        walletId: "wallet-123",
-        organizationId: "org-123",
-        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
-        authProvider: "jwt",
-        userInfo: {},
-        status: "completed",
-        createdAt: Date.now(),
-        lastUsed: Date.now(),
-      };
+      const completedSession = createCompletedSession();
       mockStorage.getSession.mockResolvedValue(completedSession);
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
       
@@ -1116,17 +1083,11 @@ describe("EmbeddedProvider Auth Flows", () => {
       config.embeddedWalletType = "app-wallet";
       provider = new EmbeddedProvider(config, mockPlatform, mockLogger);
 
-      const appWalletSession: Session = {
-        sessionId: "test-session-id",
+      const appWalletSession = createCompletedSession({
         walletId: "app-wallet-123",
-        organizationId: "org-123",
-        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "app-wallet",
         userInfo: { embeddedWalletType: "app-wallet" },
-        status: "completed",
-        createdAt: Date.now(),
-        lastUsed: Date.now(),
-      };
+      });
       mockStorage.getSession.mockResolvedValue(appWalletSession);
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
       mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
@@ -1142,18 +1103,16 @@ describe("EmbeddedProvider Auth Flows", () => {
     beforeEach(async () => {
       // Set up a connected state
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
-      const completedSession: Session = {
-        sessionId: "test-session-id",
-        walletId: "wallet-123",
-        organizationId: "org-123",
-        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
-        authProvider: "jwt",
-        userInfo: {},
-        status: "completed",
-        createdAt: Date.now(),
-        lastUsed: Date.now(),
-      };
-      mockStorage.getSession.mockResolvedValue(completedSession);
+      const completedSession = createCompletedSession();
+      
+      // Set up storage mock to track the session properly
+      let savedSession: Session | null = completedSession;
+      mockStorage.getSession.mockImplementation(() => Promise.resolve(savedSession));
+      mockStorage.saveSession.mockImplementation((session: Session) => {
+        savedSession = session;
+        return Promise.resolve();
+      });
+      
       mockClient.getWalletAddresses.mockResolvedValue([]);
       await provider.connect();
     });

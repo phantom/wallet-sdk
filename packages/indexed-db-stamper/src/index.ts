@@ -219,7 +219,7 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
   /**
    * Generate a new keypair for rotation without making it active
    */
-  async generateNewKeyPair(): Promise<StamperKeyInfo> {
+  async rotateKeyPair(): Promise<StamperKeyInfo> {
     if (!this.db) {
       await this.openDB();
     }
@@ -231,9 +231,9 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
   /**
    * Switch to the pending keypair, making it active and cleaning up the old one
    */
-  async switchToNewKeyPair(authenticatorId: string): Promise<void> {
+  async commitRotation(authenticatorId: string): Promise<void> {
     if (!this.pendingKeyPairRecord) {
-      throw new Error("No pending keypair to switch to");
+      throw new Error("No pending keypair to commit");
     }
 
     // Remove old active keypair
@@ -255,24 +255,18 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
   }
 
   /**
-   * Get expiration information for the active keypair
+   * Discard the pending keypair on rotation failure
    */
-  getExpirationInfo(): { expiresAt: number | null; shouldRenew: boolean; timeUntilExpiry: number | null } {
-    if (!this.activeKeyPairRecord?.keyInfo.expiresAt) {
-      return { expiresAt: null, shouldRenew: false, timeUntilExpiry: null };
+  async rollbackRotation(): Promise<void> {
+    if (!this.pendingKeyPairRecord) {
+      return; // Nothing to rollback
     }
 
-    const now = Date.now();
-    const expiresAt = this.activeKeyPairRecord.keyInfo.expiresAt;
-    const timeUntilExpiry = expiresAt - now;
-    const renewalWindow = 2 * 24 * 60 * 60 * 1000; // 2 days
-
-    return {
-      expiresAt,
-      timeUntilExpiry,
-      shouldRenew: timeUntilExpiry <= renewalWindow && timeUntilExpiry > 0
-    };
+    // Remove pending keypair
+    await this.removeKeyPairRecord('pending');
+    this.pendingKeyPairRecord = null;
   }
+
 
   private async generateAndStoreNewKeyPair(type: 'active' | 'pending'): Promise<KeyPairRecord> {
     // Generate non-extractable Ed25519 key pair using Web Crypto API
@@ -298,14 +292,13 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
       keyId,
       publicKey: publicKeyBase58,
       createdAt: now,
-      expiresAt: now + (7 * 24 * 60 * 60 * 1000), // 7 days from now
     };
 
     const record: KeyPairRecord = {
       keyPair,
       keyInfo,
       createdAt: now,
-      expiresAt: keyInfo.expiresAt!,
+      expiresAt: 0, // Not used anymore, kept for backward compatibility
       status: type,
     };
 
@@ -375,5 +368,6 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
       request.onerror = () => reject(request.error);
     });
   }
+
 
 }

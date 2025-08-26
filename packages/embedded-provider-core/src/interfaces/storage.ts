@@ -7,7 +7,6 @@ export interface StamperInfo {
   keyId: string;
   publicKey: string;
   createdAt?: number; // Optional timestamp when key was created
-  expiresAt?: number; // Optional timestamp when key expires
   authenticatorId?: string; // Optional authenticator ID from server
 }
 
@@ -22,9 +21,12 @@ export interface Session {
   status: "pending" | "completed" | "failed";
   createdAt: number;
   lastUsed: number;
-  // New fields for authenticator expiration tracking
-  authenticatorExpiresAt?: number; // When the authenticator expires
-  lastRenewalCheck?: number; // Last time we checked for renewal
+  // Authenticator lifecycle tracking (session owns the timing)
+  authenticatorCreatedAt: number;    // When the current authenticator was created
+  authenticatorExpiresAt: number;    // When the authenticator expires
+  lastRenewalAttempt?: number;       // Last time we attempted renewal
+  // Username used for organization creation (needed for authenticator rotation)
+  username: string;                  // Username that was used when creating the organization
 }
 
 export interface EmbeddedStorage {

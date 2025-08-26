@@ -122,7 +122,7 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
   /**
    * Generate a new keypair for rotation without making it active
    */
-  async generateNewKeyPair(): Promise<StamperKeyInfo> {
+  async rotateKeyPair(): Promise<StamperKeyInfo> {
     this.pendingKeyRecord = await this.generateAndStoreNewKeyRecord('pending');
     return this.pendingKeyRecord.keyInfo;
   }
@@ -130,9 +130,9 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
   /**
    * Switch to the pending keypair, making it active and cleaning up the old one
    */
-  async switchToNewKeyPair(authenticatorId: string): Promise<void> {
+  async commitRotation(authenticatorId: string): Promise<void> {
     if (!this.pendingKeyRecord) {
-      throw new Error("No pending keypair to switch to");
+      throw new Error("No pending keypair to commit");
     }
 
     // Remove old active key
@@ -161,23 +161,21 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
   }
 
   /**
-   * Get expiration information for the active keypair
+   * Discard the pending keypair on rotation failure
    */
-  getExpirationInfo(): { expiresAt: number | null; shouldRenew: boolean; timeUntilExpiry: number | null } {
-    if (!this.activeKeyRecord?.keyInfo.expiresAt) {
-      return { expiresAt: null, shouldRenew: false, timeUntilExpiry: null };
+  async rollbackRotation(): Promise<void> {
+    if (!this.pendingKeyRecord) {
+      return; // Nothing to rollback
     }
 
-    const now = Date.now();
-    const expiresAt = this.activeKeyRecord.keyInfo.expiresAt;
-    const timeUntilExpiry = expiresAt - now;
-    const renewalWindow = 2 * 24 * 60 * 60 * 1000; // 2 days
+    // Remove pending key
+    try {
+      await SecureStore.deleteItemAsync(this.getPendingKeyName());
+    } catch (error) {
+      // Key might not exist, continue
+    }
 
-    return {
-      expiresAt,
-      timeUntilExpiry,
-      shouldRenew: timeUntilExpiry <= renewalWindow && timeUntilExpiry > 0
-    };
+    this.pendingKeyRecord = null;
   }
 
   private async generateAndStoreNewKeyRecord(type: 'active' | 'pending'): Promise<StoredKeyRecord> {
@@ -192,14 +190,13 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
       keyId,
       publicKey: keypair.publicKey,
       createdAt: now,
-      expiresAt: now + (7 * 24 * 60 * 60 * 1000), // 7 days from now
     };
 
     const record: StoredKeyRecord = {
       keyInfo,
       secretKey: keypair.secretKey,
       createdAt: now,
-      expiresAt: keyInfo.expiresAt!,
+      expiresAt: 0, // Not used anymore, kept for backward compatibility
       status: type,
     };
 
@@ -260,6 +257,7 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
   private getPendingKeyName(): string {
     return `${this.keyPrefix}-${this.organizationId}-pending`;
   }
+
 }
 
 // Export with the legacy name for compatibility

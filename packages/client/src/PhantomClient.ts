@@ -48,6 +48,7 @@ import {
   type CreateAuthenticatorParams,
   type DeleteAuthenticatorParams,
   type UserConfig,
+  type AuthenticatorConfig,
 } from "./types";
 
 import type { Stamper } from "@phantom/sdk-types";
@@ -449,7 +450,7 @@ export class PhantomClient {
         organizationId: params.organizationId,
         username: params.username,
         authenticatorName: params.authenticatorName,
-        authenticator: params.authenticator as any,
+        authenticator: params.authenticator as AuthenticatorConfig,
         replaceExpirable: params.replaceExpirable,
       } as any;
 

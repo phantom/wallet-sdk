@@ -44,35 +44,28 @@ describe('EmbeddedProvider Renewal Tests', () => {
       }),
     };
 
-    // Mock stamper with expiration support
+    // Mock stamper with rotation support
     mockStamper = {
       init: jest.fn().mockResolvedValue({
         keyId: 'test-key-id',
         publicKey: 'test-public-key',
         createdAt: Date.now(),
-        expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
       }),
       getKeyInfo: jest.fn().mockReturnValue({
         keyId: 'test-key-id',
         publicKey: 'test-public-key',
         createdAt: Date.now(),
-        expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
       }),
       stamp: jest.fn().mockResolvedValue('mock-stamp'),
       algorithm: 'Ed25519' as any,
       type: 'PKI' as const,
-      generateNewKeyPair: jest.fn().mockResolvedValue({
+      rotateKeyPair: jest.fn().mockResolvedValue({
         keyId: 'new-key-id',
         publicKey: 'new-public-key',
         createdAt: Date.now(),
-        expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
       }),
-      switchToNewKeyPair: jest.fn().mockResolvedValue(undefined),
-      getExpirationInfo: jest.fn().mockReturnValue({
-        expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
-        timeUntilExpiry: 7 * 24 * 60 * 60 * 1000,
-        shouldRenew: false,
-      }),
+      commitRotation: jest.fn().mockResolvedValue(undefined),
+      rollbackRotation: jest.fn().mockResolvedValue(undefined),
     };
 
     // Mock client
@@ -124,28 +117,25 @@ describe('EmbeddedProvider Renewal Tests', () => {
       stamperInfo: {
         keyId: 'test-key-id',
         publicKey: 'test-public-key',
-        expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
       },
       status: 'completed',
       createdAt: Date.now(),
       lastUsed: Date.now(),
+      authenticatorCreatedAt: Date.now(),
+      authenticatorExpiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
+      lastRenewalAttempt: undefined,
+      username: 'test-user',
     };
     mockStorage.session = session;
 
-    // Mock that renewal is not needed
-    mockStamper.getExpirationInfo.mockReturnValue({
-      expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
-      timeUntilExpiry: 7 * 24 * 60 * 60 * 1000,
-      shouldRenew: false,
-    });
-
     await (provider as any).ensureValidAuthenticator();
 
-    expect(mockStamper.generateNewKeyPair).not.toHaveBeenCalled();
+    expect(mockStamper.rotateKeyPair).not.toHaveBeenCalled();
     expect(mockClient.createAuthenticator).not.toHaveBeenCalled();
   });
 
   test('should renew authenticator when close to expiration', async () => {
+    const now = Date.now();
     const session: Session = {
       sessionId: 'test-session',
       walletId: 'test-wallet',
@@ -153,27 +143,23 @@ describe('EmbeddedProvider Renewal Tests', () => {
       stamperInfo: {
         keyId: 'test-key-id',
         publicKey: 'test-public-key',
-        expiresAt: Date.now() + (1 * 24 * 60 * 60 * 1000), // 1 day left
       },
       status: 'completed',
-      createdAt: Date.now(),
-      lastUsed: Date.now(),
+      createdAt: now,
+      lastUsed: now,
+      authenticatorCreatedAt: now,
+      authenticatorExpiresAt: now + (1 * 60 * 1000), // 1 minute left (within renewal window)
+      lastRenewalAttempt: undefined,
+      username: 'test-user',
     };
     mockStorage.session = session;
-
-    // Mock that renewal is needed
-    mockStamper.getExpirationInfo.mockReturnValue({
-      expiresAt: Date.now() + (1 * 24 * 60 * 60 * 1000),
-      timeUntilExpiry: 1 * 24 * 60 * 60 * 1000,
-      shouldRenew: true, // Within 2-day renewal window
-    });
 
     // Ensure client is set before calling renewal
     expect((provider as any).client).toBe(mockClient);
     
     await (provider as any).ensureValidAuthenticator();
 
-    expect(mockStamper.generateNewKeyPair).toHaveBeenCalled();
+    expect(mockStamper.rotateKeyPair).toHaveBeenCalled();
     expect(mockClient.createAuthenticator).toHaveBeenCalledWith(
       expect.objectContaining({
         organizationId: 'test-org',
@@ -181,14 +167,14 @@ describe('EmbeddedProvider Renewal Tests', () => {
         authenticator: expect.objectContaining({
           authenticatorKind: 'keypair',
           algorithm: 'Ed25519',
-          expiresAtMs: expect.any(Number),
         }),
       })
     );
-    expect(mockStamper.switchToNewKeyPair).toHaveBeenCalledWith('new-authenticator-id');
+    expect(mockStamper.commitRotation).toHaveBeenCalledWith('new-authenticator-id');
   });
 
-  test('should disconnect when authenticator has expired', async () => {
+  test('should throw when authenticator has expired', async () => {
+    const now = Date.now();
     const session: Session = {
       sessionId: 'test-session',
       walletId: 'test-wallet',
@@ -196,26 +182,26 @@ describe('EmbeddedProvider Renewal Tests', () => {
       stamperInfo: {
         keyId: 'test-key-id',
         publicKey: 'test-public-key',
-        expiresAt: Date.now() - (1 * 24 * 60 * 60 * 1000), // Expired 1 day ago
       },
       status: 'completed',
-      createdAt: Date.now(),
-      lastUsed: Date.now(),
+      createdAt: now,
+      lastUsed: now,
+      authenticatorCreatedAt: now - (2 * 24 * 60 * 60 * 1000),
+      authenticatorExpiresAt: now - (1 * 24 * 60 * 60 * 1000), // Expired 1 day ago
+      lastRenewalAttempt: undefined,
+      username: 'test-user',
     };
     mockStorage.session = session;
 
-    // Mock that authenticator has expired
-    mockStamper.getExpirationInfo.mockReturnValue({
-      expiresAt: Date.now() - (1 * 24 * 60 * 60 * 1000),
-      timeUntilExpiry: -1 * 24 * 60 * 60 * 1000,
-      shouldRenew: false,
-    });
-
+    // Should throw for expired authenticators and disconnect
     await expect((provider as any).ensureValidAuthenticator()).rejects.toThrow('Authenticator expired');
-    expect(mockStorage.session).toBeUndefined(); // Session should be cleared
+    
+    // No renewal should be attempted for expired authenticators
+    expect(mockStamper.rotateKeyPair).not.toHaveBeenCalled();
   });
 
   test('should handle renewal failure gracefully', async () => {
+    const now = Date.now();
     const session: Session = {
       sessionId: 'test-session',
       walletId: 'test-wallet',
@@ -223,20 +209,16 @@ describe('EmbeddedProvider Renewal Tests', () => {
       stamperInfo: {
         keyId: 'test-key-id',
         publicKey: 'test-public-key',
-        expiresAt: Date.now() + (1 * 24 * 60 * 60 * 1000),
       },
       status: 'completed',
-      createdAt: Date.now(),
-      lastUsed: Date.now(),
+      createdAt: now,
+      lastUsed: now,
+      authenticatorCreatedAt: now,
+      authenticatorExpiresAt: now + (1 * 60 * 1000), // 1 minute left (within renewal window)
+      lastRenewalAttempt: undefined,
+      username: 'test-user',
     };
     mockStorage.session = session;
-
-    // Mock that renewal is needed
-    mockStamper.getExpirationInfo.mockReturnValue({
-      expiresAt: Date.now() + (1 * 24 * 60 * 60 * 1000),
-      timeUntilExpiry: 1 * 24 * 60 * 60 * 1000,
-      shouldRenew: true,
-    });
 
     // Mock renewal failure
     mockClient.createAuthenticator.mockRejectedValue(new Error('Network error'));
@@ -244,11 +226,13 @@ describe('EmbeddedProvider Renewal Tests', () => {
     // Should not throw - renewal failure should be handled gracefully
     await expect((provider as any).ensureValidAuthenticator()).resolves.not.toThrow();
 
-    expect(mockStamper.generateNewKeyPair).toHaveBeenCalled();
-    expect(mockStamper.switchToNewKeyPair).not.toHaveBeenCalled(); // Should not switch on failure
+    expect(mockStamper.rotateKeyPair).toHaveBeenCalled();
+    expect(mockStamper.commitRotation).not.toHaveBeenCalled(); // Should not commit on failure
+    expect(mockStamper.rollbackRotation).toHaveBeenCalled(); // Should rollback on failure
   });
 
   test('should update session with new expiration after successful renewal', async () => {
+    const now = Date.now();
     const session: Session = {
       sessionId: 'test-session',
       walletId: 'test-wallet',
@@ -256,20 +240,16 @@ describe('EmbeddedProvider Renewal Tests', () => {
       stamperInfo: {
         keyId: 'old-key-id',
         publicKey: 'old-public-key',
-        expiresAt: Date.now() + (1 * 24 * 60 * 60 * 1000),
       },
       status: 'completed',
-      createdAt: Date.now(),
-      lastUsed: Date.now(),
+      createdAt: now,
+      lastUsed: now,
+      authenticatorCreatedAt: now,
+      authenticatorExpiresAt: now + (1 * 60 * 1000), // 1 minute left (within renewal window)
+      lastRenewalAttempt: undefined,
+      username: 'test-user',
     };
     mockStorage.session = session;
-
-    // Mock that renewal is needed
-    mockStamper.getExpirationInfo.mockReturnValue({
-      expiresAt: Date.now() + (1 * 24 * 60 * 60 * 1000),
-      timeUntilExpiry: 1 * 24 * 60 * 60 * 1000,
-      shouldRenew: true,
-    });
 
     await (provider as any).ensureValidAuthenticator();
 
@@ -277,10 +257,11 @@ describe('EmbeddedProvider Renewal Tests', () => {
     expect(mockStorage.session.stamperInfo.keyId).toBe('new-key-id');
     expect(mockStorage.session.stamperInfo.publicKey).toBe('new-public-key');
     expect(mockStorage.session.authenticatorExpiresAt).toBeDefined();
-    expect(mockStorage.session.lastRenewalCheck).toBeDefined();
+    expect(mockStorage.session.lastRenewalAttempt).toBeDefined();
   });
 
   test('should validate session with expired authenticator', () => {
+    const now = Date.now();
     const session: Session = {
       sessionId: 'test-session',
       walletId: 'test-wallet',
@@ -288,12 +269,14 @@ describe('EmbeddedProvider Renewal Tests', () => {
       stamperInfo: {
         keyId: 'test-key-id',
         publicKey: 'test-public-key',
-        expiresAt: Date.now() - (1 * 24 * 60 * 60 * 1000), // Expired
       },
       status: 'completed',
-      createdAt: Date.now() - (2 * 24 * 60 * 60 * 1000),
-      lastUsed: Date.now(),
-      authenticatorExpiresAt: Date.now() - (1 * 24 * 60 * 60 * 1000), // Expired
+      createdAt: now - (2 * 24 * 60 * 60 * 1000),
+      lastUsed: now,
+      authenticatorCreatedAt: now - (2 * 24 * 60 * 60 * 1000),
+      authenticatorExpiresAt: now - (1 * 24 * 60 * 60 * 1000), // Expired
+      lastRenewalAttempt: undefined,
+      username: 'test-user',
     };
 
     const isValid = (provider as any).isSessionValid(session);
@@ -301,6 +284,7 @@ describe('EmbeddedProvider Renewal Tests', () => {
   });
 
   test('should validate session with valid authenticator', () => {
+    const now = Date.now();
     const session: Session = {
       sessionId: 'test-session',
       walletId: 'test-wallet',
@@ -308,12 +292,14 @@ describe('EmbeddedProvider Renewal Tests', () => {
       stamperInfo: {
         keyId: 'test-key-id',
         publicKey: 'test-public-key',
-        expiresAt: Date.now() + (5 * 24 * 60 * 60 * 1000), // Valid
       },
       status: 'completed',
-      createdAt: Date.now(),
-      lastUsed: Date.now(),
-      authenticatorExpiresAt: Date.now() + (5 * 24 * 60 * 60 * 1000), // Valid
+      createdAt: now,
+      lastUsed: now,
+      authenticatorCreatedAt: now,
+      authenticatorExpiresAt: now + (5 * 24 * 60 * 60 * 1000), // Valid
+      lastRenewalAttempt: undefined,
+      username: 'test-user',
     };
 
     const isValid = (provider as any).isSessionValid(session);

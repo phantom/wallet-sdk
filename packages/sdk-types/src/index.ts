@@ -16,7 +16,6 @@ export interface StamperKeyInfo {
   keyId: string;
   publicKey: string;
   createdAt?: number; // Optional timestamp when key was created
-  expiresAt?: number; // Optional timestamp when key expires
   authenticatorId?: string; // Optional authenticator ID from server
 }
 
@@ -24,11 +23,11 @@ export interface StamperKeyInfo {
 export interface StamperWithKeyManagement extends Stamper {
   init(): Promise<StamperKeyInfo>;
   getKeyInfo(): StamperKeyInfo | null;
-  resetKeyPair?(): Promise<StamperKeyInfo>;
-  clear?(): Promise<void>;
+  resetKeyPair(): Promise<StamperKeyInfo>;
+  clear(): Promise<void>;
   
-  // New methods for expiration and rotation support
-  generateNewKeyPair?(): Promise<StamperKeyInfo>;
-  switchToNewKeyPair?(authenticatorId: string): Promise<void>;
-  getExpirationInfo?(): { expiresAt: number | null; shouldRenew: boolean; timeUntilExpiry: number | null };
+  // Key rotation methods for seamless key transitions
+  rotateKeyPair(): Promise<StamperKeyInfo>;        // Generate new keypair, keep old as pending
+  commitRotation(authenticatorId: string): Promise<void>;  // Switch to new keypair
+  rollbackRotation(): Promise<void>;              // Discard pending keypair on failure
 }
