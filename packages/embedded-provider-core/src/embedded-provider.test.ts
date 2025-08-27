@@ -234,7 +234,24 @@ describe("EmbeddedProvider Core", () => {
     });
 
     it("should use platform stamper for signing operations", async () => {
-      // Mock connected state
+      // Mock connected state with session
+      const mockSession = {
+        sessionId: "test-session-id",
+        walletId: "test-wallet-id",
+        organizationId: "org-123",
+        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
+        authProvider: "jwt",
+        userInfo: {},
+        status: "completed" as const,
+        createdAt: Date.now(),
+        lastUsed: Date.now(),
+        authenticatorCreatedAt: Date.now(),
+        authenticatorExpiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
+        lastRenewalAttempt: undefined,
+        username: "test-user",
+      };
+      mockPlatform.storage.getSession.mockResolvedValue(mockSession);
+      
       provider["client"] = {
         signMessage: jest.fn().mockResolvedValue("signed-message"),
       } as any;
@@ -253,6 +270,7 @@ describe("EmbeddedProvider Core", () => {
 
     it("should call platform stamper getKeyInfo during client initialization", async () => {
       // Mock existing session to trigger initializeClientFromSession
+      const now = Date.now();
       const mockSession = {
         sessionId: "session-123",
         status: "completed" as const,
@@ -261,8 +279,12 @@ describe("EmbeddedProvider Core", () => {
         stamperInfo: { keyId: "key-123", publicKey: "pub-key" },
         authProvider: "app-wallet",
         userInfo: {},
-        createdAt: Date.now(),
-        lastUsed: Date.now(),
+        createdAt: now,
+        lastUsed: now,
+        authenticatorCreatedAt: now,
+        authenticatorExpiresAt: now + (7 * 24 * 60 * 60 * 1000),
+        lastRenewalAttempt: undefined,
+        username: "test-user",
       };
 
       mockPlatform.storage.getSession.mockResolvedValue(mockSession);
