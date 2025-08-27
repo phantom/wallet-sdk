@@ -9,6 +9,8 @@ import { isPhantomExtensionInstalled } from "@phantom/browser-injected-sdk";
 import { debug, DebugCategory, type DebugLevel, type DebugCallback } from "./debug";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chains";
 import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-provider-core";
+import type { InjectedProvider } from "./providers/injected";
+import type { AutoConfirmEnableParams, AutoConfirmResult, AutoConfirmSupportedChainsResult } from "@phantom/browser-injected-sdk/auto-confirm";
 
 /**
  * Browser SDK with chain-specific API
@@ -263,6 +265,111 @@ export class BrowserSDK {
     
     if (config.callback !== undefined) {
       this.setDebugCallback(config.callback);
+    }
+  }
+
+  // ===== AUTO-CONFIRM METHODS (Injected Provider Only) =====
+
+  /**
+   * Enable auto-confirm for transactions
+   * Only available for injected providers
+   */
+  async enableAutoConfirm(params: AutoConfirmEnableParams): Promise<AutoConfirmResult> {
+    debug.info(DebugCategory.BROWSER_SDK, "Enabling auto-confirm", { params });
+    
+    const currentProvider = this.providerManager.getCurrentProvider();
+    if (!currentProvider) {
+      throw new Error('No provider available. Call connect() first.');
+    }
+    
+    if (!('enableAutoConfirm' in currentProvider)) {
+      throw new Error('Auto-confirm is only available for injected providers');
+    }
+    
+    try {
+      const result = await (currentProvider as InjectedProvider).enableAutoConfirm(params);
+      debug.info(DebugCategory.BROWSER_SDK, "Auto-confirm enabled successfully", { result });
+      return result;
+    } catch (error) {
+      debug.error(DebugCategory.BROWSER_SDK, "Failed to enable auto-confirm", { error: (error as Error).message });
+      throw error;
+    }
+  }
+
+  /**
+   * Disable auto-confirm for transactions
+   * Only available for injected providers
+   */
+  async disableAutoConfirm(): Promise<void> {
+    debug.info(DebugCategory.BROWSER_SDK, "Disabling auto-confirm");
+    
+    const currentProvider = this.providerManager.getCurrentProvider();
+    if (!currentProvider) {
+      throw new Error('No provider available. Call connect() first.');
+    }
+    
+    if (!('disableAutoConfirm' in currentProvider)) {
+      throw new Error('Auto-confirm is only available for injected providers');
+    }
+    
+    try {
+      await (currentProvider as InjectedProvider).disableAutoConfirm();
+      debug.info(DebugCategory.BROWSER_SDK, "Auto-confirm disabled successfully");
+    } catch (error) {
+      debug.error(DebugCategory.BROWSER_SDK, "Failed to disable auto-confirm", { error: (error as Error).message });
+      throw error;
+    }
+  }
+
+  /**
+   * Get current auto-confirm status
+   * Only available for injected providers
+   */
+  async getAutoConfirmStatus(): Promise<AutoConfirmResult> {
+    debug.info(DebugCategory.BROWSER_SDK, "Getting auto-confirm status");
+    
+    const currentProvider = this.providerManager.getCurrentProvider();
+    if (!currentProvider) {
+      throw new Error('No provider available. Call connect() first.');
+    }
+    
+    if (!('getAutoConfirmStatus' in currentProvider)) {
+      throw new Error('Auto-confirm is only available for injected providers');
+    }
+    
+    try {
+      const result = await (currentProvider as InjectedProvider).getAutoConfirmStatus();
+      debug.info(DebugCategory.BROWSER_SDK, "Got auto-confirm status", { result });
+      return result;
+    } catch (error) {
+      debug.error(DebugCategory.BROWSER_SDK, "Failed to get auto-confirm status", { error: (error as Error).message });
+      throw error;
+    }
+  }
+
+  /**
+   * Get supported chains for auto-confirm
+   * Only available for injected providers
+   */
+  async getSupportedAutoConfirmChains(): Promise<AutoConfirmSupportedChainsResult> {
+    debug.info(DebugCategory.BROWSER_SDK, "Getting supported auto-confirm chains");
+    
+    const currentProvider = this.providerManager.getCurrentProvider();
+    if (!currentProvider) {
+      throw new Error('No provider available. Call connect() first.');
+    }
+    
+    if (!('getSupportedAutoConfirmChains' in currentProvider)) {
+      throw new Error('Auto-confirm is only available for injected providers');
+    }
+    
+    try {
+      const result = await (currentProvider as InjectedProvider).getSupportedAutoConfirmChains();
+      debug.info(DebugCategory.BROWSER_SDK, "Got supported auto-confirm chains", { result });
+      return result;
+    } catch (error) {
+      debug.error(DebugCategory.BROWSER_SDK, "Failed to get supported auto-confirm chains", { error: (error as Error).message });
+      throw error;
     }
   }
 }

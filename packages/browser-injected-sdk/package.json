@@ -55,6 +55,7 @@
     "directory": "_release/package"
   },
   "dependencies": {
+    "@phantom/constants": "workspace:^",
     "@solana/addresses": "^2.3.0"
   }
 }

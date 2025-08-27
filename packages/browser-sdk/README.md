@@ -548,6 +548,7 @@ Check if connected to Ethereum wallet.
 ```typescript
 const connected = sdk.ethereum.isConnected();
 // Returns: boolean
+```
 
 #### autoConnect()
 
@@ -556,6 +557,99 @@ Attempt auto-connection using existing session. Should be called after setting u
 ```typescript
 await sdk.autoConnect();
 ```
+
+### Auto-Confirm Methods (Injected Provider Only)
+
+The SDK provides auto-confirm functionality that allows automatic transaction confirmation for specified chains. This feature is only available when using the injected provider (Phantom browser extension).
+
+#### enableAutoConfirm(params?)
+
+Enable auto-confirm for specific chains or all supported chains.
+
+```typescript
+import { NetworkId } from "@phantom/browser-sdk";
+
+// Enable auto-confirm for specific chains
+const result = await sdk.enableAutoConfirm({
+  chains: [NetworkId.SOLANA_MAINNET, NetworkId.ETHEREUM_MAINNET]
+});
+
+// Enable auto-confirm for all supported chains  
+const result = await sdk.enableAutoConfirm();
+
+console.log("Auto-confirm enabled:", result.enabled);
+console.log("Enabled chains:", result.chains);
+// Returns: { enabled: boolean, chains: NetworkId[] }
+```
+
+#### disableAutoConfirm()
+
+Disable auto-confirm for all chains.
+
+```typescript
+const result = await sdk.disableAutoConfirm();
+console.log("Auto-confirm disabled:", !result.enabled);
+// Returns: { enabled: boolean, chains: NetworkId[] }
+```
+
+#### getAutoConfirmStatus()
+
+Get the current auto-confirm status and enabled chains.
+
+```typescript
+const status = await sdk.getAutoConfirmStatus();
+console.log("Auto-confirm enabled:", status.enabled);
+console.log("Enabled chains:", status.chains);
+// Returns: { enabled: boolean, chains: NetworkId[] }
+```
+
+#### getSupportedAutoConfirmChains()
+
+Get the list of chains that support auto-confirm functionality.
+
+```typescript
+const supportedChains = await sdk.getSupportedAutoConfirmChains();
+console.log("Supported chains:", supportedChains.chains);
+// Returns: { chains: NetworkId[] }
+```
+
+#### Available NetworkId Values
+
+```typescript
+import { NetworkId } from "@phantom/browser-sdk";
+
+// Solana networks
+NetworkId.SOLANA_MAINNET   // "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+NetworkId.SOLANA_DEVNET    // "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1"
+NetworkId.SOLANA_TESTNET   // "solana:4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z"
+
+// Ethereum networks
+NetworkId.ETHEREUM_MAINNET // "eip155:1"
+NetworkId.ETHEREUM_SEPOLIA // "eip155:11155111"
+
+// Polygon networks  
+NetworkId.POLYGON_MAINNET  // "eip155:137"
+NetworkId.POLYGON_AMOY     // "eip155:80002"
+
+// Arbitrum networks
+NetworkId.ARBITRUM_ONE     // "eip155:42161"
+NetworkId.ARBITRUM_SEPOLIA // "eip155:421614"
+
+// Optimism networks
+NetworkId.OPTIMISM_MAINNET // "eip155:10"
+NetworkId.OPTIMISM_GOERLI  // "eip155:420"
+
+// Base networks
+NetworkId.BASE_MAINNET     // "eip155:8453"
+NetworkId.BASE_SEPOLIA     // "eip155:84532"
+```
+
+**Important Notes:**
+
+- Auto-confirm methods are **only available for injected providers** (Phantom browser extension)
+- Calling these methods on embedded providers will throw an error
+- Auto-confirm applies to transaction confirmations, not initial connection prompts
+- Users can override auto-confirm settings directly in the Phantom extension UI
 
 ## Debug Configuration
 

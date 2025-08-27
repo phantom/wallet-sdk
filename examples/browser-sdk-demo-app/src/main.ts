@@ -7,10 +7,11 @@ import {
   DebugLevel,
   DEFAULT_AUTH_URL,
   DEFAULT_WALLET_API_URL,
+  NetworkId,
 } from "@phantom/browser-sdk";
 import type { DebugMessage } from "@phantom/browser-sdk";
 import { SystemProgram, PublicKey, Connection, VersionedTransaction, TransactionMessage } from "@solana/web3.js";
-import { parseEther, parseGwei } from "viem";
+import { parseEther, parseGwei, numberToHex } from "viem";
 import { getBalance } from "./utils/balance";
 import { Buffer } from "buffer";
 document.addEventListener("DOMContentLoaded", () => {
@@ -24,6 +25,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const signTypedDataBtn = document.getElementById("signTypedDataBtn") as HTMLButtonElement;
   const signTransactionBtn = document.getElementById("signTransactionBtn") as HTMLButtonElement;
   const disconnectBtn = document.getElementById("disconnectBtn") as HTMLButtonElement;
+
+  // Auto-confirm UI elements
+  const autoConfirmSection = document.getElementById("autoConfirmSection") as HTMLDivElement;
+  const enableAutoConfirmBtn = document.getElementById("enableAutoConfirmBtn") as HTMLButtonElement;
+  const disableAutoConfirmBtn = document.getElementById("disableAutoConfirmBtn") as HTMLButtonElement;
+  const getAutoConfirmStatusBtn = document.getElementById("getAutoConfirmStatusBtn") as HTMLButtonElement;
+  const getSupportedChainsBtn = document.getElementById("getSupportedChainsBtn") as HTMLButtonElement;
+  const chainSelect = document.getElementById("chainSelect") as HTMLSelectElement;
 
   // Address display elements
   const addressesSection = document.getElementById("addressesSection") as HTMLDivElement;
@@ -319,6 +328,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Update button states
   function updateButtonStates(connected: boolean) {
     const hasBalance = currentBalance !== null && currentBalance > 0;
+    const isInjected = providerTypeSelect.value === "injected";
 
     if (connectBtn) connectBtn.disabled = connected;
     if (getAccountBtn) getAccountBtn.disabled = !connected;
@@ -330,6 +340,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (disconnectBtn) disconnectBtn.disabled = false;
     if (testWeb3jsBtn) testWeb3jsBtn.disabled = !connected || !hasBalance;
     if (testEthereumBtn) testEthereumBtn.disabled = !connected || !hasBalance;
+
+    // Auto-confirm buttons (only for injected provider)
+    if (autoConfirmSection) {
+      autoConfirmSection.style.display = isInjected ? "block" : "none";
+    }
+    if (enableAutoConfirmBtn) enableAutoConfirmBtn.disabled = !connected || !isInjected;
+    if (disableAutoConfirmBtn) disableAutoConfirmBtn.disabled = !connected || !isInjected;
+    if (getAutoConfirmStatusBtn) getAutoConfirmStatusBtn.disabled = !connected || !isInjected;
+    if (getSupportedChainsBtn) getSupportedChainsBtn.disabled = !connected || !isInjected;
   }
 
   // Connect button
@@ -479,7 +498,7 @@ document.addEventListener("DOMContentLoaded", () => {
               wallet: "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826"
             },
             to: {
-              name: "Bob", 
+              name: "Bob",
               wallet: ethAddress.address
             },
             contents: "Hello, Bob! This is a typed data message from Phantom Browser SDK."
@@ -589,13 +608,17 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        // Create simple ETH transfer
-        const result = await sdk.ethereum.sendTransaction({
+        // Create simple ETH transfer with proper hex formatting
+        const transactionParams = {
+          from: ethAddress.address,
           to: ethAddress.address, // Self-transfer for demo
-          value: parseEther("0.001").toString(), // 0.001 ETH
-          gas: "21000",
-          gasPrice: parseGwei("20").toString(), // 20 gwei
-        });
+          value: numberToHex(parseEther("0.001")), // 0.001 ETH in hex
+          gas: numberToHex(21000n), // Gas limit in hex
+          gasPrice: numberToHex(parseGwei("20")), // 20 gwei in hex
+        };
+
+        console.log("Sending Ethereum transaction with params:", transactionParams);
+        const result = await sdk.ethereum.sendTransaction(transactionParams);
 
         console.log("Ethereum transaction sent:", result);
         alert(`Ethereum transaction sent: ${result.rawTransaction}`);
@@ -631,6 +654,113 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (error) {
         console.error("Error disconnecting:", error);
         alert(`Error disconnecting: ${(error as Error).message || error}`);
+      }
+    };
+  }
+
+  // Helper function to get selected chains from the select element
+  function getSelectedChains(): NetworkId[] {
+    if (!chainSelect) return [];
+
+    const selected = Array.from(chainSelect.selectedOptions);
+    return selected.map(option => NetworkId[option.value as keyof typeof NetworkId]).filter(Boolean);
+  }
+
+  // Enable Auto-Confirm button
+  if (enableAutoConfirmBtn) {
+    enableAutoConfirmBtn.onclick = async () => {
+      try {
+        if (!sdk) {
+          alert("Please connect first");
+          return;
+        }
+
+        if (providerTypeSelect.value !== "injected") {
+          alert("Auto-confirm is only available for injected provider");
+          return;
+        }
+
+        const selectedChains = getSelectedChains();
+        const params = selectedChains.length > 0 ? { chains: selectedChains } : {};
+        const result = await sdk.enableAutoConfirm(params);
+
+        console.log("Auto-confirm enabled:", result);
+        alert(`Auto-confirm enabled: ${result.enabled}\nChains: ${result.chains.join(", ")}`);
+      } catch (error) {
+        console.error("Error enabling auto-confirm:", error);
+        alert(`Error enabling auto-confirm: ${(error as Error).message || error}`);
+      }
+    };
+  }
+
+  // Disable Auto-Confirm button
+  if (disableAutoConfirmBtn) {
+    disableAutoConfirmBtn.onclick = async () => {
+      try {
+        if (!sdk) {
+          alert("Please connect first");
+          return;
+        }
+
+        if (providerTypeSelect.value !== "injected") {
+          alert("Auto-confirm is only available for injected provider");
+          return;
+        }
+
+        await sdk.disableAutoConfirm();
+        console.log("Auto-confirm disabled successfully");
+        alert("Auto-confirm disabled successfully");
+      } catch (error) {
+        console.error("Error disabling auto-confirm:", error);
+        alert(`Error disabling auto-confirm: ${(error as Error).message || error}`);
+      }
+    };
+  }
+
+  // Get Auto-Confirm Status button
+  if (getAutoConfirmStatusBtn) {
+    getAutoConfirmStatusBtn.onclick = async () => {
+      try {
+        if (!sdk) {
+          alert("Please connect first");
+          return;
+        }
+
+        if (providerTypeSelect.value !== "injected") {
+          alert("Auto-confirm is only available for injected provider");
+          return;
+        }
+
+        const status = await sdk.getAutoConfirmStatus();
+        console.log("Auto-confirm status:", status);
+        alert(`Auto-confirm status:\nEnabled: ${status.enabled}\nChains: ${status.chains.join(", ")}`);
+      } catch (error) {
+        console.error("Error getting auto-confirm status:", error);
+        alert(`Error getting auto-confirm status: ${(error as Error).message || error}`);
+      }
+    };
+  }
+
+  // Get Supported Chains button
+  if (getSupportedChainsBtn) {
+    getSupportedChainsBtn.onclick = async () => {
+      try {
+        if (!sdk) {
+          alert("Please connect first");
+          return;
+        }
+
+        if (providerTypeSelect.value !== "injected") {
+          alert("Auto-confirm is only available for injected provider");
+          return;
+        }
+
+        const supportedChains = await sdk.getSupportedAutoConfirmChains();
+        console.log("Supported auto-confirm chains:", supportedChains);
+        alert(`Supported chains for auto-confirm:\n${supportedChains.chains.join(", ")}`);
+      } catch (error) {
+        console.error("Error getting supported chains:", error);
+        alert(`Error getting supported chains: ${(error as Error).message || error}`);
       }
     };
   }

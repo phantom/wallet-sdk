@@ -6,7 +6,23 @@ import type {
 } from "../../types";
 import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-provider-core";
 import { AddressType } from "@phantom/client";
-import { isPhantomExtensionInstalled } from "@phantom/browser-injected-sdk";
+import {
+  createPhantom,
+  createExtensionPlugin,
+  type Extension,
+  type Plugin
+} from "@phantom/browser-injected-sdk";
+import { createSolanaPlugin, type Solana } from "@phantom/browser-injected-sdk/solana";
+import { createEthereumPlugin, type Ethereum } from "@phantom/browser-injected-sdk/ethereum";
+import { createAutoConfirmPlugin, type AutoConfirmPlugin, type AutoConfirmEnableParams, type AutoConfirmResult, type AutoConfirmSupportedChainsResult } from "@phantom/browser-injected-sdk/auto-confirm";
+
+// Define proper interface with imported types from browser-injected-sdk
+interface PhantomExtended {
+  extension: Extension;
+  solana: Solana;
+  ethereum: Ethereum;
+  autoConfirm: AutoConfirmPlugin;
+}
 import { debug, DebugCategory } from "../../debug";
 import { InjectedSolanaChain, InjectedEthereumChain } from "./chains";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chains";
@@ -14,8 +30,8 @@ import type { ISolanaChain, IEthereumChain } from "@phantom/chains";
 declare global {
   interface Window {
     phantom?: {
-      solana?: any;
-      ethereum?: any;
+      solana?: unknown;
+      ethereum?: unknown;
     };
   }
 }
@@ -29,11 +45,12 @@ export class InjectedProvider implements Provider {
   private connected: boolean = false;
   private addresses: WalletAddress[] = [];
   private addressTypes: [AddressType, ...AddressType[]];
-  
+  private phantom: PhantomExtended;
+
   // Chain instances
   private _solanaChain?: ISolanaChain;
   private _ethereumChain?: IEthereumChain;
-  
+
   // Event management
   private eventListeners: Map<EmbeddedProviderEvent, Set<EventCallback>> = new Map();
   private browserInjectedCleanupFunctions: (() => void)[] = [];
@@ -45,6 +62,30 @@ export class InjectedProvider implements Provider {
     // Store config values
     this.addressTypes = config.addressTypes;
     debug.log(DebugCategory.INJECTED_PROVIDER, "Address types configured", { addressTypes: this.addressTypes });
+
+    // Create single phantom instance with all needed plugins
+    const plugins = [createExtensionPlugin()];
+
+    if (this.addressTypes.includes(AddressType.solana)) {
+      plugins.push(createSolanaPlugin());
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Solana plugin added");
+    }
+
+    if (this.addressTypes.includes(AddressType.ethereum)) {
+      plugins.push(createEthereumPlugin());
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum plugin added");
+    }
+
+    // Always add autoConfirm for injected providers
+    plugins.push(createAutoConfirmPlugin());
+    debug.log(DebugCategory.INJECTED_PROVIDER, "AutoConfirm plugin added");
+
+    debug.log(DebugCategory.INJECTED_PROVIDER, "Creating Phantom instance with plugins", {
+      pluginCount: plugins.length,
+    });
+    this.phantom = createPhantom({ plugins: plugins as Plugin<unknown>[] }) as unknown as PhantomExtended;
+
+
     debug.info(DebugCategory.INJECTED_PROVIDER, "InjectedProvider initialized");
   }
 
@@ -56,7 +97,7 @@ export class InjectedProvider implements Provider {
       throw new Error('Solana not enabled for this provider');
     }
     if (!this._solanaChain) {
-      this._solanaChain = new InjectedSolanaChain();
+      this._solanaChain = new InjectedSolanaChain(this.phantom);
     }
     return this._solanaChain;
   }
@@ -69,7 +110,7 @@ export class InjectedProvider implements Provider {
       throw new Error('Ethereum not enabled for this provider');
     }
     if (!this._ethereumChain) {
-      this._ethereumChain = new InjectedEthereumChain();
+      this._ethereumChain = new InjectedEthereumChain(this.phantom);
     }
     return this._ethereumChain;
   }
@@ -87,16 +128,16 @@ export class InjectedProvider implements Provider {
     });
 
     try {
-      if (!isPhantomExtensionInstalled()) {
+      if (!this.phantom.extension?.isInstalled?.()) {
         debug.error(DebugCategory.INJECTED_PROVIDER, "Phantom wallet extension not found");
         const error = new Error("Phantom wallet not found");
-        
+
         // Emit connect_error event before throwing
         this.emit("connect_error", {
           error: error.message,
           source: "manual-connect",
         });
-        
+
         throw error;
       }
       debug.log(DebugCategory.INJECTED_PROVIDER, "Phantom extension detected");
@@ -142,13 +183,13 @@ export class InjectedProvider implements Provider {
 
       if (connectedAddresses.length === 0) {
         const error = new Error("Failed to connect to any supported wallet provider");
-        
+
         // Emit connect_error event before throwing
         this.emit("connect_error", {
           error: error.message,
           source: "manual-connect",
         });
-        
+
         throw error;
       }
 
@@ -176,7 +217,7 @@ export class InjectedProvider implements Provider {
           source: "manual-connect",
         });
       }
-      
+
       throw error;
     }
   }
@@ -228,16 +269,37 @@ export class InjectedProvider implements Provider {
     return this.connected;
   }
 
+  // AutoConfirm methods - only available for injected providers
+  async enableAutoConfirm(params: AutoConfirmEnableParams): Promise<AutoConfirmResult> {
+    debug.log(DebugCategory.INJECTED_PROVIDER, "Enabling autoConfirm", { params });
+    return await this.phantom.autoConfirm.autoConfirmEnable(params);
+  }
+
+  async disableAutoConfirm(): Promise<void> {
+    debug.log(DebugCategory.INJECTED_PROVIDER, "Disabling autoConfirm");
+    await this.phantom.autoConfirm.autoConfirmDisable();
+  }
+
+  async getAutoConfirmStatus(): Promise<AutoConfirmResult> {
+    debug.log(DebugCategory.INJECTED_PROVIDER, "Getting autoConfirm status");
+    return await this.phantom.autoConfirm.autoConfirmStatus();
+  }
+
+  async getSupportedAutoConfirmChains(): Promise<AutoConfirmSupportedChainsResult> {
+    debug.log(DebugCategory.INJECTED_PROVIDER, "Getting supported autoConfirm chains");
+    return await this.phantom.autoConfirm.autoConfirmSupportedChains();
+  }
+
   // Event management methods - implementing unified event interface
   on(event: EmbeddedProviderEvent, callback: EventCallback): void {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Adding event listener", { event });
-    
+
     // Lazy-initialize browser-injected-sdk events when first listener is added
     if (!this.eventsInitialized) {
       this.setupBrowserInjectedEvents();
       this.eventsInitialized = true;
     }
-    
+
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, new Set());
     }
@@ -246,7 +308,7 @@ export class InjectedProvider implements Provider {
 
   off(event: EmbeddedProviderEvent, callback: EventCallback): void {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Removing event listener", { event });
-    
+
     if (this.eventListeners.has(event)) {
       this.eventListeners.get(event)!.delete(callback);
       if (this.eventListeners.get(event)!.size === 0) {
@@ -256,12 +318,12 @@ export class InjectedProvider implements Provider {
   }
 
   private emit(event: EmbeddedProviderEvent, data?: any): void {
-    debug.log(DebugCategory.INJECTED_PROVIDER, "Emitting event", { 
-      event, 
+    debug.log(DebugCategory.INJECTED_PROVIDER, "Emitting event", {
+      event,
       listenerCount: this.eventListeners.get(event)?.size || 0,
-      data 
+      data
     });
-    
+
     const listeners = this.eventListeners.get(event);
     if (listeners && listeners.size > 0) {
       listeners.forEach(callback => {
@@ -278,12 +340,12 @@ export class InjectedProvider implements Provider {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Setting up browser-injected-sdk event listeners");
 
     // Set up Solana events if enabled
-    if (this.addressTypes.includes(AddressType.solana) && window.phantom?.solana) {
+    if (this.addressTypes.includes(AddressType.solana)) {
       this.setupSolanaEvents();
     }
 
     // Set up Ethereum events if enabled  
-    if (this.addressTypes.includes(AddressType.ethereum) && window.phantom?.ethereum) {
+    if (this.addressTypes.includes(AddressType.ethereum)) {
       this.setupEthereumEvents();
     }
   }
@@ -291,21 +353,17 @@ export class InjectedProvider implements Provider {
   private setupSolanaEvents(): void {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Setting up Solana event listeners");
 
-    const solanaProvider = window.phantom?.solana;
-    if (!solanaProvider) return;
-
     // Map Solana connect event to unified connect event
-    const handleSolanaConnect = (publicKey: any) => {
-      const address = publicKey?.toString?.() || publicKey;
-      debug.log(DebugCategory.INJECTED_PROVIDER, "Solana connect event received", { publicKey: address });
-      
+    const handleSolanaConnect = (publicKey: string) => {
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Solana connect event received", { publicKey });
+
       // Update our internal state
-      const solanaAddress = { addressType: AddressType.solana, address };
+      const solanaAddress = { addressType: AddressType.solana, address: publicKey };
       if (!this.addresses.find(addr => addr.addressType === AddressType.solana)) {
         this.addresses.push(solanaAddress);
       }
       this.connected = true;
-      
+
       // Emit unified connect event
       this.emit("connect", {
         addresses: this.addresses,
@@ -316,11 +374,11 @@ export class InjectedProvider implements Provider {
     // Map Solana disconnect event to unified disconnect event
     const handleSolanaDisconnect = () => {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Solana disconnect event received");
-      
+
       // Update our internal state
       this.addresses = this.addresses.filter(addr => addr.addressType !== AddressType.solana);
       this.connected = this.addresses.length > 0;
-      
+
       // Emit unified disconnect event
       this.emit("disconnect", {
         source: "injected-extension",
@@ -328,18 +386,17 @@ export class InjectedProvider implements Provider {
     };
 
     // Map Solana account changed to reconnect event
-    const handleSolanaAccountChanged = (publicKey: any) => {
-      const address = publicKey?.toString?.() || publicKey;
-      debug.log(DebugCategory.INJECTED_PROVIDER, "Solana account changed event received", { publicKey: address });
-      
+    const handleSolanaAccountChanged = (publicKey: string) => {
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Solana account changed event received", { publicKey });
+
       // Update the Solana address
       const solanaIndex = this.addresses.findIndex(addr => addr.addressType === AddressType.solana);
       if (solanaIndex >= 0) {
-        this.addresses[solanaIndex] = { addressType: AddressType.solana, address };
+        this.addresses[solanaIndex] = { addressType: AddressType.solana, address: publicKey };
       } else {
-        this.addresses.push({ addressType: AddressType.solana, address });
+        this.addresses.push({ addressType: AddressType.solana, address: publicKey });
       }
-      
+
       // Emit as a new connect event (account change = reconnection)
       this.emit("connect", {
         addresses: this.addresses,
@@ -347,59 +404,51 @@ export class InjectedProvider implements Provider {
       });
     };
 
-    // Add event listeners
-    solanaProvider.on("connect", handleSolanaConnect);
-    solanaProvider.on("disconnect", handleSolanaDisconnect);
-    solanaProvider.on("accountChanged", handleSolanaAccountChanged);
+    // Add event listeners using browser-injected-sdk
+    const cleanupConnect = (this.phantom as any).solana.addEventListener("connect", handleSolanaConnect);
+    const cleanupDisconnect = (this.phantom as any).solana.addEventListener("disconnect", handleSolanaDisconnect);
+    const cleanupAccountChanged = (this.phantom as any).solana.addEventListener("accountChanged", handleSolanaAccountChanged);
 
     // Store cleanup functions
     this.browserInjectedCleanupFunctions.push(
-      () => solanaProvider.off("connect", handleSolanaConnect),
-      () => solanaProvider.off("disconnect", handleSolanaDisconnect),
-      () => solanaProvider.off("accountChanged", handleSolanaAccountChanged)
+      cleanupConnect,
+      cleanupDisconnect,
+      cleanupAccountChanged
     );
   }
 
   private setupEthereumEvents(): void {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Setting up Ethereum event listeners");
 
-    const ethereumProvider = window.phantom?.ethereum;
-    if (!ethereumProvider) return;
-
     // Map Ethereum connect event to unified connect event
-    const handleEthereumConnect = (connectInfo: { chainId: string }) => {
-      debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum connect event received", { connectInfo });
-      
-      // For Ethereum connect, we need to fetch accounts
-      this.ethereum.getAccounts().then(accounts => {
-        // Update our internal state - remove old Ethereum addresses and add new ones
-        this.addresses = this.addresses.filter(addr => addr.addressType !== AddressType.ethereum);
-        if (accounts && accounts.length > 0) {
-          this.addresses.push(...accounts.map(address => ({ 
-            addressType: AddressType.ethereum, 
-            address 
-          })));
-        }
-        this.connected = this.addresses.length > 0;
-        
-        // Emit unified connect event
-        this.emit("connect", {
-          addresses: this.addresses,
-          source: "injected-extension",
-        });
-      }).catch(err => {
-        debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to get accounts on connect", { error: err });
+    const handleEthereumConnect = (accounts: string[]) => {
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum connect event received", { accounts });
+
+      // Update our internal state - remove old Ethereum addresses and add new ones
+      this.addresses = this.addresses.filter(addr => addr.addressType !== AddressType.ethereum);
+      if (accounts && accounts.length > 0) {
+        this.addresses.push(...accounts.map(address => ({
+          addressType: AddressType.ethereum,
+          address
+        })));
+      }
+      this.connected = this.addresses.length > 0;
+
+      // Emit unified connect event
+      this.emit("connect", {
+        addresses: this.addresses,
+        source: "injected-extension",
       });
     };
 
     // Map Ethereum disconnect event to unified disconnect event
     const handleEthereumDisconnect = () => {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum disconnect event received");
-      
+
       // Update our internal state
       this.addresses = this.addresses.filter(addr => addr.addressType !== AddressType.ethereum);
       this.connected = this.addresses.length > 0;
-      
+
       // Emit unified disconnect event
       this.emit("disconnect", {
         source: "injected-extension",
@@ -409,16 +458,16 @@ export class InjectedProvider implements Provider {
     // Map Ethereum account changed to reconnect event
     const handleEthereumAccountsChanged = (accounts: string[]) => {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum accounts changed event received", { accounts });
-      
+
       // Update Ethereum addresses
       this.addresses = this.addresses.filter(addr => addr.addressType !== AddressType.ethereum);
       if (accounts && accounts.length > 0) {
-        this.addresses.push(...accounts.map(address => ({ 
-          addressType: AddressType.ethereum, 
-          address 
+        this.addresses.push(...accounts.map(address => ({
+          addressType: AddressType.ethereum,
+          address
         })));
       }
-      
+
       // Emit as a new connect event (account change = reconnection)
       this.emit("connect", {
         addresses: this.addresses,
@@ -426,16 +475,16 @@ export class InjectedProvider implements Provider {
       });
     };
 
-    // Add event listeners
-    ethereumProvider.on("connect", handleEthereumConnect);
-    ethereumProvider.on("disconnect", handleEthereumDisconnect);
-    ethereumProvider.on("accountsChanged", handleEthereumAccountsChanged);
+    // Add event listeners using browser-injected-sdk
+    const cleanupConnect = (this.phantom as any).ethereum.addEventListener("connect", handleEthereumConnect);
+    const cleanupDisconnect = (this.phantom as any).ethereum.addEventListener("disconnect", handleEthereumDisconnect);
+    const cleanupAccountsChanged = (this.phantom as any).ethereum.addEventListener("accountsChanged", handleEthereumAccountsChanged);
 
     // Store cleanup functions
     this.browserInjectedCleanupFunctions.push(
-      () => ethereumProvider.removeListener("connect", handleEthereumConnect),
-      () => ethereumProvider.removeListener("disconnect", handleEthereumDisconnect),
-      () => ethereumProvider.removeListener("accountsChanged", handleEthereumAccountsChanged)
+      cleanupConnect,
+      cleanupDisconnect,
+      cleanupAccountsChanged
     );
   }
 }

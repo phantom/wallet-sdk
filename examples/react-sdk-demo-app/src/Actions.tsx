@@ -10,25 +10,38 @@ import {
   type ProviderType,
 } from "@phantom/react-sdk";
 import { SystemProgram, PublicKey, Connection, VersionedTransaction, TransactionMessage } from "@solana/web3.js";
+import { parseEther, parseGwei, numberToHex } from "viem";
 import { useState, useEffect } from "react";
+import { Buffer } from "buffer";
 import { useBalance } from "./hooks/useBalance";
 import { DebugConsole } from "./components/DebugConsole";
 
-export function Actions() {
+interface ActionsProps {
+  providerType: ProviderType;
+  setProviderType: (type: ProviderType) => void;
+  embeddedWalletType: "user-wallet" | "app-wallet";
+  setEmbeddedWalletType: (type: "user-wallet" | "app-wallet") => void;
+}
+
+export function Actions({ 
+  providerType, 
+  setProviderType, 
+  embeddedWalletType, 
+  setEmbeddedWalletType 
+}: ActionsProps) {
   const { connect, isConnecting, error: connectError } = useConnect();
   const { disconnect, isDisconnecting } = useDisconnect();
   const { signMessage: signSolanaMessage, signAndSendTransaction } = useSolana();
-  const { signPersonalMessage: signEthMessage, signTypedData: signEthTypedData } = useEthereum();
+  const { signPersonalMessage: signEthMessage, signTypedData: signEthTypedData, sendTransaction: sendEthTransaction } = useEthereum();
   const { isConnected, currentProviderType } = usePhantom();
   const { isInstalled, isLoading } = useIsExtensionInstalled();
   const addresses = useAccounts();
   const [isSigningMessage, setIsSigningMessage] = useState(false);
   const [isSigningTypedData, setIsSigningTypedData] = useState(false);
   const [isSigningTransaction, setIsSigningTransaction] = useState(false);
+  const [isSendingEthTransaction, setIsSendingEthTransaction] = useState(false);
 
   const [solanaAddress, setSolanaAddress] = useState<string | null>(null);
-  const [selectedProvider, setSelectedProvider] = useState<ProviderType>("embedded");
-  const [selectedEmbeddedType, setSelectedEmbeddedType] = useState<"user-wallet" | "app-wallet">("user-wallet");
 
   // Use balance hook
   const { balance, loading: balanceLoading, error: balanceError, refetch: refetchBalance } = useBalance(solanaAddress);
@@ -47,8 +60,7 @@ export function Actions() {
 
   const onConnect = async () => {
     try {
-      // Note: Provider type and embedded wallet type are configured at SDK initialization level
-      // not at connect level in the new architecture
+      console.log("Connecting with provider type:", providerType);
       await connect();
       // Connection state will be updated in the provider
     } catch (error) {
@@ -83,7 +95,9 @@ export function Actions() {
           alert("No Ethereum address found");
           return;
         }
-        const result = await signEthMessage("Hello, World!", ethAddress.address);
+        const message = "Hello, World!";
+        const prefixedMessage = "0x" + Buffer.from(message, "utf8").toString("hex");
+        const result = await signEthMessage(prefixedMessage, ethAddress.address);
         alert(`Message Signed! Signature: ${result}`);
       }
     } catch (error) {
@@ -164,6 +178,7 @@ export function Actions() {
       return;
     }
     try {
+      setIsSigningTransaction(true);
       // Create connection to get recent blockhash (using environment RPC URL)
       const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL_MAINNET || "https://api.mainnet-beta.solana.com";
       const connection = new Connection(rpcUrl);
@@ -197,6 +212,43 @@ export function Actions() {
     }
   };
 
+  const onSendEthTransaction = async () => {
+    if (!isConnected || !addresses || addresses.length === 0) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+
+    const ethAddress = addresses.find(addr => addr.addressType === "Ethereum");
+    if (!ethAddress) {
+      alert("No Ethereum address found");
+      return;
+    }
+
+    try {
+      setIsSendingEthTransaction(true);
+      
+      // Create simple ETH transfer with proper hex formatting
+      const transactionParams = {
+        from: ethAddress.address,
+        to: ethAddress.address, // Self-transfer for demo
+        value: numberToHex(parseEther("0.001")), // 0.001 ETH in hex
+        gas: numberToHex(21000n), // Gas limit in hex
+        gasPrice: numberToHex(parseGwei("20")), // 20 gwei in hex
+      };
+
+      console.log("Sending Ethereum transaction with params:", transactionParams);
+      const result = await sendEthTransaction(transactionParams);
+
+      console.log("Ethereum transaction sent:", result);
+      alert(`Ethereum transaction sent! Hash: ${result.hash}`);
+    } catch (error) {
+      console.error("Error sending Ethereum transaction:", error);
+      alert(`Error sending Ethereum transaction: ${(error as Error).message || error}`);
+    } finally {
+      setIsSendingEthTransaction(false);
+    }
+  };
+
   return (
     <div id="app">
       <h1>Phantom React SDK Demo</h1>
@@ -212,8 +264,8 @@ export function Actions() {
                   <input
                     type="radio"
                     value="embedded"
-                    checked={selectedProvider === "embedded"}
-                    onChange={e => setSelectedProvider(e.target.value as ProviderType)}
+                    checked={providerType === "embedded"}
+                    onChange={e => setProviderType(e.target.value as ProviderType)}
                   />
                   <span>Embedded (Non-Custodial)</span>
                 </label>
@@ -221,15 +273,15 @@ export function Actions() {
                   <input
                     type="radio"
                     value="injected"
-                    checked={selectedProvider === "injected"}
-                    onChange={e => setSelectedProvider(e.target.value as ProviderType)}
+                    checked={providerType === "injected"}
+                    onChange={e => setProviderType(e.target.value as ProviderType)}
                   />
                   <span>Injected (Browser Extension)</span>
                 </label>
               </div>
             </div>
 
-            {selectedProvider === "embedded" && (
+            {providerType === "embedded" && (
               <div className="form-group">
                 <label>Embedded Wallet Type:</label>
                 <div className="radio-group">
@@ -237,8 +289,8 @@ export function Actions() {
                     <input
                       type="radio"
                       value="user-wallet"
-                      checked={selectedEmbeddedType === "user-wallet"}
-                      onChange={() => setSelectedEmbeddedType("user-wallet")}
+                      checked={embeddedWalletType === "user-wallet"}
+                      onChange={() => setEmbeddedWalletType("user-wallet")}
                     />
                     <span>User Wallet (Google Auth)</span>
                   </label>
@@ -246,8 +298,8 @@ export function Actions() {
                     <input
                       type="radio"
                       value="app-wallet"
-                      checked={selectedEmbeddedType === "app-wallet"}
-                      onChange={() => setSelectedEmbeddedType("app-wallet")}
+                      checked={embeddedWalletType === "app-wallet"}
+                      onChange={() => setEmbeddedWalletType("app-wallet")}
                     />
                     <span>App Wallet (Fresh wallet)</span>
                   </label>
@@ -255,7 +307,7 @@ export function Actions() {
               </div>
             )}
 
-            {selectedProvider === "injected" && (
+            {providerType === "injected" && (
               <div className="extension-status">
                 {isLoading && <p className="status-text">Checking extension...</p>}
                 {!isLoading && isInstalled && <p className="status-success">✓ Phantom extension installed</p>}
@@ -338,7 +390,10 @@ export function Actions() {
                 {isSigningTypedData ? "Signing..." : "Sign Typed Data (EVM)"}
               </button>
               <button onClick={onSignAndSendTransaction} disabled={!isConnected || isSigningTransaction || !hasBalance}>
-                {isSigningTransaction ? "Signing..." : !hasBalance ? "Insufficient Balance" : "Sign & Send Transaction"}
+                {isSigningTransaction ? "Signing..." : !hasBalance ? "Insufficient Balance" : "Sign & Send Transaction (Solana)"}
+              </button>
+              <button onClick={onSendEthTransaction} disabled={!isConnected || isSendingEthTransaction}>
+                {isSendingEthTransaction ? "Sending..." : "Send Transaction (Ethereum)"}
               </button>
 
               <button onClick={onDisconnect} disabled={!isConnected || isDisconnecting}>

@@ -1,63 +1,82 @@
 import type { ISolanaChain } from '@phantom/chains';
 import { getExplorerUrl, NetworkId } from '@phantom/constants';
 import type { ParsedSignatureResult, ParsedTransactionResult } from '@phantom/parsers';
+import type { Solana } from '@phantom/browser-injected-sdk/solana';
+import type { Extension } from '@phantom/browser-injected-sdk';
+import { Buffer } from 'buffer';
+
+interface PhantomExtended {
+  extension: Extension;
+  solana: Solana;
+}
 
 /**
- * Injected Solana chain implementation that directly uses window.phantom.solana
+ * Injected Solana chain implementation that uses browser-injected-sdk
  */
 export class InjectedSolanaChain implements ISolanaChain {
-  private get phantom() {
-    if (typeof window === 'undefined' || !window.phantom?.solana) {
-      throw new Error('Phantom Solana provider not found');
-    }
-    return window.phantom.solana;
+  private phantom: PhantomExtended;
+
+  constructor(phantom: PhantomExtended) {
+    this.phantom = phantom;
   }
 
   async signMessage(message: string | Uint8Array): Promise<ParsedSignatureResult> {
-    const result = await this.phantom.signMessage({ message });
+    const messageBytes = typeof message === 'string' ? new TextEncoder().encode(message) : message;
+    const result = await this.phantom.solana.signMessage(messageBytes);
+
+    // Convert Uint8Array signature to base58 string for consistency
+    const signature = result.signature instanceof Uint8Array
+      ? Buffer.from(result.signature).toString('base64')
+      : result.signature;
+
     return {
-      signature: result.signature,
-      rawSignature: result.signature, // For injected provider, this is the raw response
-      // No explorer URL for signatures
+      signature,
+      rawSignature: signature,
     };
   }
 
-  async signTransaction<T>(transaction: T): Promise<T> {
-    return await this.phantom.signTransaction(transaction);
+  signTransaction<T>(_transaction: T): Promise<T> {
+    // Note: browser-injected-sdk doesn't have signTransaction, only signAndSendTransaction
+    // For now, throw an error - this may need to be implemented differently
+    throw new Error('signTransaction not available in browser-injected-sdk, use signAndSendTransaction instead');
   }
 
   async signAndSendTransaction<T>(transaction: T): Promise<ParsedTransactionResult> {
-    const result = await this.phantom.signAndSendTransaction(transaction);
-    return { 
-      hash: result.signature, // For injected, signature IS the transaction hash
+    const result = await this.phantom.solana.signAndSendTransaction(transaction as any);
+    return {
+      hash: result.signature,
       rawTransaction: result.signature,
       blockExplorer: getExplorerUrl(NetworkId.SOLANA_MAINNET, 'transaction', result.signature)
     };
   }
 
-  async connect(options?: { onlyIfTrusted?: boolean }): Promise<{ publicKey: string }> {
-    const result = await this.phantom.connect(options);
-    return { publicKey: result.publicKey.toString() };
+  async connect(_options?: { onlyIfTrusted?: boolean }): Promise<{ publicKey: string }> {
+    const address = await this.phantom.solana.connect();
+    return { publicKey: address };
   }
 
   async disconnect(): Promise<void> {
-    return await this.phantom.disconnect();
+    return await this.phantom.solana.disconnect();
   }
 
   async switchNetwork(_network: 'mainnet' | 'devnet'): Promise<void> {
     // Note: Phantom may not have network switching yet - silent implementation
   }
 
-  getPublicKey(): Promise<string | null> {
+  async getPublicKey(): Promise<string | null> {
     try {
-      const key = this.phantom.publicKey?.toString() || null;
-      return Promise.resolve(key);
+      const address = await this.phantom.solana.getAccount();
+      return address || null;
     } catch {
-      return Promise.resolve(null);
+      return null;
     }
   }
 
   isConnected(): boolean {
-    return this.phantom?.isConnected === true;
+    try {
+      return !!this.phantom.extension?.isInstalled();
+    } catch {
+      return false;
+    }
   }
 }
