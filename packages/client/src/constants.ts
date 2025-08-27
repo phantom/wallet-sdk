@@ -85,8 +85,8 @@ export function getNetworkConfig(networkId: NetworkId): NetworkConfig | null {
       // All EVM-compatible chains (Ethereum, Polygon, BSC, Arbitrum, etc.)
       return {
         derivationPath: DerivationPath.Ethereum,
-        curve: DerivationInfoCurveEnum.secp256k1,
-        algorithm: Algorithm.secp256k1,
+        curve: DerivationInfoCurveEnum.ed25519,
+        algorithm: Algorithm.ed25519,
         addressFormat: DerivationInfoAddressFormatEnum.ethereum, // EVM chains use Ethereum address format
       };
 

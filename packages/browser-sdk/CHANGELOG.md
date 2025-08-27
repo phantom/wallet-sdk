@@ -1,5 +1,25 @@
 # @phantom/browser-sdk
 
+## 1.0.0-beta.0
+
+### Major Changes
+
+- New SDKs chain specific interface, prepare for initial beta release
+
+### Patch Changes
+
+- ef68eaf: Key rotation
+- Updated dependencies [ef68eaf]
+- Updated dependencies
+  - @phantom/embedded-provider-core@1.0.0-beta.0
+  - @phantom/indexed-db-stamper@1.0.0-beta.0
+  - @phantom/client@1.0.0-beta.0
+  - @phantom/browser-injected-sdk@1.0.0-beta.0
+  - @phantom/constants@1.0.0-beta.0
+  - @phantom/parsers@1.0.0-beta.0
+  - @phantom/chains@1.0.0-beta.0
+  - @phantom/base64url@1.0.0-beta.0
+
 ## 0.3.7
 
 ### Patch Changes

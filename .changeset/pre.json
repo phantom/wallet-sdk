@@ -1,0 +1,33 @@
+{
+  "mode": "pre",
+  "tag": "beta",
+  "initialVersions": {
+    "@phantom/browser-embedded-sdk-demo-app": "0.0.7",
+    "@phantom/browser-sdk-demo-app": "0.0.3",
+    "client-demo-app": "1.0.1",
+    "@phantom/react-native-sdk-example": "1.0.0",
+    "@phantom/react-sdk-demo-app": "0.0.2",
+    "@phantom/server-sdk-examples": "1.0.7",
+    "@phantom/api-key-stamper": "0.1.5",
+    "@phantom/base64url": "0.1.0",
+    "@phantom/wallet-sdk": "0.1.2",
+    "@phantom/browser-injected-sdk": "0.0.9",
+    "@phantom/browser-sdk": "0.3.7",
+    "@phantom/chains": "0.1.0",
+    "@phantom/client": "0.1.9",
+    "@phantom/constants": "0.0.3",
+    "@phantom/crypto": "0.1.2",
+    "@phantom/embedded-provider-core": "0.1.8",
+    "@phantom/indexed-db-stamper": "0.1.4",
+    "@phantom/parsers": "0.0.7",
+    "@phantom/react-native-sdk": "0.1.6",
+    "@phantom/react-sdk": "0.3.7",
+    "@phantom/react-ui": "1.2.5",
+    "@phantom/sdk-types": "0.1.4",
+    "@phantom/server-sdk": "0.2.4"
+  },
+  "changesets": [
+    "common-owls-own",
+    "new-worlds-switch"
+  ]
+}

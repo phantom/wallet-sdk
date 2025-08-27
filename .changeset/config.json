@@ -2,7 +2,25 @@
   "$schema": "https://unpkg.com/@changesets/config@3.0.3/schema.json",
   "changelog": "@changesets/cli/changelog",
   "commit": false,
-  "fixed": [["@phantom/browser-sdk", "@phantom/react-sdk"]],
+  "fixed": [
+    [
+      "@phantom/base64url",
+      "@phantom/constants",
+      "@phantom/sdk-types",
+      "@phantom/chains",
+      "@phantom/parsers",
+      "@phantom/crypto",
+      "@phantom/api-key-stamper"
+    ],
+    [
+      "@phantom/client",
+      "@phantom/embedded-provider-core",
+      "@phantom/browser-sdk",
+      "@phantom/react-sdk",
+      "@phantom/react-native-sdk",
+      "@phantom/server-sdk"
+    ]
+  ],
   "linked": [],
   "access": "public",
   "baseBranch": "main",
@@ -11,6 +29,9 @@
   "ignore": [
     "@phantom/browser-sdk-demo-app",
     "@phantom/react-sdk-demo-app",
-    "@phantom/browser-embedded-sdk-demo-app"
+    "@phantom/browser-embedded-sdk-demo-app",
+    "client-demo-app",
+    "@phantom/server-sdk-examples",
+    "@phantom/react-native-sdk-example"
   ]
 }
