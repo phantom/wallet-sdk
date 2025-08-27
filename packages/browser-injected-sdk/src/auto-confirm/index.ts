@@ -1,3 +1,4 @@
+import type { AutoConfirmPlugin } from "./plugin";
 export { createAutoConfirmPlugin } from "./plugin";
 export type { AutoConfirmPlugin } from "./plugin";
 export type { AutoConfirmEnableParams, AutoConfirmResult, AutoConfirmSupportedChainsResult } from "./types";

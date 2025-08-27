@@ -509,6 +509,147 @@ function EthereumOperations() {
 - `isConnected` - Connection status
 - `isAvailable` - Provider availability
 
+### Auto-Confirm Hook (Injected Provider Only)
+
+#### useAutoConfirm
+
+Hook for managing auto-confirm functionality with the Phantom extension. Auto-confirm allows transactions to be automatically approved without user interaction for enabled chains.
+
+> **Note**: This hook only works with the `injected` provider type (Phantom browser extension). It will throw errors for embedded providers.
+
+```tsx
+import { useAutoConfirm, NetworkId } from "@phantom/react-sdk";
+
+function AutoConfirmControls() {
+  const {
+    enable,
+    disable, 
+    status,
+    supportedChains,
+    isLoading,
+    error,
+    refetch,
+  } = useAutoConfirm();
+
+  const handleEnable = async () => {
+    try {
+      // Enable auto-confirm for specific chains
+      const result = await enable({
+        chains: [NetworkId.SOLANA_DEVNET, NetworkId.ETHEREUM_MAINNET]
+      });
+      console.log("Auto-confirm enabled:", result);
+    } catch (err) {
+      console.error("Failed to enable auto-confirm:", err);
+    }
+  };
+
+  const handleDisable = async () => {
+    try {
+      await disable();
+      console.log("Auto-confirm disabled");
+    } catch (err) {
+      console.error("Failed to disable auto-confirm:", err);
+    }
+  };
+
+  if (isLoading) {
+    return <div>Loading auto-confirm settings...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  return (
+    <div>
+      <h3>Auto-Confirm Settings</h3>
+      
+      <div>
+        <strong>Status:</strong> {status?.enabled ? "Enabled" : "Disabled"}
+        {status?.chains && (
+          <div>
+            <strong>Active Chains:</strong>
+            <ul>
+              {status.chains.map((chain) => (
+                <li key={chain}>{chain}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      <div>
+        <strong>Supported Chains:</strong>
+        {supportedChains?.chains && (
+          <ul>
+            {supportedChains.chains.map((chain) => (
+              <li key={chain}>{chain}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div>
+        <button onClick={handleEnable} disabled={isLoading}>
+          Enable Auto-Confirm
+        </button>
+        <button onClick={handleDisable} disabled={isLoading}>
+          Disable Auto-Confirm
+        </button>
+        <button onClick={refetch} disabled={isLoading}>
+          Refresh Status
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+**Hook Interface:**
+
+```typescript
+interface UseAutoConfirmResult {
+  enable: (params: AutoConfirmEnableParams) => Promise<AutoConfirmResult>;
+  disable: () => Promise<void>;
+  status: AutoConfirmResult | null;
+  supportedChains: AutoConfirmSupportedChainsResult | null;
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => Promise<void>;
+}
+
+interface AutoConfirmEnableParams {
+  chains?: NetworkId[]; // Optional array of chains to enable
+}
+
+interface AutoConfirmResult {
+  enabled: boolean;
+  chains: NetworkId[];
+}
+
+interface AutoConfirmSupportedChainsResult {
+  chains: NetworkId[];
+}
+```
+
+**Available Methods:**
+
+- `enable(params)` - Enable auto-confirm for specific chains
+- `disable()` - Disable auto-confirm completely  
+- `refetch()` - Refresh status and supported chains from extension
+- `status` - Current auto-confirm status (enabled/disabled and active chains)
+- `supportedChains` - List of chains that support auto-confirm
+- `isLoading` - Loading state for operations
+- `error` - Any errors from auto-confirm operations
+
+**Usage Notes:**
+
+- Auto-confirm automatically fetches status and supported chains when the hook initializes
+- Only works with injected provider (Phantom extension)
+- Throws errors for embedded providers
+- Status is automatically updated after enable/disable operations
+- Use `refetch()` to manually refresh data from the extension
+
 ## Transaction Examples
 
 ### Solana with @solana/web3.js
@@ -643,6 +784,7 @@ Quick reference of all available hooks:
 | `useAccounts`               | Get wallet addresses       | `WalletAddress[]` or `null`                    |
 | `useIsExtensionInstalled`   | Check extension status     | `{ isLoading, isInstalled }`                   |
 | `useDisconnect`             | Disconnect from wallet     | `{ disconnect, isDisconnecting }`              |
+| `useAutoConfirm`            | Auto-confirm management (injected only) | `{ enable, disable, status, supportedChains, ... }` |
 | `useSolana`                 | Solana chain operations    | `{ signMessage, signAndSendTransaction, ... }` |
 | `useEthereum`               | Ethereum chain operations  | `{ signPersonalMessage, sendTransaction, ... }`|
 | `usePhantom`                | Get provider context       | `{ isConnected, isReady }`                     |

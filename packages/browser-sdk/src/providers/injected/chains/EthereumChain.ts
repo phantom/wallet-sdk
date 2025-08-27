@@ -20,6 +20,7 @@ export class InjectedEthereumChain implements IEthereumChain {
   }
 
   async request<T = any>(args: { method: string; params?: unknown[] }): Promise<T> {
+    // Use the provider directly through the strategy's request method
     const provider = await this.phantom.ethereum.getProvider();
     return await provider.request(args);
   }
@@ -55,11 +56,12 @@ export class InjectedEthereumChain implements IEthereumChain {
   }
 
   async switchChain(chainId: number): Promise<void> {
-    return await this.phantom.ethereum.switchChain(chainId);
+    return await this.phantom.ethereum.switchChain(`0x${chainId.toString(16)}`);
   }
 
   async getChainId(): Promise<number> {
-    return await this.phantom.ethereum.getChainId();
+    const chainId = await this.phantom.ethereum.getChainId();
+    return parseInt(chainId, 16);
   }
 
   async getAccounts(): Promise<string[]> {

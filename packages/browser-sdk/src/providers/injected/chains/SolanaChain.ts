@@ -52,6 +52,9 @@ export class InjectedSolanaChain implements ISolanaChain {
 
   async connect(_options?: { onlyIfTrusted?: boolean }): Promise<{ publicKey: string }> {
     const address = await this.phantom.solana.connect();
+    if (!address) {
+      throw new Error('Failed to connect to Solana wallet');
+    }
     return { publicKey: address };
   }
 

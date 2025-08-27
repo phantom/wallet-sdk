@@ -7,6 +7,8 @@ import {
   useAccounts,
   usePhantom,
   useIsExtensionInstalled,
+  useAutoConfirm,
+  NetworkId,
   type ProviderType,
 } from "@phantom/react-sdk";
 import { SystemProgram, PublicKey, Connection, VersionedTransaction, TransactionMessage } from "@solana/web3.js";
@@ -35,6 +37,7 @@ export function Actions({
   const { signPersonalMessage: signEthMessage, signTypedData: signEthTypedData, sendTransaction: sendEthTransaction } = useEthereum();
   const { isConnected, currentProviderType } = usePhantom();
   const { isInstalled, isLoading } = useIsExtensionInstalled();
+  const autoConfirm = useAutoConfirm();
   const addresses = useAccounts();
   const [isSigningMessage, setIsSigningMessage] = useState(false);
   const [isSigningTypedData, setIsSigningTypedData] = useState(false);
@@ -60,7 +63,6 @@ export function Actions({
 
   const onConnect = async () => {
     try {
-      console.log("Connecting with provider type:", providerType);
       await connect();
       // Connection state will be updated in the provider
     } catch (error) {
@@ -236,16 +238,36 @@ export function Actions({
         gasPrice: numberToHex(parseGwei("20")), // 20 gwei in hex
       };
 
-      console.log("Sending Ethereum transaction with params:", transactionParams);
       const result = await sendEthTransaction(transactionParams);
-
-      console.log("Ethereum transaction sent:", result);
       alert(`Ethereum transaction sent! Hash: ${result.hash}`);
     } catch (error) {
       console.error("Error sending Ethereum transaction:", error);
       alert(`Error sending Ethereum transaction: ${(error as Error).message || error}`);
     } finally {
       setIsSendingEthTransaction(false);
+    }
+  };
+
+  // Auto-confirm handlers
+  const onEnableAutoConfirm = async () => {
+    try {
+      const result = await autoConfirm.enable({
+        chains: [NetworkId.SOLANA_DEVNET, NetworkId.ETHEREUM_MAINNET]
+      });
+      alert(`Auto-confirm enabled for ${result.chains.length} chains!`);
+    } catch (error) {
+      console.error("Error enabling auto-confirm:", error);
+      alert(`Error enabling auto-confirm: ${(error as Error).message || error}`);
+    }
+  };
+
+  const onDisableAutoConfirm = async () => {
+    try {
+      await autoConfirm.disable();
+      alert("Auto-confirm disabled!");
+    } catch (error) {
+      console.error("Error disabling auto-confirm:", error);
+      alert(`Error disabling auto-confirm: ${(error as Error).message || error}`);
     }
   };
 
@@ -367,6 +389,60 @@ export function Actions({
                 </button>
               </div>
               {balanceError && <p className="error-text">Balance error: {balanceError}</p>}
+            </div>
+          )}
+
+          {isConnected && currentProviderType === "injected" && (
+            <div className="section">
+              <h3>Auto-Confirm Settings</h3>
+              <div className="status-card">
+                <div className="status-row">
+                  <span className="status-label">Status:</span>
+                  <span className={`status-value ${autoConfirm.status?.enabled ? "connected" : "disconnected"}`}>
+                    {autoConfirm.isLoading ? "Loading..." : autoConfirm.status?.enabled ? "Enabled" : "Disabled"}
+                  </span>
+                </div>
+                {autoConfirm.status?.enabled && autoConfirm.status.chains.length > 0 && (
+                  <div className="status-row">
+                    <span className="status-label">Active Chains:</span>
+                    <span className="status-value">{autoConfirm.status.chains.length}</span>
+                  </div>
+                )}
+                {autoConfirm.supportedChains && autoConfirm.supportedChains.chains.length > 0 && (
+                  <div className="status-row">
+                    <span className="status-label">Supported:</span>
+                    <span className="status-value">{autoConfirm.supportedChains.chains.length} chains</span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="button-group">
+                <button 
+                  onClick={onEnableAutoConfirm} 
+                  disabled={autoConfirm.isLoading || autoConfirm.status?.enabled}
+                  className="small"
+                >
+                  {autoConfirm.isLoading ? "Loading..." : "Enable Auto-Confirm"}
+                </button>
+                <button 
+                  onClick={onDisableAutoConfirm} 
+                  disabled={autoConfirm.isLoading || !autoConfirm.status?.enabled}
+                  className="small"
+                >
+                  {autoConfirm.isLoading ? "Loading..." : "Disable Auto-Confirm"}
+                </button>
+                <button 
+                  onClick={autoConfirm.refetch} 
+                  disabled={autoConfirm.isLoading}
+                  className="small"
+                >
+                  {autoConfirm.isLoading ? "Loading..." : "Refresh Status"}
+                </button>
+              </div>
+              
+              {autoConfirm.error && (
+                <p className="error-text">Auto-confirm error: {autoConfirm.error.message}</p>
+              )}
             </div>
           )}
 

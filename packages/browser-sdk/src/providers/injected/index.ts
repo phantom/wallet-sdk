@@ -64,7 +64,7 @@ export class InjectedProvider implements Provider {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Address types configured", { addressTypes: this.addressTypes });
 
     // Create single phantom instance with all needed plugins
-    const plugins = [createExtensionPlugin()];
+    const plugins: Plugin<any>[] = [createExtensionPlugin()];
 
     if (this.addressTypes.includes(AddressType.solana)) {
       plugins.push(createSolanaPlugin());
@@ -83,7 +83,7 @@ export class InjectedProvider implements Provider {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Creating Phantom instance with plugins", {
       pluginCount: plugins.length,
     });
-    this.phantom = createPhantom({ plugins: plugins as Plugin<unknown>[] }) as unknown as PhantomExtended;
+    this.phantom = createPhantom({ plugins }) as unknown as PhantomExtended;
 
 
     debug.info(DebugCategory.INJECTED_PROVIDER, "InjectedProvider initialized");

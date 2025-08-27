@@ -1,4 +1,4 @@
-import { NetworkId, InternalNetworkCaip } from "@phantom/constants";
+import type { NetworkId, InternalNetworkCaip } from "@phantom/constants";
 
 export type AutoConfirmEnableParams = {
   chains?: NetworkId[];

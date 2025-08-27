@@ -18,6 +18,7 @@ const mockProvider = {
   getChainId: jest.fn(),
   switchChain: jest.fn(),
   addChain: jest.fn(),
+  request: jest.fn(),
 };
 
 jest.mock("./getProvider");

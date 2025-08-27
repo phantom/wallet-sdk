@@ -10,7 +10,7 @@ import type { ParsedSignatureResult, ParsedTransactionResult } from '@phantom/pa
 export class EmbeddedEthereumChain implements IEthereumChain {
   private currentNetworkId: NetworkId = NetworkId.ETHEREUM_MAINNET;
 
-  constructor(private provider: EmbeddedProvider) {}
+  constructor(private provider: EmbeddedProvider) { }
 
   private ensureConnected(): void {
     if (!this.provider.isConnected()) {
@@ -80,7 +80,7 @@ export class EmbeddedEthereumChain implements IEthereumChain {
         });
         return parseSignMessageResponse(result.signature, this.currentNetworkId).signature as T;
       }
-        
+
       case 'eth_signTypedData_v4': {
         const [_typedDataAddress, typedDataStr] = args.params as [string, string];
         const _typedData = JSON.parse(typedDataStr);
@@ -90,33 +90,36 @@ export class EmbeddedEthereumChain implements IEthereumChain {
         });
         return parseSignMessageResponse(typedDataResult.signature, this.currentNetworkId).signature as T;
       }
-        
+
       case 'eth_sendTransaction': {
         const [transaction] = args.params as [EthTransactionRequest];
+        // If the transaction has a chainId, submit it to that NetworkId 
+        const networkIdFromTx = transaction.chainId ? chainIdToNetworkId(typeof transaction.chainId === 'number' ? transaction.chainId : parseInt(transaction.chainId, 16)) : null;
+
         const sendResult = await this.provider.signAndSendTransaction({
           transaction,
-          networkId: this.currentNetworkId
+          networkId: networkIdFromTx || this.currentNetworkId
         });
         return parseTransactionResponse(sendResult.rawTransaction, this.currentNetworkId, sendResult.hash).hash as T;
       }
-        
+
       case 'eth_accounts': {
         const addresses = this.provider.getAddresses();
         const ethAddr = addresses.find((a: any) => a.addressType === 'Ethereum');
         return (ethAddr ? [ethAddr.address] : []) as T;
       }
-        
+
       case 'eth_chainId': {
         return `0x${(networkIdToChainId(this.currentNetworkId) || 1).toString(16)}` as T;
       }
-        
+
       case 'wallet_switchEthereumChain': {
         const [{ chainId }] = args.params as [{ chainId: string }];
         const numericChainId = parseInt(chainId, 16);
         await this.switchChain(numericChainId);
         return undefined as T;
       }
-        
+
       default:
         throw new Error(`Embedded provider doesn't support method: ${args.method}`);
     }
