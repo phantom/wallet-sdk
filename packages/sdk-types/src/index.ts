@@ -15,12 +15,19 @@ export interface Stamper {
 export interface StamperKeyInfo {
   keyId: string;
   publicKey: string;
+  createdAt?: number; // Optional timestamp when key was created
+  authenticatorId?: string; // Optional authenticator ID from server
 }
 
 // Extended stamper interface for stampers that manage their own keys
 export interface StamperWithKeyManagement extends Stamper {
   init(): Promise<StamperKeyInfo>;
   getKeyInfo(): StamperKeyInfo | null;
-  resetKeyPair?(): Promise<StamperKeyInfo>;
-  clear?(): Promise<void>;
+  resetKeyPair(): Promise<StamperKeyInfo>;
+  clear(): Promise<void>;
+  
+  // Key rotation methods for seamless key transitions
+  rotateKeyPair(): Promise<StamperKeyInfo>;        // Generate new keypair, keep old as pending
+  commitRotation(authenticatorId: string): Promise<void>;  // Switch to new keypair
+  rollbackRotation(): Promise<void>;              // Discard pending keypair on failure
 }

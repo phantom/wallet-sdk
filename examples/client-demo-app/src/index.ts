@@ -50,7 +50,7 @@ async function main() {
 
   const client = new PhantomClient(
     {
-      apiBaseUrl: "https://api.phantom.app/v1/wallets",
+      apiBaseUrl: "https://staging-api.phantom.app/v1/wallets",
     },
     stamper,
   );

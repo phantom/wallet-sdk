@@ -36,8 +36,9 @@ All packages with links to documentation:
 - **[@phantom/client](./packages/client/README.md)** - HTTP client library
 - **[@phantom/api-key-stamper](./packages/api-key-stamper/README.md)** - API authentication
 - **[@phantom/browser-injected-sdk](./packages/browser-injected-sdk/README.md)** - Browser extension integration
-- **@phantom/wallet-sdk (DEPRECATED)** - Legacy embedded wallet SDK
-- **@phantom/browser-embedded-sdk (DEPRECATED)** - Legacy browser embedded SDK
+
+### ⚠️ Deprecated Packages
+- **[@phantom/wallet-sdk](./packages/browser-embedded-sdk/README.md)** - ⚠️ **DEPRECATED** - Use [@phantom/browser-sdk](./packages/browser-sdk/README.md) or [@phantom/react-sdk](./packages/react-sdk/README.md) instead ([NPM](https://www.npmjs.com/package/@phantom/wallet-sdk))
 
 ## Provider Types
 

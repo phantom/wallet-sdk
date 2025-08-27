@@ -9,6 +9,7 @@ import {
   type ParsedTransactionResult,
   type ParsedSignatureResult,
 } from "@phantom/parsers";
+import { AUTHENTICATOR_EXPIRATION_TIME_MS, AUTHENTICATOR_RENEWAL_WINDOW_MS } from "./constants";
 
 import type {
   PlatformAdapter,
@@ -176,6 +177,17 @@ export class EmbeddedProvider {
       }
     }
 
+    // For completed sessions, check if session is valid (only checks authenticator expiration)
+    if (session.status === "completed" && !this.isSessionValid(session)) {
+      this.logger.warn("EMBEDDED_PROVIDER", "Session invalid due to authenticator expiration", {
+        sessionId: session.sessionId,
+        authenticatorExpiresAt: session.authenticatorExpiresAt,
+      });
+      // Clear the invalid session
+      await this.storage.clearSession();
+      return null;
+    }
+
     return session;
   }
 
@@ -221,6 +233,9 @@ export class EmbeddedProvider {
         addressCount: this.addresses.length,
       });
 
+      // Ensure authenticator is valid after successful connection
+      await this.ensureValidAuthenticator();
+
       const result: ConnectResult = {
         walletId: this.walletId!,
         addresses: this.addresses,
@@ -258,8 +273,9 @@ export class EmbeddedProvider {
   }
 
   /*
-   * We use this method to validate if a session is still valid and can be used for auto-connect.
-   * This checks session status, expiration, and required fields.
+   * We use this method to validate if a session is still valid.
+   * This checks session status, required fields, and authenticator expiration.
+   * Sessions never expire by age - only authenticators expire.
    */
   private isSessionValid(session: Session | null): boolean {
     if (!session) {
@@ -282,14 +298,19 @@ export class EmbeddedProvider {
       return false;
     }
 
-    // Check session age (7 days default)
-    const sessionAge = Date.now() - session.lastUsed;
-    const maxSessionAge = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
-    if (sessionAge > maxSessionAge) {
-      this.logger.log("EMBEDDED_PROVIDER", "Session expired", {
-        sessionAge,
-        maxSessionAge,
-        lastUsed: new Date(session.lastUsed).toISOString(),
+    // Sessions without authenticator timing are invalid
+    if (!session.authenticatorExpiresAt) {
+      this.logger.log("EMBEDDED_PROVIDER", "Session invalid - missing authenticator timing", {
+        sessionId: session.sessionId,
+      });
+      return false;
+    }
+
+    // Check authenticator expiration - if expired, session is invalid
+    if (Date.now() >= session.authenticatorExpiresAt) {
+      this.logger.log("EMBEDDED_PROVIDER", "Authenticator expired, session invalid", {
+        authenticatorExpiresAt: new Date(session.authenticatorExpiresAt).toISOString(),
+        now: new Date().toISOString(),
       });
       return false;
     }
@@ -297,7 +318,7 @@ export class EmbeddedProvider {
     this.logger.log("EMBEDDED_PROVIDER", "Session is valid", {
       sessionId: session.sessionId,
       walletId: session.walletId,
-      lastUsed: new Date(session.lastUsed).toISOString(),
+      authenticatorExpires: new Date(session.authenticatorExpiresAt).toISOString(),
     });
     return true;
   }
@@ -358,7 +379,7 @@ export class EmbeddedProvider {
    * We use this method to initialize the stamper and create an organization for new sessions.
    * This is the first step when no existing session is found and we need to set up a new wallet.
    */
-  private async createOrganizationAndStamper(): Promise<{ organizationId: string; stamperInfo: StamperInfo }> {
+  private async createOrganizationAndStamper(): Promise<{ organizationId: string; stamperInfo: StamperInfo; expiresAtMs: number; username: string }> {
     // Initialize stamper (generates keypair in IndexedDB)
     this.logger.log("EMBEDDED_PROVIDER", "Initializing stamper");
     const stamperInfo = await this.stamper.init();
@@ -391,10 +412,12 @@ export class EmbeddedProvider {
 
     // Convert base58 public key to base64url format as required by the API
     const base64urlPublicKey = base64urlEncode(bs58.decode(stamperInfo.publicKey));
+    const expiresAtMs = Date.now() + AUTHENTICATOR_EXPIRATION_TIME_MS;
 
+    const username = `user-${shortPubKey}`;
     const { organizationId } = await tempClient.createOrganization(organizationName, [
       {
-        username: `user-${shortPubKey}`,
+        username,
         role: "ADMIN",
         authenticators: [
           {
@@ -402,13 +425,15 @@ export class EmbeddedProvider {
             authenticatorKind: "keypair",
             publicKey: base64urlPublicKey,
             algorithm: "Ed25519",
-          },
+            // Commented for now until KMS supports fully expirable organizations
+            // expiresAtMs: expiresAtMs,
+          } as any,
         ],
       },
     ]);
     this.logger.info("EMBEDDED_PROVIDER", "Organization created", { organizationId });
 
-    return { organizationId, stamperInfo };
+    return { organizationId, stamperInfo, expiresAtMs, username };
   }
 
   async connect(authOptions?: AuthOptions): Promise<ConnectResult> {
@@ -452,8 +477,8 @@ export class EmbeddedProvider {
 
       // No existing connection available, create new one
       this.logger.info("EMBEDDED_PROVIDER", "No existing connection, creating new auth flow");
-      const { organizationId, stamperInfo } = await this.createOrganizationAndStamper();
-      const session = await this.handleAuthFlow(organizationId, stamperInfo, authOptions);
+      const { organizationId, stamperInfo, expiresAtMs, username } = await this.createOrganizationAndStamper();
+      const session = await this.handleAuthFlow(organizationId, stamperInfo, authOptions, expiresAtMs, username);
 
       // If session is null here, it means we're doing a redirect
       if (!session) {
@@ -473,6 +498,9 @@ export class EmbeddedProvider {
 
       // Initialize client and get addresses
       await this.initializeClientFromSession(session);
+
+      // Ensure authenticator is valid after successful connection
+      await this.ensureValidAuthenticator();
 
       const result: ConnectResult = {
         walletId: this.walletId!,
@@ -566,6 +594,9 @@ export class EmbeddedProvider {
       throw new Error("Not connected");
     }
 
+    // Check if authenticator needs renewal before performing the operation
+    await this.ensureValidAuthenticator();
+
     this.logger.info("EMBEDDED_PROVIDER", "Signing message", {
       walletId: this.walletId,
       message: params.message,
@@ -594,6 +625,9 @@ export class EmbeddedProvider {
     if (!this.client || !this.walletId) {
       throw new Error("Not connected");
     }
+
+    // Check if authenticator needs renewal before performing the operation
+    await this.ensureValidAuthenticator();
 
     this.logger.info("EMBEDDED_PROVIDER", "Signing and sending transaction", {
       walletId: this.walletId,
@@ -642,7 +676,9 @@ export class EmbeddedProvider {
   private async handleAuthFlow(
     organizationId: string,
     stamperInfo: StamperInfo,
-    authOptions?: AuthOptions,
+    authOptions: AuthOptions | undefined,
+    expiresAtMs: number,
+    username: string,
   ): Promise<Session | null> {
     if (this.config.embeddedWalletType === "user-wallet") {
       this.logger.info("EMBEDDED_PROVIDER", "Creating user-wallet, routing authentication", {
@@ -651,7 +687,7 @@ export class EmbeddedProvider {
 
       // Route to appropriate authentication flow based on authOptions
       if (authOptions?.provider === "jwt") {
-        return await this.handleJWTAuth(organizationId, stamperInfo, authOptions);
+        return await this.handleJWTAuth(organizationId, stamperInfo, authOptions, expiresAtMs, username);
       } else {
         // This will redirect in browser, so we don't return a session
         // In react-native this will return an auth result
@@ -660,7 +696,7 @@ export class EmbeddedProvider {
           parentOrganizationId: this.config.organizationId,
           provider: authOptions?.provider,
         });
-        return await this.handleRedirectAuth(organizationId, stamperInfo, authOptions);
+        return await this.handleRedirectAuth(organizationId, stamperInfo, authOptions, username);
       }
     } else {
       this.logger.info("EMBEDDED_PROVIDER", "Creating app-wallet", {
@@ -690,6 +726,10 @@ export class EmbeddedProvider {
         status: "completed" as const,
         createdAt: now,
         lastUsed: now,
+        authenticatorCreatedAt: now,
+        authenticatorExpiresAt: expiresAtMs,
+        lastRenewalAttempt: undefined,
+        username,
       };
 
       await this.storage.saveSession(session);
@@ -707,6 +747,8 @@ export class EmbeddedProvider {
     organizationId: string,
     stamperInfo: StamperInfo,
     authOptions: AuthOptions,
+    expiresAtMs: number,
+    username: string,
   ): Promise<Session> {
     this.logger.info("EMBEDDED_PROVIDER", "Using JWT authentication flow");
 
@@ -738,6 +780,10 @@ export class EmbeddedProvider {
       status: "completed" as const,
       createdAt: now,
       lastUsed: now,
+      authenticatorCreatedAt: now,
+      authenticatorExpiresAt: expiresAtMs,
+      lastRenewalAttempt: undefined,
+      username,
     };
     this.logger.log("EMBEDDED_PROVIDER", "Saving JWT session");
     await this.storage.saveSession(session);
@@ -753,6 +799,7 @@ export class EmbeddedProvider {
     organizationId: string,
     stamperInfo: StamperInfo,
     authOptions?: AuthOptions,
+    username?: string,
   ): Promise<Session | null> {
     this.logger.info("EMBEDDED_PROVIDER", "Using Phantom Connect authentication flow (redirect-based)", {
       provider: authOptions?.provider,
@@ -774,6 +821,10 @@ export class EmbeddedProvider {
       status: "pending" as const,
       createdAt: now,
       lastUsed: now,
+      authenticatorCreatedAt: now,
+      authenticatorExpiresAt: now + AUTHENTICATOR_EXPIRATION_TIME_MS,
+      lastRenewalAttempt: undefined,
+      username: username || `user-${stamperInfo.keyId.substring(0, 8)}`,
     };
     this.logger.log("EMBEDDED_PROVIDER", "Saving temporary session before redirect", {
       sessionId: tempSession.sessionId,
@@ -843,11 +894,145 @@ export class EmbeddedProvider {
 
     await this.initializeClientFromSession(session);
 
+    // Ensure authenticator is valid after successful connection
+    await this.ensureValidAuthenticator();
+
     return {
       walletId: this.walletId!,
       addresses: this.addresses,
       status: "completed",
     };
+  }
+
+  /*
+   * Ensures the authenticator is valid and performs renewal if needed.
+   * The renewal of the authenticator can only happen meanwhile the previous authenticator is still valid. 
+   */
+  private async ensureValidAuthenticator(): Promise<void> {
+    // Get current session to check authenticator timing
+    const session = await this.storage.getSession();
+    if (!session) {
+      throw new Error("No active session found");
+    }
+
+    const now = Date.now();
+    
+    // Sessions without authenticator timing fields are invalid - clear them
+    if (!session.authenticatorExpiresAt) {
+      this.logger.warn("EMBEDDED_PROVIDER", "Session missing authenticator timing - treating as invalid session");
+      await this.disconnect();
+      throw new Error("Invalid session - missing authenticator timing");
+    }
+
+    const timeUntilExpiry = session.authenticatorExpiresAt - now;
+    
+    this.logger.log("EMBEDDED_PROVIDER", "Checking authenticator expiration", {
+      expiresAt: new Date(session.authenticatorExpiresAt).toISOString(),
+      timeUntilExpiry,
+    });
+
+    // Check if authenticator has expired
+    if (timeUntilExpiry <= 0) {
+      this.logger.error("EMBEDDED_PROVIDER", "Authenticator has expired, disconnecting");
+      await this.disconnect();
+      throw new Error("Authenticator expired");
+    }
+
+    // Check if authenticator needs renewal (within renewal window)
+    const renewalWindow = AUTHENTICATOR_RENEWAL_WINDOW_MS;
+    if (timeUntilExpiry <= renewalWindow) {
+      this.logger.info("EMBEDDED_PROVIDER", "Authenticator needs renewal", {
+        expiresAt: new Date(session.authenticatorExpiresAt).toISOString(),
+        timeUntilExpiry,
+        renewalWindow,
+      });
+
+      try {
+        await this.renewAuthenticator(session);
+        this.logger.info("EMBEDDED_PROVIDER", "Authenticator renewed successfully");
+      } catch (error) {
+        this.logger.error("EMBEDDED_PROVIDER", "Failed to renew authenticator", {
+          error: error instanceof Error ? error.message : String(error),
+        });
+        // Don't throw - renewal failure shouldn't break existing functionality
+      }
+    }
+  }
+
+
+  /*
+   * We use this method to perform silent authenticator renewal.
+   * It generates a new keypair, creates a new authenticator, and switches to it.
+   */
+  private async renewAuthenticator(session: Session): Promise<void> {
+    if (!this.client) {
+      throw new Error("Client not initialized");
+    }
+
+    this.logger.info("EMBEDDED_PROVIDER", "Starting authenticator renewal");
+
+    try {
+      // Step 1: Generate new keypair (but don't make it active yet)
+      const newKeyInfo = await this.stamper.rotateKeyPair();
+      this.logger.log("EMBEDDED_PROVIDER", "Generated new keypair for renewal", {
+        newKeyId: newKeyInfo.keyId,
+        newPublicKey: newKeyInfo.publicKey,
+      });
+
+      // Step 2: Convert public key and set expiration
+      const base64urlPublicKey = base64urlEncode(bs58.decode(newKeyInfo.publicKey));
+      const expiresAtMs = Date.now() + AUTHENTICATOR_EXPIRATION_TIME_MS;
+
+      // Step 3: Create new authenticator with replaceExpirable=true
+      let authenticatorResult;
+      try {
+        authenticatorResult = await this.client.createAuthenticator({
+          organizationId: session.organizationId,
+          username: session.username,
+          authenticatorName: `auth-${newKeyInfo.keyId.substring(0, 8)}`,
+          authenticator: {
+            authenticatorName: `auth-${newKeyInfo.keyId.substring(0, 8)}`,
+            authenticatorKind: "keypair",
+            publicKey: base64urlPublicKey,
+            algorithm: "Ed25519",
+            // Commented for now until KMS supports fully expiring organizations
+            // expiresAtMs: expiresAtMs,
+          } as any,
+          replaceExpirable: true,
+        } as any);
+      } catch (error) {
+        this.logger.error("EMBEDDED_PROVIDER", "Failed to create new authenticator", {
+          error: error instanceof Error ? error.message : String(error),
+        });
+        // Rollback the rotation on server error
+        await this.stamper.rollbackRotation();
+        throw new Error(`Failed to create new authenticator: ${error instanceof Error ? error.message : String(error)}`);
+      }
+
+      this.logger.info("EMBEDDED_PROVIDER", "Created new authenticator", {
+        authenticatorId: (authenticatorResult as any).id,
+      });
+
+      // Step 4: Commit the rotation (switch stamper to use new keypair)
+      await this.stamper.commitRotation((authenticatorResult as any).id || 'unknown');
+
+      // Step 5: Update session with new authenticator timing
+      const now = Date.now();
+      session.stamperInfo = newKeyInfo;
+      session.authenticatorCreatedAt = now;
+      session.authenticatorExpiresAt = expiresAtMs;
+      session.lastRenewalAttempt = now;
+      await this.storage.saveSession(session);
+
+      this.logger.info("EMBEDDED_PROVIDER", "Authenticator renewal completed successfully", {
+        newKeyId: newKeyInfo.keyId,
+        expiresAt: new Date(expiresAtMs).toISOString(),
+      });
+    } catch (error) {
+      // Rollback rotation on any failure
+      await this.stamper.rollbackRotation();
+      throw error;
+    }
   }
 
   /*
