@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@phantom/browser-sdk": "workspace:^",
+    "@solana-program/system": "^0.7.0",
     "@solana/kit": "^2.1.1",
     "@solana/web3.js": "^1.98.2",
     "buffer": "^6.0.3",

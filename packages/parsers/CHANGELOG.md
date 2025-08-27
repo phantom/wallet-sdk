@@ -1,5 +1,18 @@
 # @phantom/parsers
 
+## 0.0.7
+
+### Patch Changes
+
+- Updated dependencies [7d1b22f]
+  - @phantom/constants@0.0.3
+
+## 0.0.6
+
+### Patch Changes
+
+- 36af356: Auth flow complete
+
 ## 0.0.5
 
 ### Patch Changes

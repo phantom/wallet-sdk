@@ -7,4 +7,10 @@ export { DerivationPath, getDerivationPathForNetwork, getNetworkConfig } from ".
 export type { NetworkConfig } from "./constants";
 export { NetworkId } from "@phantom/constants";
 // Re-export enums from openapi-wallet-service
-export { DerivationInfoAddressFormatEnum as AddressType , type ExternalKmsOrganization  as Organization} from "@phantom/openapi-wallet-service";
+export {
+  DerivationInfoAddressFormatEnum as AddressType,
+  type ExternalKmsOrganization as Organization,
+  type CreateAuthenticatorRequest,
+  type DeleteAuthenticatorRequest,
+  type CreateOrganizationRequest,
+} from "@phantom/openapi-wallet-service";

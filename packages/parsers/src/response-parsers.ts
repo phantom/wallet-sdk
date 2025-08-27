@@ -60,11 +60,11 @@ export function parseTransactionResponse(
       hash,
       rawTransaction: base64RawTransaction,
       blockExplorer: getExplorerUrl(networkId, "transaction", hash),
-    }
+    };
   } else {
     return {
       rawTransaction: base64RawTransaction,
-    }
+    };
   }
 }
 

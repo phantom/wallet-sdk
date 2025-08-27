@@ -5,6 +5,7 @@ export interface PhantomClientConfig {
   organizationId?: string;
 }
 
+
 export interface CreateWalletResult {
   walletId: string;
   addresses: {
@@ -47,4 +48,52 @@ export interface SignAndSendTransactionParams {
   walletId: string;
   transaction: Transaction; // base64url encoded transaction
   networkId: NetworkId;
+}
+
+export interface GetWalletWithTagParams {
+  organizationId: string;
+  tag: string;
+  derivationPaths: string[];
+}
+
+export interface CreateAuthenticatorParams {
+  organizationId: string;
+  username: string;
+  authenticatorName: string;
+  authenticator: AuthenticatorConfig;
+}
+
+export interface DeleteAuthenticatorParams {
+  organizationId: string;
+  username: string;
+  authenticatorId: string;
+}
+
+export type AuthenticatorConfig =
+  | {
+      authenticatorKind: "keypair";
+      authenticatorName: string;
+      publicKey: string; // base64url encoded public key (required for keypair)
+      algorithm: "Ed25519";
+    }
+  | {
+      authenticatorKind: "passkey";
+      authenticatorName: string;
+      publicKey: string; // base64url encoded public key (required for passkey)
+      algorithm: "Ed25519" | "ECDSA";
+    }
+  | {
+      authenticatorKind: "oidc";
+      authenticatorName: string;
+      jwksUrl: string;
+      idTokenClaims: {
+        sub: string;
+        iss: string;
+      };
+    };
+
+export interface UserConfig {
+  username: string;
+  role?: "ADMIN" | "USER"; // Optional, defaults to 'ADMIN'
+  authenticators: AuthenticatorConfig[];
 }

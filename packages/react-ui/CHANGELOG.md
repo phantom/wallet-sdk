@@ -1,5 +1,53 @@
 # @phantom/react-ui
 
+## 1.2.5
+
+### Patch Changes
+
+- a126cf3: Bump version
+- Updated dependencies [a126cf3]
+  - @phantom/client@0.1.9
+  - @phantom/react-sdk@0.3.7
+
+## 1.2.4
+
+### Patch Changes
+
+- e41ad19: Fix re-rendering issues
+- 7d1b22f: Updated libs version
+- Updated dependencies [e41ad19]
+- Updated dependencies [7d1b22f]
+  - @phantom/react-sdk@0.3.4
+  - @phantom/client@0.1.8
+
+## 1.2.3
+
+### Patch Changes
+
+- 6d6cbf8: New stamper interface
+- Updated dependencies [6d6cbf8]
+  - @phantom/client@0.1.7
+  - @phantom/react-sdk@0.3.3
+
+## 1.2.2
+
+### Patch Changes
+
+- 36af356: Auth flow complete
+- Updated dependencies [36af356]
+- Updated dependencies [3d0c1f9]
+  - @phantom/react-sdk@0.3.2
+  - @phantom/client@0.1.6
+
+## 1.2.1
+
+### Patch Changes
+
+- 7c86fef: Add support for the newest stamper
+- Updated dependencies [7c86fef]
+  - @phantom/react-sdk@0.3.1
+  - @phantom/client@0.1.5
+
 ## 1.2.0
 
 ### Minor Changes

@@ -30,7 +30,7 @@ Object.defineProperty(global, "crypto", {
 Object.defineProperty(global, "TextEncoder", {
   value: class TextEncoder {
     encode(str: string) {
-      return new Uint8Array(Array.from(str).map((char) => char.charCodeAt(0)));
+      return new Uint8Array(Array.from(str).map(char => char.charCodeAt(0)));
     }
   },
   writable: true,

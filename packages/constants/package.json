@@ -1,6 +1,6 @@
 {
   "name": "@phantom/constants",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Shared constants for Phantom Wallet SDK",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

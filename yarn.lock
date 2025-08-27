@@ -3311,6 +3311,7 @@ __metadata:
   resolution: "@phantom/browser-sdk-demo-app@workspace:examples/browser-sdk-demo-app"
   dependencies:
     "@phantom/browser-sdk": "workspace:^"
+    "@solana-program/system": "npm:^0.7.0"
     "@solana/kit": "npm:^2.1.1"
     "@solana/web3.js": "npm:^1.98.2"
     buffer: "npm:^6.0.3"
@@ -3360,7 +3361,7 @@ __metadata:
     "@phantom/base64url": "workspace:^"
     "@phantom/constants": "workspace:^"
     "@phantom/crypto": "workspace:^"
-    "@phantom/openapi-wallet-service": "npm:^0.1.7"
+    "@phantom/openapi-wallet-service": "npm:^0.1.9"
     "@phantom/sdk-types": "workspace:^"
     "@phantom/swapper-sdk": "workspace:^"
     "@types/jest": "npm:^29.5.12"
@@ -3420,12 +3421,14 @@ __metadata:
   resolution: "@phantom/embedded-provider-core@workspace:packages/embedded-provider-core"
   dependencies:
     "@phantom/api-key-stamper": "workspace:^"
+    "@phantom/base64url": "workspace:^"
     "@phantom/client": "workspace:^"
     "@phantom/constants": "workspace:^"
     "@phantom/parsers": "workspace:^"
     "@phantom/sdk-types": "workspace:^"
     "@types/jest": "npm:^29.5.5"
     "@types/node": "npm:^20.11.0"
+    bs58: "npm:^6.0.0"
     eslint: "npm:8.53.0"
     jest: "npm:^29.7.0"
     prettier: "npm:^3.5.2"
@@ -3463,12 +3466,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/openapi-wallet-service@npm:^0.1.7":
-  version: 0.1.7
-  resolution: "@phantom/openapi-wallet-service@npm:0.1.7"
+"@phantom/openapi-wallet-service@npm:^0.1.9":
+  version: 0.1.9
+  resolution: "@phantom/openapi-wallet-service@npm:0.1.9"
   dependencies:
     axios: "npm:^1.6.1"
-  checksum: 10c0/ee43ce99ea8fa6db4cfd7d353dba8cfc33d5b2225077a9be05019d76a7330885edfad981ce3e7f3f96fa36526880cfa6e125b7c4c16d9c5f3308d75c9ee8a6a0
+  checksum: 10c0/cd4fd5f107e5e58e4b351db8abc62f8f0f1b9106055e45e29dad11fd853b5f542607232cde3621e02aca301e71843e26f8961a37f3e40e9d598f987c4842173c
   languageName: node
   linkType: hard
 
@@ -3519,6 +3522,7 @@ __metadata:
     "@babel/core": "npm:^7.20.0"
     "@expo/vector-icons": "npm:^14.1.0"
     "@phantom/react-native-sdk": "workspace:^"
+    "@solana/web3.js": "npm:^1.98.4"
     "@types/react": "npm:~19.0.10"
     expo: "npm:~53.0.20"
     expo-auth-session: "npm:^6.2.1"
@@ -3591,7 +3595,7 @@ __metadata:
     "@phantom/browser-sdk": "workspace:^"
     "@phantom/client": "workspace:^"
     "@phantom/react-sdk": "workspace:^"
-    "@solana/kit": "npm:^2.1.1"
+    "@solana/web3.js": "npm:^1.98.4"
     "@types/react": "npm:^19.1.2"
     "@types/react-dom": "npm:^19.1.2"
     "@vitejs/plugin-react": "npm:^4.4.1"
@@ -3680,7 +3684,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/sdk-types@workspace:packages/sdk-types"
   dependencies:
-    "@phantom/openapi-wallet-service": "npm:^0.1.7"
+    "@phantom/openapi-wallet-service": "npm:^0.1.9"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
     buffer: "npm:^6.0.3"
@@ -3713,12 +3717,13 @@ __metadata:
   resolution: "@phantom/server-sdk@workspace:packages/server-sdk"
   dependencies:
     "@phantom/api-key-stamper": "workspace:^"
+    "@phantom/base64url": "workspace:^"
     "@phantom/client": "workspace:^"
     "@phantom/constants": "workspace:^"
-    "@phantom/openapi-wallet-service": "npm:^0.1.7"
     "@phantom/parsers": "workspace:^"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
+    bs58: "npm:^6.0.0"
     dotenv: "npm:^16.4.1"
     eslint: "npm:8.53.0"
     jest: "npm:^29.7.0"
@@ -4307,6 +4312,15 @@ __metadata:
   dependencies:
     "@sinonjs/commons": "npm:^3.0.1"
   checksum: 10c0/a707476efd523d2138ef6bba916c83c4a377a8372ef04fad87499458af9f01afc58f4f245c5fd062793d6d70587309330c6f96947b5bd5697961c18004dc3e26
+  languageName: node
+  linkType: hard
+
+"@solana-program/system@npm:^0.7.0":
+  version: 0.7.0
+  resolution: "@solana-program/system@npm:0.7.0"
+  peerDependencies:
+    "@solana/kit": ^2.1.0
+  checksum: 10c0/0316a6f5359a79b7d070358bf5b7443ff99419f2b7120f78fe625861925b227c7129fa9c2d88c53a8731630032777491e25e8cf6c0711f92fe956d90d40b5662
   languageName: node
   linkType: hard
 
@@ -5052,7 +5066,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@solana/web3.js@npm:^1.87.6, @solana/web3.js@npm:^1.95.0, @solana/web3.js@npm:^1.98.2":
+"@solana/web3.js@npm:^1.87.6, @solana/web3.js@npm:^1.95.0, @solana/web3.js@npm:^1.98.2, @solana/web3.js@npm:^1.98.4":
   version: 1.98.4
   resolution: "@solana/web3.js@npm:1.98.4"
   dependencies:
@@ -7081,9 +7095,11 @@ __metadata:
   resolution: "client-demo-app@workspace:examples/client-demo-app"
   dependencies:
     "@phantom/api-key-stamper": "workspace:^"
+    "@phantom/base64url": "workspace:^"
     "@phantom/client": "workspace:^"
     "@phantom/crypto": "workspace:^"
     "@types/node": "npm:^20.11.0"
+    bs58: "npm:^5.0.0"
     ts-node: "npm:^10.9.1"
     typescript: "npm:^5.0.4"
   languageName: unknown

@@ -1,4 +1,3 @@
-import type { AddressType } from "@phantom/client";
 import type {
   WalletAddress,
   ConnectResult,
@@ -7,40 +6,28 @@ import type {
   SignMessageResult,
   SignedTransaction,
   AuthOptions,
+  EmbeddedProviderConfig,
 } from "@phantom/embedded-provider-core";
+import { AddressType } from "@phantom/client";
 
 import type { DebugCallback, DebugLevel } from "./debug";
 
-export interface BrowserSDKConfig {
+// Debug configuration - separate from SDK config to avoid unnecessary reinstantiation
+export interface DebugConfig {
+  enabled?: boolean;
+  level?: DebugLevel;
+  callback?: DebugCallback;
+}
+
+export interface BrowserSDKConfig extends Partial<EmbeddedProviderConfig> {
   providerType: "injected" | "embedded" | (string & Record<never, never>);
-  appName?: string;
-  // Address types to enable (applies to both injected and embedded providers)
-  addressTypes?: AddressType[];
-  // For embedded provider
+  addressTypes: [AddressType, ...AddressType[]]
+  // Required for embedded provider, optional for injected
   apiBaseUrl?: string;
   organizationId?: string;
-  authOptions?: {
-    authUrl?: string;
-    redirectUrl?: string;
-  };
   embeddedWalletType?: "app-wallet" | "user-wallet" | (string & Record<never, never>);
-  solanaProvider?: "web3js" | "kit"; // Solana library choice (default: 'web3js')
-  serverUrl?: string; // URL to your backend API endpoint (e.g., "http://localhost:3000/api")
-  // Debug options
-  debug?: {
-    enabled?: boolean;
-    level?: DebugLevel;
-    callback?: DebugCallback;
-  };
-}
-
-export interface CreateUserOrganizationParams {
-  userId: string;
-  [key: string]: any; // Allow additional options
-}
-
-export interface CreateUserOrganizationResult {
-  organizationId: string;
+  // Auto-connect to existing sessions (default: true)
+  autoConnect?: boolean;
 }
 
 // Re-export types from core for convenience
@@ -52,7 +39,12 @@ export type {
   SignMessageResult,
   SignedTransaction,
   AuthOptions,
+  DebugCallback,
+  DebugLevel,
 };
+
+// Re-export enums from client for convenience
+export { AddressType }
 
 export interface Provider {
   connect(authOptions?: AuthOptions): Promise<ConnectResult>;

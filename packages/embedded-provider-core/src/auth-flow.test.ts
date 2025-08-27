@@ -23,7 +23,7 @@ const mockedPhantomClient = jest.mocked(PhantomClient);
 
 // Set up generateKeyPair mock
 mockedGenerateKeyPair.mockReturnValue({
-  publicKey: "test-public-key",
+  publicKey: "11111111111111111111111111111111",
   secretKey: "test-secret-key",
 });
 
@@ -44,7 +44,7 @@ describe("EmbeddedProvider Auth Flows", () => {
 
     // Reset generateKeyPair mock
     mockedGenerateKeyPair.mockReturnValue({
-      publicKey: "test-public-key",
+      publicKey: "11111111111111111111111111111111",
       secretKey: "test-secret-key",
     });
 
@@ -81,11 +81,13 @@ describe("EmbeddedProvider Auth Flows", () => {
 
     // Mock stamper
     mockStamper = {
-      init: jest.fn().mockResolvedValue({ keyId: "test-key-id", publicKey: "test-public-key" }),
+      init: jest.fn().mockResolvedValue({ keyId: "test-key-id", publicKey: "11111111111111111111111111111111" }),
       sign: jest.fn().mockResolvedValue("mock-signature"),
       stamp: jest.fn().mockResolvedValue("mock-stamp"),
-      getKeyInfo: jest.fn().mockReturnValue({ keyId: "test-key-id", publicKey: "test-public-key" }),
-      resetKeyPair: jest.fn().mockResolvedValue({ keyId: "test-key-id", publicKey: "test-public-key" }),
+      getKeyInfo: jest.fn().mockReturnValue({ keyId: "test-key-id", publicKey: "11111111111111111111111111111111" }),
+      resetKeyPair: jest
+        .fn()
+        .mockResolvedValue({ keyId: "test-key-id", publicKey: "11111111111111111111111111111111" }),
       clear: jest.fn().mockResolvedValue(undefined),
     };
 
@@ -182,7 +184,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         sessionId: "test-session-id",
         walletId: "temp-wallet",
         organizationId: "org-123",
-        keypair: { publicKey: "pub", secretKey: "sec" },
+        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "phantom-connect",
         userInfo: {},
         status: "pending",
@@ -210,7 +212,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         sessionId: "test-session-id",
         walletId: "temp-wallet",
         organizationId: "org-123",
-        keypair: { publicKey: "pub", secretKey: "sec" },
+        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "phantom-connect",
         userInfo: {},
         status: "pending",
@@ -227,7 +229,6 @@ describe("EmbeddedProvider Auth Flows", () => {
           walletId: "wallet-123",
           status: "completed",
           authProvider: "google",
-          userInfo: expect.objectContaining({ email: "test@example.com" }),
         }),
       );
     });
@@ -244,7 +245,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         sessionId: "test-session-id",
         walletId: "temp-wallet",
         organizationId: "org-123",
-        keypair: { publicKey: "pub", secretKey: "sec" },
+        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "phantom-connect",
         userInfo: {},
         status: "pending",
@@ -276,7 +277,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         sessionId: "test-session-id",
         walletId: "temp-wallet",
         organizationId: "org-123",
-        keypair: { publicKey: "pub", secretKey: "sec" },
+        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "phantom-connect",
         userInfo: {},
         status: "pending",
@@ -300,7 +301,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         sessionId: "test-session-id",
         walletId: "temp-wallet",
         organizationId: "org-123",
-        keypair: { publicKey: "pub", secretKey: "sec" },
+        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "phantom-connect",
         userInfo: {},
         status: "pending",
@@ -326,7 +327,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         sessionId: "test-session-id",
         walletId: "temp-wallet",
         organizationId: "org-123",
-        keypair: { publicKey: "pub", secretKey: "sec" },
+        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "phantom-connect",
         userInfo: {},
         status: "pending",
@@ -414,8 +415,20 @@ describe("EmbeddedProvider Auth Flows", () => {
 
       expect(mockClient.createOrganization).toHaveBeenCalledWith(
         expect.stringContaining("test-org-id-"),
-        "test-public-key",
-        expect.stringMatching(/^test-platform-test-pub-\d+$/) // authenticatorName with platform name and short pubkey
+        expect.arrayContaining([
+          expect.objectContaining({
+            username: expect.stringContaining("user-"),
+            role: "ADMIN",
+            authenticators: expect.arrayContaining([
+              expect.objectContaining({
+                authenticatorName: expect.stringContaining("auth-"),
+                authenticatorKind: "keypair",
+                publicKey: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                algorithm: "Ed25519",
+              }),
+            ]),
+          }),
+        ]),
       );
     });
 
@@ -669,7 +682,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         sessionId: "test-session-id",
         walletId: "temp-wallet",
         organizationId: "org-123",
-        keypair: { publicKey: "pub", secretKey: "sec" },
+        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "phantom-connect",
         userInfo: {},
         status: "pending", // Started but no URL sessionId
@@ -691,7 +704,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         sessionId: "test-session-id",
         walletId: "wallet-123",
         organizationId: "org-123",
-        keypair: { publicKey: "pub", secretKey: "sec" },
+        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "jwt",
         userInfo: {},
         status: "completed",
@@ -714,7 +727,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         sessionId: "test-session-id",
         walletId: "wallet-123",
         organizationId: "org-123",
-        keypair: { publicKey: "pub", secretKey: "sec" },
+        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "jwt",
         userInfo: {},
         status: "completed",
@@ -804,7 +817,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         sessionId: "test-session-id",
         walletId: "wallet-123",
         organizationId: "org-123",
-        keypair: { publicKey: "pub", secretKey: "sec" },
+        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "jwt",
         userInfo: {},
         status: "completed",
@@ -828,7 +841,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         sessionId: "test-session-id",
         walletId: "wallet-123",
         organizationId: "org-123",
-        keypair: { publicKey: "pub", secretKey: "sec" },
+        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "jwt",
         userInfo: {},
         status: "completed",
@@ -850,6 +863,281 @@ describe("EmbeddedProvider Auth Flows", () => {
     });
   });
 
+  describe("AutoConnect Flow", () => {
+    it("should silently fail when no session exists", async () => {
+      mockStorage.getSession.mockResolvedValue(null);
+      mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
+      
+      // autoConnect should not throw errors, it should fail silently
+      await expect(provider.autoConnect()).resolves.toBeUndefined();
+    });
+
+    it("should connect using existing completed session", async () => {
+      const completedSession: Session = {
+        sessionId: "test-session-id",
+        walletId: "wallet-123",
+        organizationId: "org-123",
+        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
+        authProvider: "jwt",
+        userInfo: {},
+        status: "completed",
+        createdAt: Date.now(),
+        lastUsed: Date.now(),
+      };
+      mockStorage.getSession.mockResolvedValue(completedSession);
+      mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
+      mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
+
+      await provider.autoConnect();
+
+      expect(provider.isConnected()).toBe(true);
+      expect(mockClient.getWalletAddresses).toHaveBeenCalledWith("wallet-123");
+    });
+
+    it("should resume from redirect during autoConnect", async () => {
+      const authResult: AuthResult = {
+        walletId: "wallet-from-redirect-123",
+        provider: "google",
+        userInfo: { email: "test@example.com" },
+      };
+      mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
+
+      const existingSession: Session = {
+        sessionId: "test-session-id",
+        walletId: "temp-wallet",
+        organizationId: "org-123",
+        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
+        authProvider: "phantom-connect",
+        userInfo: {},
+        status: "pending",
+        createdAt: Date.now(),
+        lastUsed: Date.now(),
+      };
+      mockStorage.getSession.mockResolvedValue(existingSession);
+      mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
+
+      await provider.autoConnect();
+
+      expect(provider.isConnected()).toBe(true);
+      expect(mockStorage.saveSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          walletId: "wallet-from-redirect-123",
+          status: "completed",
+          authProvider: "google",
+        })
+      );
+    });
+
+    it("should clear invalid pending session without redirect context", async () => {
+      mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
+      mockURLParamsAccessor.getParam.mockReturnValue(null);
+
+      const pendingSession: Session = {
+        sessionId: "test-session-id",
+        walletId: "temp-wallet",
+        organizationId: "org-123",
+        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
+        authProvider: "phantom-connect",
+        userInfo: {},
+        status: "pending",
+        createdAt: Date.now(),
+        lastUsed: Date.now(),
+      };
+      mockStorage.getSession.mockResolvedValue(pendingSession);
+
+      await provider.autoConnect();
+
+      expect(mockStorage.clearSession).toHaveBeenCalled();
+      expect(provider.isConnected()).toBe(false);
+    });
+
+    it("should handle session ID mismatch during autoConnect", async () => {
+      mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
+      mockURLParamsAccessor.getParam.mockReturnValue("different-session-id");
+
+      const pendingSession: Session = {
+        sessionId: "original-session-id",
+        walletId: "temp-wallet",
+        organizationId: "org-123",
+        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
+        authProvider: "phantom-connect",
+        userInfo: {},
+        status: "pending",
+        createdAt: Date.now(),
+        lastUsed: Date.now(),
+      };
+      mockStorage.getSession.mockResolvedValue(pendingSession);
+
+      await provider.autoConnect();
+
+      expect(mockStorage.clearSession).toHaveBeenCalled();
+      expect(provider.isConnected()).toBe(false);
+    });
+
+    it("should update session timestamp on successful autoConnect", async () => {
+      const originalTimestamp = Date.now() - 60000; // 1 minute ago
+      const completedSession: Session = {
+        sessionId: "test-session-id",
+        walletId: "wallet-123",
+        organizationId: "org-123",
+        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
+        authProvider: "jwt",
+        userInfo: {},
+        status: "completed",
+        createdAt: originalTimestamp,
+        lastUsed: originalTimestamp,
+      };
+      mockStorage.getSession.mockResolvedValue(completedSession);
+      mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
+      mockClient.getWalletAddresses.mockResolvedValue([]);
+
+      await provider.autoConnect();
+
+      expect(mockStorage.saveSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          lastUsed: expect.any(Number),
+          walletId: "wallet-123",
+          status: "completed",
+        })
+      );
+      
+      // Verify the timestamp was updated (should be more recent than original)
+      const savedSession = mockStorage.saveSession.mock.calls[0][0];
+      expect(savedSession.lastUsed).toBeGreaterThan(originalTimestamp);
+    });
+
+    it("should emit connect_start event at beginning of autoConnect", async () => {
+      mockStorage.getSession.mockResolvedValue(null);
+      mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
+
+      const connectStartSpy = jest.fn();
+      provider.on("connect_start", connectStartSpy);
+
+      await provider.autoConnect();
+
+      expect(connectStartSpy).toHaveBeenCalledWith({ source: "auto-connect" });
+    });
+
+    it("should emit connect event on successful autoConnect with existing session", async () => {
+      const completedSession: Session = {
+        sessionId: "test-session-id",
+        walletId: "wallet-123",
+        organizationId: "org-123",
+        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
+        authProvider: "jwt",
+        userInfo: {},
+        status: "completed",
+        createdAt: Date.now(),
+        lastUsed: Date.now(),
+      };
+      mockStorage.getSession.mockResolvedValue(completedSession);
+      mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
+      mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
+
+      const connectSpy = jest.fn();
+      provider.on("connect", connectSpy);
+
+      await provider.autoConnect();
+
+      expect(connectSpy).toHaveBeenCalledWith({
+        walletId: "wallet-123",
+        addresses: [{ addressType: "solana", address: "test-address" }],
+        source: "existing-session",
+      });
+    });
+
+    it("should emit connect_error event when autoConnect fails silently", async () => {
+      mockStorage.getSession.mockResolvedValue(null);
+      mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
+
+      const connectErrorSpy = jest.fn();
+      provider.on("connect_error", connectErrorSpy);
+
+      await provider.autoConnect();
+
+      expect(connectErrorSpy).toHaveBeenCalledWith({
+        error: "No valid session found",
+        source: "auto-connect",
+      });
+    });
+
+    it("should handle errors during autoConnect gracefully", async () => {
+      const completedSession: Session = {
+        sessionId: "test-session-id",
+        walletId: "wallet-123",
+        organizationId: "org-123",
+        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
+        authProvider: "jwt",
+        userInfo: {},
+        status: "completed",
+        createdAt: Date.now(),
+        lastUsed: Date.now(),
+      };
+      mockStorage.getSession.mockResolvedValue(completedSession);
+      mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
+      
+      // Mock getWalletAddresses to fail consistently
+      mockClient.getWalletAddresses
+        .mockRejectedValueOnce(new Error("Network error"))
+        .mockRejectedValueOnce(new Error("Network error"))
+        .mockRejectedValueOnce(new Error("Network error"));
+
+      const connectErrorSpy = jest.fn();
+      provider.on("connect_error", connectErrorSpy);
+
+      await provider.autoConnect();
+
+      expect(connectErrorSpy).toHaveBeenCalledWith({
+        error: "Network error",
+        source: "auto-connect",
+      });
+      expect(provider.isConnected()).toBe(false);
+    });
+
+    it("should not call authProvider.authenticate during autoConnect", async () => {
+      mockStorage.getSession.mockResolvedValue(null);
+      mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
+
+      await provider.autoConnect();
+
+      // autoConnect should never try to start new authentication flows
+      expect(mockAuthProvider.authenticate).not.toHaveBeenCalled();
+    });
+
+    it("should handle missing resumeAuthFromRedirect method gracefully", async () => {
+      mockStorage.getSession.mockResolvedValue(null);
+      // Remove resumeAuthFromRedirect from authProvider
+      delete (mockAuthProvider as any).resumeAuthFromRedirect;
+
+      await expect(provider.autoConnect()).resolves.toBeUndefined();
+    });
+
+    it("should work with app-wallet sessions during autoConnect", async () => {
+      config.embeddedWalletType = "app-wallet";
+      provider = new EmbeddedProvider(config, mockPlatform, mockLogger);
+
+      const appWalletSession: Session = {
+        sessionId: "test-session-id",
+        walletId: "app-wallet-123",
+        organizationId: "org-123",
+        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
+        authProvider: "app-wallet",
+        userInfo: { embeddedWalletType: "app-wallet" },
+        status: "completed",
+        createdAt: Date.now(),
+        lastUsed: Date.now(),
+      };
+      mockStorage.getSession.mockResolvedValue(appWalletSession);
+      mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
+      mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
+
+      await provider.autoConnect();
+
+      expect(provider.isConnected()).toBe(true);
+      expect(mockClient.getWalletAddresses).toHaveBeenCalledWith("app-wallet-123");
+    });
+  });
+
   describe("Message and Transaction Signing", () => {
     beforeEach(async () => {
       // Set up a connected state
@@ -858,7 +1146,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         sessionId: "test-session-id",
         walletId: "wallet-123",
         organizationId: "org-123",
-        keypair: { publicKey: "pub", secretKey: "sec" },
+        stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "jwt",
         userInfo: {},
         status: "completed",

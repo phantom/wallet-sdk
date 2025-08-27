@@ -1,6 +1,6 @@
 {
   "name": "@phantom/parsers",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "description": "Transaction and message parsers for Phantom Wallet SDK",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

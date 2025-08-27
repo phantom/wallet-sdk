@@ -32,14 +32,14 @@ describe("IndexedDbStamper Integration", () => {
     // Temporarily remove window to test error
     const originalWindow = global.window;
     const originalIndexedDB = global.indexedDB;
-    
+
     // @ts-ignore
     delete global.window;
-    // @ts-ignore  
+    // @ts-ignore
     delete global.indexedDB;
 
     expect(() => new IndexedDbStamper()).toThrow(
-      "IndexedDbStamper requires a browser environment with IndexedDB support"
+      "IndexedDbStamper requires a browser environment with IndexedDB support",
     );
 
     // Restore
@@ -49,47 +49,47 @@ describe("IndexedDbStamper Integration", () => {
 
   it("should handle stamp method with Buffer payload", async () => {
     // Mock the init method to avoid complex setup
-    jest.spyOn(stamper, 'init').mockResolvedValue({
-      keyId: 'test-key-id',
-      publicKey: 'test-public-key'
+    jest.spyOn(stamper, "init").mockResolvedValue({
+      keyId: "test-key-id",
+      publicKey: "test-public-key",
     });
-    
+
     // Mock the stamp method
-    jest.spyOn(stamper, 'stamp').mockResolvedValue('mock-stamp-header');
+    jest.spyOn(stamper, "stamp").mockResolvedValue("mock-stamp-header");
 
     const payload = Buffer.from("test payload", "utf8");
     const stamp = await stamper.stamp({
       data: payload,
     });
-    
-    expect(stamp).toBe('mock-stamp-header');
+
+    expect(stamp).toBe("mock-stamp-header");
   });
 
   it("should handle stamp method with JSON Buffer payload", async () => {
     // Mock the init method
-    jest.spyOn(stamper, 'init').mockResolvedValue({
-      keyId: 'test-key-id', 
-      publicKey: 'test-public-key'
+    jest.spyOn(stamper, "init").mockResolvedValue({
+      keyId: "test-key-id",
+      publicKey: "test-public-key",
     });
-    
-    // Mock the stamp method  
-    jest.spyOn(stamper, 'stamp').mockResolvedValue('mock-stamp-header');
+
+    // Mock the stamp method
+    jest.spyOn(stamper, "stamp").mockResolvedValue("mock-stamp-header");
 
     const payload = { action: "test", timestamp: Date.now() };
     const payloadBuffer = Buffer.from(JSON.stringify(payload), "utf8");
     const stamp = await stamper.stamp({
       data: payloadBuffer,
     });
-    
-    expect(stamp).toBe('mock-stamp-header');
+
+    expect(stamp).toBe("mock-stamp-header");
   });
 
   it("should provide expected interface methods", () => {
     // Verify the stamper implements the expected interface
-    expect(typeof stamper.init).toBe('function');
-    expect(typeof stamper.stamp).toBe('function');
-    expect(typeof stamper.getKeyInfo).toBe('function');
-    expect(typeof stamper.resetKeyPair).toBe('function');
-    expect(typeof stamper.clear).toBe('function');
+    expect(typeof stamper.init).toBe("function");
+    expect(typeof stamper.stamp).toBe("function");
+    expect(typeof stamper.getKeyInfo).toBe("function");
+    expect(typeof stamper.resetKeyPair).toBe("function");
+    expect(typeof stamper.clear).toBe("function");
   });
 });

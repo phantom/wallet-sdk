@@ -1,6 +1,6 @@
 {
   "name": "@phantom/sdk-types",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "description": "Common types for Phantom SDK packages",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -36,7 +36,7 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "@phantom/openapi-wallet-service": "^0.1.7",
+    "@phantom/openapi-wallet-service": "^0.1.9",
     "buffer": "^6.0.3"
   },
   "files": [

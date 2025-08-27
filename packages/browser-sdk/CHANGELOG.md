@@ -1,5 +1,75 @@
 # @phantom/browser-sdk
 
+## 0.3.7
+
+### Patch Changes
+
+- a126cf3: Bump version
+- Updated dependencies [a126cf3]
+  - @phantom/client@0.1.9
+  - @phantom/embedded-provider-core@0.1.8
+
+## 0.3.6
+
+### Patch Changes
+
+- b5d76b3: Explicitly require `addressTypes` when instantiating `BrowserSDK`
+- 3bdbfbd: Fix debug system
+- Updated dependencies [b5d76b3]
+  - @phantom/embedded-provider-core@0.1.7
+
+## 0.3.5
+
+### Patch Changes
+
+- e04d53d: Added autoconnect functionality
+- Updated dependencies [e04d53d]
+  - @phantom/embedded-provider-core@0.1.6
+
+## 0.3.4
+
+### Patch Changes
+
+- 7d1b22f: Updated libs version
+- Updated dependencies [7d1b22f]
+  - @phantom/client@0.1.8
+  - @phantom/constants@0.0.3
+  - @phantom/indexed-db-stamper@0.1.4
+  - @phantom/embedded-provider-core@0.1.5
+  - @phantom/parsers@0.0.7
+
+## 0.3.3
+
+### Patch Changes
+
+- 6d6cbf8: New stamper interface
+- Updated dependencies [6d6cbf8]
+  - @phantom/client@0.1.7
+  - @phantom/embedded-provider-core@0.1.4
+  - @phantom/indexed-db-stamper@0.1.3
+
+## 0.3.2
+
+### Patch Changes
+
+- 36af356: Auth flow complete
+- 3d0c1f9: New phantom client
+- Updated dependencies [36af356]
+- Updated dependencies [3d0c1f9]
+  - @phantom/embedded-provider-core@0.1.3
+  - @phantom/indexed-db-stamper@0.1.2
+  - @phantom/parsers@0.0.6
+  - @phantom/client@0.1.6
+
+## 0.3.1
+
+### Patch Changes
+
+- 7c86fef: Add support for the newest stamper
+- Updated dependencies [7c86fef]
+  - @phantom/indexed-db-stamper@0.1.1
+  - @phantom/client@0.1.5
+
 ## 0.3.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 {
   "name": "@phantom/client",
-  "version": "0.1.4",
+  "version": "0.1.9",
   "description": "HTTP client for Phantom Wallet API",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -41,7 +41,7 @@
     "@phantom/base64url": "workspace:^",
     "@phantom/constants": "workspace:^",
     "@phantom/crypto": "workspace:^",
-    "@phantom/openapi-wallet-service": "^0.1.7",
+    "@phantom/openapi-wallet-service": "^0.1.9",
     "@phantom/sdk-types": "workspace:^",
     "@phantom/swapper-sdk": "workspace:^",
     "axios": "^1.10.0",

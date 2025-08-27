@@ -94,9 +94,11 @@ export default function App() {
         embeddedWalletType: "user-wallet",
         addressTypes: [AddressType.solana],
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
+        solanaProvider: "web3js",
         authOptions: {
           redirectUrl: "mywalletapp://phantom-auth-callback",
         },
+        appName: "My Wallet App", // Optional branding
       }}
     >
       <YourAppContent />
@@ -115,7 +117,7 @@ import { useConnect, useAccounts, useSignMessage, useDisconnect } from "@phantom
 
 export function WalletScreen() {
   const { connect, isConnecting, error: connectError } = useConnect();
-  const { addresses, isConnected, walletId } = useAccounts();
+  const { addresses, isConnected } = useAccounts();
   const { signMessage, isSigning } = useSignMessage();
   const { disconnect } = useDisconnect();
 
@@ -156,7 +158,6 @@ export function WalletScreen() {
   return (
     <View style={{ padding: 20 }}>
       <Text style={{ fontSize: 18, marginBottom: 10 }}>Wallet Connected</Text>
-      <Text>Wallet ID: {walletId}</Text>
       <Text>Address: {addresses[0]?.address}</Text>
 
       <Button
@@ -187,16 +188,20 @@ The main provider component that initializes the SDK and provides context to all
 #### Configuration Options
 
 ```typescript
-interface PhantomProviderConfig {
+interface PhantomSDKConfig {
   organizationId: string; // Your Phantom organization ID
   scheme: string; // Custom URL scheme for your app
   embeddedWalletType: "user-wallet" | "app-wallet";
-  addressTypes: AddressType[];
-  apiBaseUrl: "https://api.phantom.app/v1/wallets";
+  addressTypes: [AddressType, ...AddressType[]]; // e.g., [AddressType.solana]
+  apiBaseUrl: string; // e.g., "https://api.phantom.app/v1/wallets"
+  solanaProvider: "web3js" | "kit"; // Solana provider to use
   authOptions?: {
     authUrl?: string; // Custom auth URL (optional)
     redirectUrl?: string; // Custom redirect URL (optional)
   };
+  appName?: string; // Optional app name for branding
+  appLogo?: string; // Optional app logo URL for branding
+  autoConnect?: boolean; // Auto-connect to existing session on SDK instantiation (default: true)
 }
 ```
 
@@ -415,19 +420,40 @@ adb shell am start -W -a android.intent.action.VIEW -d "myapp://phantom-auth-cal
    - Verify URL scheme configuration
    - Check intent filters (Android) or URL schemes (iOS)
 
-### Debug Mode
+### Debug Configuration
 
-Enable debug logging in development:
+The React Native SDK supports separate debug configuration for better performance and dynamic control:
 
 ```typescript
-<PhantomProvider
-  config={{
-    ...config,
-    debug: true  // Enable debug logging
-  }}
->
-  <App />
-</PhantomProvider>
+import { PhantomProvider, type PhantomSDKConfig, type PhantomDebugConfig } from "@phantom/react-native-sdk";
+
+function App() {
+  // SDK configuration - static, won't change when debug settings change
+  const config: PhantomSDKConfig = {
+    organizationId: "your-org-id",
+    scheme: "mywalletapp",
+    // ... other config
+  };
+
+  // Debug configuration - separate to avoid SDK reinstantiation
+  const debugConfig: PhantomDebugConfig = {
+    enabled: true, // Enable debug logging
+  };
+
+  return (
+    <PhantomProvider config={config} debugConfig={debugConfig}>
+      <App />
+    </PhantomProvider>
+  );
+}
+```
+
+**PhantomDebugConfig Interface:**
+
+```typescript
+interface PhantomDebugConfig {
+  enabled?: boolean; // Enable debug logging (default: false)
+}
 ```
 
 ## Support

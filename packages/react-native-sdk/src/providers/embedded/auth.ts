@@ -14,7 +14,17 @@ export class ExpoAuthProvider implements AuthProvider {
 
     // Handle redirect-based authentication
     const phantomOptions = options as PhantomConnectOptions;
-    const { authUrl, redirectUrl, organizationId, parentOrganizationId, sessionId, provider, customAuthData } = phantomOptions;
+    const {
+      authUrl,
+      redirectUrl,
+      organizationId,
+      parentOrganizationId,
+      sessionId,
+      provider,
+      customAuthData,
+      appName,
+      appLogo,
+    } = phantomOptions;
 
     if (!redirectUrl) {
       throw new Error("redirectUrl is required for web browser authentication");
@@ -27,13 +37,15 @@ export class ExpoAuthProvider implements AuthProvider {
     try {
       // Construct the authentication URL with required parameters
       const baseUrl = authUrl || DEFAULT_AUTH_URL;
-      
+
       const params = new URLSearchParams({
         organization_id: organizationId,
         parent_organization_id: parentOrganizationId,
         redirect_uri: redirectUrl,
         session_id: sessionId,
         clear_previous_session: "true",
+        app_name: appName || "", // Optional app name
+        app_logo: appLogo || "", // Optional app logo URL
       });
 
       // Add provider if specified (will skip provider selection)
@@ -80,23 +92,16 @@ export class ExpoAuthProvider implements AuthProvider {
       if (result.type === "success" && result.url) {
         // Parse the URL to extract parameters
         const url = new URL(result.url);
-        const walletId = url.searchParams.get("walletId");
+        const walletId = url.searchParams.get("wallet_id");
         const provider = url.searchParams.get("provider");
 
         if (!walletId) {
           throw new Error("Authentication failed: no walletId in redirect URL");
         }
 
-        // Convert URLSearchParams to Record<string, string>
-        const userInfo: Record<string, string> = {};
-        url.searchParams.forEach((value, key) => {
-          userInfo[key] = value;
-        });
-
         return {
           walletId,
           provider: provider || undefined,
-          userInfo,
         };
       } else if (result.type === "cancel") {
         throw new Error("User cancelled authentication");

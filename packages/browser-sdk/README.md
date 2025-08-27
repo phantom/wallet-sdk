@@ -11,11 +11,12 @@ npm install @phantom/browser-sdk
 ### Injected Provider (Browser Extension)
 
 ```typescript
-import { BrowserSDK, NetworkId } from "@phantom/browser-sdk";
+import { BrowserSDK, NetworkId, AddressType } from "@phantom/browser-sdk";
 
 // Connect to Phantom browser extension
 const sdk = new BrowserSDK({
   providerType: "injected",
+  addressTypes: [AddressType.solana],
 });
 
 const { addresses } = await sdk.connect();
@@ -41,8 +42,7 @@ const sdk = new BrowserSDK({
   organizationId: "your-org-id",
 });
 
-const { walletId, addresses } = await sdk.connect();
-console.log("Wallet ID:", walletId);
+const { addresses } = await sdk.connect();
 console.log("Addresses:", addresses);
 
 const result = await sdk.signAndSendTransaction({
@@ -69,6 +69,7 @@ Uses the Phantom browser extension installed by the user. No additional configur
 ```typescript
 const sdk = new BrowserSDK({
   providerType: "injected",
+  addressTypes: [AddressType.solana],
 });
 ```
 
@@ -87,6 +88,9 @@ const sdk = new BrowserSDK({
     authUrl: "https://auth.phantom.app", // optional, defaults to "https://connect.phantom.app"
     redirectUrl: "https://yourapp.com/callback", // optional, defaults to current page
   },
+  appName: "My DApp", // optional, for branding
+  appLogo: "https://myapp.com/logo.png", // optional, for branding
+  autoConnect: true, // optional, auto-connect to existing session (default: true for embedded)
 });
 ```
 
@@ -156,6 +160,45 @@ const sdk = new BrowserSDK({
 - **@solana/web3.js**: Better ecosystem compatibility, wider community support
 - **@solana/kit**: Better TypeScript support, modern architecture, smaller bundle size
 
+### Auto-Connect Feature
+
+The SDK can automatically reconnect to existing sessions when instantiated, providing a seamless user experience.
+
+```typescript
+const sdk = new BrowserSDK({
+  providerType: "embedded",
+  addressTypes: [AddressType.solana],
+  // ... other config
+  autoConnect: true, // Default: true for embedded, false for injected
+});
+
+// SDK will automatically check for existing valid session and connect in background
+// No need to call connect() if user already has a session
+
+// Check if already connected
+if (sdk.isConnected()) {
+  console.log("Already connected!");
+  const addresses = await sdk.getAddresses();
+} else {
+  // First time or session expired, need to connect manually
+  await sdk.connect();
+}
+```
+
+**Disabling Auto-Connect:**
+
+```typescript
+const sdk = new BrowserSDK({
+  providerType: "embedded",
+  addressTypes: [AddressType.solana],
+  // ... other config
+  autoConnect: false, // Disable auto-connect
+});
+
+// Now you must manually call connect() every time
+await sdk.connect();
+```
+
 ## API Reference
 
 ### Constructor
@@ -169,9 +212,11 @@ new BrowserSDK(config: BrowserSDKConfig)
 ```typescript
 interface BrowserSDKConfig {
   providerType: "injected" | "embedded";
+  appName?: string; // Optional app name for branding
+  appLogo?: string; // Optional app logo URL for branding
+  addressTypes?: [AddressType, ...AddressType[]]; // Networks to enable (e.g., [AddressType.solana])
 
   // Required for embedded provider only
-  addressTypes?: AddressType[]; // Networks to enable
   apiBaseUrl?: string; // Phantom API base URL
   organizationId?: string; // Your organization ID
   authOptions?: {
@@ -180,6 +225,7 @@ interface BrowserSDKConfig {
   };
   embeddedWalletType?: "app-wallet" | "user-wallet"; // Wallet type
   solanaProvider?: "web3js" | "kit"; // Solana library choice (default: 'web3js')
+  autoConnect?: boolean; // Enable auto-connect to existing sessions (default: true)
 }
 ```
 
@@ -299,6 +345,118 @@ Disconnect from wallet and clear session.
 
 ```typescript
 await sdk.disconnect();
+```
+
+#### autoConnect()
+
+Attempt auto-connection using existing session. Should be called after setting up event listeners to avoid race conditions. Only works with embedded providers.
+
+```typescript
+await sdk.autoConnect();
+```
+
+## Debug Configuration
+
+The BrowserSDK provides dynamic debug configuration that can be changed at runtime without reinstantiating the SDK. This provides better performance and cleaner architecture.
+
+### Debug Methods
+
+```typescript
+// Enable debug logging
+sdk.enableDebug();
+
+// Disable debug logging  
+sdk.disableDebug();
+
+// Set debug level
+sdk.setDebugLevel(DebugLevel.INFO);
+
+// Set debug callback function
+sdk.setDebugCallback((message) => {
+  console.log(`[${message.category}] ${message.message}`, message.data);
+});
+
+// Configure all debug settings at once
+sdk.configureDebug({
+  enabled: true,
+  level: DebugLevel.DEBUG,
+  callback: (message) => {
+    // Handle debug messages
+    console.log(`[${message.level}] ${message.category}: ${message.message}`);
+  }
+});
+```
+
+### Debug Levels
+
+```typescript
+import { DebugLevel } from "@phantom/browser-sdk";
+
+// Available debug levels (in order of verbosity)
+DebugLevel.ERROR   // 0 - Only error messages
+DebugLevel.WARN    // 1 - Warning and error messages  
+DebugLevel.INFO    // 2 - Info, warning, and error messages
+DebugLevel.DEBUG   // 3 - All debug messages (most verbose)
+```
+
+### Debug Message Structure
+
+Debug callbacks receive a `DebugMessage` object:
+
+```typescript
+interface DebugMessage {
+  timestamp: number;     // Unix timestamp
+  level: DebugLevel;     // Message level
+  category: string;      // Component category (e.g., "BrowserSDK", "ProviderManager")
+  message: string;       // Debug message text
+  data?: any;           // Additional debug data (optional)
+}
+```
+
+### Example: Debug Console Implementation
+
+```typescript
+import { BrowserSDK, DebugLevel } from "@phantom/browser-sdk";
+
+const sdk = new BrowserSDK({
+  providerType: "embedded",
+  // ... other config
+});
+
+// Store debug messages
+const debugMessages: DebugMessage[] = [];
+
+// Set up debug system
+sdk.configureDebug({
+  enabled: true,
+  level: DebugLevel.INFO,
+  callback: (message) => {
+    debugMessages.push(message);
+    
+    // Keep only last 100 messages
+    if (debugMessages.length > 100) {
+      debugMessages.shift();
+    }
+    
+    // Update UI
+    updateDebugConsole();
+  }
+});
+
+// Dynamic debug level changing
+function changeDebugLevel(newLevel: DebugLevel) {
+  sdk.setDebugLevel(newLevel);
+  console.log(`Debug level changed to: ${DebugLevel[newLevel]}`);
+}
+
+// Toggle debug on/off
+function toggleDebug(enabled: boolean) {
+  if (enabled) {
+    sdk.enableDebug();
+  } else {
+    sdk.disableDebug();
+  }
+}
 ```
 
 ## Transaction Examples
@@ -661,12 +819,12 @@ try {
 
 2. **Install dependencies based on enabled networks**:
 
-   | AddressType                 | Required Dependencies              | Bundle Size |
-   | --------------------------- | ---------------------------------- | ----------- |
-   | `AddressType.solana`        | `@solana/web3.js` OR `@solana/kit` | ~250KB      |
-   | `AddressType.ethereum`      | `viem`                             | ~300KB      |
-   | `AddressType.bitcoinSegwit` | `bitcoinjs-lib`                    | ~200KB      |
-   | `AddressType.sui`           | `@mysten/sui.js`                   | ~250KB      |
+   | AddressType                 | Required Dependencies              |
+   | --------------------------- | ---------------------------------- |
+   | `AddressType.solana`        | `@solana/web3.js` OR `@solana/kit` |
+   | `AddressType.ethereum`      | `viem`                             |
+   | `AddressType.bitcoinSegwit` | `bitcoinjs-lib`                    |
+   | `AddressType.sui`           | `@mysten/sui.js`                   |
 
    **Example package.json for Solana + Ethereum (using @solana/web3.js)**:
 
@@ -741,62 +899,3 @@ try {
      }
    }
    ```
-
-3. **Monitor bundle size**:
-   ```bash
-   # Analyze your bundle
-   npx webpack-bundle-analyzer dist/main.js
-   ```
-
-## Server Setup for Embedded Wallets
-
-For embedded wallets, you need to set up a backend endpoint. Add the `serverUrl` parameter to your SDK configuration:
-
-```typescript
-const sdk = new BrowserSDK({
-  providerType: "embedded",
-  addressTypes: [AddressType.solana],
-  apiBaseUrl: "https://api.phantom.app/v1/wallets",
-  organizationId: "your-org-id",
-  serverUrl: "http://localhost:3000/api",
-});
-```
-
-### Required Backend Endpoint
-
-Your backend needs an endpoint that uses the server-sdk:
-
-```javascript
-// server.js
-const express = require("express");
-const { ServerSDK } = require("@phantom/server-sdk");
-
-const app = express();
-app.use(express.json());
-
-const serverSDK = new ServerSDK({
-  organizationId: process.env.ORGANIZATION_ID,
-  apiPrivateKey: process.env.PRIVATE_KEY,
-  apiBaseUrl: process.env.API_URL,
-});
-
-app.post("/api/organizations", async (req, res) => {
-  try {
-    const { userId } = req.body;
-
-    if (!userId) {
-      return res.status(400).json({ error: "userId is required" });
-    }
-
-    const organization = await serverSDK.getOrCreateChildOrganizationByTag({
-      tag: userId,
-    });
-
-    res.json({ organizationId: organization.id });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to process request" });
-  }
-});
-
-app.listen(3000);
-```

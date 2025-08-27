@@ -1,5 +1,30 @@
 # @phantom/api-key-stamper
 
+## 0.1.5
+
+### Patch Changes
+
+- 7d1b22f: Updated libs version
+- Updated dependencies [7d1b22f]
+  - @phantom/sdk-types@0.1.4
+
+## 0.1.4
+
+### Patch Changes
+
+- 6d6cbf8: New stamper interface
+- Updated dependencies [6d6cbf8]
+  - @phantom/sdk-types@0.1.3
+
+## 0.1.3
+
+### Patch Changes
+
+- 36af356: Auth flow complete
+- Updated dependencies [36af356]
+  - @phantom/sdk-types@0.1.2
+  - @phantom/crypto@0.1.2
+
 ## 0.1.2
 
 ### Patch Changes

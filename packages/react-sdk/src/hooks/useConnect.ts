@@ -1,41 +1,34 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { usePhantom, type ConnectOptions } from "../PhantomProvider";
 
 export function useConnect() {
-  const context = usePhantom();
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const { sdk, isConnecting, connectError, currentProviderType, isPhantomAvailable } = usePhantom();
 
   const connect = useCallback(
     async (options?: ConnectOptions) => {
-      if (!context.sdk) {
+      if (!sdk) {
         throw new Error("SDK not initialized");
       }
 
-      setIsConnecting(true);
-      setError(null);
-
+      // Note: isConnecting state is now managed by connect_start/connect_error events in Provider
+      // This ensures consistency between manual connect and autoConnect with zero race conditions
       try {
-        const result = await context.sdk.connect(options);
-        await context.updateConnectionState();
-
+        const result = await sdk.connect(options);
         return result;
       } catch (err) {
         console.error("Error connecting to Phantom:", err);
-        setError(err as Error);
+        // Error handling is also managed by the connect_error event listener in Provider
         throw err;
-      } finally {
-        setIsConnecting(false);
       }
     },
-    [context],
+    [sdk],
   );
 
   return {
     connect,
     isConnecting,
-    error,
-    currentProviderType: context.currentProviderType,
-    isPhantomAvailable: context.isPhantomAvailable,
+    error: connectError,
+    currentProviderType,
+    isPhantomAvailable,
   };
 }

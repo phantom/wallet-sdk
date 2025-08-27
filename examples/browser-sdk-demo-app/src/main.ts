@@ -11,16 +11,8 @@ import {
 } from "@phantom/browser-sdk";
 import type { DebugMessage } from "@phantom/browser-sdk";
 import { SystemProgram, PublicKey, Connection, VersionedTransaction, TransactionMessage } from "@solana/web3.js";
-import {
-  createSolanaRpc,
-  pipe,
-  createTransactionMessage,
-  setTransactionMessageFeePayer,
-  setTransactionMessageLifetimeUsingBlockhash,
-  address,
-  compileTransaction,
-} from "@solana/kit";
 import { parseEther, parseGwei } from "viem";
+import { getBalance } from "./utils/balance";
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log("Document loaded, setting up Browser SDK Demo...");
@@ -37,6 +29,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const addressesSection = document.getElementById("addressesSection") as HTMLDivElement;
   const addressesList = document.getElementById("addressesList") as HTMLDivElement;
 
+  // Balance display elements
+  const balanceSection = document.getElementById("balanceSection") as HTMLDivElement;
+  const balanceValue = document.getElementById("balanceValue") as HTMLSpanElement;
+  const refreshBalanceBtn = document.getElementById("refreshBalanceBtn") as HTMLButtonElement;
+
   console.log("Found buttons:", {
     connectBtn: !!connectBtn,
     getAccountBtn: !!getAccountBtn,
@@ -48,13 +45,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Get configuration UI elements
   const providerTypeSelect = document.getElementById("providerType") as HTMLSelectElement;
-  const solanaProviderSelect = document.getElementById("solanaProvider") as HTMLSelectElement;
   const testWeb3jsBtn = document.getElementById("testWeb3jsBtn") as HTMLButtonElement;
-  const testKitBtn = document.getElementById("testKitBtn") as HTMLButtonElement;
   const testEthereumBtn = document.getElementById("testEthereumBtn") as HTMLButtonElement;
 
-  let sdk: BrowserSDK | null = null;
   let connectedAddresses: any[] = [];
+  let currentBalance: number | null = null;
 
   // Debug message storage
   const debugMessages: DebugMessage[] = [];
@@ -62,6 +57,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const debugToggle = document.getElementById("debugToggle") as HTMLInputElement;
   const debugLevel = document.getElementById("debugLevel") as HTMLSelectElement;
   const clearDebugBtn = document.getElementById("clearDebugBtn") as HTMLButtonElement;
+
+  // Instantiate SDK , it will autoconnect
+  let sdk: BrowserSDK | null = createSDK();
 
   // Debug callback function
   function handleDebugMessage(message: DebugMessage) {
@@ -83,36 +81,60 @@ document.addEventListener("DOMContentLoaded", () => {
     debugContainer.style.display = isVisible ? "block" : "none";
 
     if (isVisible) {
-      debugContainer.innerHTML = debugMessages
-        .slice(-30) // Show last 30 messages for the larger container
-        .map(msg => {
-          const levelClass = DebugLevel[msg.level].toLowerCase();
-          const timestamp = new Date(msg.timestamp).toLocaleTimeString();
-          const dataStr = msg.data ? JSON.stringify(msg.data, null, 2) : "";
+      // Clear existing content safely
+      debugContainer.replaceChildren();
 
-          return `
-            <div class="debug-message debug-${levelClass}">
-              <div class="debug-header">
-                <span class="debug-timestamp">${timestamp}</span>
-                <span class="debug-level">${DebugLevel[msg.level]}</span>
-                <span class="debug-category">${msg.category}</span>
-              </div>
-              <div class="debug-content">${msg.message}</div>
-              ${dataStr ? `<pre class="debug-data">${dataStr}</pre>` : ""}
-            </div>
-          `;
-        })
-        .join("");
+      const messages = debugMessages.slice(-30); // Show last 30 messages for the larger container
+
+      messages.forEach(msg => {
+        const levelClass = DebugLevel[msg.level].toLowerCase();
+        const timestamp = new Date(msg.timestamp).toLocaleTimeString();
+        const dataStr = msg.data ? JSON.stringify(msg.data, null, 2) : "";
+
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `debug-message debug-${levelClass}`;
+
+        const headerDiv = document.createElement("div");
+        headerDiv.className = "debug-header";
+
+        const timestampSpan = document.createElement("span");
+        timestampSpan.className = "debug-timestamp";
+        timestampSpan.textContent = timestamp;
+
+        const levelSpan = document.createElement("span");
+        levelSpan.className = "debug-level";
+        levelSpan.textContent = DebugLevel[msg.level];
+
+        const categorySpan = document.createElement("span");
+        categorySpan.className = "debug-category";
+        categorySpan.textContent = msg.category;
+
+        headerDiv.appendChild(timestampSpan);
+        headerDiv.appendChild(levelSpan);
+        headerDiv.appendChild(categorySpan);
+
+        const contentDiv = document.createElement("div");
+        contentDiv.className = "debug-content";
+        contentDiv.textContent = msg.message;
+
+        messageDiv.appendChild(headerDiv);
+        messageDiv.appendChild(contentDiv);
+
+        if (dataStr) {
+          const dataPre = document.createElement("pre");
+          dataPre.className = "debug-data";
+          dataPre.textContent = dataStr;
+          messageDiv.appendChild(dataPre);
+        }
+
+        debugContainer.appendChild(messageDiv);
+      });
 
       // Scroll to bottom to show latest messages
       debugContainer.scrollTop = debugContainer.scrollHeight;
     }
   }
 
-  // Initialize debug system
-  debug.setCallback(handleDebugMessage);
-  debug.setLevel(DebugLevel.INFO);
-  debug.enable();
 
   // Debug toggle handler
   if (debugToggle) {
@@ -121,12 +143,13 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  // Debug level handler
+  // Debug level handler - now uses direct debug API instead of recreating SDK
   if (debugLevel) {
     debugLevel.onchange = () => {
       const level = parseInt(debugLevel.value) as DebugLevel;
       debug.setLevel(level);
       console.log("Debug level changed to:", DebugLevel[level]);
+      // Note: No SDK reinstantiation needed - debug config is separate now
     };
   }
 
@@ -138,40 +161,94 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
+  // Provider type change handler
+  if (providerTypeSelect) {
+    providerTypeSelect.onchange = () => {
+      console.log("Provider type changed to:", providerTypeSelect.value);
+      // Disconnect current SDK if connected
+      if (sdk) {
+        sdk.disconnect().catch(console.error);
+        connectedAddresses = [];
+        currentBalance = null;
+        updateAddressesDisplay([]);
+        if (balanceSection) balanceSection.style.display = "none";
+        updateButtonStates(false);
+      }
+      // Create new SDK with new provider type
+      sdk = createSDK();
+      console.log("SDK reinstantiated with provider type:", providerTypeSelect.value);
+    };
+  }
+
   // Create SDK instance based on current configuration
   function createSDK(): BrowserSDK {
     const providerType = providerTypeSelect.value as "injected" | "embedded";
-    const solanaProvider = solanaProviderSelect.value as "web3js" | "kit";
 
-    const baseConfig = {
-      solanaProvider: solanaProvider,
-      addressTypes: [AddressType.solana, AddressType.ethereum],
-      debug: {
-        enabled: true,
-        level: debugLevel ? (parseInt(debugLevel.value) as DebugLevel) : DebugLevel.DEBUG,
-        callback: handleDebugMessage,
-      },
-    };
+    // Set debug config 
+    debug.enable();
+    debug.setLevel(DebugLevel.DEBUG);
+    debug.setCallback(handleDebugMessage);
 
     if (providerType === "injected") {
       return new BrowserSDK({
         providerType: "injected",
-        ...baseConfig,
+        solanaProvider: "web3js",
+        addressTypes: [AddressType.solana, AddressType.ethereum],
+        appName: "Phantom Browser SDK Demo",
+        appLogo: "https://picsum.photos/200", // Optional app logo URL
       });
     } else {
       // For demo purposes, use hardcoded embedded config
-      return new BrowserSDK({
+      const embeddedSdk = new BrowserSDK({
         providerType: "embedded",
         apiBaseUrl: import.meta.env.VITE_WALLET_API || DEFAULT_WALLET_API_URL,
         organizationId: import.meta.env.VITE_ORGANIZATION_ID || "your-organization-id",
         embeddedWalletType: "user-wallet",
         authOptions: {
           authUrl: import.meta.env.VITE_AUTH_URL || DEFAULT_AUTH_URL,
-          redirectUrl: import.meta.env.VITE_REDIRECT_URL,
         },
-
-        ...baseConfig,
+        solanaProvider: "web3js",
+        addressTypes: [AddressType.solana, AddressType.ethereum],
+        appName: "Phantom Browser SDK Demo",
+        appLogo: "https://picsum.photos/200", // Optional app logo URL
       });
+
+
+
+
+
+      embeddedSdk.on("connect_start", (data) => {
+        console.log("Embedded SDK connect started:", data);
+        // Could show loading state here
+      });
+
+      embeddedSdk.on("connect", () => {
+        console.log("Embedded SDK connected:", embeddedSdk.getAddresses());
+        updateAddressesDisplay(embeddedSdk.getAddresses());
+        updateBalanceDisplay();
+        updateButtonStates(true);
+      });
+
+      embeddedSdk.on("connect_error", (data) => {
+        console.log("Embedded SDK connect error:", data);
+        // Could show error state here
+      });
+
+      embeddedSdk.on("disconnect", () => {
+        console.log("Embedded SDK disconnected");
+        connectedAddresses = [];
+        currentBalance = null;
+        updateAddressesDisplay([]);
+        if (balanceSection) balanceSection.style.display = "none";
+        updateButtonStates(false);
+      });
+
+      embeddedSdk.autoConnect();
+
+      // Note: autoConnect is already enabled via config.autoConnect: true
+      // No need to call embeddedSdk.autoConnect() manually
+
+      return embeddedSdk
     }
   }
 
@@ -187,48 +264,79 @@ document.addEventListener("DOMContentLoaded", () => {
     // Show the section
     addressesSection.style.display = "block";
 
-    // Clear existing content
-    addressesList.innerHTML = "";
+    // Clear existing content safely
+    addressesList.replaceChildren();
 
     // Add each address
     addresses.forEach(address => {
       const addressItem = document.createElement("div");
       addressItem.className = "address-item";
-      
+
       const addressType = document.createElement("div");
       addressType.className = "address-type";
       addressType.textContent = address.addressType;
-      
+
       const addressValue = document.createElement("div");
       addressValue.className = "address-value";
       addressValue.textContent = address.address;
       addressValue.title = `Click to select ${address.addressType} address`;
-      
+
       addressItem.appendChild(addressType);
       addressItem.appendChild(addressValue);
       addressesList.appendChild(addressItem);
     });
   }
 
+  // Update balance display
+  async function updateBalanceDisplay() {
+    if (!balanceSection || !balanceValue) return;
+
+    const solanaAddress = connectedAddresses.find(a => a.addressType === AddressType.solana);
+    if (!solanaAddress) {
+      balanceSection.style.display = "none";
+      return;
+    }
+
+    balanceSection.style.display = "block";
+    balanceValue.textContent = "Loading...";
+
+    try {
+      const result = await getBalance(solanaAddress.address);
+      if (result.error) {
+        balanceValue.textContent = "Error";
+        console.error("Balance error:", result.error);
+      } else {
+        currentBalance = result.balance;
+        balanceValue.textContent = result.balance ? result.balance.toFixed(4) : "0";
+      }
+    } catch (error) {
+      balanceValue.textContent = "Error";
+      console.error("Failed to fetch balance:", error);
+    }
+  }
+
   // Update button states
   function updateButtonStates(connected: boolean) {
+    const hasBalance = currentBalance !== null && currentBalance > 0;
+
     if (connectBtn) connectBtn.disabled = connected;
     if (getAccountBtn) getAccountBtn.disabled = !connected;
     if (signMessageBtn) signMessageBtn.disabled = !connected;
     if (signMessageEvmBtn) signMessageEvmBtn.disabled = !connected;
-    if (signTransactionBtn) signTransactionBtn.disabled = !connected;
+    if (signTransactionBtn) signTransactionBtn.disabled = !connected || !hasBalance;
     // Keep disconnect button always enabled for session clearing
     if (disconnectBtn) disconnectBtn.disabled = false;
-    if (testWeb3jsBtn) testWeb3jsBtn.disabled = !connected;
-    if (testKitBtn) testKitBtn.disabled = !connected;
-    if (testEthereumBtn) testEthereumBtn.disabled = !connected;
+    if (testWeb3jsBtn) testWeb3jsBtn.disabled = !connected || !hasBalance;
+    if (testEthereumBtn) testEthereumBtn.disabled = !connected || !hasBalance;
   }
 
   // Connect button
   if (connectBtn) {
     connectBtn.onclick = async () => {
       try {
-        sdk = createSDK();
+        if (!sdk) {
+          sdk = createSDK();
+        }
         const result = await sdk.connect();
         connectedAddresses = result.addresses;
 
@@ -237,6 +345,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Update UI with addresses and button states
         updateAddressesDisplay(connectedAddresses);
+        await updateBalanceDisplay();
         updateButtonStates(true);
       } catch (error) {
         console.error("Error connecting:", error);
@@ -257,9 +366,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const addresses = await sdk.getAddresses();
         connectedAddresses = addresses;
         console.log("Current addresses:", addresses);
-        
+
         // Update the display with refreshed addresses
         updateAddressesDisplay(addresses);
+        await updateBalanceDisplay();
+        updateButtonStates(true);
         alert(`Addresses: ${addresses.map(a => `${a.addressType}: ${a.address}`).join(", ")}`);
       } catch (error) {
         console.error("Error getting addresses:", error);
@@ -334,14 +445,8 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        // Use current Solana provider selection
-        const solanaProvider = solanaProviderSelect.value as "web3js" | "kit";
-
-        if (solanaProvider === "web3js") {
-          await testWeb3jsTransaction();
-        } else {
-          await testKitTransaction();
-        }
+        // Use web3js for transaction
+        await testWeb3jsTransaction();
       } catch (error) {
         console.error("Error signing transaction:", error);
         alert(`Error signing transaction: ${(error as Error).message || error}`);
@@ -389,34 +494,6 @@ document.addEventListener("DOMContentLoaded", () => {
     alert(`Transaction sent: ${result.rawTransaction}`);
   }
 
-  // Test @solana/kit transaction
-  async function testKitTransaction() {
-    const solanaAddress = connectedAddresses.find(a => a.addressType === AddressType.solana);
-    if (!solanaAddress) {
-      alert("No Solana address found");
-      return;
-    }
-
-    const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL_MAINNET;
-    const rpc = createSolanaRpc(rpcUrl);
-    const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
-
-    const transactionMessage = pipe(
-      createTransactionMessage({ version: 0 }),
-      tx => setTransactionMessageFeePayer(address(solanaAddress.address), tx),
-      tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
-    );
-
-    const transaction = compileTransaction(transactionMessage);
-
-    const result = await sdk!.signAndSendTransaction({
-      networkId: NetworkId.SOLANA_MAINNET,
-      transaction: transaction,
-    });
-
-    console.log("Transaction sent (kit):", result);
-    alert(`Transaction sent: ${result.rawTransaction}`);
-  }
 
   // Test Web3.js button
   if (testWeb3jsBtn) {
@@ -430,17 +507,6 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  // Test Kit button
-  if (testKitBtn) {
-    testKitBtn.onclick = async () => {
-      try {
-        await testKitTransaction();
-      } catch (error) {
-        console.error("Error with kit transaction:", error);
-        alert(`Error with kit transaction: ${(error as Error).message || error}`);
-      }
-    };
-  }
 
   // Test Ethereum button
   if (testEthereumBtn) {
@@ -477,6 +543,14 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
+  // Refresh Balance button
+  if (refreshBalanceBtn) {
+    refreshBalanceBtn.onclick = async () => {
+      await updateBalanceDisplay();
+      updateButtonStates(true);
+    };
+  }
+
   // Disconnect button
   if (disconnectBtn) {
     disconnectBtn.onclick = async () => {
@@ -485,8 +559,10 @@ document.addEventListener("DOMContentLoaded", () => {
           await sdk.disconnect();
           sdk = null;
           connectedAddresses = [];
+          currentBalance = null;
           alert("Disconnected successfully");
           updateAddressesDisplay([]);
+          if (balanceSection) balanceSection.style.display = "none";
           updateButtonStates(false);
         }
       } catch (error) {

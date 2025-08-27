@@ -1,5 +1,45 @@
 # @phantom/server-sdk
 
+## 0.2.4
+
+### Patch Changes
+
+- 7d1b22f: Updated libs version
+- Updated dependencies [7d1b22f]
+  - @phantom/client@0.1.8
+  - @phantom/api-key-stamper@0.1.5
+  - @phantom/constants@0.0.3
+  - @phantom/parsers@0.0.7
+
+## 0.2.3
+
+### Patch Changes
+
+- 6d6cbf8: New stamper interface
+- Updated dependencies [6d6cbf8]
+  - @phantom/api-key-stamper@0.1.4
+  - @phantom/client@0.1.7
+
+## 0.2.2
+
+### Patch Changes
+
+- 36af356: Auth flow complete
+- 3d0c1f9: New phantom client
+- Updated dependencies [36af356]
+- Updated dependencies [3d0c1f9]
+  - @phantom/api-key-stamper@0.1.3
+  - @phantom/parsers@0.0.6
+  - @phantom/client@0.1.6
+
+## 0.2.1
+
+### Patch Changes
+
+- 7c86fef: Add support for the newest stamper
+- Updated dependencies [7c86fef]
+  - @phantom/client@0.1.5
+
 ## 0.2.0
 
 ### Minor Changes

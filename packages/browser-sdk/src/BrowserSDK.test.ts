@@ -27,12 +27,13 @@ describe("BrowserSDK", () => {
     it("should create SDK with injected provider", () => {
       sdk = new BrowserSDK({
         providerType: "injected",
+        addressTypes: [AddressType.solana],
         appName: "Test App",
       });
 
       expect(MockInjectedProvider).toHaveBeenCalledWith({
         solanaProvider: "web3js",
-        addressTypes: [],
+        addressTypes: [AddressType.solana],
       });
       expect(MockEmbeddedProvider).not.toHaveBeenCalled();
     });
@@ -40,6 +41,7 @@ describe("BrowserSDK", () => {
     it("should create SDK with embedded provider", () => {
       sdk = new BrowserSDK({
         providerType: "embedded",
+        addressTypes: [AddressType.solana],
         appName: "Test App",
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
         organizationId: "org-123",
@@ -55,8 +57,10 @@ describe("BrowserSDK", () => {
           authUrl: "https://auth.phantom.com",
         },
         embeddedWalletType: "app-wallet",
-        addressTypes: [],
+        addressTypes: [AddressType.solana],
         solanaProvider: "web3js",
+        appName: "Test App",
+        appLogo: undefined,
       });
       expect(MockInjectedProvider).not.toHaveBeenCalled();
     });
@@ -69,6 +73,7 @@ describe("BrowserSDK", () => {
         authOptions: {
           authUrl: "https://auth.phantom.com",
         },
+        addressTypes: [AddressType.solana],
         embeddedWalletType: "user-wallet",
       });
 
@@ -79,7 +84,7 @@ describe("BrowserSDK", () => {
           authUrl: "https://auth.phantom.com",
         },
         embeddedWalletType: "user-wallet",
-        addressTypes: [],
+        addressTypes: [AddressType.solana],
         solanaProvider: "web3js",
       });
     });
@@ -96,12 +101,13 @@ describe("BrowserSDK", () => {
     it("should support custom solanaProvider for injected", () => {
       sdk = new BrowserSDK({
         providerType: "injected",
+        addressTypes: [AddressType.solana],
         solanaProvider: "kit",
       });
 
       expect(MockInjectedProvider).toHaveBeenCalledWith({
         solanaProvider: "kit",
-        addressTypes: [],
+        addressTypes: [AddressType.solana],
       });
     });
 
@@ -128,6 +134,7 @@ describe("BrowserSDK", () => {
       expect(() => {
         new BrowserSDK({
           providerType: "invalid" as any,
+          addressTypes: [AddressType.solana],
         });
       }).toThrow('Invalid providerType: invalid. Must be "injected" or "embedded".');
     });
@@ -150,6 +157,7 @@ describe("BrowserSDK", () => {
 
       sdk = new BrowserSDK({
         providerType: "injected",
+        addressTypes: [AddressType.solana],
       });
     });
 
@@ -267,6 +275,7 @@ describe("BrowserSDK", () => {
 
       sdk = new BrowserSDK({
         providerType: "embedded",
+        addressTypes: [AddressType.solana],
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
         organizationId: "org-123",
         authUrl: "https://auth.phantom.com",
@@ -382,6 +391,7 @@ describe("BrowserSDK", () => {
 
       sdk = new BrowserSDK({
         providerType: "injected",
+        addressTypes: [AddressType.solana],
       });
     });
 
