@@ -1,25 +1,8 @@
-import type { PhantomSolanaProvider, VersionedTransaction } from "../types";
+import type { PhantomSolanaProvider } from "../types";
 import { InjectedSolanaStrategy } from "./injected";
-import { transactionToVersionedTransaction } from "../utils/transactionToVersionedTransaction";
-import type { Transaction } from "@solana/transactions";
-import { fromVersionedTransaction } from "@solana/compat";
-
-jest.mock("../utils/transactionToVersionedTransaction", () => ({
-  transactionToVersionedTransaction: jest.fn(),
-}));
-
-jest.mock("@solana/compat", () => ({
-  fromVersionedTransaction: jest.fn(),
-}));
+import type { Transaction } from "@solana/web3.js";
 
 const mockTransaction = {} as Transaction;
-const mockVersionedTransaction = {
-  signatures: [new Uint8Array([1, 2, 3])],
-  message: {
-    deserialize: jest.fn(),
-    serialize: jest.fn(),
-  },
-} as VersionedTransaction;
 
 const createMockProvider = () => ({
   connect: jest.fn().mockResolvedValue({
@@ -310,14 +293,13 @@ describe("InjectedSolanaStrategy", () => {
         signature: "mockSignature123",
         publicKey: "mockPublicKey456",
       });
-      (transactionToVersionedTransaction as jest.Mock).mockReturnValue(mockVersionedTransaction);
     });
 
     beforeEach(() => {
       jest.clearAllMocks();
     });
 
-    it("should properly call signAndSendTransaction on the provider with converted transaction", async () => {
+    it("should properly call signAndSendTransaction on the provider", async () => {
       const strategy = new InjectedSolanaStrategy();
 
       const result = await strategy.signAndSendTransaction(mockTransaction);
@@ -326,8 +308,7 @@ describe("InjectedSolanaStrategy", () => {
         signature: "mockSignature123",
         address: "mockPublicKey456",
       });
-      expect(transactionToVersionedTransaction).toHaveBeenCalledWith(mockTransaction);
-      expect(mockProvider.signAndSendTransaction).toHaveBeenCalledWith(mockVersionedTransaction);
+      expect(mockProvider.signAndSendTransaction).toHaveBeenCalledWith(mockTransaction);
     });
 
     it("should throw error when provider is not connected", async () => {
@@ -354,22 +335,19 @@ describe("InjectedSolanaStrategy", () => {
         solana: mockProvider,
       };
       mockProvider.isConnected = true;
-      mockProvider.signTransaction = jest.fn().mockResolvedValue(mockVersionedTransaction);
-      (transactionToVersionedTransaction as jest.Mock).mockReturnValue(mockVersionedTransaction);
-      (fromVersionedTransaction as jest.Mock).mockReturnValue(mockTransaction);
+      mockProvider.signTransaction = jest.fn().mockResolvedValue(mockTransaction);
     });
 
     beforeEach(() => {
       jest.clearAllMocks();
     });
 
-    it("should properly call signTransaction on the provider with converted transaction", async () => {
+    it("should properly call signTransaction on the provider", async () => {
       const strategy = new InjectedSolanaStrategy();
 
       const result = await strategy.signTransaction(mockTransaction);
 
-      expect(transactionToVersionedTransaction).toHaveBeenCalledWith(mockTransaction);
-      expect(mockProvider.signTransaction).toHaveBeenCalledWith(mockVersionedTransaction);
+      expect(mockProvider.signTransaction).toHaveBeenCalledWith(mockTransaction);
       expect(result).toEqual(mockTransaction);
     });
 
@@ -399,28 +377,20 @@ describe("InjectedSolanaStrategy", () => {
       mockProvider.isConnected = true;
       mockProvider.signAllTransactions = jest
         .fn()
-        .mockResolvedValue([mockVersionedTransaction, mockVersionedTransaction]);
-      (transactionToVersionedTransaction as jest.Mock).mockReturnValue(mockVersionedTransaction);
-      (fromVersionedTransaction as jest.Mock).mockReturnValue(mockTransaction);
+        .mockResolvedValue([mockTransaction, mockTransaction]);
     });
 
     beforeEach(() => {
       jest.clearAllMocks();
     });
 
-    it("should properly call signAllTransactions on the provider with converted transactions", async () => {
+    it("should properly call signAllTransactions on the provider", async () => {
       const strategy = new InjectedSolanaStrategy();
       const mockTransactions = [{} as Transaction, {} as Transaction];
 
       const result = await strategy.signAllTransactions(mockTransactions);
 
-      expect(transactionToVersionedTransaction).toHaveBeenCalledTimes(2);
-      expect(transactionToVersionedTransaction).toHaveBeenNthCalledWith(1, mockTransactions[0]);
-      expect(transactionToVersionedTransaction).toHaveBeenNthCalledWith(2, mockTransactions[1]);
-      expect(mockProvider.signAllTransactions).toHaveBeenCalledWith([
-        mockVersionedTransaction,
-        mockVersionedTransaction,
-      ]);
+      expect(mockProvider.signAllTransactions).toHaveBeenCalledWith(mockTransactions);
       expect(result).toHaveLength(2);
       expect(result).toEqual([mockTransaction, mockTransaction]);
     });
@@ -432,7 +402,6 @@ describe("InjectedSolanaStrategy", () => {
 
       const result = await strategy.signAllTransactions(mockTransactions);
 
-      expect(transactionToVersionedTransaction).not.toHaveBeenCalled();
       expect(mockProvider.signAllTransactions).toHaveBeenCalledWith([]);
       expect(result).toEqual([]);
     });

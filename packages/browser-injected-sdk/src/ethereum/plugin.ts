@@ -7,6 +7,7 @@ import { signMessage, signPersonalMessage, signTypedData } from "./signMessage";
 import { signIn } from "./signIn";
 import { sendTransaction, signTransaction } from "./sendTransaction";
 import { getChainId, switchChain } from "./chainUtils";
+import { getProvider } from "./getProvider";
 import type { EthereumEventType } from "./types";
 
 export type Ethereum = {
@@ -21,6 +22,7 @@ export type Ethereum = {
   signTransaction: typeof signTransaction;
   getChainId: typeof getChainId;
   switchChain: typeof switchChain;
+  getProvider: typeof getProvider;
   addEventListener: (event: EthereumEventType, callback: PhantomEthereumEventCallback) => () => void;
   removeEventListener: (event: EthereumEventType, callback: PhantomEthereumEventCallback) => void;
 };
@@ -37,6 +39,7 @@ const ethereum: Ethereum = {
   signTransaction,
   getChainId,
   switchChain,
+  getProvider,
   addEventListener,
   removeEventListener,
 };

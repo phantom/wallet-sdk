@@ -20,8 +20,9 @@ describe("autoConfirmSupportedChains", () => {
   });
 
   it("should get supported chains", async () => {
-    const mockResult = { chains: ["solana:101", "eip155:1", "sui:mainnet"] };
-    (mockProvider.request as jest.Mock).mockResolvedValue(mockResult);
+    // Mock raw provider response with internal CAIP format
+    const mockProviderResponse = { chains: ["solana:101", "eip155:1", "sui:mainnet"] };
+    (mockProvider.request as jest.Mock).mockResolvedValue(mockProviderResponse);
 
     const result = await autoConfirmSupportedChains();
 
@@ -30,7 +31,8 @@ describe("autoConfirmSupportedChains", () => {
       method: "phantom_auto_confirm_supported_chains",
       params: {},
     });
-    expect(result).toEqual(mockResult);
+    // Expect the processed result with NetworkId values
+    expect(result).toEqual({ chains: ["solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp", "eip155:1", "sui:35834a8a"] });
   });
 
   it("should throw error when provider is not found", async () => {

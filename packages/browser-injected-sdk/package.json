@@ -1,6 +1,6 @@
 {
   "name": "@phantom/browser-injected-sdk",
-  "version": "0.0.9",
+  "version": "1.0.0-beta.0",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -51,12 +51,11 @@
     "tsup": "^6.7.0",
     "typescript": "^5.0.4"
   },
-  "dependencies": {
-    "@solana/compat": "2.1.1",
-    "@solana/kit": "^2.1.1",
-    "@solana/transactions": "^2.1.1"
-  },
   "publishConfig": {
     "directory": "_release/package"
+  },
+  "dependencies": {
+    "@phantom/constants": "workspace:^",
+    "@solana/addresses": "^2.3.0"
   }
 }

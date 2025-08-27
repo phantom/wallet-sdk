@@ -1,5 +1,16 @@
 # @phantom/browser-sdk
 
+## 1.0.0-beta.0
+
+### Major Changes
+
+- New SDKs chain specific interface, prepare for initial beta release
+
+### Patch Changes
+
+- Updated dependencies
+  - @phantom/constants@1.0.0-beta.0
+
 ## 0.0.10
 
 ### Patch Changes

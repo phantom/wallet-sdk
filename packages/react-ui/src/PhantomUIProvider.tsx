@@ -1,20 +1,30 @@
 import React, { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 import {
   useConnect as useBaseConnect,
-  useSignAndSendTransaction as useBaseSignAndSendTransaction,
-  useSignMessage as useBaseSignMessage,
+  useSolana,
+  useEthereum,
   usePhantom,
-  type ConnectOptions as _ConnectOptions,
-  type SignAndSendTransactionParams,
-  type SignedTransaction,
-  type SignMessageParams,
-  type SignMessageResult,
 } from "@phantom/react-sdk";
+import type { ParsedSignatureResult, ParsedTransactionResult } from "@phantom/parsers";
 
 export interface PhantomUIProviderProps {
   children: ReactNode;
   theme?: "light" | "dark" | "auto";
   customTheme?: Record<string, string>;
+}
+
+// Generic transaction params for UI - supports both Solana and Ethereum
+interface UITransactionParams {
+  chain: 'solana' | 'ethereum';
+  transaction: any; // Generic transaction object
+  networkId?: string; // Optional network identifier for display purposes
+}
+
+// Generic message params for UI - supports both chains  
+interface UIMessageParams {
+  chain: 'solana' | 'ethereum';
+  message: string | Uint8Array;
+  address?: string; // Required for Ethereum, optional for Solana
 }
 
 interface ConnectionUIState {
@@ -26,14 +36,14 @@ interface ConnectionUIState {
 
 interface TransactionUIState {
   isVisible: boolean;
-  transaction: SignAndSendTransactionParams | null;
+  transaction: UITransactionParams | null;
   isLoading: boolean;
   error: Error | null;
 }
 
 interface MessageUIState {
   isVisible: boolean;
-  params: SignMessageParams | null;
+  params: UIMessageParams | null;
   isLoading: boolean;
   error: Error | null;
 }
@@ -50,13 +60,13 @@ interface PhantomUIContextValue {
 
   // Transaction state
   transactionState: TransactionUIState;
-  showTransactionModal: (params: SignAndSendTransactionParams) => void;
-  signAndSendTransaction: (params: SignAndSendTransactionParams) => Promise<SignedTransaction>;
+  showTransactionModal: (params: UITransactionParams) => void;
+  signAndSendTransaction: (params: UITransactionParams) => Promise<ParsedTransactionResult>;
 
   // Message state
   messageState: MessageUIState;
-  showMessageModal: (params: SignMessageParams) => void;
-  signMessage: (params: SignMessageParams) => Promise<SignMessageResult>;
+  showMessageModal: (params: UIMessageParams) => void;
+  signMessage: (params: UIMessageParams) => Promise<ParsedSignatureResult>;
 
   // Internal methods for modals
   _internal: {
@@ -71,8 +81,8 @@ const PhantomUIContext = createContext<PhantomUIContextValue | null>(null);
 
 export function PhantomUIProvider({ children, theme = "light", customTheme }: PhantomUIProviderProps) {
   const baseConnect = useBaseConnect();
-  const baseSignAndSend = useBaseSignAndSendTransaction();
-  const baseSignMessage = useBaseSignMessage();
+  const solana = useSolana();
+  const ethereum = useEthereum();
   const { isPhantomAvailable: _isPhantomAvailable } = usePhantom();
 
   // Connection state
@@ -132,7 +142,7 @@ export function PhantomUIProvider({ children, theme = "light", customTheme }: Ph
 
   // Connect with specific provider
   const connectWithProvider = useCallback(
-    async (providerType: "injected" | "embedded", embeddedWalletType?: "app-wallet" | "user-wallet") => {
+    async (providerType: "injected" | "embedded", _embeddedWalletType?: "app-wallet" | "user-wallet") => {
       try {
         setConnectionState(prev => ({
           ...prev,
@@ -141,10 +151,8 @@ export function PhantomUIProvider({ children, theme = "light", customTheme }: Ph
           providerType,
         }));
 
-        await baseConnect.connect({
-          providerType,
-          embeddedWalletType,
-        });
+        // Note: In the new architecture, provider type is configured at SDK level
+        await baseConnect.connect();
 
         // Hide modal on successful connection
         hideConnectionModal();
@@ -162,7 +170,7 @@ export function PhantomUIProvider({ children, theme = "light", customTheme }: Ph
 
   // Enhanced sign and send transaction with UI
   const signAndSendTransaction = useCallback(
-    async (params: SignAndSendTransactionParams): Promise<SignedTransaction> => {
+    async (params: UITransactionParams): Promise<ParsedTransactionResult> => {
       // Show transaction modal
       setTransactionState({
         isVisible: true,
@@ -184,8 +192,13 @@ export function PhantomUIProvider({ children, theme = "light", customTheme }: Ph
         // Set loading state
         setTransactionState(prev => ({ ...prev, isLoading: true }));
 
-        // Execute transaction
-        const result = await baseSignAndSend.signAndSendTransaction(params);
+        // Execute transaction using chain-specific hooks
+        let result: ParsedTransactionResult;
+        if (params.chain === 'solana') {
+          result = await solana.signAndSendTransaction(params.transaction);
+        } else {
+          result = await ethereum.sendTransaction(params.transaction);
+        }
 
         // Hide modal on success
         setTransactionState({
@@ -207,12 +220,12 @@ export function PhantomUIProvider({ children, theme = "light", customTheme }: Ph
         setTransactionResolver(null);
       }
     },
-    [baseSignAndSend],
+    [solana, ethereum],
   );
 
   // Enhanced sign message with UI
   const signMessage = useCallback(
-    async (params: SignMessageParams): Promise<SignMessageResult> => {
+    async (params: UIMessageParams): Promise<ParsedSignatureResult> => {
       // Show message modal
       setMessageState({
         isVisible: true,
@@ -234,8 +247,20 @@ export function PhantomUIProvider({ children, theme = "light", customTheme }: Ph
         // Set loading state
         setMessageState(prev => ({ ...prev, isLoading: true }));
 
-        // Execute signing
-        const result = await baseSignMessage.signMessage(params);
+        // Execute signing using chain-specific hooks
+        let result: ParsedSignatureResult;
+        if (params.chain === 'solana') {
+          result = await solana.signMessage(params.message);
+        } else {
+          // For Ethereum, we need an address
+          if (!params.address) throw new Error('Address required for Ethereum signing');
+          const signature = await ethereum.signPersonalMessage(params.message as string, params.address);
+          // Format the raw hex signature into ParsedSignatureResult structure
+          result = {
+            signature,
+            rawSignature: signature,
+          };
+        }
 
         // Hide modal on success
         setMessageState({
@@ -257,7 +282,7 @@ export function PhantomUIProvider({ children, theme = "light", customTheme }: Ph
         setMessageResolver(null);
       }
     },
-    [baseSignMessage],
+    [solana, ethereum],
   );
 
   // Internal methods for modals
@@ -298,7 +323,7 @@ export function PhantomUIProvider({ children, theme = "light", customTheme }: Ph
   }, [messageResolver]);
 
   // Show modal functions
-  const showTransactionModal = useCallback((params: SignAndSendTransactionParams) => {
+  const showTransactionModal = useCallback((params: UITransactionParams) => {
     setTransactionState({
       isVisible: true,
       transaction: params,
@@ -307,7 +332,7 @@ export function PhantomUIProvider({ children, theme = "light", customTheme }: Ph
     });
   }, []);
 
-  const showMessageModal = useCallback((params: SignMessageParams) => {
+  const showMessageModal = useCallback((params: UIMessageParams) => {
     setMessageState({
       isVisible: true,
       params,

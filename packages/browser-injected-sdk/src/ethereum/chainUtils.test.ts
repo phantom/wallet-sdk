@@ -17,6 +17,7 @@ const mockProvider = {
   signTransaction: jest.fn(),
   getChainId: jest.fn(),
   switchChain: jest.fn(),
+  request: jest.fn(),
 };
 
 jest.mock("./getProvider");

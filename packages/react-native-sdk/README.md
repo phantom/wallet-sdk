@@ -113,12 +113,13 @@ export default function App() {
 // WalletScreen.tsx
 import React from "react";
 import { View, Button, Text, Alert } from "react-native";
-import { useConnect, useAccounts, useSignMessage, useDisconnect } from "@phantom/react-native-sdk";
+import { useConnect, useAccounts, useSolana, useEthereum, useDisconnect } from "@phantom/react-native-sdk";
 
 export function WalletScreen() {
   const { connect, isConnecting, error: connectError } = useConnect();
   const { addresses, isConnected } = useAccounts();
-  const { signMessage, isSigning } = useSignMessage();
+  const solana = useSolana();
+  const ethereum = useEthereum();
   const { disconnect } = useDisconnect();
 
   const handleConnect = async () => {
@@ -130,13 +131,20 @@ export function WalletScreen() {
     }
   };
 
-  const handleSignMessage = async () => {
+  const handleSignSolanaMessage = async () => {
     try {
-      const signature = await signMessage({
-        message: "Hello from my React Native app!",
-        networkId: "solana:mainnet",
-      });
-      Alert.alert("Signed!", `Signature: ${signature.slice(0, 10)}...`);
+      const signature = await solana.signMessage("Hello from Solana!");
+      Alert.alert("Solana Signed!", `Signature: ${signature.signature.slice(0, 10)}...`);
+    } catch (error) {
+      Alert.alert("Error", `Failed to sign: ${error.message}`);
+    }
+  };
+
+  const handleSignEthereumMessage = async () => {
+    try {
+      const accounts = await ethereum.getAccounts();
+      const signature = await ethereum.signPersonalMessage("Hello from Ethereum!", accounts[0]);
+      Alert.alert("Ethereum Signed!", `Signature: ${signature.signature.slice(0, 10)}...`);
     } catch (error) {
       Alert.alert("Error", `Failed to sign: ${error.message}`);
     }
@@ -158,12 +166,21 @@ export function WalletScreen() {
   return (
     <View style={{ padding: 20 }}>
       <Text style={{ fontSize: 18, marginBottom: 10 }}>Wallet Connected</Text>
-      <Text>Address: {addresses[0]?.address}</Text>
+      {addresses.map((addr, index) => (
+        <Text key={index}>
+          {addr.addressType}: {addr.address}
+        </Text>
+      ))}
 
       <Button
-        title={isSigning ? "Signing..." : "Sign Message"}
-        onPress={handleSignMessage}
-        disabled={isSigning}
+        title="Sign Solana Message"
+        onPress={handleSignSolanaMessage}
+        style={{ marginTop: 10 }}
+      />
+
+      <Button
+        title="Sign Ethereum Message"
+        onPress={handleSignEthereumMessage}
         style={{ marginTop: 10 }}
       />
 
@@ -232,30 +249,38 @@ const {
 } = useAccounts();
 ```
 
-#### useSignMessage
+#### useSolana
 
-Handles message signing operations.
+Provides access to Solana-specific operations.
 
 ```typescript
-const { signMessage, isSigning, error } = useSignMessage();
+const solana = useSolana();
 
-const signature = await signMessage({
-  message: "Message to sign",
-  networkId: "solana:mainnet", // or 'ethereum:1'
-});
+// Sign a message
+const signature = await solana.signMessage("Hello Solana!");
+
+// Sign and send a transaction
+const result = await solana.signAndSendTransaction(transaction);
 ```
 
-#### useSignAndSendTransaction
+#### useEthereum
 
-Handles transaction signing and sending.
+Provides access to Ethereum-specific operations.
 
 ```typescript
-const { signAndSendTransaction, isSigning, error } = useSignAndSendTransaction();
+const ethereum = useEthereum();
 
-const result = await signAndSendTransaction({
-  transaction: "base64-encoded-transaction",
-  networkId: NetworkId.SOLANA_MAINNET,
-});
+// Get accounts
+const accounts = await ethereum.getAccounts();
+
+// Sign a personal message
+const signature = await ethereum.signPersonalMessage("Hello Ethereum!", accounts[0]);
+
+// Send a transaction
+const result = await ethereum.sendTransaction(transactionData);
+
+// Get current chain ID
+const chainId = await ethereum.getChainId();
 ```
 
 #### useDisconnect
@@ -328,7 +353,7 @@ import { PhantomProvider, AddressType } from "@phantom/react-native-sdk";
 </PhantomProvider>;
 ```
 
-### Advanced Configuration
+### Multi-Chain Configuration
 
 ```tsx
 import { PhantomProvider, AddressType } from "@phantom/react-native-sdk";
@@ -340,8 +365,9 @@ import { PhantomProvider, AddressType } from "@phantom/react-native-sdk";
     embeddedWalletType: "user-wallet",
     addressTypes: [AddressType.solana, AddressType.ethereum],
     apiBaseUrl: "https://api.phantom.app/v1/wallets",
+    solanaProvider: "web3js",
     authOptions: {
-      authUrl: "https://auth.yourcompany.com",
+      authUrl: "https://connect.phantom.app",
       redirectUrl: "mycompany-wallet://auth/success",
     },
   }}

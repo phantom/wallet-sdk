@@ -24,8 +24,8 @@ export function createPhantom({ plugins = [] }: CreatePhantomConfig): Phantom {
   return phantom as unknown as Phantom;
 }
 
-// Export extension functionality
-export { createExtensionPlugin } from "./extension";
+// Export extension functionality  
+export { createExtensionPlugin, type Extension } from "./extension";
 
 // Export Ethereum functionality
 export { createEthereumPlugin } from "./ethereum";

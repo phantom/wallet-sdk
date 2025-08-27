@@ -1,6 +1,7 @@
 import { autoConfirmEnable } from "./autoConfirmEnable";
 import { getProvider } from "./getProvider";
 import type { PhantomProvider } from "./types";
+import { NetworkId } from "@phantom/constants";
 
 jest.mock("./getProvider", () => ({
   getProvider: jest.fn(),
@@ -20,17 +21,18 @@ describe("autoConfirmEnable", () => {
   });
 
   it("should enable auto-confirm with chains parameter", async () => {
-    const mockResult = { enabled: true, chains: ["solana:101", "eip155:1"] };
-    (mockProvider.request as jest.Mock).mockResolvedValue(mockResult);
+    const mockProviderResponse = { enabled: true, chains: ["solana:103", "eip155:1"] };
+    const expectedResult = { enabled: true, chains: [NetworkId.SOLANA_DEVNET, NetworkId.ETHEREUM_MAINNET] };
+    (mockProvider.request as jest.Mock).mockResolvedValue(mockProviderResponse);
 
-    const result = await autoConfirmEnable({ chains: ["solana:101", "eip155:1"] });
+    const result = await autoConfirmEnable({ chains: [NetworkId.SOLANA_DEVNET, NetworkId.ETHEREUM_MAINNET] });
 
     expect(mockGetProvider).toHaveBeenCalledTimes(1);
     expect(mockProvider.request).toHaveBeenCalledWith({
       method: "phantom_auto_confirm_enable",
-      params: { chains: ["solana:101", "eip155:1"] },
+      params: { chains: ["solana:103", "eip155:1"] },
     });
-    expect(result).toEqual(mockResult);
+    expect(result).toEqual(expectedResult);
   });
 
   it("should enable auto-confirm without chains parameter", async () => {

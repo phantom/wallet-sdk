@@ -60,13 +60,13 @@ export interface PhantomSolanaProvider {
     signInData: SolanaSignInData, // This will now use the simple type alias
   ) => Promise<{ address: PublicKey; signature: Uint8Array; signedMessage: Uint8Array }>;
   signAndSendTransaction: (
-    transaction: Transaction | VersionedTransaction,
+    transaction: any,
     options?: SendOptions,
   ) => Promise<{ signature: string; publicKey?: string }>;
   signAllTransactions: (
-    transactions: (Transaction | VersionedTransaction)[],
-  ) => Promise<(Transaction | VersionedTransaction)[]>;
-  signTransaction: (transaction: Transaction | VersionedTransaction) => Promise<Transaction | VersionedTransaction>;
+    transactions: any[],
+  ) => Promise<any[]>;
+  signTransaction: (transaction: any) => Promise<any>;
   on: (event: "connect" | "disconnect" | "accountChanged", handler: (publicKey?: PublicKey) => void) => void;
   off: (event: "connect" | "disconnect" | "accountChanged", handler: (publicKey?: PublicKey) => void) => void;
 }

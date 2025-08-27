@@ -20,8 +20,9 @@ describe("autoConfirmStatus", () => {
   });
 
   it("should get auto-confirm status", async () => {
-    const mockResult = { enabled: true, chains: ["solana:101", "eip155:1"] };
-    (mockProvider.request as jest.Mock).mockResolvedValue(mockResult);
+    // Mock raw provider response with internal CAIP format
+    const mockProviderResponse = { enabled: true, chains: ["solana:101", "eip155:1"] };
+    (mockProvider.request as jest.Mock).mockResolvedValue(mockProviderResponse);
 
     const result = await autoConfirmStatus();
 
@@ -30,7 +31,8 @@ describe("autoConfirmStatus", () => {
       method: "phantom_auto_confirm_status",
       params: {},
     });
-    expect(result).toEqual(mockResult);
+    // Expect the processed result with NetworkId values
+    expect(result).toEqual({ enabled: true, chains: ["solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp", "eip155:1"] });
   });
 
   it("should throw error when provider is not found", async () => {

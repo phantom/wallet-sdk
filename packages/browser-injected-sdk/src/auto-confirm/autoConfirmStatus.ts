@@ -1,5 +1,6 @@
 import { getProvider } from "./getProvider";
 import type { AutoConfirmResult } from "./types";
+import { internalCaipToNetworkId } from "@phantom/constants";
 
 export async function autoConfirmStatus(): Promise<AutoConfirmResult> {
   const provider = await getProvider();
@@ -13,5 +14,9 @@ export async function autoConfirmStatus(): Promise<AutoConfirmResult> {
     params: {},
   });
 
-  return result;
+  // Transform InternalNetworkCaip back to NetworkId for public interface
+  return {
+    ...result,
+    chains: result.chains.map(internalCaipToNetworkId),
+  };
 }

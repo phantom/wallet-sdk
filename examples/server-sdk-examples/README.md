@@ -44,7 +44,7 @@ Before running the demo, you need:
    ```env
    ORGANIZATION_ID=your-organization-id
    ORGANIZATION_PRIVATE_KEY=your-base58-encoded-private-key
-   WALLET_API=https://api.phantom.app/wallet
+   WALLET_API=https://api.phantom.app/v1/wallets
    SOLANA_RPC_URL=https://api.devnet.solana.com
    NETWORK=devnet
    ```
@@ -139,7 +139,7 @@ yarn workspace @phantom/server-sdk-examples server-sdk-demo
 | -------------------------- | ------------------------------- | -------------------------------- |
 | `ORGANIZATION_ID`          | Your organization ID            | `org_abc123...`                  |
 | `ORGANIZATION_PRIVATE_KEY` | Base58 encoded P256 private key | `5Kb8kL...`                      |
-| `WALLET_API`               | Phantom API endpoint            | `https://api.phantom.app/wallet` |
+| `WALLET_API`               | Phantom API endpoint            | `https://api.phantom.app/v1/wallets` |
 | `SOLANA_RPC_URL`           | Solana RPC endpoint             | `https://api.devnet.solana.com`  |
 | `NETWORK`                  | Network to use                  | `devnet` or `mainnet`            |
 

@@ -47,11 +47,6 @@ const CAIP2_NETWORK_MAPPINGS: Record<string, NetworkMapping> = {
     network: "mainnet",
     description: "Ethereum Mainnet",
   },
-  [NetworkId.ETHEREUM_GOERLI]: {
-    chain: "ethereum",
-    network: "goerli",
-    description: "Goerli Testnet",
-  },
   [NetworkId.ETHEREUM_SEPOLIA]: {
     chain: "ethereum",
     network: "sepolia",
@@ -62,11 +57,7 @@ const CAIP2_NETWORK_MAPPINGS: Record<string, NetworkMapping> = {
     network: "mainnet",
     description: "Polygon Mainnet",
   },
-  [NetworkId.POLYGON_MUMBAI]: {
-    chain: "polygon",
-    network: "mumbai",
-    description: "Polygon Mumbai Testnet",
-  },
+
   [NetworkId.OPTIMISM_MAINNET]: {
     chain: "optimism",
     network: "mainnet",
@@ -82,21 +73,12 @@ const CAIP2_NETWORK_MAPPINGS: Record<string, NetworkMapping> = {
     network: "mainnet",
     description: "Arbitrum One",
   },
-  [NetworkId.ARBITRUM_GOERLI]: {
-    chain: "arbitrum",
-    network: "goerli",
-    description: "Arbitrum Goerli",
-  },
   [NetworkId.BASE_MAINNET]: {
     chain: "base",
     network: "mainnet",
     description: "Base Mainnet",
   },
-  [NetworkId.BASE_GOERLI]: {
-    chain: "base",
-    network: "goerli",
-    description: "Base Goerli Testnet",
-  },
+
   [NetworkId.BASE_SEPOLIA]: {
     chain: "base",
     network: "sepolia",

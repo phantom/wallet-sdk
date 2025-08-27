@@ -3,9 +3,7 @@ export type {
   NetworkId,
   AddressType,
   WalletAddress,
-  SignedTransaction,
-  SignMessageParams,
-  SignAndSendTransactionParams,
+  SignedTransaction
 } from "@phantom/browser-sdk";
 
 export type ProviderType = "injected" | "embedded";

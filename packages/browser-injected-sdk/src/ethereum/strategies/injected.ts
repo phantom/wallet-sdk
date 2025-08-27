@@ -219,4 +219,13 @@ export class InjectedEthereumStrategy implements EthereumStrategy {
       params: [{ chainId }],
     });
   }
+
+  public async request<T = any>(args: { method: string; params?: unknown[] }): Promise<T> {
+    const provider = this.#getProvider();
+    if (!provider) {
+      throw new Error("Provider not found.");
+    }
+
+    return await provider.request(args);
+  }
 }
