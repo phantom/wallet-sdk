@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phantom Auth Callback</title>
+</head>
+<body>
+    <h1>Authentication in progress...</h1>
+    <script>
+        // Close this window to return to the main app
+        if (window.opener) {
+            window.close();
+        } else {
+            // If opened directly, redirect to main app
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>
