@@ -1,5 +1,13 @@
 # @phantom/client
 
+## 0.1.10
+
+### Patch Changes
+
+- ef68eaf: Key rotation
+- Updated dependencies [ef68eaf]
+  - @phantom/sdk-types@0.1.5
+
 ## 0.1.9
 
 ### Patch Changes

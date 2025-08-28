@@ -1,5 +1,11 @@
 # @phantom/sdk-types
 
+## 0.1.5
+
+### Patch Changes
+
+- ef68eaf: Key rotation
+
 ## 0.1.4
 
 ### Patch Changes

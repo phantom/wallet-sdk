@@ -1,5 +1,18 @@
 # @phantom/browser-sdk
 
+## 0.3.8
+
+### Patch Changes
+
+- ef68eaf: Key rotation
+- 9305f27: Remove solana kit dep
+- Updated dependencies [ef68eaf]
+- Updated dependencies [9305f27]
+  - @phantom/embedded-provider-core@0.1.9
+  - @phantom/indexed-db-stamper@0.1.5
+  - @phantom/client@0.1.10
+  - @phantom/browser-injected-sdk@0.0.10
+
 ## 0.3.7
 
 ### Patch Changes
