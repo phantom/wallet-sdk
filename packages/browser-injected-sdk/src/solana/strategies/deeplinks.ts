@@ -1,6 +1,5 @@
 import type { SolanaStrategy } from "./types";
-import type { DisplayEncoding, SolanaSignInData } from "../types";
-import type { Transaction } from "@solana/transactions";
+import type { DisplayEncoding, SolanaSignInData, Transaction, VersionedTransaction } from "../types";
 import { ProviderStrategy } from "../../types";
 
 export class DeepLinkSolanaStrategy implements SolanaStrategy {
@@ -57,7 +56,7 @@ export class DeepLinkSolanaStrategy implements SolanaStrategy {
     });
   }
 
-  public async signAndSendTransaction(transaction: Transaction): Promise<{ signature: string; address?: string }> {
+  public async signAndSendTransaction(transaction: Transaction | VersionedTransaction): Promise<{ signature: string; address?: string }> {
     const deeplink = `phantom://sign-and-send-transaction?transaction=${transaction}`;
     window.location.href = deeplink;
     return Promise.resolve({
@@ -66,13 +65,13 @@ export class DeepLinkSolanaStrategy implements SolanaStrategy {
     });
   }
 
-  public async signTransaction(transaction: Transaction): Promise<Transaction> {
+  public async signTransaction(transaction: Transaction | VersionedTransaction): Promise<Transaction | VersionedTransaction> {
     const deeplink = `phantom://sign-transaction?transaction=${transaction}`;
     window.location.href = deeplink;
     return Promise.resolve(transaction);
   }
 
-  public async signAllTransactions(transactions: Transaction[]): Promise<Transaction[]> {
+  public async signAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<(Transaction | VersionedTransaction)[]> {
     const deeplink = `phantom://sign-all-transactions?transactions=${transactions}`;
     window.location.href = deeplink;
     return Promise.resolve(transactions);

@@ -1,19 +1,7 @@
-export type Transaction = {
-  message: Uint8Array;
-  recentBlockhash: string;
-  feePayer: string;
-  instructions: any[];
-  signers: string[];
-  version: number;
-};
+import type { Transaction, VersionedTransaction } from "@solana/web3.js";
 
-export type VersionedTransaction = {
-  signatures: Uint8Array[];
-  message: {
-    deserialize: (serializedTransaction: Uint8Array) => VersionedTransaction;
-    serialize: (transaction: VersionedTransaction) => Uint8Array;
-  };
-};
+// Re-export native @solana/web3.js types
+export type { Transaction, VersionedTransaction };
 
 export type SendOptions = {
   skipPreflight?: boolean;

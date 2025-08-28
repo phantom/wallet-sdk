@@ -1,4 +1,4 @@
-import type { Transaction } from "@solana/kit";
+import type { Transaction, VersionedTransaction } from "@solana/web3.js";
 import { getProvider } from "./getProvider";
 
 /**
@@ -7,7 +7,7 @@ import { getProvider } from "./getProvider";
  * @returns A promise that resolves with an array of signed transactions.
  * @throws Error if Phantom provider is not found or if the operation fails.
  */
-export async function signAllTransactions(transactions: Transaction[]): Promise<Transaction[]> {
+export async function signAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<(Transaction | VersionedTransaction)[]> {
   const provider = await getProvider();
   if (!provider) {
     throw new Error("Provider not found.");
