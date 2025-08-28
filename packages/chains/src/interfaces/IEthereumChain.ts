@@ -1,5 +1,3 @@
-import type { ParsedSignatureResult, ParsedTransactionResult } from '@phantom/parsers';
-
 export interface EthTransactionRequest {
   to?: string;
   from?: string;
@@ -14,44 +12,37 @@ export interface EthTransactionRequest {
   chainId?: string;
 }
 
+// Now directly EIP-1193 compliant
 export interface IEthereumChain {
-  /**
-   * Make an EIP-1193 compatible request
-   */
+  // EIP-1193 required properties
+  readonly connected: boolean;
+  readonly chainId: string;
+  readonly accounts: string[];
+
+  // EIP-1193 core method
   request<T = any>(args: { method: string; params?: unknown[] }): Promise<T>;
 
-  /**
-   * Sign a personal message
-   */
-  signPersonalMessage(message: string, address: string): Promise<ParsedSignatureResult>;
+  // Connection methods (bound to SDK)
+  connect(): Promise<string[]>;
+  disconnect(): Promise<void>;
 
-  /**
-   * Sign typed data (EIP-712)
-   */
-  signTypedData(typedData: any, address: string): Promise<ParsedSignatureResult>;
-
-  /**
-   * Send a transaction
-   */
-  sendTransaction(transaction: EthTransactionRequest): Promise<ParsedTransactionResult>;
-
-  /**
-   * Switch to a different chain
-   */
+  // Convenience methods (return raw values for standard compliance)
+  signPersonalMessage(message: string, address: string): Promise<string>;
+  signTypedData(typedData: any, address: string): Promise<string>;
+  sendTransaction(transaction: EthTransactionRequest): Promise<string>;
   switchChain(chainId: number): Promise<void>;
-
-  /**
-   * Get current chain ID
-   */
   getChainId(): Promise<number>;
-
-  /**
-   * Get connected accounts
-   */
   getAccounts(): Promise<string[]>;
-
-  /**
-   * Check if connected to Ethereum wallet
-   */
   isConnected(): boolean;
+
+  // Event methods
+  on(event: string, listener: (...args: any[]) => void): void;
+  off(event: string, listener: (...args: any[]) => void): void;
+
+  // Standard EIP-1193 Events:
+  // - connect: (connectInfo: { chainId: string }) => void
+  // - disconnect: (error: { code: number; message: string }) => void  
+  // - accountsChanged: (accounts: string[]) => void
+  // - chainChanged: (chainId: string) => void
+  // - message: (message: { type: string; data: unknown }) => void
 }

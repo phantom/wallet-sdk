@@ -443,7 +443,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const result = await sdk.ethereum.signPersonalMessage(prefixedMessage, ethAddress.address);
 
         console.log("EVM Message signed:", result);
-        alert(`EVM Message signed: ${result.signature}`);
+        alert(`EVM Message signed: ${result}`);
       } catch (error) {
         console.error("Error signing EVM message:", error);
         alert(`Error signing EVM message: ${(error as Error).message || error}`);
@@ -509,7 +509,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const result = await sdk.ethereum.signTypedData(typedData, ethAddress.address);
 
         console.log("Typed data signed:", result);
-        alert(`Typed data signed: ${result.signature}`);
+        alert(`Typed data signed: ${result}`);
       } catch (error) {
         console.error("Error signing typed data:", error);
         alert(`Error signing typed data: ${(error as Error).message || error}`);
@@ -576,7 +576,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const result = await sdk!.solana.signAndSendTransaction(transaction);
 
     console.log("Transaction sent (web3.js):", result);
-    alert(`Transaction sent: ${result.rawTransaction}`);
+    alert(`Transaction sent: ${result.signature}`);
   }
 
 
@@ -621,7 +621,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const result = await sdk.ethereum.sendTransaction(transactionParams);
 
         console.log("Ethereum transaction sent:", result);
-        alert(`Ethereum transaction sent: ${result.rawTransaction}`);
+        alert(`Ethereum transaction sent: ${result}`);
       } catch (error) {
         console.error("Error with Ethereum transaction:", error);
         alert(`Error with Ethereum transaction: ${(error as Error).message || error}`);

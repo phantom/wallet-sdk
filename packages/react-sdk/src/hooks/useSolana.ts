@@ -46,7 +46,7 @@ export function useSolana() {
   
   const switchNetwork = useCallback(async (network: 'mainnet' | 'devnet') => {
     if (!solanaChain) throw new Error('Solana chain not available. Ensure SDK is connected.');
-    return solanaChain.switchNetwork(network);
+    return solanaChain.switchNetwork?.(network);
   }, [solanaChain]);
   
   const getPublicKey = useCallback(async () => {

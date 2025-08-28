@@ -1,7 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { usePhantom } from '../PhantomProvider';
 import type { IEthereumChain, EthTransactionRequest } from '@phantom/chains';
-import type { ParsedSignatureResult, ParsedTransactionResult } from '@phantom/parsers';
 
 /**
  * Hook for Ethereum chain operations in React Native
@@ -25,12 +24,12 @@ export function useEthereum() {
     return await ethereumChain.request(args);
   }, [ethereumChain]);
   
-  const signPersonalMessage = useCallback(async (message: string, address: string): Promise<ParsedSignatureResult> => {
+  const signPersonalMessage = useCallback(async (message: string, address: string) => {
     if (!ethereumChain) throw new Error('Ethereum chain not available. Ensure SDK is connected.');
     return await ethereumChain.signPersonalMessage(message, address);
   }, [ethereumChain]);
   
-  const sendTransaction = useCallback(async (transaction: EthTransactionRequest): Promise<ParsedTransactionResult> => {
+  const sendTransaction = useCallback(async (transaction: EthTransactionRequest) => {
     if (!ethereumChain) throw new Error('Ethereum chain not available. Ensure SDK is connected.');
     return await ethereumChain.sendTransaction(transaction);
   }, [ethereumChain]);
@@ -59,7 +58,7 @@ export function useEthereum() {
     });
   }, [request, getAccounts]);
   
-  const signTypedData = useCallback(async (typedData: any): Promise<ParsedSignatureResult> => {
+  const signTypedData = useCallback(async (typedData: any) => {
     if (!ethereumChain) throw new Error('Ethereum chain not available. Ensure SDK is connected.');
     const accounts = await getAccounts();
     return await ethereumChain.signTypedData(typedData, accounts[0]);

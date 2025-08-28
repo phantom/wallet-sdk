@@ -1,16 +1,35 @@
+import { EventEmitter } from 'eventemitter3';
 import type { IEthereumChain, EthTransactionRequest } from '@phantom/chains';
 import type { EmbeddedProvider } from '../embedded-provider';
 import { NetworkId, chainIdToNetworkId, networkIdToChainId } from '@phantom/constants';
-import { parseSignMessageResponse, parseTransactionResponse } from '@phantom/parsers';
-import type { ParsedSignatureResult, ParsedTransactionResult } from '@phantom/parsers';
 
 /**
- * Embedded Ethereum chain implementation for React Native and web embedded providers
+ * Embedded Ethereum chain implementation that is EIP-1193 compliant
  */
 export class EmbeddedEthereumChain implements IEthereumChain {
   private currentNetworkId: NetworkId = NetworkId.ETHEREUM_MAINNET;
+  private _connected: boolean = false;
+  private _accounts: string[] = [];
+  private eventEmitter: EventEmitter = new EventEmitter();
 
-  constructor(private provider: EmbeddedProvider) { }
+  constructor(private provider: EmbeddedProvider) {
+    this.setupEventListeners();
+    this.syncInitialState();
+  }
+
+  // EIP-1193 compliant properties
+  get connected(): boolean {
+    return this._connected;
+  }
+
+  get chainId(): string {
+    const chainId = networkIdToChainId(this.currentNetworkId) || 1;
+    return `0x${chainId.toString(16)}`;
+  }
+
+  get accounts(): string[] {
+    return this._accounts;
+  }
 
   private ensureConnected(): void {
     if (!this.provider.isConnected()) {
@@ -23,36 +42,58 @@ export class EmbeddedEthereumChain implements IEthereumChain {
     return this.handleEmbeddedRequest(args);
   }
 
-  async signPersonalMessage(message: string, address: string): Promise<ParsedSignatureResult> {
-    const signature = await this.request<string>({
+  // Connection methods
+  connect(): Promise<string[]> {
+    if (!this.provider.isConnected()) {
+      throw new Error('Provider not connected. Call provider connect first.');
+    }
+    const addresses = this.provider.getAddresses();
+    const ethAddresses = addresses
+      .filter((a: any) => a.addressType === 'Ethereum')
+      .map((a: any) => a.address);
+    
+    this.updateConnectionState(true, ethAddresses);
+    return Promise.resolve(ethAddresses);
+  }
+
+  async disconnect(): Promise<void> {
+    await this.provider.disconnect();
+  }
+
+  // Standard compliant methods (return raw values)
+  async signPersonalMessage(message: string, address: string): Promise<string> {
+    return await this.request<string>({
       method: 'personal_sign',
       params: [message, address]
     });
-    return parseSignMessageResponse(signature, this.currentNetworkId);
   }
 
-  async signTypedData(typedData: any, address: string): Promise<ParsedSignatureResult> {
-    const signature = await this.request<string>({
+  async signTypedData(typedData: any, address: string): Promise<string> {
+    return await this.request<string>({
       method: 'eth_signTypedData_v4',
       params: [address, JSON.stringify(typedData)]
     });
-    return parseSignMessageResponse(signature, this.currentNetworkId);
   }
 
-  async sendTransaction(transaction: EthTransactionRequest): Promise<ParsedTransactionResult> {
+  async sendTransaction(transaction: EthTransactionRequest): Promise<string> {
     const result = await this.provider.signAndSendTransaction({
       transaction,
       networkId: this.currentNetworkId
     });
-    return parseTransactionResponse(result.rawTransaction, this.currentNetworkId, result.hash);
+    if (!result.hash) {
+      // Throw error as we didn't submit the transaction
+      throw new Error('Transaction not submitted');
+    }
+    return result.hash;
   }
 
   switchChain(chainId: number): Promise<void> {
     const networkId = chainIdToNetworkId(chainId);
     if (!networkId) {
-      return Promise.reject(new Error(`Unsupported chainId: ${chainId}`));
+      throw new Error(`Unsupported chainId: ${chainId}`);
     }
     this.currentNetworkId = networkId;
+    this.eventEmitter.emit('chainChanged', `0x${chainId.toString(16)}`);
     return Promise.resolve();
   }
 
@@ -66,7 +107,46 @@ export class EmbeddedEthereumChain implements IEthereumChain {
   }
 
   isConnected(): boolean {
-    return this.provider.isConnected();
+    return this._connected && this.provider.isConnected();
+  }
+
+  private setupEventListeners(): void {
+    // Listen to provider events and bridge to EIP-1193 events
+    this.provider.on('connect', (data: any) => {
+      const ethAddresses = data.addresses
+        ?.filter((addr: any) => addr.addressType === 'Ethereum')
+        ?.map((addr: any) => addr.address) || [];
+      
+      if (ethAddresses.length > 0) {
+        this.updateConnectionState(true, ethAddresses);
+        this.eventEmitter.emit('connect', { chainId: this.chainId });
+        this.eventEmitter.emit('accountsChanged', ethAddresses);
+      }
+    });
+
+    this.provider.on('disconnect', () => {
+      this.updateConnectionState(false, []);
+      this.eventEmitter.emit('disconnect', { code: 4900, message: 'Provider disconnected' });
+      this.eventEmitter.emit('accountsChanged', []);
+    });
+  }
+
+  private syncInitialState(): void {
+    if (this.provider.isConnected()) {
+      const addresses = this.provider.getAddresses();
+      const ethAddresses = addresses
+        .filter((a: any) => a.addressType === 'Ethereum')
+        .map((a: any) => a.address);
+      
+      if (ethAddresses.length > 0) {
+        this.updateConnectionState(true, ethAddresses);
+      }
+    }
+  }
+
+  private updateConnectionState(connected: boolean, accounts: string[]): void {
+    this._connected = connected;
+    this._accounts = accounts;
   }
 
   private async handleEmbeddedRequest<T>(args: { method: string; params?: unknown[] }): Promise<T> {
@@ -78,7 +158,7 @@ export class EmbeddedEthereumChain implements IEthereumChain {
           message,
           networkId: this.currentNetworkId
         });
-        return parseSignMessageResponse(result.signature, this.currentNetworkId).signature as T;
+        return result.signature as T;
       }
 
       case 'eth_signTypedData_v4': {
@@ -88,7 +168,7 @@ export class EmbeddedEthereumChain implements IEthereumChain {
           message: typedDataStr, // Pass the stringified typed data as message
           networkId: this.currentNetworkId
         });
-        return parseSignMessageResponse(typedDataResult.signature, this.currentNetworkId).signature as T;
+        return typedDataResult.signature as T;
       }
 
       case 'eth_sendTransaction': {
@@ -100,7 +180,7 @@ export class EmbeddedEthereumChain implements IEthereumChain {
           transaction,
           networkId: networkIdFromTx || this.currentNetworkId
         });
-        return parseTransactionResponse(sendResult.rawTransaction, this.currentNetworkId, sendResult.hash).hash as T;
+        return sendResult.hash as T;
       }
 
       case 'eth_accounts': {
@@ -123,5 +203,14 @@ export class EmbeddedEthereumChain implements IEthereumChain {
       default:
         throw new Error(`Embedded provider doesn't support method: ${args.method}`);
     }
+  }
+
+  // Event methods for interface compliance
+  on(event: string, listener: (...args: any[]) => void): void {
+    this.eventEmitter.on(event, listener);
+  }
+
+  off(event: string, listener: (...args: any[]) => void): void {
+    this.eventEmitter.off(event, listener);
   }
 }

@@ -1,11 +1,8 @@
 import React, { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 import {
   useConnect as useBaseConnect,
-  useSolana,
-  useEthereum,
   usePhantom,
 } from "@phantom/react-sdk";
-import type { ParsedSignatureResult, ParsedTransactionResult } from "@phantom/parsers";
 
 export interface PhantomUIProviderProps {
   children: ReactNode;
@@ -13,20 +10,7 @@ export interface PhantomUIProviderProps {
   customTheme?: Record<string, string>;
 }
 
-// Generic transaction params for UI - supports both Solana and Ethereum
-interface UITransactionParams {
-  chain: 'solana' | 'ethereum';
-  transaction: any; // Generic transaction object
-  networkId?: string; // Optional network identifier for display purposes
-}
-
-// Generic message params for UI - supports both chains  
-interface UIMessageParams {
-  chain: 'solana' | 'ethereum';
-  message: string | Uint8Array;
-  address?: string; // Required for Ethereum, optional for Solana
-}
-
+// Connection UI state
 interface ConnectionUIState {
   isVisible: boolean;
   isConnecting: boolean;
@@ -34,55 +18,18 @@ interface ConnectionUIState {
   providerType: "injected" | "embedded" | null;
 }
 
-interface TransactionUIState {
-  isVisible: boolean;
-  transaction: UITransactionParams | null;
-  isLoading: boolean;
-  error: Error | null;
-}
-
-interface MessageUIState {
-  isVisible: boolean;
-  params: UIMessageParams | null;
-  isLoading: boolean;
-  error: Error | null;
-}
-
 interface PhantomUIContextValue {
   // Connection state
   connectionState: ConnectionUIState;
   showConnectionModal: () => void;
   hideConnectionModal: () => void;
-  connectWithProvider: (
-    providerType: "injected" | "embedded",
-    embeddedWalletType?: "app-wallet" | "user-wallet",
-  ) => Promise<void>;
-
-  // Transaction state
-  transactionState: TransactionUIState;
-  showTransactionModal: (params: UITransactionParams) => void;
-  signAndSendTransaction: (params: UITransactionParams) => Promise<ParsedTransactionResult>;
-
-  // Message state
-  messageState: MessageUIState;
-  showMessageModal: (params: UIMessageParams) => void;
-  signMessage: (params: UIMessageParams) => Promise<ParsedSignatureResult>;
-
-  // Internal methods for modals
-  _internal: {
-    approveTransaction: () => void;
-    rejectTransaction: () => void;
-    approveMessage: () => void;
-    rejectMessage: () => void;
-  };
+  connectWithAuthProvider: (provider?: "google" | "apple") => Promise<void>;
 }
 
 const PhantomUIContext = createContext<PhantomUIContextValue | null>(null);
 
 export function PhantomUIProvider({ children, theme = "light", customTheme }: PhantomUIProviderProps) {
   const baseConnect = useBaseConnect();
-  const solana = useSolana();
-  const ethereum = useEthereum();
   const { isPhantomAvailable: _isPhantomAvailable } = usePhantom();
 
   // Connection state
@@ -92,34 +39,6 @@ export function PhantomUIProvider({ children, theme = "light", customTheme }: Ph
     error: null,
     providerType: null,
   });
-
-  // Transaction state
-  const [transactionState, setTransactionState] = useState<TransactionUIState>({
-    isVisible: false,
-    transaction: null,
-    isLoading: false,
-    error: null,
-  });
-
-  // Message state
-  const [messageState, setMessageState] = useState<MessageUIState>({
-    isVisible: false,
-    params: null,
-    isLoading: false,
-    error: null,
-  });
-
-  // Transaction promise resolver
-  const [transactionResolver, setTransactionResolver] = useState<{
-    resolve: (value: boolean) => void;
-    reject: (reason?: any) => void;
-  } | null>(null);
-
-  // Message promise resolver
-  const [messageResolver, setMessageResolver] = useState<{
-    resolve: (value: boolean) => void;
-    reject: (reason?: any) => void;
-  } | null>(null);
 
   // Show connection modal
   const showConnectionModal = useCallback(() => {
@@ -140,22 +59,27 @@ export function PhantomUIProvider({ children, theme = "light", customTheme }: Ph
     }));
   }, []);
 
-  // Connect with specific provider
-  const connectWithProvider = useCallback(
-    async (providerType: "injected" | "embedded", _embeddedWalletType?: "app-wallet" | "user-wallet") => {
+  // Connect with specific auth provider
+  const connectWithAuthProvider = useCallback(
+    async (provider?: "google" | "apple") => {
       try {
         setConnectionState(prev => ({
           ...prev,
           isConnecting: true,
           error: null,
-          providerType,
+          providerType: "embedded", // Always embedded when using modal
         }));
 
-        // Note: In the new architecture, provider type is configured at SDK level
-        await baseConnect.connect();
+        const authOptions = provider ? { provider } : undefined;
+        await baseConnect.connect(authOptions);
 
         // Hide modal on successful connection
-        hideConnectionModal();
+        setConnectionState({
+          isVisible: false,
+          isConnecting: false,
+          error: null,
+          providerType: null,
+        });
       } catch (error) {
         setConnectionState(prev => ({
           ...prev,
@@ -165,216 +89,76 @@ export function PhantomUIProvider({ children, theme = "light", customTheme }: Ph
         throw error;
       }
     },
-    [baseConnect, hideConnectionModal],
+    [baseConnect],
   );
-
-  // Enhanced sign and send transaction with UI
-  const signAndSendTransaction = useCallback(
-    async (params: UITransactionParams): Promise<ParsedTransactionResult> => {
-      // Show transaction modal
-      setTransactionState({
-        isVisible: true,
-        transaction: params,
-        isLoading: false,
-        error: null,
-      });
-
-      try {
-        // Wait for user confirmation
-        const confirmed = await new Promise<boolean>((resolve, reject) => {
-          setTransactionResolver({ resolve, reject });
-        });
-
-        if (!confirmed) {
-          throw new Error("Transaction cancelled by user");
-        }
-
-        // Set loading state
-        setTransactionState(prev => ({ ...prev, isLoading: true }));
-
-        // Execute transaction using chain-specific hooks
-        let result: ParsedTransactionResult;
-        if (params.chain === 'solana') {
-          result = await solana.signAndSendTransaction(params.transaction);
-        } else {
-          result = await ethereum.sendTransaction(params.transaction);
-        }
-
-        // Hide modal on success
-        setTransactionState({
-          isVisible: false,
-          transaction: null,
-          isLoading: false,
-          error: null,
-        });
-
-        return result;
-      } catch (error) {
-        setTransactionState(prev => ({
-          ...prev,
-          isLoading: false,
-          error: error as Error,
-        }));
-        throw error;
-      } finally {
-        setTransactionResolver(null);
-      }
-    },
-    [solana, ethereum],
-  );
-
-  // Enhanced sign message with UI
-  const signMessage = useCallback(
-    async (params: UIMessageParams): Promise<ParsedSignatureResult> => {
-      // Show message modal
-      setMessageState({
-        isVisible: true,
-        params,
-        isLoading: false,
-        error: null,
-      });
-
-      try {
-        // Wait for user confirmation
-        const confirmed = await new Promise<boolean>((resolve, reject) => {
-          setMessageResolver({ resolve, reject });
-        });
-
-        if (!confirmed) {
-          throw new Error("Message signing cancelled by user");
-        }
-
-        // Set loading state
-        setMessageState(prev => ({ ...prev, isLoading: true }));
-
-        // Execute signing using chain-specific hooks
-        let result: ParsedSignatureResult;
-        if (params.chain === 'solana') {
-          result = await solana.signMessage(params.message);
-        } else {
-          // For Ethereum, we need an address
-          if (!params.address) throw new Error('Address required for Ethereum signing');
-          const signature = await ethereum.signPersonalMessage(params.message as string, params.address);
-          // Format the raw hex signature into ParsedSignatureResult structure
-          result = {
-            signature,
-            rawSignature: signature,
-          };
-        }
-
-        // Hide modal on success
-        setMessageState({
-          isVisible: false,
-          params: null,
-          isLoading: false,
-          error: null,
-        });
-
-        return result;
-      } catch (error) {
-        setMessageState(prev => ({
-          ...prev,
-          isLoading: false,
-          error: error as Error,
-        }));
-        throw error;
-      } finally {
-        setMessageResolver(null);
-      }
-    },
-    [solana, ethereum],
-  );
-
-  // Internal methods for modals
-  const approveTransaction = useCallback(() => {
-    if (transactionResolver) {
-      transactionResolver.resolve(true);
-    }
-  }, [transactionResolver]);
-
-  const rejectTransaction = useCallback(() => {
-    if (transactionResolver) {
-      transactionResolver.resolve(false);
-    }
-    setTransactionState({
-      isVisible: false,
-      transaction: null,
-      isLoading: false,
-      error: null,
-    });
-  }, [transactionResolver]);
-
-  const approveMessage = useCallback(() => {
-    if (messageResolver) {
-      messageResolver.resolve(true);
-    }
-  }, [messageResolver]);
-
-  const rejectMessage = useCallback(() => {
-    if (messageResolver) {
-      messageResolver.resolve(false);
-    }
-    setMessageState({
-      isVisible: false,
-      params: null,
-      isLoading: false,
-      error: null,
-    });
-  }, [messageResolver]);
-
-  // Show modal functions
-  const showTransactionModal = useCallback((params: UITransactionParams) => {
-    setTransactionState({
-      isVisible: true,
-      transaction: params,
-      isLoading: false,
-      error: null,
-    });
-  }, []);
-
-  const showMessageModal = useCallback((params: UIMessageParams) => {
-    setMessageState({
-      isVisible: true,
-      params,
-      isLoading: false,
-      error: null,
-    });
-  }, []);
 
   const contextValue: PhantomUIContextValue = {
     connectionState,
     showConnectionModal,
     hideConnectionModal,
-    connectWithProvider,
-    transactionState,
-    showTransactionModal,
-    signAndSendTransaction,
-    messageState,
-    showMessageModal,
-    signMessage,
-    _internal: {
-      approveTransaction,
-      rejectTransaction,
-      approveMessage,
-      rejectMessage,
-    },
+    connectWithAuthProvider,
   };
 
   return (
     <PhantomUIContext.Provider value={contextValue}>
-      <div data-theme={theme} style={customTheme}>
-        {children}
-      </div>
+      {children}
+      {/* Connection Modal - rendered conditionally based on state */}
+      {connectionState.isVisible && (
+        <div 
+          className={`phantom-ui-modal-overlay ${theme}`} 
+          style={customTheme}
+          onClick={hideConnectionModal}
+        >
+          <div 
+            className="phantom-ui-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="phantom-ui-modal-header">
+              <h3>Connect to Phantom</h3>
+              <button 
+                className="phantom-ui-close-button"
+                onClick={hideConnectionModal}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="phantom-ui-modal-body">
+              {connectionState.error && (
+                <div className="phantom-ui-error">
+                  {connectionState.error.message}
+                </div>
+              )}
+              
+              <div className="phantom-ui-provider-options">
+                <button
+                  className="phantom-ui-provider-button"
+                  onClick={() => connectWithAuthProvider("google")}
+                  disabled={connectionState.isConnecting}
+                >
+                  {connectionState.isConnecting ? "Connecting..." : "Continue with Google"}
+                </button>
+                
+                <button
+                  className="phantom-ui-provider-button phantom-ui-provider-button-secondary"
+                  onClick={() => connectWithAuthProvider()}
+                  disabled={connectionState.isConnecting}
+                >
+                  {connectionState.isConnecting ? "Connecting..." : "Create Fresh Wallet"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </PhantomUIContext.Provider>
   );
 }
 
-export function usePhantomUI() {
+export function usePhantomUI(): PhantomUIContextValue {
   const context = useContext(PhantomUIContext);
   if (!context) {
     throw new Error("usePhantomUI must be used within a PhantomUIProvider");
   }
   return context;
 }
-
-// Internal hooks are exported from hooks directory instead to avoid naming conflicts

@@ -1,6 +1,2 @@
-// TODO: Implementation pending
-// Enhanced hooks with UI integration
-
+// UI-enhanced hooks - only useConnect has modal functionality
 export * from "./useConnect";
-export * from "./useSignAndSendTransaction";
-export * from "./useSignMessage";

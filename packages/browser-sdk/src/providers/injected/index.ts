@@ -24,7 +24,7 @@ interface PhantomExtended {
   autoConfirm: AutoConfirmPlugin;
 }
 import { debug, DebugCategory } from "../../debug";
-import { InjectedSolanaChain, InjectedEthereumChain } from "./chains";
+import { InjectedSolanaChain, InjectedEthereumChain, type ChainCallbacks } from "./chains";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chains";
 
 declare global {
@@ -85,6 +85,16 @@ export class InjectedProvider implements Provider {
     });
     this.phantom = createPhantom({ plugins }) as unknown as PhantomExtended;
 
+    // Create callback objects to avoid circular dependencies
+    const callbacks = this.createCallbacks();
+    
+    // Create chains with callbacks instead of SDK reference
+    if (this.addressTypes.includes(AddressType.solana)) {
+      this._solanaChain = new InjectedSolanaChain(this.phantom, callbacks);
+    }
+    if (this.addressTypes.includes(AddressType.ethereum)) {
+      this._ethereumChain = new InjectedEthereumChain(this.phantom, callbacks);
+    }
 
     debug.info(DebugCategory.INJECTED_PROVIDER, "InjectedProvider initialized");
   }
@@ -97,7 +107,7 @@ export class InjectedProvider implements Provider {
       throw new Error('Solana not enabled for this provider');
     }
     if (!this._solanaChain) {
-      this._solanaChain = new InjectedSolanaChain(this.phantom);
+      throw new Error('Solana chain not initialized');
     }
     return this._solanaChain;
   }
@@ -110,7 +120,7 @@ export class InjectedProvider implements Provider {
       throw new Error('Ethereum not enabled for this provider');
     }
     if (!this._ethereumChain) {
-      this._ethereumChain = new InjectedEthereumChain(this.phantom);
+      throw new Error('Ethereum chain not initialized');
     }
     return this._ethereumChain;
   }
@@ -148,13 +158,13 @@ export class InjectedProvider implements Provider {
       if (this.addressTypes.includes(AddressType.solana)) {
         debug.log(DebugCategory.INJECTED_PROVIDER, "Attempting Solana connection");
         try {
-          const result = await this.solana.connect();
-          if (result.publicKey) {
+          const publicKey = await this.phantom.solana.connect();
+          if (publicKey) {
             connectedAddresses.push({
               addressType: AddressType.solana,
-              address: result.publicKey,
+              address: publicKey,
             });
-            debug.info(DebugCategory.INJECTED_PROVIDER, "Solana connected successfully", { address: result.publicKey });
+            debug.info(DebugCategory.INJECTED_PROVIDER, "Solana connected successfully", { address: publicKey });
           }
         } catch (err) {
           // Continue to other address types
@@ -165,7 +175,7 @@ export class InjectedProvider implements Provider {
       // Try Ethereum if enabled
       if (this.addressTypes.includes(AddressType.ethereum)) {
         try {
-          const accounts = await this.ethereum.getAccounts();
+          const accounts = await this.phantom.ethereum.getAccounts();
           if (accounts && accounts.length > 0) {
             connectedAddresses.push(
               ...accounts.map((address: string) => ({
@@ -228,7 +238,7 @@ export class InjectedProvider implements Provider {
     // Disconnect from Solana if enabled
     if (this.addressTypes.includes(AddressType.solana)) {
       try {
-        await this.solana.disconnect();
+        await this.phantom.solana.disconnect();
         debug.log(DebugCategory.INJECTED_PROVIDER, "Solana disconnected successfully");
       } catch (err) {
         // Ignore errors if Solana wasn't connected
@@ -241,9 +251,7 @@ export class InjectedProvider implements Provider {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum disconnected (no-op)");
     }
 
-    // Reset chain instances on disconnect
-    this._solanaChain = undefined;
-    this._ethereumChain = undefined;
+    // Don't reset chain instances - they should remain available after disconnect
 
     // Clean up browser-injected-sdk event listeners only
     // Do NOT clear this.eventListeners as it contains ProviderManager forwarding callbacks
@@ -486,5 +494,29 @@ export class InjectedProvider implements Provider {
       cleanupDisconnect,
       cleanupAccountsChanged
     );
+  }
+
+  private createCallbacks(): ChainCallbacks {
+    return {
+      connect: async (): Promise<WalletAddress[]> => {
+        const result = await this.connect();
+        return result.addresses;
+      },
+      disconnect: async (): Promise<void> => {
+        await this.disconnect();
+      },
+      isConnected: (): boolean => {
+        return this.isConnected();
+      },
+      getAddresses: (): WalletAddress[] => {
+        return this.getAddresses();
+      },
+      on: (event: string, callback: (data: any) => void): void => {
+        this.on(event as any, callback);
+      },
+      off: (event: string, callback: (data: any) => void): void => {
+        this.off(event as any, callback);
+      }
+    };
   }
 }
