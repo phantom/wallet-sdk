@@ -175,7 +175,7 @@ export class InjectedProvider implements Provider {
       // Try Ethereum if enabled
       if (this.addressTypes.includes(AddressType.ethereum)) {
         try {
-          const accounts = await this.phantom.ethereum.getAccounts();
+          const accounts = await this.phantom.ethereum.connect();
           if (accounts && accounts.length > 0) {
             connectedAddresses.push(
               ...accounts.map((address: string) => ({
