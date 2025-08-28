@@ -11,8 +11,8 @@ export const DerivationPath = {
   // Ethereum - BIP44 standard for Ethereum and all EVM-compatible chains (coin type 60)
   Ethereum: (accountIndex: number = 0) => `m/44'/60'/${accountIndex}'/0/0`,
 
-  // Bitcoin - BIP44 standard for Bitcoin (coin type 0)
-  Bitcoin: (accountIndex: number = 0) => `m/84'/${accountIndex}'/0'/0`,
+  // Bitcoin - BIP84 standard for Bitcoin (coin type 0)
+  Bitcoin: (accountIndex: number = 0) => `m/84'/0'/${accountIndex}'/0`,
 
   // Sui - BIP44 standard for Sui (coin type 784)
   Sui: (accountIndex: number = 0) => `m/44'/784'/${accountIndex}'/0'/0'`,

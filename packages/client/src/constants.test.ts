@@ -22,8 +22,8 @@ describe('DerivationPath', () => {
   test('Bitcoin derivation paths with different account indices', () => {
     expect(DerivationPath.Bitcoin()).toBe("m/84'/0'/0'/0");
     expect(DerivationPath.Bitcoin(0)).toBe("m/84'/0'/0'/0");
-    expect(DerivationPath.Bitcoin(1)).toBe("m/84'/1'/0'/0");
-    expect(DerivationPath.Bitcoin(2)).toBe("m/84'/2'/0'/0");
+    expect(DerivationPath.Bitcoin(1)).toBe("m/84'/0'/1'/0");
+    expect(DerivationPath.Bitcoin(2)).toBe("m/84'/0'/2'/0");
   });
 
   test('Sui derivation paths with different account indices', () => {
@@ -56,8 +56,8 @@ describe('getDerivationPathForNetwork', () => {
 
   test('returns correct Bitcoin paths', () => {
     expect(getDerivationPathForNetwork('bitcoin:mainnet')).toBe("m/84'/0'/0'/0");
-    expect(getDerivationPathForNetwork('bitcoin:mainnet', 1)).toBe("m/84'/1'/0'/0");
-    expect(getDerivationPathForNetwork('btc:mainnet', 2)).toBe("m/84'/2'/0'/0");
+    expect(getDerivationPathForNetwork('bitcoin:mainnet', 1)).toBe("m/84'/0'/1'/0");
+    expect(getDerivationPathForNetwork('btc:mainnet', 2)).toBe("m/84'/0'/2'/0");
   });
 
   test('defaults to Ethereum for unknown networks', () => {
