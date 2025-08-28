@@ -1,4 +1,4 @@
-import type { Transaction } from "@solana/kit";
+import type { Transaction } from "@solana/web3.js";
 import { getProvider } from "./getProvider";
 import type { SolanaStrategy } from "./strategies/types";
 import { signAllTransactions } from "./signAllTransactions";

@@ -41,8 +41,10 @@
     "test": "jest",
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
   },
+  "dependencies": {
+    "@solana/web3.js": "^1.98.2"
+  },
   "devDependencies": {
-    "@solana/web3.js": "^1.98.2",
     "@types/jest": "^29.5.14",
     "eslint": "8.53.0",
     "jest": "^29.7.0",
@@ -50,11 +52,6 @@
     "rimraf": "^6.0.1",
     "tsup": "^6.7.0",
     "typescript": "^5.0.4"
-  },
-  "dependencies": {
-    "@solana/compat": "2.1.1",
-    "@solana/kit": "^2.1.1",
-    "@solana/transactions": "^2.1.1"
   },
   "publishConfig": {
     "directory": "_release/package"
