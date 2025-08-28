@@ -1,5 +1,14 @@
 # @phantom/embedded-provider-core
 
+## 0.1.9
+
+### Patch Changes
+
+- ef68eaf: Key rotation
+- Updated dependencies [ef68eaf]
+  - @phantom/sdk-types@0.1.5
+  - @phantom/client@0.1.10
+
 ## 0.1.8
 
 ### Patch Changes

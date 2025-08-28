@@ -1,5 +1,15 @@
 # @phantom/react-ui
 
+## 1.2.6
+
+### Patch Changes
+
+- ef68eaf: Key rotation
+- Updated dependencies [ef68eaf]
+- Updated dependencies [9305f27]
+  - @phantom/client@0.1.10
+  - @phantom/react-sdk@0.3.8
+
 ## 1.2.5
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @phantom/indexed-db-stamper
 
+## 0.1.5
+
+### Patch Changes
+
+- ef68eaf: Key rotation
+- Updated dependencies [ef68eaf]
+  - @phantom/embedded-provider-core@0.1.9
+  - @phantom/sdk-types@0.1.5
+
 ## 0.1.4
 
 ### Patch Changes

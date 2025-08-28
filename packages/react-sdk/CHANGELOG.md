@@ -1,5 +1,15 @@
 # @phantom/react-sdk
 
+## 0.3.8
+
+### Patch Changes
+
+- ef68eaf: Key rotation
+- 9305f27: Remove solana kit dep
+- Updated dependencies [ef68eaf]
+- Updated dependencies [9305f27]
+  - @phantom/browser-sdk@0.3.8
+
 ## 0.3.7
 
 ### Patch Changes
