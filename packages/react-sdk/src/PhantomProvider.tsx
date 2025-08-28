@@ -39,7 +39,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   const [connectError, setConnectError] = useState<Error | null>(null);
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
   const [walletId, setWalletId] = useState<string | null>(null);
-  const [currentProviderType, setCurrentProviderType] = useState<"injected" | "embedded" | null>(null);
+  const [currentProviderType, setCurrentProviderType] = useState<"injected" | "embedded" | null>(config.providerType as "injected" | "embedded" || null);
   const [isPhantomAvailable, setIsPhantomAvailable] = useState(false);
   const [sdk, setSdk] = useState<BrowserSDK | null>(null);
 
@@ -128,10 +128,10 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   useEffect(() => {
     if (!sdk) return;
 
-    const initialize = () => {
+    const initialize = async () => {
       // Check if Phantom extension is available (only for injected provider)
       try {
-        const available = BrowserSDK.isPhantomInstalled();
+        const available = await BrowserSDK.isPhantomInstalled();
         setIsPhantomAvailable(available);
       } catch (err) {
         console.error("Error checking Phantom extension:", err);

@@ -5,12 +5,12 @@ import type {
   AuthOptions,
 } from "./types";
 import { ProviderManager, type SwitchProviderOptions, type ProviderPreference } from "./ProviderManager";
-import { isPhantomExtensionInstalled } from "@phantom/browser-injected-sdk";
 import { debug, DebugCategory, type DebugLevel, type DebugCallback } from "./debug";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chains";
 import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-provider-core";
 import type { InjectedProvider } from "./providers/injected";
 import type { AutoConfirmEnableParams, AutoConfirmResult, AutoConfirmSupportedChainsResult } from "@phantom/browser-injected-sdk/auto-confirm";
+import { waitForPhantomExtension } from "./waitForPhantomExtension";
 
 /**
  * Browser SDK with chain-specific API
@@ -172,9 +172,10 @@ export class BrowserSDK {
   /**
    * Check if Phantom extension is installed
    */
-  static isPhantomInstalled(): boolean {
-    return isPhantomExtensionInstalled();
+  static async isPhantomInstalled(timeoutMs?: number): Promise<boolean> {
+    return waitForPhantomExtension(timeoutMs);
   }
+
 
   /**
    * Add event listener for provider events (connect, connect_start, connect_error, disconnect, error)

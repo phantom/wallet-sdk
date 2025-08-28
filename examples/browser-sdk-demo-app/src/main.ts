@@ -675,11 +675,6 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        if (providerTypeSelect.value !== "injected") {
-          alert("Auto-confirm is only available for injected provider");
-          return;
-        }
-
         const selectedChains = getSelectedChains();
         const params = selectedChains.length > 0 ? { chains: selectedChains } : {};
         const result = await sdk.enableAutoConfirm(params);
@@ -702,10 +697,7 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        if (providerTypeSelect.value !== "injected") {
-          alert("Auto-confirm is only available for injected provider");
-          return;
-        }
+
 
         await sdk.disableAutoConfirm();
         console.log("Auto-confirm disabled successfully");
@@ -726,10 +718,7 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        if (providerTypeSelect.value !== "injected") {
-          alert("Auto-confirm is only available for injected provider");
-          return;
-        }
+  
 
         const status = await sdk.getAutoConfirmStatus();
         console.log("Auto-confirm status:", status);
@@ -749,12 +738,6 @@ document.addEventListener("DOMContentLoaded", () => {
           alert("Please connect first");
           return;
         }
-
-        if (providerTypeSelect.value !== "injected") {
-          alert("Auto-confirm is only available for injected provider");
-          return;
-        }
-
         const supportedChains = await sdk.getSupportedAutoConfirmChains();
         console.log("Supported auto-confirm chains:", supportedChains);
         alert(`Supported chains for auto-confirm:\n${supportedChains.chains.join(", ")}`);
