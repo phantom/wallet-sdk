@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { AddressType, PhantomProvider, type PhantomSDKConfig, type PhantomDebugConfig, DebugLevel, type DebugMessage, type ProviderType } from "@phantom/react-sdk";
 import { Actions } from "./Actions";
+import { ConfigurationForm } from "./ConfigurationForm";
 import { AuthCallback } from "./AuthCallback";
 import { useState, useCallback, useMemo } from "react";
 import { DebugContext, type DebugContextType } from "./contexts/DebugContext";
@@ -14,6 +15,9 @@ function App() {
   // Provider type state - this will control the SDK configuration
   const [providerType, setProviderType] = useState<ProviderType>("embedded");
   const [embeddedWalletType, setEmbeddedWalletType] = useState<"user-wallet" | "app-wallet">("user-wallet");
+  
+  // SDK instantiation state
+  const [sdkInstantiated, setSdkInstantiated] = useState(false);
 
   // Debug callback function for the provider
   const handleDebugMessage = useCallback((message: DebugMessage) => {
@@ -69,19 +73,27 @@ function App() {
 
   return (
     <DebugContext.Provider value={debugContextValue}>
-      <PhantomProvider config={config} debugConfig={debugConfig}>
+      {sdkInstantiated ? (
+        <PhantomProvider config={config} debugConfig={debugConfig}>
+          <Routes>
+            <Route path="/" element={<Actions providerType={providerType} />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+          </Routes>
+        </PhantomProvider>
+      ) : (
         <Routes>
           <Route path="/" element={
-            <Actions 
+            <ConfigurationForm 
               providerType={providerType}
               setProviderType={setProviderType}
               embeddedWalletType={embeddedWalletType}
               setEmbeddedWalletType={setEmbeddedWalletType}
+              onCreateSDK={() => setSdkInstantiated(true)}
             />
           } />
           <Route path="/auth/callback" element={<AuthCallback />} />
         </Routes>
-      </PhantomProvider>
+      )}
     </DebugContext.Provider>
   );
 }
