@@ -1,43 +1,32 @@
-import type { ParsedSignatureResult, ParsedTransactionResult } from '@phantom/parsers';
-
+// Now directly wallet-adapter compliant
 export interface ISolanaChain {
-  /**
-   * Sign a message with the connected Solana wallet
-   */
-  signMessage(message: string | Uint8Array): Promise<ParsedSignatureResult>;
-  
-  /**
-   * Sign a transaction without sending it
-   */
-  signTransaction<T>(transaction: T): Promise<T>;
-  
-  /**
-   * Sign and send a transaction to the network
-   */
-  signAndSendTransaction<T>(transaction: T): Promise<ParsedTransactionResult>;
-  
-  /**
-   * Connect to the Solana wallet
-   */
+  // Wallet adapter required properties
+  readonly publicKey: string | null;
+  readonly connected: boolean;
+
+  // Core wallet adapter methods (bound to SDK)
   connect(options?: { onlyIfTrusted?: boolean }): Promise<{ publicKey: string }>;
-  
-  /**
-   * Disconnect from the Solana wallet
-   */
   disconnect(): Promise<void>;
-  
-  /**
-   * Switch Solana network
-   */
-  switchNetwork(network: 'mainnet' | 'devnet'): Promise<void>;
-  
-  /**
-   * Get the current public key
-   */
+
+  // Standard wallet adapter signing methods
+  signMessage(message: string | Uint8Array): Promise<{ signature: Uint8Array; publicKey: string }>;
+  signTransaction<T>(transaction: T): Promise<T>;
+  signAndSendTransaction<T>(transaction: T): Promise<{ signature: string }>;
+  signAllTransactions?<T>(transactions: T[]): Promise<T[]>;
+
+  // Network switching
+  switchNetwork?(network: 'mainnet' | 'devnet'): Promise<void>;
+
+  // Legacy compatibility methods
   getPublicKey(): Promise<string | null>;
-  
-  /**
-   * Check if connected to Solana wallet
-   */
   isConnected(): boolean;
+
+  // Event methods
+  on(event: string, listener: (...args: any[]) => void): void;
+  off(event: string, listener: (...args: any[]) => void): void;
+
+  // Standard Wallet Adapter Events:
+  // - connect: (publicKey: string) => void
+  // - disconnect: () => void
+  // - accountChanged: (publicKey: string | null) => void
 }

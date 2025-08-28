@@ -46,7 +46,9 @@
     "@phantom/constants": "workspace:^",
     "@phantom/parsers": "workspace:^",
     "@phantom/sdk-types": "workspace:^",
-    "bs58": "^6.0.0"
+    "bs58": "^6.0.0",
+    "buffer": "^6.0.3",
+    "eventemitter3": "^5.0.1"
   },
   "devDependencies": {
     "@types/jest": "^29.5.5",
