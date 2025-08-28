@@ -7,7 +7,6 @@ import {
   useAccounts,
   usePhantom,
   useAutoConfirm,
-  useIsExtensionInstalled,
   NetworkId,
   type ProviderType,
 } from "@phantom/react-sdk";
@@ -28,7 +27,6 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
   const { signMessage: signSolanaMessage, signAndSendTransaction } = useSolana();
   const { signPersonalMessage: signEthMessage, signTypedData: signEthTypedData, sendTransaction: sendEthTransaction } = useEthereum();
   const { isConnected, currentProviderType } = usePhantom();
-  const { isInstalled, isLoading } = useIsExtensionInstalled();
   const autoConfirm = useAutoConfirm();
   const addresses = useAccounts();
   const [isSigningMessage, setIsSigningMessage] = useState(false);
@@ -277,23 +275,6 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
               Destroy SDK Instance
             </button>
           </div>
-        </div>
-      )}
-
-      {providerType === "injected" && (
-        <div className="section">
-          <h3>Extension Status</h3>
-          <div className="status-card">
-            <div className="status-row">
-              <span className="status-label">Extension:</span>
-              <span className="status-value">
-                {isLoading ? "Checking..." : isInstalled ? "✓ Installed" : "✗ Not Installed"}
-              </span>
-            </div>
-          </div>
-          {!isLoading && !isInstalled && (
-            <p className="error-text">Please install the Phantom extension to use injected provider</p>
-          )}
         </div>
       )}
 

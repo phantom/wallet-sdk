@@ -71,18 +71,37 @@ function App() {
     clearDebugMessages,
   }), [debugMessages, debugLevel, showDebug, setDebugLevel, setShowDebug, clearDebugMessages]);
 
+  // Auth callback always needs embedded config
+  const authConfig: PhantomSDKConfig = useMemo(() => ({
+    appName: "React SDK Demo App",
+    appLogo: "https://picsum.photos/200",
+    providerType: "embedded",
+    addressTypes: [AddressType.solana, AddressType.ethereum, AddressType.bitcoinSegwit, AddressType.sui],
+    solanaProvider: "web3js",
+    organizationId: import.meta.env.VITE_ORGANIZATION_ID || "your-organization-id",
+    apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "https://api.phantom.app/v1/wallets",
+    embeddedWalletType: "user-wallet", // Auth callback is always for user wallet
+    authOptions: {
+      authUrl: import.meta.env.VITE_AUTH_URL || "https://connect.phantom.app",
+      redirectUrl: import.meta.env.VITE_REDIRECT_URL,
+    },
+    autoConnect: true,
+  }), []);
+
   return (
     <DebugContext.Provider value={debugContextValue}>
-      {sdkInstantiated ? (
-        <PhantomProvider config={config} debugConfig={debugConfig}>
-          <Routes>
-            <Route path="/" element={<Actions providerType={providerType} />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-          </Routes>
-        </PhantomProvider>
-      ) : (
-        <Routes>
-          <Route path="/" element={
+      <Routes>
+        <Route path="/auth/callback" element={
+          <PhantomProvider config={authConfig} debugConfig={debugConfig}>
+            <AuthCallback />
+          </PhantomProvider>
+        } />
+        <Route path="/" element={
+          sdkInstantiated ? (
+            <PhantomProvider config={config} debugConfig={debugConfig}>
+              <Actions providerType={providerType} />
+            </PhantomProvider>
+          ) : (
             <ConfigurationForm 
               providerType={providerType}
               setProviderType={setProviderType}
@@ -90,10 +109,9 @@ function App() {
               setEmbeddedWalletType={setEmbeddedWalletType}
               onCreateSDK={() => setSdkInstantiated(true)}
             />
-          } />
-          <Route path="/auth/callback" element={<AuthCallback />} />
-        </Routes>
-      )}
+          )
+        } />
+      </Routes>
     </DebugContext.Provider>
   );
 }

@@ -1,5 +1,5 @@
 import "./Actions.css";
-import { type ProviderType } from "@phantom/react-sdk";
+import { type ProviderType, useIsExtensionInstalled } from "@phantom/react-sdk";
 import { DebugConsole } from "./components/DebugConsole";
 
 interface ConfigurationFormProps {
@@ -17,6 +17,7 @@ export function ConfigurationForm({
   setEmbeddedWalletType,
   onCreateSDK
 }: ConfigurationFormProps) {
+  const { isInstalled, isLoading } = useIsExtensionInstalled();
 
 
   return (
@@ -77,7 +78,13 @@ export function ConfigurationForm({
               </div>
             )}
 
-            
+            {providerType === "injected" && (
+              <div className="extension-status">
+                {isLoading && <p className="status-text">Checking extension...</p>}
+                {!isLoading && isInstalled && <p className="status-success">✓ Phantom extension installed</p>}
+                {!isLoading && !isInstalled && <p className="status-error">✗ Phantom extension not installed</p>}
+              </div>
+            )}
           </div>
 
           <div className="section">
@@ -92,11 +99,14 @@ export function ConfigurationForm({
               <button
                 className="primary"
                 onClick={onCreateSDK}
+                disabled={providerType === "injected" && !isInstalled}
               >
                 Create SDK Instance
               </button>
             </div>
-           
+            {providerType === "injected" && !isInstalled && (
+              <p className="error-text">Please install the Phantom extension first</p>
+            )}
           </div>
         </div>
 
