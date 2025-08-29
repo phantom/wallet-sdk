@@ -67,16 +67,7 @@ const CAIP2_NETWORK_MAPPINGS: Record<string, NetworkMapping> = {
     network: "mumbai",
     description: "Polygon Mumbai Testnet",
   },
-  [NetworkId.OPTIMISM_MAINNET]: {
-    chain: "optimism",
-    network: "mainnet",
-    description: "Optimism Mainnet",
-  },
-  [NetworkId.OPTIMISM_GOERLI]: {
-    chain: "optimism",
-    network: "goerli",
-    description: "Optimism Goerli Testnet",
-  },
+
   [NetworkId.ARBITRUM_ONE]: {
     chain: "arbitrum",
     network: "mainnet",

@@ -32,7 +32,7 @@ import {
   type ExternalDerivedAccount,
   KmsUserRole,
   type ExternalKmsOrganization,
-  type DerivationInfoAddressFormatEnum,
+  type DerivationInfoAddressFormatEnum as AddressType,
   type ExternalKmsAuthenticator
 } from "@phantom/openapi-wallet-service";
 import { DerivationPath, getNetworkConfig } from "./constants";
@@ -227,7 +227,7 @@ export class PhantomClient {
   async getWalletAddresses(
     walletId: string,
     derivationPaths?: string[],
-  ): Promise<{ addressType: DerivationInfoAddressFormatEnum; address: string }[]> {
+  ): Promise<{ addressType: AddressType; address: string }[]> {
     try {
       const paths = derivationPaths || [
         DerivationPath.Solana,
@@ -416,7 +416,7 @@ export class PhantomClient {
       const params: CreateOrganizationRequest = {
         organizationName: name,
         users: users.map(userConfig => ({
-          role: userConfig.role === "ADMIN"  ? KmsUserRole.admin : KmsUserRole.user,
+          role: userConfig.role === "ADMIN" ? KmsUserRole.admin : KmsUserRole.user,
           username: userConfig.username || `user-${Date.now()}`,
           authenticators: userConfig.authenticators as any,
         })),
