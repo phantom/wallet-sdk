@@ -105,15 +105,20 @@ export class EmbeddedProvider {
   }
 
   private async getAndFilterWalletAddresses(walletId: string): Promise<WalletAddress[]> {
+    // Get session to access derivation index
+    const session = await this.storage.getSession();
+    const derivationIndex = session?.accountDerivationIndex ?? 0;
+
     // Get wallet addresses with retry and auto-disconnect on failure
     const addresses = await retryWithBackoff(
-      () => this.client!.getWalletAddresses(walletId),
+      () => this.client!.getWalletAddresses(walletId, undefined, derivationIndex),
       "getWalletAddresses",
       this.logger,
     ).catch(async error => {
       this.logger.error("EMBEDDED_PROVIDER", "getWalletAddresses failed after retries, disconnecting", {
         walletId,
         error: error.message,
+        derivationIndex: derivationIndex,
       });
       // Clear the session if getWalletAddresses fails after retries
       await this.storage.clearSession();
@@ -595,11 +600,16 @@ export class EmbeddedProvider {
     // Parse message to base64url format for client
     const parsedMessage = parseMessage(params.message);
 
+    // Get session to access derivation index
+    const session = await this.storage.getSession();
+    const derivationIndex = session?.accountDerivationIndex ?? 0;
+
     // Get raw response from client
     const rawResponse = await this.client.signMessage({
       walletId: this.walletId,
       message: parsedMessage.base64url,
       networkId: params.networkId,
+      derivationIndex: derivationIndex,
     });
 
     this.logger.info("EMBEDDED_PROVIDER", "Message signed successfully", {
@@ -627,9 +637,14 @@ export class EmbeddedProvider {
     // Parse transaction to base64url format for client based on network
     const parsedTransaction = await parseTransaction(params.transaction, params.networkId);
 
+    // Get session to access derivation index
+    const session = await this.storage.getSession();
+    const derivationIndex = session?.accountDerivationIndex ?? 0;
+
     this.logger.log("EMBEDDED_PROVIDER", "Parsed transaction for signing", {
       walletId: this.walletId,
       transaction: parsedTransaction,
+      derivationIndex: derivationIndex,
     });
 
     // Get raw response from client
@@ -637,6 +652,7 @@ export class EmbeddedProvider {
       walletId: this.walletId,
       transaction: parsedTransaction.base64url,
       networkId: params.networkId,
+      derivationIndex: derivationIndex,
     });
 
     this.logger.info("EMBEDDED_PROVIDER", "Transaction signed and sent successfully", {
@@ -713,6 +729,7 @@ export class EmbeddedProvider {
         stamperInfo,
         authProvider: "app-wallet",
         userInfo: { embeddedWalletType: this.config.embeddedWalletType },
+        accountDerivationIndex: 0, // App wallets default to index 0
         status: "completed" as const,
         createdAt: now,
         lastUsed: now,
@@ -767,6 +784,7 @@ export class EmbeddedProvider {
       stamperInfo,
       authProvider: authResult.provider,
       userInfo: authResult.userInfo,
+      accountDerivationIndex: authResult.accountDerivationIndex,
       status: "completed" as const,
       createdAt: now,
       lastUsed: now,
@@ -808,6 +826,7 @@ export class EmbeddedProvider {
       stamperInfo,
       authProvider: "phantom-connect",
       userInfo: { provider: authOptions?.provider },
+      accountDerivationIndex: undefined, // Will be set when redirect completes
       status: "pending" as const,
       createdAt: now,
       lastUsed: now,
@@ -855,6 +874,7 @@ export class EmbeddedProvider {
       // Update the temporary session with actual wallet ID and auth info
       tempSession.walletId = authResult.walletId;
       tempSession.authProvider = authResult.provider || tempSession.authProvider;
+      tempSession.accountDerivationIndex = authResult.accountDerivationIndex;
       tempSession.status = "completed";
       tempSession.lastUsed = Date.now();
       await this.storage.saveSession(tempSession);
@@ -878,6 +898,7 @@ export class EmbeddedProvider {
     // Update session with actual wallet ID and auth info from redirect
     session.walletId = authResult.walletId;
     session.authProvider = authResult.provider || session.authProvider;
+    session.accountDerivationIndex = authResult.accountDerivationIndex;
     session.status = "completed";
     session.lastUsed = Date.now();
     await this.storage.saveSession(session);

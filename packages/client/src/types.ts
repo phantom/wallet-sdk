@@ -42,12 +42,14 @@ export interface SignMessageParams {
   walletId: string;
   message: string; // base64url encoded message
   networkId: NetworkId;
+  derivationIndex?: number; // Optional account derivation index (defaults to 0)
 }
 
 export interface SignAndSendTransactionParams {
   walletId: string;
   transaction: Transaction; // base64url encoded transaction
   networkId: NetworkId;
+  derivationIndex?: number; // Optional account derivation index (defaults to 0)
 }
 
 export interface GetWalletWithTagParams {

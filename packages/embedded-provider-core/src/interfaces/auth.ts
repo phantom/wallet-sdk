@@ -2,6 +2,7 @@ export interface AuthResult {
   walletId: string;
   provider?: string;
   userInfo?: Record<string, any>;
+  accountDerivationIndex?: number; // Account derivation index from auth response
 }
 
 export interface PhantomConnectOptions {
