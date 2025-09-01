@@ -57,5 +57,4 @@
   "publishConfig": {
     "directory": "_release/package"
   }
-  
 }

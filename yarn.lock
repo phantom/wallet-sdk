@@ -3293,7 +3293,6 @@ __metadata:
   resolution: "@phantom/browser-injected-sdk@workspace:packages/browser-injected-sdk"
   dependencies:
     "@phantom/constants": "workspace:^"
-    "@solana/addresses": "npm:^2.3.0"
     "@solana/web3.js": "npm:^1.98.2"
     "@types/jest": "npm:^29.5.14"
     eslint: "npm:8.53.0"
@@ -4345,7 +4344,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@solana/addresses@npm:2.3.0, @solana/addresses@npm:^2.3.0":
+"@solana/addresses@npm:2.3.0":
   version: 2.3.0
   resolution: "@solana/addresses@npm:2.3.0"
   dependencies:
