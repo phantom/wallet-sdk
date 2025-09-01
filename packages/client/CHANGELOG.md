@@ -6,6 +6,8 @@
 
 - New SDKs chain specific interface, prepare for initial beta release
 
+### Patch Changes
+
 - ef68eaf: Key rotation
 - Updated dependencies [ef68eaf]
 - Updated dependencies
@@ -14,6 +16,12 @@
   - @phantom/api-key-stamper@1.0.0-beta.0
   - @phantom/base64url@1.0.0-beta.0
   - @phantom/crypto@1.0.0-beta.0
+
+## 0.1.11
+
+### Patch Changes
+
+- b20bc21: Support derivation index
 
 ## 0.1.10
 

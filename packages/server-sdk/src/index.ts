@@ -30,12 +30,14 @@ export interface ServerSignMessageParams {
   walletId: string;
   message: string; // Plain text - automatically converted to base64url
   networkId: NetworkId;
+  derivationIndex?: number; // Optional account derivation index (defaults to 0)
 }
 
 export interface ServerSignAndSendTransactionParams {
   walletId: string;
   transaction: any; // Various transaction formats - automatically parsed
   networkId: NetworkId;
+  derivationIndex?: number; // Optional account derivation index (defaults to 0)
 }
 
 export class ServerSDK {
@@ -73,6 +75,7 @@ export class ServerSDK {
       walletId: params.walletId,
       message: parsedMessage.base64url,
       networkId: params.networkId,
+      derivationIndex: params.derivationIndex,
     };
 
     // Get raw response from client
@@ -96,6 +99,7 @@ export class ServerSDK {
       walletId: params.walletId,
       transaction: parsedTransaction.base64url,
       networkId: params.networkId,
+      derivationIndex: params.derivationIndex,
     };
     // Get raw response from client
     const rawResponse = await this.client.signAndSendTransaction(signAndSendParams);
@@ -146,8 +150,9 @@ export class ServerSDK {
   getWalletAddresses(
     walletId: string,
     derivationPaths?: string[],
+    derivationIndex?: number,
   ): Promise<{ addressType: AddressType; address: string }[]> {
-    return this.client.getWalletAddresses(walletId, derivationPaths);
+    return this.client.getWalletAddresses(walletId, derivationPaths, derivationIndex);
   }
 }
 
