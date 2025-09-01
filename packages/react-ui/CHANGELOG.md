@@ -1,14 +1,20 @@
 # @phantom/react-ui
 
-## 1.2.6
+## 2.0.0-beta.0
+
+### Major Changes
+
+- New SDKs chain specific interface, prepare for initial beta release
 
 ### Patch Changes
 
 - ef68eaf: Key rotation
 - Updated dependencies [ef68eaf]
-- Updated dependencies [9305f27]
-  - @phantom/client@0.1.10
-  - @phantom/react-sdk@0.3.8
+- Updated dependencies
+  - @phantom/client@1.0.0-beta.0
+  - @phantom/browser-sdk@1.0.0-beta.0
+  - @phantom/react-sdk@1.0.0-beta.0
+  - @phantom/parsers@1.0.0-beta.0
 
 ## 1.2.5
 

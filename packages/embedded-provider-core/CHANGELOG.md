@@ -1,5 +1,24 @@
 # @phantom/embedded-provider-core
 
+## 1.0.0-beta.0
+
+### Major Changes
+
+- New SDKs chain specific interface, prepare for initial beta release
+
+### Patch Changes
+
+- ef68eaf: Key rotation
+- Updated dependencies [ef68eaf]
+- Updated dependencies
+  - @phantom/sdk-types@1.0.0-beta.0
+  - @phantom/client@1.0.0-beta.0
+  - @phantom/constants@1.0.0-beta.0
+  - @phantom/parsers@1.0.0-beta.0
+  - @phantom/chains@1.0.0-beta.0
+  - @phantom/api-key-stamper@1.0.0-beta.0
+  - @phantom/base64url@1.0.0-beta.0
+
 ## 0.1.10
 
 ### Patch Changes
@@ -9,13 +28,6 @@
   - @phantom/client@0.1.11
 
 ## 0.1.9
-
-### Patch Changes
-
-- ef68eaf: Key rotation
-- Updated dependencies [ef68eaf]
-  - @phantom/sdk-types@0.1.5
-  - @phantom/client@0.1.10
 
 ## 0.1.8
 

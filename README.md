@@ -40,65 +40,96 @@ All packages with links to documentation:
 ### ⚠️ Deprecated Packages
 - **[@phantom/wallet-sdk](./packages/browser-embedded-sdk/README.md)** - ⚠️ **DEPRECATED** - Use [@phantom/browser-sdk](./packages/browser-sdk/README.md) or [@phantom/react-sdk](./packages/react-sdk/README.md) instead ([NPM](https://www.npmjs.com/package/@phantom/wallet-sdk))
 
+## Provider Types
+
+All frontend SDKs support two provider types:
+
+### 🔌 Injected Provider (Browser Extension)
+Connect to the user's existing Phantom browser extension wallet:
+- Uses wallets already installed and funded by the user
+- Requires Phantom browser extension to be installed
+- Access to user's existing wallet history and assets
+
+### 🔮 Embedded Provider (Non-Custodial)
+Create new non-custodial wallets embedded in your application:
+- **App Wallet**: Fresh wallet created per application (unfunded, app-specific)
+- **User Wallet**: User's Phantom wallet accessed via authentication (potentially funded)
+
 ## SDK Overview
 
 This repository contains multiple SDKs for different integration needs, prioritized by ease of use:
 
 ### React SDK
 
-**[@phantom/react-sdk](./packages/react-sdk/README.md)** - React hooks for Phantom integration with native transaction support.
+**[@phantom/react-sdk](./packages/react-sdk/README.md)** - React hooks for Phantom integration with chain-specific APIs.
 
 ```tsx
-import { PhantomProvider, useConnect, useSignAndSendTransaction, AddressType, NetworkId } from "@phantom/react-sdk";
+import { PhantomProvider, useConnect, useSolana, useEthereum, AddressType } from "@phantom/react-sdk";
 
-// App wrapper
+// App wrapper with provider selection
 <PhantomProvider
   config={{
-    providerType: "embedded",
-    embeddedWalletType: "app-wallet",
-    addressTypes: [AddressType.solana],
-    apiBaseUrl: "https://api.phantom.app/v1/wallets",
-    organizationId: "your-org-id",
+    providerType: "injected", // or "embedded"
+    addressTypes: [AddressType.solana, AddressType.ethereum],
+    // For embedded wallets:
+    // embeddedWalletType: "app-wallet",
+    // apiBaseUrl: "https://api.phantom.app/v1/wallets",
+    // organizationId: "your-org-id",
   }}
 >
   <App />
 </PhantomProvider>;
 
-// Component - works with native transaction objects!
-function SendTransaction() {
+// Component with chain-specific operations
+function WalletComponent() {
   const { connect } = useConnect();
-  const { signAndSendTransaction } = useSignAndSendTransaction();
+  const solana = useSolana();
+  const ethereum = useEthereum();
 
-  const handleSend = async () => {
-    await connect();
-    const transaction = new Transaction().add(/* your instructions */);
-    await signAndSendTransaction({
-      networkId: NetworkId.SOLANA_MAINNET,
-      transaction, // Native Solana Transaction object!
-    });
+  const handleConnect = async () => {
+    const { addresses } = await connect();
+    console.log("Connected addresses:", addresses);
+  };
+
+  const signMessages = async () => {
+    const solanaSignature = await solana.signMessage("Hello Solana!");
+    const accounts = await ethereum.getAccounts();
+    const ethSignature = await ethereum.signPersonalMessage("Hello Ethereum!", accounts[0]);
   };
 }
 ```
 
 ### Browser SDK - **For Vanilla JS/TS**
 
-**[@phantom/browser-sdk](./packages/browser-sdk/README.md)** - Core browser SDK with unified interface for Phantom extension and embedded wallets.
+**[@phantom/browser-sdk](./packages/browser-sdk/README.md)** - Core browser SDK with dual provider support and chain-specific APIs.
 
 ```typescript
-import { BrowserSDK, NetworkId, AddressType } from "@phantom/browser-sdk";
+import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 
+// Injected Provider (Browser Extension)
 const sdk = new BrowserSDK({
-  providerType: "embedded", // or 'injected' for browser extension
-  embeddedWalletType: "app-wallet",
-  addressTypes: [AddressType.solana],
-  apiBaseUrl: "https://api.phantom.app/v1/wallets",
-  organizationId: "your-org-id",
+  providerType: "injected",
+  addressTypes: [AddressType.solana, AddressType.ethereum],
 });
 
-await sdk.connect();
-await sdk.signAndSendTransaction({
-  networkId: NetworkId.SOLANA_MAINNET,
-  transaction: solanaTransaction, // Native transaction objects
+// Embedded Provider (Non-Custodial)
+// const sdk = new BrowserSDK({
+//   providerType: "embedded",
+//   embeddedWalletType: "app-wallet",
+//   addressTypes: [AddressType.solana, AddressType.ethereum],
+//   apiBaseUrl: "https://api.phantom.app/v1/wallets",
+//   organizationId: "your-org-id",
+// });
+
+// Connect through SDK
+const { addresses } = await sdk.connect();
+
+// Chain-specific operations
+const solanaSignature = await sdk.solana.signMessage("Hello Solana!");
+const ethResult = await sdk.ethereum.sendTransaction({
+  to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
+  value: "1000000000000000000",
+  gas: "21000",
 });
 ```
 
@@ -156,16 +187,16 @@ await sdk.signAndSendTransaction({
 
 ### React UI - **Complete UI Solution**
 
-**[@phantom/react-ui](./packages/react-ui/README.md)** - Pre-built React UI components with automatic modal injection.
+**[@phantom/react-ui](./packages/react-ui/README.md)** - Pre-built React UI components with automatic modal injection and chain-specific operations.
 
 ```tsx
-import { PhantomUIProvider, useSignAndSendTransaction } from "@phantom/react-ui";
+import { PhantomUIProvider, useConnect, useSolana, useEthereum, AddressType } from "@phantom/react-ui";
 
 // App wrapper - includes react-sdk + UI theme
 <PhantomUIProvider
   config={{
-    providerType: "embedded",
-    addressTypes: [AddressType.solana],
+    providerType: "embedded", // or "injected"
+    addressTypes: [AddressType.solana, AddressType.ethereum],
     apiBaseUrl: "https://api.phantom.app/v1/wallets",
     organizationId: "your-org-id",
   }}
@@ -175,15 +206,18 @@ import { PhantomUIProvider, useSignAndSendTransaction } from "@phantom/react-ui"
 </PhantomUIProvider>;
 
 // Component - UI appears automatically
-function SendTransaction() {
-  const { signAndSendTransaction } = useSignAndSendTransaction();
+function WalletOperations() {
+  const { connect } = useConnect();
+  const solana = useSolana();
+  const ethereum = useEthereum();
 
-  const send = async () => {
-    // Connection/transaction modals appear automatically
-    await signAndSendTransaction({
-      networkId: NetworkId.SOLANA_MAINNET,
-      transaction: solanaTransaction,
-    });
+  const handleOperations = async () => {
+    // Connection modals appear automatically
+    await connect();
+    
+    // Chain-specific operations with UI
+    await solana.signAndSendTransaction(solanaTransaction);
+    await ethereum.sendTransaction(ethTransaction);
   };
 }
 ```
