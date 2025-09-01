@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-var-requires */
-import { parseTransaction } from "./index";
+import { parseTransactionToBase64Url } from "./index";
 import { base64urlDecode } from "@phantom/base64url";
 
 // Load environment variables
@@ -78,7 +78,7 @@ describe("Parsers Integration Tests", () => {
         const versionedTransaction = new web3js.VersionedTransaction(messageV0);
 
         // Test parser
-        const result = await parseTransaction(versionedTransaction, "solana:mainnet");
+        const result = await parseTransactionToBase64Url(versionedTransaction, "solana:mainnet");
 
         expect(result).toBeDefined();
         expect(result.originalFormat).toBe("@solana/web3.js");
@@ -123,7 +123,7 @@ describe("Parsers Integration Tests", () => {
         );
 
         // Test parser
-        const result = await parseTransaction(legacyTransaction, "solana:mainnet");
+        const result = await parseTransactionToBase64Url(legacyTransaction, "solana:mainnet");
 
         expect(result).toBeDefined();
         expect(result.originalFormat).toBe("@solana/web3.js");
@@ -167,7 +167,7 @@ describe("Parsers Integration Tests", () => {
         const kitTransaction = solanaKit.compileTransaction(transactionMessage);
 
         // Test parser
-        const result = await parseTransaction(kitTransaction, "solana:mainnet");
+        const result = await parseTransactionToBase64Url(kitTransaction, "solana:mainnet");
 
         expect(result).toBeDefined();
         expect(result.originalFormat).toBe("@solana/kit");
@@ -216,7 +216,7 @@ describe("Parsers Integration Tests", () => {
           }).compileToV0Message();
 
           const versionedTransaction = new web3js.VersionedTransaction(messageV0);
-          const versionedResult = await parseTransaction(versionedTransaction, "solana:mainnet");
+          const versionedResult = await parseTransactionToBase64Url(versionedTransaction, "solana:mainnet");
           results.push({ type: "VersionedTransaction", result: versionedResult });
         }
 
@@ -233,7 +233,7 @@ describe("Parsers Integration Tests", () => {
             }),
           );
 
-          const legacyResult = await parseTransaction(legacyTransaction, "solana:mainnet");
+          const legacyResult = await parseTransactionToBase64Url(legacyTransaction, "solana:mainnet");
           results.push({ type: "Legacy Transaction", result: legacyResult });
         }
 
@@ -249,7 +249,7 @@ describe("Parsers Integration Tests", () => {
           );
 
           const kitTransaction = solanaKit.compileTransaction(transactionMessage);
-          const kitResult = await parseTransaction(kitTransaction, "solana:mainnet");
+          const kitResult = await parseTransactionToBase64Url(kitTransaction, "solana:mainnet");
           results.push({ type: "@solana/kit Transaction", result: kitResult });
         }
 
@@ -321,7 +321,7 @@ describe("Parsers Integration Tests", () => {
         );
 
         // This should work even if network failed
-        const result = await parseTransaction(mockTransaction, "solana:mainnet");
+        const result = await parseTransactionToBase64Url(mockTransaction, "solana:mainnet");
         expect(result).toBeDefined();
         expect(result.originalFormat).toBe("@solana/web3.js");
 

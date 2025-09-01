@@ -1,5 +1,17 @@
 # @phantom/sdk-types
 
+## 1.0.0-beta.0
+
+### Major Changes
+
+- New SDKs chain specific interface, prepare for initial beta release
+
+## 0.1.5
+
+### Patch Changes
+
+- ef68eaf: Key rotation
+
 ## 0.1.4
 
 ### Patch Changes

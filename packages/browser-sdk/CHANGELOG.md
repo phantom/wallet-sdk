@@ -1,5 +1,46 @@
 # @phantom/browser-sdk
 
+## 1.0.0-beta.0
+
+### Major Changes
+
+- New SDKs chain specific interface, prepare for initial beta release
+
+### Patch Changes
+
+- ef68eaf: Key rotation
+- Updated dependencies [ef68eaf]
+- Updated dependencies
+  - @phantom/embedded-provider-core@1.0.0-beta.0
+  - @phantom/indexed-db-stamper@1.0.0-beta.0
+  - @phantom/client@1.0.0-beta.0
+  - @phantom/browser-injected-sdk@1.0.0-beta.0
+  - @phantom/constants@1.0.0-beta.0
+  - @phantom/parsers@1.0.0-beta.0
+  - @phantom/chains@1.0.0-beta.0
+  - @phantom/base64url@1.0.0-beta.0
+
+## 0.3.9
+
+### Patch Changes
+
+- b20bc21: Support derivation index
+- Updated dependencies [b20bc21]
+  - @phantom/embedded-provider-core@0.1.10
+  - @phantom/client@0.1.11
+
+## 0.3.8
+
+### Patch Changes
+
+- 9305f27: Remove solana kit dep
+- Updated dependencies [ef68eaf]
+- Updated dependencies [9305f27]
+  - @phantom/embedded-provider-core@0.1.9
+  - @phantom/indexed-db-stamper@0.1.5
+  - @phantom/client@0.1.10
+  - @phantom/browser-injected-sdk@0.0.10
+
 ## 0.3.7
 
 ### Patch Changes

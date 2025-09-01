@@ -1,5 +1,11 @@
 # @phantom/base64url
 
+## 1.0.0-beta.0
+
+### Major Changes
+
+- New SDKs chain specific interface, prepare for initial beta release
+
 ## 0.1.0
 
 ### Minor Changes

@@ -2,7 +2,7 @@ import { BrowserSDK } from "./BrowserSDK";
 import { InjectedProvider } from "./providers/injected";
 import { EmbeddedProvider } from "./providers/embedded";
 import { cleanupWindowMock } from "./test-utils/mockWindow";
-import { AddressType, NetworkId } from "@phantom/client";
+import { AddressType } from "@phantom/client";
 
 // Mock the providers
 jest.mock("./providers/injected");
@@ -147,10 +147,16 @@ describe("BrowserSDK", () => {
       mockProvider = {
         connect: jest.fn(),
         disconnect: jest.fn(),
-        signMessage: jest.fn(),
-        signAndSendTransaction: jest.fn(),
         getAddresses: jest.fn(),
         isConnected: jest.fn(),
+        solana: {
+          signMessage: jest.fn(),
+          signAndSendTransaction: jest.fn(),
+        },
+        ethereum: {
+          signPersonalMessage: jest.fn(),
+          sendTransaction: jest.fn(),
+        },
       };
 
       MockInjectedProvider.mockImplementation(() => mockProvider);
@@ -193,38 +199,37 @@ describe("BrowserSDK", () => {
     });
 
     describe("signMessage", () => {
-      it("should call provider signMessage", async () => {
-        const mockSignature = "mockSignature";
-        mockProvider.signMessage.mockResolvedValue(mockSignature);
+      it("should call Solana chain signMessage", async () => {
+        const mockSignature = { signature: "mockSignature", rawSignature: "mockRaw" };
+        mockProvider.solana.signMessage.mockResolvedValue(mockSignature);
 
-        const result = await sdk.signMessage({
-          message: "test-message",
-          networkId: NetworkId.SOLANA_MAINNET,
-        });
+        const result = await sdk.solana.signMessage("test-message");
 
-        expect(mockProvider.signMessage).toHaveBeenCalledWith({
-          message: "test-message",
-          networkId: NetworkId.SOLANA_MAINNET,
-        });
+        expect(mockProvider.solana.signMessage).toHaveBeenCalledWith("test-message");
         expect(result).toBe(mockSignature);
       });
     });
 
     describe("signAndSendTransaction", () => {
-      it("should call provider signAndSendTransaction", async () => {
-        const mockResult = { rawTransaction: "mockTxHash" };
-        mockProvider.signAndSendTransaction.mockResolvedValue(mockResult);
+      it("should call Solana chain signAndSendTransaction", async () => {
+        const mockResult = { rawTransaction: "mockTxHash", hash: "mockHash" };
+        mockProvider.solana.signAndSendTransaction.mockResolvedValue(mockResult);
+
+        const mockTransaction = { instructions: [] };
+        const result = await sdk.solana.signAndSendTransaction(mockTransaction);
+
+        expect(mockProvider.solana.signAndSendTransaction).toHaveBeenCalledWith(mockTransaction);
+        expect(result).toEqual(mockResult);
+      });
+
+      it("should call Ethereum chain sendTransaction", async () => {
+        const mockResult = { rawTransaction: "mockTxHash", hash: "0xmockHash" };
+        mockProvider.ethereum.sendTransaction.mockResolvedValue(mockResult);
 
         const mockTransaction = { to: "0x123", value: "1000000000000000000" };
-        const result = await sdk.signAndSendTransaction({
-          transaction: mockTransaction,
-          networkId: NetworkId.ETHEREUM_MAINNET,
-        });
+        const result = await sdk.ethereum.sendTransaction(mockTransaction);
 
-        expect(mockProvider.signAndSendTransaction).toHaveBeenCalledWith({
-          transaction: mockTransaction,
-          networkId: NetworkId.ETHEREUM_MAINNET,
-        });
+        expect(mockProvider.ethereum.sendTransaction).toHaveBeenCalledWith(mockTransaction);
         expect(result).toEqual(mockResult);
       });
     });
@@ -265,10 +270,16 @@ describe("BrowserSDK", () => {
       mockProvider = {
         connect: jest.fn(),
         disconnect: jest.fn(),
-        signMessage: jest.fn(),
-        signAndSendTransaction: jest.fn(),
         getAddresses: jest.fn(),
         isConnected: jest.fn(),
+        solana: {
+          signMessage: jest.fn(),
+          signAndSendTransaction: jest.fn(),
+        },
+        ethereum: {
+          signPersonalMessage: jest.fn(),
+          sendTransaction: jest.fn(),
+        },
       };
 
       MockEmbeddedProvider.mockImplementation(() => mockProvider);
@@ -323,7 +334,7 @@ describe("BrowserSDK", () => {
     });
 
     describe("signMessage", () => {
-      it("should call provider signMessage with walletId", async () => {
+      it("should call Solana chain signMessage with walletId", async () => {
         // First connect to set walletId
         mockProvider.connect.mockResolvedValue({
           walletId: "wallet-123",
@@ -331,24 +342,18 @@ describe("BrowserSDK", () => {
         });
         await sdk.connect();
 
-        const mockSignature = "mockSignature";
-        mockProvider.signMessage.mockResolvedValue(mockSignature);
+        const mockSignature = { signature: "mockSignature", rawSignature: "mockRaw" };
+        mockProvider.solana.signMessage.mockResolvedValue(mockSignature);
 
-        const result = await sdk.signMessage({
-          message: "test-message",
-          networkId: NetworkId.SOLANA_MAINNET,
-        });
+        const result = await sdk.solana.signMessage("test-message");
 
-        expect(mockProvider.signMessage).toHaveBeenCalledWith({
-          message: "test-message",
-          networkId: NetworkId.SOLANA_MAINNET,
-        });
+        expect(mockProvider.solana.signMessage).toHaveBeenCalledWith("test-message");
         expect(result).toBe(mockSignature);
       });
     });
 
     describe("signAndSendTransaction", () => {
-      it("should call provider signAndSendTransaction with walletId", async () => {
+      it("should call Ethereum chain sendTransaction with walletId", async () => {
         // First connect to set walletId
         mockProvider.connect.mockResolvedValue({
           walletId: "wallet-123",
@@ -356,19 +361,13 @@ describe("BrowserSDK", () => {
         });
         await sdk.connect();
 
-        const mockResult = { rawTransaction: "mockTxHash" };
-        mockProvider.signAndSendTransaction.mockResolvedValue(mockResult);
+        const mockResult = { rawTransaction: "mockTxHash", hash: "0xmockHash" };
+        mockProvider.ethereum.sendTransaction.mockResolvedValue(mockResult);
 
         const mockTransaction = { to: "0x123", value: "1000000000000000000" };
-        const result = await sdk.signAndSendTransaction({
-          transaction: mockTransaction,
-          networkId: NetworkId.ETHEREUM_MAINNET,
-        });
+        const result = await sdk.ethereum.sendTransaction(mockTransaction);
 
-        expect(mockProvider.signAndSendTransaction).toHaveBeenCalledWith({
-          transaction: mockTransaction,
-          networkId: NetworkId.ETHEREUM_MAINNET,
-        });
+        expect(mockProvider.ethereum.sendTransaction).toHaveBeenCalledWith(mockTransaction);
         expect(result).toEqual(mockResult);
       });
     });
@@ -381,10 +380,16 @@ describe("BrowserSDK", () => {
       mockProvider = {
         connect: jest.fn(),
         disconnect: jest.fn(),
-        signMessage: jest.fn(),
-        signAndSendTransaction: jest.fn(),
         getAddresses: jest.fn(),
         isConnected: jest.fn(),
+        solana: {
+          signMessage: jest.fn(),
+          signAndSendTransaction: jest.fn(),
+        },
+        ethereum: {
+          signPersonalMessage: jest.fn(),
+          sendTransaction: jest.fn(),
+        },
       };
 
       MockInjectedProvider.mockImplementation(() => mockProvider);
@@ -402,25 +407,15 @@ describe("BrowserSDK", () => {
     });
 
     it("should propagate signing errors", async () => {
-      mockProvider.signMessage.mockRejectedValue(new Error("Signing failed"));
+      mockProvider.solana.signMessage.mockRejectedValue(new Error("Signing failed"));
 
-      await expect(
-        sdk.signMessage({
-          message: "test",
-          networkId: NetworkId.SOLANA_MAINNET,
-        }),
-      ).rejects.toThrow("Signing failed");
+      await expect(sdk.solana.signMessage("test")).rejects.toThrow("Signing failed");
     });
 
     it("should propagate transaction errors", async () => {
-      mockProvider.signAndSendTransaction.mockRejectedValue(new Error("Transaction failed"));
+      mockProvider.solana.signAndSendTransaction.mockRejectedValue(new Error("Transaction failed"));
 
-      await expect(
-        sdk.signAndSendTransaction({
-          transaction: { to: "0x123" },
-          networkId: NetworkId.SOLANA_MAINNET,
-        }),
-      ).rejects.toThrow("Transaction failed");
+      await expect(sdk.solana.signAndSendTransaction({ instructions: [] })).rejects.toThrow("Transaction failed");
     });
   });
 });

@@ -1,4 +1,4 @@
-import type { Transaction } from "@solana/kit";
+import type { Transaction, VersionedTransaction } from "@solana/web3.js";
 import { getProvider } from "./getProvider";
 import type { SolanaStrategy } from "./strategies/types";
 import { signAllTransactions } from "./signAllTransactions";
@@ -7,8 +7,8 @@ jest.mock("./getProvider", () => ({
   getProvider: jest.fn(),
 }));
 
-const mockTransactionA = {} as Transaction;
-const mockTransactionB = {} as Transaction;
+const mockTransactionA = {} as VersionedTransaction;
+const mockTransactionB = {} as VersionedTransaction;
 
 describe("signAllTransactions", () => {
   let mockProvider: Partial<SolanaStrategy>;
@@ -50,7 +50,7 @@ describe("signAllTransactions", () => {
   });
 
   it("should handle an empty array of transactions", async () => {
-    const transactions: Transaction[] = [];
+    const transactions: (Transaction | VersionedTransaction)[] = [];
 
     (mockProvider.signAllTransactions as jest.Mock).mockResolvedValue(transactions);
     mockProvider.isConnected = true;
