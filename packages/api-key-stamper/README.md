@@ -47,6 +47,7 @@ import { ServerSDK } from "@phantom/server-sdk";
 
 const sdk = new ServerSDK({
   organizationId: "your-org-id",
+  appId: "your-app-id",
   apiBaseUrl: "https://api.phantom.app/v1/wallets",
   apiPrivateKey: "your-base58-encoded-secret-key",
 });

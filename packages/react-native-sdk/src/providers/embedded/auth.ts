@@ -22,6 +22,7 @@ export class ExpoAuthProvider implements AuthProvider {
       sessionId,
       provider,
       customAuthData,
+      appId,
       appName,
       appLogo,
     } = phantomOptions;
@@ -30,8 +31,8 @@ export class ExpoAuthProvider implements AuthProvider {
       throw new Error("redirectUrl is required for web browser authentication");
     }
 
-    if (!organizationId || !sessionId) {
-      throw new Error("organizationId and sessionId are required for authentication");
+    if (!organizationId || !sessionId || !appId) {
+      throw new Error("organizationId, sessionId and appId are required for authentication");
     }
 
     try {
@@ -41,6 +42,7 @@ export class ExpoAuthProvider implements AuthProvider {
       const params = new URLSearchParams({
         organization_id: organizationId,
         parent_organization_id: parentOrganizationId,
+        app_id: appId,
         redirect_uri: redirectUrl,
         session_id: sessionId,
         clear_previous_session: "true",

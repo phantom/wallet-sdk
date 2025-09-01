@@ -145,7 +145,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-
   // Debug toggle handler
   if (debugToggle) {
     debugToggle.onchange = () => {
@@ -194,7 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function createSDK(): BrowserSDK {
     const providerType = providerTypeSelect.value as "injected" | "embedded";
 
-    // Set debug config 
+    // Set debug config
     debug.enable();
     debug.setLevel(DebugLevel.DEBUG);
     debug.setCallback(handleDebugMessage);
@@ -213,6 +212,7 @@ document.addEventListener("DOMContentLoaded", () => {
         providerType: "embedded",
         apiBaseUrl: import.meta.env.VITE_WALLET_API || DEFAULT_WALLET_API_URL,
         organizationId: import.meta.env.VITE_ORGANIZATION_ID || "your-organization-id",
+        appId: import.meta.env.VITE_APP_ID || "your-app-id",
         embeddedWalletType: "user-wallet",
         authOptions: {
           authUrl: import.meta.env.VITE_AUTH_URL || DEFAULT_AUTH_URL,
@@ -223,11 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
         appLogo: "https://picsum.photos/200", // Optional app logo URL
       });
 
-
-
-
-
-      embeddedSdk.on("connect_start", (data) => {
+      embeddedSdk.on("connect_start", data => {
         console.log("Embedded SDK connect started:", data);
         // Could show loading state here
       });
@@ -239,7 +235,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updateButtonStates(true);
       });
 
-      embeddedSdk.on("connect_error", (data) => {
+      embeddedSdk.on("connect_error", data => {
         console.log("Embedded SDK connect error:", data);
         // Could show error state here
       });
@@ -258,7 +254,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Note: autoConnect is already enabled via config.autoConnect: true
       // No need to call embeddedSdk.autoConnect() manually
 
-      return embeddedSdk
+      return embeddedSdk;
     }
   }
 
@@ -579,7 +575,6 @@ document.addEventListener("DOMContentLoaded", () => {
     alert(`Transaction sent: ${result.signature}`);
   }
 
-
   // Test Web3.js button
   if (testWeb3jsBtn) {
     testWeb3jsBtn.onclick = async () => {
@@ -591,7 +586,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     };
   }
-
 
   // Test Ethereum button
   if (testEthereumBtn) {

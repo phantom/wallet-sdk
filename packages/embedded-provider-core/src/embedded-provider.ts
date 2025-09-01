@@ -34,11 +34,17 @@ import { generateSessionId } from "./utils/session";
 import { retryWithBackoff } from "./utils/retry";
 import type { StamperWithKeyManagement } from "@phantom/sdk-types";
 import { EmbeddedSolanaChain, EmbeddedEthereumChain } from "./chains";
-import type { ISolanaChain, IEthereumChain } from '@phantom/chains';
+import type { ISolanaChain, IEthereumChain } from "@phantom/chains";
 
-export type EmbeddedProviderEvent = 'connect' | 'connect_start' | 'connect_error' | 'disconnect' | 'error';
+export type EmbeddedProviderEvent = "connect" | "connect_start" | "connect_error" | "disconnect" | "error";
 export type EventCallback = (data?: any) => void;
 
+interface StamperResponse {
+  organizationId: string;
+  stamperInfo: StamperInfo;
+  expiresAtMs: number;
+  username: string;
+}
 export class EmbeddedProvider {
   private config: EmbeddedProviderConfig;
   private platform: PlatformAdapter;
@@ -51,7 +57,7 @@ export class EmbeddedProvider {
   private walletId: string | null = null;
   private addresses: WalletAddress[] = [];
   private jwtAuth: JWTAuth;
-  
+
   // Built-in chain instances
   public readonly solana: ISolanaChain;
   public readonly ethereum: IEthereumChain;
@@ -71,11 +77,11 @@ export class EmbeddedProvider {
 
     // Store solana provider config (unused for now)
     config.solanaProvider;
-    
+
     // Initialize chain instances
     this.solana = new EmbeddedSolanaChain(this);
     this.ethereum = new EmbeddedEthereumChain(this);
-    
+
     this.logger.info("EMBEDDED_PROVIDER", "EmbeddedProvider initialized");
 
     // Auto-connect is now handled manually via autoConnect() method to avoid race conditions
@@ -139,8 +145,7 @@ export class EmbeddedProvider {
     });
 
     // Filter by enabled address types and return formatted addresses
-    return addresses
-      .filter(addr => this.config.addressTypes.some(type => type === addr.addressType))
+    return addresses.filter(addr => this.config.addressTypes.some(type => type === addr.addressType));
   }
 
   /*
@@ -336,13 +341,13 @@ export class EmbeddedProvider {
   async autoConnect(): Promise<void> {
     try {
       this.logger.log("EMBEDDED_PROVIDER", "Starting auto-connect attempt");
-      
+
       // Emit connect_start event for auto-connect
       this.emit("connect_start", { source: "auto-connect" });
 
       // Try to use existing connection (redirect resume or completed session)
       const result = await this.tryExistingConnection();
-      
+
       if (result) {
         // Successfully connected using existing session or redirect
         this.logger.info("EMBEDDED_PROVIDER", "Auto-connect successful", {
@@ -360,18 +365,17 @@ export class EmbeddedProvider {
 
       // No existing connection available - auto-connect should fail silently
       this.logger.log("EMBEDDED_PROVIDER", "Auto-connect failed: no valid session found");
-      
+
       // Emit connect_error to reset isConnecting state
       this.emit("connect_error", {
         error: "No valid session found",
         source: "auto-connect",
       });
-      
     } catch (error) {
       this.logger.error("EMBEDDED_PROVIDER", "Auto-connect failed", {
         error: error instanceof Error ? error.message : String(error),
       });
-      
+
       // Emit connect_error to reset isConnecting state
       this.emit("connect_error", {
         error: error instanceof Error ? error.message : "Auto-connect failed",
@@ -384,7 +388,8 @@ export class EmbeddedProvider {
    * We use this method to initialize the stamper and create an organization for new sessions.
    * This is the first step when no existing session is found and we need to set up a new wallet.
    */
-  private async createOrganizationAndStamper(): Promise<{ organizationId: string; stamperInfo: StamperInfo; expiresAtMs: number; username: string }> {
+
+  private async createOrganizationAndStamper(): Promise<StamperResponse> {
     // Initialize stamper (generates keypair in IndexedDB)
     this.logger.log("EMBEDDED_PROVIDER", "Initializing stamper");
     const stamperInfo = await this.stamper.init();
@@ -451,11 +456,11 @@ export class EmbeddedProvider {
             }
           : undefined,
       });
-      
+
       // Emit connect_start event for manual connect
-      this.emit("connect_start", { 
+      this.emit("connect_start", {
         source: "manual-connect",
-        authOptions: authOptions ? { provider: authOptions.provider } : undefined
+        authOptions: authOptions ? { provider: authOptions.provider } : undefined,
       });
 
       // Try to use existing connection (redirect resume or completed session)
@@ -466,14 +471,14 @@ export class EmbeddedProvider {
           walletId: existingResult.walletId,
           addressCount: existingResult.addresses.length,
         });
-        
+
         // Emit connect event for manual connect success with existing connection
         this.emit("connect", {
           walletId: existingResult.walletId,
           addresses: existingResult.addresses,
           source: "manual-existing",
         });
-        
+
         return existingResult;
       }
 
@@ -578,7 +583,7 @@ export class EmbeddedProvider {
 
   async disconnect(): Promise<void> {
     const wasConnected = this.client !== null;
-    
+
     await this.storage.clearSession();
 
     this.client = null;
@@ -736,6 +741,7 @@ export class EmbeddedProvider {
         sessionId: generateSessionId(),
         walletId: walletId,
         organizationId: organizationId,
+        appId: this.config.appId,
         stamperInfo,
         authProvider: "app-wallet",
         userInfo: { embeddedWalletType: this.config.embeddedWalletType },
@@ -777,7 +783,8 @@ export class EmbeddedProvider {
 
     this.logger.log("EMBEDDED_PROVIDER", "Starting JWT authentication");
     const authResult = await this.jwtAuth.authenticate({
-      organizationId: organizationId,
+      organizationId,
+      appId: this.config.appId,
       parentOrganizationId: this.config.organizationId,
       jwtToken: authOptions.jwtToken,
       customAuthData: authOptions.customAuthData,
@@ -791,6 +798,7 @@ export class EmbeddedProvider {
       sessionId: generateSessionId(),
       walletId: walletId,
       organizationId: organizationId,
+      appId: this.config.appId,
       stamperInfo,
       authProvider: authResult.provider,
       userInfo: authResult.userInfo,
@@ -833,6 +841,7 @@ export class EmbeddedProvider {
       sessionId: sessionId,
       walletId: `temp-${now}`, // Temporary ID, will be updated after redirect
       organizationId: organizationId,
+      appId: this.config.appId,
       stamperInfo,
       authProvider: "phantom-connect",
       userInfo: { provider: authOptions?.provider },
@@ -857,6 +866,7 @@ export class EmbeddedProvider {
     this.logger.info("EMBEDDED_PROVIDER", "Starting Phantom Connect redirect", {
       organizationId,
       parentOrganizationId: this.config.organizationId,
+      appId: this.config.appId,
       provider: authOptions?.provider,
       authUrl: this.config.authOptions?.authUrl,
     });
@@ -864,6 +874,7 @@ export class EmbeddedProvider {
     // Start the authentication flow (this will redirect the user in the browser, or handle it in React Native)
     const authResult = await this.authProvider.authenticate({
       organizationId: organizationId,
+      appId: this.config.appId,
       parentOrganizationId: this.config.organizationId,
       provider: authOptions?.provider as "google" | "apple" | undefined,
       redirectUrl: this.config.authOptions?.redirectUrl,
@@ -927,7 +938,7 @@ export class EmbeddedProvider {
 
   /*
    * Ensures the authenticator is valid and performs renewal if needed.
-   * The renewal of the authenticator can only happen meanwhile the previous authenticator is still valid. 
+   * The renewal of the authenticator can only happen meanwhile the previous authenticator is still valid.
    */
   private async ensureValidAuthenticator(): Promise<void> {
     // Get current session to check authenticator timing
@@ -937,7 +948,7 @@ export class EmbeddedProvider {
     }
 
     const now = Date.now();
-    
+
     // Sessions without authenticator timing fields are invalid - clear them
     if (!session.authenticatorExpiresAt) {
       this.logger.warn("EMBEDDED_PROVIDER", "Session missing authenticator timing - treating as invalid session");
@@ -946,7 +957,7 @@ export class EmbeddedProvider {
     }
 
     const timeUntilExpiry = session.authenticatorExpiresAt - now;
-    
+
     this.logger.log("EMBEDDED_PROVIDER", "Checking authenticator expiration", {
       expiresAt: new Date(session.authenticatorExpiresAt).toISOString(),
       timeUntilExpiry,
@@ -979,7 +990,6 @@ export class EmbeddedProvider {
       }
     }
   }
-
 
   /*
    * We use this method to perform silent authenticator renewal.
@@ -1027,7 +1037,9 @@ export class EmbeddedProvider {
         });
         // Rollback the rotation on server error
         await this.stamper.rollbackRotation();
-        throw new Error(`Failed to create new authenticator: ${error instanceof Error ? error.message : String(error)}`);
+        throw new Error(
+          `Failed to create new authenticator: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
 
       this.logger.info("EMBEDDED_PROVIDER", "Created new authenticator", {
@@ -1035,7 +1047,7 @@ export class EmbeddedProvider {
       });
 
       // Step 4: Commit the rotation (switch stamper to use new keypair)
-      await this.stamper.commitRotation((authenticatorResult as any).id || 'unknown');
+      await this.stamper.commitRotation((authenticatorResult as any).id || "unknown");
 
       // Step 5: Update session with new authenticator timing
       const now = Date.now();
@@ -1065,6 +1077,7 @@ export class EmbeddedProvider {
     this.logger.log("EMBEDDED_PROVIDER", "Initializing PhantomClient from session", {
       organizationId: session.organizationId,
       walletId: session.walletId,
+      appId: session.appId,
     });
 
     // Ensure stamper is initialized with existing keys

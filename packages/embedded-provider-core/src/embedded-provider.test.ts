@@ -44,6 +44,7 @@ describe("EmbeddedProvider Core", () => {
     config = {
       apiBaseUrl: "https://api.example.com",
       organizationId: "test-org-id",
+      appId: "test-app-id",
       embeddedWalletType: "user-wallet",
       addressTypes: ["solana"],
       solanaProvider: "web3js",
@@ -147,6 +148,7 @@ describe("EmbeddedProvider Core", () => {
         status: "pending",
         walletId: "wallet-123",
         organizationId: "org-123",
+        appId: "app-123",
         stamperInfo: { keyId: "key-123", publicKey: "pub-key" },
         authProvider: "phantom-connect",
         userInfo: {},
@@ -239,6 +241,7 @@ describe("EmbeddedProvider Core", () => {
         sessionId: "test-session-id",
         walletId: "test-wallet-id",
         organizationId: "org-123",
+        appId: "app-123",
         stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "jwt",
         userInfo: {},
@@ -246,12 +249,12 @@ describe("EmbeddedProvider Core", () => {
         createdAt: Date.now(),
         lastUsed: Date.now(),
         authenticatorCreatedAt: Date.now(),
-        authenticatorExpiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
+        authenticatorExpiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
         lastRenewalAttempt: undefined,
         username: "test-user",
       };
       mockPlatform.storage.getSession.mockResolvedValue(mockSession);
-      
+
       provider["client"] = {
         signMessage: jest.fn().mockResolvedValue("signed-message"),
       } as any;
@@ -276,13 +279,14 @@ describe("EmbeddedProvider Core", () => {
         status: "completed" as const,
         walletId: "wallet-123",
         organizationId: "org-123",
+        appId: "app-123",
         stamperInfo: { keyId: "key-123", publicKey: "pub-key" },
         authProvider: "app-wallet",
         userInfo: {},
         createdAt: now,
         lastUsed: now,
         authenticatorCreatedAt: now,
-        authenticatorExpiresAt: now + (7 * 24 * 60 * 60 * 1000),
+        authenticatorExpiresAt: now + 7 * 24 * 60 * 60 * 1000,
         lastRenewalAttempt: undefined,
         username: "test-user",
       };
