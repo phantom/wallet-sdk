@@ -9,7 +9,7 @@ export const DerivationPath = {
   Solana: (accountIndex: number = 0) => `m/44'/501'/${accountIndex}'/0'`,
 
   // Ethereum - BIP44 standard for Ethereum and all EVM-compatible chains (coin type 60)
-  Ethereum: (accountIndex: number = 0) => `m/44'/60'/${accountIndex}'/0/0`,
+  Ethereum: (accountIndex: number = 0) => `m/44'/60'/0'/0/${accountIndex}`,
 
   // Bitcoin - BIP84 standard for Bitcoin (coin type 0)
   Bitcoin: (accountIndex: number = 0) => `m/84'/0'/${accountIndex}'/0`,

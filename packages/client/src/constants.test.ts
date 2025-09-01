@@ -14,9 +14,9 @@ describe('DerivationPath', () => {
   test('Ethereum derivation paths with different account indices', () => {
     expect(DerivationPath.Ethereum()).toBe("m/44'/60'/0'/0/0");
     expect(DerivationPath.Ethereum(0)).toBe("m/44'/60'/0'/0/0");
-    expect(DerivationPath.Ethereum(1)).toBe("m/44'/60'/1'/0/0");
-    expect(DerivationPath.Ethereum(3)).toBe("m/44'/60'/3'/0/0");
-    expect(DerivationPath.Ethereum(42)).toBe("m/44'/60'/42'/0/0");
+    expect(DerivationPath.Ethereum(1)).toBe("m/44'/60'/0'/0/1");
+    expect(DerivationPath.Ethereum(3)).toBe("m/44'/60'/0'/0/3");
+    expect(DerivationPath.Ethereum(42)).toBe("m/44'/60'/0'/0/42");
   });
 
   test('Bitcoin derivation paths with different account indices', () => {
@@ -45,8 +45,8 @@ describe('getDerivationPathForNetwork', () => {
   test('returns correct Ethereum paths', () => {
     expect(getDerivationPathForNetwork('eip155:1')).toBe("m/44'/60'/0'/0/0");
     expect(getDerivationPathForNetwork('eip155:1', 0)).toBe("m/44'/60'/0'/0/0");
-    expect(getDerivationPathForNetwork('eip155:1', 2)).toBe("m/44'/60'/2'/0/0");
-    expect(getDerivationPathForNetwork('ethereum:mainnet', 1)).toBe("m/44'/60'/1'/0/0");
+    expect(getDerivationPathForNetwork('eip155:1', 2)).toBe("m/44'/60'/0'/0/2");
+    expect(getDerivationPathForNetwork('ethereum:mainnet', 1)).toBe("m/44'/60'/0'/0/1");
   });
 
   test('returns correct Sui paths', () => {
@@ -62,7 +62,7 @@ describe('getDerivationPathForNetwork', () => {
 
   test('defaults to Ethereum for unknown networks', () => {
     expect(getDerivationPathForNetwork('unknown:network')).toBe("m/44'/60'/0'/0/0");
-    expect(getDerivationPathForNetwork('unknown:network', 5)).toBe("m/44'/60'/5'/0/0");
+    expect(getDerivationPathForNetwork('unknown:network', 5)).toBe("m/44'/60'/0'/0/5");
   });
 });
 
@@ -100,7 +100,7 @@ describe('getNetworkConfig', () => {
   test('returns correct Ethereum network config with custom account index', () => {
     const config = getNetworkConfig(NetworkId.ETHEREUM_MAINNET, 3);
     expect(config).toEqual({
-      derivationPath: "m/44'/60'/3'/0/0",
+      derivationPath: "m/44'/60'/0'/0/3",
       curve: DerivationInfoCurveEnum.secp256k1,
       algorithm: Algorithm.secp256k1,
       addressFormat: DerivationInfoAddressFormatEnum.ethereum,
