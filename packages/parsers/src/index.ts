@@ -1,5 +1,6 @@
 import type { NetworkId } from "@phantom/constants";
 import { base64urlEncode, stringToBase64url } from "@phantom/base64url";
+import { getTransactionEncoder, type Transaction } from "@solana/transactions";
 import { Buffer } from "buffer";
 import {
   parseSignMessageResponse as _parseSignMessageResponse,
@@ -33,23 +34,23 @@ export function parseMessage(message: string): ParsedMessage {
 /**
  * Parse a transaction to base64url format based on network type
  */
-export async function parseTransaction(transaction: any, networkId: NetworkId): Promise<ParsedTransaction> {
+export async function parseTransactionToBase64Url(transaction: any, networkId: NetworkId): Promise<ParsedTransaction> {
   const networkPrefix = networkId.split(":")[0].toLowerCase();
 
   switch (networkPrefix) {
     case "solana":
-      return parseSolanaTransaction(transaction);
+      return parseSolanaTransactionToBase64Url(transaction);
     case "ethereum":
     case "eip155": // Standard Ethereum chain identifier
     case "polygon":
     case "optimism":
     case "arbitrum":
     case "base":
-      return parseEVMTransaction(transaction);
+      return parseEVMTransactionToBase64Url(transaction);
     case "sui":
-      return await parseSuiTransaction(transaction);
+      return await parseSuiTransactionToBase64Url(transaction);
     case "bitcoin":
-      return parseBitcoinTransaction(transaction);
+      return parseBitcoinTransactionToBase64Url(transaction);
     default:
       throw new Error(`Unsupported network: ${networkPrefix}`);
   }
@@ -59,7 +60,7 @@ export async function parseTransaction(transaction: any, networkId: NetworkId): 
  * Parse Solana transaction to base64url
  * Supports both @solana/web3.js and @solana/kit formats
  */
-function parseSolanaTransaction(transaction: any): ParsedTransaction {
+function parseSolanaTransactionToBase64Url(transaction: any): ParsedTransaction {
   // Check if it's a @solana/kit Transaction (has messageBytes)
   if (transaction?.messageBytes != null) {
     // @solana/kit Transaction
@@ -110,7 +111,7 @@ function parseSolanaTransaction(transaction: any): ParsedTransaction {
  * Parse EVM transaction to base64url
  * Supports Ethereum, Polygon, and other EVM-compatible chains
  */
-function parseEVMTransaction(transaction: any): ParsedTransaction {
+function parseEVMTransactionToBase64Url(transaction: any): ParsedTransaction {
   // Check if it's a Viem transaction object
   if (transaction && typeof transaction === "object" && (transaction.to || transaction.data)) {
     // Serialize with BigInt support
@@ -158,7 +159,7 @@ function parseEVMTransaction(transaction: any): ParsedTransaction {
 /**
  * Parse Sui transaction to base64url
  */
-async function parseSuiTransaction(transaction: any): Promise<ParsedTransaction> {
+async function parseSuiTransactionToBase64Url(transaction: any): Promise<ParsedTransaction> {
   // Check if it's a Sui transaction object with serialize method
   if (transaction?.serialize && typeof transaction.serialize === "function") {
     const serialized = transaction.serialize();
@@ -194,7 +195,7 @@ async function parseSuiTransaction(transaction: any): Promise<ParsedTransaction>
 /**
  * Parse Bitcoin transaction to base64url
  */
-function parseBitcoinTransaction(transaction: any): ParsedTransaction {
+function parseBitcoinTransactionToBase64Url(transaction: any): ParsedTransaction {
   // Check if it's a bitcoinjs-lib transaction
   if (transaction?.toBuffer && typeof transaction.toBuffer === "function") {
     const buffer = transaction.toBuffer();
@@ -222,4 +223,20 @@ function parseBitcoinTransaction(transaction: any): ParsedTransaction {
   }
 
   throw new Error("Unsupported Bitcoin transaction format");
+}
+
+
+export function parseSolanaKitTransactionToSolanaWeb3js(transaction: Transaction) {
+  // Encode the Kit transaction into its canonical wire format (Uint8Array).
+  const serialized = getTransactionEncoder().encode(transaction);
+
+  const fakeVersioned = {
+    serialize() {
+      // `serialize` should return a *new* `Uint8Array` each call to avoid
+      // consumers mutating the internal representation.
+      return new Uint8Array(serialized);
+    },
+  } as unknown as any;
+
+  return fakeVersioned;
 }

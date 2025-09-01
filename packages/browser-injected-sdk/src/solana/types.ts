@@ -1,19 +1,7 @@
-export type Transaction = {
-  message: Uint8Array;
-  recentBlockhash: string;
-  feePayer: string;
-  instructions: any[];
-  signers: string[];
-  version: number;
-};
+import type { Transaction, VersionedTransaction } from "@solana/web3.js";
 
-export type VersionedTransaction = {
-  signatures: Uint8Array[];
-  message: {
-    deserialize: (serializedTransaction: Uint8Array) => VersionedTransaction;
-    serialize: (transaction: VersionedTransaction) => Uint8Array;
-  };
-};
+// Re-export native @solana/web3.js types
+export type { Transaction, VersionedTransaction };
 
 export type SendOptions = {
   skipPreflight?: boolean;
@@ -60,13 +48,13 @@ export interface PhantomSolanaProvider {
     signInData: SolanaSignInData, // This will now use the simple type alias
   ) => Promise<{ address: PublicKey; signature: Uint8Array; signedMessage: Uint8Array }>;
   signAndSendTransaction: (
-    transaction: Transaction | VersionedTransaction,
+    transaction: any,
     options?: SendOptions,
   ) => Promise<{ signature: string; publicKey?: string }>;
   signAllTransactions: (
-    transactions: (Transaction | VersionedTransaction)[],
-  ) => Promise<(Transaction | VersionedTransaction)[]>;
-  signTransaction: (transaction: Transaction | VersionedTransaction) => Promise<Transaction | VersionedTransaction>;
+    transactions: any[],
+  ) => Promise<any[]>;
+  signTransaction: (transaction: any) => Promise<any>;
   on: (event: "connect" | "disconnect" | "accountChanged", handler: (publicKey?: PublicKey) => void) => void;
   off: (event: "connect" | "disconnect" | "accountChanged", handler: (publicKey?: PublicKey) => void) => void;
 }
