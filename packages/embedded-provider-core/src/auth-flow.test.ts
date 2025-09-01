@@ -219,6 +219,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         walletId: "wallet-123",
         provider: "google",
         userInfo: { email: "test@example.com" },
+        accountDerivationIndex: 1,
       };
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
 
@@ -237,6 +238,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         walletId: "wallet-123",
         provider: "google",
         userInfo: { email: "test@example.com" },
+        accountDerivationIndex: 2,
       };
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
 
@@ -260,6 +262,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         walletId: "wallet-123",
         provider: "google",
         userInfo: { email: "test@example.com" },
+        accountDerivationIndex: 3,
       };
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
 
@@ -275,7 +278,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         }),
         expect.any(Object),
       );
-      expect(mockClient.getWalletAddresses).toHaveBeenCalledWith("wallet-123");
+      expect(mockClient.getWalletAddresses).toHaveBeenCalledWith("wallet-123", undefined, 3);
     });
   });
 
@@ -363,6 +366,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         walletId: "wallet-123",
         provider: "google",
         userInfo: { email: "test@example.com" },
+        accountDerivationIndex: 4,
       };
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
       mockStorage.getSession.mockResolvedValue(null);
@@ -375,6 +379,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         walletId: "wallet-123",
         provider: "google",
         userInfo: { email: "test@example.com" },
+        accountDerivationIndex: 5,
       };
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
       mockStorage.getSession.mockResolvedValue(null);
@@ -387,6 +392,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         walletId: "wallet-123",
         provider: "google",
         userInfo: { email: "test@example.com" },
+        accountDerivationIndex: 6,
       };
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
       mockStorage.getSession.mockResolvedValue(null);
@@ -499,7 +505,7 @@ describe("EmbeddedProvider Auth Flows", () => {
 
       const result = await provider.connect();
 
-      expect(mockClient.getWalletAddresses).toHaveBeenCalledWith("app-wallet-123");
+      expect(mockClient.getWalletAddresses).toHaveBeenCalledWith("app-wallet-123", undefined, 0);
       expect(result.addresses).toHaveLength(1);
     });
   });
@@ -895,7 +901,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       await provider.autoConnect();
 
       expect(provider.isConnected()).toBe(true);
-      expect(mockClient.getWalletAddresses).toHaveBeenCalledWith("wallet-123");
+      expect(mockClient.getWalletAddresses).toHaveBeenCalledWith("wallet-123", undefined, 0);
     });
 
     it("should resume from redirect during autoConnect", async () => {
@@ -903,6 +909,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         walletId: "wallet-from-redirect-123",
         provider: "google",
         userInfo: { email: "test@example.com" },
+        accountDerivationIndex: 7,
       };
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
 
@@ -1095,7 +1102,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       await provider.autoConnect();
 
       expect(provider.isConnected()).toBe(true);
-      expect(mockClient.getWalletAddresses).toHaveBeenCalledWith("app-wallet-123");
+      expect(mockClient.getWalletAddresses).toHaveBeenCalledWith("app-wallet-123", undefined, 0);
     });
   });
 
@@ -1129,6 +1136,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         walletId: "wallet-123",
         message: expect.any(String),
         networkId: NetworkId.SOLANA_MAINNET,
+        derivationIndex: 0,
       });
       expect(result.signature).toBeDefined();
       expect(typeof result.blockExplorer === "string" || result.blockExplorer === undefined).toBe(true);
@@ -1160,6 +1168,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         walletId: "wallet-123",
         transaction: expect.any(String),
         networkId: NetworkId.SOLANA_MAINNET,
+        derivationIndex: 0,
       });
       expect(result.hash).toBeDefined();
       expect(typeof result.blockExplorer === "string" || result.blockExplorer === undefined).toBe(true);

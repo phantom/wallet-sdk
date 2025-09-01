@@ -109,7 +109,7 @@ export class PhantomClient {
       const walletRequest: any = {
         organizationId: this.config.organizationId,
         walletName: walletName || `Wallet ${Date.now()}`,
-        accounts: [DerivationPath.Solana, DerivationPath.Ethereum, DerivationPath.Bitcoin, DerivationPath.Sui] as any,
+        accounts: [DerivationPath.Solana(), DerivationPath.Ethereum(), DerivationPath.Bitcoin(), DerivationPath.Sui()] as any,
       };
 
       // Creating wallet with request
@@ -128,7 +128,7 @@ export class PhantomClient {
       const requestAccounts: GetAccounts = {
         method: GetAccountsMethodEnum.getAccounts,
         params: {
-          accounts: [DerivationPath.Solana, DerivationPath.Ethereum, DerivationPath.Bitcoin, DerivationPath.Sui],
+          accounts: [DerivationPath.Solana(), DerivationPath.Ethereum(), DerivationPath.Bitcoin(), DerivationPath.Sui()],
           organizationId: this.config.organizationId,
           walletId: walletResult.walletId,
         },
@@ -161,6 +161,7 @@ export class PhantomClient {
     const walletId = params.walletId;
     const transactionParam = params.transaction;
     const networkIdParam = params.networkId;
+    const derivationIndex = params.derivationIndex ?? 0;
 
     try {
       if (!this.config.organizationId) {
@@ -178,8 +179,8 @@ export class PhantomClient {
         );
       }
 
-      // Get network configuration
-      const networkConfig = getNetworkConfig(networkIdParam);
+      // Get network configuration with custom derivation index
+      const networkConfig = getNetworkConfig(networkIdParam, derivationIndex);
 
       if (!networkConfig) {
         throw new Error(`Unsupported network ID: ${networkIdParam}`);
@@ -227,13 +228,15 @@ export class PhantomClient {
   async getWalletAddresses(
     walletId: string,
     derivationPaths?: string[],
+    derivationIndex?: number,
   ): Promise<{ addressType: DerivationInfoAddressFormatEnum; address: string }[]> {
     try {
+      const accountIndex = derivationIndex ?? 0;
       const paths = derivationPaths || [
-        DerivationPath.Solana,
-        DerivationPath.Ethereum,
-        DerivationPath.Bitcoin,
-        DerivationPath.Sui,
+        DerivationPath.Solana(accountIndex),
+        DerivationPath.Ethereum(accountIndex),
+        DerivationPath.Bitcoin(accountIndex),
+        DerivationPath.Sui(accountIndex),
       ];
 
       const requestAccounts: GetAccounts = {
@@ -266,13 +269,14 @@ export class PhantomClient {
     const walletId = params.walletId;
     const messageParam = params.message;
     const networkIdParam = params.networkId;
+    const derivationIndex = params.derivationIndex ?? 0;
 
     try {
       if (!this.config.organizationId) {
         throw new Error("organizationId is required to sign a message");
       }
-      // Get network configuration
-      const networkConfig = getNetworkConfig(networkIdParam);
+      // Get network configuration with custom derivation index
+      const networkConfig = getNetworkConfig(networkIdParam, derivationIndex);
 
       if (!networkConfig) {
         throw new Error(`Unsupported network ID: ${networkIdParam}`);
