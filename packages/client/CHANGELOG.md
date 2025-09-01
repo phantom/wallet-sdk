@@ -1,5 +1,11 @@
 # @phantom/client
 
+## 0.1.11
+
+### Patch Changes
+
+- b20bc21: Support derivation index
+
 ## 0.1.10
 
 ### Patch Changes

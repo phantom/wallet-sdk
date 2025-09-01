@@ -1,5 +1,13 @@
 # @phantom/react-sdk
 
+## 0.3.9
+
+### Patch Changes
+
+- b20bc21: Support derivation index
+- Updated dependencies [b20bc21]
+  - @phantom/browser-sdk@0.3.9
+
 ## 0.3.8
 
 ### Patch Changes

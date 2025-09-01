@@ -1,5 +1,13 @@
 # @phantom/server-sdk
 
+## 0.2.5
+
+### Patch Changes
+
+- b20bc21: Support derivation index
+- Updated dependencies [b20bc21]
+  - @phantom/client@0.1.11
+
 ## 0.2.4
 
 ### Patch Changes

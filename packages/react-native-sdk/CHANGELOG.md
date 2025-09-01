@@ -1,5 +1,14 @@
 # @phantom/react-native-sdk
 
+## 0.1.8
+
+### Patch Changes
+
+- b20bc21: Support derivation index
+- Updated dependencies [b20bc21]
+  - @phantom/embedded-provider-core@0.1.10
+  - @phantom/client@0.1.11
+
 ## 0.1.7
 
 ### Patch Changes
