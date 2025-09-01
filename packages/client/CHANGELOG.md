@@ -1,5 +1,88 @@
 # @phantom/client
 
+## 1.0.0-beta.0
+
+### Major Changes
+
+- New SDKs chain specific interface, prepare for initial beta release
+
+### Patch Changes
+
+- ef68eaf: Key rotation
+- Updated dependencies [ef68eaf]
+- Updated dependencies
+  - @phantom/sdk-types@1.0.0-beta.0
+  - @phantom/constants@1.0.0-beta.0
+  - @phantom/api-key-stamper@1.0.0-beta.0
+  - @phantom/base64url@1.0.0-beta.0
+  - @phantom/crypto@1.0.0-beta.0
+
+## 0.1.11
+
+### Patch Changes
+
+- b20bc21: Support derivation index
+
+## 0.1.10
+
+### Patch Changes
+
+- Updated dependencies
+  - @phantom/sdk-types@0.1.5
+
+## 0.1.9
+
+### Patch Changes
+
+- a126cf3: Bump version
+
+## 0.1.8
+
+### Patch Changes
+
+- 7d1b22f: Updated libs version
+- Updated dependencies [7d1b22f]
+  - @phantom/sdk-types@0.1.4
+  - @phantom/api-key-stamper@0.1.5
+  - @phantom/constants@0.0.3
+
+## 0.1.7
+
+### Patch Changes
+
+- 6d6cbf8: New stamper interface
+- Updated dependencies [6d6cbf8]
+  - @phantom/api-key-stamper@0.1.4
+  - @phantom/sdk-types@0.1.3
+
+## 0.1.6
+
+### Patch Changes
+
+- 36af356: Auth flow complete
+- 3d0c1f9: New phantom client
+- Updated dependencies [36af356]
+  - @phantom/api-key-stamper@0.1.3
+  - @phantom/sdk-types@0.1.2
+  - @phantom/crypto@0.1.2
+
+## 0.1.5
+
+### Patch Changes
+
+- 7c86fef: Add support for the newest stamper
+- Updated dependencies [7c86fef]
+  - @phantom/sdk-types@0.1.1
+
+## 0.1.4
+
+### Patch Changes
+
+- b379ec2: Added new responses for phantom API , including blockexplorer responses
+- Updated dependencies [b379ec2]
+  - @phantom/api-key-stamper@0.1.2
+  - @phantom/constants@0.0.2
+
 ## 0.1.3
 
 ### Patch Changes

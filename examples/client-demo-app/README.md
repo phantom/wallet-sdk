@@ -1,12 +1,28 @@
-# Phantom Client Setup Tool
+# Phantom Client Demo Apps
 
-This tool helps you set up your Phantom wallet infrastructure by generating the necessary credentials and creating your organization. It uses the Phantom Client and Crypto packages to:
+This directory contains demo applications showcasing Phantom Client functionality, including basic setup and advanced multi-authenticator features.
+
+## Available Scripts
+
+### 1. Basic Setup Tool (`yarn dev`)
+
+Sets up your Phantom wallet infrastructure by generating credentials and creating your organization:
 
 1. Generate a cryptographic Ed25519 key pair for your organization
 2. Save credentials to a secure JSON file
 3. Create your organization using the Phantom API
 4. Generate a test wallet to verify functionality
 5. Create comprehensive Server SDK documentation with your credentials
+
+### 2. Multi-Authenticator Demo (`yarn multi-auth`)
+
+Demonstrates the Phantom Client with multi-authenticator support:
+
+1. Generate multiple key pairs for different authenticators
+2. Create an organization with multiple authenticators (keypair, PKI, OIDC)
+3. Test methods: `getOrganization`, `getWalletWithTag`, `createAuthenticator`, `deleteAuthenticator`
+4. Show how different authenticators can access the same organization
+5. Demonstrate multi-authenticator functionality
 
 ## Setup
 
@@ -16,18 +32,23 @@ This tool helps you set up your Phantom wallet infrastructure by generating the 
 yarn install
 ```
 
-2. Run the setup tool:
+2. Run either script:
 
 ```bash
 cd examples/client-demo-app
+
+# Basic setup (original demo)
 yarn dev
+
+# Multi-authenticator demo (NEW)
+yarn multi-auth
 ```
 
-No environment variables needed - the tool generates everything for you!
+No environment variables needed - the tools generate everything for you!
 
-## What it does
+## What the scripts do
 
-The setup script will:
+### Basic Setup Script (`yarn dev`)
 
 - Generate a new Ed25519 key pair using `@phantom/crypto`
 - Save the key pair to `demo-data.json`
@@ -37,34 +58,83 @@ The setup script will:
 - Create a test wallet with addresses for Solana, Ethereum, Bitcoin, and Sui
 - Generate `SERVER_SDK_USAGE.md` with complete integration instructions
 
+### Multi-Authenticator Demo (`yarn multi-auth`)
+
+- Generate multiple Ed25519 key pairs for different authenticators
+- Create an organization with multiple authenticator configurations
+- Demonstrate the new `createOrganization` method with authenticator array
+- Test `getOrganization` method to retrieve organization details
+- Test `getWalletWithTag` method for tagged wallet retrieval
+- Test `createAuthenticator` and `deleteAuthenticator` methods
+- Show multiple clients accessing the same organization with different authenticators
+- Generate `MULTI_AUTH_DEMO_SUMMARY.md` with comprehensive documentation
+
 ## Output Files
 
-### `demo-data.json`
+### Basic Setup Script Output
 
-Contains your organization credentials:
+- **`demo-data.json`**: Contains your organization credentials (keyPair, organization details)
+- **`SERVER_SDK_USAGE.md`**: Comprehensive Server SDK integration guide with your credentials
 
-```json
-{
-  "keyPair": {
-    "publicKey": "...",
-    "secretKey": "..."
-  },
-  "organization": {
-    "organizationId": "...",
-    "name": "..."
-  }
-}
+### Multi-Authenticator Demo Output
+
+The multi-authenticator demo runs all tests in memory without creating any files. All test results are displayed in the console output.
+
+## Phantom Client Features
+
+The multi-authenticator demo showcases PhantomClient capabilities:
+
+### Multi-Authenticator Organization Creation
+
+```typescript
+const org = await client.createOrganization(name, publicKey, [
+  { authenticatorName: "Auth1", authenticatorKind: "keypair", publicKey: "...", algorithm: "Ed25519" },
+  { authenticatorName: "Auth2", authenticatorKind: "oidc", jwksUrl: "...", idTokenClaims: {...} }
+]);
 ```
 
-### `SERVER_SDK_USAGE.md`
+### Organization Management
 
-A comprehensive guide for integrating with the Phantom Server SDK, including:
+```typescript
+const org = await client.getOrganization(organizationId);
+```
 
-- Your specific credentials and organization ID
-- Installation and setup instructions
-- Complete code examples for wallet creation, message signing, and transactions
-- Multi-chain wallet management
-- Security best practices
+### Tagged Wallet Retrieval
+
+```typescript
+const wallet = await client.getWalletWithTag({
+  organizationId,
+  tag: "demo-tag",
+  derivationPaths: ["m/44'/501'/0'/0'"],
+});
+```
+
+### Authenticator Management
+
+```typescript
+await client.createAuthenticator({
+  organizationId,
+  username,
+  authenticatorName,
+  authenticator: { publicKey: "base64url-string", authenticatorKind: "keypair", algorithm: "Ed25519", authenticatorName },
+});
+
+await client.deleteAuthenticator({
+  organizationId,
+  username,
+  authenticatorId,
+});
+```
+
+### OIDC Authenticator Support
+
+```typescript
+{
+  authenticatorKind: "oidc",
+  jwksUrl: "https://issuer.com/.well-known/jwks.json",
+  idTokenClaims: { sub: "user-id", iss: "issuer.com" }
+}
+```
 
 ## Next Steps
 

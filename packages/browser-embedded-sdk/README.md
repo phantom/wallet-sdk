@@ -1,5 +1,14 @@
 # @phantom/wallet-sdk
 
+> **⚠️ DEPRECATED** 
+> 
+> This package (`@phantom/wallet-sdk`) is deprecated and will no longer receive updates. Please migrate to the new Phantom SDK packages:
+> 
+> - **[@phantom/react-sdk](../react-sdk/README.md)** - For React applications
+> - **[@phantom/browser-sdk](../browser-sdk/README.md)** - For vanilla JavaScript/TypeScript applications  
+> - **[@phantom/server-sdk](../server-sdk/README.md)** - For server-side applications
+>
+
 The Phantom Embedded Wallet SDK allows you to integrate Phantom's wallet functionality directly into your web application. It provides a simple interface for interacting with the wallet, including showing/hiding the wallet UI, performing swaps and purchases, and accessing chain-specific RPC interfaces for Solana, Ethereum, Sui, and Bitcoin.
 
 ## Installation

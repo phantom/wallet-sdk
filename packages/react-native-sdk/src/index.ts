@@ -2,12 +2,13 @@
 export { PhantomProvider, usePhantom } from "./PhantomProvider";
 
 // Individual hooks
-export { useConnect, useDisconnect, useAccounts, useSignMessage, useSignAndSendTransaction } from "./hooks";
+export * from "./hooks";
+
 
 // Types
 export type {
-  PhantomProviderConfig,
-  ReactNativeAuthOptions,
+  PhantomSDKConfig,
+  PhantomDebugConfig,
   ConnectOptions,
   ConnectResult,
   WalletAddress,

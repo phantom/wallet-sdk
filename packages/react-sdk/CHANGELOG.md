@@ -1,5 +1,108 @@
 # @phantom/react-sdk
 
+## 1.0.0-beta.0
+
+### Major Changes
+
+- New SDKs chain specific interface, prepare for initial beta release
+
+### Patch Changes
+
+- ef68eaf: Key rotation
+- Updated dependencies [ef68eaf]
+- Updated dependencies
+  - @phantom/browser-sdk@1.0.0-beta.0
+  - @phantom/constants@1.0.0-beta.0
+  - @phantom/chains@1.0.0-beta.0
+
+## 0.3.9
+
+### Patch Changes
+
+- b20bc21: Support derivation index
+- Updated dependencies [b20bc21]
+  - @phantom/browser-sdk@0.3.9
+
+## 0.3.8
+
+### Patch Changes
+
+- 9305f27: Remove solana kit dep
+- Updated dependencies [ef68eaf]
+- Updated dependencies [9305f27]
+  - @phantom/browser-sdk@0.3.8
+
+## 0.3.7
+
+### Patch Changes
+
+- a126cf3: Bump version
+- Updated dependencies [a126cf3]
+  - @phantom/browser-sdk@0.3.7
+
+## 0.3.6
+
+### Patch Changes
+
+- 3bdbfbd: Fix debug system
+- Updated dependencies [b5d76b3]
+- Updated dependencies [3bdbfbd]
+  - @phantom/browser-sdk@0.3.6
+
+## 0.3.5
+
+### Patch Changes
+
+- e04d53d: Added autoconnect functionality
+- Updated dependencies [e04d53d]
+  - @phantom/browser-sdk@0.3.5
+
+## 0.3.4
+
+### Patch Changes
+
+- e41ad19: Fix re-rendering issues
+- 7d1b22f: Updated libs version
+- Updated dependencies [7d1b22f]
+  - @phantom/browser-sdk@0.3.4
+
+## 0.3.3
+
+### Patch Changes
+
+- 6d6cbf8: New stamper interface
+- Updated dependencies [6d6cbf8]
+  - @phantom/browser-sdk@0.3.3
+
+## 0.3.2
+
+### Patch Changes
+
+- 36af356: Auth flow complete
+- 3d0c1f9: New phantom client
+- Updated dependencies [36af356]
+- Updated dependencies [3d0c1f9]
+  - @phantom/browser-sdk@0.3.2
+
+## 0.3.1
+
+### Patch Changes
+
+- 7c86fef: Add support for the newest stamper
+- Updated dependencies [7c86fef]
+  - @phantom/browser-sdk@0.3.1
+
+## 0.3.0
+
+### Minor Changes
+
+- b379ec2: Added new responses for phantom API , including blockexplorer responses
+
+### Patch Changes
+
+- Updated dependencies [b379ec2]
+  - @phantom/browser-sdk@0.3.0
+
 ## 0.2.3
 
 ### Patch Changes

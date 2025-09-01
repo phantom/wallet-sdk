@@ -1,6 +1,6 @@
 # @phantom/browser-sdk
 
-Browser SDK for Phantom Wallet supporting both injected and embedded non-custodial wallets.
+Browser SDK for Phantom Wallet supporting both injected and embedded non-custodial wallets with chain-specific APIs.
 
 ## Quick Start
 
@@ -11,27 +11,34 @@ npm install @phantom/browser-sdk
 ### Injected Provider (Browser Extension)
 
 ```typescript
-import { BrowserSDK, NetworkId } from "@phantom/browser-sdk";
+import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 
 // Connect to Phantom browser extension
 const sdk = new BrowserSDK({
   providerType: "injected",
+  addressTypes: [AddressType.solana, AddressType.ethereum],
 });
 
 const { addresses } = await sdk.connect();
 console.log("Connected addresses:", addresses);
 
+// Chain-specific operations
+const message = "Hello from Phantom!";
+const solanaSignature = await sdk.solana.signMessage(message);
+
+// Encode the message as hex for EVM
+const encoded = "0x" + Buffer.from(message, "utf8").toString("hex");
+const ethSignature = await sdk.ethereum.signPersonalMessage(encoded, addresses[1].address);
+
 // Sign and send transactions
-const result = await sdk.signAndSendTransaction({
-  networkId: NetworkId.SOLANA_MAINNET,
-  transaction: mySolanaTransaction,
-});
+const solanaResult = await sdk.solana.signAndSendTransaction(mySolanaTransaction);
+const ethResult = await sdk.ethereum.sendTransaction(myEthTransaction);
 ```
 
 ### Embedded Provider
 
 ```typescript
-import { BrowserSDK, AddressType, NetworkId } from "@phantom/browser-sdk";
+import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 
 // Create embedded non-custodial wallet
 const sdk = new BrowserSDK({
@@ -41,24 +48,126 @@ const sdk = new BrowserSDK({
   organizationId: "your-org-id",
 });
 
-const { walletId, addresses } = await sdk.connect();
-console.log("Wallet ID:", walletId);
+const { addresses } = await sdk.connect();
 console.log("Addresses:", addresses);
 
-const result = await sdk.signAndSendTransaction({
-  networkId: NetworkId.SOLANA_MAINNET,
-  transaction: mySolanaTransaction,
-});
+// Use chain-specific APIs
+const solanaResult = await sdk.solana.signAndSendTransaction(mySolanaTransaction);
+const ethResult = await sdk.ethereum.sendTransaction(myEthTransaction);
 ```
 
 ## Features
 
 - **🔒 Non-Custodial**: Full user control of private keys for both injected and embedded wallets
 - **🌐 Dual Provider Support**: Works with Phantom browser extension or creates embedded wallets
+- **⛓️ Chain-Specific APIs**: Dedicated interfaces for Solana and Ethereum operations
 - **🛠️ Native Transactions**: Work with blockchain-native objects, not base64url strings
-- **🔗 Multi-Chain**: Solana, Ethereum, Bitcoin, Sui support
+- **🔗 Multi-Chain**: Solana and Ethereum support with dedicated methods
 - **⚡ TypeScript**: Full type safety for all transaction formats
 - **🎯 Unified API**: Same interface for both injected and embedded providers
+
+## Connection Flow
+
+After instantiating the SDK, use `sdk.connect()` to establish a connection to the wallet:
+
+```typescript
+import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
+
+// 1. Create SDK instance
+const sdk = new BrowserSDK({
+  providerType: "injected",
+  addressTypes: [AddressType.solana, AddressType.ethereum],
+});
+
+// 2. Connect to wallet
+const { addresses } = await sdk.connect();
+console.log("Connected addresses:", addresses);
+
+// 3. Use chain-specific methods
+const signature = await sdk.solana.signMessage("Hello!");
+const ethResult = await sdk.ethereum.sendTransaction({
+  to: "0x...",
+  value: "1000000000000000000",
+  gas: "21000",
+});
+```
+
+### Connection Options
+
+For embedded user-wallets, you can specify authentication providers:
+
+```typescript
+// Default: Show provider selection screen
+const result = await sdk.connect();
+
+// Google authentication (skips provider selection)
+const result = await sdk.connect({
+  authOptions: {
+    provider: "google",
+  },
+});
+
+// Apple authentication (skips provider selection) 
+const result = await sdk.connect({
+  authOptions: {
+    provider: "apple",
+  },
+});
+```
+
+## Chain-Specific APIs
+
+The SDK provides separate interfaces for each blockchain with optimized methods:
+
+### Solana Chain (`sdk.solana`)
+
+```typescript
+// Message signing
+const signature = await sdk.solana.signMessage("Hello Solana!");
+
+// Transaction signing (without sending)
+const signedTx = await sdk.solana.signTransaction(transaction);
+
+// Sign and send transaction
+const result = await sdk.solana.signAndSendTransaction(transaction);
+
+// Network switching
+await sdk.solana.switchNetwork('devnet');
+
+// Utilities
+const publicKey = await sdk.solana.getPublicKey();
+const isConnected = sdk.solana.isConnected();
+```
+
+### Ethereum Chain (`sdk.ethereum`)
+
+```typescript
+// EIP-1193 requests
+const accounts = await sdk.ethereum.request({ method: 'eth_accounts' });
+const chainId = await sdk.ethereum.request({ method: 'eth_chainId' });
+
+// Message signing
+const signature = await sdk.ethereum.signPersonalMessage(message, address);
+
+// EIP-712 typed data signing
+const typedDataSignature = await sdk.ethereum.signTypedData(typedData, address);
+
+// Transaction sending
+const result = await sdk.ethereum.sendTransaction({
+  to: "0x...",
+  value: "1000000000000000000", // 1 ETH in wei
+  gas: "21000",
+});
+
+// Network switching
+await sdk.ethereum.switchChain(1); // Ethereum mainnet
+await sdk.ethereum.switchChain(137); // Polygon
+
+// Utilities
+const chainId = await sdk.ethereum.getChainId();
+const accounts = await sdk.ethereum.getAccounts();
+const isConnected = sdk.ethereum.isConnected();
+```
 
 ## Provider Types
 
@@ -69,6 +178,7 @@ Uses the Phantom browser extension installed by the user. No additional configur
 ```typescript
 const sdk = new BrowserSDK({
   providerType: "injected",
+  addressTypes: [AddressType.solana, AddressType.ethereum],
 });
 ```
 
@@ -87,6 +197,9 @@ const sdk = new BrowserSDK({
     authUrl: "https://auth.phantom.app", // optional, defaults to "https://connect.phantom.app"
     redirectUrl: "https://yourapp.com/callback", // optional, defaults to current page
   },
+  appName: "My DApp", // optional, for branding
+  appLogo: "https://myapp.com/logo.png", // optional, for branding
+  autoConnect: true, // optional, auto-connect to existing session (default: true for embedded)
 });
 ```
 
@@ -124,14 +237,12 @@ const sdk = new BrowserSDK({
 });
 ```
 
-### Available AddressTypes (Embedded Only)
+### Available AddressTypes
 
-| AddressType                 | Networks Supported                          |
-| --------------------------- | ------------------------------------------- |
-| `AddressType.solana`        | Solana Mainnet, Devnet, Testnet             |
-| `AddressType.ethereum`      | Ethereum, Polygon, Arbitrum, Optimism, Base |
-| `AddressType.bitcoinSegwit` | Bitcoin Mainnet, Testnet                    |
-| `AddressType.sui`           | Sui Mainnet, Testnet, Devnet                |
+| AddressType                 | Supported Chains                    |
+| --------------------------- | ----------------------------------- |
+| `AddressType.solana`        | Solana Mainnet, Devnet, Testnet     |
+| `AddressType.ethereum`      | Ethereum, Polygon, Arbitrum, and more |
 
 ### Solana Provider Configuration
 
@@ -156,6 +267,45 @@ const sdk = new BrowserSDK({
 - **@solana/web3.js**: Better ecosystem compatibility, wider community support
 - **@solana/kit**: Better TypeScript support, modern architecture, smaller bundle size
 
+### Auto-Connect Feature
+
+The SDK can automatically reconnect to existing sessions when instantiated, providing a seamless user experience.
+
+```typescript
+const sdk = new BrowserSDK({
+  providerType: "embedded",
+  addressTypes: [AddressType.solana],
+  // ... other config
+  autoConnect: true, // Default: true for embedded, false for injected
+});
+
+// SDK will automatically check for existing valid session and connect in background
+// No need to call connect() if user already has a session
+
+// Check if already connected
+if (sdk.isConnected()) {
+  console.log("Already connected!");
+  const addresses = await sdk.getAddresses();
+} else {
+  // First time or session expired, need to connect manually
+  await sdk.connect();
+}
+```
+
+**Disabling Auto-Connect:**
+
+```typescript
+const sdk = new BrowserSDK({
+  providerType: "embedded",
+  addressTypes: [AddressType.solana],
+  // ... other config
+  autoConnect: false, // Disable auto-connect
+});
+
+// Now you must manually call connect() every time
+await sdk.connect();
+```
+
 ## API Reference
 
 ### Constructor
@@ -169,9 +319,11 @@ new BrowserSDK(config: BrowserSDKConfig)
 ```typescript
 interface BrowserSDKConfig {
   providerType: "injected" | "embedded";
+  appName?: string; // Optional app name for branding
+  appLogo?: string; // Optional app logo URL for branding
+  addressTypes?: [AddressType, ...AddressType[]]; // Networks to enable (e.g., [AddressType.solana])
 
   // Required for embedded provider only
-  addressTypes?: AddressType[]; // Networks to enable
   apiBaseUrl?: string; // Phantom API base URL
   organizationId?: string; // Your organization ID
   authOptions?: {
@@ -180,10 +332,11 @@ interface BrowserSDKConfig {
   };
   embeddedWalletType?: "app-wallet" | "user-wallet"; // Wallet type
   solanaProvider?: "web3js" | "kit"; // Solana library choice (default: 'web3js')
+  autoConnect?: boolean; // Enable auto-connect to existing sessions (default: true)
 }
 ```
 
-### Methods
+### Core Methods
 
 #### connect()
 
@@ -191,98 +344,9 @@ Connect to wallet and get addresses for configured AddressTypes.
 
 ```typescript
 const result = await sdk.connect();
-// Returns: { walletId: string, addresses: WalletAddress[] }
+// Returns: { walletId?: string, addresses: WalletAddress[] }
 // addresses only includes types from addressTypes config
 ```
-
-For embedded user-wallets, you can specify authentication options:
-
-```typescript
-// Phantom Connect with provider selection (default)
-const result = await sdk.connect();
-
-// Phantom Connect with Google authentication (skips provider selection)
-const result = await sdk.connect({
-  authOptions: {
-    provider: "google",
-  },
-});
-
-// Phantom Connect with Apple authentication (skips provider selection)
-const result = await sdk.connect({
-  authOptions: {
-    provider: "apple",
-  },
-});
-
-// JWT authentication (direct API call)
-const result = await sdk.connect({
-  authOptions: {
-    provider: "jwt",
-    jwtToken: "your-jwt-token",
-    customAuthData: { userId: "user123" },
-  },
-});
-```
-
-**Authentication Options:**
-
-- `provider` - Authentication method: `"google"`, `"apple"`, or `"jwt"`
-  - If not specified: Shows provider selection screen on Phantom Connect
-  - If `"google"` or `"apple"`: Skips provider selection and uses specified provider
-  - If `"jwt"`: Uses JWT authentication flow via API call
-- `jwtToken` - Required when `provider` is `"jwt"`. Your JWT token for authentication
-- `customAuthData` - Additional data to pass to authentication service
-
-**Authentication Flow Types:**
-
-1. **Phantom Connect (Redirect-based)**: Used when `provider` is undefined, `"google"`, or `"apple"`
-   - Redirects to `https://connect.phantom.app` (or custom `authOptions.authUrl` from config)
-   - Handles OAuth flow with selected provider
-   - Returns to your app with authentication result using `authOptions.redirectUrl` or current page
-
-2. **JWT Authentication (API-based)**: Used when `provider` is `"jwt"`
-   - Makes direct API call to `/api/auth/jwt` endpoint
-   - Validates JWT token server-side
-   - Returns wallet immediately without redirect
-
-#### signAndSendTransaction(transaction)
-
-Sign and send a native transaction object.
-
-```typescript
-// Solana transaction
-const result = await sdk.signAndSendTransaction({
-  networkId: NetworkId.SOLANA_MAINNET,
-  transaction: solanaTransaction, // Native Transaction or VersionedTransaction
-});
-
-// Ethereum transaction
-const result = await sdk.signAndSendTransaction({
-  networkId: NetworkId.ETHEREUM_MAINNET,
-  transaction: {
-    to: "0x...",
-    value: parseEther("1"), // 1 ETH
-    gas: 21000n,
-  },
-});
-```
-
-#### signMessage(params)
-
-Sign a message string.
-
-```typescript
-const signature = await sdk.signMessage({
-  message: "Hello from Phantom!",
-  networkId: NetworkId.SOLANA_MAINNET,
-});
-```
-
-**Parameters:**
-
-- `params.message` (string) - Message to sign
-- `params.networkId` (NetworkId) - Network identifier
 
 #### getAddresses()
 
@@ -299,6 +363,396 @@ Disconnect from wallet and clear session.
 
 ```typescript
 await sdk.disconnect();
+```
+
+#### isConnected()
+
+Check if SDK is connected to a wallet.
+
+```typescript
+const connected = sdk.isConnected();
+```
+
+#### getWalletId()
+
+Get the wallet ID (embedded wallets only).
+
+```typescript
+const walletId = sdk.getWalletId();
+// Returns string for embedded wallets, null for injected
+```
+
+### Solana Chain Methods
+
+#### signMessage(message)
+
+Sign a message with the Solana wallet.
+
+```typescript
+const signature = await sdk.solana.signMessage("Hello Solana!");
+// Returns: { signature: string, rawSignature: string }
+```
+
+#### signTransaction(transaction)
+
+Sign a transaction without sending it.
+
+```typescript
+const signedTx = await sdk.solana.signTransaction(transaction);
+// Returns the signed transaction object
+```
+
+#### signAndSendTransaction(transaction)
+
+Sign and send a transaction to the Solana network.
+
+```typescript
+const result = await sdk.solana.signAndSendTransaction(transaction);
+// Returns: { hash: string, rawTransaction: string, blockExplorer?: string }
+```
+
+#### switchNetwork(network)
+
+Switch between Solana networks.
+
+```typescript
+await sdk.solana.switchNetwork('mainnet');
+await sdk.solana.switchNetwork('devnet');
+```
+
+#### getPublicKey()
+
+Get the current Solana public key.
+
+```typescript
+const publicKey = await sdk.solana.getPublicKey();
+// Returns: string | null
+```
+
+#### isConnected()
+
+Check if connected to Solana wallet.
+
+```typescript
+const connected = sdk.solana.isConnected();
+// Returns: boolean
+```
+
+### Ethereum Chain Methods
+
+#### request(args)
+
+Make an EIP-1193 compatible request.
+
+```typescript
+const accounts = await sdk.ethereum.request({ method: 'eth_accounts' });
+const chainId = await sdk.ethereum.request({ method: 'eth_chainId' });
+const balance = await sdk.ethereum.request({ 
+  method: 'eth_getBalance', 
+  params: [address, 'latest'] 
+});
+```
+
+#### signPersonalMessage(message, address)
+
+Sign a personal message.
+
+```typescript
+const signature = await sdk.ethereum.signPersonalMessage("Hello Ethereum!", address);
+// Returns: { signature: string, rawSignature: string }
+```
+
+#### signTypedData(typedData, address)
+
+Sign EIP-712 typed data.
+
+```typescript
+const typedData = {
+  types: {
+    EIP712Domain: [
+      { name: "name", type: "string" },
+      { name: "version", type: "string" },
+      { name: "chainId", type: "uint256" },
+      { name: "verifyingContract", type: "address" }
+    ],
+    Mail: [
+      { name: "from", type: "string" },
+      { name: "to", type: "string" },
+      { name: "contents", type: "string" }
+    ]
+  },
+  primaryType: "Mail",
+  domain: {
+    name: "Ether Mail",
+    version: "1",
+    chainId: 1,
+    verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC"
+  },
+  message: {
+    from: "Alice",
+    to: "Bob",
+    contents: "Hello!"
+  }
+};
+
+const signature = await sdk.ethereum.signTypedData(typedData, address);
+// Returns: { signature: string, rawSignature: string }
+```
+
+#### sendTransaction(transaction)
+
+Send an Ethereum transaction.
+
+```typescript
+const result = await sdk.ethereum.sendTransaction({
+  to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
+  value: "1000000000000000000", // 1 ETH in wei
+  gas: "21000",
+  gasPrice: "20000000000", // 20 gwei
+});
+// Returns: { hash: string, rawTransaction: string, blockExplorer?: string }
+```
+
+#### switchChain(chainId)
+
+Switch to a different Ethereum chain.
+
+```typescript
+await sdk.ethereum.switchChain(1);    // Ethereum mainnet
+await sdk.ethereum.switchChain(137);  // Polygon
+await sdk.ethereum.switchChain(42161); // Arbitrum One
+```
+
+#### getChainId()
+
+Get the current chain ID.
+
+```typescript
+const chainId = await sdk.ethereum.getChainId();
+// Returns: number
+```
+
+#### getAccounts()
+
+Get connected Ethereum accounts.
+
+```typescript
+const accounts = await sdk.ethereum.getAccounts();
+// Returns: string[]
+```
+
+#### isConnected()
+
+Check if connected to Ethereum wallet.
+
+```typescript
+const connected = sdk.ethereum.isConnected();
+// Returns: boolean
+```
+
+#### autoConnect()
+
+Attempt auto-connection using existing session. Should be called after setting up event listeners to avoid race conditions. Only works with embedded providers.
+
+```typescript
+await sdk.autoConnect();
+```
+
+### Auto-Confirm Methods (Injected Provider Only)
+
+The SDK provides auto-confirm functionality that allows automatic transaction confirmation for specified chains. This feature is only available when using the injected provider (Phantom browser extension).
+
+#### enableAutoConfirm(params?)
+
+Enable auto-confirm for specific chains or all supported chains.
+
+```typescript
+import { NetworkId } from "@phantom/browser-sdk";
+
+// Enable auto-confirm for specific chains
+const result = await sdk.enableAutoConfirm({
+  chains: [NetworkId.SOLANA_MAINNET, NetworkId.ETHEREUM_MAINNET]
+});
+
+// Enable auto-confirm for all supported chains  
+const result = await sdk.enableAutoConfirm();
+
+console.log("Auto-confirm enabled:", result.enabled);
+console.log("Enabled chains:", result.chains);
+// Returns: { enabled: boolean, chains: NetworkId[] }
+```
+
+#### disableAutoConfirm()
+
+Disable auto-confirm for all chains.
+
+```typescript
+const result = await sdk.disableAutoConfirm();
+console.log("Auto-confirm disabled:", !result.enabled);
+// Returns: { enabled: boolean, chains: NetworkId[] }
+```
+
+#### getAutoConfirmStatus()
+
+Get the current auto-confirm status and enabled chains.
+
+```typescript
+const status = await sdk.getAutoConfirmStatus();
+console.log("Auto-confirm enabled:", status.enabled);
+console.log("Enabled chains:", status.chains);
+// Returns: { enabled: boolean, chains: NetworkId[] }
+```
+
+#### getSupportedAutoConfirmChains()
+
+Get the list of chains that support auto-confirm functionality.
+
+```typescript
+const supportedChains = await sdk.getSupportedAutoConfirmChains();
+console.log("Supported chains:", supportedChains.chains);
+// Returns: { chains: NetworkId[] }
+```
+
+#### Available NetworkId Values
+
+```typescript
+import { NetworkId } from "@phantom/browser-sdk";
+
+// Solana networks
+NetworkId.SOLANA_MAINNET   // "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+NetworkId.SOLANA_DEVNET    // "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1"
+NetworkId.SOLANA_TESTNET   // "solana:4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z"
+
+// Ethereum networks
+NetworkId.ETHEREUM_MAINNET // "eip155:1"
+NetworkId.ETHEREUM_SEPOLIA // "eip155:11155111"
+
+// Polygon networks  
+NetworkId.POLYGON_MAINNET  // "eip155:137"
+NetworkId.POLYGON_AMOY     // "eip155:80002"
+
+// Arbitrum networks
+NetworkId.ARBITRUM_ONE     // "eip155:42161"
+NetworkId.ARBITRUM_SEPOLIA // "eip155:421614"
+
+// Optimism networks
+NetworkId.OPTIMISM_MAINNET // "eip155:10"
+NetworkId.OPTIMISM_GOERLI  // "eip155:420"
+
+// Base networks
+NetworkId.BASE_MAINNET     // "eip155:8453"
+NetworkId.BASE_SEPOLIA     // "eip155:84532"
+```
+
+**Important Notes:**
+
+- Auto-confirm methods are **only available for injected providers** (Phantom browser extension)
+- Calling these methods on embedded providers will throw an error
+- Auto-confirm applies to transaction confirmations, not initial connection prompts
+- Users can override auto-confirm settings directly in the Phantom extension UI
+
+## Debug Configuration
+
+The BrowserSDK provides dynamic debug configuration that can be changed at runtime without reinstantiating the SDK. This provides better performance and cleaner architecture.
+
+### Debug Methods
+
+```typescript
+// Enable debug logging
+sdk.enableDebug();
+
+// Disable debug logging  
+sdk.disableDebug();
+
+// Set debug level
+sdk.setDebugLevel(DebugLevel.INFO);
+
+// Set debug callback function
+sdk.setDebugCallback((message) => {
+  console.log(`[${message.category}] ${message.message}`, message.data);
+});
+
+// Configure all debug settings at once
+sdk.configureDebug({
+  enabled: true,
+  level: DebugLevel.DEBUG,
+  callback: (message) => {
+    // Handle debug messages
+    console.log(`[${message.level}] ${message.category}: ${message.message}`);
+  }
+});
+```
+
+### Debug Levels
+
+```typescript
+import { DebugLevel } from "@phantom/browser-sdk";
+
+// Available debug levels (in order of verbosity)
+DebugLevel.ERROR   // 0 - Only error messages
+DebugLevel.WARN    // 1 - Warning and error messages  
+DebugLevel.INFO    // 2 - Info, warning, and error messages
+DebugLevel.DEBUG   // 3 - All debug messages (most verbose)
+```
+
+### Debug Message Structure
+
+Debug callbacks receive a `DebugMessage` object:
+
+```typescript
+interface DebugMessage {
+  timestamp: number;     // Unix timestamp
+  level: DebugLevel;     // Message level
+  category: string;      // Component category (e.g., "BrowserSDK", "ProviderManager")
+  message: string;       // Debug message text
+  data?: any;           // Additional debug data (optional)
+}
+```
+
+### Example: Debug Console Implementation
+
+```typescript
+import { BrowserSDK, DebugLevel } from "@phantom/browser-sdk";
+
+const sdk = new BrowserSDK({
+  providerType: "embedded",
+  // ... other config
+});
+
+// Store debug messages
+const debugMessages: DebugMessage[] = [];
+
+// Set up debug system
+sdk.configureDebug({
+  enabled: true,
+  level: DebugLevel.INFO,
+  callback: (message) => {
+    debugMessages.push(message);
+    
+    // Keep only last 100 messages
+    if (debugMessages.length > 100) {
+      debugMessages.shift();
+    }
+    
+    // Update UI
+    updateDebugConsole();
+  }
+});
+
+// Dynamic debug level changing
+function changeDebugLevel(newLevel: DebugLevel) {
+  sdk.setDebugLevel(newLevel);
+  console.log(`Debug level changed to: ${DebugLevel[newLevel]}`);
+}
+
+// Toggle debug on/off
+function toggleDebug(enabled: boolean) {
+  if (enabled) {
+    sdk.enableDebug();
+  } else {
+    sdk.disableDebug();
+  }
+}
 ```
 
 ## Transaction Examples
@@ -324,13 +778,22 @@ import {
   LAMPORTS_PER_SOL,
   Connection,
 } from "@solana/web3.js";
-import { BrowserSDK, NetworkId } from "@phantom/browser-sdk";
+import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
+
+const sdk = new BrowserSDK({
+  providerType: "injected",
+  addressTypes: [AddressType.solana],
+  solanaProvider: "web3js",
+});
+
+await sdk.connect();
 
 // Get recent blockhash
 const connection = new Connection("https://api.mainnet-beta.solana.com");
 const { blockhash } = await connection.getLatestBlockhash();
 
 // Create transfer instruction
+const fromAddress = await sdk.solana.getPublicKey();
 const transferInstruction = SystemProgram.transfer({
   fromPubkey: new PublicKey(fromAddress),
   toPubkey: new PublicKey(toAddress),
@@ -346,26 +809,9 @@ const messageV0 = new TransactionMessage({
 
 const transaction = new VersionedTransaction(messageV0);
 
-// Send native transaction object - no encoding needed!
-const result = await sdk.signAndSendTransaction({
-  networkId: NetworkId.SOLANA_MAINNET,
-  transaction: transaction,
-});
-
-console.log("Transaction signature:", result.rawTransaction);
-```
-
-**VersionedTransaction with @solana/web3.js:**
-
-```typescript
-import { VersionedTransaction } from "@solana/web3.js";
-
-const versionedTx = new VersionedTransaction(message);
-
-const result = await sdk.signAndSendTransaction({
-  networkId: NetworkId.SOLANA_DEVNET,
-  transaction: versionedTx,
-});
+// Send transaction using chain-specific API
+const result = await sdk.solana.signAndSendTransaction(transaction);
+console.log("Transaction signature:", result.hash);
 ```
 
 #### Option 2: @solana/kit (Modern Library)
@@ -386,12 +832,21 @@ import {
   address,
   compileTransaction,
 } from "@solana/kit";
-import { BrowserSDK, NetworkId } from "@phantom/browser-sdk";
+import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
+
+const sdk = new BrowserSDK({
+  providerType: "injected", 
+  addressTypes: [AddressType.solana],
+  solanaProvider: "kit",
+});
+
+await sdk.connect();
 
 // Create transaction with @solana/kit
 const rpc = createSolanaRpc("https://api.mainnet-beta.solana.com");
 const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
 
+const userPublicKey = await sdk.solana.getPublicKey();
 const transactionMessage = pipe(
   createTransactionMessage({ version: 0 }),
   tx => setTransactionMessageFeePayer(address(userPublicKey), tx),
@@ -400,404 +855,75 @@ const transactionMessage = pipe(
 
 const transaction = compileTransaction(transactionMessage);
 
-const result = await sdk.signAndSendTransaction({
-  networkId: NetworkId.SOLANA_MAINNET,
-  transaction: transaction,
-});
+// Send using chain-specific API
+const result = await sdk.solana.signAndSendTransaction(transaction);
+console.log("Transaction signature:", result.hash);
 ```
 
-### Ethereum Transactions (with Viem)
-
-```typescript
-import { parseEther, parseGwei, encodeFunctionData } from "viem";
-import { BrowserSDK, NetworkId } from "@phantom/browser-sdk";
-
-// Simple ETH transfer
-const result = await sdk.signAndSendTransaction({
-  networkId: NetworkId.ETHEREUM_MAINNET,
-  transaction: {
-    to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
-    value: parseEther("1"), // 1 ETH
-    gas: 21000n,
-    gasPrice: parseGwei("20"), // 20 gwei
-  },
-});
-
-// EIP-1559 transaction with maxFeePerGas
-const result = await sdk.signAndSendTransaction({
-  networkId: NetworkId.ETHEREUM_MAINNET,
-  transaction: {
-    to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
-    value: parseEther("1"),
-    data: encodeFunctionData({
-      abi: tokenAbi,
-      functionName: "transfer",
-      args: ["0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E", parseEther("1")],
-    }),
-    gas: 50000n,
-    maxFeePerGas: parseGwei("30"), // 30 gwei
-    maxPriorityFeePerGas: parseGwei("2"), // 2 gwei
-    type: "eip1559",
-  },
-});
-```
-
-#### Other EVM Networks
-
-```typescript
-// Polygon transaction
-const result = await sdk.signAndSendTransaction({
-  networkId: NetworkId.POLYGON_MAINNET,
-  transaction: {
-    to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
-    value: parseEther("1"), // 1 MATIC
-    gas: 21000n,
-  },
-});
-
-// Arbitrum transaction
-const result = await sdk.signAndSendTransaction({
-  networkId: NetworkId.ARBITRUM_ONE,
-  transaction: {
-    to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
-    value: parseEther("0.1"), // 0.1 ETH
-    gas: 21000n,
-  },
-});
-```
-
-### Bitcoin Transactions
-
-```typescript
-// Bitcoin transaction
-const result = await sdk.signAndSendTransaction({
-  networkId: NetworkId.BITCOIN_MAINNET,
-  transaction: {
-    inputs: [
-      {
-        txid: "previous-transaction-id",
-        vout: 0,
-        scriptSig: "...",
-      },
-    ],
-    outputs: [
-      {
-        value: 50000, // satoshis
-        scriptPubKey: "76a914...88ac", // P2PKH script
-      },
-    ],
-    version: 2,
-    locktime: 0,
-  },
-});
-
-// Bitcoin testnet
-const result = await sdk.signAndSendTransaction({
-  networkId: NetworkId.BITCOIN_TESTNET,
-  transaction: {
-    // ... transaction details
-  },
-});
-```
-
-### Sui Transactions
-
-```typescript
-import { TransactionBlock } from "@mysten/sui.js/transactions";
-
-// Create Sui transaction block
-const txb = new TransactionBlock();
-txb.transferObjects([coin], recipientAddress);
-
-const result = await sdk.signAndSendTransaction({
-  networkId: NetworkId.SUI_MAINNET,
-  transaction: {
-    kind: "moveCall", // or 'transferObject', 'transferSui', 'pay'
-    data: txb, // TransactionBlock from @mysten/sui.js
-  },
-});
-
-// Sui testnet
-const result = await sdk.signAndSendTransaction({
-  networkId: NetworkId.SUI_TESTNET,
-  transaction: {
-    kind: "transferSui",
-    data: suiTransactionData,
-  },
-});
-```
-
-## Network IDs Reference
-
-Use the exported `NetworkId` enum for type safety:
-
-```typescript
-import { NetworkId } from "@phantom/browser-sdk";
-```
-
-### Solana
-
-- `NetworkId.SOLANA_MAINNET` - Solana Mainnet Beta
-- `NetworkId.SOLANA_DEVNET` - Solana Devnet
-- `NetworkId.SOLANA_TESTNET` - Solana Testnet
-
-### Ethereum/EVM
-
-- `NetworkId.ETHEREUM_MAINNET` - Ethereum Mainnet
-- `NetworkId.ETHEREUM_SEPOLIA` - Ethereum Sepolia Testnet
-- `NetworkId.POLYGON_MAINNET` - Polygon Mainnet
-- `NetworkId.ARBITRUM_ONE` - Arbitrum One
-- `NetworkId.OPTIMISM_MAINNET` - Optimism Mainnet
-- `NetworkId.BASE_MAINNET` - Base Mainnet
-
-### Bitcoin
-
-- `NetworkId.BITCOIN_MAINNET` - Bitcoin Mainnet
-- `NetworkId.BITCOIN_TESTNET` - Bitcoin Testnet
-
-### Sui
-
-- `NetworkId.SUI_MAINNET` - Sui Mainnet
-- `NetworkId.SUI_TESTNET` - Sui Testnet
-- `NetworkId.SUI_DEVNET` - Sui Devnet
-
-## Advanced Usage
-
-### Multi-Chain Application
+### Ethereum Transactions
 
 ```typescript
 import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 
 const sdk = new BrowserSDK({
-  addressTypes: [AddressType.solana, AddressType.ethereum, AddressType.sui],
-  apiBaseUrl: "https://api.phantom.app/v1/wallets",
-  organizationId: "your-org-id",
+  providerType: "injected",
+  addressTypes: [AddressType.ethereum],
 });
 
-class MultiChainWallet {
-  async sendSolana(amount: number, recipient: string) {
-    // Get recent blockhash
-    const connection = new Connection("https://api.mainnet-beta.solana.com");
-    const { blockhash } = await connection.getLatestBlockhash();
+await sdk.connect();
 
-    // Create transfer instruction
-    const transferInstruction = SystemProgram.transfer({
-      fromPubkey: new PublicKey(this.solanaAddress),
-      toPubkey: new PublicKey(recipient),
-      lamports: amount * LAMPORTS_PER_SOL,
-    });
+// Simple ETH transfer
+const result = await sdk.ethereum.sendTransaction({
+  to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
+  value: "1000000000000000000", // 1 ETH in wei
+  gas: "21000",
+  gasPrice: "20000000000", // 20 gwei
+});
 
-    // Create VersionedTransaction
-    const messageV0 = new TransactionMessage({
-      payerKey: new PublicKey(this.solanaAddress),
-      recentBlockhash: blockhash,
-      instructions: [transferInstruction],
-    }).compileToV0Message();
+// EIP-1559 transaction with maxFeePerGas
+const result = await sdk.ethereum.sendTransaction({
+  to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
+  value: "1000000000000000000", // 1 ETH in wei
+  data: "0x...", // contract call data
+  gas: "50000",
+  maxFeePerGas: "30000000000", // 30 gwei
+  maxPriorityFeePerGas: "2000000000", // 2 gwei
+});
 
-    const transaction = new VersionedTransaction(messageV0);
-
-    return await sdk.signAndSendTransaction({
-      networkId: NetworkId.SOLANA_MAINNET,
-      transaction,
-    });
-  }
-
-  async sendEthereum(amount: string, recipient: string) {
-    return await sdk.signAndSendTransaction({
-      networkId: NetworkId.ETHEREUM_MAINNET,
-      transaction: {
-        to: recipient,
-        value: parseEther(amount),
-        gas: 21000n,
-      },
-    });
-  }
-
-  async sendSui(coinId: string, recipient: string) {
-    const txb = new TransactionBlock();
-    txb.transferObjects([coinId], recipient);
-
-    return await sdk.signAndSendTransaction({
-      networkId: NetworkId.SUI_MAINNET,
-      transaction: {
-        kind: "transferObject",
-        data: txb,
-      },
-    });
-  }
-}
+console.log("Transaction hash:", result.hash);
 ```
 
-### Error Handling
+#### Working with Viem
 
 ```typescript
-try {
-  const result = await sdk.signAndSendTransaction({
-    networkId: NetworkId.SOLANA_MAINNET,
-    transaction: myTransaction,
-  });
-  console.log("Success:", result);
-} catch (error) {
-  if (error.message.includes("User rejected")) {
-    console.log("User cancelled the transaction");
-  } else if (error.message.includes("insufficient funds")) {
-    console.log("Not enough balance");
-  } else {
-    console.error("Transaction failed:", error);
-  }
-}
-```
+import { parseEther, parseGwei, encodeFunctionData } from "viem";
+import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 
-### Bundle Optimization Tips
-
-1. **Only include networks you need**:
-
-   ```typescript
-   // Good: Only Solana (~250KB)
-   addressTypes: [AddressType.solana];
-
-   // Avoid: All networks if not needed (~800KB+)
-   addressTypes: [AddressType.solana, AddressType.ethereum, AddressType.sui, AddressType.bitcoinSegwit];
-   ```
-
-2. **Install dependencies based on enabled networks**:
-
-   | AddressType                 | Required Dependencies              | Bundle Size |
-   | --------------------------- | ---------------------------------- | ----------- |
-   | `AddressType.solana`        | `@solana/web3.js` OR `@solana/kit` | ~250KB      |
-   | `AddressType.ethereum`      | `viem`                             | ~300KB      |
-   | `AddressType.bitcoinSegwit` | `bitcoinjs-lib`                    | ~200KB      |
-   | `AddressType.sui`           | `@mysten/sui.js`                   | ~250KB      |
-
-   **Example package.json for Solana + Ethereum (using @solana/web3.js)**:
-
-   ```json
-   {
-     "dependencies": {
-       "@phantom/browser-sdk": "^1.0.0",
-       "@solana/web3.js": "^1.87.0",
-       "viem": "^2.0.0"
-     }
-   }
-   ```
-
-   **Example package.json for Solana + Ethereum (using @solana/kit)**:
-
-   ```json
-   {
-     "dependencies": {
-       "@phantom/browser-sdk": "^1.0.0",
-       "@solana/kit": "^2.0.0",
-       "viem": "^2.0.0"
-     }
-   }
-   ```
-
-   **Example package.json for Solana only (using @solana/web3.js)**:
-
-   ```json
-   {
-     "dependencies": {
-       "@phantom/browser-sdk": "^1.0.0",
-       "@solana/web3.js": "^1.87.0"
-     }
-   }
-   ```
-
-   **Example package.json for Solana only (using @solana/kit)**:
-
-   ```json
-   {
-     "dependencies": {
-       "@phantom/browser-sdk": "^1.0.0",
-       "@solana/kit": "^2.0.0"
-     }
-   }
-   ```
-
-   **Example package.json for all networks (using @solana/web3.js)**:
-
-   ```json
-   {
-     "dependencies": {
-       "@phantom/browser-sdk": "^1.0.0",
-       "@solana/web3.js": "^1.87.0",
-       "viem": "^2.0.0",
-       "bitcoinjs-lib": "^6.1.0",
-       "@mysten/sui.js": "^0.50.0"
-     }
-   }
-   ```
-
-   **Example package.json for all networks (using @solana/kit)**:
-
-   ```json
-   {
-     "dependencies": {
-       "@phantom/browser-sdk": "^1.0.0",
-       "@solana/kit": "^2.0.0",
-       "viem": "^2.0.0",
-       "bitcoinjs-lib": "^6.1.0",
-       "@mysten/sui.js": "^0.50.0"
-     }
-   }
-   ```
-
-3. **Monitor bundle size**:
-   ```bash
-   # Analyze your bundle
-   npx webpack-bundle-analyzer dist/main.js
-   ```
-
-## Server Setup for Embedded Wallets
-
-For embedded wallets, you need to set up a backend endpoint. Add the `serverUrl` parameter to your SDK configuration:
-
-```typescript
 const sdk = new BrowserSDK({
   providerType: "embedded",
-  addressTypes: [AddressType.solana],
-  apiBaseUrl: "https://api.phantom.app/v1/wallets",
-  organizationId: "your-org-id",
-  serverUrl: "http://localhost:3000/api",
+  addressTypes: [AddressType.ethereum],
+  // ... config
+});
+
+// Simple transfer with viem utilities
+const result = await sdk.ethereum.sendTransaction({
+  to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
+  value: parseEther("1").toString(), // 1 ETH
+  gas: "21000",
+  gasPrice: parseGwei("20").toString(), // 20 gwei
+});
+
+// Contract interaction
+const result = await sdk.ethereum.sendTransaction({
+  to: tokenContractAddress,
+  data: encodeFunctionData({
+    abi: tokenAbi,
+    functionName: "transfer",
+    args: [recipientAddress, parseEther("100")],
+  }),
+  gas: "50000",
+  maxFeePerGas: parseGwei("30").toString(),
+  maxPriorityFeePerGas: parseGwei("2").toString(),
 });
 ```
 
-### Required Backend Endpoint
-
-Your backend needs an endpoint that uses the server-sdk:
-
-```javascript
-// server.js
-const express = require("express");
-const { ServerSDK } = require("@phantom/server-sdk");
-
-const app = express();
-app.use(express.json());
-
-const serverSDK = new ServerSDK({
-  organizationId: process.env.ORGANIZATION_ID,
-  apiPrivateKey: process.env.PRIVATE_KEY,
-  apiBaseUrl: process.env.API_URL,
-});
-
-app.post("/api/organizations", async (req, res) => {
-  try {
-    const { userId } = req.body;
-
-    if (!userId) {
-      return res.status(400).json({ error: "userId is required" });
-    }
-
-    const organization = await serverSDK.getOrCreateChildOrganizationByTag({
-      tag: userId,
-    });
-
-    res.json({ organizationId: organization.id });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to process request" });
-  }
-});
-
-app.listen(3000);
-```

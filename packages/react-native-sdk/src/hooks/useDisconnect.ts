@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { usePhantom } from "../PhantomProvider";
 
 export function useDisconnect() {
-  const { sdk, updateConnectionState } = usePhantom();
+  const { sdk } = usePhantom();
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -16,9 +16,6 @@ export function useDisconnect() {
 
     try {
       await sdk.disconnect();
-
-      // Update connection state after disconnection
-      updateConnectionState();
     } catch (err) {
       const error = err as Error;
       setError(error);
@@ -26,7 +23,7 @@ export function useDisconnect() {
     } finally {
       setIsDisconnecting(false);
     }
-  }, [sdk, updateConnectionState]);
+  }, [sdk]);
 
   return {
     disconnect,

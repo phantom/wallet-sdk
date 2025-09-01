@@ -294,11 +294,11 @@ describe("ServerSDK", () => {
     });
 
     it("should parse various transaction formats (without actual signing)", async () => {
-      const { parseTransaction } = await import("@phantom/parsers");
+      const { parseTransactionToBase64Url } = await import("@phantom/parsers");
 
       // Test Solana raw bytes
       const mockSolanaBytes = new Uint8Array([1, 2, 3, 4, 5]);
-      const solanaResult = await parseTransaction(mockSolanaBytes, NetworkId.SOLANA_MAINNET);
+      const solanaResult = await parseTransactionToBase64Url(mockSolanaBytes, NetworkId.SOLANA_MAINNET);
       expect(solanaResult.base64url).toBeDefined();
       expect(solanaResult.originalFormat).toBe("bytes");
 
@@ -306,7 +306,7 @@ describe("ServerSDK", () => {
       const mockWeb3Transaction = {
         serialize: jest.fn().mockReturnValue(new Uint8Array([6, 7, 8, 9, 10])),
       };
-      const web3Result = await parseTransaction(mockWeb3Transaction, NetworkId.SOLANA_MAINNET);
+      const web3Result = await parseTransactionToBase64Url(mockWeb3Transaction, NetworkId.SOLANA_MAINNET);
       expect(web3Result.base64url).toBeDefined();
       expect(web3Result.originalFormat).toBe("@solana/web3.js");
       expect(mockWeb3Transaction.serialize).toHaveBeenCalled();
@@ -317,13 +317,13 @@ describe("ServerSDK", () => {
         value: 1000000000000000000n,
         data: "0x",
       };
-      const evmResult = await parseTransaction(mockEvmTransaction, NetworkId.ETHEREUM_MAINNET);
+      const evmResult = await parseTransactionToBase64Url(mockEvmTransaction, NetworkId.ETHEREUM_MAINNET);
       expect(evmResult.base64url).toBeDefined();
       expect(evmResult.originalFormat).toBe("viem");
 
       // Test hex string transaction
       const hexTransaction = "0x0102030405";
-      const hexResult = await parseTransaction(hexTransaction, NetworkId.ETHEREUM_MAINNET);
+      const hexResult = await parseTransactionToBase64Url(hexTransaction, NetworkId.ETHEREUM_MAINNET);
       expect(hexResult.base64url).toBeDefined();
       expect(hexResult.originalFormat).toBe("hex");
     });

@@ -2,6 +2,7 @@ export interface AuthResult {
   walletId: string;
   provider?: string;
   userInfo?: Record<string, any>;
+  accountDerivationIndex?: number; // Account derivation index from auth response
 }
 
 export interface PhantomConnectOptions {
@@ -12,6 +13,8 @@ export interface PhantomConnectOptions {
   customAuthData?: Record<string, any>;
   authUrl?: string;
   sessionId: string;
+  appName?: string;
+  appLogo?: string; // URL to app logo
 }
 
 export interface JWTAuthOptions {
@@ -19,6 +22,8 @@ export interface JWTAuthOptions {
   parentOrganizationId: string;
   jwtToken: string;
   customAuthData?: Record<string, any>;
+  appName?: string;
+  appLogo?: string; // URL to app logo
 }
 
 export interface AuthProvider {

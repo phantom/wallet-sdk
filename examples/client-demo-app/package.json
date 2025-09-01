@@ -1,16 +1,19 @@
 {
   "name": "client-demo-app",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Demo application using Phantom Client and Crypto packages",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "ts-node src/index.ts"
+    "dev": "ts-node src/index.ts",
+    "multi-auth": "ts-node src/multi-auth-demo.ts"
   },
   "dependencies": {
     "@phantom/api-key-stamper": "workspace:^",
+    "@phantom/base64url": "workspace:^",
     "@phantom/client": "workspace:^",
-    "@phantom/crypto": "workspace:^"
+    "@phantom/crypto": "workspace:^",
+    "bs58": "^5.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

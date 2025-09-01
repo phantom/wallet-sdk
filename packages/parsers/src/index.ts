@@ -1,14 +1,14 @@
 import type { NetworkId } from "@phantom/constants";
-import { getExplorerUrl } from "@phantom/constants";
-import { base64urlEncode, stringToBase64url, base64urlDecode } from "@phantom/base64url";
+import { base64urlEncode, stringToBase64url } from "@phantom/base64url";
+import { getTransactionEncoder, type Transaction } from "@solana/transactions";
 import { Buffer } from "buffer";
-import bs58 from "bs58";
 import {
-  parseSolanaTransactionSignature,
-  parseEVMTransactionHash,
-  parseBitcoinTransactionHash,
-  parseSuiTransactionDigest,
-} from "./dynamic-imports";
+  parseSignMessageResponse as _parseSignMessageResponse,
+  parseTransactionResponse as _parseTransactionResponse,
+} from "./response-parsers";
+
+// Re-export response parsers
+export { parseSignMessageResponse, parseTransactionResponse } from "./response-parsers";
 
 export interface ParsedTransaction {
   base64url: string;
@@ -19,17 +19,8 @@ export interface ParsedMessage {
   base64url: string;
 }
 
-export interface ParsedSignatureResult {
-  signature: string; // Human-readable signature (hex/base58)
-  rawSignature: string; // Original base64url signature from server
-  blockExplorer?: string; // Explorer link (if supported)
-}
-
-export interface ParsedTransactionResult {
-  hash: string; // Transaction hash/signature
-  rawTransaction: string; // Original base64url transaction from server
-  blockExplorer?: string; // Explorer link to transaction
-}
+// Re-export interfaces from response-parsers
+export type { ParsedSignatureResult, ParsedTransactionResult } from "./response-parsers";
 
 /**
  * Parse a message to base64url format for the client
@@ -43,23 +34,23 @@ export function parseMessage(message: string): ParsedMessage {
 /**
  * Parse a transaction to base64url format based on network type
  */
-export async function parseTransaction(transaction: any, networkId: NetworkId): Promise<ParsedTransaction> {
+export async function parseTransactionToBase64Url(transaction: any, networkId: NetworkId): Promise<ParsedTransaction> {
   const networkPrefix = networkId.split(":")[0].toLowerCase();
 
   switch (networkPrefix) {
     case "solana":
-      return parseSolanaTransaction(transaction);
+      return parseSolanaTransactionToBase64Url(transaction);
     case "ethereum":
     case "eip155": // Standard Ethereum chain identifier
     case "polygon":
     case "optimism":
     case "arbitrum":
     case "base":
-      return parseEVMTransaction(transaction);
+      return parseEVMTransactionToBase64Url(transaction);
     case "sui":
-      return await parseSuiTransaction(transaction);
+      return await parseSuiTransactionToBase64Url(transaction);
     case "bitcoin":
-      return parseBitcoinTransaction(transaction);
+      return parseBitcoinTransactionToBase64Url(transaction);
     default:
       throw new Error(`Unsupported network: ${networkPrefix}`);
   }
@@ -69,7 +60,7 @@ export async function parseTransaction(transaction: any, networkId: NetworkId): 
  * Parse Solana transaction to base64url
  * Supports both @solana/web3.js and @solana/kit formats
  */
-function parseSolanaTransaction(transaction: any): ParsedTransaction {
+function parseSolanaTransactionToBase64Url(transaction: any): ParsedTransaction {
   // Check if it's a @solana/kit Transaction (has messageBytes)
   if (transaction?.messageBytes != null) {
     // @solana/kit Transaction
@@ -120,7 +111,7 @@ function parseSolanaTransaction(transaction: any): ParsedTransaction {
  * Parse EVM transaction to base64url
  * Supports Ethereum, Polygon, and other EVM-compatible chains
  */
-function parseEVMTransaction(transaction: any): ParsedTransaction {
+function parseEVMTransactionToBase64Url(transaction: any): ParsedTransaction {
   // Check if it's a Viem transaction object
   if (transaction && typeof transaction === "object" && (transaction.to || transaction.data)) {
     // Serialize with BigInt support
@@ -168,7 +159,7 @@ function parseEVMTransaction(transaction: any): ParsedTransaction {
 /**
  * Parse Sui transaction to base64url
  */
-async function parseSuiTransaction(transaction: any): Promise<ParsedTransaction> {
+async function parseSuiTransactionToBase64Url(transaction: any): Promise<ParsedTransaction> {
   // Check if it's a Sui transaction object with serialize method
   if (transaction?.serialize && typeof transaction.serialize === "function") {
     const serialized = transaction.serialize();
@@ -204,7 +195,7 @@ async function parseSuiTransaction(transaction: any): Promise<ParsedTransaction>
 /**
  * Parse Bitcoin transaction to base64url
  */
-function parseBitcoinTransaction(transaction: any): ParsedTransaction {
+function parseBitcoinTransactionToBase64Url(transaction: any): ParsedTransaction {
   // Check if it's a bitcoinjs-lib transaction
   if (transaction?.toBuffer && typeof transaction.toBuffer === "function") {
     const buffer = transaction.toBuffer();
@@ -234,246 +225,18 @@ function parseBitcoinTransaction(transaction: any): ParsedTransaction {
   throw new Error("Unsupported Bitcoin transaction format");
 }
 
-/**
- * Parse a signed message response from base64 to human-readable format
- */
-export function parseSignMessageResponse(base64Response: string, networkId: NetworkId): ParsedSignatureResult {
-  const networkPrefix = networkId.split(":")[0].toLowerCase();
 
-  switch (networkPrefix) {
-    case "solana":
-      return parseSolanaSignatureResponse(base64Response, networkId);
-    case "eip155": // EVM chains
-    case "ethereum":
-      return parseEVMSignatureResponse(base64Response, networkId);
-    case "sui":
-      return parseSuiSignatureResponse(base64Response, networkId);
-    case "bip122": // Bitcoin
-    case "bitcoin":
-      return parseBitcoinSignatureResponse(base64Response, networkId);
-    default:
-      // Fallback: return the signature as-is
-      return {
-        signature: base64Response,
-        rawSignature: base64Response,
-        blockExplorer: getExplorerUrl(networkId, "transaction", base64Response),
-      };
-  }
-}
+export function parseSolanaKitTransactionToSolanaWeb3js(transaction: Transaction) {
+  // Encode the Kit transaction into its canonical wire format (Uint8Array).
+  const serialized = getTransactionEncoder().encode(transaction);
 
-/**
- * Parse a transaction response from base64 rawTransaction to extract hash
- */
-export async function parseTransactionResponse(
-  base64RawTransaction: string,
-  networkId: NetworkId,
-): Promise<ParsedTransactionResult> {
-  const networkPrefix = networkId.split(":")[0].toLowerCase();
+  const fakeVersioned = {
+    serialize() {
+      // `serialize` should return a *new* `Uint8Array` each call to avoid
+      // consumers mutating the internal representation.
+      return new Uint8Array(serialized);
+    },
+  } as unknown as any;
 
-  switch (networkPrefix) {
-    case "solana":
-      return await parseSolanaTransactionResponse(base64RawTransaction, networkId);
-    case "eip155": // EVM chains
-    case "ethereum":
-      return await parseEVMTransactionResponse(base64RawTransaction, networkId);
-    case "sui":
-      return await parseSuiTransactionResponse(base64RawTransaction, networkId);
-    case "bip122": // Bitcoin
-    case "bitcoin":
-      return await parseBitcoinTransactionResponse(base64RawTransaction, networkId);
-    default:
-      // Fallback: use the raw transaction as hash
-      return {
-        hash: base64RawTransaction,
-        rawTransaction: base64RawTransaction,
-        blockExplorer: getExplorerUrl(networkId, "transaction", base64RawTransaction),
-      };
-  }
-}
-
-/**
- * Parse Solana signature response
- */
-function parseSolanaSignatureResponse(base64Response: string, networkId: NetworkId): ParsedSignatureResult {
-  try {
-    // Solana signatures are typically 64 bytes, base58 encoded
-    // The response might be base64url encoded signature bytes
-    const signatureBytes = base64urlDecode(base64Response);
-    const signature = bs58.encode(signatureBytes);
-
-    return {
-      signature,
-      rawSignature: base64Response,
-      blockExplorer: getExplorerUrl(networkId, "transaction", signature),
-    };
-  } catch (error) {
-    // Fallback: assume it's already a base58 signature
-    return {
-      signature: base64Response,
-      rawSignature: base64Response,
-      blockExplorer: getExplorerUrl(networkId, "transaction", base64Response),
-    };
-  }
-}
-
-/**
- * Parse Solana transaction response to extract signature using dynamic imports
- */
-async function parseSolanaTransactionResponse(
-  base64RawTransaction: string,
-  networkId: NetworkId,
-): Promise<ParsedTransactionResult> {
-  try {
-    const result = await parseSolanaTransactionSignature(base64RawTransaction);
-
-    return {
-      hash: result.signature,
-      rawTransaction: base64RawTransaction,
-      blockExplorer: getExplorerUrl(networkId, "transaction", result.signature),
-    };
-  } catch (error) {
-    return {
-      hash: base64RawTransaction,
-      rawTransaction: base64RawTransaction,
-      blockExplorer: getExplorerUrl(networkId, "transaction", base64RawTransaction),
-    };
-  }
-}
-
-/**
- * Parse EVM signature response
- */
-function parseEVMSignatureResponse(base64Response: string, _networkId: NetworkId): ParsedSignatureResult {
-  try {
-    // EVM signatures are typically 65 bytes (r + s + v)
-    const signatureBytes = base64urlDecode(base64Response);
-    const signature = "0x" + Buffer.from(signatureBytes).toString("hex");
-
-    return {
-      signature,
-      rawSignature: base64Response,
-      // Note: Most block explorers don't have direct signature lookup, only transaction lookup
-    };
-  } catch (error) {
-    // Fallback: assume it's already hex format
-    const signature = base64Response.startsWith("0x") ? base64Response : "0x" + base64Response;
-    return {
-      signature,
-      rawSignature: base64Response,
-    };
-  }
-}
-
-/**
- * Parse EVM transaction response to extract hash using dynamic imports
- */
-async function parseEVMTransactionResponse(
-  base64RawTransaction: string,
-  networkId: NetworkId,
-): Promise<ParsedTransactionResult> {
-  try {
-    const result = await parseEVMTransactionHash(base64RawTransaction);
-
-    return {
-      hash: result.hash,
-      rawTransaction: base64RawTransaction,
-      blockExplorer: getExplorerUrl(networkId, "transaction", result.hash),
-    };
-  } catch (error) {
-    return {
-      hash: base64RawTransaction,
-      rawTransaction: base64RawTransaction,
-      blockExplorer: getExplorerUrl(networkId, "transaction", base64RawTransaction),
-    };
-  }
-}
-
-/**
- * Parse Sui signature response
- */
-function parseSuiSignatureResponse(base64Response: string, _networkId: NetworkId): ParsedSignatureResult {
-  try {
-    // Sui uses base64 encoded signatures
-    const signatureBytes = base64urlDecode(base64Response);
-    const signature = Buffer.from(signatureBytes).toString("base64");
-
-    return {
-      signature,
-      rawSignature: base64Response,
-    };
-  } catch (error) {
-    return {
-      signature: base64Response,
-      rawSignature: base64Response,
-    };
-  }
-}
-
-/**
- * Parse Sui transaction response using dynamic imports
- */
-async function parseSuiTransactionResponse(
-  base64RawTransaction: string,
-  networkId: NetworkId,
-): Promise<ParsedTransactionResult> {
-  try {
-    const result = await parseSuiTransactionDigest(base64RawTransaction);
-
-    return {
-      hash: result.digest,
-      rawTransaction: base64RawTransaction,
-      blockExplorer: getExplorerUrl(networkId, "transaction", result.digest),
-    };
-  } catch (error) {
-    return {
-      hash: base64RawTransaction,
-      rawTransaction: base64RawTransaction,
-      blockExplorer: getExplorerUrl(networkId, "transaction", base64RawTransaction),
-    };
-  }
-}
-
-/**
- * Parse Bitcoin signature response
- */
-function parseBitcoinSignatureResponse(base64Response: string, _networkId: NetworkId): ParsedSignatureResult {
-  try {
-    // Bitcoin signatures are DER encoded
-    const signatureBytes = base64urlDecode(base64Response);
-    const signature = Buffer.from(signatureBytes).toString("hex");
-
-    return {
-      signature,
-      rawSignature: base64Response,
-    };
-  } catch (error) {
-    return {
-      signature: base64Response,
-      rawSignature: base64Response,
-    };
-  }
-}
-
-/**
- * Parse Bitcoin transaction response using dynamic imports
- */
-async function parseBitcoinTransactionResponse(
-  base64RawTransaction: string,
-  networkId: NetworkId,
-): Promise<ParsedTransactionResult> {
-  try {
-    const result = await parseBitcoinTransactionHash(base64RawTransaction);
-
-    return {
-      hash: result.hash,
-      rawTransaction: base64RawTransaction,
-      blockExplorer: getExplorerUrl(networkId, "transaction", result.hash),
-    };
-  } catch (error) {
-    return {
-      hash: base64RawTransaction,
-      rawTransaction: base64RawTransaction,
-      blockExplorer: getExplorerUrl(networkId, "transaction", base64RawTransaction),
-    };
-  }
+  return fakeVersioned;
 }

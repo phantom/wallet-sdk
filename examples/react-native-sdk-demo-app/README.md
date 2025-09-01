@@ -119,7 +119,7 @@ The app is configured in `app/_layout.tsx` using environment variables:
 const config = {
   organizationId: process.env.EXPO_PUBLIC_ORGANIZATION_ID || "your-org-id",
   scheme: process.env.EXPO_PUBLIC_APP_SCHEME || "phantom-rn-demo",
-  embeddedWalletType: (process.env.EXPO_PUBLIC_EMBEDDED_WALLET_TYPE || "app-wallet") as const,
+  embeddedWalletType: (process.env.EXPO_PUBLIC_EMBEDDED_WALLET_TYPE || "user-wallet") as const,
   addressTypes: [AddressType.solana],
   authOptions: {
     authUrl: process.env.EXPO_PUBLIC_AUTH_URL,

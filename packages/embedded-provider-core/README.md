@@ -273,7 +273,7 @@ interface EmbeddedProviderConfig {
   apiBaseUrl: string; // Phantom API base URL
   organizationId: string; // Your organization ID
   embeddedWalletType: "app-wallet" | "user-wallet";
-  addressTypes: AddressType[]; // Supported blockchain addresses
+  addressTypes: [AddressType, ...AddressType[]]; // Supported blockchain addresses
 
   // Optional
   solanaProvider?: "web3js" | "kit"; // Solana library preference

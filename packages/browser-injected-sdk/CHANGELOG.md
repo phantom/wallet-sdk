@@ -1,5 +1,22 @@
 # @phantom/browser-sdk
 
+## 1.0.0-beta.0
+
+### Major Changes
+
+- New SDKs chain specific interface, prepare for initial beta release
+
+### Patch Changes
+
+- Updated dependencies
+  - @phantom/constants@1.0.0-beta.0
+
+## 0.0.10
+
+### Patch Changes
+
+- 9305f27: Remove solana kit dep
+
 ## 0.0.10
 
 ### Patch Changes

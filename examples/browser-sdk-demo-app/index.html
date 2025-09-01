@@ -17,18 +17,11 @@
             <div class="form-group">
               <label for="providerType">Provider Type:</label>
               <select id="providerType">
-                <option value="embedded">Embedded (Non-Custodial)</option>
+                <option value="embedded" selected>Embedded (Non-Custodial)</option>
                 <option value="injected">Injected (Browser Extension)</option>
               </select>
             </div>
 
-            <div class="form-group">
-              <label for="solanaProvider">Solana Library:</label>
-              <select id="solanaProvider">
-                <option value="web3js">@solana/web3.js</option>
-                <option value="kit">@solana/kit</option>
-              </select>
-            </div>
           </div>
 
           <div class="section">
@@ -38,8 +31,46 @@
               <button id="getAccountBtn" disabled>Get Account</button>
               <button id="signMessageBtn" disabled>Sign Message (Solana)</button>
               <button id="signMessageEvmBtn" disabled>Sign Message (EVM)</button>
+              <button id="signTypedDataBtn" disabled>Sign Typed Data (EVM)</button>
               <button id="signTransactionBtn" disabled>Sign Transaction</button>
               <button id="disconnectBtn" disabled>Disconnect</button>
+            </div>
+          </div>
+
+          <div class="section" id="addressesSection" style="display: none">
+            <h3>Connected Wallet Addresses</h3>
+            <div id="addressesList" class="addresses-list">
+              <!-- Addresses will be populated here -->
+            </div>
+          </div>
+
+          <div class="section" id="balanceSection" style="display: none">
+            <h3>SOL Balance</h3>
+            <div class="balance-info">
+              <div class="balance-display"><span id="balanceValue">--</span> SOL</div>
+              <button id="refreshBalanceBtn" class="small">Refresh</button>
+            </div>
+          </div>
+
+          <div class="section" id="autoConfirmSection" style="display: none">
+            <h3>Auto-Confirm (Injected Only)</h3>
+            <div class="button-group">
+              <button id="enableAutoConfirmBtn" disabled>Enable Auto-Confirm</button>
+              <button id="disableAutoConfirmBtn" disabled>Disable Auto-Confirm</button>
+              <button id="getAutoConfirmStatusBtn" disabled>Get Status</button>
+              <button id="getSupportedChainsBtn" disabled>Get Supported Chains</button>
+            </div>
+            <div class="form-group">
+              <label for="chainSelect">Select Chain for Auto-Confirm:</label>
+              <select id="chainSelect" multiple size="4">
+                <option value="SOLANA_MAINNET">Solana Mainnet</option>
+                <option value="SOLANA_DEVNET">Solana Devnet</option>
+                <option value="ETHEREUM_MAINNET">Ethereum Mainnet</option>
+                <option value="ETHEREUM_SEPOLIA">Ethereum Sepolia</option>
+                <option value="POLYGON_MAINNET">Polygon Mainnet</option>
+                <option value="ARBITRUM_ONE">Arbitrum One</option>
+              </select>
+              <small>Hold Ctrl/Cmd to select multiple chains</small>
             </div>
           </div>
 
@@ -47,7 +78,6 @@
             <h3>Transaction Tests</h3>
             <div class="button-group">
               <button id="testWeb3jsBtn" disabled>Test @solana/web3.js</button>
-              <button id="testKitBtn" disabled>Test @solana/kit</button>
               <button id="testEthereumBtn" disabled>Test Ethereum</button>
             </div>
           </div>
@@ -66,8 +96,8 @@
                 <select id="debugLevel">
                   <option value="0">ERROR</option>
                   <option value="1">WARN</option>
-                  <option value="2" selected>INFO</option>
-                  <option value="3">DEBUG</option>
+                  <option value="2" >INFO</option>
+                  <option value="3" selected>DEBUG</option>
                 </select>
               </div>
 

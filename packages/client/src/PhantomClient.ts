@@ -1,8 +1,5 @@
 import axios, { type AxiosInstance } from "axios";
-import bs58 from "bs58";
-import { base64urlEncode } from "@phantom/base64url";
-import { type Keypair } from "@phantom/crypto";
-import { ApiKeyStamper } from "@phantom/api-key-stamper";
+import { Buffer } from "buffer";
 import {
   Configuration,
   KMSRPCApi,
@@ -34,20 +31,27 @@ import {
   GetAccountsMethodEnum,
   type ExternalDerivedAccount,
   KmsUserRole,
-  Algorithm,
   type ExternalKmsOrganization,
+  type DerivationInfoAddressFormatEnum,
+  type ExternalKmsAuthenticator
 } from "@phantom/openapi-wallet-service";
 import { DerivationPath, getNetworkConfig } from "./constants";
 import { deriveSubmissionConfig } from "./caip2-mappings";
 import {
   type PhantomClientConfig,
-  type Stamper,
   type CreateWalletResult,
   type SignedTransaction,
   type GetWalletsResult,
   type SignMessageParams,
   type SignAndSendTransactionParams,
+  type GetWalletWithTagParams,
+  type CreateAuthenticatorParams,
+  type DeleteAuthenticatorParams,
+  type UserConfig,
+  type AuthenticatorConfig,
 } from "./types";
+
+import type { Stamper } from "@phantom/sdk-types";
 
 // TODO(napas): Auto generate this from the OpenAPI spec
 export interface SubmissionConfig {
@@ -59,6 +63,7 @@ export class PhantomClient {
   private config: PhantomClientConfig;
   private kmsApi: KMSRPCApi;
   private axiosInstance: AxiosInstance;
+  public stamper?: Stamper;
 
   constructor(config: PhantomClientConfig, stamper?: Stamper) {
     this.config = config;
@@ -74,9 +79,9 @@ export class PhantomClient {
     if (stamper) {
       // Add stamper interceptor to axios instance
       this.axiosInstance.interceptors.request.use(async config => {
-        const stampedConfig = await stamper.stamp(config);
-        return stampedConfig;
+        return await this.stampRequest(config, stamper);
       });
+      this.stamper = stamper;
     }
 
     // Configure the KMS API client
@@ -104,7 +109,7 @@ export class PhantomClient {
       const walletRequest: any = {
         organizationId: this.config.organizationId,
         walletName: walletName || `Wallet ${Date.now()}`,
-        accounts: [DerivationPath.Solana, DerivationPath.Ethereum, DerivationPath.Bitcoin, DerivationPath.Sui] as any,
+        accounts: [DerivationPath.Solana(), DerivationPath.Ethereum(), DerivationPath.Bitcoin(), DerivationPath.Sui()] as any,
       };
 
       // Creating wallet with request
@@ -115,7 +120,7 @@ export class PhantomClient {
       } as any;
 
       const response = await this.kmsApi.postKmsRpc(request);
-      const walletResult = response.data.result as ExternalKmsWallet;
+      const walletResult = (response.data as any).result as ExternalKmsWallet;
 
       // Wallet created successfully
 
@@ -123,7 +128,7 @@ export class PhantomClient {
       const requestAccounts: GetAccounts = {
         method: GetAccountsMethodEnum.getAccounts,
         params: {
-          accounts: [DerivationPath.Solana, DerivationPath.Ethereum, DerivationPath.Bitcoin, DerivationPath.Sui],
+          accounts: [DerivationPath.Solana(), DerivationPath.Ethereum(), DerivationPath.Bitcoin(), DerivationPath.Sui()],
           organizationId: this.config.organizationId,
           walletId: walletResult.walletId,
         },
@@ -135,7 +140,7 @@ export class PhantomClient {
       const accountsResponse = await this.kmsApi.postKmsRpc(requestAccounts);
 
       // Accounts fetched successfully
-      const accountsResult = accountsResponse.data.result as (ExternalDerivedAccount & { address: string })[];
+      const accountsResult = (accountsResponse.data as any).result as (ExternalDerivedAccount & { address: string })[];
       return {
         walletId: walletResult.walletId,
         addresses: accountsResult.map(account => ({
@@ -156,6 +161,7 @@ export class PhantomClient {
     const walletId = params.walletId;
     const transactionParam = params.transaction;
     const networkIdParam = params.networkId;
+    const derivationIndex = params.derivationIndex ?? 0;
 
     try {
       if (!this.config.organizationId) {
@@ -173,8 +179,8 @@ export class PhantomClient {
         );
       }
 
-      // Get network configuration
-      const networkConfig = getNetworkConfig(networkIdParam);
+      // Get network configuration with custom derivation index
+      const networkConfig = getNetworkConfig(networkIdParam, derivationIndex);
 
       if (!networkConfig) {
         throw new Error(`Unsupported network ID: ${networkIdParam}`);
@@ -206,9 +212,12 @@ export class PhantomClient {
       } as any;
 
       const response = await this.kmsApi.postKmsRpc(request);
-      const result = response.data.result as SignedTransactionWithPublicKey;
+      const result = (response.data as any).result as SignedTransactionWithPublicKey;
+      const rpcSubmissionResult = (response.data as any)["rpc_submission_result"];
+      const hash = rpcSubmissionResult ? rpcSubmissionResult.result : null;
       return {
         rawTransaction: result.transaction as unknown as string, // Base64 encoded signed transaction
+        hash,
       };
     } catch (error: any) {
       console.error("Failed to sign and send transaction:", error.response?.data || error.message);
@@ -219,13 +228,15 @@ export class PhantomClient {
   async getWalletAddresses(
     walletId: string,
     derivationPaths?: string[],
-  ): Promise<{ addressType: string; address: string }[]> {
+    derivationIndex?: number,
+  ): Promise<{ addressType: DerivationInfoAddressFormatEnum; address: string }[]> {
     try {
+      const accountIndex = derivationIndex ?? 0;
       const paths = derivationPaths || [
-        DerivationPath.Solana,
-        DerivationPath.Ethereum,
-        DerivationPath.Bitcoin,
-        DerivationPath.Sui,
+        DerivationPath.Solana(accountIndex),
+        DerivationPath.Ethereum(accountIndex),
+        DerivationPath.Bitcoin(accountIndex),
+        DerivationPath.Sui(accountIndex),
       ];
 
       const requestAccounts: GetAccounts = {
@@ -239,7 +250,7 @@ export class PhantomClient {
       } as any;
 
       const accountsResponse = await this.kmsApi.postKmsRpc(requestAccounts);
-      const accountsResult = accountsResponse.data.result as (ExternalDerivedAccount & { address: string })[];
+      const accountsResult = (accountsResponse.data as any).result as (ExternalDerivedAccount & { address: string })[];
 
       return accountsResult.map(account => ({
         addressType: account.addressFormat,
@@ -258,13 +269,14 @@ export class PhantomClient {
     const walletId = params.walletId;
     const messageParam = params.message;
     const networkIdParam = params.networkId;
+    const derivationIndex = params.derivationIndex ?? 0;
 
     try {
       if (!this.config.organizationId) {
         throw new Error("organizationId is required to sign a message");
       }
-      // Get network configuration
-      const networkConfig = getNetworkConfig(networkIdParam);
+      // Get network configuration with custom derivation index
+      const networkConfig = getNetworkConfig(networkIdParam, derivationIndex);
 
       if (!networkConfig) {
         throw new Error(`Unsupported network ID: ${networkIdParam}`);
@@ -294,7 +306,7 @@ export class PhantomClient {
       } as any;
 
       const response = await this.kmsApi.postKmsRpc(request);
-      const result = response.data.result as SignatureWithPublicKey;
+      const result = (response.data as any).result as SignatureWithPublicKey;
 
       // Return the base64 encoded signature
       return result.signature;
@@ -319,7 +331,7 @@ export class PhantomClient {
       // Fetching wallets for organization
 
       const response = await this.kmsApi.postKmsRpc(request as any);
-      const result = response.data.result as {
+      const result = (response.data as any).result as {
         wallets: ExternalKmsWallet[];
         totalCount: number;
         limit: number;
@@ -343,36 +355,76 @@ export class PhantomClient {
     }
   }
 
-  async getOrCreateOrganization(tag: string, keyPair: Keypair): Promise<ExternalKmsOrganization> {
+  /**
+   * Get organization details by organization ID
+   */
+  async getOrganization(organizationId: string): Promise<ExternalKmsOrganization> {
+    try {
+      const request = {
+        method: "getOrganization",
+        params: {
+          organizationId: organizationId,
+        },
+        timestampMs: Date.now(),
+      };
+
+      const response = await this.kmsApi.postKmsRpc(request as any);
+      const result = (response.data as any).result as ExternalKmsOrganization;
+      return result;
+    } catch (error: any) {
+      console.error("Failed to get organization:", error.response?.data || error.message);
+      throw new Error(`Failed to get organization: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  async getOrCreateOrganization(tag: string, publicKey: string): Promise<ExternalKmsOrganization> {
     try {
       // First, try to get the organization
       // Since there's no explicit getOrganization method, we'll create it
       // This assumes the API returns existing org if it already exists
-      return await this.createOrganization(tag, keyPair);
+      return await this.createOrganization(tag, [
+        {
+          username: `user-${Date.now()}`,
+          role: KmsUserRole.admin,
+          authenticators: [
+            {
+              authenticatorName: `auth-${Date.now()}`,
+              authenticatorKind: "keypair",
+              publicKey: publicKey,
+              algorithm: "Ed25519",
+            },
+          ],
+        },
+      ]);
     } catch (error: any) {
       console.error("Failed to get or create organization:", error.response?.data || error.message);
       throw new Error(`Failed to get or create organization: ${error.response?.data?.message || error.message}`);
     }
   }
 
-  async internalCreateOrganization(name: string, keyPair: Keypair): Promise<ExternalKmsOrganization> {
+  /**
+   * Create a new organization with the specified name and users
+   * @param name Organization name
+   * @param users Array of users with their authenticators
+   */
+  async createOrganization(name: string, users: UserConfig[], tags?: string[]): Promise<ExternalKmsOrganization> {
     try {
+      if (!name) {
+        throw new Error("Organization name is required");
+      }
+
+      if (!users || users.length === 0) {
+        throw new Error("At least one user is required");
+      }
+
       const params: CreateOrganizationRequest = {
         organizationName: name,
-        users: [
-          {
-            role: KmsUserRole.admin,
-            authenticators: [
-              {
-                algorithm: Algorithm.ed25519,
-                authenticatorKind: "keypair" as any,
-                publicKey: base64urlEncode(bs58.decode(keyPair.publicKey)) as any,
-                authenticatorName: `KeyPair ${Date.now()}`,
-              },
-            ] as any,
-            username: `user-${Date.now()}`,
-          },
-        ],
+        users: users.map(userConfig => ({
+          role: userConfig.role === "ADMIN"  ? KmsUserRole.admin : KmsUserRole.user,
+          username: userConfig.username || `user-${Date.now()}`,
+          authenticators: userConfig.authenticators as any,
+        })),
+        tags
       };
 
       const request: CreateOrganization = {
@@ -381,10 +433,8 @@ export class PhantomClient {
         timestampMs: Date.now(),
       } as any;
 
-      // Creating organization with request
-
       const response = await this.kmsApi.postKmsRpc(request);
-      const result = response.data.result as ExternalKmsOrganization;
+      const result = (response.data as any).result as ExternalKmsOrganization;
 
       return result;
     } catch (error: any) {
@@ -393,42 +443,27 @@ export class PhantomClient {
     }
   }
 
-  async createOrganization(name: string, keyPair: Keypair): Promise<ExternalKmsOrganization> {
+  /**
+   * Create an authenticator for a user in an organization
+   */
+  async createAuthenticator(params: CreateAuthenticatorParams): Promise<ExternalKmsAuthenticator> {
     try {
-      if (!name) {
-        throw new Error("Organization name is required");
-      }
-      // Create a new instance of the client with the provided keyPair
-      const tempClient = new PhantomClient(
-        {
-          apiBaseUrl: this.config.apiBaseUrl,
-        },
-        new ApiKeyStamper({
-          apiSecretKey: keyPair.secretKey,
-        }),
-      );
+      const requestParams: CreateAuthenticatorRequest = {
+        organizationId: params.organizationId,
+        username: params.username,
+        authenticatorName: params.authenticatorName,
+        authenticator: params.authenticator as AuthenticatorConfig,
+        replaceExpirable: params.replaceExpirable,
+      } as any;
 
-      return await tempClient.internalCreateOrganization(name, keyPair);
-    } catch (error: any) {
-      console.error("Failed to create organization:", error.response?.data || error.message);
-      throw new Error(`Failed to create organization: ${error.response?.data?.message || error.message}`);
-    }
-  }
-
-  async createAuthenticator(params: CreateAuthenticatorRequest): Promise<any> {
-    try {
       const request: CreateAuthenticator = {
         method: CreateAuthenticatorMethodEnum.createAuthenticator,
-        params: params,
+        params: requestParams,
         timestampMs: Date.now(),
       } as any;
 
-      // Creating authenticator with request
-
       const response = await this.kmsApi.postKmsRpc(request);
-      const result = response.data.result;
-
-      // Authenticator created successfully
+      const result = (response.data as any).result as ExternalKmsAuthenticator
 
       return result;
     } catch (error: any) {
@@ -437,20 +472,25 @@ export class PhantomClient {
     }
   }
 
-  async deleteAuthenticator(params: DeleteAuthenticatorRequest): Promise<any> {
+  /**
+   * Delete an authenticator for a user in an organization
+   */
+  async deleteAuthenticator(params: DeleteAuthenticatorParams): Promise<any> {
     try {
+      const requestParams: DeleteAuthenticatorRequest = {
+        organizationId: params.organizationId,
+        username: params.username,
+        authenticatorId: params.authenticatorId,
+      };
+
       const request: DeleteAuthenticator = {
         method: DeleteAuthenticatorMethodEnum.deleteAuthenticator,
-        params: params,
+        params: requestParams,
         timestampMs: Date.now(),
       } as any;
 
-      // Deleting authenticator with request
-
       const response = await this.kmsApi.postKmsRpc(request);
-      const result = response.data.result;
-
-      // Authenticator deleted successfully
+      const result = (response.data as any).result;
 
       return result;
     } catch (error: any) {
@@ -470,7 +510,7 @@ export class PhantomClient {
       // Granting organization access with request
 
       const response = await this.kmsApi.postKmsRpc(request);
-      const result = response.data.result;
+      const result = (response.data as any).result;
 
       // Organization access granted successfully
 
@@ -479,5 +519,49 @@ export class PhantomClient {
       console.error("Failed to grant organization access:", error.response?.data || error.message);
       throw new Error(`Failed to grant organization access: ${error.response?.data?.message || error.message}`);
     }
+  }
+
+  /**
+   * Get a wallet by tag from the specified organization
+   */
+  async getWalletWithTag(params: GetWalletWithTagParams): Promise<any> {
+    try {
+      const request = {
+        method: "getWalletWithTag",
+        params: {
+          organizationId: params.organizationId,
+          tag: params.tag,
+          derivationPaths: params.derivationPaths,
+        },
+        timestampMs: Date.now(),
+      };
+
+      const response = await this.kmsApi.postKmsRpc(request as any);
+      const result = (response.data as any).result;
+      return result;
+    } catch (error: any) {
+      console.error("Failed to get wallet with tag:", error.response?.data || error.message);
+      throw new Error(`Failed to get wallet with tag: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  /**
+   * Stamp an axios request with the provided stamper
+   */
+  private async stampRequest(config: any, stamper: Stamper) {
+    // Convert request body to Buffer for stamper
+    const requestBody =
+      typeof config.data === "string" ? config.data : config.data === undefined ? "" : JSON.stringify(config.data);
+    const dataUtf8 = Buffer.from(requestBody, "utf8");
+
+
+    const stamp = await stamper.stamp({
+      data: dataUtf8,
+    });
+
+    // Add the stamp header
+    config.headers = config.headers || {};
+    config.headers["X-Phantom-Stamp"] = stamp;
+    return config;
   }
 }

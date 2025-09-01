@@ -437,3 +437,35 @@ button:focus-visible {
     height: 300px;
   }
 }
+
+/* Balance Card Styles */
+.balance-card {
+  background-color: #f8f9fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 1rem;
+}
+
+.balance-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.balance-row:last-child {
+  margin-bottom: 0;
+}
+
+.balance-label {
+  font-weight: 500;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.balance-value {
+  font-size: 1.25rem;
+  color: #2563eb;
+  font-weight: bold;
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace;
+}

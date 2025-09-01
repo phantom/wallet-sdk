@@ -2,62 +2,54 @@ import "./Actions.css";
 import {
   useConnect,
   useDisconnect,
-  useSignAndSendTransaction,
-  useSignMessage,
+  useSolana,
+  useEthereum,
   useAccounts,
   usePhantom,
-  useCreateUserOrganization,
   useIsExtensionInstalled,
+  useAutoConfirm,
   NetworkId,
-  DebugLevel,
-  debug,
   type ProviderType,
-  type DebugMessage,
 } from "@phantom/react-sdk";
-import {
-  createSolanaRpc,
-  pipe,
-  createTransactionMessage,
-  setTransactionMessageFeePayer,
-  setTransactionMessageLifetimeUsingBlockhash,
-  address,
-  compileTransaction,
-} from "@solana/kit";
-import { useState, useEffect, useCallback } from "react";
+import { SystemProgram, PublicKey, Connection, VersionedTransaction, TransactionMessage } from "@solana/web3.js";
+import { parseEther, parseGwei, numberToHex } from "viem";
+import { useState, useEffect } from "react";
+import { Buffer } from "buffer";
+import { useBalance } from "./hooks/useBalance";
+import { DebugConsole } from "./components/DebugConsole";
 
-export function Actions() {
+interface ActionsProps {
+  providerType: ProviderType;
+  setProviderType: (type: ProviderType) => void;
+  embeddedWalletType: "user-wallet" | "app-wallet";
+  setEmbeddedWalletType: (type: "user-wallet" | "app-wallet") => void;
+}
+
+export function Actions({ 
+  providerType, 
+  setProviderType, 
+  embeddedWalletType, 
+  setEmbeddedWalletType 
+}: ActionsProps) {
   const { connect, isConnecting, error: connectError } = useConnect();
   const { disconnect, isDisconnecting } = useDisconnect();
-  const { signAndSendTransaction, isSigning: isSigningTransaction } = useSignAndSendTransaction();
-  const { signMessage, isSigning: isSigningMessage } = useSignMessage();
-  const { createUserOrganization, isCreating } = useCreateUserOrganization();
+  const { signMessage: signSolanaMessage, signAndSendTransaction } = useSolana();
+  const { signPersonalMessage: signEthMessage, signTypedData: signEthTypedData, sendTransaction: sendEthTransaction } = useEthereum();
   const { isConnected, currentProviderType } = usePhantom();
   const { isInstalled, isLoading } = useIsExtensionInstalled();
+  const autoConfirm = useAutoConfirm();
   const addresses = useAccounts();
+  const [isSigningMessage, setIsSigningMessage] = useState(false);
+  const [isSigningTypedData, setIsSigningTypedData] = useState(false);
+  const [isSigningTransaction, setIsSigningTransaction] = useState(false);
+  const [isSendingEthTransaction, setIsSendingEthTransaction] = useState(false);
 
   const [solanaAddress, setSolanaAddress] = useState<string | null>(null);
-  const [selectedProvider, setSelectedProvider] = useState<ProviderType>("embedded");
-  const [selectedEmbeddedType, setSelectedEmbeddedType] = useState<"user-wallet" | "app-wallet">("user-wallet");
 
-  // Debug state
-  const [debugLevel, setDebugLevel] = useState<DebugLevel>(DebugLevel.INFO);
-  const [showDebug, setShowDebug] = useState(true);
-  const [debugMessages, setDebugMessages] = useState<DebugMessage[]>([]);
-  // Debug callback function
-  const handleDebugMessage = useCallback((message: DebugMessage) => {
-    setDebugMessages(prev => {
-      const newMessages = [...prev, message];
-      // Keep only last 100 messages to prevent memory issues
-      return newMessages.slice(-100);
-    });
-  }, []);
+  // Use balance hook
+  const { balance, loading: balanceLoading, error: balanceError, refetch: refetchBalance } = useBalance(solanaAddress);
+  const hasBalance = balance !== null && balance > 0;
 
-  // Initialize debug system
-  useEffect(() => {
-    debug.setCallback(handleDebugMessage);
-    debug.setLevel(debugLevel);
-    debug.enable();
-  }, [handleDebugMessage, debugLevel]);
 
   // Extract Solana address when addresses change
   useEffect(() => {
@@ -71,11 +63,7 @@ export function Actions() {
 
   const onConnect = async () => {
     try {
-      const options = {
-        providerType: selectedProvider,
-        ...(selectedProvider === "embedded" && { embeddedWalletType: selectedEmbeddedType }),
-      };
-      await connect(options);
+      await connect();
       // Connection state will be updated in the provider
     } catch (error) {
       console.error("Error connecting to Phantom:", error);
@@ -83,9 +71,6 @@ export function Actions() {
     }
   };
 
-  const clearDebugMessages = () => {
-    setDebugMessages([]);
-  };
 
   const onDisconnect = async () => {
     try {
@@ -97,21 +82,95 @@ export function Actions() {
   };
 
   const onSignMessage = async (type: "solana" | "evm") => {
-    if (!isConnected || !solanaAddress) {
+    if (!isConnected || !addresses || addresses.length === 0) {
       alert("Please connect your wallet first.");
       return;
     }
     try {
-      const result = await signMessage({
-        message: "Hello, World!",
-        networkId: type === "solana" ? NetworkId.SOLANA_MAINNET : NetworkId.ETHEREUM_MAINNET,
-      });
-      alert(
-        `Message Signed! Signature: ${result.signature}${result.blockExplorer ? `\n\nView on explorer: ${result.blockExplorer}` : ""}`,
-      );
+      setIsSigningMessage(true);
+      if (type === "solana") {
+        const result = await signSolanaMessage("Hello, World!");
+        alert(`Message Signed! Signature: ${result.signature}`);
+      } else {
+        const ethAddress = addresses.find(addr => addr.addressType === "Ethereum");
+        if (!ethAddress) {
+          alert("No Ethereum address found");
+          return;
+        }
+        const message = "Hello, World!";
+        const prefixedMessage = "0x" + Buffer.from(message, "utf8").toString("hex");
+        const result = await signEthMessage(prefixedMessage, ethAddress.address);
+        alert(`Message Signed! Signature: ${result}`);
+      }
     } catch (error) {
       console.error("Error signing message:", error);
       alert(`Error signing message: ${(error as Error).message || error}`);
+    } finally {
+      setIsSigningMessage(false);
+    }
+  };
+
+  const onSignTypedData = async () => {
+    if (!isConnected || !addresses || addresses.length === 0) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+    
+    const ethAddress = addresses.find(addr => addr.addressType === "Ethereum");
+    if (!ethAddress) {
+      alert("No Ethereum address found");
+      return;
+    }
+
+    try {
+      setIsSigningTypedData(true);
+      
+      // Example typed data structure (EIP-712)
+      const typedData = {
+        types: {
+          EIP712Domain: [
+            { name: "name", type: "string" },
+            { name: "version", type: "string" },
+            { name: "chainId", type: "uint256" },
+            { name: "verifyingContract", type: "address" }
+          ],
+          Person: [
+            { name: "name", type: "string" },
+            { name: "wallet", type: "address" }
+          ],
+          Mail: [
+            { name: "from", type: "Person" },
+            { name: "to", type: "Person" },
+            { name: "contents", type: "string" }
+          ]
+        },
+        primaryType: "Mail",
+        domain: {
+          name: "Ether Mail",
+          version: "1",
+          chainId: 1,
+          verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC"
+        },
+        message: {
+          from: {
+            name: "Cow",
+            wallet: "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826"
+          },
+          to: {
+            name: "Bob", 
+            wallet: ethAddress.address
+          },
+          contents: "Hello, Bob! This is a typed data message from Phantom React SDK Demo."
+        }
+      };
+
+      const result = await signEthTypedData(typedData);
+      alert(`Typed Data Signed! Signature: ${result}`);
+    } catch (error) {
+      console.error("Error signing typed data:", error);
+      alert(`Error signing typed data: ${(error as Error).message || error}`);
+    } finally {
+      setIsSigningTypedData(false);
     }
   };
 
@@ -121,39 +180,94 @@ export function Actions() {
       return;
     }
     try {
-      const rpc = createSolanaRpc(import.meta.env.VITE_SOLANA_RPC_URL_MAINNET);
+      setIsSigningTransaction(true);
+      // Create connection to get recent blockhash (using environment RPC URL)
+      const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL_MAINNET || "https://api.mainnet-beta.solana.com";
+      const connection = new Connection(rpcUrl);
 
-      const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
+      // Get recent blockhash
+      const { blockhash } = await connection.getLatestBlockhash();
 
-      const transactionMessage = pipe(
-        createTransactionMessage({ version: 0 }),
-        tx => setTransactionMessageFeePayer(address(solanaAddress), tx),
-        tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
-      );
-
-      const transaction = compileTransaction(transactionMessage);
-
-      const result = await signAndSendTransaction({
-        transaction: transaction,
-        networkId: NetworkId.SOLANA_MAINNET,
+      // Create a versioned transaction message
+      const transferInstruction = SystemProgram.transfer({
+        fromPubkey: new PublicKey(solanaAddress),
+        toPubkey: new PublicKey(solanaAddress), // Self-transfer for demo
+        lamports: 1000, // Very small amount: 0.000001 SOL
       });
 
-      alert(`Transaction sent! Signature: ${result.rawTransaction}`);
+      const messageV0 = new TransactionMessage({
+        payerKey: new PublicKey(solanaAddress),
+        recentBlockhash: blockhash,
+        instructions: [transferInstruction],
+      }).compileToV0Message();
+
+      const transaction = new VersionedTransaction(messageV0);
+
+      const result = await signAndSendTransaction(transaction);
+
+      alert(`Transaction sent! Signature: ${result.signature}`);
     } catch (error) {
       console.error("Error signing and sending transaction:", error);
       alert(`Error signing and sending transaction: ${(error as Error).message || error}`);
+    } finally {
+      setIsSigningTransaction(false);
     }
   };
 
-  const onCreateUserOrganization = async () => {
+  const onSendEthTransaction = async () => {
+    if (!isConnected || !addresses || addresses.length === 0) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+
+    const ethAddress = addresses.find(addr => addr.addressType === "Ethereum");
+    if (!ethAddress) {
+      alert("No Ethereum address found");
+      return;
+    }
+
     try {
-      const result = await createUserOrganization({
-        userId: "demo-user-123",
-      });
-      alert(`Organization created! ID: ${result.organizationId}`);
+      setIsSendingEthTransaction(true);
+      
+      // Create simple ETH transfer with proper hex formatting
+      const transactionParams = {
+        from: ethAddress.address,
+        to: ethAddress.address, // Self-transfer for demo
+        value: numberToHex(parseEther("0.001")), // 0.001 ETH in hex
+        gas: numberToHex(21000n), // Gas limit in hex
+        gasPrice: numberToHex(parseGwei("20")), // 20 gwei in hex
+      };
+
+      const result = await sendEthTransaction(transactionParams);
+      alert(`Ethereum transaction sent! Hash: ${result.hash}`);
     } catch (error) {
-      console.error("Error creating organization:", error);
-      alert(`Error creating organization: ${(error as Error).message || error}`);
+      console.error("Error sending Ethereum transaction:", error);
+      alert(`Error sending Ethereum transaction: ${(error as Error).message || error}`);
+    } finally {
+      setIsSendingEthTransaction(false);
+    }
+  };
+
+  // Auto-confirm handlers
+  const onEnableAutoConfirm = async () => {
+    try {
+      const result = await autoConfirm.enable({
+        chains: [NetworkId.SOLANA_DEVNET, NetworkId.ETHEREUM_MAINNET]
+      });
+      alert(`Auto-confirm enabled for ${result.chains.length} chains!`);
+    } catch (error) {
+      console.error("Error enabling auto-confirm:", error);
+      alert(`Error enabling auto-confirm: ${(error as Error).message || error}`);
+    }
+  };
+
+  const onDisableAutoConfirm = async () => {
+    try {
+      await autoConfirm.disable();
+      alert("Auto-confirm disabled!");
+    } catch (error) {
+      console.error("Error disabling auto-confirm:", error);
+      alert(`Error disabling auto-confirm: ${(error as Error).message || error}`);
     }
   };
 
@@ -172,8 +286,8 @@ export function Actions() {
                   <input
                     type="radio"
                     value="embedded"
-                    checked={selectedProvider === "embedded"}
-                    onChange={e => setSelectedProvider(e.target.value as ProviderType)}
+                    checked={providerType === "embedded"}
+                    onChange={e => setProviderType(e.target.value as ProviderType)}
                   />
                   <span>Embedded (Non-Custodial)</span>
                 </label>
@@ -181,15 +295,15 @@ export function Actions() {
                   <input
                     type="radio"
                     value="injected"
-                    checked={selectedProvider === "injected"}
-                    onChange={e => setSelectedProvider(e.target.value as ProviderType)}
+                    checked={providerType === "injected"}
+                    onChange={e => setProviderType(e.target.value as ProviderType)}
                   />
                   <span>Injected (Browser Extension)</span>
                 </label>
               </div>
             </div>
 
-            {selectedProvider === "embedded" && (
+            {providerType === "embedded" && (
               <div className="form-group">
                 <label>Embedded Wallet Type:</label>
                 <div className="radio-group">
@@ -197,8 +311,8 @@ export function Actions() {
                     <input
                       type="radio"
                       value="user-wallet"
-                      checked={selectedEmbeddedType === "user-wallet"}
-                      onChange={() => setSelectedEmbeddedType("user-wallet")}
+                      checked={embeddedWalletType === "user-wallet"}
+                      onChange={() => setEmbeddedWalletType("user-wallet")}
                     />
                     <span>User Wallet (Google Auth)</span>
                   </label>
@@ -206,8 +320,8 @@ export function Actions() {
                     <input
                       type="radio"
                       value="app-wallet"
-                      checked={selectedEmbeddedType === "app-wallet"}
-                      onChange={() => setSelectedEmbeddedType("app-wallet")}
+                      checked={embeddedWalletType === "app-wallet"}
+                      onChange={() => setEmbeddedWalletType("app-wallet")}
                     />
                     <span>App Wallet (Fresh wallet)</span>
                   </label>
@@ -215,7 +329,7 @@ export function Actions() {
               </div>
             )}
 
-            {selectedProvider === "injected" && (
+            {providerType === "injected" && (
               <div className="extension-status">
                 {isLoading && <p className="status-text">Checking extension...</p>}
                 {!isLoading && isInstalled && <p className="status-success">✓ Phantom extension installed</p>}
@@ -254,6 +368,84 @@ export function Actions() {
             </div>
           </div>
 
+          {isConnected && solanaAddress && (
+            <div className="section">
+              <h3>SOL Balance</h3>
+              <div className="balance-card">
+                <div className="balance-row">
+                  <span className="balance-label">Balance:</span>
+                  <span className="balance-value">
+                    {balanceLoading
+                      ? "Loading..."
+                      : balanceError
+                        ? "Error"
+                        : balance !== null
+                          ? `${balance.toFixed(4)} SOL`
+                          : "--"}
+                  </span>
+                </div>
+                <button className="small" onClick={() => refetchBalance()} disabled={balanceLoading}>
+                  {balanceLoading ? "Loading..." : "Refresh"}
+                </button>
+              </div>
+              {balanceError && <p className="error-text">Balance error: {balanceError}</p>}
+            </div>
+          )}
+
+          {isConnected && currentProviderType === "injected" && (
+            <div className="section">
+              <h3>Auto-Confirm Settings</h3>
+              <div className="status-card">
+                <div className="status-row">
+                  <span className="status-label">Status:</span>
+                  <span className={`status-value ${autoConfirm.status?.enabled ? "connected" : "disconnected"}`}>
+                    {autoConfirm.isLoading ? "Loading..." : autoConfirm.status?.enabled ? "Enabled" : "Disabled"}
+                  </span>
+                </div>
+                {autoConfirm.status?.enabled && autoConfirm.status.chains.length > 0 && (
+                  <div className="status-row">
+                    <span className="status-label">Active Chains:</span>
+                    <span className="status-value">{autoConfirm.status.chains.length}</span>
+                  </div>
+                )}
+                {autoConfirm.supportedChains && autoConfirm.supportedChains.chains.length > 0 && (
+                  <div className="status-row">
+                    <span className="status-label">Supported:</span>
+                    <span className="status-value">{autoConfirm.supportedChains.chains.length} chains</span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="button-group">
+                <button 
+                  onClick={onEnableAutoConfirm} 
+                  disabled={autoConfirm.isLoading || autoConfirm.status?.enabled}
+                  className="small"
+                >
+                  {autoConfirm.isLoading ? "Loading..." : "Enable Auto-Confirm"}
+                </button>
+                <button 
+                  onClick={onDisableAutoConfirm} 
+                  disabled={autoConfirm.isLoading || !autoConfirm.status?.enabled}
+                  className="small"
+                >
+                  {autoConfirm.isLoading ? "Loading..." : "Disable Auto-Confirm"}
+                </button>
+                <button 
+                  onClick={autoConfirm.refetch} 
+                  disabled={autoConfirm.isLoading}
+                  className="small"
+                >
+                  {autoConfirm.isLoading ? "Loading..." : "Refresh Status"}
+                </button>
+              </div>
+              
+              {autoConfirm.error && (
+                <p className="error-text">Auto-confirm error: {autoConfirm.error.message}</p>
+              )}
+            </div>
+          )}
+
           <div className="section">
             <h3>Wallet Operations</h3>
             <div className="button-group">
@@ -265,19 +457,21 @@ export function Actions() {
                 {isConnecting ? "Connecting..." : "Connect"}
               </button>
               <button onClick={() => onSignMessage("solana")} disabled={!isConnected || isSigningMessage}>
-                {isSigningMessage ? "Signing..." : "Sign Message"}
+                {isSigningMessage ? "Signing..." : "Sign Message (Solana)"}
               </button>
               <button onClick={() => onSignMessage("evm")} disabled={!isConnected || isSigningMessage}>
-                {isSigningMessage ? "Signing..." : "Sign Message EVM"}
+                {isSigningMessage ? "Signing..." : "Sign Message (EVM)"}
               </button>
-              <button onClick={onSignAndSendTransaction} disabled={!isConnected || isSigningTransaction}>
-                {isSigningTransaction ? "Signing..." : "Sign & Send Transaction"}
+              <button onClick={onSignTypedData} disabled={!isConnected || isSigningTypedData}>
+                {isSigningTypedData ? "Signing..." : "Sign Typed Data (EVM)"}
               </button>
-              {selectedProvider === "embedded" && (
-                <button onClick={onCreateUserOrganization} disabled={isCreating}>
-                  {isCreating ? "Creating..." : "Create Organization"}
-                </button>
-              )}
+              <button onClick={onSignAndSendTransaction} disabled={!isConnected || isSigningTransaction || !hasBalance}>
+                {isSigningTransaction ? "Signing..." : !hasBalance ? "Insufficient Balance" : "Sign & Send Transaction (Solana)"}
+              </button>
+              <button onClick={onSendEthTransaction} disabled={!isConnected || isSendingEthTransaction}>
+                {isSendingEthTransaction ? "Sending..." : "Send Transaction (Ethereum)"}
+              </button>
+
               <button onClick={onDisconnect} disabled={!isConnected || isDisconnecting}>
                 {isDisconnecting ? "Disconnecting..." : "Disconnect"}
               </button>
@@ -287,58 +481,7 @@ export function Actions() {
         </div>
 
         <div className="right-panel">
-          <div className="section">
-            <h3>Debug Console</h3>
-            <div className="debug-controls">
-              <label className="checkbox-label">
-                <input type="checkbox" checked={showDebug} onChange={e => setShowDebug(e.target.checked)} />
-                <span>Show Debug Messages</span>
-              </label>
-
-              <div className="form-group inline">
-                <label>Level:</label>
-                <select value={debugLevel} onChange={e => setDebugLevel(parseInt(e.target.value) as DebugLevel)}>
-                  <option value={DebugLevel.ERROR}>ERROR</option>
-                  <option value={DebugLevel.WARN}>WARN</option>
-                  <option value={DebugLevel.INFO}>INFO</option>
-                  <option value={DebugLevel.DEBUG}>DEBUG</option>
-                </select>
-              </div>
-
-              <button className="small" onClick={clearDebugMessages}>
-                Clear
-              </button>
-            </div>
-
-            <div className="debug-container" style={{ display: showDebug ? "block" : "none" }}>
-              {debugMessages.slice(-30).map((msg, index) => {
-                const levelClass = DebugLevel[msg.level].toLowerCase();
-                const timestamp = new Date(msg.timestamp).toLocaleTimeString();
-                // Debug message rendering
-                let dataStr = "";
-                try {
-                  dataStr = msg.data ? JSON.stringify(msg.data, null, 2) : "";
-                } catch (error) {
-                  console.error("Error stringifying debug message data:", error);
-                }
-
-                return (
-                  <div key={index} className={`debug-message debug-${levelClass}`}>
-                    <div className="debug-header">
-                      <span className="debug-timestamp">{timestamp}</span>
-                      <span className="debug-level">{DebugLevel[msg.level]}</span>
-                      <span className="debug-category">{msg.category}</span>
-                    </div>
-                    <div className="debug-content">{msg.message}</div>
-                    {dataStr && <pre className="debug-data">{dataStr}</pre>}
-                  </div>
-                );
-              })}
-              {debugMessages.length === 0 && (
-                <div className="debug-empty">No debug messages yet. Try connecting to see debug output.</div>
-              )}
-            </div>
-          </div>
+          <DebugConsole />
         </div>
       </div>
     </div>

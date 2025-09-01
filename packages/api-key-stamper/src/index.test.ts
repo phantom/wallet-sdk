@@ -26,153 +26,58 @@ describe("ApiKeyStamper", () => {
   });
 
   describe("stamp", () => {
-    it("should add X-Phantom-Stamp header to request config", async () => {
-      const config = {
-        url: "https://api.example.com/test",
-        method: "POST" as const,
-        data: { message: "test" },
-      };
+    it("should return complete X-Phantom-Stamp header value", async () => {
+      const testData = Buffer.from("test message", "utf8");
 
-      const stamped = await stamper.stamp(config);
+      const stamp = await stamper.stamp({ data: testData });
 
-      expect(stamped.headers).toBeDefined();
-      expect(stamped.headers!["X-Phantom-Stamp"]).toBeDefined();
-      expect(typeof stamped.headers!["X-Phantom-Stamp"]).toBe("string");
-    });
+      expect(typeof stamp).toBe("string");
+      expect(stamp.length).toBeGreaterThan(0);
 
-    it("should preserve existing headers", async () => {
-      const config = {
-        url: "https://api.example.com/test",
-        method: "POST" as const,
-        data: { message: "test" },
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer token",
-        },
-      };
-
-      const stamped = await stamper.stamp(config);
-
-      expect(stamped.headers!["Content-Type"]).toBe("application/json");
-      expect(stamped.headers!["Authorization"]).toBe("Bearer token");
-      expect(stamped.headers!["X-Phantom-Stamp"]).toBeDefined();
-    });
-
-    it("should handle string data", async () => {
-      const config = {
-        url: "https://api.example.com/test",
-        method: "POST" as const,
-        data: "string data",
-      };
-
-      const stamped = await stamper.stamp(config);
-      expect(stamped.headers!["X-Phantom-Stamp"]).toBeDefined();
-    });
-
-    it("should handle object data", async () => {
-      const config = {
-        url: "https://api.example.com/test",
-        method: "POST" as const,
-        data: { key: "value", number: 42 },
-      };
-
-      const stamped = await stamper.stamp(config);
-      expect(stamped.headers!["X-Phantom-Stamp"]).toBeDefined();
-    });
-
-    it("should create valid stamp structure", async () => {
-      const config = {
-        url: "https://api.example.com/test",
-        method: "POST" as const,
-        data: { message: "test" },
-      };
-
-      const stamped = await stamper.stamp(config);
-      const stampHeader = stamped.headers!["X-Phantom-Stamp"] as string;
-
-      // Decode the stamp
-      const stampJson = base64urlDecodeToString(stampHeader);
+      // Should be a base64url encoded JSON
+      const stampJson = base64urlDecodeToString(stamp);
       const stampData = JSON.parse(stampJson);
 
       expect(stampData).toHaveProperty("publicKey");
       expect(stampData).toHaveProperty("signature");
       expect(stampData).toHaveProperty("kind");
       expect(stampData.kind).toBe("PKI");
-      expect(typeof stampData.publicKey).toBe("string");
-      expect(typeof stampData.signature).toBe("string");
     });
 
-    it("should create valid signatures", async () => {
-      const testData = { message: "test message" };
-      const config = {
-        url: "https://api.example.com/test",
-        method: "POST" as const,
-        data: testData,
-      };
+    it("should create valid stamp with verifiable signature", async () => {
+      const testData = Buffer.from("test message for verification", "utf8");
 
-      const stamped = await stamper.stamp(config);
-      const stampHeader = stamped.headers!["X-Phantom-Stamp"] as string;
+      const stamp = await stamper.stamp({ data: testData });
 
-      // Decode and verify the stamp
-      const stampJson = base64urlDecodeToString(stampHeader);
+      // Decode the stamp
+      const stampJson = base64urlDecodeToString(stamp);
       const stampData = JSON.parse(stampJson);
 
-      // Decode the signature
+      // Verify the signature
       const signature = base64urlDecode(stampData.signature);
-
-      // Verify the signature by re-signing the same data and comparing
-      const requestBody = JSON.stringify(testData);
-      const dataUtf8 = Buffer.from(requestBody, "utf8");
-      const expectedSignature = signWithSecret(testKeyPair.secretKey, dataUtf8);
+      const expectedSignature = signWithSecret(testKeyPair.secretKey, testData);
 
       expect(signature).toEqual(expectedSignature);
     });
 
-    it("should create different signatures for different data", async () => {
-      const config1 = {
-        url: "https://api.example.com/test",
-        method: "POST" as const,
-        data: { message: "first message" },
-      };
+    it("should create different stamps for different data", async () => {
+      const data1 = Buffer.from("first message", "utf8");
+      const data2 = Buffer.from("second message", "utf8");
 
-      const config2 = {
-        url: "https://api.example.com/test",
-        method: "POST" as const,
-        data: { message: "second message" },
-      };
-
-      const stamped1 = await stamper.stamp(config1);
-      const stamped2 = await stamper.stamp(config2);
-
-      const stamp1 = stamped1.headers!["X-Phantom-Stamp"];
-      const stamp2 = stamped2.headers!["X-Phantom-Stamp"];
+      const stamp1 = await stamper.stamp({ data: data1 });
+      const stamp2 = await stamper.stamp({ data: data2 });
 
       expect(stamp1).not.toBe(stamp2);
     });
 
-    it("should create consistent stamps for same data", async () => {
-      const config = {
-        url: "https://api.example.com/test",
-        method: "POST" as const,
-        data: { message: "consistent message" },
-      };
+    it("should create consistent stamps for the same data", async () => {
+      const testData = Buffer.from("consistent message", "utf8");
 
-      const stamped1 = await stamper.stamp({ ...config });
-      const stamped2 = await stamper.stamp({ ...config });
+      const stamp1 = await stamper.stamp({ data: testData });
+      const stamp2 = await stamper.stamp({ data: testData });
 
       // The stamps should be the same for the same data and same key
-      expect(stamped1.headers!["X-Phantom-Stamp"]).toBe(stamped2.headers!["X-Phantom-Stamp"]);
-    });
-
-    it("should handle empty data", async () => {
-      const config = {
-        url: "https://api.example.com/test",
-        method: "GET" as const,
-        data: undefined,
-      };
-
-      const stamped = await stamper.stamp(config);
-      expect(stamped.headers!["X-Phantom-Stamp"]).toBeDefined();
+      expect(stamp1).toBe(stamp2);
     });
   });
 });

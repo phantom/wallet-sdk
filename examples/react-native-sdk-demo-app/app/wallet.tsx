@@ -1,23 +1,43 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, SafeAreaView, TextInput } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  SafeAreaView,
+  TextInput,
+  Linking,
+} from "react-native";
 import { useRouter } from "expo-router";
 import {
   useAccounts,
-  useSignMessage,
-  useSignAndSendTransaction,
+  useSolana,
   useDisconnect,
-  NetworkId,
 } from "@phantom/react-native-sdk";
+import { useBalance } from "../hooks/useBalance";
 
 export default function WalletScreen() {
   const router = useRouter();
   const { isConnected, addresses, walletId } = useAccounts();
-  const { signMessage, isSigning: isSigningMessage, error: signError } = useSignMessage();
-  const { isSigning: isSigningTx, error: txError } = useSignAndSendTransaction();
+  const { signMessage, signAndSendTransaction } = useSolana();
   const { disconnect, isDisconnecting } = useDisconnect();
+  const [isSigningMessage, setIsSigningMessage] = useState(false);
+  const [isSigningTx, setIsSigningTx] = useState(false);
+  const [signError, setSignError] = useState<Error | null>(null);
+  const [txError, setTxError] = useState<Error | null>(null);
 
   const [messageToSign, setMessageToSign] = useState("Hello from Phantom React Native SDK Demo!");
   const [signedMessage, setSignedMessage] = useState<string | null>(null);
+  const [transactionResult, setTransactionResult] = useState<string | null>(null);
+  const [transactionError, setTransactionError] = useState<string | null>(null);
+  const [transactionExplorer, setTransactionExplorer] = useState<string | null>(null);
+
+  // Get Solana address for balance checking
+  const solanaAddress = addresses?.find(addr => addr.addressType === "Solana")?.address || null;
+  const { balance, loading: balanceLoading, error: balanceError, refetch: refetchBalance } = useBalance(solanaAddress);
+  const hasBalance = balance !== null && balance > 0;
 
   // Redirect if not connected
   React.useEffect(() => {
@@ -33,40 +53,119 @@ export default function WalletScreen() {
     }
 
     try {
-      const result = await signMessage({
-        message: messageToSign,
-        networkId: NetworkId.SOLANA_MAINNET,
-      });
+      setIsSigningMessage(true);
+      setSignError(null);
+      const result = await signMessage(messageToSign);
 
       setSignedMessage(result.signature);
-      Alert.alert(
-        "Success",
-        `Message signed successfully!\n\nSignature: ${result.signature.slice(0, 20)}...${result.blockExplorer ? `\n\nView on explorer: ${result.blockExplorer}` : ""}`,
-      );
+      Alert.alert("Success", `Message signed successfully!\n\nSignature: ${result.signature.slice(0, 20)}...`);
     } catch (error) {
-      Alert.alert("Error", `Failed to sign message: ${(error as Error).message}`);
+      const err = error as Error;
+      setSignError(err);
+      Alert.alert("Error", `Failed to sign message: ${err.message}`);
+    } finally {
+      setIsSigningMessage(false);
     }
   };
 
-  const handleSignTransaction = () => {
+  const handleSignTransaction = async () => {
+    if (!hasBalance) {
+      Alert.alert("Error", "Insufficient balance to send transaction");
+      return;
+    }
+
     Alert.alert(
-      "Demo Transaction",
-      "This would sign and send a transaction. In a real app, you would provide a transaction object.",
+      "Send Transaction",
+      "This will create a small self-transfer transaction (0.000001 SOL) to demonstrate signing and sending.",
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: "Simulate",
-          onPress: () => {
+          text: "Send Transaction",
+          onPress: async () => {
             try {
-              // This is a demo - in a real app you'd have a proper transaction
-              Alert.alert("Demo", "Transaction signing simulation - not implemented in this demo");
+              setTransactionError(null);
+              setTransactionResult(null);
+              await sendTestTransaction();
             } catch (error) {
-              Alert.alert("Error", `Failed to sign transaction: ${(error as Error).message}`);
+              setTransactionError(`Failed to sign transaction: ${(error as Error).message}`);
+              setTransactionResult(null);
             }
           },
         },
       ],
     );
+  };
+
+  const sendTestTransaction = async () => {
+    try {
+      // Find Solana address
+      const solanaAddress = addresses?.find(addr => addr.addressType === "Solana")?.address;
+      if (!solanaAddress) {
+        Alert.alert("Error", "No Solana address found");
+        return;
+      }
+
+      // Import Solana web3.js components
+      const { SystemProgram, PublicKey, Connection, VersionedTransaction, TransactionMessage } = await import(
+        "@solana/web3.js"
+      );
+
+      // Create connection to get recent blockhash using environment variable
+      const rpcUrl = process.env.EXPO_PUBLIC_SOLANA_RPC_URL_MAINNET || "https://api.mainnet-beta.solana.com";
+      const connection = new Connection(rpcUrl);
+
+      // Get recent blockhash
+      const { blockhash } = await connection.getLatestBlockhash();
+
+      // Create a self-transfer instruction (very small amount for demo)
+      const transferInstruction = SystemProgram.transfer({
+        fromPubkey: new PublicKey(solanaAddress),
+        toPubkey: new PublicKey(solanaAddress), // Self-transfer
+        lamports: 1000, // 0.000001 SOL
+      });
+
+      // Create versioned transaction
+      const messageV0 = new TransactionMessage({
+        payerKey: new PublicKey(solanaAddress),
+        recentBlockhash: blockhash,
+        instructions: [transferInstruction],
+      }).compileToV0Message();
+
+      const transaction = new VersionedTransaction(messageV0);
+
+      // Sign and send the transaction
+      setIsSigningTx(true);
+      setTxError(null);
+      const result = await signAndSendTransaction(transaction);
+
+      // Set success state
+      setTransactionResult(`Transaction sent successfully!\n\nSignature: ${result.signature}`);
+      setTransactionExplorer(null);
+      setTransactionError(null);
+      setIsSigningTx(false);
+
+      // Refresh balance after successful transaction
+      setTimeout(() => refetchBalance(), 2000);
+    } catch (error) {
+      console.error("Transaction error:", error);
+      setIsSigningTx(false);
+      const err = error as Error;
+      setTxError(err);
+      throw error;
+    }
+  };
+
+  const handleOpenExplorer = async (url: string) => {
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert("Error", "Cannot open block explorer URL");
+      }
+    } catch (error) {
+      Alert.alert("Error", `Failed to open URL: ${(error as Error).message}`);
+    }
   };
 
   const handleDisconnect = () => {
@@ -130,6 +229,40 @@ export default function WalletScreen() {
           )}
         </View>
 
+        {/* SOL Balance Section */}
+        {solanaAddress && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>SOL Balance</Text>
+            <View style={styles.balanceContainer}>
+              <View style={styles.balanceDisplay}>
+                <Text style={styles.balanceValue}>
+                  {balanceLoading
+                    ? "Loading..."
+                    : balanceError
+                      ? "Error"
+                      : balance !== null
+                        ? `${balance.toFixed(4)} SOL`
+                        : "--"}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.button, styles.refreshButton]}
+                onPress={() => refetchBalance()}
+                disabled={balanceLoading}
+              >
+                <Text style={[styles.buttonText, { color: "#6366f1" }]}>
+                  {balanceLoading ? "Loading..." : "Refresh"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {balanceError && (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>Failed to load balance: {balanceError}</Text>
+              </View>
+            )}
+          </View>
+        )}
+
         {/* Message Signing Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Sign Message</Text>
@@ -174,18 +307,62 @@ export default function WalletScreen() {
           <Text style={styles.description}>This demonstrates transaction signing capabilities:</Text>
 
           <TouchableOpacity
-            style={[styles.button, styles.secondaryButton]}
+            style={[styles.button, styles.secondaryButton, !hasBalance && styles.disabledButton]}
             onPress={() => handleSignTransaction()}
-            disabled={isSigningTx}
+            disabled={isSigningTx || !hasBalance}
           >
-            <Text style={[styles.buttonText, { color: "#6366f1" }]}>
-              {isSigningTx ? "Signing..." : "Demo Transaction Signing"}
+            <Text style={[styles.buttonText, { color: !hasBalance ? "#9ca3af" : "#6366f1" }]}>
+              {isSigningTx ? "Signing..." : !hasBalance ? "Insufficient Balance" : "Demo Transaction Signing"}
             </Text>
           </TouchableOpacity>
 
           {txError && (
             <View style={styles.errorContainer}>
               <Text style={styles.errorText}>{txError.message}</Text>
+            </View>
+          )}
+
+          {/* Transaction Result Display */}
+          {transactionResult && (
+            <View style={styles.resultContainer}>
+              <Text style={styles.resultLabel}>Transaction Result:</Text>
+              <Text style={styles.resultValue} numberOfLines={6}>
+                {transactionResult}
+              </Text>
+              {transactionExplorer && (
+                <TouchableOpacity
+                  style={[styles.button, styles.explorerButton]}
+                  onPress={() => handleOpenExplorer(transactionExplorer)}
+                >
+                  <Text style={[styles.buttonText, { color: "#059669" }]}>View on Block Explorer</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                style={[styles.button, styles.clearButton]}
+                onPress={() => {
+                  setTransactionResult(null);
+                  setTransactionError(null);
+                  setTransactionExplorer(null);
+                }}
+              >
+                <Text style={[styles.buttonText, { color: "#6366f1" }]}>Clear</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Transaction Error Display */}
+          {transactionError && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{transactionError}</Text>
+              <TouchableOpacity
+                style={[styles.button, styles.clearButton]}
+                onPress={() => {
+                  setTransactionResult(null);
+                  setTransactionError(null);
+                }}
+              >
+                <Text style={[styles.buttonText, { color: "#ef4444" }]}>Clear Error</Text>
+              </TouchableOpacity>
             </View>
           )}
         </View>
@@ -306,10 +483,48 @@ const styles = StyleSheet.create({
   dangerButton: {
     backgroundColor: "#ef4444",
   },
+  disabledButton: {
+    backgroundColor: "#f3f4f6",
+    borderColor: "#e5e7eb",
+  },
+  refreshButton: {
+    backgroundColor: "#ffffff",
+    borderColor: "#6366f1",
+    borderWidth: 1,
+    paddingHorizontal: 16,
+  },
+  clearButton: {
+    backgroundColor: "#ffffff",
+    borderColor: "#6366f1",
+    borderWidth: 1,
+    marginTop: 10,
+    paddingHorizontal: 16,
+  },
+  explorerButton: {
+    backgroundColor: "#ffffff",
+    borderColor: "#059669",
+    borderWidth: 1,
+    marginTop: 10,
+    paddingHorizontal: 16,
+  },
   buttonText: {
     color: "#ffffff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  balanceContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  balanceDisplay: {
+    flex: 1,
+  },
+  balanceValue: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#2563eb",
+    fontFamily: "monospace",
   },
   resultContainer: {
     backgroundColor: "#f0fdf4",

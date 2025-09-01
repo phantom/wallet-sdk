@@ -1,9 +1,19 @@
-import { PhantomClient, type SignMessageParams, type SignAndSendTransactionParams } from "@phantom/client";
-import { type NetworkId } from "@phantom/constants";
+import {
+  PhantomClient,
+  type SignMessageParams,
+  type SignAndSendTransactionParams,
+  type NetworkId,
+  type CreateWalletResult,
+  type GetWalletsResult,
+  type AddressType,
+  type Organization,
+} from "@phantom/client";
 import { ApiKeyStamper } from "@phantom/api-key-stamper";
+import { base64urlEncode } from "@phantom/base64url";
+import bs58 from "bs58";
 import {
   parseMessage,
-  parseTransaction,
+  parseTransactionToBase64Url,
   parseSignMessageResponse,
   parseTransactionResponse,
   type ParsedSignatureResult,
@@ -20,24 +30,28 @@ export interface ServerSignMessageParams {
   walletId: string;
   message: string; // Plain text - automatically converted to base64url
   networkId: NetworkId;
+  derivationIndex?: number; // Optional account derivation index (defaults to 0)
 }
 
 export interface ServerSignAndSendTransactionParams {
   walletId: string;
   transaction: any; // Various transaction formats - automatically parsed
   networkId: NetworkId;
+  derivationIndex?: number; // Optional account derivation index (defaults to 0)
 }
 
 export class ServerSDK {
-  private client: PhantomClient;
+  private config: ServerSDKConfig;
+  client: PhantomClient;
 
   constructor(config: ServerSDKConfig) {
+    this.config = config;
     // Create the API key stamper
     const stamper = new ApiKeyStamper({
       apiSecretKey: config.apiPrivateKey,
     });
 
-    // Initialize the PhantomClient with the stamper
+    // Initialize the parent PhantomClient with the stamper
     this.client = new PhantomClient(
       {
         apiBaseUrl: config.apiBaseUrl,
@@ -61,6 +75,7 @@ export class ServerSDK {
       walletId: params.walletId,
       message: parsedMessage.base64url,
       networkId: params.networkId,
+      derivationIndex: params.derivationIndex,
     };
 
     // Get raw response from client
@@ -77,37 +92,67 @@ export class ServerSDK {
    */
   async signAndSendTransaction(params: ServerSignAndSendTransactionParams): Promise<ParsedTransactionResult> {
     // Parse the transaction to base64url format
-    const parsedTransaction = await parseTransaction(params.transaction, params.networkId);
+    const parsedTransaction = await parseTransactionToBase64Url(params.transaction, params.networkId);
 
     // Use the parent's signAndSendTransaction method with parsed transaction
     const signAndSendParams: SignAndSendTransactionParams = {
       walletId: params.walletId,
       transaction: parsedTransaction.base64url,
       networkId: params.networkId,
+      derivationIndex: params.derivationIndex,
     };
-
     // Get raw response from client
     const rawResponse = await this.client.signAndSendTransaction(signAndSendParams);
 
     // Parse the response to get transaction hash and explorer URL
-    return await parseTransactionResponse(rawResponse.rawTransaction, params.networkId);
+    return await parseTransactionResponse(rawResponse.rawTransaction, params.networkId, rawResponse.hash);
   }
 
-  // Proxy methods for other PhantomClient functionality
-  async createOrganization(organizationId: string, keypair: any) {
-    return await this.client.createOrganization(organizationId, keypair);
+  createOrganization(name: string, keyPair: { publicKey: string; secretKey: string }): Promise<Organization> {
+    // Create a temporary PhantomClient instance with the stamper
+    const tempClient = new PhantomClient(
+      {
+        apiBaseUrl: this.config.apiBaseUrl,
+        organizationId: this.config.organizationId,
+      },
+      new ApiKeyStamper({
+        apiSecretKey: keyPair.secretKey,
+      }),
+    );
+
+    // Call the createOrganization method with the provided parameters using new signature
+    // Convert base58 public key to base64url format as required by the API
+    const base64urlPublicKey = base64urlEncode(bs58.decode(keyPair.publicKey));
+
+    return tempClient.createOrganization(name, [
+      {
+        username: `user-${Date.now()}`,
+        role: "ADMIN",
+        authenticators: [
+          {
+            authenticatorName: `auth-${Date.now()}`,
+            authenticatorKind: "keypair",
+            publicKey: base64urlPublicKey,
+            algorithm: "Ed25519",
+          },
+        ],
+      },
+    ]);
+  }
+  getWallets(limit?: number, offset?: number): Promise<GetWalletsResult> {
+    return this.client.getWallets(limit, offset);
   }
 
-  async createWallet(walletType: string = "user-wallet") {
-    return await this.client.createWallet(walletType);
+  createWallet(name: string): Promise<CreateWalletResult> {
+    return this.client.createWallet(name);
   }
 
-  async getWalletAddresses(walletId: string, derivationPaths?: string[]) {
-    return await this.client.getWalletAddresses(walletId, derivationPaths);
-  }
-
-  async getWallets(limit?: number, offset?: number) {
-    return await this.client.getWallets(limit, offset);
+  getWalletAddresses(
+    walletId: string,
+    derivationPaths?: string[],
+    derivationIndex?: number,
+  ): Promise<{ addressType: AddressType; address: string }[]> {
+    return this.client.getWalletAddresses(walletId, derivationPaths, derivationIndex);
   }
 }
 
@@ -137,7 +182,7 @@ export { NetworkId } from "@phantom/constants";
 export { ApiKeyStamper } from "@phantom/api-key-stamper";
 export {
   parseMessage,
-  parseTransaction,
+  parseTransactionToBase64Url,
   parseSignMessageResponse,
   parseTransactionResponse,
   type ParsedMessage,

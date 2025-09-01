@@ -1,6 +1,6 @@
 {
   "name": "@phantom/react-ui",
-  "version": "1.1.3",
+  "version": "2.0.0-beta.0",
   "description": "React UI components for Phantom Wallet SDK with built-in transaction and connection modals",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
@@ -16,7 +16,9 @@
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
   },
   "dependencies": {
+    "@phantom/browser-sdk": "workspace:^",
     "@phantom/client": "workspace:^",
+    "@phantom/parsers": "workspace:^",
     "@phantom/react-sdk": "workspace:^"
   },
   "peerDependencies": {

@@ -1,7 +1,7 @@
 {
   "name": "@phantom/browser-sdk",
-  "version": "0.2.3",
-  "description": "Browser SDK for Phantom Wallet with unified interface",
+  "version": "1.0.0-beta.0",
+  "description": "Browser SDK for Phantom Wallet",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -28,12 +28,13 @@
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
   },
   "dependencies": {
-    "@phantom/api-key-stamper": "workspace:^",
     "@phantom/base64url": "workspace:^",
     "@phantom/browser-injected-sdk": "workspace:^",
+    "@phantom/chains": "workspace:^",
     "@phantom/client": "workspace:^",
     "@phantom/constants": "workspace:^",
     "@phantom/embedded-provider-core": "workspace:^",
+    "@phantom/indexed-db-stamper": "workspace:^",
     "@phantom/parsers": "workspace:^",
     "axios": "^1.10.0",
     "bs58": "^6.0.0",

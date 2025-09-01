@@ -1,6 +1,6 @@
 {
   "name": "@phantom/server-sdk",
-  "version": "0.1.4",
+  "version": "1.0.0-beta.0",
   "description": "Server SDK for Phantom Wallet",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -38,10 +38,11 @@
   },
   "dependencies": {
     "@phantom/api-key-stamper": "workspace:^",
+    "@phantom/base64url": "workspace:^",
     "@phantom/client": "workspace:^",
     "@phantom/constants": "workspace:^",
-    "@phantom/openapi-wallet-service": "^0.1.7",
-    "@phantom/parsers": "workspace:^"
+    "@phantom/parsers": "workspace:^",
+    "bs58": "^6.0.0"
   },
   "files": [
     "dist"

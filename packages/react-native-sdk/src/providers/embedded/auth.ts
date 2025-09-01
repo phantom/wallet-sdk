@@ -1,6 +1,8 @@
 import * as WebBrowser from "expo-web-browser";
 import type { AuthProvider, AuthResult, PhantomConnectOptions, JWTAuthOptions } from "@phantom/embedded-provider-core";
 
+const DEFAULT_AUTH_URL = "https://auth.phantom.app";
+
 export class ExpoAuthProvider implements AuthProvider {
   async authenticate(options: PhantomConnectOptions | JWTAuthOptions): Promise<void | AuthResult> {
     // Handle JWT authentication
@@ -11,22 +13,73 @@ export class ExpoAuthProvider implements AuthProvider {
     }
 
     // Handle redirect-based authentication
-    const { authUrl, redirectUrl } = options;
+    const phantomOptions = options as PhantomConnectOptions;
+    const {
+      authUrl,
+      redirectUrl,
+      organizationId,
+      parentOrganizationId,
+      sessionId,
+      provider,
+      customAuthData,
+      appName,
+      appLogo,
+    } = phantomOptions;
 
-    if (!authUrl || !redirectUrl) {
-      throw new Error("authUrl and redirectUrl are required for web browser authentication");
+    if (!redirectUrl) {
+      throw new Error("redirectUrl is required for web browser authentication");
+    }
+
+    if (!organizationId || !sessionId) {
+      throw new Error("organizationId and sessionId are required for authentication");
     }
 
     try {
+      // Construct the authentication URL with required parameters
+      const baseUrl = authUrl || DEFAULT_AUTH_URL;
+
+      const params = new URLSearchParams({
+        organization_id: organizationId,
+        parent_organization_id: parentOrganizationId,
+        redirect_uri: redirectUrl,
+        session_id: sessionId,
+        clear_previous_session: "true",
+        app_name: appName || "", // Optional app name
+        app_logo: appLogo || "", // Optional app logo URL
+      });
+
+      // Add provider if specified (will skip provider selection)
+      if (provider) {
+        console.log("[ExpoAuthProvider] Provider specified, will skip selection", { provider });
+        params.append("provider", provider);
+      } else {
+        // Default to Google if no provider specified
+        console.log("[ExpoAuthProvider] No provider specified, defaulting to Google");
+        params.append("provider", "google");
+      }
+
+      // Add custom auth data if provided
+      if (customAuthData) {
+        console.log("[ExpoAuthProvider] Adding custom auth data");
+        params.append("authData", JSON.stringify(customAuthData));
+      }
+
+      const fullAuthUrl = `${baseUrl}?${params.toString()}`;
+
       console.log("[ExpoAuthProvider] Starting authentication", {
-        authUrl: authUrl.substring(0, 50) + "...",
+        baseUrl,
         redirectUrl,
+        organizationId,
+        parentOrganizationId,
+        sessionId,
+        provider,
+        hasCustomData: !!customAuthData,
       });
 
       // Configure the web browser for better UX
       await WebBrowser.warmUpAsync();
 
-      const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUrl, {
+      const result = await WebBrowser.openAuthSessionAsync(fullAuthUrl, redirectUrl, {
         // Use system browser on iOS for ASWebAuthenticationSession
         preferEphemeralSession: false,
       });
@@ -39,23 +92,18 @@ export class ExpoAuthProvider implements AuthProvider {
       if (result.type === "success" && result.url) {
         // Parse the URL to extract parameters
         const url = new URL(result.url);
-        const walletId = url.searchParams.get("walletId");
+        const walletId = url.searchParams.get("wallet_id");
         const provider = url.searchParams.get("provider");
+        const accountDerivationIndex = url.searchParams.get("selected_account_index");
 
         if (!walletId) {
           throw new Error("Authentication failed: no walletId in redirect URL");
         }
 
-        // Convert URLSearchParams to Record<string, string>
-        const userInfo: Record<string, string> = {};
-        url.searchParams.forEach((value, key) => {
-          userInfo[key] = value;
-        });
-
         return {
           walletId,
           provider: provider || undefined,
-          userInfo,
+          accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : undefined
         };
       } else if (result.type === "cancel") {
         throw new Error("User cancelled authentication");
