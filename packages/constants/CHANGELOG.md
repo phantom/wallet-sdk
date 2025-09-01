@@ -1,5 +1,11 @@
 # @phantom/constants
 
+## 1.0.0-beta.0
+
+### Major Changes
+
+- New SDKs chain specific interface, prepare for initial beta release
+
 ## 0.0.3
 
 ### Patch Changes

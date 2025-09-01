@@ -1,5 +1,37 @@
 # @phantom/react-sdk
 
+## 1.0.0-beta.0
+
+### Major Changes
+
+- New SDKs chain specific interface, prepare for initial beta release
+
+### Patch Changes
+
+- ef68eaf: Key rotation
+- Updated dependencies [ef68eaf]
+- Updated dependencies
+  - @phantom/browser-sdk@1.0.0-beta.0
+  - @phantom/constants@1.0.0-beta.0
+  - @phantom/chains@1.0.0-beta.0
+
+## 0.3.9
+
+### Patch Changes
+
+- b20bc21: Support derivation index
+- Updated dependencies [b20bc21]
+  - @phantom/browser-sdk@0.3.9
+
+## 0.3.8
+
+### Patch Changes
+
+- 9305f27: Remove solana kit dep
+- Updated dependencies [ef68eaf]
+- Updated dependencies [9305f27]
+  - @phantom/browser-sdk@0.3.8
+
 ## 0.3.7
 
 ### Patch Changes

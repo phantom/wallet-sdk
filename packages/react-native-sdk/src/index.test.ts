@@ -4,8 +4,8 @@ import {
   useConnect,
   useDisconnect,
   useAccounts,
-  useSignMessage,
-  useSignAndSendTransaction,
+  useSolana,
+  useEthereum,
 } from "./index";
 
 describe("React Native SDK Exports", () => {
@@ -29,11 +29,11 @@ describe("React Native SDK Exports", () => {
     expect(useAccounts).toBeDefined();
     expect(typeof useAccounts).toBe("function");
 
-    expect(useSignMessage).toBeDefined();
-    expect(typeof useSignMessage).toBe("function");
+    expect(useSolana).toBeDefined();
+    expect(typeof useSolana).toBe("function");
 
-    expect(useSignAndSendTransaction).toBeDefined();
-    expect(typeof useSignAndSendTransaction).toBe("function");
+    expect(useEthereum).toBeDefined();
+    expect(typeof useEthereum).toBe("function");
   });
 
   it("should have consistent API structure", async () => {
@@ -46,7 +46,7 @@ describe("React Native SDK Exports", () => {
     expect(exports).toContain("useConnect");
     expect(exports).toContain("useDisconnect");
     expect(exports).toContain("useAccounts");
-    expect(exports).toContain("useSignMessage");
-    expect(exports).toContain("useSignAndSendTransaction");
+    expect(exports).toContain("useSolana");
+    expect(exports).toContain("useEthereum");
   });
 });

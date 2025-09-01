@@ -91,6 +91,7 @@ export class BrowserAuthProvider implements AuthProvider {
     try {
       const walletId = this.urlParamsAccessor.getParam("wallet_id");
       const sessionId = this.urlParamsAccessor.getParam("session_id");
+      const accountDerivationIndex = this.urlParamsAccessor.getParam("selected_account_index");
       const error = this.urlParamsAccessor.getParam("error");
       const errorDescription = this.urlParamsAccessor.getParam("error_description");
 
@@ -144,11 +145,13 @@ export class BrowserAuthProvider implements AuthProvider {
       debug.info(DebugCategory.PHANTOM_CONNECT_AUTH, "Successfully resumed auth from redirect", {
         walletId,
         sessionId,
+        accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : undefined,
       });
 
       return {
         walletId,
         userInfo: context,
+        accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : undefined,
       };
     } catch (error) {
       // Clean up session storage on any error
