@@ -1,5 +1,13 @@
 # @phantom/embedded-provider-core
 
+## 0.1.10
+
+### Patch Changes
+
+- b20bc21: Support derivation index
+- Updated dependencies [b20bc21]
+  - @phantom/client@0.1.11
+
 ## 0.1.9
 
 ### Patch Changes
