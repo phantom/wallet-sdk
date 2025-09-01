@@ -336,6 +336,22 @@ interface BrowserSDKConfig {
 }
 ```
 
+### Extension Detection
+
+For injected provider usage, you can check if the Phantom extension is installed:
+
+```typescript
+import { waitForPhantomExtension } from "@phantom/browser-sdk";
+
+const isAvailable = await waitForPhantomExtension(5000); 
+
+if (isAvailable) {
+  console.log("Phantom extension is available!");
+} else {
+  console.log("Phantom extension not found");
+}
+```
+
 ### Core Methods
 
 #### connect()
