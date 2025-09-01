@@ -20,6 +20,5 @@ export async function signAndSendTransaction(
     await provider.connect({ onlyIfTrusted: false });
   }
 
-  // Direct pass-through to extension - no conversion needed
   return provider.signAndSendTransaction(transaction);
 }

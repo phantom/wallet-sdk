@@ -6,6 +6,8 @@
 
 - New SDKs chain specific interface, prepare for initial beta release
 
+## 0.1.5
+
 ### Patch Changes
 
 - ef68eaf: Key rotation

@@ -15,6 +15,15 @@
   - @phantom/constants@1.0.0-beta.0
   - @phantom/chains@1.0.0-beta.0
 
+## 0.3.8
+
+### Patch Changes
+
+- 9305f27: Remove solana kit dep
+- Updated dependencies [ef68eaf]
+- Updated dependencies [9305f27]
+  - @phantom/browser-sdk@0.3.8
+
 ## 0.3.7
 
 ### Patch Changes

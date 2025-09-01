@@ -15,6 +15,12 @@
 
 ### Patch Changes
 
+- 9305f27: Remove solana kit dep
+
+## 0.0.10
+
+### Patch Changes
+
 - dff64e5: Add function to detect whether phantom wallet is installed
 
 ## 0.0.9

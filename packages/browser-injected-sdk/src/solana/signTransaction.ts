@@ -1,5 +1,6 @@
 import type { VersionedTransaction, Transaction } from "@solana/web3.js";
 import { getProvider } from "./getProvider";
+
 /**
  * Signs a transaction using the Phantom provider without sending it.
  * @param transaction The transaction to sign (Web3.js format).

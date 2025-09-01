@@ -122,7 +122,6 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
       throw new Error("Provider is not connected.");
     }
 
-    // Pass transaction directly to provider - no conversion needed
     const result = await provider.signAndSendTransaction(transaction);
     return {
       signature: result.signature,
@@ -140,7 +139,6 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
       throw new Error("Provider is not connected.");
     }
 
-    // Pass transaction directly to provider - no conversion needed
     const result = await provider.signTransaction(transaction);
     return result;
   }
@@ -155,7 +153,6 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
       throw new Error("Provider is not connected.");
     }
 
-    // Pass transactions directly to provider - no conversion needed
     const result = await provider.signAllTransactions(transactions);
     return result;
   }

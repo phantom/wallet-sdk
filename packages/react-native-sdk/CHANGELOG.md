@@ -21,6 +21,13 @@
   - @phantom/base64url@1.0.0-beta.0
   - @phantom/crypto@1.0.0-beta.0
 
+## 0.1.7
+
+### Patch Changes
+  - @phantom/embedded-provider-core@0.1.9
+  - @phantom/sdk-types@0.1.5
+  - @phantom/client@0.1.10
+
 ## 0.1.6
 
 ### Patch Changes

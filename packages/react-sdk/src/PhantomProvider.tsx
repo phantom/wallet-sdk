@@ -39,7 +39,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   const [connectError, setConnectError] = useState<Error | null>(null);
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
   const [walletId, setWalletId] = useState<string | null>(null);
-  const [currentProviderType, setCurrentProviderType] = useState<"injected" | "embedded" | null>(null);
+  const [currentProviderType, setCurrentProviderType] = useState<"injected" | "embedded" | null>(config.providerType as any || null);
   const [isPhantomAvailable, setIsPhantomAvailable] = useState(false);
   const [sdk, setSdk] = useState<BrowserSDK | null>(null);
 
