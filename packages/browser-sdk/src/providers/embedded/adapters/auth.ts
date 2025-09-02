@@ -43,8 +43,6 @@ export class BrowserAuthProvider implements AuthProvider {
         redirect_uri: phantomOptions.redirectUrl || (typeof window !== "undefined" ? window.location.href : ""),
         session_id: phantomOptions.sessionId,
         clear_previous_session: true.toString(),
-        app_name: phantomOptions.appName || "", // Optional app name
-        app_logo: phantomOptions.appLogo || "", // Optional app logo URL
       });
 
       // Add provider if specified (will skip provider selection)

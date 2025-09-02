@@ -203,8 +203,6 @@ document.addEventListener("DOMContentLoaded", () => {
         providerType: "injected",
         solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
-        appName: "Phantom Browser SDK Demo",
-        appLogo: "https://picsum.photos/200", // Optional app logo URL
       });
     } else {
       // For demo purposes, use hardcoded embedded config
@@ -219,8 +217,6 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
-        appName: "Phantom Browser SDK Demo",
-        appLogo: "https://picsum.photos/200", // Optional app logo URL
       });
 
       embeddedSdk.on("connect_start", data => {
@@ -469,36 +465,36 @@ document.addEventListener("DOMContentLoaded", () => {
               { name: "name", type: "string" },
               { name: "version", type: "string" },
               { name: "chainId", type: "uint256" },
-              { name: "verifyingContract", type: "address" }
+              { name: "verifyingContract", type: "address" },
             ],
             Person: [
               { name: "name", type: "string" },
-              { name: "wallet", type: "address" }
+              { name: "wallet", type: "address" },
             ],
             Mail: [
               { name: "from", type: "Person" },
               { name: "to", type: "Person" },
-              { name: "contents", type: "string" }
-            ]
+              { name: "contents", type: "string" },
+            ],
           },
           primaryType: "Mail",
           domain: {
             name: "Ether Mail",
             version: "1",
             chainId: 1,
-            verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC"
+            verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC",
           },
           message: {
             from: {
               name: "Cow",
-              wallet: "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826"
+              wallet: "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826",
             },
             to: {
               name: "Bob",
-              wallet: ethAddress.address
+              wallet: ethAddress.address,
             },
-            contents: "Hello, Bob! This is a typed data message from Phantom Browser SDK."
-          }
+            contents: "Hello, Bob! This is a typed data message from Phantom Browser SDK.",
+          },
         };
 
         console.log("Signing typed data:", typedData);

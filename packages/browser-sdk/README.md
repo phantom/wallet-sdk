@@ -199,8 +199,6 @@ const sdk = new BrowserSDK({
     authUrl: "https://auth.phantom.app", // optional, defaults to "https://connect.phantom.app"
     redirectUrl: "https://yourapp.com/callback", // optional, defaults to current page
   },
-  appName: "My DApp", // optional, for branding
-  appLogo: "https://myapp.com/logo.png", // optional, for branding
   autoConnect: true, // optional, auto-connect to existing session (default: true for embedded)
 });
 ```
@@ -321,8 +319,6 @@ new BrowserSDK(config: BrowserSDKConfig)
 ```typescript
 interface BrowserSDKConfig {
   providerType: "injected" | "embedded";
-  appName?: string; // Optional app name for branding
-  appLogo?: string; // Optional app logo URL for branding
   addressTypes?: [AddressType, ...AddressType[]]; // Networks to enable (e.g., [AddressType.solana])
 
   // Required for embedded provider only

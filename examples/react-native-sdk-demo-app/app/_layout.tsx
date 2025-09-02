@@ -22,8 +22,6 @@ const config: PhantomSDKConfig = {
   },
   apiBaseUrl: process.env.EXPO_PUBLIC_WALLET_API || "https://api.phantom.app/v1/wallets",
   solanaProvider: "web3js",
-  appName: "Phantom React Native SDK Demo",
-  appLogo: "https://picsum.photos/200", // Optional app logo URL
 };
 
 // Debug configuration - separate to avoid SDK reinstantiation

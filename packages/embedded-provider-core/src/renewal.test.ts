@@ -97,7 +97,6 @@ describe("EmbeddedProvider Renewal Tests", () => {
       apiBaseUrl: "https://api.test.com",
       embeddedWalletType: "app-wallet",
       addressTypes: ["solana"],
-      appName: "Test App",
     };
 
     provider = new EmbeddedProvider(config, mockPlatform, mockLogger);
