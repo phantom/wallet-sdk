@@ -1,18 +1,30 @@
 import type {
   BrowserSDKConfig,
   ConnectResult,
-  SignedTransaction,
   WalletAddress,
-  SignAndSendTransactionParams,
-  SignMessageParams,
-  SignMessageResult,
   AuthOptions,
 } from "./types";
 import { ProviderManager, type SwitchProviderOptions, type ProviderPreference } from "./ProviderManager";
 import { isPhantomExtensionInstalled } from "@phantom/browser-injected-sdk";
 import { debug, DebugCategory, type DebugLevel, type DebugCallback } from "./debug";
+import type { ISolanaChain, IEthereumChain } from "@phantom/chains";
 import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-provider-core";
+import type { InjectedProvider } from "./providers/injected";
+import type { AutoConfirmEnableParams, AutoConfirmResult, AutoConfirmSupportedChainsResult } from "@phantom/browser-injected-sdk/auto-confirm";
 
+/**
+ * Browser SDK with chain-specific API
+ * 
+ * Usage:
+ * ```typescript
+ * const sdk = new BrowserSDK({ providerType: 'embedded', appId: 'your-app-id' });
+ * await sdk.connect();
+ * 
+ * // Chain-specific operations
+ * await sdk.solana.signMessage(message);
+ * await sdk.ethereum.signPersonalMessage(message, address);
+ * ```
+ */
 export class BrowserSDK {
   private providerManager: ProviderManager;
 
@@ -41,171 +53,127 @@ export class BrowserSDK {
       );
     }
 
-    config.embeddedWalletType = embeddedWalletType as "app-wallet" | "user-wallet";
-
-    debug.log(DebugCategory.BROWSER_SDK, "Creating ProviderManager", { config });
     this.providerManager = new ProviderManager(config);
-    debug.info(DebugCategory.BROWSER_SDK, "BrowserSDK initialized successfully");
   }
 
+  // ===== CHAIN API =====
+  
   /**
-   * Connect to the wallet with optional provider switching
+   * Access Solana chain operations
    */
-  async connect(options?: {
-    providerType?: "injected" | "embedded" | (string & Record<never, never>);
-    embeddedWalletType?: "app-wallet" | "user-wallet" | (string & Record<never, never>);
-    authOptions?: AuthOptions;
-  }): Promise<ConnectResult> {
-    debug.info(DebugCategory.BROWSER_SDK, "Starting connect process", { options });
-
-    // Switch provider if requested
-    if (options?.providerType) {
-      debug.log(DebugCategory.BROWSER_SDK, "Provider switch requested", {
-        providerType: options.providerType,
-        embeddedWalletType: options.embeddedWalletType,
-      });
-
-      // Validate providerType
-      if (!["injected", "embedded"].includes(options.providerType)) {
-        debug.error(DebugCategory.BROWSER_SDK, "Invalid providerType in connect options", {
-          providerType: options.providerType,
-        });
-        throw new Error(`Invalid providerType: ${options.providerType}. Must be "injected" or "embedded".`);
-      }
-
-      // Validate embeddedWalletType if provided
-      if (options.embeddedWalletType && !["app-wallet", "user-wallet"].includes(options.embeddedWalletType)) {
-        debug.error(DebugCategory.BROWSER_SDK, "Invalid embeddedWalletType in connect options", {
-          embeddedWalletType: options.embeddedWalletType,
-        });
-        throw new Error(
-          `Invalid embeddedWalletType: ${options.embeddedWalletType}. Must be "app-wallet" or "user-wallet".`,
-        );
-      }
-
-      debug.log(DebugCategory.BROWSER_SDK, "Switching provider", {
-        providerType: options.providerType,
-        embeddedWalletType: options.embeddedWalletType,
-      });
-
-      await this.providerManager.switchProvider(options.providerType as "injected" | "embedded", {
-        embeddedWalletType: options.embeddedWalletType as "app-wallet" | "user-wallet",
-      });
+  get solana(): ISolanaChain {
+    const currentProvider = this.providerManager.getCurrentProvider();
+    if (!currentProvider) {
+      throw new Error('No provider available. Call connect() first.');
     }
-
-    debug.log(DebugCategory.BROWSER_SDK, "Delegating to ProviderManager.connect", {
-      authOptions: options?.authOptions,
-    });
-    const result = await this.providerManager.connect(options?.authOptions);
-    debug.info(DebugCategory.BROWSER_SDK, "Connect completed successfully", result);
-    return result;
+    return currentProvider.solana;
   }
-
+  
   /**
-   * Switch to a different provider type
+   * Access Ethereum chain operations
    */
-  async switchProvider(
-    type: "injected" | "embedded" | (string & Record<never, never>),
-    options?: SwitchProviderOptions,
-  ): Promise<void> {
-    // Validate providerType
-    if (!["injected", "embedded"].includes(type)) {
-      throw new Error(`Invalid providerType: ${type}. Must be "injected" or "embedded".`);
+  get ethereum(): IEthereumChain {
+    const currentProvider = this.providerManager.getCurrentProvider();
+    if (!currentProvider) {
+      throw new Error('No provider available. Call connect() first.');
     }
-
-    await this.providerManager.switchProvider(type as "injected" | "embedded", options);
+    return currentProvider.ethereum;
   }
 
-  /**
-   * Get current provider information
-   */
-  getCurrentProviderInfo(): ProviderPreference | null {
-    return this.providerManager.getCurrentProviderInfo();
-  }
+  // ===== CONNECTION MANAGEMENT =====
 
   /**
-   * Wait for Phantom extension to become available
+   * Connect to the wallet
    */
-  async waitForPhantomExtension(timeoutMs?: number): Promise<boolean> {
-    const isInstalled = async (retries = 3, timeAccumulated = 0): Promise<boolean> => {
-      const installed = isPhantomExtensionInstalled();
-      if (installed) return true;
-      if (retries <= 0) return false;
-      if (timeAccumulated >= (timeoutMs || 3000)) return false;
+  async connect(options?: AuthOptions): Promise<ConnectResult> {
+    debug.info(DebugCategory.BROWSER_SDK, "Starting connection", options);
 
-      return new Promise(resolve => {
-        setTimeout(async () => {
-          const result = await isInstalled(retries - 1, timeAccumulated + 100);
-          resolve(result);
-        }, 100);
+    try {
+      const result = await this.providerManager.connect(options);
+      
+      debug.info(DebugCategory.BROWSER_SDK, "Connection successful", {
+        addressCount: result.addresses.length,
+        walletId: result.walletId,
+        status: result.status,
       });
-    };
-    return isInstalled();
+
+      return result;
+    } catch (error) {
+      debug.error(DebugCategory.BROWSER_SDK, "Connection failed", { error: (error as Error).message });
+      throw error;
+    }
   }
 
   /**
    * Disconnect from the wallet
    */
   async disconnect(): Promise<void> {
-    return this.providerManager.disconnect();
+    debug.info(DebugCategory.BROWSER_SDK, "Disconnecting");
+
+    try {
+      await this.providerManager.disconnect();
+      debug.info(DebugCategory.BROWSER_SDK, "Disconnection successful");
+    } catch (error) {
+      debug.error(DebugCategory.BROWSER_SDK, "Disconnection failed", { error: (error as Error).message });
+      throw error;
+    }
   }
 
   /**
-   * Sign a message
-   * @param message - Message string to sign
-   * @param networkId - Network identifier
-   * @returns Signature string
+   * Switch between provider types (injected vs embedded)
    */
-  async signMessage(params: SignMessageParams): Promise<SignMessageResult> {
-    debug.info(DebugCategory.BROWSER_SDK, "Signing message", {
-      message: params.message,
-      networkId: params.networkId,
-    });
-    const result = await this.providerManager.signMessage(params);
-    debug.info(DebugCategory.BROWSER_SDK, "Message signed successfully", {
-      message: params.message,
-      networkId: params.networkId,
-      result: result,
-    });
-    return result;
+  async switchProvider(type: "injected" | "embedded", options?: SwitchProviderOptions): Promise<void> {
+    debug.info(DebugCategory.BROWSER_SDK, "Switching provider", { type, options });
+
+    try {
+      await this.providerManager.switchProvider(type, options);
+      debug.info(DebugCategory.BROWSER_SDK, "Provider switch successful", { type });
+    } catch (error) {
+      debug.error(DebugCategory.BROWSER_SDK, "Provider switch failed", { 
+        type, 
+        error: (error as Error).message 
+      });
+      throw error;
+    }
   }
 
-  /**
-   * Sign and send a transaction
-   * @param params - Transaction parameters with native transaction object
-   * @returns Transaction result
-   */
-  async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<SignedTransaction> {
-    debug.info(DebugCategory.BROWSER_SDK, "Signing and sending transaction", {
-      networkId: params.networkId,
-    });
-    const result = await this.providerManager.signAndSendTransaction(params);
-    debug.info(DebugCategory.BROWSER_SDK, "Transaction signed and sent successfully", {
-      networkId: params.networkId,
-      result: result,
-    });
-    return result;
-  }
+  // ===== STATE QUERIES =====
 
   /**
-   * Get wallet addresses
-   */
-  getAddresses(): WalletAddress[] {
-    return this.providerManager.getAddresses();
-  }
-
-  /**
-   * Check if wallet is connected
+   * Check if the SDK is connected to a wallet
    */
   isConnected(): boolean {
     return this.providerManager.isConnected();
   }
 
   /**
-   * Get the current wallet ID (for embedded wallets)
+   * Get all connected wallet addresses
+   */
+  getAddresses(): WalletAddress[] {
+    return this.providerManager.getAddresses();
+  }
+
+  /**
+   * Get information about the current provider
+   */
+  getCurrentProviderInfo(): ProviderPreference | null {
+    return this.providerManager.getCurrentProviderInfo();
+  }
+
+  /**
+   * Get the wallet ID (for embedded wallets)
    */
   getWalletId(): string | null {
     return this.providerManager.getWalletId();
+  }
+
+  // ===== UTILITY METHODS =====
+
+  /**
+   * Check if Phantom extension is installed
+   */
+  static isPhantomInstalled(): boolean {
+    return isPhantomExtensionInstalled();
   }
 
   /**
@@ -297,6 +265,111 @@ export class BrowserSDK {
     
     if (config.callback !== undefined) {
       this.setDebugCallback(config.callback);
+    }
+  }
+
+  // ===== AUTO-CONFIRM METHODS (Injected Provider Only) =====
+
+  /**
+   * Enable auto-confirm for transactions
+   * Only available for injected providers
+   */
+  async enableAutoConfirm(params: AutoConfirmEnableParams): Promise<AutoConfirmResult> {
+    debug.info(DebugCategory.BROWSER_SDK, "Enabling auto-confirm", { params });
+    
+    const currentProvider = this.providerManager.getCurrentProvider();
+    if (!currentProvider) {
+      throw new Error('No provider available. Call connect() first.');
+    }
+    
+    if (!('enableAutoConfirm' in currentProvider)) {
+      throw new Error('Auto-confirm is only available for injected providers');
+    }
+    
+    try {
+      const result = await (currentProvider as InjectedProvider).enableAutoConfirm(params);
+      debug.info(DebugCategory.BROWSER_SDK, "Auto-confirm enabled successfully", { result });
+      return result;
+    } catch (error) {
+      debug.error(DebugCategory.BROWSER_SDK, "Failed to enable auto-confirm", { error: (error as Error).message });
+      throw error;
+    }
+  }
+
+  /**
+   * Disable auto-confirm for transactions
+   * Only available for injected providers
+   */
+  async disableAutoConfirm(): Promise<void> {
+    debug.info(DebugCategory.BROWSER_SDK, "Disabling auto-confirm");
+    
+    const currentProvider = this.providerManager.getCurrentProvider();
+    if (!currentProvider) {
+      throw new Error('No provider available. Call connect() first.');
+    }
+    
+    if (!('disableAutoConfirm' in currentProvider)) {
+      throw new Error('Auto-confirm is only available for injected providers');
+    }
+    
+    try {
+      await (currentProvider as InjectedProvider).disableAutoConfirm();
+      debug.info(DebugCategory.BROWSER_SDK, "Auto-confirm disabled successfully");
+    } catch (error) {
+      debug.error(DebugCategory.BROWSER_SDK, "Failed to disable auto-confirm", { error: (error as Error).message });
+      throw error;
+    }
+  }
+
+  /**
+   * Get current auto-confirm status
+   * Only available for injected providers
+   */
+  async getAutoConfirmStatus(): Promise<AutoConfirmResult> {
+    debug.info(DebugCategory.BROWSER_SDK, "Getting auto-confirm status");
+    
+    const currentProvider = this.providerManager.getCurrentProvider();
+    if (!currentProvider) {
+      throw new Error('No provider available. Call connect() first.');
+    }
+    
+    if (!('getAutoConfirmStatus' in currentProvider)) {
+      throw new Error('Auto-confirm is only available for injected providers');
+    }
+    
+    try {
+      const result = await (currentProvider as InjectedProvider).getAutoConfirmStatus();
+      debug.info(DebugCategory.BROWSER_SDK, "Got auto-confirm status", { result });
+      return result;
+    } catch (error) {
+      debug.error(DebugCategory.BROWSER_SDK, "Failed to get auto-confirm status", { error: (error as Error).message });
+      throw error;
+    }
+  }
+
+  /**
+   * Get supported chains for auto-confirm
+   * Only available for injected providers
+   */
+  async getSupportedAutoConfirmChains(): Promise<AutoConfirmSupportedChainsResult> {
+    debug.info(DebugCategory.BROWSER_SDK, "Getting supported auto-confirm chains");
+    
+    const currentProvider = this.providerManager.getCurrentProvider();
+    if (!currentProvider) {
+      throw new Error('No provider available. Call connect() first.');
+    }
+    
+    if (!('getSupportedAutoConfirmChains' in currentProvider)) {
+      throw new Error('Auto-confirm is only available for injected providers');
+    }
+    
+    try {
+      const result = await (currentProvider as InjectedProvider).getSupportedAutoConfirmChains();
+      debug.info(DebugCategory.BROWSER_SDK, "Got supported auto-confirm chains", { result });
+      return result;
+    } catch (error) {
+      debug.error(DebugCategory.BROWSER_SDK, "Failed to get supported auto-confirm chains", { error: (error as Error).message });
+      throw error;
     }
   }
 }

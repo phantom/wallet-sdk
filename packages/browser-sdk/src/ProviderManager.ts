@@ -2,11 +2,7 @@ import type {
   BrowserSDKConfig,
   Provider,
   ConnectResult,
-  SignedTransaction,
   WalletAddress,
-  SignAndSendTransactionParams,
-  SignMessageParams,
-  SignMessageResult,
   AuthOptions,
 } from "./types";
 import { InjectedProvider } from "./providers/injected";
@@ -146,27 +142,6 @@ export class ProviderManager implements EventEmitter {
     this.walletId = null;
   }
 
-  /**
-   * Sign a message using current provider
-   */
-  async signMessage(params: SignMessageParams): Promise<SignMessageResult> {
-    if (!this.currentProvider) {
-      throw new Error("No provider connected");
-    }
-
-    return this.currentProvider.signMessage(params);
-  }
-
-  /**
-   * Sign and send transaction using current provider
-   */
-  async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<SignedTransaction> {
-    if (!this.currentProvider) {
-      throw new Error("No provider connected");
-    }
-
-    return this.currentProvider.signAndSendTransaction(params);
-  }
 
   /**
    * Get addresses from current provider

@@ -1,5 +1,21 @@
 # @phantom/server-sdk
 
+## 1.0.0-beta.0
+
+### Major Changes
+
+- New SDKs chain specific interface, prepare for initial beta release
+
+### Patch Changes
+
+- Updated dependencies [ef68eaf]
+- Updated dependencies
+  - @phantom/client@1.0.0-beta.0
+  - @phantom/constants@1.0.0-beta.0
+  - @phantom/parsers@1.0.0-beta.0
+  - @phantom/api-key-stamper@1.0.0-beta.0
+  - @phantom/base64url@1.0.0-beta.0
+
 ## 0.2.5
 
 ### Patch Changes

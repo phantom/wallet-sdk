@@ -12,8 +12,6 @@ export function AuthCallback() {
   const addresses = useAccounts();
 
 
-
-
   // Monitor connect error
   useEffect(() => {
     if (connectError) {

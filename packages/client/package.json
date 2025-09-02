@@ -1,6 +1,6 @@
 {
   "name": "@phantom/client",
-  "version": "0.1.11",
+  "version": "1.0.0-beta.0",
   "description": "HTTP client for Phantom Wallet API",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

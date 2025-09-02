@@ -1,5 +1,6 @@
 import type { SolanaStrategy } from "./types";
-import type { DisplayEncoding, PhantomSolanaProvider, SolanaSignInData, VersionedTransaction, Transaction } from "../types";
+import type { DisplayEncoding, PhantomSolanaProvider, SolanaSignInData } from "../types";
+import type { Transaction, VersionedTransaction } from "@solana/web3.js";
 import { ProviderStrategy } from "../../types";
 
 const MAX_RETRIES = 4;

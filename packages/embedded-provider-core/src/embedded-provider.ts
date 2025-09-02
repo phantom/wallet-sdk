@@ -3,7 +3,7 @@ import { base64urlEncode } from "@phantom/base64url";
 import bs58 from "bs58";
 import {
   parseMessage,
-  parseTransaction,
+  parseTransactionToBase64Url,
   parseSignMessageResponse,
   parseTransactionResponse,
   type ParsedTransactionResult,
@@ -33,6 +33,8 @@ import { JWTAuth } from "./auth/jwt-auth";
 import { generateSessionId } from "./utils/session";
 import { retryWithBackoff } from "./utils/retry";
 import type { StamperWithKeyManagement } from "@phantom/sdk-types";
+import { EmbeddedSolanaChain, EmbeddedEthereumChain } from "./chains";
+import type { ISolanaChain, IEthereumChain } from '@phantom/chains';
 
 export type EmbeddedProviderEvent = 'connect' | 'connect_start' | 'connect_error' | 'disconnect' | 'error';
 export type EventCallback = (data?: any) => void;
@@ -49,6 +51,10 @@ export class EmbeddedProvider {
   private walletId: string | null = null;
   private addresses: WalletAddress[] = [];
   private jwtAuth: JWTAuth;
+  
+  // Built-in chain instances
+  public readonly solana: ISolanaChain;
+  public readonly ethereum: IEthereumChain;
   private eventListeners: Map<EmbeddedProviderEvent, Set<EventCallback>> = new Map();
 
   constructor(config: EmbeddedProviderConfig, platform: PlatformAdapter, logger: DebugLogger) {
@@ -65,6 +71,10 @@ export class EmbeddedProvider {
 
     // Store solana provider config (unused for now)
     config.solanaProvider;
+    
+    // Initialize chain instances
+    this.solana = new EmbeddedSolanaChain(this);
+    this.ethereum = new EmbeddedEthereumChain(this);
     
     this.logger.info("EMBEDDED_PROVIDER", "EmbeddedProvider initialized");
 
@@ -635,7 +645,7 @@ export class EmbeddedProvider {
     });
 
     // Parse transaction to base64url format for client based on network
-    const parsedTransaction = await parseTransaction(params.transaction, params.networkId);
+    const parsedTransaction = await parseTransactionToBase64Url(params.transaction, params.networkId);
 
     // Get session to access derivation index
     const session = await this.storage.getSession();

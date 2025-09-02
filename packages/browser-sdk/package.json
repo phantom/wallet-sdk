@@ -1,7 +1,7 @@
 {
   "name": "@phantom/browser-sdk",
-  "version": "0.3.9",
-  "description": "Browser SDK for Phantom Wallet with unified interface",
+  "version": "1.0.0-beta.0",
+  "description": "Browser SDK for Phantom Wallet",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -30,6 +30,7 @@
   "dependencies": {
     "@phantom/base64url": "workspace:^",
     "@phantom/browser-injected-sdk": "workspace:^",
+    "@phantom/chains": "workspace:^",
     "@phantom/client": "workspace:^",
     "@phantom/constants": "workspace:^",
     "@phantom/embedded-provider-core": "workspace:^",

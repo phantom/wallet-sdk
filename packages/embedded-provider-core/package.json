@@ -1,6 +1,6 @@
 {
   "name": "@phantom/embedded-provider-core",
-  "version": "0.1.10",
+  "version": "1.0.0-beta.0",
   "description": "Platform-agnostic embedded provider core logic for Phantom Wallet SDK",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -41,6 +41,7 @@
   "dependencies": {
     "@phantom/api-key-stamper": "workspace:^",
     "@phantom/base64url": "workspace:^",
+    "@phantom/chains": "workspace:^",
     "@phantom/client": "workspace:^",
     "@phantom/constants": "workspace:^",
     "@phantom/parsers": "workspace:^",

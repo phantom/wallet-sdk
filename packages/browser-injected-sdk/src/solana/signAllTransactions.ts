@@ -1,13 +1,13 @@
-import type { Transaction, VersionedTransaction } from "@solana/web3.js";
+import type { VersionedTransaction, Transaction } from "@solana/web3.js";
 import { getProvider } from "./getProvider";
 
 /**
  * Signs all transactions using the Phantom provider.
- * @param transactions An array of transactions to sign.
+ * @param transactions An array of transactions to sign (Web3.js format).
  * @returns A promise that resolves with an array of signed transactions.
  * @throws Error if Phantom provider is not found or if the operation fails.
  */
-export async function signAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<(Transaction | VersionedTransaction)[]> {
+export async function signAllTransactions(transactions: (VersionedTransaction | Transaction)[]): Promise<(VersionedTransaction | Transaction)[]> {
   const provider = await getProvider();
   if (!provider) {
     throw new Error("Provider not found.");
