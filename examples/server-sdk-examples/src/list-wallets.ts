@@ -10,6 +10,7 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 // Configuration
 const config = {
   organizationId: process.env.ORGANIZATION_ID!,
+  appId: process.env.APP_ID!,
   apiPrivateKey: process.env.ORGANIZATION_PRIVATE_KEY!,
   apiBaseUrl: process.env.WALLET_API!,
 };
@@ -40,11 +41,7 @@ async function listAllWallets() {
 
   // Initialize SDK
   console.log("📦 Initializing Server SDK...");
-  const sdk = new ServerSDK({
-    apiPrivateKey: config.apiPrivateKey,
-    organizationId: config.organizationId,
-    apiBaseUrl: config.apiBaseUrl,
-  });
+  const sdk = new ServerSDK(config);
 
   try {
     console.log("📊 Fetching wallets...\n");

@@ -22,13 +22,14 @@ export interface DebugConfig {
 
 export interface BrowserSDKConfig extends Partial<EmbeddedProviderConfig> {
   providerType: "injected" | "embedded" | (string & Record<never, never>);
-  addressTypes: [AddressType, ...AddressType[]]
+  addressTypes: [AddressType, ...AddressType[]];
   // Required for embedded provider, optional for injected
   apiBaseUrl?: string;
   organizationId?: string;
   embeddedWalletType?: "app-wallet" | "user-wallet" | (string & Record<never, never>);
   // Auto-connect to existing sessions (default: true)
   autoConnect?: boolean;
+  appId?: string; // the app id retrieved from phantom.com/portal
 }
 
 // Re-export types from core for convenience
@@ -45,7 +46,7 @@ export type {
 };
 
 // Re-export enums from client for convenience
-export { AddressType }
+export { AddressType };
 
 export interface Provider {
   connect(authOptions?: AuthOptions): Promise<ConnectResult>;

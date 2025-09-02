@@ -58,6 +58,7 @@ import {
 const config: EmbeddedProviderConfig = {
   apiBaseUrl: "https://api.phantom.app",
   organizationId: "your-org-id",
+  appId: "your-app-id",
   embeddedWalletType: "user-wallet", // or 'app-wallet'
   addressTypes: ["solana", "ethereum"],
   solanaProvider: "web3js",
@@ -272,6 +273,7 @@ interface EmbeddedProviderConfig {
   // Required
   apiBaseUrl: string; // Phantom API base URL
   organizationId: string; // Your organization ID
+  appId: string;
   embeddedWalletType: "app-wallet" | "user-wallet";
   addressTypes: [AddressType, ...AddressType[]]; // Supported blockchain addresses
 

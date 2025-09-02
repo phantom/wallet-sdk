@@ -22,6 +22,7 @@ import {
 
 export interface ServerSDKConfig {
   organizationId: string;
+  appId: string;
   apiBaseUrl: string;
   apiPrivateKey: string;
 }

@@ -34,6 +34,7 @@ function createCompletedSession(overrides: Partial<Session> = {}): Session {
     sessionId: "test-session-id",
     walletId: "wallet-123",
     organizationId: "org-123",
+    appId: "app-123",
     stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
     authProvider: "jwt",
     userInfo: {},
@@ -41,7 +42,7 @@ function createCompletedSession(overrides: Partial<Session> = {}): Session {
     createdAt: now,
     lastUsed: now,
     authenticatorCreatedAt: now,
-    authenticatorExpiresAt: now + (7 * 24 * 60 * 60 * 1000), // 7 days from now
+    authenticatorExpiresAt: now + 7 * 24 * 60 * 60 * 1000, // 7 days from now
     lastRenewalAttempt: undefined,
     username: "test-user",
     ...overrides,
@@ -55,6 +56,7 @@ function createPendingSession(overrides: Partial<Session> = {}): Session {
     sessionId: "test-session-id",
     walletId: "temp-wallet",
     organizationId: "org-123",
+    appId: "app-123",
     stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
     authProvider: "phantom-connect",
     userInfo: {},
@@ -62,7 +64,7 @@ function createPendingSession(overrides: Partial<Session> = {}): Session {
     createdAt: now,
     lastUsed: now,
     authenticatorCreatedAt: now,
-    authenticatorExpiresAt: now + (7 * 24 * 60 * 60 * 1000), // 7 days from now
+    authenticatorExpiresAt: now + 7 * 24 * 60 * 60 * 1000, // 7 days from now
     lastRenewalAttempt: undefined,
     username: "test-user",
     ...overrides,
@@ -94,6 +96,7 @@ describe("EmbeddedProvider Auth Flows", () => {
     config = {
       apiBaseUrl: "https://api.example.com",
       organizationId: "test-org-id",
+      appId: "test-app-id",
       embeddedWalletType: "user-wallet",
       addressTypes: ["solana"],
       solanaProvider: "web3js",
@@ -292,6 +295,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         sessionId: "test-session-id",
         walletId: "temp-wallet",
         organizationId: "org-123",
+        appId: "app-123",
         stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "phantom-connect",
         userInfo: {},
@@ -316,6 +320,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         sessionId: "test-session-id",
         walletId: "temp-wallet",
         organizationId: "org-123",
+        appId: "app-123",
         stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "phantom-connect",
         userInfo: {},
@@ -342,6 +347,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         sessionId: "test-session-id",
         walletId: "temp-wallet",
         organizationId: "org-123",
+        appId: "app-123",
         stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "phantom-connect",
         userInfo: {},
@@ -545,6 +551,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       expect(mockJWTAuth.authenticate).toHaveBeenCalledWith({
         organizationId: "new-org-id",
         parentOrganizationId: "test-org-id",
+        appId: "test-app-id",
         jwtToken: "valid-jwt-token",
         customAuthData: undefined,
       });
@@ -726,6 +733,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         expect.objectContaining({
           organizationId: "new-org-id",
           parentOrganizationId: "test-org-id",
+          appId: "test-app-id",
           sessionId: expect.any(String),
         }),
       );
@@ -742,6 +750,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         sessionId: "test-session-id",
         walletId: "temp-wallet",
         organizationId: "org-123",
+        appId: "app-123",
         stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "phantom-connect",
         userInfo: {},
@@ -887,7 +896,7 @@ describe("EmbeddedProvider Auth Flows", () => {
     it("should silently fail when no session exists", async () => {
       mockStorage.getSession.mockResolvedValue(null);
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
-      
+
       // autoConnect should not throw errors, it should fail silently
       await expect(provider.autoConnect()).resolves.toBeUndefined();
     });
@@ -925,7 +934,7 @@ describe("EmbeddedProvider Auth Flows", () => {
           walletId: "wallet-from-redirect-123",
           status: "completed",
           authProvider: "google",
-        })
+        }),
       );
     });
 
@@ -937,6 +946,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         sessionId: "test-session-id",
         walletId: "temp-wallet",
         organizationId: "org-123",
+        appId: "app-123",
         stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "phantom-connect",
         userInfo: {},
@@ -960,6 +970,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         sessionId: "original-session-id",
         walletId: "temp-wallet",
         organizationId: "org-123",
+        appId: "app-123",
         stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "phantom-connect",
         userInfo: {},
@@ -992,9 +1003,9 @@ describe("EmbeddedProvider Auth Flows", () => {
           lastUsed: expect.any(Number),
           walletId: "wallet-123",
           status: "completed",
-        })
+        }),
       );
-      
+
       // Verify the timestamp was updated (should be more recent than original)
       const savedSession = mockStorage.saveSession.mock.calls[0][0];
       expect(savedSession.lastUsed).toBeGreaterThan(originalTimestamp);
@@ -1049,7 +1060,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       const completedSession = createCompletedSession();
       mockStorage.getSession.mockResolvedValue(completedSession);
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
-      
+
       // Mock getWalletAddresses to fail consistently
       mockClient.getWalletAddresses
         .mockRejectedValueOnce(new Error("Network error"))
@@ -1111,7 +1122,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       // Set up a connected state
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
       const completedSession = createCompletedSession();
-      
+
       // Set up storage mock to track the session properly
       let savedSession: Session | null = completedSession;
       mockStorage.getSession.mockImplementation(() => Promise.resolve(savedSession));
@@ -1119,7 +1130,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         savedSession = session;
         return Promise.resolve();
       });
-      
+
       mockClient.getWalletAddresses.mockResolvedValue([]);
       await provider.connect();
     });

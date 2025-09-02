@@ -46,6 +46,7 @@ const sdk = new BrowserSDK({
   addressTypes: [AddressType.solana, AddressType.ethereum],
   apiBaseUrl: "https://api.phantom.app/v1/wallets",
   organizationId: "your-org-id",
+  appId: "your-app-id",
 });
 
 const { addresses } = await sdk.connect();
@@ -107,7 +108,7 @@ const result = await sdk.connect({
   },
 });
 
-// Apple authentication (skips provider selection) 
+// Apple authentication (skips provider selection)
 const result = await sdk.connect({
   authOptions: {
     provider: "apple",
@@ -132,7 +133,7 @@ const signedTx = await sdk.solana.signTransaction(transaction);
 const result = await sdk.solana.signAndSendTransaction(transaction);
 
 // Network switching
-await sdk.solana.switchNetwork('devnet');
+await sdk.solana.switchNetwork("devnet");
 
 // Utilities
 const publicKey = await sdk.solana.getPublicKey();
@@ -143,8 +144,8 @@ const isConnected = sdk.solana.isConnected();
 
 ```typescript
 // EIP-1193 requests
-const accounts = await sdk.ethereum.request({ method: 'eth_accounts' });
-const chainId = await sdk.ethereum.request({ method: 'eth_chainId' });
+const accounts = await sdk.ethereum.request({ method: "eth_accounts" });
+const chainId = await sdk.ethereum.request({ method: "eth_chainId" });
 
 // Message signing
 const signature = await sdk.ethereum.signPersonalMessage(message, address);
@@ -192,6 +193,7 @@ const sdk = new BrowserSDK({
   addressTypes: [AddressType.solana, AddressType.ethereum],
   apiBaseUrl: "https://api.phantom.app/v1/wallets",
   organizationId: "your-org-id",
+  appId: "your-app-id",
   embeddedWalletType: "app-wallet", // or 'user-wallet'
   authOptions: {
     authUrl: "https://auth.phantom.app", // optional, defaults to "https://connect.phantom.app"
@@ -239,10 +241,10 @@ const sdk = new BrowserSDK({
 
 ### Available AddressTypes
 
-| AddressType                 | Supported Chains                    |
-| --------------------------- | ----------------------------------- |
-| `AddressType.solana`        | Solana Mainnet, Devnet, Testnet     |
-| `AddressType.ethereum`      | Ethereum, Polygon, Arbitrum, and more |
+| AddressType            | Supported Chains                      |
+| ---------------------- | ------------------------------------- |
+| `AddressType.solana`   | Solana Mainnet, Devnet, Testnet       |
+| `AddressType.ethereum` | Ethereum, Polygon, Arbitrum, and more |
 
 ### Solana Provider Configuration
 
@@ -416,8 +418,8 @@ const result = await sdk.solana.signAndSendTransaction(transaction);
 Switch between Solana networks.
 
 ```typescript
-await sdk.solana.switchNetwork('mainnet');
-await sdk.solana.switchNetwork('devnet');
+await sdk.solana.switchNetwork("mainnet");
+await sdk.solana.switchNetwork("devnet");
 ```
 
 #### getPublicKey()
@@ -445,11 +447,11 @@ const connected = sdk.solana.isConnected();
 Make an EIP-1193 compatible request.
 
 ```typescript
-const accounts = await sdk.ethereum.request({ method: 'eth_accounts' });
-const chainId = await sdk.ethereum.request({ method: 'eth_chainId' });
-const balance = await sdk.ethereum.request({ 
-  method: 'eth_getBalance', 
-  params: [address, 'latest'] 
+const accounts = await sdk.ethereum.request({ method: "eth_accounts" });
+const chainId = await sdk.ethereum.request({ method: "eth_chainId" });
+const balance = await sdk.ethereum.request({
+  method: "eth_getBalance",
+  params: [address, "latest"],
 });
 ```
 
@@ -473,26 +475,26 @@ const typedData = {
       { name: "name", type: "string" },
       { name: "version", type: "string" },
       { name: "chainId", type: "uint256" },
-      { name: "verifyingContract", type: "address" }
+      { name: "verifyingContract", type: "address" },
     ],
     Mail: [
       { name: "from", type: "string" },
       { name: "to", type: "string" },
-      { name: "contents", type: "string" }
-    ]
+      { name: "contents", type: "string" },
+    ],
   },
   primaryType: "Mail",
   domain: {
     name: "Ether Mail",
     version: "1",
     chainId: 1,
-    verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC"
+    verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC",
   },
   message: {
     from: "Alice",
     to: "Bob",
-    contents: "Hello!"
-  }
+    contents: "Hello!",
+  },
 };
 
 const signature = await sdk.ethereum.signTypedData(typedData, address);
@@ -518,8 +520,8 @@ const result = await sdk.ethereum.sendTransaction({
 Switch to a different Ethereum chain.
 
 ```typescript
-await sdk.ethereum.switchChain(1);    // Ethereum mainnet
-await sdk.ethereum.switchChain(137);  // Polygon
+await sdk.ethereum.switchChain(1); // Ethereum mainnet
+await sdk.ethereum.switchChain(137); // Polygon
 await sdk.ethereum.switchChain(42161); // Arbitrum One
 ```
 
@@ -571,10 +573,10 @@ import { NetworkId } from "@phantom/browser-sdk";
 
 // Enable auto-confirm for specific chains
 const result = await sdk.enableAutoConfirm({
-  chains: [NetworkId.SOLANA_MAINNET, NetworkId.ETHEREUM_MAINNET]
+  chains: [NetworkId.SOLANA_MAINNET, NetworkId.ETHEREUM_MAINNET],
 });
 
-// Enable auto-confirm for all supported chains  
+// Enable auto-confirm for all supported chains
 const result = await sdk.enableAutoConfirm();
 
 console.log("Auto-confirm enabled:", result.enabled);
@@ -619,29 +621,29 @@ console.log("Supported chains:", supportedChains.chains);
 import { NetworkId } from "@phantom/browser-sdk";
 
 // Solana networks
-NetworkId.SOLANA_MAINNET   // "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
-NetworkId.SOLANA_DEVNET    // "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1"
-NetworkId.SOLANA_TESTNET   // "solana:4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z"
+NetworkId.SOLANA_MAINNET; // "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+NetworkId.SOLANA_DEVNET; // "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1"
+NetworkId.SOLANA_TESTNET; // "solana:4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z"
 
 // Ethereum networks
-NetworkId.ETHEREUM_MAINNET // "eip155:1"
-NetworkId.ETHEREUM_SEPOLIA // "eip155:11155111"
+NetworkId.ETHEREUM_MAINNET; // "eip155:1"
+NetworkId.ETHEREUM_SEPOLIA; // "eip155:11155111"
 
-// Polygon networks  
-NetworkId.POLYGON_MAINNET  // "eip155:137"
-NetworkId.POLYGON_AMOY     // "eip155:80002"
+// Polygon networks
+NetworkId.POLYGON_MAINNET; // "eip155:137"
+NetworkId.POLYGON_AMOY; // "eip155:80002"
 
 // Arbitrum networks
-NetworkId.ARBITRUM_ONE     // "eip155:42161"
-NetworkId.ARBITRUM_SEPOLIA // "eip155:421614"
+NetworkId.ARBITRUM_ONE; // "eip155:42161"
+NetworkId.ARBITRUM_SEPOLIA; // "eip155:421614"
 
 // Optimism networks
-NetworkId.OPTIMISM_MAINNET // "eip155:10"
-NetworkId.OPTIMISM_GOERLI  // "eip155:420"
+NetworkId.OPTIMISM_MAINNET; // "eip155:10"
+NetworkId.OPTIMISM_GOERLI; // "eip155:420"
 
 // Base networks
-NetworkId.BASE_MAINNET     // "eip155:8453"
-NetworkId.BASE_SEPOLIA     // "eip155:84532"
+NetworkId.BASE_MAINNET; // "eip155:8453"
+NetworkId.BASE_SEPOLIA; // "eip155:84532"
 ```
 
 **Important Notes:**
@@ -661,14 +663,14 @@ The BrowserSDK provides dynamic debug configuration that can be changed at runti
 // Enable debug logging
 sdk.enableDebug();
 
-// Disable debug logging  
+// Disable debug logging
 sdk.disableDebug();
 
 // Set debug level
 sdk.setDebugLevel(DebugLevel.INFO);
 
 // Set debug callback function
-sdk.setDebugCallback((message) => {
+sdk.setDebugCallback(message => {
   console.log(`[${message.category}] ${message.message}`, message.data);
 });
 
@@ -676,10 +678,10 @@ sdk.setDebugCallback((message) => {
 sdk.configureDebug({
   enabled: true,
   level: DebugLevel.DEBUG,
-  callback: (message) => {
+  callback: message => {
     // Handle debug messages
     console.log(`[${message.level}] ${message.category}: ${message.message}`);
-  }
+  },
 });
 ```
 
@@ -689,10 +691,10 @@ sdk.configureDebug({
 import { DebugLevel } from "@phantom/browser-sdk";
 
 // Available debug levels (in order of verbosity)
-DebugLevel.ERROR   // 0 - Only error messages
-DebugLevel.WARN    // 1 - Warning and error messages  
-DebugLevel.INFO    // 2 - Info, warning, and error messages
-DebugLevel.DEBUG   // 3 - All debug messages (most verbose)
+DebugLevel.ERROR; // 0 - Only error messages
+DebugLevel.WARN; // 1 - Warning and error messages
+DebugLevel.INFO; // 2 - Info, warning, and error messages
+DebugLevel.DEBUG; // 3 - All debug messages (most verbose)
 ```
 
 ### Debug Message Structure
@@ -701,11 +703,11 @@ Debug callbacks receive a `DebugMessage` object:
 
 ```typescript
 interface DebugMessage {
-  timestamp: number;     // Unix timestamp
-  level: DebugLevel;     // Message level
-  category: string;      // Component category (e.g., "BrowserSDK", "ProviderManager")
-  message: string;       // Debug message text
-  data?: any;           // Additional debug data (optional)
+  timestamp: number; // Unix timestamp
+  level: DebugLevel; // Message level
+  category: string; // Component category (e.g., "BrowserSDK", "ProviderManager")
+  message: string; // Debug message text
+  data?: any; // Additional debug data (optional)
 }
 ```
 
@@ -726,17 +728,17 @@ const debugMessages: DebugMessage[] = [];
 sdk.configureDebug({
   enabled: true,
   level: DebugLevel.INFO,
-  callback: (message) => {
+  callback: message => {
     debugMessages.push(message);
-    
+
     // Keep only last 100 messages
     if (debugMessages.length > 100) {
       debugMessages.shift();
     }
-    
+
     // Update UI
     updateDebugConsole();
-  }
+  },
 });
 
 // Dynamic debug level changing
@@ -835,7 +837,7 @@ import {
 import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 
 const sdk = new BrowserSDK({
-  providerType: "injected", 
+  providerType: "injected",
   addressTypes: [AddressType.solana],
   solanaProvider: "kit",
 });
@@ -926,4 +928,3 @@ const result = await sdk.ethereum.sendTransaction({
   maxPriorityFeePerGas: parseGwei("2").toString(),
 });
 ```
-

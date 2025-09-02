@@ -30,7 +30,7 @@ export class ProviderManager implements EventEmitter {
   private currentProviderKey: string | null = null;
   private walletId: string | null = null;
   private config: BrowserSDKConfig;
-  
+
   // Event management for forwarding provider events
   private eventListeners: Map<EmbeddedProviderEvent, Set<EventCallback>> = new Map();
   private providerForwardingSetup = new WeakSet<Provider>(); // Track which providers have forwarding set up
@@ -173,12 +173,12 @@ export class ProviderManager implements EventEmitter {
    */
   on(event: EmbeddedProviderEvent, callback: EventCallback): void {
     debug.log(DebugCategory.PROVIDER_MANAGER, "Adding event listener", { event });
-    
+
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, new Set());
     }
     this.eventListeners.get(event)!.add(callback);
-    
+
     // Ensure current provider is set up to forward events to us
     this.ensureProviderEventForwarding();
   }
@@ -188,7 +188,7 @@ export class ProviderManager implements EventEmitter {
    */
   off(event: EmbeddedProviderEvent, callback: EventCallback): void {
     debug.log(DebugCategory.PROVIDER_MANAGER, "Removing event listener", { event });
-    
+
     if (this.eventListeners.has(event)) {
       this.eventListeners.get(event)!.delete(callback);
       if (this.eventListeners.get(event)!.size === 0) {
@@ -201,12 +201,12 @@ export class ProviderManager implements EventEmitter {
    * Emit event to all registered callbacks
    */
   private emit(event: EmbeddedProviderEvent, data?: any): void {
-    debug.log(DebugCategory.PROVIDER_MANAGER, "Emitting event to stored callbacks", { 
-      event, 
+    debug.log(DebugCategory.PROVIDER_MANAGER, "Emitting event to stored callbacks", {
+      event,
       listenerCount: this.eventListeners.get(event)?.size || 0,
-      data 
+      data,
     });
-    
+
     const listeners = this.eventListeners.get(event);
     if (listeners && listeners.size > 0) {
       listeners.forEach(callback => {
@@ -227,7 +227,7 @@ export class ProviderManager implements EventEmitter {
    * Only sets up forwarding once per provider instance to avoid accumulation
    */
   private ensureProviderEventForwarding(): void {
-    if (!this.currentProvider || !('on' in this.currentProvider)) {
+    if (!this.currentProvider || !("on" in this.currentProvider)) {
       debug.warn(DebugCategory.PROVIDER_MANAGER, "Current provider does not support events", {
         providerType: this.getCurrentProviderInfo()?.type,
       });
@@ -243,15 +243,21 @@ export class ProviderManager implements EventEmitter {
     debug.log(DebugCategory.PROVIDER_MANAGER, "Setting up event forwarding from current provider");
 
     // Set up forwarding for each event type
-    const eventsToForward: EmbeddedProviderEvent[] = ["connect_start", "connect", "connect_error", "disconnect", "error"];
-    
+    const eventsToForward: EmbeddedProviderEvent[] = [
+      "connect_start",
+      "connect",
+      "connect_error",
+      "disconnect",
+      "error",
+    ];
+
     for (const event of eventsToForward) {
       // Set up a single forwarding callback that emits to our listeners
       const forwardingCallback = (data: any) => {
         debug.log(DebugCategory.PROVIDER_MANAGER, "Forwarding event from provider", { event, data });
         this.emit(event, data);
       };
-      
+
       debug.log(DebugCategory.PROVIDER_MANAGER, "Attaching forwarding callback for event", { event });
       (this.currentProvider as any).on(event, forwardingCallback);
     }
@@ -287,19 +293,20 @@ export class ProviderManager implements EventEmitter {
         addressTypes: this.config.addressTypes,
       });
     } else {
-      if (!this.config.apiBaseUrl || !this.config.organizationId) {
-        throw new Error("apiBaseUrl and organizationId are required for embedded provider");
+      if (!this.config.apiBaseUrl || !this.config.organizationId || !this.config.appId) {
+        throw new Error("apiBaseUrl, organizationId and appId are required for embedded provider");
       }
 
       provider = new EmbeddedProvider({
         apiBaseUrl: this.config.apiBaseUrl,
         organizationId: this.config.organizationId,
+        appId: this.config.appId,
         authOptions: this.config.authOptions,
         embeddedWalletType: embeddedWalletType || "app-wallet",
         addressTypes: this.config.addressTypes,
         solanaProvider: (this.config.solanaProvider || "web3js") as "web3js" | "kit",
         appLogo: this.config.appLogo, // Optional app logo URL
-        appName: this.config.appName
+        appName: this.config.appName,
       });
     }
 

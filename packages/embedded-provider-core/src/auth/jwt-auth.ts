@@ -22,6 +22,7 @@ export class JWTAuth {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${options.jwtToken}`,
+          "X-PHANTOM-APPID": options.appId,
         },
         body: JSON.stringify({
           organizationId: options.organizationId,

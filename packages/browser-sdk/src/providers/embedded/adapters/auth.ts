@@ -27,6 +27,7 @@ export class BrowserAuthProvider implements AuthProvider {
       debug.info(DebugCategory.PHANTOM_CONNECT_AUTH, "Starting Phantom Connect authentication", {
         organizationId: phantomOptions.organizationId,
         parentOrganizationId: phantomOptions.parentOrganizationId,
+        appId: phantomOptions.appId,
         provider: phantomOptions.provider,
         authUrl: phantomOptions.authUrl,
         hasCustomData: !!phantomOptions.customAuthData,
@@ -38,6 +39,7 @@ export class BrowserAuthProvider implements AuthProvider {
       const params = new URLSearchParams({
         organization_id: phantomOptions.organizationId,
         parent_organization_id: phantomOptions.parentOrganizationId,
+        app_id: phantomOptions.appId,
         redirect_uri: phantomOptions.redirectUrl || (typeof window !== "undefined" ? window.location.href : ""),
         session_id: phantomOptions.sessionId,
         clear_previous_session: true.toString(),
@@ -68,6 +70,7 @@ export class BrowserAuthProvider implements AuthProvider {
       const authContext = {
         organizationId: phantomOptions.organizationId,
         parentOrganizationId: phantomOptions.parentOrganizationId,
+        appId: phantomOptions.appId,
         provider: phantomOptions.provider,
         sessionId: phantomOptions.sessionId,
       };

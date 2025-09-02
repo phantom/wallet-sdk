@@ -37,6 +37,7 @@ export interface AuthOptions {
 
 export interface EmbeddedProviderConfig {
   apiBaseUrl: string;
+  appId: string;
   organizationId: string;
   authOptions?: {
     authUrl?: string;
