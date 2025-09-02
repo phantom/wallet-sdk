@@ -14,18 +14,8 @@ export class ExpoAuthProvider implements AuthProvider {
 
     // Handle redirect-based authentication
     const phantomOptions = options as PhantomConnectOptions;
-    const {
-      authUrl,
-      redirectUrl,
-      organizationId,
-      parentOrganizationId,
-      sessionId,
-      provider,
-      customAuthData,
-      appId,
-      appName,
-      appLogo,
-    } = phantomOptions;
+    const { authUrl, redirectUrl, organizationId, parentOrganizationId, sessionId, provider, customAuthData, appId } =
+      phantomOptions;
 
     if (!redirectUrl) {
       throw new Error("redirectUrl is required for web browser authentication");
@@ -46,8 +36,6 @@ export class ExpoAuthProvider implements AuthProvider {
         redirect_uri: redirectUrl,
         session_id: sessionId,
         clear_previous_session: "true",
-        app_name: appName || "", // Optional app name
-        app_logo: appLogo || "", // Optional app logo URL
       });
 
       // Add provider if specified (will skip provider selection)
@@ -105,7 +93,7 @@ export class ExpoAuthProvider implements AuthProvider {
         return {
           walletId,
           provider: provider || undefined,
-          accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : undefined
+          accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : undefined,
         };
       } else if (result.type === "cancel") {
         throw new Error("User cancelled authentication");

@@ -1,10 +1,4 @@
-import type {
-  BrowserSDKConfig,
-  Provider,
-  ConnectResult,
-  WalletAddress,
-  AuthOptions,
-} from "./types";
+import type { BrowserSDKConfig, Provider, ConnectResult, WalletAddress, AuthOptions } from "./types";
 import { InjectedProvider } from "./providers/injected";
 import { EmbeddedProvider } from "./providers/embedded";
 import { debug, DebugCategory } from "./debug";
@@ -141,7 +135,6 @@ export class ProviderManager implements EventEmitter {
     await this.currentProvider.disconnect();
     this.walletId = null;
   }
-
 
   /**
    * Get addresses from current provider
@@ -305,8 +298,6 @@ export class ProviderManager implements EventEmitter {
         embeddedWalletType: embeddedWalletType || "app-wallet",
         addressTypes: this.config.addressTypes,
         solanaProvider: (this.config.solanaProvider || "web3js") as "web3js" | "kit",
-        appLogo: this.config.appLogo, // Optional app logo URL
-        appName: this.config.appName,
       });
     }
 

@@ -881,8 +881,6 @@ export class EmbeddedProvider {
       customAuthData: authOptions?.customAuthData,
       authUrl: this.config.authOptions?.authUrl,
       sessionId: sessionId,
-      appName: this.config.appName,
-      appLogo: this.config.appLogo,
     });
 
     if (authResult && "walletId" in authResult) {

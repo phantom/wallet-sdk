@@ -153,7 +153,7 @@ await connect({
   },
 });
 
-// Apple authentication (skips provider selection) 
+// Apple authentication (skips provider selection)
 await connect({
   authOptions: {
     provider: "apple",
@@ -378,7 +378,7 @@ function SolanaOperations() {
     // Create transaction
     const connection = new Connection("https://api.mainnet-beta.solana.com");
     const { blockhash } = await connection.getLatestBlockhash();
-    
+
     const fromAddress = await solana.getPublicKey();
     const transferInstruction = SystemProgram.transfer({
       fromPubkey: new PublicKey(fromAddress),
@@ -400,7 +400,7 @@ function SolanaOperations() {
   };
 
   const switchNetwork = async () => {
-    await solana.switchNetwork('devnet');
+    await solana.switchNetwork("devnet");
   };
 
   return (
@@ -408,13 +408,14 @@ function SolanaOperations() {
       <button onClick={signMessage}>Sign Message</button>
       <button onClick={signAndSendTransaction}>Send Transaction</button>
       <button onClick={switchNetwork}>Switch to Devnet</button>
-      <p>Connected: {solana.isConnected ? 'Yes' : 'No'}</p>
+      <p>Connected: {solana.isConnected ? "Yes" : "No"}</p>
     </div>
   );
 }
 ```
 
 **Available methods:**
+
 - `signMessage(message)` - Sign a message
 - `signTransaction(transaction)` - Sign without sending
 - `signAndSendTransaction(transaction)` - Sign and send
@@ -447,26 +448,26 @@ function EthereumOperations() {
           { name: "name", type: "string" },
           { name: "version", type: "string" },
           { name: "chainId", type: "uint256" },
-          { name: "verifyingContract", type: "address" }
+          { name: "verifyingContract", type: "address" },
         ],
         Mail: [
           { name: "from", type: "string" },
           { name: "to", type: "string" },
-          { name: "contents", type: "string" }
-        ]
+          { name: "contents", type: "string" },
+        ],
       },
       primaryType: "Mail",
       domain: {
         name: "Ether Mail",
         version: "1",
         chainId: 1,
-        verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC"
+        verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC",
       },
       message: {
         from: "Alice",
         to: "Bob",
-        contents: "Hello!"
-      }
+        contents: "Hello!",
+      },
     };
 
     const signature = await ethereum.signTypedData(typedData);
@@ -492,13 +493,14 @@ function EthereumOperations() {
       <button onClick={signTypedData}>Sign Typed Data</button>
       <button onClick={sendTransaction}>Send Transaction</button>
       <button onClick={switchChain}>Switch to Polygon</button>
-      <p>Connected: {ethereum.isConnected ? 'Yes' : 'No'}</p>
+      <p>Connected: {ethereum.isConnected ? "Yes" : "No"}</p>
     </div>
   );
 }
 ```
 
 **Available methods:**
+
 - `request(args)` - EIP-1193 requests
 - `signPersonalMessage(message, address)` - Sign personal message
 - `signTypedData(typedData)` - Sign EIP-712 typed data
@@ -521,21 +523,13 @@ Hook for managing auto-confirm functionality with the Phantom extension. Auto-co
 import { useAutoConfirm, NetworkId } from "@phantom/react-sdk";
 
 function AutoConfirmControls() {
-  const {
-    enable,
-    disable, 
-    status,
-    supportedChains,
-    isLoading,
-    error,
-    refetch,
-  } = useAutoConfirm();
+  const { enable, disable, status, supportedChains, isLoading, error, refetch } = useAutoConfirm();
 
   const handleEnable = async () => {
     try {
       // Enable auto-confirm for specific chains
       const result = await enable({
-        chains: [NetworkId.SOLANA_DEVNET, NetworkId.ETHEREUM_MAINNET]
+        chains: [NetworkId.SOLANA_DEVNET, NetworkId.ETHEREUM_MAINNET],
       });
       console.log("Auto-confirm enabled:", result);
     } catch (err) {
@@ -563,14 +557,14 @@ function AutoConfirmControls() {
   return (
     <div>
       <h3>Auto-Confirm Settings</h3>
-      
+
       <div>
         <strong>Status:</strong> {status?.enabled ? "Enabled" : "Disabled"}
         {status?.chains && (
           <div>
             <strong>Active Chains:</strong>
             <ul>
-              {status.chains.map((chain) => (
+              {status.chains.map(chain => (
                 <li key={chain}>{chain}</li>
               ))}
             </ul>
@@ -582,7 +576,7 @@ function AutoConfirmControls() {
         <strong>Supported Chains:</strong>
         {supportedChains?.chains && (
           <ul>
-            {supportedChains.chains.map((chain) => (
+            {supportedChains.chains.map(chain => (
               <li key={chain}>{chain}</li>
             ))}
           </ul>
@@ -635,7 +629,7 @@ interface AutoConfirmSupportedChainsResult {
 **Available Methods:**
 
 - `enable(params)` - Enable auto-confirm for specific chains
-- `disable()` - Disable auto-confirm completely  
+- `disable()` - Disable auto-confirm completely
 - `refetch()` - Refresh status and supported chains from extension
 - `status` - Current auto-confirm status (enabled/disabled and active chains)
 - `supportedChains` - List of chains that support auto-confirm
@@ -778,24 +772,22 @@ function EthereumExample() {
 
 Quick reference of all available hooks:
 
-| Hook                        | Purpose                    | Returns                                        |
-| --------------------------- | -------------------------- | ---------------------------------------------- |
-| `useConnect`                | Connect to wallet          | `{ connect, isConnecting, error }`             |
-| `useAccounts`               | Get wallet addresses       | `WalletAddress[]` or `null`                    |
-| `useIsExtensionInstalled`   | Check extension status     | `{ isLoading, isInstalled }`                   |
-| `useDisconnect`             | Disconnect from wallet     | `{ disconnect, isDisconnecting }`              |
-| `useAutoConfirm`            | Auto-confirm management (injected only) | `{ enable, disable, status, supportedChains, ... }` |
-| `useSolana`                 | Solana chain operations    | `{ signMessage, signAndSendTransaction, ... }` |
-| `useEthereum`               | Ethereum chain operations  | `{ signPersonalMessage, sendTransaction, ... }`|
-| `usePhantom`                | Get provider context       | `{ isConnected, isReady }`                     |
+| Hook                      | Purpose                                 | Returns                                             |
+| ------------------------- | --------------------------------------- | --------------------------------------------------- |
+| `useConnect`              | Connect to wallet                       | `{ connect, isConnecting, error }`                  |
+| `useAccounts`             | Get wallet addresses                    | `WalletAddress[]` or `null`                         |
+| `useIsExtensionInstalled` | Check extension status                  | `{ isLoading, isInstalled }`                        |
+| `useDisconnect`           | Disconnect from wallet                  | `{ disconnect, isDisconnecting }`                   |
+| `useAutoConfirm`          | Auto-confirm management (injected only) | `{ enable, disable, status, supportedChains, ... }` |
+| `useSolana`               | Solana chain operations                 | `{ signMessage, signAndSendTransaction, ... }`      |
+| `useEthereum`             | Ethereum chain operations               | `{ signPersonalMessage, sendTransaction, ... }`     |
+| `usePhantom`              | Get provider context                    | `{ isConnected, isReady }`                          |
 
 ## Configuration Reference
 
 ```typescript
 interface PhantomSDKConfig {
   providerType: "injected" | "embedded";
-  appName?: string; // Optional app name for branding
-  appLogo?: string; // Optional app logo URL for branding
   addressTypes?: [AddressType, ...AddressType[]]; // Networks to enable (e.g., [AddressType.solana])
 
   // Required for embedded provider only
@@ -819,8 +811,8 @@ The React SDK supports separate debug configuration that can be changed without 
 
 ```typescript
 interface PhantomDebugConfig {
-  enabled?: boolean;     // Enable debug logging
-  level?: DebugLevel;    // Debug level (ERROR, WARN, INFO, DEBUG)
+  enabled?: boolean; // Enable debug logging
+  level?: DebugLevel; // Debug level (ERROR, WARN, INFO, DEBUG)
   callback?: DebugCallback; // Custom debug message handler
 }
 ```
@@ -866,11 +858,11 @@ Debug callbacks receive a `DebugMessage` object:
 
 ```typescript
 interface DebugMessage {
-  timestamp: number;     // Unix timestamp
-  level: DebugLevel;     // Message level
-  category: string;      // Component category
-  message: string;       // Debug message text
-  data?: any;           // Additional debug data (optional)
+  timestamp: number; // Unix timestamp
+  level: DebugLevel; // Message level
+  category: string; // Component category
+  message: string; // Debug message text
+  data?: any; // Additional debug data (optional)
 }
 ```
 

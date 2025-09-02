@@ -39,8 +39,6 @@ function App() {
   // SDK configuration - now dynamic based on provider type selection
   const config: PhantomSDKConfig = useMemo(
     () => ({
-      appName: "React SDK Demo App",
-      appLogo: "https://picsum.photos/200", // Optional app logo URL
       providerType: providerType, // Dynamic provider type
       addressTypes: [AddressType.solana, AddressType.ethereum, AddressType.bitcoinSegwit, AddressType.sui],
 
