@@ -1,9 +1,10 @@
+import { EventEmitter } from 'eventemitter3';
 import type { ISolanaChain } from '@phantom/chains';
-import { getExplorerUrl, NetworkId } from '@phantom/constants';
-import type { ParsedSignatureResult, ParsedTransactionResult } from '@phantom/parsers';
 import type { Solana } from '@phantom/browser-injected-sdk/solana';
 import type { Extension } from '@phantom/browser-injected-sdk';
+import { AddressType } from '@phantom/client';
 import { Buffer } from 'buffer';
+import type { ChainCallbacks } from './ChainCallbacks';
 
 interface PhantomExtended {
   extension: Extension;
@@ -11,75 +12,146 @@ interface PhantomExtended {
 }
 
 /**
- * Injected Solana chain implementation that uses browser-injected-sdk
+ * Injected Solana chain implementation that is wallet adapter compliant
  */
 export class InjectedSolanaChain implements ISolanaChain {
   private phantom: PhantomExtended;
+  private callbacks: ChainCallbacks;
+  private _connected: boolean = false;
+  private _publicKey: string | null = null;
+  private eventEmitter: EventEmitter = new EventEmitter();
 
-  constructor(phantom: PhantomExtended) {
+  constructor(phantom: PhantomExtended, callbacks: ChainCallbacks) {
     this.phantom = phantom;
+    this.callbacks = callbacks;
+    this.setupEventListeners();
+    this.syncInitialState();
   }
 
-  async signMessage(message: string | Uint8Array): Promise<ParsedSignatureResult> {
+  // Wallet adapter compliant properties
+  get connected(): boolean {
+    return this._connected;
+  }
+
+  get publicKey(): string | null {
+    return this._publicKey;
+  }
+
+  // Connection methods - delegate to provider
+  connect(_options?: { onlyIfTrusted?: boolean }): Promise<{ publicKey: string }> {
+    if (!this.callbacks.isConnected()) {
+      return Promise.reject(new Error('Provider not connected. Call provider connect first.'));
+    }
+    
+    const addresses = this.callbacks.getAddresses();
+    const solanaAddress = addresses.find(addr => addr.addressType === AddressType.solana);
+    
+    if (!solanaAddress) {
+      return Promise.reject(new Error('Solana not enabled for this provider'));
+    }
+
+    this.updateConnectionState(true, solanaAddress.address);
+    return Promise.resolve({ publicKey: solanaAddress.address });
+  }
+
+  async disconnect(): Promise<void> {
+    await this.callbacks.disconnect();
+  }
+
+  // Standard wallet adapter methods
+  async signMessage(message: string | Uint8Array): Promise<{ signature: Uint8Array; publicKey: string }> {
     const messageBytes = typeof message === 'string' ? new TextEncoder().encode(message) : message;
     const result = await this.phantom.solana.signMessage(messageBytes);
 
-    // Convert Uint8Array signature to base58 string for consistency
-    const signature = result.signature instanceof Uint8Array
-      ? Buffer.from(result.signature).toString('base64')
-      : result.signature;
-
     return {
-      signature,
-      rawSignature: signature,
+      signature: result.signature instanceof Uint8Array 
+        ? result.signature 
+        : new Uint8Array(Buffer.from(result.signature, 'base64')),
+      publicKey: this._publicKey || ''
     };
   }
 
   signTransaction<T>(_transaction: T): Promise<T> {
-    // Note: browser-injected-sdk doesn't have signTransaction, only signAndSendTransaction
-    // For now, throw an error - this may need to be implemented differently
-    throw new Error('signTransaction not available in browser-injected-sdk, use signAndSendTransaction instead');
+    return Promise.reject(new Error('Sign-only transactions not supported by injected provider. Use signAndSendTransaction instead.'));
   }
 
-  async signAndSendTransaction<T>(transaction: T): Promise<ParsedTransactionResult> {
+  async signAndSendTransaction<T>(transaction: T): Promise<{ signature: string }> {
     const result = await this.phantom.solana.signAndSendTransaction(transaction as any);
-    return {
-      hash: result.signature,
-      rawTransaction: result.signature,
-      blockExplorer: getExplorerUrl(NetworkId.SOLANA_MAINNET, 'transaction', result.signature)
-    };
+    return { signature: result.signature };
   }
 
-  async connect(_options?: { onlyIfTrusted?: boolean }): Promise<{ publicKey: string }> {
-    const address = await this.phantom.solana.connect();
-    if (!address) {
-      throw new Error('Failed to connect to Solana wallet');
-    }
-    return { publicKey: address };
+  signAllTransactions<T>(_transactions: T[]): Promise<T[]> {
+    return Promise.reject(new Error('Sign-only transactions not supported by injected provider'));
   }
 
-  async disconnect(): Promise<void> {
-    return await this.phantom.solana.disconnect();
+
+  switchNetwork(_network: 'mainnet' | 'devnet'): Promise<void> {
+    return Promise.resolve();
   }
 
-  async switchNetwork(_network: 'mainnet' | 'devnet'): Promise<void> {
-    // Note: Phantom may not have network switching yet - silent implementation
-  }
-
-  async getPublicKey(): Promise<string | null> {
-    try {
-      const address = await this.phantom.solana.getAccount();
-      return address || null;
-    } catch {
-      return null;
-    }
+  // Legacy methods
+  getPublicKey(): Promise<string | null> {
+    return Promise.resolve(this._publicKey);
   }
 
   isConnected(): boolean {
-    try {
-      return !!this.phantom.extension?.isInstalled();
-    } catch {
-      return false;
+    return this._connected && this.callbacks.isConnected();
+  }
+
+  private setupEventListeners(): void {
+    // Bridge phantom events to wallet adapter standard events
+    this.phantom.solana.addEventListener("connect", (publicKey: string) => {
+      this.updateConnectionState(true, publicKey);
+      this.eventEmitter.emit('connect', publicKey);
+    });
+
+    this.phantom.solana.addEventListener("disconnect", () => {
+      this.updateConnectionState(false, null);
+      this.eventEmitter.emit('disconnect');
+    });
+
+    this.phantom.solana.addEventListener("accountChanged", (publicKey: string) => {
+      this._publicKey = publicKey;
+      this.eventEmitter.emit('accountChanged', publicKey);
+    });
+
+    // Listen to SDK events via callbacks (no circular reference)
+    this.callbacks.on('connect', (data) => {
+      const solanaAddress = data.addresses
+        ?.find((addr: any) => addr.addressType === AddressType.solana);
+      
+      if (solanaAddress) {
+        this.updateConnectionState(true, solanaAddress.address);
+      }
+    });
+
+    this.callbacks.on('disconnect', () => {
+      this.updateConnectionState(false, null);
+    });
+  }
+
+  private syncInitialState(): void {
+    if (this.callbacks.isConnected()) {
+      const solanaAddress = this.callbacks.getAddresses()
+        .find(addr => addr.addressType === AddressType.solana);
+      
+      if (solanaAddress) {
+        this.updateConnectionState(true, solanaAddress.address);
+      }
     }
+  }
+
+  private updateConnectionState(connected: boolean, publicKey: string | null): void {
+    this._connected = connected;
+    this._publicKey = publicKey;
+  }
+
+  // Event methods for interface compliance
+  on(event: string, listener: (...args: any[]) => void): void {
+    this.eventEmitter.on(event, listener);
+  }
+
+  off(event: string, listener: (...args: any[]) => void): void {
+    this.eventEmitter.off(event, listener);
   }
 }

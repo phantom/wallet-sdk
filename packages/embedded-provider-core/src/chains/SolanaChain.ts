@@ -1,16 +1,31 @@
+import { EventEmitter } from 'eventemitter3';
 import type { ISolanaChain } from '@phantom/chains';
 import type { EmbeddedProvider } from '../embedded-provider';
 import { NetworkId } from '@phantom/constants';
-import { parseSignMessageResponse, parseTransactionResponse } from '@phantom/parsers';
-import type { ParsedSignatureResult, ParsedTransactionResult } from '@phantom/parsers';
+import { Buffer } from 'buffer';
 
 /**
- * Embedded Solana chain implementation for React Native and web embedded providers
+ * Embedded Solana chain implementation that is wallet adapter compliant
  */
 export class EmbeddedSolanaChain implements ISolanaChain {
   private currentNetworkId: NetworkId = NetworkId.SOLANA_MAINNET;
+  private _connected: boolean = false;
+  private _publicKey: string | null = null;
+  private eventEmitter: EventEmitter = new EventEmitter();
 
-  constructor(private provider: EmbeddedProvider) {}
+  constructor(private provider: EmbeddedProvider) {
+    this.setupEventListeners();
+    this.syncInitialState();
+  }
+
+  // Wallet adapter compliant properties
+  get connected(): boolean {
+    return this._connected;
+  }
+
+  get publicKey(): string | null {
+    return this._publicKey;
+  }
 
   private ensureConnected(): void {
     if (!this.provider.isConnected()) {
@@ -18,13 +33,24 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     }
   }
 
-  async signMessage(message: string ): Promise<ParsedSignatureResult> {
+  // Standard wallet adapter methods
+  async signMessage(message: string | Uint8Array): Promise<{ signature: Uint8Array; publicKey: string }> {
     this.ensureConnected();
+    const messageStr = typeof message === 'string' ? message : new TextDecoder().decode(message);
     const result = await this.provider.signMessage({
-      message,
-      networkId:this.currentNetworkId
+      message: messageStr,
+      networkId: this.currentNetworkId
     });
-    return parseSignMessageResponse(result.signature,this.currentNetworkId);
+    
+    // Convert signature to Uint8Array
+    const signature = typeof result.signature === 'string' 
+      ? new Uint8Array(Buffer.from(result.signature, 'base64'))
+      : result.signature;
+      
+    return {
+      signature,
+      publicKey: this._publicKey || ''
+    };
   }
 
   signTransaction<T>(_transaction: T): Promise<T> {
@@ -34,20 +60,32 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     throw new Error('signTransaction not yet implemented for embedded provider');
   }
 
-  async signAndSendTransaction<T>(transaction: T): Promise<ParsedTransactionResult> {
+  async signAndSendTransaction<T>(transaction: T): Promise<{ signature: string }> {
     this.ensureConnected();
     const result = await this.provider.signAndSendTransaction({
       transaction,
-      networkId:this.currentNetworkId
+      networkId: this.currentNetworkId
     });
-    return parseTransactionResponse(result.rawTransaction,this.currentNetworkId, result.hash);
+    if (!result.hash) {
+      throw new Error('Transaction not submitted');
+    }
+    return { signature: result.hash };
+  }
+
+  async signAllTransactions<T>(transactions: T[]): Promise<T[]> {
+    const results = await Promise.all(transactions.map(tx => this.signTransaction(tx)));
+    return results;
   }
 
   connect(_options?: { onlyIfTrusted?: boolean }): Promise<{ publicKey: string }> {
-    // For embedded, connection is handled at SDK level
+    if (!this.provider.isConnected()) {
+      throw new Error('Provider not connected. Call provider connect first.');
+    }
     const addresses = this.provider.getAddresses();
     const solanaAddr = addresses.find((a: any) => a.addressType === 'Solana');
     if (!solanaAddr) throw new Error('No Solana address found');
+    
+    this.updateConnectionState(true, solanaAddr.address);
     return Promise.resolve({ publicKey: solanaAddr.address });
   }
 
@@ -70,6 +108,49 @@ export class EmbeddedSolanaChain implements ISolanaChain {
   }
 
   isConnected(): boolean {
-    return this.provider.isConnected();
+    return this._connected && this.provider.isConnected();
+  }
+
+  private setupEventListeners(): void {
+    // Listen to provider events and bridge to wallet adapter events
+    this.provider.on('connect', (data: any) => {
+      const solanaAddress = data.addresses
+        ?.find((addr: any) => addr.addressType === 'Solana');
+      
+      if (solanaAddress) {
+        this.updateConnectionState(true, solanaAddress.address);
+        this.eventEmitter.emit('connect', solanaAddress.address);
+      }
+    });
+
+    this.provider.on('disconnect', () => {
+      this.updateConnectionState(false, null);
+      this.eventEmitter.emit('disconnect');
+    });
+  }
+
+  private syncInitialState(): void {
+    if (this.provider.isConnected()) {
+      const addresses = this.provider.getAddresses();
+      const solanaAddress = addresses.find((a: any) => a.addressType === 'Solana');
+      
+      if (solanaAddress) {
+        this.updateConnectionState(true, solanaAddress.address);
+      }
+    }
+  }
+
+  private updateConnectionState(connected: boolean, publicKey: string | null): void {
+    this._connected = connected;
+    this._publicKey = publicKey;
+  }
+
+  // Event methods for interface compliance
+  on(event: string, listener: (...args: any[]) => void): void {
+    this.eventEmitter.on(event, listener);
+  }
+
+  off(event: string, listener: (...args: any[]) => void): void {
+    this.eventEmitter.off(event, listener);
   }
 }
