@@ -10,20 +10,32 @@ export function useIsExtensionInstalled() {
   const [isInstalled, setIsInstalled] = React.useState(false);
 
   React.useEffect(() => {
+    let isMounted = true;
+
     const checkExtension = async () => {
       try {
         setIsLoading(true);
         const result = await waitForPhantomExtension(3000);
-        setIsInstalled(result);
+        if (isMounted) {
+          setIsInstalled(result);
+        }
       } catch (error) {
         // If check fails, assume not installed
-        setIsInstalled(false);
+        if (isMounted) {
+          setIsInstalled(false);
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     checkExtension();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return { isLoading, isInstalled };
