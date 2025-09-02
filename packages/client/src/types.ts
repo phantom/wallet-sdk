@@ -5,7 +5,6 @@ export interface PhantomClientConfig {
   organizationId?: string;
 }
 
-
 export interface CreateWalletResult {
   walletId: string;
   addresses: {

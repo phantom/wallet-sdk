@@ -38,6 +38,7 @@ All packages with links to documentation:
 - **[@phantom/browser-injected-sdk](./packages/browser-injected-sdk/README.md)** - Browser extension integration
 
 ### ⚠️ Deprecated Packages
+
 - **[@phantom/wallet-sdk](./packages/browser-embedded-sdk/README.md)** - ⚠️ **DEPRECATED** - Use [@phantom/browser-sdk](./packages/browser-sdk/README.md) or [@phantom/react-sdk](./packages/react-sdk/README.md) instead ([NPM](https://www.npmjs.com/package/@phantom/wallet-sdk))
 
 ## Provider Types
@@ -45,13 +46,17 @@ All packages with links to documentation:
 All frontend SDKs support two provider types:
 
 ### 🔌 Injected Provider (Browser Extension)
+
 Connect to the user's existing Phantom browser extension wallet:
+
 - Uses wallets already installed and funded by the user
 - Requires Phantom browser extension to be installed
 - Access to user's existing wallet history and assets
 
 ### 🔮 Embedded Provider (Non-Custodial)
+
 Create new non-custodial wallets embedded in your application:
+
 - **App Wallet**: Fresh wallet created per application (unfunded, app-specific)
 - **User Wallet**: User's Phantom wallet accessed via authentication (potentially funded)
 
@@ -75,6 +80,7 @@ import { PhantomProvider, useConnect, useSolana, useEthereum, AddressType } from
     // embeddedWalletType: "app-wallet",
     // apiBaseUrl: "https://api.phantom.app/v1/wallets",
     // organizationId: "your-org-id",
+    // appId: "your-app-id",
   }}
 >
   <App />
@@ -119,6 +125,7 @@ const sdk = new BrowserSDK({
 //   addressTypes: [AddressType.solana, AddressType.ethereum],
 //   apiBaseUrl: "https://api.phantom.app/v1/wallets",
 //   organizationId: "your-org-id",
+//   appId: "your-app-id",
 // });
 
 // Connect through SDK
@@ -142,6 +149,7 @@ import { ServerSDK, NetworkId } from "@phantom/server-sdk";
 
 const sdk = new ServerSDK({
   organizationId: process.env.ORGANIZATION_ID,
+  appId: process.env.APP_ID,
   apiPrivateKey: process.env.PRIVATE_KEY,
   apiBaseUrl: process.env.API_URL,
 });
@@ -199,6 +207,7 @@ import { PhantomUIProvider, useConnect, useSolana, useEthereum, AddressType } fr
     addressTypes: [AddressType.solana, AddressType.ethereum],
     apiBaseUrl: "https://api.phantom.app/v1/wallets",
     organizationId: "your-org-id",
+    appId: "your-app-id",
   }}
   theme="dark"
 >
@@ -214,7 +223,7 @@ function WalletOperations() {
   const handleOperations = async () => {
     // Connection modals appear automatically
     await connect();
-    
+
     // Chain-specific operations with UI
     await solana.signAndSendTransaction(solanaTransaction);
     await ethereum.sendTransaction(ethTransaction);

@@ -78,7 +78,7 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
       setIsSigningMessage(true);
       if (type === "solana") {
         const result = await signSolanaMessage("Hello, World!");
-        alert(`Message Signed! Signature: ${result.signature}`);
+        alert(`Message Signed! Signature: ${Buffer.from(result.signature).toString('base64')}`);
       } else {
         const ethAddress = addresses.find(addr => addr.addressType === "Ethereum");
         if (!ethAddress) {
@@ -227,7 +227,7 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
       };
 
       const result = await sendEthTransaction(transactionParams);
-      alert(`Ethereum transaction sent! Hash: ${result.hash}`);
+      alert(`Ethereum transaction sent! Hash: ${result}`);
     } catch (error) {
       console.error("Error sending Ethereum transaction:", error);
       alert(`Error sending Ethereum transaction: ${(error as Error).message || error}`);

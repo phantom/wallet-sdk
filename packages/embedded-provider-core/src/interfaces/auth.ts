@@ -8,22 +8,20 @@ export interface AuthResult {
 export interface PhantomConnectOptions {
   organizationId: string;
   parentOrganizationId: string;
+  appId: string;
   provider?: "google" | "apple";
   redirectUrl?: string;
   customAuthData?: Record<string, any>;
   authUrl?: string;
   sessionId: string;
-  appName?: string;
-  appLogo?: string; // URL to app logo
 }
 
 export interface JWTAuthOptions {
+  appId: string;
   organizationId: string;
   parentOrganizationId: string;
   jwtToken: string;
   customAuthData?: Record<string, any>;
-  appName?: string;
-  appLogo?: string; // URL to app logo
 }
 
 export interface AuthProvider {

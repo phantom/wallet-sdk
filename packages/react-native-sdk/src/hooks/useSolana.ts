@@ -1,7 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { usePhantom } from '../PhantomProvider';
 import type { ISolanaChain } from '@phantom/chains';
-import type { ParsedSignatureResult, ParsedTransactionResult } from '@phantom/parsers';
 
 /**
  * Hook for Solana chain operations in React Native
@@ -20,7 +19,7 @@ export function useSolana() {
     }
   }, [sdk, isConnected]);
   
-  const signMessage = useCallback(async (message: string | Uint8Array): Promise<ParsedSignatureResult> => {
+  const signMessage = useCallback(async (message: string | Uint8Array) => {
     if (!solanaChain) throw new Error('Solana chain not available. Ensure SDK is connected.');
     return await solanaChain.signMessage(message);
   }, [solanaChain]);
@@ -30,7 +29,7 @@ export function useSolana() {
     return await solanaChain.signTransaction(transaction);
   }, [solanaChain]);
   
-  const signAndSendTransaction = useCallback(async <T>(transaction: T): Promise<ParsedTransactionResult> => {
+  const signAndSendTransaction = useCallback(async <T>(transaction: T) => {
     if (!solanaChain) throw new Error('Solana chain not available. Ensure SDK is connected.');
     return await solanaChain.signAndSendTransaction(transaction);
   }, [solanaChain]);
@@ -47,7 +46,7 @@ export function useSolana() {
   
   const switchNetwork = useCallback(async (network: 'mainnet' | 'devnet') => {
     if (!solanaChain) throw new Error('Solana chain not available. Ensure SDK is connected.');
-    return await solanaChain.switchNetwork(network);
+    return await solanaChain.switchNetwork?.(network);
   }, [solanaChain]);
   
   const getPublicKey = useCallback(async () => {

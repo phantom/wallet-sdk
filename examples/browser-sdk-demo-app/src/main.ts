@@ -145,7 +145,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-
   // Debug toggle handler
   if (debugToggle) {
     debugToggle.onchange = () => {
@@ -194,7 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function createSDK(): BrowserSDK {
     const providerType = providerTypeSelect.value as "injected" | "embedded";
 
-    // Set debug config 
+    // Set debug config
     debug.enable();
     debug.setLevel(DebugLevel.DEBUG);
     debug.setCallback(handleDebugMessage);
@@ -204,8 +203,6 @@ document.addEventListener("DOMContentLoaded", () => {
         providerType: "injected",
         solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
-        appName: "Phantom Browser SDK Demo",
-        appLogo: "https://picsum.photos/200", // Optional app logo URL
       });
     } else {
       // For demo purposes, use hardcoded embedded config
@@ -213,21 +210,16 @@ document.addEventListener("DOMContentLoaded", () => {
         providerType: "embedded",
         apiBaseUrl: import.meta.env.VITE_WALLET_API || DEFAULT_WALLET_API_URL,
         organizationId: import.meta.env.VITE_ORGANIZATION_ID || "your-organization-id",
+        appId: import.meta.env.VITE_APP_ID || "your-app-id",
         embeddedWalletType: "user-wallet",
         authOptions: {
           authUrl: import.meta.env.VITE_AUTH_URL || DEFAULT_AUTH_URL,
         },
         solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
-        appName: "Phantom Browser SDK Demo",
-        appLogo: "https://picsum.photos/200", // Optional app logo URL
       });
 
-
-
-
-
-      embeddedSdk.on("connect_start", (data) => {
+      embeddedSdk.on("connect_start", data => {
         console.log("Embedded SDK connect started:", data);
         // Could show loading state here
       });
@@ -239,7 +231,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updateButtonStates(true);
       });
 
-      embeddedSdk.on("connect_error", (data) => {
+      embeddedSdk.on("connect_error", data => {
         console.log("Embedded SDK connect error:", data);
         // Could show error state here
       });
@@ -258,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Note: autoConnect is already enabled via config.autoConnect: true
       // No need to call embeddedSdk.autoConnect() manually
 
-      return embeddedSdk
+      return embeddedSdk;
     }
   }
 
@@ -443,7 +435,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const result = await sdk.ethereum.signPersonalMessage(prefixedMessage, ethAddress.address);
 
         console.log("EVM Message signed:", result);
-        alert(`EVM Message signed: ${result.signature}`);
+        alert(`EVM Message signed: ${result}`);
       } catch (error) {
         console.error("Error signing EVM message:", error);
         alert(`Error signing EVM message: ${(error as Error).message || error}`);
@@ -473,43 +465,43 @@ document.addEventListener("DOMContentLoaded", () => {
               { name: "name", type: "string" },
               { name: "version", type: "string" },
               { name: "chainId", type: "uint256" },
-              { name: "verifyingContract", type: "address" }
+              { name: "verifyingContract", type: "address" },
             ],
             Person: [
               { name: "name", type: "string" },
-              { name: "wallet", type: "address" }
+              { name: "wallet", type: "address" },
             ],
             Mail: [
               { name: "from", type: "Person" },
               { name: "to", type: "Person" },
-              { name: "contents", type: "string" }
-            ]
+              { name: "contents", type: "string" },
+            ],
           },
           primaryType: "Mail",
           domain: {
             name: "Ether Mail",
             version: "1",
             chainId: 1,
-            verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC"
+            verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC",
           },
           message: {
             from: {
               name: "Cow",
-              wallet: "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826"
+              wallet: "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826",
             },
             to: {
               name: "Bob",
-              wallet: ethAddress.address
+              wallet: ethAddress.address,
             },
-            contents: "Hello, Bob! This is a typed data message from Phantom Browser SDK."
-          }
+            contents: "Hello, Bob! This is a typed data message from Phantom Browser SDK.",
+          },
         };
 
         console.log("Signing typed data:", typedData);
         const result = await sdk.ethereum.signTypedData(typedData, ethAddress.address);
 
         console.log("Typed data signed:", result);
-        alert(`Typed data signed: ${result.signature}`);
+        alert(`Typed data signed: ${result}`);
       } catch (error) {
         console.error("Error signing typed data:", error);
         alert(`Error signing typed data: ${(error as Error).message || error}`);
@@ -576,9 +568,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const result = await sdk!.solana.signAndSendTransaction(transaction);
 
     console.log("Transaction sent (web3.js):", result);
-    alert(`Transaction sent: ${result.rawTransaction}`);
+    alert(`Transaction sent: ${result.signature}`);
   }
-
 
   // Test Web3.js button
   if (testWeb3jsBtn) {
@@ -591,7 +582,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     };
   }
-
 
   // Test Ethereum button
   if (testEthereumBtn) {
@@ -621,7 +611,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const result = await sdk.ethereum.sendTransaction(transactionParams);
 
         console.log("Ethereum transaction sent:", result);
-        alert(`Ethereum transaction sent: ${result.rawTransaction}`);
+        alert(`Ethereum transaction sent: ${result}`);
       } catch (error) {
         console.error("Error with Ethereum transaction:", error);
         alert(`Error with Ethereum transaction: ${(error as Error).message || error}`);

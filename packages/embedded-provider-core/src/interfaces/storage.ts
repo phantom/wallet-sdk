@@ -14,6 +14,7 @@ export interface Session {
   sessionId: string;
   walletId: string;
   organizationId: string;
+  appId: string;
   stamperInfo: StamperInfo;
   keypair?: Keypair; // Keep for backward compatibility during migration
   authProvider?: string;
@@ -22,13 +23,13 @@ export interface Session {
   createdAt: number;
   lastUsed: number;
   // Authenticator lifecycle tracking (session owns the timing)
-  authenticatorCreatedAt: number;    // When the current authenticator was created
-  authenticatorExpiresAt: number;    // When the authenticator expires
-  lastRenewalAttempt?: number;       // Last time we attempted renewal
+  authenticatorCreatedAt: number; // When the current authenticator was created
+  authenticatorExpiresAt: number; // When the authenticator expires
+  lastRenewalAttempt?: number; // Last time we attempted renewal
   // Username used for organization creation (needed for authenticator rotation)
-  username: string;                  // Username that was used when creating the organization
+  username: string; // Username that was used when creating the organization
   // Derivation index for account paths (defaults to 0 for backward compatibility)
-  accountDerivationIndex?: number;   // Account derivation index from auth flow
+  accountDerivationIndex?: number; // Account derivation index from auth flow
 }
 
 export interface EmbeddedStorage {

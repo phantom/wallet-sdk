@@ -14,24 +14,15 @@ export class ExpoAuthProvider implements AuthProvider {
 
     // Handle redirect-based authentication
     const phantomOptions = options as PhantomConnectOptions;
-    const {
-      authUrl,
-      redirectUrl,
-      organizationId,
-      parentOrganizationId,
-      sessionId,
-      provider,
-      customAuthData,
-      appName,
-      appLogo,
-    } = phantomOptions;
+    const { authUrl, redirectUrl, organizationId, parentOrganizationId, sessionId, provider, customAuthData, appId } =
+      phantomOptions;
 
     if (!redirectUrl) {
       throw new Error("redirectUrl is required for web browser authentication");
     }
 
-    if (!organizationId || !sessionId) {
-      throw new Error("organizationId and sessionId are required for authentication");
+    if (!organizationId || !sessionId || !appId) {
+      throw new Error("organizationId, sessionId and appId are required for authentication");
     }
 
     try {
@@ -41,11 +32,10 @@ export class ExpoAuthProvider implements AuthProvider {
       const params = new URLSearchParams({
         organization_id: organizationId,
         parent_organization_id: parentOrganizationId,
+        app_id: appId,
         redirect_uri: redirectUrl,
         session_id: sessionId,
         clear_previous_session: "true",
-        app_name: appName || "", // Optional app name
-        app_logo: appLogo || "", // Optional app logo URL
       });
 
       // Add provider if specified (will skip provider selection)
@@ -103,7 +93,7 @@ export class ExpoAuthProvider implements AuthProvider {
         return {
           walletId,
           provider: provider || undefined,
-          accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : undefined
+          accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : undefined,
         };
       } else if (result.type === "cancel") {
         throw new Error("User cancelled authentication");
