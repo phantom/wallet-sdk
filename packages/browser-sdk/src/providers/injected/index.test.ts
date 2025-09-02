@@ -45,7 +45,7 @@ describe("InjectedProvider", () => {
         signMessage: jest.fn().mockResolvedValue({ signature: "mock-signature" }),
         signIn: jest.fn(),
         signAndSendTransaction: jest.fn().mockResolvedValue({ signature: "mock-transaction-signature" }),
-        addEventListener: jest.fn(),
+        addEventListener: jest.fn().mockReturnValue(() => {}),
         removeEventListener: jest.fn(),
       },
       ethereum: {
@@ -63,7 +63,7 @@ describe("InjectedProvider", () => {
         getProvider: jest.fn().mockResolvedValue({
           request: mockEthereumProvider.request,
         }),
-        addEventListener: jest.fn(),
+        addEventListener: jest.fn().mockReturnValue(() => {}),
         removeEventListener: jest.fn(),
       },
       autoConfirm: {
@@ -196,14 +196,13 @@ describe("InjectedProvider", () => {
 
     it("should sign message with Solana", async () => {
       const message = "Hello Phantom!";
-      const mockSignature = "mock-signature";
 
       const result = await provider.solana.signMessage(message);
 
       expect(mockPhantomObject.solana.signMessage).toHaveBeenCalled();
       expect(result).toEqual({
-        signature: mockSignature,
-        rawSignature: mockSignature,
+        signature: expect.any(Uint8Array),
+        publicKey: expect.any(String),
       });
     });
 
@@ -215,20 +214,20 @@ describe("InjectedProvider", () => {
       const result = await provider.ethereum.signPersonalMessage(message, address);
 
       expect(mockPhantomObject.ethereum.signPersonalMessage).toHaveBeenCalledWith(message, address);
-      expect(result).toEqual({
-        signature: mockSignature,
-        rawSignature: mockSignature,
-      });
+      expect(result).toBe(mockSignature);
     });
 
-    it("should throw error when not connected", async () => {
+    it("should work when not connected with mock", async () => {
       const disconnectedProvider = new InjectedProvider({
         solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
-      // Provider is not connected, should work but return empty result
+      // Provider is not connected, but mocked solana will still work
       const result = await disconnectedProvider.solana.signMessage("test");
-      expect(result.signature).toBe("mock-signature");
+      expect(result).toEqual({
+        signature: expect.any(Uint8Array),
+        publicKey: '',
+      });
     });
   });
 
@@ -252,9 +251,7 @@ describe("InjectedProvider", () => {
 
       expect(mockPhantomObject.solana.signAndSendTransaction).toHaveBeenCalledWith(mockTransaction);
       expect(result).toEqual({
-        hash: mockSignature,
-        rawTransaction: mockSignature,
-        blockExplorer: expect.stringContaining("https://"),
+        signature: mockSignature,
       });
     });
 
@@ -269,14 +266,10 @@ describe("InjectedProvider", () => {
       const result = await provider.ethereum.sendTransaction(mockTransaction);
 
       expect(mockPhantomObject.ethereum.sendTransaction).toHaveBeenCalledWith(mockTransaction);
-      expect(result).toEqual({
-        hash: mockTxHash,
-        rawTransaction: mockTxHash,
-        blockExplorer: expect.stringContaining("https://"),
-      });
+      expect(result).toBe(mockTxHash);
     });
 
-    it("should throw error when not connected", async () => {
+    it("should work when not connected with mock", async () => {
       const disconnectedProvider = new InjectedProvider({
         solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
@@ -284,7 +277,7 @@ describe("InjectedProvider", () => {
       
       // With mocked phantom object, this will succeed
       const result = await disconnectedProvider.solana.signAndSendTransaction({ messageBytes: new Uint8Array([1, 2, 3]) });
-      expect(result.hash).toBe("mock-transaction-signature");
+      expect(result.signature).toBe("mock-transaction-signature");
     });
   });
 

@@ -7,15 +7,17 @@ export * from "./PhantomUIProvider";
 // Enhanced Hooks with UI integration
 export * from "./hooks";
 
-// UI Components
-export * from "./components";
 
-// Re-export base hooks and types from react-sdk for convenience
-// Note: useConnect, useSignAndSendTransaction, useSignMessage are overridden by UI hooks
+// Re-export hooks and types from react-sdk (useConnect is overridden by UI hooks)
 export {
   useAccounts,
   useDisconnect,
+  useSolana,
+  useEthereum,
   PhantomProvider,
+  usePhantom,
+  useIsExtensionInstalled,
+  useAutoConfirm,
   type ConnectOptions,
   type ProviderType,
 } from "@phantom/react-sdk";
