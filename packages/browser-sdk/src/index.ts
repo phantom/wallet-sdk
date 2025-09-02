@@ -24,6 +24,9 @@ export {
 } from "./utils/browser-detection";
 export type { BrowserInfo } from "./utils/browser-detection";
 
+// Extension detection
+export { waitForPhantomExtension } from "./waitForPhantomExtension";
+
 // Re-export useful types from constants and client
 export { NetworkId } from "@phantom/constants";
 export { AddressType } from "@phantom/client";
