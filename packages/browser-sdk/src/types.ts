@@ -53,7 +53,7 @@ export interface Provider {
   disconnect(): Promise<void>;
   getAddresses(): WalletAddress[];
   isConnected(): boolean;
-  
+
   // Chain access - providers expose their chains directly
   solana: ISolanaChain;
   ethereum: IEthereumChain;

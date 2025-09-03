@@ -15,7 +15,11 @@ export interface SolanaStrategy {
   signIn: (
     signInData: SolanaSignInData,
   ) => Promise<{ address: string; signature: Uint8Array; signedMessage: Uint8Array }>;
-  signAndSendTransaction: (transaction: VersionedTransaction | Transaction) => Promise<{ signature: string; address?: string }>;
+  signAndSendTransaction: (
+    transaction: VersionedTransaction | Transaction,
+  ) => Promise<{ signature: string; address?: string }>;
   signTransaction: (transaction: VersionedTransaction | Transaction) => Promise<VersionedTransaction | Transaction>;
-  signAllTransactions: (transactions: (VersionedTransaction | Transaction)[]) => Promise<(VersionedTransaction | Transaction)[]>;
+  signAllTransactions: (
+    transactions: (VersionedTransaction | Transaction)[],
+  ) => Promise<(VersionedTransaction | Transaction)[]>;
 }

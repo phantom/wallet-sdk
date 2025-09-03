@@ -41,7 +41,7 @@ export interface IEthereumChain {
 
   // Standard EIP-1193 Events:
   // - connect: (connectInfo: { chainId: string }) => void
-  // - disconnect: (error: { code: number; message: string }) => void  
+  // - disconnect: (error: { code: number; message: string }) => void
   // - accountsChanged: (accounts: string[]) => void
   // - chainChanged: (chainId: string) => void
   // - message: (message: { type: string; data: unknown }) => void

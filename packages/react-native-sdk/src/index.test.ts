@@ -1,12 +1,4 @@
-import {
-  PhantomProvider,
-  usePhantom,
-  useConnect,
-  useDisconnect,
-  useAccounts,
-  useSolana,
-  useEthereum,
-} from "./index";
+import { PhantomProvider, usePhantom, useConnect, useDisconnect, useAccounts, useSolana, useEthereum } from "./index";
 
 describe("React Native SDK Exports", () => {
   it("should export PhantomProvider", () => {

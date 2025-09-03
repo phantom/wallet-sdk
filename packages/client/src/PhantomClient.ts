@@ -33,7 +33,7 @@ import {
   KmsUserRole,
   type ExternalKmsOrganization,
   type DerivationInfoAddressFormatEnum,
-  type ExternalKmsAuthenticator
+  type ExternalKmsAuthenticator,
 } from "@phantom/openapi-wallet-service";
 import { DerivationPath, getNetworkConfig } from "./constants";
 import { deriveSubmissionConfig } from "./caip2-mappings";
@@ -109,7 +109,12 @@ export class PhantomClient {
       const walletRequest: any = {
         organizationId: this.config.organizationId,
         walletName: walletName || `Wallet ${Date.now()}`,
-        accounts: [DerivationPath.Solana(), DerivationPath.Ethereum(), DerivationPath.Bitcoin(), DerivationPath.Sui()] as any,
+        accounts: [
+          DerivationPath.Solana(),
+          DerivationPath.Ethereum(),
+          DerivationPath.Bitcoin(),
+          DerivationPath.Sui(),
+        ] as any,
       };
 
       // Creating wallet with request
@@ -128,7 +133,12 @@ export class PhantomClient {
       const requestAccounts: GetAccounts = {
         method: GetAccountsMethodEnum.getAccounts,
         params: {
-          accounts: [DerivationPath.Solana(), DerivationPath.Ethereum(), DerivationPath.Bitcoin(), DerivationPath.Sui()],
+          accounts: [
+            DerivationPath.Solana(),
+            DerivationPath.Ethereum(),
+            DerivationPath.Bitcoin(),
+            DerivationPath.Sui(),
+          ],
           organizationId: this.config.organizationId,
           walletId: walletResult.walletId,
         },
@@ -420,11 +430,11 @@ export class PhantomClient {
       const params: CreateOrganizationRequest = {
         organizationName: name,
         users: users.map(userConfig => ({
-          role: userConfig.role === "ADMIN"  ? KmsUserRole.admin : KmsUserRole.user,
+          role: userConfig.role === "ADMIN" ? KmsUserRole.admin : KmsUserRole.user,
           username: userConfig.username || `user-${Date.now()}`,
           authenticators: userConfig.authenticators as any,
         })),
-        tags
+        tags,
       };
 
       const request: CreateOrganization = {
@@ -463,7 +473,7 @@ export class PhantomClient {
       } as any;
 
       const response = await this.kmsApi.postKmsRpc(request);
-      const result = (response.data as any).result as ExternalKmsAuthenticator
+      const result = (response.data as any).result as ExternalKmsAuthenticator;
 
       return result;
     } catch (error: any) {
@@ -553,7 +563,6 @@ export class PhantomClient {
     const requestBody =
       typeof config.data === "string" ? config.data : config.data === undefined ? "" : JSON.stringify(config.data);
     const dataUtf8 = Buffer.from(requestBody, "utf8");
-
 
     const stamp = await stamper.stamp({
       data: dataUtf8,

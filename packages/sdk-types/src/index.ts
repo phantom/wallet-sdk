@@ -25,9 +25,9 @@ export interface StamperWithKeyManagement extends Stamper {
   getKeyInfo(): StamperKeyInfo | null;
   resetKeyPair(): Promise<StamperKeyInfo>;
   clear(): Promise<void>;
-  
+
   // Key rotation methods for seamless key transitions
-  rotateKeyPair(): Promise<StamperKeyInfo>;        // Generate new keypair, keep old as pending
-  commitRotation(authenticatorId: string): Promise<void>;  // Switch to new keypair
-  rollbackRotation(): Promise<void>;              // Discard pending keypair on failure
+  rotateKeyPair(): Promise<StamperKeyInfo>; // Generate new keypair, keep old as pending
+  commitRotation(authenticatorId: string): Promise<void>; // Switch to new keypair
+  rollbackRotation(): Promise<void>; // Discard pending keypair on failure
 }

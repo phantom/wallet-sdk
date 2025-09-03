@@ -203,29 +203,17 @@ export class EmbeddedProvider {
 
   /*
    * Shared connection logic for both connect() and autoConnect().
-   * Handles redirect resume, existing session validation, and session initialization.
+   * Handles existing session validation, redirect resume, and session initialization.
    * Returns ConnectResult if connection succeeds, null if should continue with new auth flow.
    */
-  private async tryExistingConnection(): Promise<ConnectResult | null> {
+  private async tryExistingConnection(authOptions?: AuthOptions): Promise<ConnectResult | null> {
     // Get and validate existing session
     this.logger.log("EMBEDDED_PROVIDER", "Getting existing session");
     let session = await this.storage.getSession();
     session = await this.validateAndCleanSession(session);
 
-    // First, check if we're resuming from a redirect
-    this.logger.log("EMBEDDED_PROVIDER", "Checking for redirect resume");
-    if (this.authProvider.resumeAuthFromRedirect) {
-      const authResult = this.authProvider.resumeAuthFromRedirect();
-      if (authResult) {
-        this.logger.info("EMBEDDED_PROVIDER", "Resuming from redirect", {
-          walletId: authResult.walletId,
-          provider: authResult.provider,
-        });
-        return this.completeAuthConnection(authResult);
-      }
-    }
-
-    // If we have a completed session, use it
+    // First priority: If we have a completed session, use it
+    // This prevents unnecessary redirect resume when the session is already valid
     if (session && session.status === "completed") {
       this.logger.info("EMBEDDED_PROVIDER", "Using existing completed session", {
         sessionId: session.sessionId,
@@ -260,6 +248,44 @@ export class EmbeddedProvider {
       });
 
       return result;
+    }
+
+    // Second priority: Check if we're resuming from a redirect
+    // Only attempt redirect resume if there's no valid completed session
+    this.logger.log("EMBEDDED_PROVIDER", "No completed session found, checking for redirect resume");
+    if (this.authProvider.resumeAuthFromRedirect) {
+      const authResult = this.authProvider.resumeAuthFromRedirect();
+      if (authResult) {
+        this.logger.info("EMBEDDED_PROVIDER", "Resuming from redirect", {
+          walletId: authResult.walletId,
+          provider: authResult.provider,
+        });
+
+        try {
+          return await this.completeAuthConnection(authResult);
+        } catch (error) {
+          // Handle the edge case where session was wiped from DB but URL has session params
+          // Only fall back gracefully when authOptions are provided (indicating intent to start fresh auth)
+          if (error instanceof Error && error.message.includes("No session found after redirect") && authOptions) {
+            this.logger.warn(
+              "EMBEDDED_PROVIDER",
+              "Session missing during redirect resume - will start fresh auth flow",
+              {
+                error: error.message,
+                walletId: authResult.walletId,
+                provider: authOptions.provider,
+              },
+            );
+
+            // Clear any potentially stale session data and continue to fresh auth flow
+            await this.storage.clearSession();
+            return null; // Let connect() method start a fresh auth flow
+          }
+
+          // Re-throw error if no authOptions (should fail) or if different error type
+          throw error;
+        }
+      }
     }
 
     // No existing connection available
@@ -464,7 +490,7 @@ export class EmbeddedProvider {
       });
 
       // Try to use existing connection (redirect resume or completed session)
-      const existingResult = await this.tryExistingConnection();
+      const existingResult = await this.tryExistingConnection(authOptions);
       if (existingResult) {
         // Successfully connected using existing session or redirect
         this.logger.info("EMBEDDED_PROVIDER", "Manual connect using existing connection", {

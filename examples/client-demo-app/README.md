@@ -116,7 +116,12 @@ await client.createAuthenticator({
   organizationId,
   username,
   authenticatorName,
-  authenticator: { publicKey: "base64url-string", authenticatorKind: "keypair", algorithm: "Ed25519", authenticatorName },
+  authenticator: {
+    publicKey: "base64url-string",
+    authenticatorKind: "keypair",
+    algorithm: "Ed25519",
+    authenticatorName,
+  },
 });
 
 await client.deleteAuthenticator({

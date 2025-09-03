@@ -10,9 +10,7 @@ export async function autoConfirmEnable(params?: AutoConfirmEnableParams): Promi
   }
 
   // Transform NetworkId to InternalNetworkCaip for extension communication
-  const transformedParams = params?.chains 
-    ? { chains: params.chains.map(networkIdToInternalCaip) }
-    : {};
+  const transformedParams = params?.chains ? { chains: params.chains.map(networkIdToInternalCaip) } : {};
 
   const result = await provider.request({
     method: "phantom_auto_confirm_enable",

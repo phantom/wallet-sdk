@@ -20,7 +20,7 @@ interface StoredKeyRecord {
   createdAt: number;
   expiresAt: number;
   authenticatorId?: string;
-  status: 'active' | 'pending' | 'expired';
+  status: "active" | "pending" | "expired";
 }
 
 /**
@@ -48,10 +48,10 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
   async init(): Promise<StamperKeyInfo> {
     // Try to load existing active key record
     this.activeKeyRecord = await this.loadActiveKeyRecord();
-    
+
     if (!this.activeKeyRecord) {
       // No existing keypair, generate new one
-      this.activeKeyRecord = await this.generateAndStoreNewKeyRecord('active');
+      this.activeKeyRecord = await this.generateAndStoreNewKeyRecord("active");
     }
 
     // Check if there's a pending key record from a previous rotation
@@ -72,7 +72,7 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
    */
   async resetKeyPair(): Promise<StamperKeyInfo> {
     await this.clear();
-    this.activeKeyRecord = await this.generateAndStoreNewKeyRecord('active');
+    this.activeKeyRecord = await this.generateAndStoreNewKeyRecord("active");
     this.pendingKeyRecord = null;
     return this.activeKeyRecord.keyInfo;
   }
@@ -85,7 +85,7 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
   async stamp(
     params:
       | { data: Buffer; type?: "PKI"; idToken?: never; salt?: never }
-      | { data: Buffer; type: "OIDC"; idToken: string; salt: string }
+      | { data: Buffer; type: "OIDC"; idToken: string; salt: string },
   ): Promise<string> {
     if (!this.activeKeyRecord) {
       throw new Error("Stamper not initialized. Call init() first.");
@@ -123,7 +123,7 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
    * Generate a new keypair for rotation without making it active
    */
   async rotateKeyPair(): Promise<StamperKeyInfo> {
-    this.pendingKeyRecord = await this.generateAndStoreNewKeyRecord('pending');
+    this.pendingKeyRecord = await this.generateAndStoreNewKeyRecord("pending");
     return this.pendingKeyRecord.keyInfo;
   }
 
@@ -145,14 +145,14 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
     }
 
     // Promote pending to active
-    this.pendingKeyRecord.status = 'active';
+    this.pendingKeyRecord.status = "active";
     this.pendingKeyRecord.authenticatorId = authenticatorId;
     this.pendingKeyRecord.keyInfo.authenticatorId = authenticatorId; // Also set on keyInfo
     this.activeKeyRecord = this.pendingKeyRecord;
     this.pendingKeyRecord = null;
 
     // Store as active and remove pending
-    await this.storeKeyRecord(this.activeKeyRecord, 'active');
+    await this.storeKeyRecord(this.activeKeyRecord, "active");
     try {
       await SecureStore.deleteItemAsync(this.getPendingKeyName());
     } catch (error) {
@@ -178,7 +178,7 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
     this.pendingKeyRecord = null;
   }
 
-  private async generateAndStoreNewKeyRecord(type: 'active' | 'pending'): Promise<StoredKeyRecord> {
+  private async generateAndStoreNewKeyRecord(type: "active" | "pending"): Promise<StoredKeyRecord> {
     // Generate Ed25519 keypair using our crypto package
     const keypair = generateKeyPair();
 
@@ -211,8 +211,8 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
     return base64urlEncode(new TextEncoder().encode(publicKey)).substring(0, 16);
   }
 
-  private async storeKeyRecord(record: StoredKeyRecord, type: 'active' | 'pending'): Promise<void> {
-    const keyName = type === 'active' ? this.getActiveKeyName() : this.getPendingKeyName();
+  private async storeKeyRecord(record: StoredKeyRecord, type: "active" | "pending"): Promise<void> {
+    const keyName = type === "active" ? this.getActiveKeyName() : this.getPendingKeyName();
 
     // Store the entire record as JSON
     await SecureStore.setItemAsync(keyName, JSON.stringify(record), {
@@ -257,7 +257,6 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
   private getPendingKeyName(): string {
     return `${this.keyPrefix}-${this.organizationId}-pending`;
   }
-
 }
 
 // Export with the legacy name for compatibility

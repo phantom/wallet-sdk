@@ -7,7 +7,9 @@ import { getProvider } from "./getProvider";
  * @returns A promise that resolves with an array of signed transactions.
  * @throws Error if Phantom provider is not found or if the operation fails.
  */
-export async function signAllTransactions(transactions: (VersionedTransaction | Transaction)[]): Promise<(VersionedTransaction | Transaction)[]> {
+export async function signAllTransactions(
+  transactions: (VersionedTransaction | Transaction)[],
+): Promise<(VersionedTransaction | Transaction)[]> {
   const provider = await getProvider();
   if (!provider) {
     throw new Error("Provider not found.");

@@ -405,6 +405,59 @@ describe("EmbeddedProvider Auth Flows", () => {
 
       await expect(provider.connect()).rejects.toThrow(/session may have expired/);
     });
+
+    it("should fall back to fresh authentication when session is missing from database but URL has session_id", async () => {
+      // Setup: URL contains session_id parameter (session was wiped from DB)
+      mockURLParamsAccessor.getParam.mockReturnValue("wiped-session-123");
+
+      // Setup: resumeAuthFromRedirect returns auth result (detects parameters)
+      const authResult: AuthResult = {
+        walletId: "wallet-from-url-123",
+        provider: "google",
+        userInfo: { email: "test@example.com" },
+        accountDerivationIndex: 0,
+      };
+      mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
+
+      // Setup: No session exists in storage (was wiped from database)
+      // This affects both tryExistingConnection AND completeAuthConnection
+      mockStorage.getSession.mockResolvedValue(null);
+
+      // Setup: Fresh auth flow should succeed after fallback
+      mockClient.createOrganization.mockResolvedValue({ organizationId: "new-org-id" });
+      mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
+
+      // This should NOT throw an error, instead it should fall back to fresh auth
+      // The tryExistingConnection should catch the error from completeAuthConnection and return null
+      // Then connect() should proceed with fresh auth flow
+      const result = await provider.connect({ provider: "google" });
+
+      // Should have attempted to resume auth from redirect (and failed silently due to missing session)
+      expect(mockAuthProvider.resumeAuthFromRedirect).toHaveBeenCalled();
+
+      // Should have cleared session after the redirect resume failure
+      expect(mockStorage.clearSession).toHaveBeenCalled();
+
+      // Should fall back to fresh auth flow when redirect resume fails
+      expect(mockClient.createOrganization).toHaveBeenCalled();
+      expect(mockAuthProvider.authenticate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          provider: "google",
+          organizationId: "new-org-id",
+          parentOrganizationId: "test-org-id",
+          appId: "test-app-id",
+        }),
+      );
+
+      // Should save new session with pending status for redirect flow
+      expect(mockStorage.saveSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: "pending",
+          authProvider: "phantom-connect",
+          userInfo: { provider: "google" },
+        }),
+      );
+    });
   });
 
   describe("App Wallet Flow", () => {
@@ -1114,6 +1167,42 @@ describe("EmbeddedProvider Auth Flows", () => {
 
       expect(provider.isConnected()).toBe(true);
       expect(mockClient.getWalletAddresses).toHaveBeenCalledWith("app-wallet-123", undefined, 0);
+    });
+
+    it("should use completed session during autoConnect even when session_id parameters exist in URL", async () => {
+      // Setup: completed session exists in storage
+      const completedSession = createCompletedSession({
+        sessionId: "existing-session-123",
+        walletId: "wallet-existing-123",
+      });
+      mockStorage.getSession.mockResolvedValue(completedSession);
+
+      // Setup: URL contains session_id parameter (from old redirect)
+      mockURLParamsAccessor.getParam.mockReturnValue("old-session-456");
+
+      // Setup: resumeAuthFromRedirect returns null (no active redirect)
+      mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
+
+      mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
+
+      await provider.autoConnect();
+
+      // Should use the existing completed session, not attempt redirect resume
+      expect(provider.isConnected()).toBe(true);
+      expect(mockClient.getWalletAddresses).toHaveBeenCalledWith("wallet-existing-123", undefined, 0);
+
+      // Should not clear or modify the existing completed session
+      expect(mockStorage.clearSession).not.toHaveBeenCalled();
+
+      // Should update session timestamp but keep same walletId
+      expect(mockStorage.saveSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sessionId: "existing-session-123",
+          walletId: "wallet-existing-123",
+          status: "completed",
+          lastUsed: expect.any(Number),
+        }),
+      );
     });
   });
 

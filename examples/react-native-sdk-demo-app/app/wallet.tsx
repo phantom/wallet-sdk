@@ -11,11 +11,7 @@ import {
   Linking,
 } from "react-native";
 import { useRouter } from "expo-router";
-import {
-  useAccounts,
-  useSolana,
-  useDisconnect,
-} from "@phantom/react-native-sdk";
+import { useAccounts, useSolana, useDisconnect } from "@phantom/react-native-sdk";
 import { useBalance } from "../hooks/useBalance";
 
 export default function WalletScreen() {

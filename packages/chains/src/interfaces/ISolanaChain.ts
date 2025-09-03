@@ -15,7 +15,7 @@ export interface ISolanaChain {
   signAllTransactions?<T>(transactions: T[]): Promise<T[]>;
 
   // Network switching
-  switchNetwork?(network: 'mainnet' | 'devnet'): Promise<void>;
+  switchNetwork?(network: "mainnet" | "devnet"): Promise<void>;
 
   // Legacy compatibility methods
   getPublicKey(): Promise<string | null>;

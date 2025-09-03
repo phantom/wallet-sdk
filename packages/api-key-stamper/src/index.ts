@@ -31,18 +31,18 @@ export class ApiKeyStamper implements Stamper {
   async stamp(
     params:
       | { data: Buffer; type?: "PKI"; idToken?: never; salt?: never }
-      | { data: Buffer; type: "OIDC"; idToken: string; salt: string }
+      | { data: Buffer; type: "OIDC"; idToken: string; salt: string },
   ): Promise<string> {
     const { data } = params;
     // Sign the data
     const signature = signWithSecret(this.keypair.secretKey, data);
     const signatureBase64url = base64urlEncode(signature);
 
-    // Determine stamp type - use override parameter if provided, otherwise use instance type  
+    // Determine stamp type - use override parameter if provided, otherwise use instance type
     const stampType = params.type || this.type;
-    
+
     // Create the stamp structure based on stamp type
-    const stampData = 
+    const stampData =
       stampType === "PKI"
         ? {
             publicKey: base64urlEncode(bs58.decode(this.keypair.publicKey)),

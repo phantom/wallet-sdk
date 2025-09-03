@@ -1,11 +1,11 @@
 // Polyfills for Solana Web3.js in Node.js test environment
-const { TextEncoder, TextDecoder } = require('util');
+const { TextEncoder, TextDecoder } = require("util");
 
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
 // Mock EventTarget if not available
-if (typeof global.EventTarget === 'undefined') {
+if (typeof global.EventTarget === "undefined") {
   global.EventTarget = class EventTarget {
     constructor() {
       this.listeners = new Map();
@@ -38,7 +38,7 @@ if (typeof global.EventTarget === 'undefined') {
   };
 }
 
-if (typeof global.CustomEvent === 'undefined') {
+if (typeof global.CustomEvent === "undefined") {
   global.CustomEvent = class CustomEvent extends Event {
     constructor(type, options = {}) {
       super(type);
