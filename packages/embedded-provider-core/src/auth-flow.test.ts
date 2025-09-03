@@ -380,7 +380,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       await expect(provider.connect()).rejects.toThrow();
     });
 
-    it("should throw error when no session found after redirect", async () => {
+    it("should fall back to fresh authentication when no session found after redirect during manual connect", async () => {
       const authResult: AuthResult = {
         walletId: "wallet-123",
         provider: "google",
@@ -389,22 +389,26 @@ describe("EmbeddedProvider Auth Flows", () => {
       };
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
       mockStorage.getSession.mockResolvedValue(null);
+      
+      // Setup fresh auth flow to succeed after fallback
+      mockClient.createOrganization.mockResolvedValue({ organizationId: "new-org-id" });
+      mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
 
-      await expect(provider.connect()).rejects.toThrow("No session found after redirect - session may have expired");
+      // Should NOT throw an error, instead it should fall back to fresh auth
+      await provider.connect();
+
+      // Should have attempted to resume auth from redirect (and failed silently due to missing session)
+      expect(mockAuthProvider.resumeAuthFromRedirect).toHaveBeenCalled();
+
+      // Should have cleared session after the redirect resume failure
+      expect(mockStorage.clearSession).toHaveBeenCalled();
+
+      // Should fall back to fresh auth flow when redirect resume fails
+      expect(mockClient.createOrganization).toHaveBeenCalled();
+      expect(mockAuthProvider.authenticate).toHaveBeenCalled();
     });
 
-    it("should provide clear error message about session expiration", async () => {
-      const authResult: AuthResult = {
-        walletId: "wallet-123",
-        provider: "google",
-        userInfo: { email: "test@example.com" },
-        accountDerivationIndex: 6,
-      };
-      mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
-      mockStorage.getSession.mockResolvedValue(null);
-
-      await expect(provider.connect()).rejects.toThrow(/session may have expired/);
-    });
+   
 
     it("should fall back to fresh authentication when session is missing from database but URL has session_id", async () => {
       // Setup: URL contains session_id parameter (session was wiped from DB)
@@ -430,7 +434,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       // This should NOT throw an error, instead it should fall back to fresh auth
       // The tryExistingConnection should catch the error from completeAuthConnection and return null
       // Then connect() should proceed with fresh auth flow
-      const result = await provider.connect({ provider: "google" });
+      await provider.connect({ provider: "google" });
 
       // Should have attempted to resume auth from redirect (and failed silently due to missing session)
       expect(mockAuthProvider.resumeAuthFromRedirect).toHaveBeenCalled();

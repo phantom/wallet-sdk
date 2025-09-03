@@ -206,7 +206,7 @@ export class EmbeddedProvider {
    * Handles existing session validation, redirect resume, and session initialization.
    * Returns ConnectResult if connection succeeds, null if should continue with new auth flow.
    */
-  private async tryExistingConnection(authOptions?: AuthOptions): Promise<ConnectResult | null> {
+  private async tryExistingConnection(isAutoConnect: boolean): Promise<ConnectResult | null> {
     // Get and validate existing session
     this.logger.log("EMBEDDED_PROVIDER", "Getting existing session");
     let session = await this.storage.getSession();
@@ -266,14 +266,13 @@ export class EmbeddedProvider {
         } catch (error) {
           // Handle the edge case where session was wiped from DB but URL has session params
           // Only fall back gracefully when authOptions are provided (indicating intent to start fresh auth)
-          if (error instanceof Error && error.message.includes("No session found after redirect") && authOptions) {
+          if (error instanceof Error && error.message.includes("No session found after redirect") && !isAutoConnect) {
             this.logger.warn(
               "EMBEDDED_PROVIDER",
               "Session missing during redirect resume - will start fresh auth flow",
               {
                 error: error.message,
                 walletId: authResult.walletId,
-                provider: authOptions.provider,
               },
             );
 
@@ -372,7 +371,7 @@ export class EmbeddedProvider {
       this.emit("connect_start", { source: "auto-connect" });
 
       // Try to use existing connection (redirect resume or completed session)
-      const result = await this.tryExistingConnection();
+      const result = await this.tryExistingConnection(true);
 
       if (result) {
         // Successfully connected using existing session or redirect
@@ -490,7 +489,7 @@ export class EmbeddedProvider {
       });
 
       // Try to use existing connection (redirect resume or completed session)
-      const existingResult = await this.tryExistingConnection(authOptions);
+      const existingResult = await this.tryExistingConnection(false);
       if (existingResult) {
         // Successfully connected using existing session or redirect
         this.logger.info("EMBEDDED_PROVIDER", "Manual connect using existing connection", {
