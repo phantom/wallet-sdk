@@ -1,46 +1,42 @@
 import * as React from "react";
-import { usePhantom } from "../PhantomProvider";
-import { BrowserSDK } from "@phantom/browser-sdk";
+import { waitForPhantomExtension } from "@phantom/browser-sdk";
 
-// Session cache for extension installation status
-let cachedIsInstalled: boolean | null = null;
-
+/**
+ * React hook to check if Phantom extension is installed
+ * Uses waitForPhantomExtension for proper detection with retry logic
+ */
 export function useIsExtensionInstalled() {
-  const { sdk } = usePhantom();
-  const [isLoading, setIsLoading] = React.useState(cachedIsInstalled === null);
-  const [isInstalled, setIsInstalled] = React.useState(cachedIsInstalled ?? false);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [isInstalled, setIsInstalled] = React.useState(false);
 
   React.useEffect(() => {
-    if (!sdk) {
-      setIsLoading(false);
-      return;
-    }
+    let isMounted = true;
 
-    // If we have cached result, use it immediately
-    if (cachedIsInstalled !== null) {
-      setIsInstalled(cachedIsInstalled);
-      setIsLoading(false);
-      return;
-    }
-
-    // Perform the check
-    const checkExtension = () => {
+    const checkExtension = async () => {
       try {
         setIsLoading(true);
-        const result = BrowserSDK.isPhantomInstalled();
-        cachedIsInstalled = result;
-        setIsInstalled(result);
+        const result = await waitForPhantomExtension(3000);
+        if (isMounted) {
+          setIsInstalled(result);
+        }
       } catch (error) {
         // If check fails, assume not installed
-        cachedIsInstalled = false;
-        setIsInstalled(false);
+        if (isMounted) {
+          setIsInstalled(false);
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     checkExtension();
-  }, [sdk]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return { isLoading, isInstalled };
 }

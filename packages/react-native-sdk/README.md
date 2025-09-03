@@ -98,7 +98,6 @@ export default function App() {
         authOptions: {
           redirectUrl: "mywalletapp://phantom-auth-callback",
         },
-        appName: "My Wallet App", // Optional branding
       }}
     >
       <YourAppContent />
@@ -172,17 +171,9 @@ export function WalletScreen() {
         </Text>
       ))}
 
-      <Button
-        title="Sign Solana Message"
-        onPress={handleSignSolanaMessage}
-        style={{ marginTop: 10 }}
-      />
+      <Button title="Sign Solana Message" onPress={handleSignSolanaMessage} style={{ marginTop: 10 }} />
 
-      <Button
-        title="Sign Ethereum Message"
-        onPress={handleSignEthereumMessage}
-        style={{ marginTop: 10 }}
-      />
+      <Button title="Sign Ethereum Message" onPress={handleSignEthereumMessage} style={{ marginTop: 10 }} />
 
       <Button title="Disconnect" onPress={disconnect} style={{ marginTop: 10 }} />
     </View>
@@ -216,8 +207,6 @@ interface PhantomSDKConfig {
     authUrl?: string; // Custom auth URL (optional)
     redirectUrl?: string; // Custom redirect URL (optional)
   };
-  appName?: string; // Optional app name for branding
-  appLogo?: string; // Optional app logo URL for branding
   autoConnect?: boolean; // Auto-connect to existing session on SDK instantiation (default: true)
 }
 ```

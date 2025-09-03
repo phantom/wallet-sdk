@@ -28,7 +28,6 @@ describe("BrowserSDK", () => {
       sdk = new BrowserSDK({
         providerType: "injected",
         addressTypes: [AddressType.solana],
-        appName: "Test App",
       });
 
       expect(MockInjectedProvider).toHaveBeenCalledWith({
@@ -42,9 +41,9 @@ describe("BrowserSDK", () => {
       sdk = new BrowserSDK({
         providerType: "embedded",
         addressTypes: [AddressType.solana],
-        appName: "Test App",
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
         organizationId: "org-123",
+        appId: "app-123",
         authOptions: {
           authUrl: "https://auth.phantom.com",
         },
@@ -53,14 +52,13 @@ describe("BrowserSDK", () => {
       expect(MockEmbeddedProvider).toHaveBeenCalledWith({
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
         organizationId: "org-123",
+        appId: "app-123",
         authOptions: {
           authUrl: "https://auth.phantom.com",
         },
         embeddedWalletType: "app-wallet",
         addressTypes: [AddressType.solana],
         solanaProvider: "web3js",
-        appName: "Test App",
-        appLogo: undefined,
       });
       expect(MockInjectedProvider).not.toHaveBeenCalled();
     });
@@ -70,6 +68,7 @@ describe("BrowserSDK", () => {
         providerType: "embedded",
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
         organizationId: "org-123",
+        appId: "app-123",
         authOptions: {
           authUrl: "https://auth.phantom.com",
         },
@@ -80,6 +79,7 @@ describe("BrowserSDK", () => {
       expect(MockEmbeddedProvider).toHaveBeenCalledWith({
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
         organizationId: "org-123",
+        appId: "app-123",
         authOptions: {
           authUrl: "https://auth.phantom.com",
         },
@@ -93,9 +93,8 @@ describe("BrowserSDK", () => {
       expect(() => {
         new BrowserSDK({
           providerType: "embedded",
-          appName: "Test App",
         });
-      }).toThrow("apiBaseUrl and organizationId are required for embedded provider");
+      }).toThrow("apiBaseUrl, organizationId and appId are required for embedded provider");
     });
 
     it("should support custom solanaProvider for injected", () => {
@@ -116,6 +115,7 @@ describe("BrowserSDK", () => {
         providerType: "embedded",
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
         organizationId: "org-123",
+        appId: "app-123",
         solanaProvider: "kit",
         addressTypes: [AddressType.solana],
       });
@@ -123,6 +123,7 @@ describe("BrowserSDK", () => {
       expect(MockEmbeddedProvider).toHaveBeenCalledWith({
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
         organizationId: "org-123",
+        appId: "app-123",
         authUrl: undefined,
         embeddedWalletType: "app-wallet",
         addressTypes: [AddressType.solana],
@@ -289,6 +290,7 @@ describe("BrowserSDK", () => {
         addressTypes: [AddressType.solana],
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
         organizationId: "org-123",
+        appId: "app-123",
         authUrl: "https://auth.phantom.com",
         embeddedWalletType: "app-wallet",
       });

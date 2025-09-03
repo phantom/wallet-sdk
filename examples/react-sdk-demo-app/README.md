@@ -96,9 +96,9 @@ The app is configured in `App.tsx` using environment variables:
 
 ```typescript
 const config = {
-  appName: "React SDK Demo App",
   providerType: "injected",
   organizationId: import.meta.env.VITE_ORGANIZATION_ID, // Required for embedded
+  appId: import.meta.env.VITE_APP_ID, // Required for embedded
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL, // Required for embedded
   // ... other optional configurations
 };

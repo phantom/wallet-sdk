@@ -43,6 +43,7 @@ Before running the demo, you need:
 3. **Edit `.env`** and add your credentials:
    ```env
    ORGANIZATION_ID=your-organization-id
+   APP_ID=your-app-id
    ORGANIZATION_PRIVATE_KEY=your-base58-encoded-private-key
    WALLET_API=https://api.phantom.app/v1/wallets
    SOLANA_RPC_URL=https://api.devnet.solana.com

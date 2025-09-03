@@ -37,6 +37,7 @@ export interface AuthOptions {
 
 export interface EmbeddedProviderConfig {
   apiBaseUrl: string;
+  appId: string;
   organizationId: string;
   authOptions?: {
     authUrl?: string;
@@ -45,6 +46,4 @@ export interface EmbeddedProviderConfig {
   embeddedWalletType: "app-wallet" | "user-wallet" | (string & Record<never, never>); // Allow any string for avoiding type conflicts
   addressTypes: [AddressType, ...AddressType[]];
   solanaProvider: "web3js" | "kit" | (string & Record<never, never>); // Allow any string for avoiding type conflicts
-  appName?: string; // Optional app name for branding
-  appLogo?: string; // Optional app logo URL
 }

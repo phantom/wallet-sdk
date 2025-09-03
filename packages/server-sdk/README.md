@@ -69,6 +69,7 @@ Create a `.env` file in your project root:
 
 ```env
 ORGANIZATION_ID=your-organization-id
+APP_ID=your-app-id
 PRIVATE_KEY=your-base58-encoded-private-key
 API_URL=https://api.phantom.app/v1/wallets
 ```
