@@ -67,11 +67,13 @@ export function phantomConnector() {
         }
       })
 
-      console.log("HEEEE", sdk)
 
       await sdk?.autoConnect()
+      if (sdk?.isConnected()) {
+        const accounts = await this.getAccounts()
+        config.emitter.emit('change', { accounts: accounts as `0x${string}`[] })
+      }
 
-      console.log("AAAA", sdk?.isConnected())
     },
 
     async connect() {
