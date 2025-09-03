@@ -88,7 +88,7 @@ function App() {
   );
 
   // Auth callback always needs embedded config
-  const authConfig: PhantomSDKConfig = {
+  const authConfig: PhantomSDKConfig = useMemo(() => ({
     providerType: "embedded",
     addressTypes: [AddressType.solana, AddressType.ethereum, AddressType.bitcoinSegwit, AddressType.sui],
     solanaProvider: "web3js",
@@ -100,7 +100,7 @@ function App() {
       redirectUrl: import.meta.env.VITE_REDIRECT_URL,
     },
     autoConnect: true,
-  };
+  }), []);
 
   return (
     <DebugContext.Provider value={debugContextValue}>

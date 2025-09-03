@@ -1,7 +1,7 @@
 {
   "name": "@phantom/browser-sdk-demo-app",
   "private": true,
-  "version": "0.0.3",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "predev": "yarn workspace @phantom/browser-sdk build:watch",
@@ -16,11 +16,16 @@
     "@solana-program/system": "^0.7.0",
     "@solana/kit": "^2.1.1",
     "@solana/web3.js": "^1.98.2",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
     "buffer": "^6.0.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "typescript": "^5.0.4",
     "viem": "^2.33.1"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
     "concurrently": "^9.1.2",
     "vite": "^6.3.5"
   }

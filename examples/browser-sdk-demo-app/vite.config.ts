@@ -1,26 +1,18 @@
-import { defineConfig } from "vite";
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { Buffer } from 'buffer'
 
 export default defineConfig({
-  server: {
-    port: 5175, // Different port from the other demo app
-    open: true,
-  },
+  plugins: [react()],
   define: {
-    global: "globalThis",
+    global: 'globalThis',
   },
   resolve: {
     alias: {
-      buffer: "buffer",
+      buffer: 'buffer',
     },
   },
   optimizeDeps: {
-    include: ["buffer"],
+    include: ['buffer'],
   },
-  build: {
-    rollupOptions: {
-      input: {
-        main: "index.html",
-      },
-    },
-  },
-});
+})
