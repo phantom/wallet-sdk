@@ -1,5 +1,14 @@
 # @phantom/parsers
 
+## 1.0.0-beta.1
+
+### Patch Changes
+
+- 8cd9ac7: Release with new interfaces, appId
+- Updated dependencies [8cd9ac7]
+  - @phantom/base64url@1.0.0-beta.1
+  - @phantom/constants@1.0.0-beta.1
+
 ## 1.0.0-beta.0
 
 ### Major Changes

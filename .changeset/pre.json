@@ -24,10 +24,11 @@
     "@phantom/react-sdk": "0.3.7",
     "@phantom/react-ui": "1.2.5",
     "@phantom/sdk-types": "0.1.4",
-    "@phantom/server-sdk": "0.2.4"
+    "@phantom/server-sdk": "0.2.4",
+    "with-wagmi": "0.1.0"
   },
   "changesets": [
-    "common-owls-own",
+    "cute-days-yell",
     "new-worlds-switch"
   ]
 }
