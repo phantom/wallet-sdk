@@ -9,7 +9,7 @@ interface KeyPairRecord {
   createdAt: number;
   expiresAt: number;
   authenticatorId?: string;
-  status: 'active' | 'pending' | 'expired';
+  status: "active" | "pending" | "expired";
 }
 
 export type IndexedDbStamperConfig = {
@@ -41,7 +41,7 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
   private pendingKeyPairRecord: KeyPairRecord | null = null;
   algorithm = Algorithm.ed25519; // Use Ed25519 for maximum security and performance
 
-  // The type of stamper, can be changed at any time 
+  // The type of stamper, can be changed at any time
   public type: "PKI" | "OIDC" = "PKI"; // Default to PKI, can be set to OIDC if needed
   public idToken?: string; // Optional for PKI, required for OIDC
   public salt?: string; // Optional for PKI, required for OIDC
@@ -67,10 +67,10 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
 
     // Try to load existing active keypair
     this.activeKeyPairRecord = await this.loadActiveKeyPairRecord();
-    
+
     if (!this.activeKeyPairRecord) {
       // No existing keypair, generate new one
-      this.activeKeyPairRecord = await this.generateAndStoreNewKeyPair('active');
+      this.activeKeyPairRecord = await this.generateAndStoreNewKeyPair("active");
     }
 
     // Check if there's a pending keypair from a previous rotation
@@ -91,7 +91,7 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
    */
   async resetKeyPair(): Promise<StamperKeyInfo> {
     await this.clearStoredKeys();
-    this.activeKeyPairRecord = await this.generateAndStoreNewKeyPair('active');
+    this.activeKeyPairRecord = await this.generateAndStoreNewKeyPair("active");
     this.pendingKeyPairRecord = null;
     return this.activeKeyPairRecord.keyInfo;
   }
@@ -104,7 +104,7 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
   async stamp(
     params:
       | { data: Buffer; type?: "PKI"; idToken?: never; salt?: never }
-      | { data: Buffer; type: "OIDC"; idToken: string; salt: string }
+      | { data: Buffer; type: "OIDC"; idToken: string; salt: string },
   ): Promise<string> {
     const { data } = params;
     if (!this.activeKeyPairRecord) {
@@ -137,20 +137,20 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
     const stampData =
       stampType === "PKI"
         ? {
-          // Decode base58 public key to bytes, then encode as base64url (consistent with ApiKeyStamper)
-          publicKey: base64urlEncode(bs58.decode(this.activeKeyPairRecord.keyInfo.publicKey)),
-          signature: signatureBase64url,
-          kind: "PKI",
-          algorithm: this.algorithm,
-        }
+            // Decode base58 public key to bytes, then encode as base64url (consistent with ApiKeyStamper)
+            publicKey: base64urlEncode(bs58.decode(this.activeKeyPairRecord.keyInfo.publicKey)),
+            signature: signatureBase64url,
+            kind: "PKI",
+            algorithm: this.algorithm,
+          }
         : {
-          kind: "OIDC",
-          idToken,
-          publicKey: base64urlEncode(bs58.decode(this.activeKeyPairRecord.keyInfo.publicKey)),
-          salt,
-          algorithm: this.algorithm,
-          signature: signatureBase64url,
-        };
+            kind: "OIDC",
+            idToken,
+            publicKey: base64urlEncode(bs58.decode(this.activeKeyPairRecord.keyInfo.publicKey)),
+            salt,
+            algorithm: this.algorithm,
+            signature: signatureBase64url,
+          };
 
     // Encode the entire stamp as base64url JSON
     const stampJson = JSON.stringify(stampData);
@@ -224,7 +224,7 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
       await this.openDB();
     }
 
-    this.pendingKeyPairRecord = await this.generateAndStoreNewKeyPair('pending');
+    this.pendingKeyPairRecord = await this.generateAndStoreNewKeyPair("pending");
     return this.pendingKeyPairRecord.keyInfo;
   }
 
@@ -238,20 +238,20 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
 
     // Remove old active keypair
     if (this.activeKeyPairRecord) {
-      await this.removeKeyPairRecord('active');
+      await this.removeKeyPairRecord("active");
     }
 
     // Promote pending to active
-    this.pendingKeyPairRecord.status = 'active';
+    this.pendingKeyPairRecord.status = "active";
     this.pendingKeyPairRecord.authenticatorId = authenticatorId;
     this.pendingKeyPairRecord.keyInfo.authenticatorId = authenticatorId; // Also set on keyInfo
     this.activeKeyPairRecord = this.pendingKeyPairRecord;
     this.pendingKeyPairRecord = null;
 
     // Store the now-active keypair
-    await this.storeKeyPairRecord(this.activeKeyPairRecord, 'active');
+    await this.storeKeyPairRecord(this.activeKeyPairRecord, "active");
     // Remove the pending record
-    await this.removeKeyPairRecord('pending');
+    await this.removeKeyPairRecord("pending");
   }
 
   /**
@@ -263,12 +263,11 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
     }
 
     // Remove pending keypair
-    await this.removeKeyPairRecord('pending');
+    await this.removeKeyPairRecord("pending");
     this.pendingKeyPairRecord = null;
   }
 
-
-  private async generateAndStoreNewKeyPair(type: 'active' | 'pending'): Promise<KeyPairRecord> {
+  private async generateAndStoreNewKeyPair(type: "active" | "pending"): Promise<KeyPairRecord> {
     // Generate non-extractable Ed25519 key pair using Web Crypto API
     const keyPair = await crypto.subtle.generateKey(
       {
@@ -308,7 +307,7 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
     return record;
   }
 
-  private async storeKeyPairRecord(record: KeyPairRecord, type: 'active' | 'pending'): Promise<void> {
+  private async storeKeyPairRecord(record: KeyPairRecord, type: "active" | "pending"): Promise<void> {
     if (!this.db) {
       throw new Error("Database not initialized");
     }
@@ -354,7 +353,7 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
     });
   }
 
-  private async removeKeyPairRecord(type: 'active' | 'pending'): Promise<void> {
+  private async removeKeyPairRecord(type: "active" | "pending"): Promise<void> {
     if (!this.db) {
       return;
     }
@@ -368,6 +367,4 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
       request.onerror = () => reject(request.error);
     });
   }
-
-
 }

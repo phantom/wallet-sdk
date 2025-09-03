@@ -57,10 +57,12 @@ export class DeepLinkSolanaStrategy implements SolanaStrategy {
     });
   }
 
-  public async signAndSendTransaction(transaction: VersionedTransaction | Transaction): Promise<{ signature: string; address?: string }> {
+  public async signAndSendTransaction(
+    transaction: VersionedTransaction | Transaction,
+  ): Promise<{ signature: string; address?: string }> {
     // For deeplinks, we need to serialize the transaction
     let serialized: Uint8Array;
-    if ('serialize' in transaction && typeof transaction.serialize === 'function') {
+    if ("serialize" in transaction && typeof transaction.serialize === "function") {
       serialized = transaction.serialize();
     } else {
       // For legacy Transaction, use serializeMessage or similar
@@ -75,10 +77,12 @@ export class DeepLinkSolanaStrategy implements SolanaStrategy {
     });
   }
 
-  public async signTransaction(transaction: VersionedTransaction | Transaction): Promise<VersionedTransaction | Transaction> {
-    // For deeplinks, we need to serialize the transaction  
+  public async signTransaction(
+    transaction: VersionedTransaction | Transaction,
+  ): Promise<VersionedTransaction | Transaction> {
+    // For deeplinks, we need to serialize the transaction
     let serialized: Uint8Array;
-    if ('serialize' in transaction && typeof transaction.serialize === 'function') {
+    if ("serialize" in transaction && typeof transaction.serialize === "function") {
       serialized = transaction.serialize();
     } else {
       // For legacy Transaction, use serializeMessage or similar
@@ -90,11 +94,13 @@ export class DeepLinkSolanaStrategy implements SolanaStrategy {
     return Promise.resolve(transaction);
   }
 
-  public async signAllTransactions(transactions: (VersionedTransaction | Transaction)[]): Promise<(VersionedTransaction | Transaction)[]> {
+  public async signAllTransactions(
+    transactions: (VersionedTransaction | Transaction)[],
+  ): Promise<(VersionedTransaction | Transaction)[]> {
     // For deeplinks, we need to serialize each transaction
     const serializedTxs = transactions.map(tx => {
       let serialized: Uint8Array;
-      if ('serialize' in tx && typeof tx.serialize === 'function') {
+      if ("serialize" in tx && typeof tx.serialize === "function") {
         serialized = tx.serialize();
       } else {
         // For legacy Transaction, use serializeMessage or similar

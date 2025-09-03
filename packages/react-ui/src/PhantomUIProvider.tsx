@@ -1,8 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, type ReactNode } from "react";
-import {
-  useConnect as useBaseConnect,
-  usePhantom,
-} from "@phantom/react-sdk";
+import { useConnect as useBaseConnect, usePhantom } from "@phantom/react-sdk";
 
 export interface PhantomUIProviderProps {
   children: ReactNode;
@@ -104,32 +101,18 @@ export function PhantomUIProvider({ children, theme = "light", customTheme }: Ph
       {children}
       {/* Connection Modal - rendered conditionally based on state */}
       {connectionState.isVisible && (
-        <div 
-          className={`phantom-ui-modal-overlay ${theme}`} 
-          style={customTheme}
-          onClick={hideConnectionModal}
-        >
-          <div 
-            className="phantom-ui-modal-content"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className={`phantom-ui-modal-overlay ${theme}`} style={customTheme} onClick={hideConnectionModal}>
+          <div className="phantom-ui-modal-content" onClick={e => e.stopPropagation()}>
             <div className="phantom-ui-modal-header">
               <h3>Connect to Phantom</h3>
-              <button 
-                className="phantom-ui-close-button"
-                onClick={hideConnectionModal}
-              >
+              <button className="phantom-ui-close-button" onClick={hideConnectionModal}>
                 ×
               </button>
             </div>
-            
+
             <div className="phantom-ui-modal-body">
-              {connectionState.error && (
-                <div className="phantom-ui-error">
-                  {connectionState.error.message}
-                </div>
-              )}
-              
+              {connectionState.error && <div className="phantom-ui-error">{connectionState.error.message}</div>}
+
               <div className="phantom-ui-provider-options">
                 <button
                   className="phantom-ui-provider-button"
@@ -138,7 +121,7 @@ export function PhantomUIProvider({ children, theme = "light", customTheme }: Ph
                 >
                   {connectionState.isConnecting ? "Connecting..." : "Continue with Google"}
                 </button>
-                
+
                 <button
                   className="phantom-ui-provider-button phantom-ui-provider-button-secondary"
                   onClick={() => connectWithAuthProvider()}

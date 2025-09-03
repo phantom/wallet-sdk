@@ -7,7 +7,6 @@ export * from "./PhantomUIProvider";
 // Enhanced Hooks with UI integration
 export * from "./hooks";
 
-
 // Re-export hooks and types from react-sdk (useConnect is overridden by UI hooks)
 export {
   useAccounts,

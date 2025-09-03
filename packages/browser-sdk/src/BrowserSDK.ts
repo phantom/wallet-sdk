@@ -1,25 +1,24 @@
-import type {
-  BrowserSDKConfig,
-  ConnectResult,
-  WalletAddress,
-  AuthOptions,
-} from "./types";
+import type { BrowserSDKConfig, ConnectResult, WalletAddress, AuthOptions } from "./types";
 import { ProviderManager, type SwitchProviderOptions, type ProviderPreference } from "./ProviderManager";
 import { debug, DebugCategory, type DebugLevel, type DebugCallback } from "./debug";
 import { waitForPhantomExtension } from "./waitForPhantomExtension";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chains";
 import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-provider-core";
 import type { InjectedProvider } from "./providers/injected";
-import type { AutoConfirmEnableParams, AutoConfirmResult, AutoConfirmSupportedChainsResult } from "@phantom/browser-injected-sdk/auto-confirm";
+import type {
+  AutoConfirmEnableParams,
+  AutoConfirmResult,
+  AutoConfirmSupportedChainsResult,
+} from "@phantom/browser-injected-sdk/auto-confirm";
 
 /**
  * Browser SDK with chain-specific API
- * 
+ *
  * Usage:
  * ```typescript
  * const sdk = new BrowserSDK({ providerType: 'embedded', appId: 'your-app-id' });
  * await sdk.connect();
- * 
+ *
  * // Chain-specific operations
  * await sdk.solana.signMessage(message);
  * await sdk.ethereum.signPersonalMessage(message, address);
@@ -57,25 +56,25 @@ export class BrowserSDK {
   }
 
   // ===== CHAIN API =====
-  
+
   /**
    * Access Solana chain operations
    */
   get solana(): ISolanaChain {
     const currentProvider = this.providerManager.getCurrentProvider();
     if (!currentProvider) {
-      throw new Error('No provider available. Call connect() first.');
+      throw new Error("No provider available. Call connect() first.");
     }
     return currentProvider.solana;
   }
-  
+
   /**
    * Access Ethereum chain operations
    */
   get ethereum(): IEthereumChain {
     const currentProvider = this.providerManager.getCurrentProvider();
     if (!currentProvider) {
-      throw new Error('No provider available. Call connect() first.');
+      throw new Error("No provider available. Call connect() first.");
     }
     return currentProvider.ethereum;
   }
@@ -90,7 +89,7 @@ export class BrowserSDK {
 
     try {
       const result = await this.providerManager.connect(options);
-      
+
       debug.info(DebugCategory.BROWSER_SDK, "Connection successful", {
         addressCount: result.addresses.length,
         walletId: result.walletId,
@@ -129,9 +128,9 @@ export class BrowserSDK {
       await this.providerManager.switchProvider(type, options);
       debug.info(DebugCategory.BROWSER_SDK, "Provider switch successful", { type });
     } catch (error) {
-      debug.error(DebugCategory.BROWSER_SDK, "Provider switch failed", { 
-        type, 
-        error: (error as Error).message 
+      debug.error(DebugCategory.BROWSER_SDK, "Provider switch failed", {
+        type,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -202,7 +201,7 @@ export class BrowserSDK {
   async autoConnect(): Promise<void> {
     debug.log(DebugCategory.BROWSER_SDK, "Attempting auto-connect");
     const currentProvider = this.providerManager.getCurrentProvider();
-    if (currentProvider && 'autoConnect' in currentProvider) {
+    if (currentProvider && "autoConnect" in currentProvider) {
       await (currentProvider as any).autoConnect();
     } else {
       debug.warn(DebugCategory.BROWSER_SDK, "Current provider does not support auto-connect", {
@@ -258,11 +257,11 @@ export class BrowserSDK {
         this.disableDebug();
       }
     }
-    
+
     if (config.level !== undefined) {
       this.setDebugLevel(config.level);
     }
-    
+
     if (config.callback !== undefined) {
       this.setDebugCallback(config.callback);
     }
@@ -276,16 +275,16 @@ export class BrowserSDK {
    */
   async enableAutoConfirm(params: AutoConfirmEnableParams): Promise<AutoConfirmResult> {
     debug.info(DebugCategory.BROWSER_SDK, "Enabling auto-confirm", { params });
-    
+
     const currentProvider = this.providerManager.getCurrentProvider();
     if (!currentProvider) {
-      throw new Error('No provider available. Call connect() first.');
+      throw new Error("No provider available. Call connect() first.");
     }
-    
-    if (!('enableAutoConfirm' in currentProvider)) {
-      throw new Error('Auto-confirm is only available for injected providers');
+
+    if (!("enableAutoConfirm" in currentProvider)) {
+      throw new Error("Auto-confirm is only available for injected providers");
     }
-    
+
     try {
       const result = await (currentProvider as InjectedProvider).enableAutoConfirm(params);
       debug.info(DebugCategory.BROWSER_SDK, "Auto-confirm enabled successfully", { result });
@@ -302,16 +301,16 @@ export class BrowserSDK {
    */
   async disableAutoConfirm(): Promise<void> {
     debug.info(DebugCategory.BROWSER_SDK, "Disabling auto-confirm");
-    
+
     const currentProvider = this.providerManager.getCurrentProvider();
     if (!currentProvider) {
-      throw new Error('No provider available. Call connect() first.');
+      throw new Error("No provider available. Call connect() first.");
     }
-    
-    if (!('disableAutoConfirm' in currentProvider)) {
-      throw new Error('Auto-confirm is only available for injected providers');
+
+    if (!("disableAutoConfirm" in currentProvider)) {
+      throw new Error("Auto-confirm is only available for injected providers");
     }
-    
+
     try {
       await (currentProvider as InjectedProvider).disableAutoConfirm();
       debug.info(DebugCategory.BROWSER_SDK, "Auto-confirm disabled successfully");
@@ -327,16 +326,16 @@ export class BrowserSDK {
    */
   async getAutoConfirmStatus(): Promise<AutoConfirmResult> {
     debug.info(DebugCategory.BROWSER_SDK, "Getting auto-confirm status");
-    
+
     const currentProvider = this.providerManager.getCurrentProvider();
     if (!currentProvider) {
-      throw new Error('No provider available. Call connect() first.');
+      throw new Error("No provider available. Call connect() first.");
     }
-    
-    if (!('getAutoConfirmStatus' in currentProvider)) {
-      throw new Error('Auto-confirm is only available for injected providers');
+
+    if (!("getAutoConfirmStatus" in currentProvider)) {
+      throw new Error("Auto-confirm is only available for injected providers");
     }
-    
+
     try {
       const result = await (currentProvider as InjectedProvider).getAutoConfirmStatus();
       debug.info(DebugCategory.BROWSER_SDK, "Got auto-confirm status", { result });
@@ -353,22 +352,24 @@ export class BrowserSDK {
    */
   async getSupportedAutoConfirmChains(): Promise<AutoConfirmSupportedChainsResult> {
     debug.info(DebugCategory.BROWSER_SDK, "Getting supported auto-confirm chains");
-    
+
     const currentProvider = this.providerManager.getCurrentProvider();
     if (!currentProvider) {
-      throw new Error('No provider available. Call connect() first.');
+      throw new Error("No provider available. Call connect() first.");
     }
-    
-    if (!('getSupportedAutoConfirmChains' in currentProvider)) {
-      throw new Error('Auto-confirm is only available for injected providers');
+
+    if (!("getSupportedAutoConfirmChains" in currentProvider)) {
+      throw new Error("Auto-confirm is only available for injected providers");
     }
-    
+
     try {
       const result = await (currentProvider as InjectedProvider).getSupportedAutoConfirmChains();
       debug.info(DebugCategory.BROWSER_SDK, "Got supported auto-confirm chains", { result });
       return result;
     } catch (error) {
-      debug.error(DebugCategory.BROWSER_SDK, "Failed to get supported auto-confirm chains", { error: (error as Error).message });
+      debug.error(DebugCategory.BROWSER_SDK, "Failed to get supported auto-confirm chains", {
+        error: (error as Error).message,
+      });
       throw error;
     }
   }

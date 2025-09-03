@@ -1,2 +1,2 @@
-export type { ISolanaChain } from './ISolanaChain';
-export type { IEthereumChain, EthTransactionRequest } from './IEthereumChain';
+export type { ISolanaChain } from "./ISolanaChain";
+export type { IEthereumChain, EthTransactionRequest } from "./IEthereumChain";

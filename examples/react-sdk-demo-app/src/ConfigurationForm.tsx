@@ -10,15 +10,14 @@ interface ConfigurationFormProps {
   onCreateSDK: () => void;
 }
 
-export function ConfigurationForm({ 
-  providerType, 
-  setProviderType, 
-  embeddedWalletType, 
+export function ConfigurationForm({
+  providerType,
+  setProviderType,
+  embeddedWalletType,
   setEmbeddedWalletType,
-  onCreateSDK
+  onCreateSDK,
 }: ConfigurationFormProps) {
   const { isInstalled, isLoading } = useIsExtensionInstalled();
-
 
   return (
     <div id="app">
@@ -96,11 +95,7 @@ export function ConfigurationForm({
               </div>
             </div>
             <div className="button-group">
-              <button
-                className="primary"
-                onClick={onCreateSDK}
-                disabled={providerType === "injected" && !isInstalled}
-              >
+              <button className="primary" onClick={onCreateSDK} disabled={providerType === "injected" && !isInstalled}>
                 Create SDK Instance
               </button>
             </div>

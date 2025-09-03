@@ -88,7 +88,7 @@ describe("InjectedProvider", () => {
   describe("connect", () => {
     it("should connect to Solana wallet", async () => {
       const mockPublicKey = "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH";
-      
+
       const provider = new InjectedProvider({
         solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
@@ -106,10 +106,10 @@ describe("InjectedProvider", () => {
 
     it("should connect to Ethereum wallet", async () => {
       const mockAddresses = ["0x742d35Cc6634C0532925a3b844Bc9e7595f6cE65"];
-      
+
       // Update the mock to make Solana fail and Ethereum succeed
       mockPhantomObject.solana.connect.mockRejectedValue(new Error("Provider not found."));
-      mockPhantomObject.ethereum.getAccounts.mockResolvedValue(mockAddresses);
+      mockPhantomObject.ethereum.connect.mockResolvedValue(mockAddresses);
       
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { createPhantom } = require("@phantom/browser-injected-sdk");
@@ -133,7 +133,7 @@ describe("InjectedProvider", () => {
     it("should throw error when Phantom wallet not found", async () => {
       // Mock extension as not installed
       mockPhantomObject.extension.isInstalled = () => false;
-      
+
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { createPhantom } = require("@phantom/browser-injected-sdk");
       createPhantom.mockReturnValue(mockPhantomObject);
@@ -149,7 +149,7 @@ describe("InjectedProvider", () => {
     it("should throw error when no provider connects successfully", async () => {
       // Mock both Solana and Ethereum to fail
       mockPhantomObject.solana.connect.mockRejectedValue(new Error("Provider not found."));
-      mockPhantomObject.ethereum.getAccounts.mockRejectedValue(new Error("Provider not found."));
+      mockPhantomObject.ethereum.connect.mockRejectedValue(new Error("Provider not found."));
       
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { createPhantom } = require("@phantom/browser-injected-sdk");
@@ -170,7 +170,7 @@ describe("InjectedProvider", () => {
         solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
-      
+
       // First connect - already mocked in beforeEach
       await provider.connect();
 
@@ -184,13 +184,13 @@ describe("InjectedProvider", () => {
 
   describe("signMessage", () => {
     let provider: InjectedProvider;
-    
+
     beforeEach(async () => {
       provider = new InjectedProvider({
         solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
-      
+
       await provider.connect();
     });
 
@@ -226,20 +226,20 @@ describe("InjectedProvider", () => {
       const result = await disconnectedProvider.solana.signMessage("test");
       expect(result).toEqual({
         signature: expect.any(Uint8Array),
-        publicKey: '',
+        publicKey: "",
       });
     });
   });
 
   describe("signAndSendTransaction", () => {
     let provider: InjectedProvider;
-    
+
     beforeEach(async () => {
       provider = new InjectedProvider({
         solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
-      
+
       await provider.connect();
     });
 
@@ -274,9 +274,11 @@ describe("InjectedProvider", () => {
         solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
-      
+
       // With mocked phantom object, this will succeed
-      const result = await disconnectedProvider.solana.signAndSendTransaction({ messageBytes: new Uint8Array([1, 2, 3]) });
+      const result = await disconnectedProvider.solana.signAndSendTransaction({
+        messageBytes: new Uint8Array([1, 2, 3]),
+      });
       expect(result.signature).toBe("mock-transaction-signature");
     });
   });
@@ -296,7 +298,7 @@ describe("InjectedProvider", () => {
         solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
-      
+
       await provider.connect();
       const addresses = provider.getAddresses();
 
@@ -319,7 +321,7 @@ describe("InjectedProvider", () => {
         solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
-      
+
       await provider.connect();
       expect(provider.isConnected()).toBe(true);
     });
@@ -329,7 +331,7 @@ describe("InjectedProvider", () => {
         solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
-      
+
       await provider.connect();
       await provider.disconnect();
       expect(provider.isConnected()).toBe(false);

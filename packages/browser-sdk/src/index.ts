@@ -1,7 +1,6 @@
 // Main SDK
 export { BrowserSDK } from "./BrowserSDK";
 
-
 // Chain interfaces (from shared package)
 export type { ISolanaChain, IEthereumChain, EthTransactionRequest } from "@phantom/chains";
 
@@ -32,8 +31,8 @@ export { NetworkId } from "@phantom/constants";
 export { AddressType } from "@phantom/client";
 
 // Re-export auto-confirm types
-export type { 
-  AutoConfirmEnableParams, 
-  AutoConfirmResult, 
-  AutoConfirmSupportedChainsResult 
+export type {
+  AutoConfirmEnableParams,
+  AutoConfirmResult,
+  AutoConfirmSupportedChainsResult,
 } from "@phantom/browser-injected-sdk/auto-confirm";

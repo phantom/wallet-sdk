@@ -339,7 +339,7 @@ For injected provider usage, you can check if the Phantom extension is installed
 ```typescript
 import { waitForPhantomExtension } from "@phantom/browser-sdk";
 
-const isAvailable = await waitForPhantomExtension(5000); 
+const isAvailable = await waitForPhantomExtension(5000);
 
 if (isAvailable) {
   console.log("Phantom extension is available!");

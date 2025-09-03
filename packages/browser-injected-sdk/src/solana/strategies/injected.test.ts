@@ -375,9 +375,7 @@ describe("InjectedSolanaStrategy", () => {
         solana: mockProvider,
       };
       mockProvider.isConnected = true;
-      mockProvider.signAllTransactions = jest
-        .fn()
-        .mockResolvedValue([mockTransaction, mockTransaction]);
+      mockProvider.signAllTransactions = jest.fn().mockResolvedValue([mockTransaction, mockTransaction]);
     });
 
     beforeEach(() => {

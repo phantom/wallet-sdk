@@ -23,7 +23,7 @@ function App() {
   // Provider type state - this will control the SDK configuration
   const [providerType, setProviderType] = useState<ProviderType>("embedded");
   const [embeddedWalletType, setEmbeddedWalletType] = useState<"user-wallet" | "app-wallet">("user-wallet");
-  
+
   // SDK instantiation state
   const [sdkInstantiated, setSdkInstantiated] = useState(false);
 
@@ -88,7 +88,7 @@ function App() {
   );
 
   // Auth callback always needs embedded config
-  const authConfig: PhantomSDKConfig = useMemo(() => ({
+  const authConfig: PhantomSDKConfig = {
     providerType: "embedded",
     addressTypes: [AddressType.solana, AddressType.ethereum, AddressType.bitcoinSegwit, AddressType.sui],
     solanaProvider: "web3js",
@@ -100,31 +100,37 @@ function App() {
       redirectUrl: import.meta.env.VITE_REDIRECT_URL,
     },
     autoConnect: true,
-  }), []);
+  };
 
   return (
     <DebugContext.Provider value={debugContextValue}>
       <Routes>
-        <Route path="/auth/callback" element={
-          <PhantomProvider config={authConfig} debugConfig={debugConfig}>
-            <AuthCallback />
-          </PhantomProvider>
-        } />
-        <Route path="/" element={
-          sdkInstantiated ? (
-            <PhantomProvider config={config} debugConfig={debugConfig}>
-              <Actions providerType={providerType} />
+        <Route
+          path="/auth/callback"
+          element={
+            <PhantomProvider config={authConfig} debugConfig={debugConfig}>
+              <AuthCallback />
             </PhantomProvider>
-          ) : (
-            <ConfigurationForm 
-              providerType={providerType}
-              setProviderType={setProviderType}
-              embeddedWalletType={embeddedWalletType}
-              setEmbeddedWalletType={setEmbeddedWalletType}
-              onCreateSDK={() => setSdkInstantiated(true)}
-            />
-          )
-        } />
+          }
+        />
+        <Route
+          path="/"
+          element={
+            sdkInstantiated ? (
+              <PhantomProvider config={config} debugConfig={debugConfig}>
+                <Actions providerType={providerType} />
+              </PhantomProvider>
+            ) : (
+              <ConfigurationForm
+                providerType={providerType}
+                setProviderType={setProviderType}
+                embeddedWalletType={embeddedWalletType}
+                setEmbeddedWalletType={setEmbeddedWalletType}
+                onCreateSDK={() => setSdkInstantiated(true)}
+              />
+            )
+          }
+        />
       </Routes>
     </DebugContext.Provider>
   );

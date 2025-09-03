@@ -4,7 +4,7 @@ export type AutoConfirmEnableParams = {
   chains?: NetworkId[];
 };
 
-// Internal types for extension communication  
+// Internal types for extension communication
 type InternalAutoConfirmEnableParams = {
   chains?: InternalNetworkCaip[];
 };
