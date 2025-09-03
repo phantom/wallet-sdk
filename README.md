@@ -79,7 +79,6 @@ import { PhantomProvider, useConnect, useSolana, useEthereum, AddressType } from
     // For embedded wallets:
     // embeddedWalletType: "app-wallet",
     // apiBaseUrl: "https://api.phantom.app/v1/wallets",
-    // organizationId: "your-org-id",
     // appId: "your-app-id",
   }}
 >
@@ -124,7 +123,6 @@ const sdk = new BrowserSDK({
 //   embeddedWalletType: "app-wallet",
 //   addressTypes: [AddressType.solana, AddressType.ethereum],
 //   apiBaseUrl: "https://api.phantom.app/v1/wallets",
-//   organizationId: "your-org-id",
 //   appId: "your-app-id",
 // });
 
@@ -206,7 +204,6 @@ import { PhantomUIProvider, useConnect, useSolana, useEthereum, AddressType } fr
     providerType: "embedded", // or "injected"
     addressTypes: [AddressType.solana, AddressType.ethereum],
     apiBaseUrl: "https://api.phantom.app/v1/wallets",
-    organizationId: "your-org-id",
     appId: "your-app-id",
   }}
   theme="dark"

@@ -89,7 +89,7 @@ export default function App() {
   return (
     <PhantomProvider
       config={{
-        organizationId: "your-organization-id",
+        appId: "your-app-id",
         scheme: "mywalletapp", // Must match app.json scheme
         embeddedWalletType: "user-wallet",
         addressTypes: [AddressType.solana],
@@ -197,7 +197,6 @@ The main provider component that initializes the SDK and provides context to all
 
 ```typescript
 interface PhantomSDKConfig {
-  organizationId: string; // Your Phantom organization ID
   scheme: string; // Custom URL scheme for your app
   embeddedWalletType: "user-wallet" | "app-wallet";
   addressTypes: [AddressType, ...AddressType[]]; // e.g., [AddressType.solana]
@@ -331,7 +330,7 @@ import { PhantomProvider, AddressType } from "@phantom/react-native-sdk";
 
 <PhantomProvider
   config={{
-    organizationId: "org_123456789",
+    appId: "app_123456789",
     scheme: "myapp",
     embeddedWalletType: "user-wallet",
     addressTypes: [AddressType.solana],
@@ -349,7 +348,7 @@ import { PhantomProvider, AddressType } from "@phantom/react-native-sdk";
 
 <PhantomProvider
   config={{
-    organizationId: "org_123456789",
+    appId: "app_123456789",
     scheme: "mycompany-wallet",
     embeddedWalletType: "user-wallet",
     addressTypes: [AddressType.solana, AddressType.ethereum],
@@ -388,7 +387,7 @@ import { PhantomProvider, AddressType } from "@phantom/react-native-sdk";
 import { PhantomProvider, AddressType } from '@phantom/react-native-sdk';
 
 const testConfig = {
-  organizationId: "test-org",
+  appId: "test-app",
   scheme: "testapp",
   embeddedWalletType: "app-wallet" as const,
   addressTypes: [AddressType.solana],
@@ -445,7 +444,6 @@ import { PhantomProvider, type PhantomSDKConfig, type PhantomDebugConfig } from 
 function App() {
   // SDK configuration - static, won't change when debug settings change
   const config: PhantomSDKConfig = {
-    organizationId: "your-org-id",
     scheme: "mywalletapp",
     // ... other config
   };

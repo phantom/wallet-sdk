@@ -286,13 +286,13 @@ export class ProviderManager implements EventEmitter {
         addressTypes: this.config.addressTypes,
       });
     } else {
-      if (!this.config.apiBaseUrl || !this.config.organizationId || !this.config.appId) {
-        throw new Error("apiBaseUrl, organizationId and appId are required for embedded provider");
+      if (!this.config.apiBaseUrl || !this.config.appId) {
+        throw new Error("apiBaseUrl and appId are required for embedded provider");
       }
 
       provider = new EmbeddedProvider({
         apiBaseUrl: this.config.apiBaseUrl,
-        organizationId: this.config.organizationId,
+        organizationId: this.config.appId,
         appId: this.config.appId,
         authOptions: this.config.authOptions,
         embeddedWalletType: embeddedWalletType || "app-wallet",
