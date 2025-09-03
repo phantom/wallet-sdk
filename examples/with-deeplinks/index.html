@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Phantom Deeplinks Demo</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <h1>Phantom Deeplinks Demo</h1>
+
+      <div class="main-layout">
+        <div class="left-panel">
+          <div class="section">
+            <h3>Deeplinks Configuration</h3>
+            <p>This demo uses the Phantom Deeplinks provider to interact with Phantom wallet via mobile deeplinks.</p>
+            <p><strong>Note:</strong> Deeplinks currently only support Solana blockchain.</p>
+          </div>
+
+          <div class="section">
+            <h3>Connection Status</h3>
+            <div id="connectionStatus" class="status-display">
+              <span id="statusText">Not Connected</span>
+            </div>
+          </div>
+
+          <div class="section">
+            <h3>Wallet Operations</h3>
+            <div class="button-group">
+              <button id="connectBtn" class="primary">Connect via Deeplinks</button>
+              <button id="getAddressesBtn" disabled>Get Connected Addresses</button>
+              <button id="disconnectBtn" disabled>Disconnect</button>
+            </div>
+          </div>
+
+          <div class="section" id="addressesSection" style="display: none">
+            <h3>Connected Wallet Addresses</h3>
+            <div id="addressesList" class="addresses-list">
+              <!-- Addresses will be populated here -->
+            </div>
+          </div>
+
+          <div class="section">
+            <h3>Solana Operations</h3>
+            <div class="button-group">
+              <button id="signMessageBtn" disabled>Sign Message</button>
+              <button id="signTransactionBtn" disabled>Sign Transaction</button>
+              <button id="signAndSendBtn" disabled>Sign & Send Transaction</button>
+            </div>
+          </div>
+
+          <div class="section" id="messageSection">
+            <h3>Custom Message Signing</h3>
+            <div class="form-group">
+              <label for="messageInput">Message to sign:</label>
+              <textarea id="messageInput" placeholder="Enter a message to sign..." rows="3">Hello from Phantom Deeplinks!</textarea>
+            </div>
+            <button id="customSignMessageBtn" disabled>Sign Custom Message</button>
+          </div>
+        </div>
+
+        <div class="right-panel">
+          <div class="section">
+            <h3>Debug Console</h3>
+            <div class="debug-controls">
+              <label class="checkbox-label">
+                <input type="checkbox" id="debugToggle" checked /> Show Debug Messages
+              </label>
+
+              <div class="form-group inline">
+                <label for="debugLevel">Level:</label>
+                <select id="debugLevel">
+                  <option value="0">ERROR</option>
+                  <option value="1">WARN</option>
+                  <option value="2" selected>INFO</option>
+                  <option value="3">DEBUG</option>
+                </select>
+              </div>
+
+              <button id="clearDebugBtn" class="small">Clear</button>
+            </div>
+            <div id="debugMessages" class="debug-container"></div>
+          </div>
+
+          <div class="section">
+            <h3>Last Operation Result</h3>
+            <div id="lastResult" class="result-display">
+              <pre id="lastResultContent">No operations performed yet</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

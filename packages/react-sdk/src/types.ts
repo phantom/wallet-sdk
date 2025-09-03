@@ -6,4 +6,4 @@ export type {
   SignedTransaction
 } from "@phantom/browser-sdk";
 
-export type ProviderType = "injected" | "embedded";
+export type ProviderType = "injected" | "embedded" | "deeplinks";

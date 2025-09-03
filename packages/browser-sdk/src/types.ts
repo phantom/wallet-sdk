@@ -21,7 +21,7 @@ export interface DebugConfig {
 }
 
 export interface BrowserSDKConfig extends Partial<EmbeddedProviderConfig> {
-  providerType: "injected" | "embedded" | (string & Record<never, never>);
+  providerType: "injected" | "embedded" | "deeplinks" | (string & Record<never, never>);
   addressTypes: [AddressType, ...AddressType[]];
   // Required for embedded provider, optional for injected
   apiBaseUrl?: string;

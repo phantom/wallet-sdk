@@ -137,7 +137,7 @@ describe("BrowserSDK", () => {
           providerType: "invalid" as any,
           addressTypes: [AddressType.solana],
         });
-      }).toThrow('Invalid providerType: invalid. Must be "injected" or "embedded".');
+      }).toThrow('Invalid providerType: invalid. Must be "injected", "embedded", or "deeplinks".');
     });
   });
 

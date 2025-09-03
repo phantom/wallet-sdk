@@ -1,0 +1,24 @@
+{
+  "name": "@phantom/with-deeplinks",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "predev": "yarn workspace @phantom/browser-sdk build:watch",
+    "dev": "concurrently \"yarn predev\" \"vite --port 5176\"",
+    "prebuild": "yarn workspace @phantom/browser-sdk build",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@phantom/browser-sdk": "workspace:^",
+    "@solana/web3.js": "^1.98.2",
+    "buffer": "^6.0.3",
+    "typescript": "^5.0.4"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "vite": "^6.3.5"
+  }
+}

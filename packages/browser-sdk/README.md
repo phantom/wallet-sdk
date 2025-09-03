@@ -57,15 +57,38 @@ const solanaResult = await sdk.solana.signAndSendTransaction(mySolanaTransaction
 const ethResult = await sdk.ethereum.sendTransaction(myEthTransaction);
 ```
 
+### Deeplinks Provider (Mobile Integration)
+
+```typescript
+import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
+
+// Connect to Phantom mobile app via deeplinks
+const sdk = new BrowserSDK({
+  providerType: "deeplinks",
+  addressTypes: [AddressType.solana], // Currently only Solana is supported via deeplinks
+});
+
+const { addresses } = await sdk.connect();
+console.log("Connected addresses:", addresses);
+
+// Chain-specific operations work the same as other providers
+const message = "Hello from Phantom Mobile!";
+const solanaSignature = await sdk.solana.signMessage(message);
+
+// Sign and send transactions
+const solanaResult = await sdk.solana.signAndSendTransaction(mySolanaTransaction);
+```
+
 ## Features
 
-- **🔒 Non-Custodial**: Full user control of private keys for both injected and embedded wallets
-- **🌐 Dual Provider Support**: Works with Phantom browser extension or creates embedded wallets
+- **🔒 Non-Custodial**: Full user control of private keys across all provider types
+- **🌐 Multi-Provider Support**: Works with Phantom browser extension, creates embedded wallets, or connects to Phantom mobile app
+- **📱 Mobile Integration**: Seamless connection to Phantom mobile app via Universal Links
 - **⛓️ Chain-Specific APIs**: Dedicated interfaces for Solana and Ethereum operations
 - **🛠️ Native Transactions**: Work with blockchain-native objects, not base64url strings
 - **🔗 Multi-Chain**: Solana and Ethereum support with dedicated methods
 - **⚡ TypeScript**: Full type safety for all transaction formats
-- **🎯 Unified API**: Same interface for both injected and embedded providers
+- **🎯 Unified API**: Same interface across injected, embedded, and deeplinks providers
 
 ## Connection Flow
 
@@ -203,6 +226,37 @@ const sdk = new BrowserSDK({
 });
 ```
 
+### Deeplinks Provider
+
+Connects to Phantom mobile app via Universal Links for mobile-first applications.
+
+```typescript
+const sdk = new BrowserSDK({
+  providerType: "deeplinks",
+  addressTypes: [AddressType.solana], // Currently only Solana is supported
+});
+```
+
+**Key Features:**
+- **Mobile-First**: Designed for mobile web applications
+- **Universal Links**: Uses `https://phantom.app/ul/v1/` URLs to open Phantom mobile app
+- **Cross-Tab Communication**: Automatically handles responses even when Phantom opens in a new tab
+- **Session Persistence**: Maintains connection across browser sessions
+- **Encrypted Communication**: Secure NaCl.box encryption for all data exchange
+
+**How it Works:**
+1. **Connect**: Opens Phantom mobile app via Universal Link
+2. **User Approval**: User approves connection in Phantom app
+3. **Return**: User returns to browser (may be new tab)
+4. **Auto-Detection**: SDK automatically detects response and completes connection
+5. **Session Storage**: Connection persists for future visits
+
+**Perfect for:**
+- Mobile web applications
+- dApps targeting mobile users
+- Applications where users prefer mobile wallets
+- Cross-platform wallet integration
+
 ### Embedded Wallet Types
 
 #### App Wallet (`'app-wallet'`)
@@ -318,7 +372,7 @@ new BrowserSDK(config: BrowserSDKConfig)
 
 ```typescript
 interface BrowserSDKConfig {
-  providerType: "injected" | "embedded";
+  providerType: "injected" | "embedded" | "deeplinks";
   addressTypes?: [AddressType, ...AddressType[]]; // Networks to enable (e.g., [AddressType.solana])
 
   // Required for embedded provider only

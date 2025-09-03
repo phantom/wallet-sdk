@@ -36,9 +36,9 @@ export class BrowserSDK {
     });
 
     // Validate providerType
-    if (!["injected", "embedded"].includes(config.providerType)) {
+    if (!["injected", "embedded", "deeplinks"].includes(config.providerType)) {
       debug.error(DebugCategory.BROWSER_SDK, "Invalid providerType", { providerType: config.providerType });
-      throw new Error(`Invalid providerType: ${config.providerType}. Must be "injected" or "embedded".`);
+      throw new Error(`Invalid providerType: ${config.providerType}. Must be "injected", "embedded", or "deeplinks".`);
     }
 
     const embeddedWalletType = config.embeddedWalletType || "app-wallet";
@@ -120,9 +120,9 @@ export class BrowserSDK {
   }
 
   /**
-   * Switch between provider types (injected vs embedded)
+   * Switch between provider types (injected vs embedded vs deeplinks)
    */
-  async switchProvider(type: "injected" | "embedded", options?: SwitchProviderOptions): Promise<void> {
+  async switchProvider(type: "injected" | "embedded" | "deeplinks", options?: SwitchProviderOptions): Promise<void> {
     debug.info(DebugCategory.BROWSER_SDK, "Switching provider", { type, options });
 
     try {

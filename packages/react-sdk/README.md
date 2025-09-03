@@ -178,6 +178,50 @@ Uses the Phantom browser extension installed by the user.
 </PhantomProvider>
 ```
 
+### Deeplinks Provider (Mobile Integration)
+
+```tsx
+import { PhantomProvider } from "@phantom/react-sdk";
+import { AddressType } from "@phantom/browser-sdk";
+
+function App() {
+  return (
+    <PhantomProvider
+      config={{
+        providerType: "deeplinks",
+        addressTypes: [AddressType.solana], // Currently only Solana is supported via deeplinks
+      }}
+    >
+      <YourApp />
+    </PhantomProvider>
+  );
+}
+
+function WalletComponent() {
+  const { connect, isConnecting } = useConnect();
+  const solana = useSolana();
+
+  const handleConnect = async () => {
+    const { addresses } = await connect(); // Opens Phantom mobile app
+    console.log("Connected via mobile:", addresses);
+  };
+
+  const signMessage = async () => {
+    const signature = await solana.signMessage("Hello from mobile!");
+    console.log("Mobile signature:", signature);
+  };
+
+  return (
+    <div>
+      <button onClick={handleConnect} disabled={isConnecting}>
+        {isConnecting ? "Opening Phantom..." : "Connect Mobile Wallet"}
+      </button>
+      <button onClick={signMessage}>Sign Message</button>
+    </div>
+  );
+}
+```
+
 ### Embedded Provider
 
 Creates non-custodial wallets embedded in your application.
@@ -787,7 +831,7 @@ Quick reference of all available hooks:
 
 ```typescript
 interface PhantomSDKConfig {
-  providerType: "injected" | "embedded";
+  providerType: "injected" | "embedded" | "deeplinks";
   addressTypes?: [AddressType, ...AddressType[]]; // Networks to enable (e.g., [AddressType.solana])
 
   // Required for embedded provider only

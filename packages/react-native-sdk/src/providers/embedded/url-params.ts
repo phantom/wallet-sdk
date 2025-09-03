@@ -3,7 +3,6 @@ import type { URLParamsAccessor } from "@phantom/embedded-provider-core";
 
 export class ExpoURLParamsAccessor implements URLParamsAccessor {
   private listeners: Set<(params: Record<string, string>) => void> = new Set();
-  private subscription: any = null;
   private currentParams: Record<string, string> = {};
 
   getParam(key: string): string | null {
@@ -23,27 +22,6 @@ export class ExpoURLParamsAccessor implements URLParamsAccessor {
     } catch (error) {
       console.error("[ExpoURLParamsAccessor] Failed to get initial URL", error);
       return null;
-    }
-  }
-
-  startListening(): void {
-    if (this.subscription) {
-      return; // Already listening
-    }
-
-    this.subscription = Linking.addEventListener("url", ({ url }) => {
-      const params = this.parseURLParams(url);
-      if (params && Object.keys(params).length > 0) {
-        this.currentParams = { ...this.currentParams, ...params };
-        this.listeners.forEach(listener => listener(params));
-      }
-    });
-  }
-
-  stopListening(): void {
-    if (this.subscription) {
-      this.subscription.remove();
-      this.subscription = null;
     }
   }
 
@@ -73,7 +51,6 @@ export class ExpoURLParamsAccessor implements URLParamsAccessor {
   }
 
   dispose(): void {
-    this.stopListening();
     this.listeners.clear();
   }
 }

@@ -1,11 +1,12 @@
 import type { BrowserSDKConfig, Provider, ConnectResult, WalletAddress, AuthOptions } from "./types";
 import { InjectedProvider } from "./providers/injected";
 import { EmbeddedProvider } from "./providers/embedded";
+import { DeeplinksProvider } from "./providers/deeplinks";
 import { debug, DebugCategory } from "./debug";
 import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-provider-core";
 
 export interface ProviderPreference {
-  type: "injected" | "embedded";
+  type: "injected" | "embedded" | "deeplinks";
   embeddedWalletType?: "app-wallet" | "user-wallet";
 }
 
@@ -47,7 +48,7 @@ export class ProviderManager implements EventEmitter {
   /**
    * Switch to a different provider type
    */
-  switchProvider(type: "injected" | "embedded", options?: SwitchProviderOptions): Provider {
+  switchProvider(type: "injected" | "embedded" | "deeplinks", options?: SwitchProviderOptions): Provider {
     // Validate embeddedWalletType if provided
     if (options?.embeddedWalletType && !["app-wallet", "user-wallet"].includes(options.embeddedWalletType)) {
       throw new Error(
@@ -88,7 +89,7 @@ export class ProviderManager implements EventEmitter {
 
     const [type, embeddedWalletType] = this.currentProviderKey.split("-");
     return {
-      type: type as "injected" | "embedded",
+      type: type as "injected" | "embedded" | "deeplinks",
       embeddedWalletType: embeddedWalletType as "app-wallet" | "user-wallet" | undefined,
     };
   }
@@ -263,7 +264,7 @@ export class ProviderManager implements EventEmitter {
    * Set default provider based on initial config
    */
   private setDefaultProvider(): void {
-    const defaultType = (this.config.providerType || "embedded") as "injected" | "embedded";
+    const defaultType = (this.config.providerType || "embedded") as "injected" | "embedded" | "deeplinks";
     const defaultEmbeddedType = (this.config.embeddedWalletType || "app-wallet") as "app-wallet" | "user-wallet";
 
     this.createProvider(defaultType, defaultEmbeddedType);
@@ -273,7 +274,7 @@ export class ProviderManager implements EventEmitter {
   /**
    * Create a provider instance
    */
-  private createProvider(type: "injected" | "embedded", embeddedWalletType?: "app-wallet" | "user-wallet"): void {
+  private createProvider(type: "injected" | "embedded" | "deeplinks", embeddedWalletType?: "app-wallet" | "user-wallet"): void {
     const key = this.getProviderKey(type, embeddedWalletType);
 
     if (this.providers.has(key)) return;
@@ -285,6 +286,10 @@ export class ProviderManager implements EventEmitter {
         solanaProvider: (this.config.solanaProvider || "web3js") as "web3js" | "kit",
         addressTypes: this.config.addressTypes,
       });
+    } else if (type === "deeplinks") {
+      provider = new DeeplinksProvider({
+        addressTypes: this.config.addressTypes,
+      });
     } else {
       if (!this.config.apiBaseUrl || !this.config.organizationId || !this.config.appId) {
         throw new Error("apiBaseUrl, organizationId and appId are required for embedded provider");
@@ -293,7 +298,7 @@ export class ProviderManager implements EventEmitter {
       provider = new EmbeddedProvider({
         apiBaseUrl: this.config.apiBaseUrl,
         organizationId: this.config.organizationId,
-        appId: this.config.appId,
+        appId: this.config.appId!,
         authOptions: this.config.authOptions,
         embeddedWalletType: embeddedWalletType || "app-wallet",
         addressTypes: this.config.addressTypes,
@@ -307,9 +312,12 @@ export class ProviderManager implements EventEmitter {
   /**
    * Generate a unique key for provider instances
    */
-  private getProviderKey(type: "injected" | "embedded", embeddedWalletType?: "app-wallet" | "user-wallet"): string {
+  private getProviderKey(type: "injected" | "embedded" | "deeplinks", embeddedWalletType?: "app-wallet" | "user-wallet"): string {
     if (type === "injected") {
       return "injected";
+    }
+    if (type === "deeplinks") {
+      return "deeplinks";
     }
     return `embedded-${embeddedWalletType || "app-wallet"}`;
   }
