@@ -1,0 +1,309 @@
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+  margin: 0;
+  padding: 1rem;
+  background-color: #f7fafc;
+  color: #2d3748;
+  line-height: 1.5;
+}
+
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.header {
+  padding: 1.5rem 2rem;
+  background-color: #667eea;
+  color: white;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.header h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+}
+
+.header p {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 0.9rem;
+}
+
+.provider-section {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.provider-section:last-child {
+  border-bottom: none;
+}
+
+.provider-section h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: #2d3748;
+}
+
+.input-group {
+  margin-bottom: 1rem;
+}
+
+.input-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #4a5568;
+  font-size: 0.875rem;
+}
+
+.input-group select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  background-color: white;
+}
+
+.provider-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.provider-controls button {
+  padding: 0.625rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  width: 100%;
+  background-color: #f7fafc;
+  color: #4a5568;
+  border-color: #d1d5db;
+}
+
+.provider-controls button:hover:not(:disabled) {
+  background-color: #edf2f7;
+  border-color: #a0aec0;
+}
+
+.provider-controls button.primary {
+  background-color: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.provider-controls button.primary:hover:not(:disabled) {
+  background-color: #5a67d8;
+  border-color: #5a67d8;
+}
+
+.provider-controls button:disabled {
+  background-color: #f7fafc !important;
+  color: #a0aec0 !important;
+  border-color: #e2e8f0 !important;
+  cursor: not-allowed;
+}
+
+.provider-controls button:focus,
+.provider-controls button:focus-visible {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+.status {
+  background-color: #f8f9fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.status.connected {
+  color: #059669;
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.status.disconnected {
+  color: #6b7280;
+  background-color: #f8f9fa;
+  border-color: #e5e7eb;
+}
+
+.status.error {
+  color: #dc2626;
+  background-color: #fef2f2;
+  border-color: #fecaca;
+}
+
+.addresses {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.address-item {
+  background-color: #f8f9fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 1rem;
+}
+
+.address-item .type {
+  font-weight: 600;
+  color: #667eea;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.address-item .address {
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace;
+  font-size: 0.75rem;
+  font-weight: 400;
+  word-break: break-all;
+  color: #374151;
+  background-color: white;
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+}
+
+.error-message {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin: 0.75rem 0 0 0;
+  font-weight: 500;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+.checkbox-label input[type="checkbox"] {
+  margin: 0;
+}
+
+/* Balance card styles */
+.balance-card {
+  background-color: #f8f9fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-top: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.balance-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.balance-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.balance-value {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.balance-refresh-btn {
+  padding: 0.375rem 0.75rem !important;
+  font-size: 0.75rem !important;
+  width: auto !important;
+  background-color: #e2e8f0 !important;
+  color: #4a5568 !important;
+  border-color: #d1d5db !important;
+}
+
+.balance-refresh-btn:hover:not(:disabled) {
+  background-color: #cbd5e0 !important;
+}
+
+/* Debug section specific styles */
+.provider-section:has(.debug-container) {
+  background-color: #f8f9fa;
+  border-left: 4px solid #667eea;
+}
+
+.debug-container {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace;
+  font-size: 0.75rem;
+  max-height: 400px;
+  overflow: auto;
+  padding: 1rem;
+}
+
+.debug-empty {
+  color: #9ca3af;
+  font-style: italic;
+  margin: 0;
+  text-align: center;
+}
+
+.debug-message {
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.8rem;
+}
+
+.debug-message:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.debug-header {
+  color: #667eea;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.debug-content {
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
+.debug-data {
+  background-color: #f8f9fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 3px;
+  padding: 0.5rem;
+  margin: 0.25rem 0 0 0;
+  font-size: 0.7rem;
+  color: #6b7280;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}

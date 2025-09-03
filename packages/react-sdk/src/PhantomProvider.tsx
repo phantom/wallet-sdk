@@ -33,17 +33,6 @@ export interface PhantomProviderProps {
 }
 
 export function PhantomProvider({ children, config, debugConfig }: PhantomProviderProps) {
-  const [isConnected, setIsConnected] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [connectError, setConnectError] = useState<Error | null>(null);
-  const [addresses, setAddresses] = useState<WalletAddress[]>([]);
-  const [walletId, setWalletId] = useState<string | null>(null);
-  const [currentProviderType, setCurrentProviderType] = useState<"injected" | "embedded" | null>(
-    (config.providerType as any) || null,
-  );
-  const [isPhantomAvailable, setIsPhantomAvailable] = useState(false);
-  const [sdk, setSdk] = useState<BrowserSDK | null>(null);
-
   // Memoized config to avoid unnecessary SDK recreation
   const memoizedConfig: BrowserSDKConfig = useMemo(() => {
     return {
@@ -52,6 +41,19 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       providerType: config.providerType || "embedded",
     };
   }, [config]);
+  
+  const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectError, setConnectError] = useState<Error | null>(null);
+  const [addresses, setAddresses] = useState<WalletAddress[]>([]);
+  const [walletId, setWalletId] = useState<string | null>(null);
+  const [currentProviderType, setCurrentProviderType] = useState<"injected" | "embedded" | null>(
+    (memoizedConfig.providerType as any) || null,
+  );
+  const [isPhantomAvailable, setIsPhantomAvailable] = useState(false);
+  const [sdk, setSdk] = useState<BrowserSDK | null>(null);
+
+  
 
   // SDK initialization and cleanup with event listener management
   useEffect(() => {
@@ -140,7 +142,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       }
 
       // Attempt auto-connect if enabled
-      if (config.autoConnect !== false) {
+      if (memoizedConfig.autoConnect !== false) {
         sdk.autoConnect().catch(() => {
           // Silent fail - auto-connect is optional and shouldn't break the app
         });
@@ -148,7 +150,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
     };
 
     initialize();
-  }, [sdk, config.autoConnect]);
+  }, [sdk, memoizedConfig.autoConnect]);
 
   // Memoize context value to prevent unnecessary re-renders
   const value: PhantomContextValue = useMemo(
