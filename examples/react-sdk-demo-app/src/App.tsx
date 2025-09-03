@@ -51,7 +51,7 @@ function App() {
 
       // Embedded wallet configuration (only used when providerType is "embedded")
       ...(providerType === "embedded" && {
-        organizationId: import.meta.env.VITE_ORGANIZATION_ID || "your-organization-id",
+        
         appId: import.meta.env.VITE_APP_ID || "your-app-id",
         apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "https://api.phantom.app/v1/wallets",
         embeddedWalletType: embeddedWalletType,
@@ -88,24 +88,19 @@ function App() {
   );
 
   // Auth callback always needs embedded config
-  const authConfig: PhantomSDKConfig = useMemo(
-    () => ({
-      appName: "React SDK Demo App",
-      appLogo: "https://picsum.photos/200",
-      providerType: "embedded",
-      addressTypes: [AddressType.solana, AddressType.ethereum, AddressType.bitcoinSegwit, AddressType.sui],
-      solanaProvider: "web3js",
-      organizationId: import.meta.env.VITE_ORGANIZATION_ID || "your-organization-id",
-      apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "https://api.phantom.app/v1/wallets",
-      embeddedWalletType: "user-wallet", // Auth callback is always for user wallet
-      authOptions: {
-        authUrl: import.meta.env.VITE_AUTH_URL || "https://connect.phantom.app",
-        redirectUrl: import.meta.env.VITE_REDIRECT_URL,
-      },
-      autoConnect: true,
-    }),
-    [],
-  );
+  const authConfig: PhantomSDKConfig = {
+    providerType: "embedded",
+    addressTypes: [AddressType.solana, AddressType.ethereum, AddressType.bitcoinSegwit, AddressType.sui],
+    solanaProvider: "web3js",
+    appId: import.meta.env.VITE_APP_ID || "your-app-id",
+    apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "https://api.phantom.app/v1/wallets",
+    embeddedWalletType: "user-wallet", // Auth callback is always for user wallet
+    authOptions: {
+      authUrl: import.meta.env.VITE_AUTH_URL || "https://connect.phantom.app",
+      redirectUrl: import.meta.env.VITE_REDIRECT_URL,
+    },
+    autoConnect: true,
+  };
 
   return (
     <DebugContext.Provider value={debugContextValue}>

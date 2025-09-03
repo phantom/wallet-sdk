@@ -25,11 +25,10 @@ export interface BrowserSDKConfig extends Partial<EmbeddedProviderConfig> {
   addressTypes: [AddressType, ...AddressType[]];
   // Required for embedded provider, optional for injected
   apiBaseUrl?: string;
-  organizationId?: string;
+  appId?: string; // the app id retrieved from phantom.com/portal (required for embedded provider)
   embeddedWalletType?: "app-wallet" | "user-wallet" | (string & Record<never, never>);
   // Auto-connect to existing sessions (default: true)
   autoConnect?: boolean;
-  appId?: string; // the app id retrieved from phantom.com/portal
 }
 
 // Re-export types from core for convenience

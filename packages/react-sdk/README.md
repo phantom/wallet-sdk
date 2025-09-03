@@ -97,7 +97,6 @@ function App() {
         embeddedWalletType: "app-wallet", // or 'user-wallet'
         addressTypes: [AddressType.solana, AddressType.ethereum],
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
-        organizationId: "your-org-id",
       }}
     >
       <YourApp />
@@ -195,7 +194,6 @@ Creates non-custodial wallets embedded in your application.
     embeddedWalletType: "app-wallet",
     addressTypes: [AddressType.solana],
     apiBaseUrl: "https://api.phantom.app/v1/wallets",
-    organizationId: "your-org-id",
   }}
 >
   <YourApp />
@@ -215,7 +213,6 @@ Creates non-custodial wallets embedded in your application.
     embeddedWalletType: "user-wallet",
     addressTypes: [AddressType.solana, AddressType.ethereum],
     apiBaseUrl: "https://api.phantom.app/v1/wallets",
-    organizationId: "your-org-id",
   }}
 >
   <YourApp />
@@ -233,7 +230,6 @@ When using `AddressType.solana`, you can choose between two Solana libraries:
     addressTypes: [AddressType.solana],
     solanaProvider: "web3js", // or 'kit'
     apiBaseUrl: "https://api.phantom.app/v1/wallets",
-    organizationId: "your-org-id",
   }}
 >
   <YourApp />
@@ -792,7 +788,7 @@ interface PhantomSDKConfig {
 
   // Required for embedded provider only
   apiBaseUrl?: string; // Phantom API base URL
-  organizationId?: string; // Your organization ID
+  appId: string; // Your app ID
   authOptions?: {
     authUrl?: string; // Custom auth URL (optional)
     redirectUrl?: string; // Custom redirect URL (optional)
@@ -831,7 +827,6 @@ function App() {
   // SDK configuration - static, won't change when debug settings change
   const config: PhantomSDKConfig = {
     providerType: "embedded",
-    organizationId: "your-org-id",
     // ... other config
   };
 

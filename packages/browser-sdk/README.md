@@ -45,7 +45,6 @@ const sdk = new BrowserSDK({
   providerType: "embedded",
   addressTypes: [AddressType.solana, AddressType.ethereum],
   apiBaseUrl: "https://api.phantom.app/v1/wallets",
-  organizationId: "your-org-id",
   appId: "your-app-id",
 });
 
@@ -192,7 +191,6 @@ const sdk = new BrowserSDK({
   providerType: "embedded",
   addressTypes: [AddressType.solana, AddressType.ethereum],
   apiBaseUrl: "https://api.phantom.app/v1/wallets",
-  organizationId: "your-org-id",
   appId: "your-app-id",
   embeddedWalletType: "app-wallet", // or 'user-wallet'
   authOptions: {
@@ -323,7 +321,7 @@ interface BrowserSDKConfig {
 
   // Required for embedded provider only
   apiBaseUrl?: string; // Phantom API base URL
-  organizationId?: string; // Your organization ID
+  appId?: string; // Your app ID (required for embedded provider)
   authOptions?: {
     authUrl?: string; // Custom auth URL (default: "https://connect.phantom.app")
     redirectUrl?: string; // Custom redirect URL after authentication

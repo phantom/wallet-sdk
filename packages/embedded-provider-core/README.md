@@ -57,7 +57,6 @@ import {
 // 1. Define your configuration
 const config: EmbeddedProviderConfig = {
   apiBaseUrl: "https://api.phantom.app",
-  organizationId: "your-org-id",
   appId: "your-app-id",
   embeddedWalletType: "user-wallet", // or 'app-wallet'
   addressTypes: ["solana", "ethereum"],
@@ -272,7 +271,6 @@ try {
 interface EmbeddedProviderConfig {
   // Required
   apiBaseUrl: string; // Phantom API base URL
-  organizationId: string; // Your organization ID
   appId: string;
   embeddedWalletType: "app-wallet" | "user-wallet";
   addressTypes: [AddressType, ...AddressType[]]; // Supported blockchain addresses
@@ -292,7 +290,6 @@ interface EmbeddedProviderConfig {
 interface Session {
   sessionId: string; // Unique session identifier
   walletId: string; // Phantom wallet ID
-  organizationId: string; // Organization ID
   keypair: {
     // Cryptographic keypair
     publicKey: string;

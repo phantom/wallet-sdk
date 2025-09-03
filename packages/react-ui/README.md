@@ -44,7 +44,6 @@ function App() {
         embeddedWalletType: "user-wallet",
         addressTypes: [AddressType.solana, AddressType.ethereum],
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
-        organizationId: "your-org-id",
       }}
     >
       <PhantomUIProvider>

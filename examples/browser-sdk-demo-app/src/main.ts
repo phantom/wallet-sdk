@@ -209,7 +209,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const embeddedSdk = new BrowserSDK({
         providerType: "embedded",
         apiBaseUrl: import.meta.env.VITE_WALLET_API || DEFAULT_WALLET_API_URL,
-        organizationId: import.meta.env.VITE_ORGANIZATION_ID || "your-organization-id",
         appId: import.meta.env.VITE_APP_ID || "your-app-id",
         embeddedWalletType: "user-wallet",
         authOptions: {
