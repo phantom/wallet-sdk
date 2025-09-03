@@ -15,6 +15,7 @@ export function phantomConnector() {
     if (!sdk) {
       sdk = new BrowserSDK({
         providerType: 'embedded',
+        appId: "test-app-id",
         organizationId: "test-org-id",
         apiBaseUrl: 'https://staging-api.phantom.app/v1/wallets',
 
@@ -33,13 +34,13 @@ export function phantomConnector() {
         level: DebugLevel.DEBUG
       })
 
-      sdk.autoConnect()
+
 
       sdk.ethereum.on("accountsChanged", (accounts) => {
         console.log("Accounts changed:", accounts)
       })
 
-      
+
     }
   }
 
@@ -47,7 +48,7 @@ export function phantomConnector() {
     id: 'phantom',
     name: 'Phantom Wallet',
     type: 'phantom',
-    
+
     async setup() {
       await initializeSdk()
 
@@ -65,23 +66,29 @@ export function phantomConnector() {
           config.emitter.emit('change', { accounts: accounts as `0x${string}`[] })
         }
       })
+
+      console.log("HEEEE", sdk)
+
+      await sdk?.autoConnect()
+
+      console.log("AAAA", sdk?.isConnected())
     },
 
     async connect() {
       if (!sdk) {
         await initializeSdk()
       }
-      
+
       try {
         const result = await sdk!.connect()
         const ethereumAddresses = result.addresses.filter(addr => addr.addressType === AddressType.ethereum)
-        
+
         if (ethereumAddresses.length === 0) {
           throw new Error('No Ethereum addresses found')
         }
 
         const chainId = await sdk!.ethereum.getChainId()
-        
+
         return {
           accounts: ethereumAddresses.map(addr => addr.address as `0x${string}`),
           chainId: chainId,
@@ -101,7 +108,7 @@ export function phantomConnector() {
       if (!sdk?.isConnected()) {
         return []
       }
-      
+
       const addresses = sdk.getAddresses()
       return addresses
         .filter(addr => addr.addressType === AddressType.ethereum)
@@ -112,7 +119,7 @@ export function phantomConnector() {
       if (!sdk?.isConnected()) {
         throw new Error('Not connected')
       }
-      
+
       return await sdk.ethereum.getChainId()
     },
 
@@ -133,18 +140,18 @@ export function phantomConnector() {
       if (!sdk?.isConnected()) {
         throw new Error('Not connected')
       }
-      
+
       await sdk.ethereum.switchChain(chainId)
-      
+
       // Emit chain change event to wagmi so UI updates
       config.emitter.emit('change', { chainId })
-      
+
       // Return the chain object - we need to find it from our config
       const chain = config.chains.find(c => c.id === chainId)
       if (!chain) {
         throw new Error(`Chain with id ${chainId} not found in configuration`)
       }
-      
+
       return chain
     },
 
@@ -169,7 +176,7 @@ export function phantomConnector() {
         const accounts = sdk.getAddresses()
           .filter(addr => addr.addressType === AddressType.ethereum)
           .map(addr => addr.address as `0x${string}`)
-        
+
         sdk.ethereum.getChainId().then(chainId => {
           config.emitter.emit('connect', { accounts, chainId })
         })
