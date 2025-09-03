@@ -109,8 +109,8 @@ describe("InjectedProvider", () => {
 
       // Update the mock to make Solana fail and Ethereum succeed
       mockPhantomObject.solana.connect.mockRejectedValue(new Error("Provider not found."));
-      mockPhantomObject.ethereum.getAccounts.mockResolvedValue(mockAddresses);
-
+      mockPhantomObject.ethereum.connect.mockResolvedValue(mockAddresses);
+      
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { createPhantom } = require("@phantom/browser-injected-sdk");
       createPhantom.mockReturnValue(mockPhantomObject);
@@ -149,8 +149,8 @@ describe("InjectedProvider", () => {
     it("should throw error when no provider connects successfully", async () => {
       // Mock both Solana and Ethereum to fail
       mockPhantomObject.solana.connect.mockRejectedValue(new Error("Provider not found."));
-      mockPhantomObject.ethereum.getAccounts.mockRejectedValue(new Error("Provider not found."));
-
+      mockPhantomObject.ethereum.connect.mockRejectedValue(new Error("Provider not found."));
+      
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { createPhantom } = require("@phantom/browser-injected-sdk");
       createPhantom.mockReturnValue(mockPhantomObject);
