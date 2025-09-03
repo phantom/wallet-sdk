@@ -32,14 +32,15 @@ export interface PhantomProviderProps {
   debugConfig?: PhantomDebugConfig;
 }
 
-
 export function PhantomProvider({ children, config, debugConfig }: PhantomProviderProps) {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectError, setConnectError] = useState<Error | null>(null);
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
   const [walletId, setWalletId] = useState<string | null>(null);
-  const [currentProviderType, setCurrentProviderType] = useState<"injected" | "embedded" | null>(config.providerType as any || null);
+  const [currentProviderType, setCurrentProviderType] = useState<"injected" | "embedded" | null>(
+    (config.providerType as any) || null,
+  );
   const [isPhantomAvailable, setIsPhantomAvailable] = useState(false);
   const [sdk, setSdk] = useState<BrowserSDK | null>(null);
 
@@ -55,7 +56,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   // SDK initialization and cleanup with event listener management
   useEffect(() => {
     const sdkInstance = new BrowserSDK(memoizedConfig);
-    
+
     // Event handlers that need to be referenced for cleanup
     const handleConnectStart = () => {
       setIsConnecting(true);
@@ -66,17 +67,17 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       try {
         setIsConnected(true);
         setIsConnecting(false);
-        
+
         // Update current provider type
         const providerInfo = sdkInstance.getCurrentProviderInfo();
         setCurrentProviderType(providerInfo?.type || null);
-        
+
         const addrs = await sdkInstance.getAddresses();
         setAddresses(addrs);
         setWalletId(sdkInstance.getWalletId());
       } catch (err) {
         console.error("Error connecting:", err);
-        
+
         // Call disconnect to reset state if an error occurs
         try {
           await sdkInstance.disconnect();
@@ -91,7 +92,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       setIsConnected(false);
       setConnectError(new Error(errorData.error || "Connection failed"));
     };
-    
+
     const handleDisconnect = () => {
       setIsConnected(false);
       setIsConnecting(false);
@@ -99,13 +100,13 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       setAddresses([]);
       setWalletId(null);
     };
-    
+
     // Add event listeners immediately when SDK is created to avoid race conditions
     sdkInstance.on("connect_start", handleConnectStart);
     sdkInstance.on("connect", handleConnect);
     sdkInstance.on("connect_error", handleConnectError);
     sdkInstance.on("disconnect", handleDisconnect);
-    
+
     setSdk(sdkInstance);
 
     // Cleanup function to remove event listeners when SDK is recreated or component unmounts
@@ -137,7 +138,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
         console.error("Error checking Phantom extension:", err);
         setIsPhantomAvailable(false);
       }
-      
+
       // Attempt auto-connect if enabled
       if (config.autoConnect !== false) {
         sdk.autoConnect().catch(() => {
@@ -161,16 +162,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       currentProviderType,
       isPhantomAvailable,
     }),
-    [
-      sdk,
-      isConnected,
-      isConnecting,
-      connectError,
-      addresses,
-      walletId,
-      currentProviderType,
-      isPhantomAvailable,
-    ]
+    [sdk, isConnected, isConnecting, connectError, addresses, walletId, currentProviderType, isPhantomAvailable],
   );
 
   return <PhantomContext.Provider value={value}>{children}</PhantomContext.Provider>;

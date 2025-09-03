@@ -14,10 +14,7 @@ export function Actions({ providerType }: ActionsProps) {
 
       <div className="main-layout">
         <div className="left-panel">
-          <SDKActions 
-            providerType={providerType} 
-            onDestroySDK={() => window.location.reload()}
-          />
+          <SDKActions providerType={providerType} onDestroySDK={() => window.location.reload()} />
         </div>
 
         <div className="right-panel">

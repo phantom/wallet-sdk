@@ -2,10 +2,10 @@ import { isPhantomExtensionInstalled } from "@phantom/browser-injected-sdk";
 
 /**
  * Wait for Phantom extension to be available with retry logic
- * 
+ *
  * @param timeoutMs - Maximum time to wait in milliseconds (default: 3000)
  * @returns Promise<boolean> - true if Phantom extension is available, false if timeout reached
- * 
+ *
  * Usage:
  * ```typescript
  * const isAvailable = await waitForPhantomExtension(5000);
@@ -17,7 +17,7 @@ import { isPhantomExtensionInstalled } from "@phantom/browser-injected-sdk";
  * ```
  */
 export async function waitForPhantomExtension(timeoutMs: number = 3000): Promise<boolean> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const startTime = Date.now();
     const checkInterval = 100; // Check every 100ms
 

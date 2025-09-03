@@ -1,8 +1,8 @@
-import { EventEmitter } from 'eventemitter3';
-import type { ISolanaChain } from '@phantom/chains';
-import type { EmbeddedProvider } from '../embedded-provider';
-import { NetworkId } from '@phantom/constants';
-import { Buffer } from 'buffer';
+import { EventEmitter } from "eventemitter3";
+import type { ISolanaChain } from "@phantom/chains";
+import type { EmbeddedProvider } from "../embedded-provider";
+import { NetworkId } from "@phantom/constants";
+import { Buffer } from "buffer";
 
 /**
  * Embedded Solana chain implementation that is wallet adapter compliant
@@ -29,27 +29,26 @@ export class EmbeddedSolanaChain implements ISolanaChain {
 
   private ensureConnected(): void {
     if (!this.provider.isConnected()) {
-      throw new Error('Solana chain not available. Ensure SDK is connected.');
+      throw new Error("Solana chain not available. Ensure SDK is connected.");
     }
   }
 
   // Standard wallet adapter methods
   async signMessage(message: string | Uint8Array): Promise<{ signature: Uint8Array; publicKey: string }> {
     this.ensureConnected();
-    const messageStr = typeof message === 'string' ? message : new TextDecoder().decode(message);
+    const messageStr = typeof message === "string" ? message : new TextDecoder().decode(message);
     const result = await this.provider.signMessage({
       message: messageStr,
-      networkId: this.currentNetworkId
+      networkId: this.currentNetworkId,
     });
-    
+
     // Convert signature to Uint8Array
-    const signature = typeof result.signature === 'string' 
-      ? new Uint8Array(Buffer.from(result.signature, 'base64'))
-      : result.signature;
-      
+    const signature =
+      typeof result.signature === "string" ? new Uint8Array(Buffer.from(result.signature, "base64")) : result.signature;
+
     return {
       signature,
-      publicKey: this._publicKey || ''
+      publicKey: this._publicKey || "",
     };
   }
 
@@ -57,17 +56,17 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     this.ensureConnected();
     // For embedded provider, we need to implement signing without sending
     // This might require a new method in the EmbeddedProvider
-    throw new Error('signTransaction not yet implemented for embedded provider');
+    throw new Error("signTransaction not yet implemented for embedded provider");
   }
 
   async signAndSendTransaction<T>(transaction: T): Promise<{ signature: string }> {
     this.ensureConnected();
     const result = await this.provider.signAndSendTransaction({
       transaction,
-      networkId: this.currentNetworkId
+      networkId: this.currentNetworkId,
     });
     if (!result.hash) {
-      throw new Error('Transaction not submitted');
+      throw new Error("Transaction not submitted");
     }
     return { signature: result.hash };
   }
@@ -79,12 +78,12 @@ export class EmbeddedSolanaChain implements ISolanaChain {
 
   connect(_options?: { onlyIfTrusted?: boolean }): Promise<{ publicKey: string }> {
     if (!this.provider.isConnected()) {
-      throw new Error('Provider not connected. Call provider connect first.');
+      throw new Error("Provider not connected. Call provider connect first.");
     }
     const addresses = this.provider.getAddresses();
-    const solanaAddr = addresses.find((a: any) => a.addressType === 'Solana');
-    if (!solanaAddr) throw new Error('No Solana address found');
-    
+    const solanaAddr = addresses.find((a: any) => a.addressType === "Solana");
+    if (!solanaAddr) throw new Error("No Solana address found");
+
     this.updateConnectionState(true, solanaAddr.address);
     return Promise.resolve({ publicKey: solanaAddr.address });
   }
@@ -94,16 +93,16 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     return this.provider.disconnect();
   }
 
-  switchNetwork(network: 'mainnet' | 'devnet'): Promise<void> {
-    this.currentNetworkId = network === 'mainnet' ? NetworkId.SOLANA_MAINNET : NetworkId.SOLANA_DEVNET;
+  switchNetwork(network: "mainnet" | "devnet"): Promise<void> {
+    this.currentNetworkId = network === "mainnet" ? NetworkId.SOLANA_MAINNET : NetworkId.SOLANA_DEVNET;
     return Promise.resolve();
   }
 
   getPublicKey(): Promise<string | null> {
     if (!this.provider.isConnected()) return Promise.resolve(null);
-    
+
     const addresses = this.provider.getAddresses();
-    const solanaAddr = addresses.find((a: any) => a.addressType === 'Solana');
+    const solanaAddr = addresses.find((a: any) => a.addressType === "Solana");
     return Promise.resolve(solanaAddr?.address || null);
   }
 
@@ -113,27 +112,26 @@ export class EmbeddedSolanaChain implements ISolanaChain {
 
   private setupEventListeners(): void {
     // Listen to provider events and bridge to wallet adapter events
-    this.provider.on('connect', (data: any) => {
-      const solanaAddress = data.addresses
-        ?.find((addr: any) => addr.addressType === 'Solana');
-      
+    this.provider.on("connect", (data: any) => {
+      const solanaAddress = data.addresses?.find((addr: any) => addr.addressType === "Solana");
+
       if (solanaAddress) {
         this.updateConnectionState(true, solanaAddress.address);
-        this.eventEmitter.emit('connect', solanaAddress.address);
+        this.eventEmitter.emit("connect", solanaAddress.address);
       }
     });
 
-    this.provider.on('disconnect', () => {
+    this.provider.on("disconnect", () => {
       this.updateConnectionState(false, null);
-      this.eventEmitter.emit('disconnect');
+      this.eventEmitter.emit("disconnect");
     });
   }
 
   private syncInitialState(): void {
     if (this.provider.isConnected()) {
       const addresses = this.provider.getAddresses();
-      const solanaAddress = addresses.find((a: any) => a.addressType === 'Solana');
-      
+      const solanaAddress = addresses.find((a: any) => a.addressType === "Solana");
+
       if (solanaAddress) {
         this.updateConnectionState(true, solanaAddress.address);
       }

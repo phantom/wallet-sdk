@@ -225,7 +225,6 @@ function parseBitcoinTransactionToBase64Url(transaction: any): ParsedTransaction
   throw new Error("Unsupported Bitcoin transaction format");
 }
 
-
 export function parseSolanaKitTransactionToSolanaWeb3js(transaction: Transaction) {
   // Encode the Kit transaction into its canonical wire format (Uint8Array).
   const serialized = getTransactionEncoder().encode(transaction);

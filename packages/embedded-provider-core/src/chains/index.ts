@@ -1,2 +1,2 @@
-export { EmbeddedSolanaChain } from './SolanaChain';
-export { EmbeddedEthereumChain } from './EthereumChain';
+export { EmbeddedSolanaChain } from "./SolanaChain";
+export { EmbeddedEthereumChain } from "./EthereumChain";

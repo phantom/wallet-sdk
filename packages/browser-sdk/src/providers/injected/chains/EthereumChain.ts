@@ -1,9 +1,9 @@
-import { EventEmitter } from 'eventemitter3';
-import type { IEthereumChain, EthTransactionRequest } from '@phantom/chains';
-import type { Ethereum } from '@phantom/browser-injected-sdk/ethereum';
-import type { Extension } from '@phantom/browser-injected-sdk';
-import { AddressType } from '@phantom/client';
-import type { ChainCallbacks } from './ChainCallbacks';
+import { EventEmitter } from "eventemitter3";
+import type { IEthereumChain, EthTransactionRequest } from "@phantom/chains";
+import type { Ethereum } from "@phantom/browser-injected-sdk/ethereum";
+import type { Extension } from "@phantom/browser-injected-sdk";
+import { AddressType } from "@phantom/client";
+import type { ChainCallbacks } from "./ChainCallbacks";
 
 interface PhantomExtended {
   extension: Extension;
@@ -17,7 +17,7 @@ export class InjectedEthereumChain implements IEthereumChain {
   private phantom: PhantomExtended;
   private callbacks: ChainCallbacks;
   private _connected: boolean = false;
-  private _chainId: string = '0x1';
+  private _chainId: string = "0x1";
   private _accounts: string[] = [];
   private eventEmitter: EventEmitter = new EventEmitter();
 
@@ -50,14 +50,12 @@ export class InjectedEthereumChain implements IEthereumChain {
   // Connection methods - delegate to provider
   connect(): Promise<string[]> {
     if (!this.callbacks.isConnected()) {
-      return Promise.reject(new Error('Provider not connected. Call provider connect first.'));
+      return Promise.reject(new Error("Provider not connected. Call provider connect first."));
     }
-    
+
     const addresses = this.callbacks.getAddresses();
-    const ethAddresses = addresses
-      .filter(addr => addr.addressType === AddressType.ethereum)
-      .map(addr => addr.address);
-    
+    const ethAddresses = addresses.filter(addr => addr.addressType === AddressType.ethereum).map(addr => addr.address);
+
     this.updateConnectionState(true, ethAddresses);
     return Promise.resolve(ethAddresses);
   }
@@ -79,11 +77,10 @@ export class InjectedEthereumChain implements IEthereumChain {
     return await this.phantom.ethereum.sendTransaction(transaction);
   }
 
-
   async switchChain(chainId: number): Promise<void> {
     await this.phantom.ethereum.switchChain(`0x${chainId.toString(16)}`);
     this._chainId = `0x${chainId.toString(16)}`;
-    this.eventEmitter.emit('chainChanged', this._chainId);
+    this.eventEmitter.emit("chainChanged", this._chainId);
   }
 
   async getChainId(): Promise<number> {
@@ -103,38 +100,39 @@ export class InjectedEthereumChain implements IEthereumChain {
     // Bridge phantom events to EIP-1193 standard events
     this.phantom.ethereum.addEventListener("connect", (accounts: string[]) => {
       this.updateConnectionState(true, accounts);
-      this.eventEmitter.emit('connect', { chainId: this._chainId });
-      this.eventEmitter.emit('accountsChanged', accounts);
+      this.eventEmitter.emit("connect", { chainId: this._chainId });
+      this.eventEmitter.emit("accountsChanged", accounts);
     });
 
     this.phantom.ethereum.addEventListener("disconnect", () => {
       this.updateConnectionState(false, []);
-      this.eventEmitter.emit('disconnect', { code: 4900, message: 'Provider disconnected' });
-      this.eventEmitter.emit('accountsChanged', []);
+      this.eventEmitter.emit("disconnect", { code: 4900, message: "Provider disconnected" });
+      this.eventEmitter.emit("accountsChanged", []);
     });
 
     this.phantom.ethereum.addEventListener("accountsChanged", (accounts: string[]) => {
       this._accounts = accounts;
-      this.eventEmitter.emit('accountsChanged', accounts);
+      this.eventEmitter.emit("accountsChanged", accounts);
     });
 
     this.phantom.ethereum.addEventListener("chainChanged", (chainId: string) => {
       this._chainId = chainId;
-      this.eventEmitter.emit('chainChanged', chainId);
+      this.eventEmitter.emit("chainChanged", chainId);
     });
 
     // Listen to SDK events via callbacks (no circular reference)
-    this.callbacks.on('connect', (data) => {
-      const ethAddresses = data.addresses
-        ?.filter((addr: any) => addr.addressType === AddressType.ethereum)
-        ?.map((addr: any) => addr.address) || [];
-      
+    this.callbacks.on("connect", data => {
+      const ethAddresses =
+        data.addresses
+          ?.filter((addr: any) => addr.addressType === AddressType.ethereum)
+          ?.map((addr: any) => addr.address) || [];
+
       if (ethAddresses.length > 0) {
         this.updateConnectionState(true, ethAddresses);
       }
     });
 
-    this.callbacks.on('disconnect', () => {
+    this.callbacks.on("disconnect", () => {
       this.updateConnectionState(false, []);
     });
   }
@@ -142,10 +140,11 @@ export class InjectedEthereumChain implements IEthereumChain {
   private syncInitialState(): void {
     // Sync initial state using callbacks
     if (this.callbacks.isConnected()) {
-      const ethAddresses = this.callbacks.getAddresses()
+      const ethAddresses = this.callbacks
+        .getAddresses()
         .filter(addr => addr.addressType === AddressType.ethereum)
         .map(addr => addr.address);
-      
+
       if (ethAddresses.length > 0) {
         this.updateConnectionState(true, ethAddresses);
       }

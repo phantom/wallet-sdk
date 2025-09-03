@@ -4,7 +4,6 @@ export { PhantomProvider, usePhantom } from "./PhantomProvider";
 // Individual hooks
 export * from "./hooks";
 
-
 // Types
 export type {
   PhantomSDKConfig,

@@ -100,7 +100,7 @@ function WalletComponent() {
 All other hooks work exactly the same as `@phantom/react-sdk`:
 
 - `useSolana` - Solana operations
-- `useEthereum` - Ethereum operations  
+- `useEthereum` - Ethereum operations
 - `usePhantom` - Core SDK state
 - `useAccounts` - Account management
 - `useDisconnect` - Disconnect functionality
@@ -149,17 +149,17 @@ Customize the modal appearance using CSS variables:
   --phantom-ui-modal-bg: #ffffff;
   --phantom-ui-modal-overlay: rgba(0, 0, 0, 0.5);
   --phantom-ui-modal-border-radius: 12px;
-  
+
   /* Buttons */
   --phantom-ui-button-bg: #ab9ff2;
   --phantom-ui-button-hover-bg: #9c8dff;
   --phantom-ui-button-text: #ffffff;
   --phantom-ui-button-border-radius: 8px;
-  
+
   /* Text */
   --phantom-ui-text-primary: #212529;
   --phantom-ui-text-secondary: #6c757d;
-  
+
   /* Spacing */
   --phantom-ui-spacing-sm: 8px;
   --phantom-ui-spacing-md: 16px;
@@ -202,7 +202,7 @@ Migration is simple - just add the UI provider and import `useConnect` from `@ph
 import { PhantomProvider, useConnect } from "@phantom/react-sdk";
 ```
 
-### After  
+### After
 
 ```tsx
 import { PhantomProvider } from "@phantom/react-sdk";

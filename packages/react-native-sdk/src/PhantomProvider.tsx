@@ -38,7 +38,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   const [walletId, setWalletId] = useState<string | null>(null);
   const [sdk, setSdk] = useState<EmbeddedProvider | null>(null);
 
-  // Memoized config to avoid unnecessary SDK recreation  
+  // Memoized config to avoid unnecessary SDK recreation
   const memoizedConfig: PhantomSDKConfig = useMemo(() => {
     // Build redirect URL if not provided
     const redirectUrl = config.authOptions?.redirectUrl || `${config.scheme}://phantom-auth-callback`;
@@ -47,7 +47,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
     return {
       ...config,
       authOptions: {
-        ...config.authOptions || {},
+        ...(config.authOptions || {}),
         redirectUrl,
       },
     };
@@ -74,7 +74,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
     };
 
     const sdkInstance = new EmbeddedProvider(memoizedConfig, platform, logger);
-    
+
     // Event handlers that need to be referenced for cleanup
     const handleConnectStart = () => {
       setIsConnecting(true);
@@ -89,7 +89,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
         setAddresses(addrs);
       } catch (err) {
         console.error("Error connecting:", err);
-        
+
         // Call disconnect to reset state if an error occurs
         try {
           await sdkInstance.disconnect();
@@ -103,7 +103,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       setIsConnecting(false);
       setConnectError(new Error(errorData.error || "Connection failed"));
     };
-    
+
     const handleDisconnect = () => {
       setIsConnected(false);
       setIsConnecting(false);
@@ -111,13 +111,13 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       setAddresses([]);
       setWalletId(null);
     };
-    
+
     // Add event listeners immediately when SDK is created to avoid race conditions
     sdkInstance.on("connect_start", handleConnectStart);
     sdkInstance.on("connect", handleConnect);
     sdkInstance.on("connect_error", handleConnectError);
     sdkInstance.on("disconnect", handleDisconnect);
-    
+
     setSdk(sdkInstance);
 
     // Cleanup function to remove event listeners when SDK is recreated or component unmounts
@@ -152,15 +152,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       walletId,
       setWalletId,
     }),
-    [
-      sdk,
-      isConnected,
-      isConnecting,
-      connectError,
-      addresses,
-      walletId,
-      setWalletId,
-    ]
+    [sdk, isConnected, isConnecting, connectError, addresses, walletId, setWalletId],
   );
 
   return <PhantomContext.Provider value={value}>{children}</PhantomContext.Provider>;

@@ -4,20 +4,17 @@ import { useConnect, useAccounts, usePhantom } from "@phantom/react-sdk";
 import { DebugConsole } from "./components/DebugConsole";
 import "./AuthCallback.css";
 
-
 export function AuthCallback() {
   const navigate = useNavigate();
-  const { isConnected} = usePhantom();
-  const { isConnecting,  error: connectError } = useConnect();
+  const { isConnected } = usePhantom();
+  const { isConnecting, error: connectError } = useConnect();
   const addresses = useAccounts();
-
 
   // Monitor connect error
   useEffect(() => {
     if (connectError) {
       console.error("Auth callback error:", connectError);
       // Error will be captured by the debug system via the provider
-     
     }
   }, [connectError]);
 
@@ -28,7 +25,6 @@ export function AuthCallback() {
   const handleRetry = () => {
     window.location.reload();
   };
-
 
   return (
     <div id="app">
@@ -52,7 +48,6 @@ export function AuthCallback() {
                 <h3>Authentication Successful</h3>
                 <p>You are now connected to your wallet.</p>
                 <div className="wallet-info">
-                  
                   <div className="info-row">
                     <span className="label">Addresses:</span>
                     <div className="addresses">
@@ -80,7 +75,9 @@ export function AuthCallback() {
               <div className="auth-error">
                 <div className="error-icon">✗</div>
                 <h3>Authentication Failed</h3>
-                <div className="error-message">{connectError.message || "An unknown error occurred during authentication."}</div>
+                <div className="error-message">
+                  {connectError.message || "An unknown error occurred during authentication."}
+                </div>
                 <div className="button-group">
                   <button onClick={handleRetry}>Retry Authentication</button>
                   <button onClick={handleGoHome} className="primary">

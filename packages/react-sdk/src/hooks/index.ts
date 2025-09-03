@@ -2,7 +2,7 @@
 export { useConnect } from "./useConnect";
 export { useDisconnect } from "./useDisconnect";
 
-// Account management  
+// Account management
 export { useAccounts } from "./useAccounts";
 
 // Extension detection

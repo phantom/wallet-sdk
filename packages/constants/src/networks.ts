@@ -36,7 +36,7 @@ export interface NetworkConfig {
   chain: string;
   network: string;
   internalCaip?: InternalNetworkCaip; // Internal caip identifier
-  chainId?: number;  // EIP-155 chain ID
+  chainId?: number; // EIP-155 chain ID
   slip44?: string; // SLIP-44 coin type
   explorer?: {
     name: string;
@@ -323,9 +323,9 @@ export function getNetworksByChain(chain: string): NetworkId[] {
  * Convert Ethereum internalCaip to NetworkId
  */
 export function chainIdToNetworkId(chainId: number): NetworkId | undefined {
-  return Object.keys(NETWORK_CONFIGS).find(
-    (id) => NETWORK_CONFIGS[id as NetworkId].chainId === chainId,
-  ) as NetworkId | undefined;
+  return Object.keys(NETWORK_CONFIGS).find(id => NETWORK_CONFIGS[id as NetworkId].chainId === chainId) as
+    | NetworkId
+    | undefined;
 }
 
 /**
@@ -351,7 +351,7 @@ export function networkIdToInternalCaip(networkId: NetworkId): InternalNetworkCa
  */
 export function internalCaipToNetworkId(internalCaip: InternalNetworkCaip): NetworkId {
   const networkId = Object.keys(NETWORK_CONFIGS).find(
-    (id) => NETWORK_CONFIGS[id as NetworkId].internalCaip === internalCaip,
+    id => NETWORK_CONFIGS[id as NetworkId].internalCaip === internalCaip,
   ) as NetworkId | undefined;
 
   if (!networkId) {
@@ -360,4 +360,3 @@ export function internalCaipToNetworkId(internalCaip: InternalNetworkCaip): Netw
 
   return networkId;
 }
-

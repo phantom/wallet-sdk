@@ -6,9 +6,7 @@ const config = {
   displayName: "react-sdk",
   testEnvironment: "jsdom",
   setupFilesAfterEnv: ["<rootDir>/src/test-setup.js"],
-  transformIgnorePatterns: [
-    "node_modules/(?!(@solana|@noble|uuid|jayson|superstruct|@phantom)/)"
-  ],
+  transformIgnorePatterns: ["node_modules/(?!(@solana|@noble|uuid|jayson|superstruct|@phantom)/)"],
 };
 
 module.exports = config;

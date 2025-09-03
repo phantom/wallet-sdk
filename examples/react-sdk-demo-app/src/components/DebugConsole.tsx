@@ -29,29 +29,32 @@ export function DebugConsole() {
       </div>
 
       <div className="debug-container" style={{ display: showDebug ? "block" : "none" }}>
-        {debugMessages.filter(i => i.level <= debugLevel).slice(-100).map((msg, index) => {
-          const levelClass = DebugLevel[msg.level].toLowerCase();
-          const timestamp = new Date(msg.timestamp).toLocaleTimeString();
-          // Debug message rendering
-          let dataStr = "";
-          try {
-            dataStr = msg.data ? JSON.stringify(msg.data, null, 2) : "";
-          } catch (error) {
-            console.error("Error stringifying debug message data:", error);
-          }
+        {debugMessages
+          .filter(i => i.level <= debugLevel)
+          .slice(-100)
+          .map((msg, index) => {
+            const levelClass = DebugLevel[msg.level].toLowerCase();
+            const timestamp = new Date(msg.timestamp).toLocaleTimeString();
+            // Debug message rendering
+            let dataStr = "";
+            try {
+              dataStr = msg.data ? JSON.stringify(msg.data, null, 2) : "";
+            } catch (error) {
+              console.error("Error stringifying debug message data:", error);
+            }
 
-          return (
-            <div key={index} className={`debug-message debug-${levelClass}`}>
-              <div className="debug-header">
-                <span className="debug-timestamp">{timestamp}</span>
-                <span className="debug-level">{DebugLevel[msg.level]}</span>
-                <span className="debug-category">{msg.category}</span>
+            return (
+              <div key={index} className={`debug-message debug-${levelClass}`}>
+                <div className="debug-header">
+                  <span className="debug-timestamp">{timestamp}</span>
+                  <span className="debug-level">{DebugLevel[msg.level]}</span>
+                  <span className="debug-category">{msg.category}</span>
+                </div>
+                <div className="debug-content">{msg.message}</div>
+                {dataStr && <pre className="debug-data">{dataStr}</pre>}
               </div>
-              <div className="debug-content">{msg.message}</div>
-              {dataStr && <pre className="debug-data">{dataStr}</pre>}
-            </div>
-          );
-        })}
+            );
+          })}
         {debugMessages.length === 0 && (
           <div className="debug-empty">No debug messages yet. Try connecting to see debug output.</div>
         )}

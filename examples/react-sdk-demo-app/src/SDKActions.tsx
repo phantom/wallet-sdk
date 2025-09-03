@@ -25,7 +25,11 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
   const { connect, isConnecting, error: connectError } = useConnect();
   const { disconnect, isDisconnecting } = useDisconnect();
   const { signMessage: signSolanaMessage, signAndSendTransaction } = useSolana();
-  const { signPersonalMessage: signEthMessage, signTypedData: signEthTypedData, sendTransaction: sendEthTransaction } = useEthereum();
+  const {
+    signPersonalMessage: signEthMessage,
+    signTypedData: signEthTypedData,
+    sendTransaction: sendEthTransaction,
+  } = useEthereum();
   const { isConnected, currentProviderType } = usePhantom();
   const autoConfirm = useAutoConfirm();
   const addresses = useAccounts();
@@ -78,7 +82,7 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
       setIsSigningMessage(true);
       if (type === "solana") {
         const result = await signSolanaMessage("Hello, World!");
-        alert(`Message Signed! Signature: ${Buffer.from(result.signature).toString('base64')}`);
+        alert(`Message Signed! Signature: ${Buffer.from(result.signature).toString("base64")}`);
       } else {
         const ethAddress = addresses.find(addr => addr.addressType === "Ethereum");
         if (!ethAddress) {
@@ -103,7 +107,7 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
       alert("Please connect your wallet first.");
       return;
     }
-    
+
     const ethAddress = addresses.find(addr => addr.addressType === "Ethereum");
     if (!ethAddress) {
       alert("No Ethereum address found");
@@ -112,7 +116,7 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
 
     try {
       setIsSigningTypedData(true);
-      
+
       // Example typed data structure (EIP-712)
       const typedData = {
         types: {
@@ -120,36 +124,36 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
             { name: "name", type: "string" },
             { name: "version", type: "string" },
             { name: "chainId", type: "uint256" },
-            { name: "verifyingContract", type: "address" }
+            { name: "verifyingContract", type: "address" },
           ],
           Person: [
             { name: "name", type: "string" },
-            { name: "wallet", type: "address" }
+            { name: "wallet", type: "address" },
           ],
           Mail: [
             { name: "from", type: "Person" },
             { name: "to", type: "Person" },
-            { name: "contents", type: "string" }
-          ]
+            { name: "contents", type: "string" },
+          ],
         },
         primaryType: "Mail",
         domain: {
           name: "Ether Mail",
           version: "1",
           chainId: 1,
-          verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC"
+          verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC",
         },
         message: {
           from: {
             name: "Cow",
-            wallet: "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826"
+            wallet: "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826",
           },
           to: {
-            name: "Bob", 
-            wallet: ethAddress.address
+            name: "Bob",
+            wallet: ethAddress.address,
           },
-          contents: "Hello, Bob! This is a typed data message from Phantom React SDK Demo."
-        }
+          contents: "Hello, Bob! This is a typed data message from Phantom React SDK Demo.",
+        },
       };
 
       const result = await signEthTypedData(typedData);
@@ -216,7 +220,7 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
 
     try {
       setIsSendingEthTransaction(true);
-      
+
       // Create simple ETH transfer with proper hex formatting
       const transactionParams = {
         from: ethAddress.address,
@@ -240,7 +244,7 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
   const onEnableAutoConfirm = async () => {
     try {
       const result = await autoConfirm.enable({
-        chains: [NetworkId.SOLANA_DEVNET, NetworkId.ETHEREUM_MAINNET]
+        chains: [NetworkId.SOLANA_DEVNET, NetworkId.ETHEREUM_MAINNET],
       });
       alert(`Auto-confirm enabled for ${result.chains.length} chains!`);
     } catch (error) {
@@ -271,9 +275,7 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
             </div>
           </div>
           <div className="button-group">
-            <button onClick={onDestroySDK}>
-              Destroy SDK Instance
-            </button>
+            <button onClick={onDestroySDK}>Destroy SDK Instance</button>
           </div>
         </div>
       )}
@@ -355,34 +357,28 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
               </div>
             )}
           </div>
-          
+
           <div className="button-group">
-            <button 
-              onClick={onEnableAutoConfirm} 
+            <button
+              onClick={onEnableAutoConfirm}
               disabled={autoConfirm.isLoading || autoConfirm.status?.enabled}
               className="small"
             >
               {autoConfirm.isLoading ? "Loading..." : "Enable Auto-Confirm"}
             </button>
-            <button 
-              onClick={onDisableAutoConfirm} 
+            <button
+              onClick={onDisableAutoConfirm}
               disabled={autoConfirm.isLoading || !autoConfirm.status?.enabled}
               className="small"
             >
               {autoConfirm.isLoading ? "Loading..." : "Disable Auto-Confirm"}
             </button>
-            <button 
-              onClick={autoConfirm.refetch} 
-              disabled={autoConfirm.isLoading}
-              className="small"
-            >
+            <button onClick={autoConfirm.refetch} disabled={autoConfirm.isLoading} className="small">
               {autoConfirm.isLoading ? "Loading..." : "Refresh Status"}
             </button>
           </div>
-          
-          {autoConfirm.error && (
-            <p className="error-text">Auto-confirm error: {autoConfirm.error.message}</p>
-          )}
+
+          {autoConfirm.error && <p className="error-text">Auto-confirm error: {autoConfirm.error.message}</p>}
         </div>
       )}
 
@@ -406,7 +402,11 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
             {isSigningTypedData ? "Signing..." : "Sign Typed Data (EVM)"}
           </button>
           <button onClick={onSignAndSendTransaction} disabled={!isConnected || isSigningTransaction || !hasBalance}>
-            {isSigningTransaction ? "Signing..." : !hasBalance ? "Insufficient Balance" : "Sign & Send Transaction (Solana)"}
+            {isSigningTransaction
+              ? "Signing..."
+              : !hasBalance
+                ? "Insufficient Balance"
+                : "Sign & Send Transaction (Solana)"}
           </button>
           <button onClick={onSendEthTransaction} disabled={!isConnected || isSendingEthTransaction}>
             {isSendingEthTransaction ? "Sending..." : "Send Transaction (Ethereum)"}

@@ -16,7 +16,7 @@ export const DebugContext = createContext<DebugContextType | undefined>(undefine
 export const useDebug = () => {
   const context = useContext(DebugContext);
   if (!context) {
-    throw new Error('useDebug must be used within a DebugProvider');
+    throw new Error("useDebug must be used within a DebugProvider");
   }
   return context;
 };

@@ -112,7 +112,9 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
     };
   }
 
-  public async signAndSendTransaction(transaction: Transaction | VersionedTransaction): Promise<{ signature: string; address?: string }> {
+  public async signAndSendTransaction(
+    transaction: Transaction | VersionedTransaction,
+  ): Promise<{ signature: string; address?: string }> {
     const provider = this.#getProvider();
     if (!provider) {
       throw new Error("Provider not found.");
@@ -129,7 +131,9 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
     };
   }
 
-  public async signTransaction(transaction: Transaction | VersionedTransaction): Promise<Transaction | VersionedTransaction> {
+  public async signTransaction(
+    transaction: Transaction | VersionedTransaction,
+  ): Promise<Transaction | VersionedTransaction> {
     const provider = this.#getProvider();
     if (!provider) {
       throw new Error("Provider not found.");
@@ -143,7 +147,9 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
     return result;
   }
 
-  public async signAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<(Transaction | VersionedTransaction)[]> {
+  public async signAllTransactions(
+    transactions: (Transaction | VersionedTransaction)[],
+  ): Promise<(Transaction | VersionedTransaction)[]> {
     const provider = this.#getProvider();
     if (!provider) {
       throw new Error("Provider not found.");

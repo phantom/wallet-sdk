@@ -1,9 +1,9 @@
 import { useCallback, useState, useEffect } from "react";
 import { usePhantom } from "../PhantomProvider";
-import type { 
-  AutoConfirmEnableParams, 
-  AutoConfirmResult, 
-  AutoConfirmSupportedChainsResult 
+import type {
+  AutoConfirmEnableParams,
+  AutoConfirmResult,
+  AutoConfirmSupportedChainsResult,
 } from "@phantom/browser-sdk";
 
 export interface UseAutoConfirmResult {
@@ -51,57 +51,51 @@ export function useAutoConfirm(): UseAutoConfirmResult {
     [sdk, isInjected],
   );
 
-  const disable = useCallback(
-    async (): Promise<void> => {
-      if (!sdk) {
-        throw new Error("SDK not initialized");
-      }
-      if (!isInjected) {
-        throw new Error("Auto-confirm is only available for injected (extension) providers");
-      }
+  const disable = useCallback(async (): Promise<void> => {
+    if (!sdk) {
+      throw new Error("SDK not initialized");
+    }
+    if (!isInjected) {
+      throw new Error("Auto-confirm is only available for injected (extension) providers");
+    }
 
-      try {
-        setIsLoading(true);
-        setError(null);
-        await sdk.disableAutoConfirm();
-        // Update status after disabling
-        const newStatus = await sdk.getAutoConfirmStatus();
-        setStatus(newStatus);
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error("Unknown error occurred");
-        setError(error);
-        throw error;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [sdk, isInjected],
-  );
+    try {
+      setIsLoading(true);
+      setError(null);
+      await sdk.disableAutoConfirm();
+      // Update status after disabling
+      const newStatus = await sdk.getAutoConfirmStatus();
+      setStatus(newStatus);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error("Unknown error occurred");
+      setError(error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [sdk, isInjected]);
 
-  const refetch = useCallback(
-    async (): Promise<void> => {
-      if (!sdk || !isInjected) {
-        return;
-      }
+  const refetch = useCallback(async (): Promise<void> => {
+    if (!sdk || !isInjected) {
+      return;
+    }
 
-      try {
-        setIsLoading(true);
-        setError(null);
-        const [statusResult, supportedResult] = await Promise.all([
-          sdk.getAutoConfirmStatus(),
-          sdk.getSupportedAutoConfirmChains(),
-        ]);
-        setStatus(statusResult);
-        setSupportedChains(supportedResult);
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error("Failed to fetch auto-confirm data");
-        setError(error);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [sdk, isInjected],
-  );
+    try {
+      setIsLoading(true);
+      setError(null);
+      const [statusResult, supportedResult] = await Promise.all([
+        sdk.getAutoConfirmStatus(),
+        sdk.getSupportedAutoConfirmChains(),
+      ]);
+      setStatus(statusResult);
+      setSupportedChains(supportedResult);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error("Failed to fetch auto-confirm data");
+      setError(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [sdk, isInjected]);
 
   // Automatically fetch status and supported chains when SDK becomes available
   useEffect(() => {

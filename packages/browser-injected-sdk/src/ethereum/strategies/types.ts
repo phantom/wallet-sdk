@@ -20,6 +20,6 @@ export interface EthereumStrategy {
 
   getChainId: () => Promise<string>;
   switchChain: (chainId: string) => Promise<void>;
-  
+
   request: <T = any>(args: { method: string; params?: unknown[] }) => Promise<T>;
 }
