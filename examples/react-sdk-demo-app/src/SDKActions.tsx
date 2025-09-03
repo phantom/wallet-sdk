@@ -12,7 +12,7 @@ import {
 } from "@phantom/react-sdk";
 import { SystemProgram, PublicKey, Connection, VersionedTransaction, TransactionMessage } from "@solana/web3.js";
 import { parseEther, parseGwei, numberToHex } from "viem";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Buffer } from "buffer";
 import { useBalance } from "./hooks/useBalance";
 
@@ -33,26 +33,30 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
   const { isConnected, currentProviderType } = usePhantom();
   const autoConfirm = useAutoConfirm();
   const addresses = useAccounts();
-  const [isSigningMessage, setIsSigningMessage] = useState(false);
+  const [isSigningMessageType, setIsSigningMessageType] = useState<"solana" | "evm" | null>(null);
   const [isSigningTypedData, setIsSigningTypedData] = useState(false);
   const [isSigningTransaction, setIsSigningTransaction] = useState(false);
   const [isSendingEthTransaction, setIsSendingEthTransaction] = useState(false);
 
-  const [solanaAddress, setSolanaAddress] = useState<string | null>(null);
+  const solanaAddress = addresses?.find(addr => addr.addressType === "Solana")?.address || null;
+  const ethereumAddress = addresses?.find(addr => addr.addressType === "Ethereum")?.address || null;
 
   // Use balance hook
-  const { balance, loading: balanceLoading, error: balanceError, refetch: refetchBalance } = useBalance(solanaAddress);
-  const hasBalance = balance !== null && balance > 0;
+  const {
+    balance: solanaBalance,
+    loading: solanaBalanceLoading,
+    error: solanaBalanceError,
+    refetch: refetchSolanaBalance,
+  } = useBalance(solanaAddress);
+  const hasSolanaBalance = solanaBalance !== null && solanaBalance > 0;
 
-  // Extract Solana address when addresses change
-  useEffect(() => {
-    if (addresses && addresses.length > 0) {
-      const solAddr = addresses.find(addr => addr.addressType === "Solana");
-      setSolanaAddress(solAddr?.address || null);
-    } else {
-      setSolanaAddress(null);
-    }
-  }, [addresses]);
+  const {
+    balance: ethereumBalance,
+    loading: ethereumBalanceLoading,
+    error: ethereumBalanceError,
+    refetch: refetchEthereumBalance,
+  } = useBalance(ethereumAddress);
+  const hasEthereumBalance = ethereumBalance !== null && ethereumBalance > 0;
 
   const onConnect = async () => {
     try {
@@ -79,7 +83,7 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
       return;
     }
     try {
-      setIsSigningMessage(true);
+      setIsSigningMessageType(type);
       if (type === "solana") {
         const result = await signSolanaMessage("Hello, World!");
         alert(`Message Signed! Signature: ${Buffer.from(result.signature).toString("base64")}`);
@@ -98,7 +102,7 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
       console.error("Error signing message:", error);
       alert(`Error signing message: ${(error as Error).message || error}`);
     } finally {
-      setIsSigningMessage(false);
+      setIsSigningMessageType(null);
     }
   };
 
@@ -295,12 +299,13 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
               <span className="status-value">{currentProviderType}</span>
             </div>
           )}
-          {solanaAddress && (
-            <div className="status-row">
-              <span className="status-label">Solana:</span>
-              <span className="status-value address">{solanaAddress}</span>
-            </div>
-          )}
+          {addresses &&
+            addresses.map(address => (
+              <div className="status-row">
+                <span className="status-label">{address.addressType}:</span>
+                <span className="status-value address">{address.address}</span>
+              </div>
+            ))}
           {addresses && addresses.length > 1 && (
             <div className="status-row">
               <span className="status-label">Total:</span>
@@ -317,20 +322,44 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
             <div className="balance-row">
               <span className="balance-label">Balance:</span>
               <span className="balance-value">
-                {balanceLoading
+                {solanaBalanceLoading
                   ? "Loading..."
-                  : balanceError
+                  : solanaBalanceError
                     ? "Error"
-                    : balance !== null
-                      ? `${balance.toFixed(4)} SOL`
+                    : solanaBalance !== null
+                      ? `${solanaBalance.toFixed(4)} SOL`
                       : "--"}
               </span>
             </div>
-            <button className="small" onClick={() => refetchBalance()} disabled={balanceLoading}>
-              {balanceLoading ? "Loading..." : "Refresh"}
+            <button className="small" onClick={() => refetchSolanaBalance()} disabled={solanaBalanceLoading}>
+              {solanaBalanceLoading ? "Loading..." : "Refresh"}
             </button>
           </div>
-          {balanceError && <p className="error-text">Balance error: {balanceError}</p>}
+          {solanaBalanceError && <p className="error-text">Balance error: {solanaBalanceError}</p>}
+        </div>
+      )}
+
+      {isConnected && ethereumAddress && (
+        <div className="section">
+          <h3>ETH Balance</h3>
+          <div className="balance-card">
+            <div className="balance-row">
+              <span className="balance-label">Balance:</span>
+              <span className="balance-value">
+                {ethereumBalanceLoading
+                  ? "Loading..."
+                  : ethereumBalanceError
+                    ? "Error"
+                    : ethereumBalance !== null
+                      ? `${ethereumBalance.toFixed(4)} ETH`
+                      : "--"}
+              </span>
+            </div>
+            <button className="small" onClick={() => refetchEthereumBalance()} disabled={ethereumBalanceLoading}>
+              {ethereumBalanceLoading ? "Loading..." : "Refresh"}
+            </button>
+          </div>
+          {ethereumBalanceError && <p className="error-text">Balance error: {ethereumBalanceError}</p>}
         </div>
       )}
 
@@ -392,24 +421,34 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
           >
             {isConnecting ? "Connecting..." : "Connect"}
           </button>
-          <button onClick={() => onSignMessage("solana")} disabled={!isConnected || isSigningMessage}>
-            {isSigningMessage ? "Signing..." : "Sign Message (Solana)"}
+          <button onClick={() => onSignMessage("solana")} disabled={!isConnected || isSigningMessageType === "solana"}>
+            {isSigningMessageType === "solana" ? "Signing..." : "Sign Message (Solana)"}
           </button>
-          <button onClick={() => onSignMessage("evm")} disabled={!isConnected || isSigningMessage}>
-            {isSigningMessage ? "Signing..." : "Sign Message (EVM)"}
+          <button onClick={() => onSignMessage("evm")} disabled={!isConnected || isSigningMessageType === "evm"}>
+            {isSigningMessageType === "evm" ? "Signing..." : "Sign Message (EVM)"}
           </button>
           <button onClick={onSignTypedData} disabled={!isConnected || isSigningTypedData}>
             {isSigningTypedData ? "Signing..." : "Sign Typed Data (EVM)"}
           </button>
-          <button onClick={onSignAndSendTransaction} disabled={!isConnected || isSigningTransaction || !hasBalance}>
+          <button
+            onClick={onSignAndSendTransaction}
+            disabled={!isConnected || isSigningTransaction || !hasSolanaBalance}
+          >
             {isSigningTransaction
               ? "Signing..."
-              : !hasBalance
+              : !hasSolanaBalance
                 ? "Insufficient Balance"
                 : "Sign & Send Transaction (Solana)"}
           </button>
-          <button onClick={onSendEthTransaction} disabled={!isConnected || isSendingEthTransaction}>
-            {isSendingEthTransaction ? "Sending..." : "Send Transaction (Ethereum)"}
+          <button
+            onClick={onSendEthTransaction}
+            disabled={!isConnected || isSendingEthTransaction || !hasEthereumBalance}
+          >
+            {isSendingEthTransaction
+              ? "Sending..."
+              : !hasEthereumBalance
+                ? "Insufficient Balance"
+                : "Send Transaction (Ethereum)"}
           </button>
 
           <button onClick={onDisconnect} disabled={!isConnected || isDisconnecting}>
