@@ -1,5 +1,11 @@
 # @phantom/wallet-sdk
 
+## 0.1.3-beta.0
+
+### Patch Changes
+
+- 8cd9ac7: Release with new interfaces, appId
+
 ## 0.1.2
 
 ### Patch Changes
