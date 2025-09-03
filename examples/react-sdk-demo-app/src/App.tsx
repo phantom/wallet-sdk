@@ -89,12 +89,10 @@ function App() {
 
   // Auth callback always needs embedded config
   const authConfig: PhantomSDKConfig = useMemo(() => ({
-    appName: "React SDK Demo App",
-    appLogo: "https://picsum.photos/200",
     providerType: "embedded",
     addressTypes: [AddressType.solana, AddressType.ethereum, AddressType.bitcoinSegwit, AddressType.sui],
     solanaProvider: "web3js",
-    
+    appId: import.meta.env.VITE_APP_ID || "your-app-id",
     apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "https://api.phantom.app/v1/wallets",
     embeddedWalletType: "user-wallet", // Auth callback is always for user wallet
     authOptions: {
