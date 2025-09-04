@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "isolatedModules": true,
+    "lib": ["dom", "esnext"],
+    "moduleResolution": "bundler",
+    "outDir": "dist/esm"
+  },
+  "exclude": ["node_modules", "dist", "_release"]
+}

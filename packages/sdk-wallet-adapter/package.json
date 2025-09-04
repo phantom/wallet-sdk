@@ -1,0 +1,52 @@
+{
+  "name": "@phantom/sdk-wallet-adapter",
+  "version": "1.0.0-beta.1",
+  "description": "Solana Wallet Adapter for Phantom Browser SDK",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rimraf ./dist && tsup",
+    "dev": "rimraf ./dist && tsup --watch",
+    "clean": "rm -rf dist",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "tsc --noEmit && eslint --cache . --ext .ts,.tsx",
+    "check-types": "tsc --noEmit",
+    "prettier": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "pack-release": "rimraf ./_release && yarn pack && mkdir ./_release && tar zxvf ./package.tgz --directory ./_release && rm ./package.tgz"
+  },
+  "dependencies": {
+    "@phantom/browser-sdk": "workspace:^",
+    "@solana/wallet-adapter-base": "^0.9.23",
+    "@solana/web3.js": "^1.95.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.0",
+    "eslint": "8.53.0",
+    "jest": "^30.0.5",
+    "jest-environment-jsdom": "^30.0.5",
+    "prettier": "^3.5.2",
+    "rimraf": "^6.0.1",
+    "ts-jest": "^29.1.2",
+    "tsup": "^6.7.0",
+    "typescript": "^5.0.4"
+  },
+  "peerDependencies": {
+    "@solana/web3.js": "^1.95.0"
+  },
+  "publishConfig": {
+    "directory": "_release/package"
+  }
+}
