@@ -1,5 +1,4 @@
-import { BrowserSDK } from "@phantom/browser-sdk";
-import type { PhantomSDKConfig } from "@phantom/react-sdk";
+import { BrowserSDK, type BrowserSDKConfig } from "@phantom/browser-sdk";
 import {
   SOLANA_CHAINS,
   SolanaSignAndSendTransaction,
@@ -42,7 +41,7 @@ export class EmbeddedWallet extends AbstractWallet implements Wallet {
 
   #accounts: Wallet["accounts"] = [];
 
-  constructor(config: PhantomSDKConfig) {
+  constructor(config: BrowserSDKConfig) {
     super();
 
     this.#sdk = new BrowserSDK(config);
@@ -118,12 +117,8 @@ export class EmbeddedWallet extends AbstractWallet implements Wallet {
     };
   }
 
-  readonly #connect: StandardConnectMethod = async ({ silent } = {}) => {
-    if (!silent && !confirm("Do you want to connect?")) {
-      throw new Error("connection declined");
-    }
-
-    await this.#sdk.solana.connect();
+  readonly #connect: StandardConnectMethod = async () => {
+    await this.#sdk.connect();
 
     return {
       accounts: this.#accounts,
@@ -131,7 +126,7 @@ export class EmbeddedWallet extends AbstractWallet implements Wallet {
   };
 
   readonly #disconnect: StandardDisconnectMethod = async () => {
-    await this.#sdk.solana.disconnect();
+    await this.#sdk.disconnect();
   };
 
   readonly #signAndSendTransaction: SolanaSignAndSendTransactionMethod = async (...inputs) => {

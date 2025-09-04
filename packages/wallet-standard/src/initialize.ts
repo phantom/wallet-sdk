@@ -1,15 +1,18 @@
+import type { BrowserSDKConfig } from "@phantom/browser-sdk";
 import type {
   WalletEventsWindow,
   WindowAppReadyEvent,
   WindowRegisterWalletEvent,
   WindowRegisterWalletEventCallback,
 } from "@wallet-standard/core";
-import type { EmbeddedWallet } from "./wallets/embedded";
+import { EmbeddedWallet } from "./wallets/embedded";
 
 const WindowRegisterWalletEventType: WindowRegisterWalletEvent["type"] = "wallet-standard:register-wallet";
 const WindowAppReadyEventType: WindowAppReadyEvent["type"] = "wallet-standard:app-ready";
 
-export function initialize(wallet: EmbeddedWallet): void {
+export function initialize(config: BrowserSDKConfig): void {
+  const wallet = new EmbeddedWallet(config);
+
   const callback: WindowRegisterWalletEventCallback = ({ register }) => register(wallet);
 
   const walletEventsWindow = window as WalletEventsWindow;
