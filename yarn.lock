@@ -5428,7 +5428,6 @@ __metadata:
   dependencies:
     "@phantom/browser-sdk": "workspace:^"
     "@solana/wallet-standard": "npm:^1.1.4"
-    "@solana/web3.js": "npm:^1.98.4"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
     "@wallet-standard/core": "npm:^1.1.1"

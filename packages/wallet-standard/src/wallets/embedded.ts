@@ -4,6 +4,7 @@ import {
   SolanaSignAndSendTransaction,
   SolanaSignMessage,
   SolanaSignTransaction,
+  SolanaTransactionVersion,
   type SolanaSignAndSendTransactionFeature,
   type SolanaSignAndSendTransactionMethod,
   type SolanaSignMessageFeature,
@@ -11,7 +12,6 @@ import {
   type SolanaSignTransactionFeature,
   type SolanaSignTransactionMethod,
 } from "@solana/wallet-standard";
-import { Transaction } from "@solana/web3.js";
 import type {
   StandardConnectFeature,
   StandardConnectMethod,
@@ -87,6 +87,8 @@ export class EmbeddedWallet extends AbstractWallet implements Wallet {
   }
 
   get features(): Features {
+    const supportedTransactionVersions: Array<SolanaTransactionVersion> = ["legacy", 0];
+
     return {
       [StandardConnect]: {
         version: "1.0.0",
@@ -102,12 +104,12 @@ export class EmbeddedWallet extends AbstractWallet implements Wallet {
       },
       [SolanaSignAndSendTransaction]: {
         version: "1.0.0",
-        supportedTransactionVersions: ["legacy"],
+        supportedTransactionVersions,
         signAndSendTransaction: this.#signAndSendTransaction,
       },
       [SolanaSignTransaction]: {
         version: "1.0.0",
-        supportedTransactionVersions: ["legacy"],
+        supportedTransactionVersions,
         signTransaction: this.#signTransaction,
       },
       [SolanaSignMessage]: {
@@ -140,7 +142,7 @@ export class EmbeddedWallet extends AbstractWallet implements Wallet {
           throw new Error("invalid chain");
         }
 
-        const { signature } = await this.#sdk.solana.signAndSendTransaction(Transaction.from(transaction));
+        const { signature } = await this.#sdk.solana.signAndSendTransaction(transaction);
 
         return {
           signature: bs58.decode(signature),
@@ -160,14 +162,10 @@ export class EmbeddedWallet extends AbstractWallet implements Wallet {
           throw new Error("invalid chain");
         }
 
-        const signedTransaction = await this.#sdk.solana.signTransaction(Transaction.from(transaction));
+        const signedTransaction = await this.#sdk.solana.signTransaction(transaction);
 
         return {
-          signedTransaction: new Uint8Array(
-            signedTransaction.serialize({
-              requireAllSignatures: false,
-            }),
-          ),
+          signedTransaction,
         };
       }),
     );

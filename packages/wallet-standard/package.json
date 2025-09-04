@@ -38,7 +38,6 @@
   "dependencies": {
     "@phantom/browser-sdk": "workspace:^",
     "@solana/wallet-standard": "^1.1.4",
-    "@solana/web3.js": "^1.98.4",
     "@wallet-standard/core": "^1.1.1",
     "@wallet-standard/features": "^1.1.0",
     "bs58": "^6.0.0"
