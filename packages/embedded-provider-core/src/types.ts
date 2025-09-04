@@ -21,6 +21,11 @@ export interface SignMessageParams {
 // Use the parsed signature result
 export interface SignMessageResult extends ParsedSignatureResult {}
 
+export interface SignTransactionParams {
+  transaction: any; // Native transaction object (Transaction, VersionedTransaction, etc.)
+  networkId: NetworkId;
+}
+
 export interface SignAndSendTransactionParams {
   transaction: any; // Native transaction object (Transaction, VersionedTransaction, etc.)
   networkId: NetworkId;

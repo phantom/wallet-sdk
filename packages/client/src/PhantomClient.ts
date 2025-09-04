@@ -41,8 +41,10 @@ import {
   type PhantomClientConfig,
   type CreateWalletResult,
   type SignedTransaction,
+  type SignedTransactionResult,
   type GetWalletsResult,
   type SignMessageParams,
+  type SignTransactionParams,
   type SignAndSendTransactionParams,
   type GetWalletWithTagParams,
   type CreateAuthenticatorParams,
@@ -165,9 +167,12 @@ export class PhantomClient {
   }
 
   /**
-   * Sign and send a transaction
+   * Private method for shared signing logic
    */
-  async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<SignedTransaction> {
+  private async performTransactionSigning(
+    params: SignTransactionParams, 
+    includeSubmissionConfig: boolean
+  ): Promise<{ signedTransaction: string; hash?: string }> {
     const walletId = params.walletId;
     const transactionParam = params.transaction;
     const networkIdParam = params.networkId;
@@ -175,18 +180,22 @@ export class PhantomClient {
 
     try {
       if (!this.config.organizationId) {
-        throw new Error("organizationId is required to sign and send a transaction");
+        throw new Error("organizationId is required to sign a transaction");
       }
       // Transaction is already base64url encoded
       const encodedTransaction = transactionParam;
 
-      const submissionConfig = deriveSubmissionConfig(networkIdParam);
+      let submissionConfig: SubmissionConfig | null = null;
+      
+      if (includeSubmissionConfig) {
+        submissionConfig = deriveSubmissionConfig(networkIdParam) || null;
 
-      // If we don't have a submission config, the transaction will only be signed, not submitted
-      if (!submissionConfig) {
-        console.error(
-          `No submission config available for network ${networkIdParam}. Transaction will be signed but not submitted.`,
-        );
+        // If we don't have a submission config, the transaction will only be signed, not submitted
+        if (!submissionConfig) {
+          console.error(
+            `No submission config available for network ${networkIdParam}. Transaction will be signed but not submitted.`,
+          );
+        }
       }
 
       // Get network configuration with custom derivation index
@@ -210,8 +219,8 @@ export class PhantomClient {
         derivationInfo: derivationInfo,
       };
 
-      // Add submission config if available
-      if (submissionConfig) {
+      // Add submission config if available and requested
+      if (includeSubmissionConfig && submissionConfig) {
         signRequest.submissionConfig = submissionConfig;
       }
 
@@ -224,15 +233,38 @@ export class PhantomClient {
       const response = await this.kmsApi.postKmsRpc(request);
       const result = (response.data as any).result as SignedTransactionWithPublicKey;
       const rpcSubmissionResult = (response.data as any)["rpc_submission_result"];
-      const hash = rpcSubmissionResult ? rpcSubmissionResult.result : null;
+      const hash = includeSubmissionConfig && rpcSubmissionResult ? rpcSubmissionResult.result : null;
+      
       return {
-        rawTransaction: result.transaction as unknown as string, // Base64 encoded signed transaction
+        signedTransaction: result.transaction as unknown as string, // Base64 encoded signed transaction
         hash,
       };
     } catch (error: any) {
-      console.error("Failed to sign and send transaction:", error.response?.data || error.message);
-      throw new Error(`Failed to sign and send transaction: ${error.response?.data?.message || error.message}`);
+      const actionType = includeSubmissionConfig ? "sign and send" : "sign";
+      console.error(`Failed to ${actionType} transaction:`, error.response?.data || error.message);
+      throw new Error(`Failed to ${actionType} transaction: ${error.response?.data?.message || error.message}`);
     }
+  }
+
+  /**
+   * Sign a transaction
+   */
+  async signTransaction(params: SignTransactionParams): Promise<SignedTransactionResult> {
+    const result = await this.performTransactionSigning(params, false);
+    return {
+      rawTransaction: result.signedTransaction,
+    };
+  }
+
+  /**
+   * Sign and send a transaction
+   */
+  async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<SignedTransaction> {
+    const result = await this.performTransactionSigning(params, true);
+    return {
+      rawTransaction: result.signedTransaction,
+      hash: result.hash,
+    };
   }
 
   async getWalletAddresses(

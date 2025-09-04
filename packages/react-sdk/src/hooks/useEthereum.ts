@@ -85,6 +85,14 @@ export function useEthereum() {
     [request, getAccounts],
   );
 
+  const signTransaction = useCallback(
+    async (transaction: EthTransactionRequest) => {
+      if (!ethereumChain) throw new Error("Ethereum chain not available. Ensure SDK is connected.");
+      return ethereumChain.signTransaction(transaction);
+    },
+    [ethereumChain],
+  );
+
   return {
     // Chain instance for advanced usage
     ethereum: ethereumChain,
@@ -96,6 +104,7 @@ export function useEthereum() {
     signPersonalMessage,
     signMessage,
     signTypedData,
+    signTransaction,
     sendTransaction,
     switchChain,
     getChainId,

@@ -1,6 +1,7 @@
 import {
   PhantomClient,
   type SignMessageParams,
+  type SignTransactionParams,
   type SignAndSendTransactionParams,
   type NetworkId,
   type CreateWalletResult,
@@ -30,6 +31,13 @@ export interface ServerSDKConfig {
 export interface ServerSignMessageParams {
   walletId: string;
   message: string; // Plain text - automatically converted to base64url
+  networkId: NetworkId;
+  derivationIndex?: number; // Optional account derivation index (defaults to 0)
+}
+
+export interface ServerSignTransactionParams {
+  walletId: string;
+  transaction: any; // Various transaction formats - automatically parsed
   networkId: NetworkId;
   derivationIndex?: number; // Optional account derivation index (defaults to 0)
 }
@@ -84,6 +92,30 @@ export class ServerSDK {
 
     // Parse the response to get human-readable signature and explorer URL
     return parseSignMessageResponse(rawResponse, params.networkId);
+  }
+
+  /**
+   * Sign a transaction - supports various transaction formats and automatically parses them
+   * @param params - Transaction parameters with flexible transaction format
+   * @returns Promise<ParsedTransactionResult> - Parsed transaction result without hash
+   */
+  async signTransaction(params: ServerSignTransactionParams): Promise<ParsedTransactionResult> {
+    // Parse the transaction to base64url format
+    const parsedTransaction = await parseTransactionToBase64Url(params.transaction, params.networkId);
+
+    // Use the parent's signTransaction method with parsed transaction
+    const signTransactionParams: SignTransactionParams = {
+      walletId: params.walletId,
+      transaction: parsedTransaction.base64url,
+      networkId: params.networkId,
+      derivationIndex: params.derivationIndex,
+    };
+
+    // Get raw response from client
+    const rawResponse = await this.client.signTransaction(signTransactionParams);
+
+    // Parse the response to get transaction result (without hash)
+    return await parseTransactionResponse(rawResponse.rawTransaction, params.networkId);
   }
 
   /**
@@ -172,6 +204,7 @@ export {
   type CreateWalletResult,
   type Transaction,
   type SignedTransaction,
+  type SignedTransactionResult,
   type GetWalletsResult,
   type Wallet,
   generateKeyPair,

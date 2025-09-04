@@ -8,7 +8,7 @@ import {
 } from "./response-parsers";
 
 // Re-export response parsers
-export { parseSignMessageResponse, parseTransactionResponse } from "./response-parsers";
+export { parseSignMessageResponse, parseTransactionResponse, parseSolanaTransactionSignature } from "./response-parsers";
 
 export interface ParsedTransaction {
   base64url: string;

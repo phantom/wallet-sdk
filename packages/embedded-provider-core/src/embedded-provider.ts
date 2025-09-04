@@ -25,6 +25,7 @@ import type {
   EmbeddedProviderConfig,
   ConnectResult,
   SignMessageParams,
+  SignTransactionParams,
   SignAndSendTransactionParams,
   WalletAddress,
   AuthOptions,
@@ -659,6 +660,50 @@ export class EmbeddedProvider {
 
     // Parse the response to get human-readable signature and explorer URL
     return parseSignMessageResponse(rawResponse, params.networkId);
+  }
+
+  async signTransaction(params: SignTransactionParams): Promise<ParsedTransactionResult> {
+    if (!this.client || !this.walletId) {
+      throw new Error("Not connected");
+    }
+
+    // Check if authenticator needs renewal before performing the operation
+    await this.ensureValidAuthenticator();
+
+    this.logger.info("EMBEDDED_PROVIDER", "Signing transaction", {
+      walletId: this.walletId,
+      networkId: params.networkId,
+    });
+
+    // Parse transaction to base64url format for client based on network
+    const parsedTransaction = await parseTransactionToBase64Url(params.transaction, params.networkId);
+
+    // Get session to access derivation index
+    const session = await this.storage.getSession();
+    const derivationIndex = session?.accountDerivationIndex ?? 0;
+
+    this.logger.log("EMBEDDED_PROVIDER", "Parsed transaction for signing", {
+      walletId: this.walletId,
+      transaction: parsedTransaction,
+      derivationIndex: derivationIndex,
+    });
+
+    // Get raw response from client
+    const rawResponse = await this.client.signTransaction({
+      walletId: this.walletId,
+      transaction: parsedTransaction.base64url,
+      networkId: params.networkId,
+      derivationIndex: derivationIndex,
+    });
+
+    this.logger.info("EMBEDDED_PROVIDER", "Transaction signed successfully", {
+      walletId: this.walletId,
+      networkId: params.networkId,
+      rawTransaction: rawResponse.rawTransaction,
+    });
+
+    // Parse the response to get transaction result (without hash since it wasn't sent)
+    return await parseTransactionResponse(rawResponse.rawTransaction, params.networkId);
   }
 
   async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<ParsedTransactionResult> {

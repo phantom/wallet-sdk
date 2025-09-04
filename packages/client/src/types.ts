@@ -20,6 +20,10 @@ export interface SignedTransaction {
   hash?: string; // Optional transaction hash if available
 }
 
+export interface SignedTransactionResult {
+  rawTransaction: string; // base64url encoded signed transaction
+}
+
 export interface GetWalletsResult {
   wallets: Wallet[];
   totalCount: number;
@@ -40,6 +44,13 @@ export interface Keypair {
 export interface SignMessageParams {
   walletId: string;
   message: string; // base64url encoded message
+  networkId: NetworkId;
+  derivationIndex?: number; // Optional account derivation index (defaults to 0)
+}
+
+export interface SignTransactionParams {
+  walletId: string;
+  transaction: Transaction; // base64url encoded transaction
   networkId: NetworkId;
   derivationIndex?: number; // Optional account derivation index (defaults to 0)
 }
