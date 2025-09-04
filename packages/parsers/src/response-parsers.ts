@@ -162,10 +162,10 @@ function parseBitcoinSignatureResponse(base64Response: string): ParsedSignatureR
  * Parse Solana transaction signature from a signed transaction
  * This function extracts the signature from a base64url encoded signed transaction
  */
-export async function parseSolanaTransactionSignature(base64RawTransaction: string): Promise<{
+export function parseSolanaTransactionSignature(base64RawTransaction: string): {
   signature: string;
   fallback: boolean;
-}> {
+} {
   try {
     // Use @solana/web3.js to properly parse the transaction
     const transactionBytes = Buffer.from(base64RawTransaction, "base64url");

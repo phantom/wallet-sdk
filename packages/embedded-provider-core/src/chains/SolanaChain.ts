@@ -62,7 +62,7 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     
     // For Solana, we need to extract the signature from the signed transaction
     // Since the API returns a base64url encoded signed transaction, we parse it to get the signature
-    const signatureResult = await parseSolanaTransactionSignature(result.rawTransaction);
+    const signatureResult = parseSolanaTransactionSignature(result.rawTransaction);
     
     // Return the signature as the transaction result
     // This maintains compatibility with wallet adapter expectations

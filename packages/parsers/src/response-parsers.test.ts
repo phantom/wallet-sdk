@@ -170,13 +170,13 @@ describe("Response Parsing", () => {
   });
 
   describe("parseSolanaTransactionSignature", () => {
-    it("should extract signature from mock transaction bytes", async () => {
+    it("should extract signature from mock transaction bytes", () => {
       // Create a realistic mock transaction similar to archived tests
       const mockTransactionBytes = new Uint8Array(200);
       mockTransactionBytes.fill(55, 0, 64); // Fill first 64 bytes with signature-like data
       const base64Transaction = base64urlEncode(mockTransactionBytes);
 
-      const result = await parseSolanaTransactionSignature(base64Transaction);
+      const result = parseSolanaTransactionSignature(base64Transaction);
 
       expect(result).toBeDefined();
       expect(result.signature).toBeDefined();
@@ -186,10 +186,10 @@ describe("Response Parsing", () => {
       expect(typeof result.fallback).toBe("boolean");
     });
 
-    it("should handle parsing errors gracefully", async () => {
+    it("should handle parsing errors gracefully", () => {
       const invalidBase64 = "invalid-base64!!!";
 
-      const result = await parseSolanaTransactionSignature(invalidBase64);
+      const result = parseSolanaTransactionSignature(invalidBase64);
 
       expect(result).toBeDefined();
       expect(result.signature).toBeDefined(); // Should have some signature value
@@ -198,8 +198,8 @@ describe("Response Parsing", () => {
       expect(result.fallback).toBe(true);
     });
 
-    it("should handle empty input", async () => {
-      const result = await parseSolanaTransactionSignature("");
+    it("should handle empty input", () => {
+      const result = parseSolanaTransactionSignature("");
 
       expect(result).toBeDefined();
       expect(result.signature).toBeDefined(); // Should have some signature value
@@ -207,7 +207,7 @@ describe("Response Parsing", () => {
       expect(result.fallback).toBe(true);
     });
 
-    it("should extract signature from first 64 bytes as fallback", async () => {
+    it("should extract signature from first 64 bytes as fallback", () => {
       // Create a transaction that will fail Transaction.from() parsing but has valid bytes
       const mockBytes = new Uint8Array(200);
       // Fill first 64 bytes with signature-like pattern (similar to archived tests)
@@ -217,7 +217,7 @@ describe("Response Parsing", () => {
       
       const base64Transaction = base64urlEncode(mockBytes);
 
-      const result = await parseSolanaTransactionSignature(base64Transaction);
+      const result = parseSolanaTransactionSignature(base64Transaction);
 
       expect(result).toBeDefined();
       expect(result.signature).toBeDefined();
@@ -226,7 +226,7 @@ describe("Response Parsing", () => {
       expect(result.fallback).toBe(true); // Should use fallback since Transaction.from() will fail
     });
 
-    it("should handle various transaction sizes", async () => {
+    it("should handle various transaction sizes", () => {
       // Test with different transaction sizes (adapted from archived tests)
       const sizes = [64, 100, 200, 500];
       
@@ -235,7 +235,7 @@ describe("Response Parsing", () => {
         mockBytes.fill(42, 0, Math.min(64, size)); // Fill available bytes for signature
         const base64Transaction = base64urlEncode(mockBytes);
 
-        const result = await parseSolanaTransactionSignature(base64Transaction);
+        const result = parseSolanaTransactionSignature(base64Transaction);
 
         expect(result).toBeDefined();
         expect(result.signature).toBeDefined();
