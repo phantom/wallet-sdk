@@ -31,7 +31,6 @@
   "dependencies": {
     "@phantom/base64url": "workspace:^",
     "@phantom/constants": "workspace:^",
-    "@solana/kit": "^2.1.1",
     "@solana/transactions": "^2.0.0",
     "@solana/web3.js": "^1.95.0",
     "bs58": "^6.0.0",
@@ -44,6 +43,7 @@
     "viem": "^2.0.0"
   },
   "devDependencies": {
+    "@solana/kit": "^2.1.1",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.0",
     "dotenv": "^16.4.5",
