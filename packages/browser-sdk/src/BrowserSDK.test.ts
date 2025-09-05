@@ -4,6 +4,19 @@ import { EmbeddedProvider } from "./providers/embedded";
 import { cleanupWindowMock } from "./test-utils/mockWindow";
 import { AddressType } from "@phantom/client";
 
+// Mock parsers to prevent ESM module parsing issues
+jest.mock("@phantom/parsers", () => ({
+  parseMessage: jest.fn().mockReturnValue({ base64url: "mock-base64url" }),
+  parseTransactionToBase64Url: jest.fn().mockResolvedValue({ base64url: "mock-base64url", originalFormat: "mock" }),
+  parseSignMessageResponse: jest.fn().mockReturnValue({ signature: "mock-signature", rawSignature: "mock-raw" }),
+  parseTransactionResponse: jest.fn().mockReturnValue({ 
+    hash: "mock-transaction-hash", 
+    rawTransaction: "mock-raw-tx",
+    blockExplorer: "https://explorer.com/tx/mock-transaction-hash"
+  }),
+  parseSolanaTransactionSignature: jest.fn().mockReturnValue({ signature: "mock-signature", fallback: false }),
+}));
+
 // Mock the providers
 jest.mock("./providers/injected");
 jest.mock("./providers/embedded");

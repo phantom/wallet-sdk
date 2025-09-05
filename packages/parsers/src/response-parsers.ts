@@ -8,6 +8,7 @@ import { getExplorerUrl } from "@phantom/constants";
 import { base64urlDecode } from "@phantom/base64url";
 import { Buffer } from "buffer";
 import bs58 from "bs58";
+import { Transaction } from "@solana/web3.js";
 
 export interface ParsedSignatureResult {
   signature: string; // Human-readable signature (hex/base58)
@@ -153,6 +154,57 @@ function parseBitcoinSignatureResponse(base64Response: string): ParsedSignatureR
     return {
       signature: base64Response,
       rawSignature: base64Response,
+    };
+  }
+}
+
+/**
+ * Parse Solana transaction signature from a signed transaction
+ * This function extracts the signature from a base64url encoded signed transaction
+ */
+export function parseSolanaTransactionSignature(base64RawTransaction: string): {
+  signature: string;
+  fallback: boolean;
+} {
+  try {
+    // Use @solana/web3.js to properly parse the transaction
+    const transactionBytes = Buffer.from(base64RawTransaction, "base64url");
+    const transaction = Transaction.from(transactionBytes);
+
+    let signature: string | null = null;
+
+    // Extract signature from the signed transaction
+    if (transaction.signature) {
+      signature = bs58.encode(transaction.signature);
+    } else if (transaction.signatures && transaction.signatures.length > 0 && transaction.signatures[0].signature) {
+      signature = bs58.encode(transaction.signatures[0].signature);
+    }
+
+    if (signature) {
+      return {
+        signature,
+        fallback: false,
+      };
+    }
+  } catch (error) {
+    // Fall through to fallback method
+  }
+
+  // Fallback: extract first 64 bytes as signature (simple approach)
+  try {
+    const transactionBytes = Buffer.from(base64RawTransaction, "base64url");
+    const signatureBytes = transactionBytes.slice(0, 64);
+    const signature = bs58.encode(signatureBytes);
+
+    return {
+      signature,
+      fallback: true,
+    };
+  } catch (error) {
+    // Last resort: use the raw transaction as signature
+    return {
+      signature: base64RawTransaction,
+      fallback: true,
     };
   }
 }

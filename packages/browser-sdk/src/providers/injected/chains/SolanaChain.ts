@@ -72,10 +72,17 @@ export class InjectedSolanaChain implements ISolanaChain {
     };
   }
 
-  signTransaction<T>(_transaction: T): Promise<T> {
-    return Promise.reject(
-      new Error("Sign-only transactions not supported by injected provider. Use signAndSendTransaction instead."),
-    );
+  async signTransaction<T>(transaction: T): Promise<T> {
+    if (!this.callbacks.isConnected()) {
+      return Promise.reject(new Error("Provider not connected. Call provider connect first."));
+    }
+
+    try {
+      const result = await this.phantom.solana.signTransaction(transaction as any);
+      return result as T;
+    } catch (error) {
+      return Promise.reject(error);
+    }
   }
 
   async signAndSendTransaction<T>(transaction: T): Promise<{ signature: string }> {

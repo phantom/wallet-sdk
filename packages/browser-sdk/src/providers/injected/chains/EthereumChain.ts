@@ -41,8 +41,16 @@ export class InjectedEthereumChain implements IEthereumChain {
     return this._accounts;
   }
 
-  // EIP-1193 core method - unchanged, already compliant!
+  // EIP-1193 core method with eth_signTransaction support
   async request<T = any>(args: { method: string; params?: unknown[] }): Promise<T> {
+    // Handle eth_signTransaction locally since the underlying provider might not support it
+    if (args.method === "eth_signTransaction") {
+      const [transaction] = args.params as [EthTransactionRequest];
+      const result = await this.signTransaction(transaction);
+      return result as T;
+    }
+
+    // Delegate all other requests to the underlying provider
     const provider = await this.phantom.ethereum.getProvider();
     return await provider.request(args);
   }
@@ -71,6 +79,10 @@ export class InjectedEthereumChain implements IEthereumChain {
 
   async signTypedData(typedData: any, address: string): Promise<string> {
     return await this.phantom.ethereum.signTypedData(typedData, address);
+  }
+
+  async signTransaction(transaction: EthTransactionRequest): Promise<string> {
+    return await this.phantom.ethereum.signTransaction(transaction);
   }
 
   async sendTransaction(transaction: EthTransactionRequest): Promise<string> {

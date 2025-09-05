@@ -5174,8 +5174,6 @@ __metadata:
   dependenciesMeta:
     "@mysten/sui.js":
       optional: true
-    "@solana/web3.js":
-      optional: true
     bitcoinjs-lib:
       optional: true
     ethers:

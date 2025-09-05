@@ -25,10 +25,11 @@ interface SDKActionsProps {
 export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
   const { connect, isConnecting, error: connectError } = useConnect();
   const { disconnect, isDisconnecting } = useDisconnect();
-  const { signMessage: signSolanaMessage, signAndSendTransaction } = useSolana();
+  const { signMessage: signSolanaMessage, signTransaction: signSolanaTransaction, signAndSendTransaction } = useSolana();
   const {
     signPersonalMessage: signEthMessage,
     signTypedData: signEthTypedData,
+    signTransaction: signEthTransaction,
     sendTransaction: sendEthTransaction,
   } = useEthereum();
   const { isConnected, currentProviderType } = usePhantom();
@@ -36,7 +37,8 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
   const addresses = useAccounts();
   const [isSigningMessageType, setIsSigningMessageType] = useState<"solana" | "evm" | null>(null);
   const [isSigningTypedData, setIsSigningTypedData] = useState(false);
-  const [isSigningTransaction, setIsSigningTransaction] = useState(false);
+  const [isSigningOnlyTransaction, setIsSigningOnlyTransaction] = useState<"solana" | "ethereum" | null>(null);
+  const [isSigningAndSendingTransaction, setIsSigningAndSendingTransaction] = useState(false);
   const [isSendingEthTransaction, setIsSendingEthTransaction] = useState(false);
 
   const solanaAddress = addresses?.find(addr => addr.addressType === "Solana")?.address || null;
@@ -171,13 +173,77 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
     }
   };
 
+  const onSignTransaction = async (type: "solana" | "ethereum") => {
+    if (!isConnected || !addresses || addresses.length === 0) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+    try {
+      setIsSigningOnlyTransaction(type);
+      if (type === "solana") {
+        if (!solanaAddress) {
+          alert("No Solana address found");
+          return;
+        }
+        // Create connection to get recent blockhash (using environment RPC URL)
+        const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL_MAINNET || "https://api.mainnet-beta.solana.com";
+        const connection = new Connection(rpcUrl);
+
+        // Get recent blockhash
+        const { blockhash } = await connection.getLatestBlockhash();
+
+        // Create a versioned transaction message
+        const transferInstruction = SystemProgram.transfer({
+          fromPubkey: new PublicKey(solanaAddress),
+          toPubkey: new PublicKey(solanaAddress), // Self-transfer for demo
+          lamports: 1000, // Very small amount: 0.000001 SOL
+        });
+
+        const messageV0 = new TransactionMessage({
+          payerKey: new PublicKey(solanaAddress),
+          recentBlockhash: blockhash,
+          instructions: [transferInstruction],
+        }).compileToV0Message();
+
+        const transaction = new VersionedTransaction(messageV0);
+
+        const result = await signSolanaTransaction(transaction);
+        alert(`Transaction signed! Signature: ${JSON.stringify(result)}`);
+      } else {
+        // Ethereum
+        const ethAddress = addresses.find(addr => addr.addressType === "Ethereum");
+        if (!ethAddress) {
+          alert("No Ethereum address found");
+          return;
+        }
+
+        // Create simple ETH transfer with proper hex formatting
+        const transactionParams = {
+          from: ethAddress.address,
+          to: ethAddress.address, // Self-transfer for demo
+          value: numberToHex(parseEther("0.001")), // 0.001 ETH in hex
+          gas: numberToHex(21000n), // Gas limit in hex
+          gasPrice: numberToHex(parseGwei("20")), // 20 gwei in hex
+        };
+
+        const result = await signEthTransaction(transactionParams);
+        alert(`Transaction signed! Signature: ${result}`);
+      }
+    } catch (error) {
+      console.error("Error signing transaction:", error);
+      alert(`Error signing transaction: ${(error as Error).message || error}`);
+    } finally {
+      setIsSigningOnlyTransaction(null);
+    }
+  };
+
   const onSignAndSendTransaction = async () => {
     if (!isConnected || !solanaAddress) {
       alert("Please connect your wallet first.");
       return;
     }
     try {
-      setIsSigningTransaction(true);
+      setIsSigningAndSendingTransaction(true);
       // Create connection to get recent blockhash (using environment RPC URL)
       const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL_MAINNET || "https://api.mainnet-beta.solana.com";
       const connection = new Connection(rpcUrl);
@@ -207,7 +273,7 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
       console.error("Error signing and sending transaction:", error);
       alert(`Error signing and sending transaction: ${(error as Error).message || error}`);
     } finally {
-      setIsSigningTransaction(false);
+      setIsSigningAndSendingTransaction(false);
     }
   };
 
@@ -432,11 +498,31 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
             {isSigningTypedData ? "Signing..." : "Sign Typed Data (EVM)"}
           </button>
           <button
-            onClick={onSignAndSendTransaction}
-            disabled={!isConnected || isSigningTransaction || !hasSolanaBalance}
+            onClick={() => onSignTransaction("solana")}
+            disabled={!isConnected || isSigningOnlyTransaction === "solana" || !hasSolanaBalance}
           >
-            {isSigningTransaction
+            {isSigningOnlyTransaction === "solana"
               ? "Signing..."
+              : !hasSolanaBalance
+                ? "Insufficient Balance"
+                : "Sign Transaction (Solana)"}
+          </button>
+          <button
+            onClick={() => onSignTransaction("ethereum")}
+            disabled={!isConnected || isSigningOnlyTransaction === "ethereum" || !hasEthereumBalance}
+          >
+            {isSigningOnlyTransaction === "ethereum"
+              ? "Signing..."
+              : !hasEthereumBalance
+                ? "Insufficient Balance"
+                : "Sign Transaction (Ethereum)"}
+          </button>
+          <button
+            onClick={onSignAndSendTransaction}
+            disabled={!isConnected || isSigningAndSendingTransaction || !hasSolanaBalance}
+          >
+            {isSigningAndSendingTransaction
+              ? "Signing & Sending..."
               : !hasSolanaBalance
                 ? "Insufficient Balance"
                 : "Sign & Send Transaction (Solana)"}
@@ -449,7 +535,7 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
               ? "Sending..."
               : !hasEthereumBalance
                 ? "Insufficient Balance"
-                : "Send Transaction (Ethereum)"}
+                : "Sign & Send Transaction (Ethereum)"}
           </button>
 
           <button onClick={onDisconnect} disabled={!isConnected || isDisconnecting}>

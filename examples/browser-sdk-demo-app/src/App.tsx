@@ -240,8 +240,62 @@ function App() {
     }
   }
 
-  // Sign transaction handler (Solana)
-  const handleSignTransaction = async () => {
+  // Sign transaction handler (Solana) - Sign only, don't send
+  const handleSignSolanaTransaction = async () => {
+    if (!sdk || !sdk.isConnected()) {
+      setError("Please connect first")
+      return
+    }
+
+    const solanaAddress = addresses.find(a => a.addressType === AddressType.solana)
+    if (!solanaAddress) {
+      setError("No Solana address found")
+      return
+    }
+
+    if (!balance || balance <= 0.001) {
+      setError("Insufficient balance for transaction")
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      // Create connection to get recent blockhash
+      const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL_MAINNET || "https://api.mainnet-beta.solana.com"
+      const connection = new Connection(rpcUrl)
+
+      // Get recent blockhash
+      const { blockhash } = await connection.getLatestBlockhash()
+
+      // Create a versioned transaction message
+      const transferInstruction = SystemProgram.transfer({
+        fromPubkey: new PublicKey(solanaAddress.address),
+        toPubkey: new PublicKey(solanaAddress.address), // Self-transfer for demo
+        lamports: 1000, // Very small amount: 0.000001 SOL
+      })
+
+      const messageV0 = new TransactionMessage({
+        payerKey: new PublicKey(solanaAddress.address),
+        recentBlockhash: blockhash,
+        instructions: [transferInstruction],
+      }).compileToV0Message()
+
+      const transaction = new VersionedTransaction(messageV0)
+
+      const result = await sdk.solana.signTransaction(transaction)
+
+      console.log("Transaction signed:", result)
+      alert(`Transaction signed: ${JSON.stringify(result)}`)
+    } catch (error) {
+      console.error("Error signing transaction:", error)
+      setError((error as Error).message || 'Failed to sign transaction')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Sign and send transaction handler (Solana)
+  const handleSignAndSendSolanaTransaction = async () => {
     if (!sdk || !sdk.isConnected()) {
       setError("Please connect first")
       return
@@ -290,8 +344,87 @@ function App() {
       // Refresh balance after transaction
       await updateBalance()
     } catch (error) {
-      console.error("Error signing transaction:", error)
-      setError((error as Error).message || 'Failed to sign transaction')
+      console.error("Error signing and sending transaction:", error)
+      setError((error as Error).message || 'Failed to sign and send transaction')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Sign Ethereum transaction (sign only, don't send)
+  const handleSignEthTransaction = async () => {
+    if (!sdk || !sdk.isConnected()) {
+      setError("Please connect first")
+      return
+    }
+
+    const ethAddress = addresses.find(a => a.addressType === AddressType.ethereum)
+    if (!ethAddress) {
+      setError("No Ethereum address found")
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      // Create simple ETH transfer with proper hex formatting
+      const transactionParams = {
+        from: ethAddress.address,
+        to: ethAddress.address, // Self-transfer for demo
+        value: numberToHex(parseEther("0.001")), // 0.001 ETH in hex
+        gas: numberToHex(21000n), // Gas limit in hex
+        gasPrice: numberToHex(parseGwei("20")), // 20 gwei in hex
+      }
+
+      console.log("Signing Ethereum transaction with params:", transactionParams)
+      const result = await sdk.ethereum.signTransaction(transactionParams)
+
+      console.log("Ethereum transaction signed:", result)
+      alert(`Ethereum transaction signed: ${result}`)
+    } catch (error) {
+      console.error("Error signing Ethereum transaction:", error)
+      setError((error as Error).message || 'Failed to sign Ethereum transaction')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Test eth_signTransaction RPC method
+  const handleEthSignTransactionRPC = async () => {
+    if (!sdk || !sdk.isConnected()) {
+      setError("Please connect first")
+      return
+    }
+
+    const ethAddress = addresses.find(a => a.addressType === AddressType.ethereum)
+    if (!ethAddress) {
+      setError("No Ethereum address found")
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      // Create simple ETH transfer with proper hex formatting
+      const transactionParams = {
+        from: ethAddress.address,
+        to: ethAddress.address, // Self-transfer for demo
+        value: numberToHex(parseEther("0.001")), // 0.001 ETH in hex
+        gas: numberToHex(21000n), // Gas limit in hex
+        gasPrice: numberToHex(parseGwei("20")), // 20 gwei in hex
+      }
+
+      console.log("Signing Ethereum transaction via RPC with params:", transactionParams)
+      
+      // Use the RPC method instead of direct signTransaction
+      const result = await sdk.ethereum.request({
+        method: "eth_signTransaction",
+        params: [transactionParams],
+      })
+
+      console.log("Ethereum transaction signed via RPC:", result)
+      alert(`Ethereum transaction signed via RPC: ${result}`)
+    } catch (error) {
+      console.error("Error signing Ethereum transaction via RPC:", error)
+      setError((error as Error).message || 'Failed to sign Ethereum transaction via RPC')
     } finally {
       setIsLoading(false)
     }
@@ -359,8 +492,8 @@ function App() {
     }
   }
 
-  // Test Ethereum transaction
-  const handleTestEthereum = async () => {
+  // Sign and send Ethereum transaction
+  const handleSignAndSendEthTransaction = async () => {
     if (!sdk || !sdk.isConnected()) {
       setError("Please connect first")
       return
@@ -602,31 +735,55 @@ function App() {
               Sign Typed Data (EVM)
             </button>
             <button 
-              onClick={handleSignTransaction}
+              onClick={handleSignSolanaTransaction}
               disabled={!hasBalance || isLoading}
             >
-              Sign Transaction (0.000001 SOL)
+              Sign Transaction (Solana)
+            </button>
+            <button 
+              onClick={handleSignEthTransaction}
+              disabled={!addresses.find(a => a.addressType === AddressType.ethereum) || isLoading}
+            >
+              Sign Transaction (Ethereum)
+            </button>
+            <button 
+              onClick={handleEthSignTransactionRPC}
+              disabled={!addresses.find(a => a.addressType === AddressType.ethereum) || isLoading}
+            >
+              Sign Transaction via RPC (Ethereum)
+            </button>
+            <button 
+              onClick={handleSignAndSendSolanaTransaction}
+              disabled={!hasBalance || isLoading}
+            >
+              Sign & Send Transaction (Solana)
+            </button>
+            <button 
+              onClick={handleSignAndSendEthTransaction}
+              disabled={!addresses.find(a => a.addressType === AddressType.ethereum) || isLoading}
+            >
+              Sign & Send Transaction (Ethereum)
             </button>
           </div>
         </section>
       )}
 
-      {/* Transaction Tests Section */}
+      {/* Transaction Tests Section - Legacy section can be removed or updated */}
       {isConnected && hasBalance && (
         <section className="provider-section">
-          <h2>Transaction Tests</h2>
+          <h2>Quick Transaction Tests</h2>
           <div className="provider-controls">
             <button 
-              onClick={handleSignTransaction}
+              onClick={handleSignAndSendSolanaTransaction}
               disabled={isLoading}
             >
-              {isLoading ? 'Testing...' : 'Test @solana/web3.js'}
+              {isLoading ? 'Testing...' : 'Quick Solana Test (Sign & Send)'}
             </button>
             <button 
-              onClick={handleTestEthereum}
+              onClick={handleSignAndSendEthTransaction}
               disabled={!addresses.find(a => a.addressType === AddressType.ethereum) || isLoading}
             >
-              {isLoading ? 'Testing...' : 'Test Ethereum'}
+              {isLoading ? 'Testing...' : 'Quick Ethereum Test (Sign & Send)'}
             </button>
           </div>
         </section>
