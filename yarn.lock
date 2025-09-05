@@ -5270,6 +5270,7 @@ __metadata:
     "@types/react": "npm:^19.1.2"
     "@types/react-dom": "npm:^19.1.2"
     "@vitejs/plugin-react": "npm:^4.4.1"
+    bs58: "npm:^6.0.0"
     buffer: "npm:^6.0.3"
     globals: "npm:^16.0.0"
     react: "npm:^19.1.1"
