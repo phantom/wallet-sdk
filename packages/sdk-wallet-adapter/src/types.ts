@@ -26,4 +26,12 @@ export interface PhantomSDKWalletAdapterConfig {
    * TODO: Add support for network switching in the adapter
    */
   network?: "mainnet-beta" | "devnet" | "testnet";
+
+  /**
+   * The auth options for the embedded provider
+   */
+  authOptions?: {
+    authUrl?: string;
+    redirectUrl?: string;
+  };
 }

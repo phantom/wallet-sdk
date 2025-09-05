@@ -41,8 +41,9 @@ export class PhantomSDKWalletAdapter extends BaseMessageSignerWalletAdapter {
     this._sdk = new BrowserSDK({
       providerType: "embedded",
       apiBaseUrl: config.apiBaseUrl,
-      embeddedWalletType: config.embeddedWalletType || "app-wallet",
+      embeddedWalletType: "user-wallet",
       addressTypes: [AddressType.solana],
+      authOptions: config.authOptions,
       // Pass appId through as part of the config (it's in Partial<EmbeddedProviderConfig>)
       ...{ appId: config.appId },
     } as any);
