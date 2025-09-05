@@ -1,5 +1,6 @@
-import { decryptPayload, type EncryptedPayload } from "./crypto";
+import type { EncryptedPayload, SecureCrypto } from "./secureCrypto";
 import type { DeeplinksSession } from "./session";
+import { debug, DebugCategory } from "../../debug";
 
 export interface PendingRequest {
   id: string;
@@ -12,8 +13,25 @@ export class DeeplinksCommunicator {
   private pendingRequests = new Map<string, PendingRequest>();
   private isListening = false;
   private cleanupFunctions: (() => void)[] = [];
+  private onConnectSuccessCallback?: (response: any) => void;
+  private onResponseSuccessCallback?: (response: any, requestId: string, method: string) => void;
+  private _lastDecryptedConnectResponse?: any;
 
-  constructor(private session: DeeplinksSession) {}
+  constructor(private session: DeeplinksSession, private secureCrypto: SecureCrypto) {}
+
+  /**
+   * Set callback to be called when a connect response is processed successfully
+   */
+  setOnConnectSuccess(callback: (response: any) => void): void {
+    this.onConnectSuccessCallback = callback;
+  }
+
+  /**
+   * Set callback to be called when any response is processed successfully (sign message, etc.)
+   */
+  setOnResponseSuccess(callback: (response: any, requestId: string, method: string) => void): void {
+    this.onResponseSuccessCallback = callback;
+  }
 
   /**
    * Start listening for deeplink responses
@@ -29,40 +47,11 @@ export class DeeplinksCommunicator {
     window.addEventListener("hashchange", handleHashChange);
     this.cleanupFunctions.push(() => window.removeEventListener("hashchange", handleHashChange));
 
-    // Listen for localStorage changes (cross-tab communication)
-    const handleStorageChange = (event: StorageEvent) => {
-      // eslint-disable-next-line no-console
-      console.log("📡 STORAGE: Storage event received", event);
-      
-      if (event.key === "phantom_deeplink_response" && event.newValue) {
-        // eslint-disable-next-line no-console
-        console.log("📡 STORAGE: Found phantom_deeplink_response in storage", event.newValue);
-        alert("📡 Received response from another tab!");
-        
-        try {
-          const responseData = JSON.parse(event.newValue);
-          // eslint-disable-next-line no-console
-          console.log("📡 STORAGE: Parsed response data", responseData);
-          
-          this.processPhantomResponse(responseData);
-          // Clean up the localStorage entry
-          localStorage.removeItem("phantom_deeplink_response");
-        } catch (error) {
-          // eslint-disable-next-line no-console
-          console.warn("📡 STORAGE: Failed to parse deeplink response from localStorage:", error);
-          alert("📡 Error parsing storage response: " + (error as Error).message);
-        }
-      }
-    };
-    window.addEventListener("storage", handleStorageChange);
-    this.cleanupFunctions.push(() => window.removeEventListener("storage", handleStorageChange));
+    // Note: We don't need to listen for storage changes anymore since we process responses directly in the new tab
     
     // Check current URL on start
     this.handlePotentialResponse(window.location.hash);
     this.handlePotentialResponse(window.location.search);
-
-    // Check if we're in a tab that received a response (handle page refresh case)
-    this.checkForStoredResponse();
 
     // Listen for custom protocol handler messages if supported
     if (typeof window !== "undefined" && window.addEventListener) {
@@ -97,17 +86,13 @@ export class DeeplinksCommunicator {
   /**
    * Wait for a response from Phantom with given request ID
    */
-  waitForResponse<T>(requestId: string, timeoutMs: number = 30000): Promise<T> {
-    // eslint-disable-next-line no-console
-    console.log("📡 COMMUNICATION: Starting to wait for response", { requestId, timeoutMs });
-    alert("📡 Waiting for response from Phantom...");
+  async waitForResponse<T>(requestId: string, timeoutMs: number = 30000): Promise<T> {
+    debug.info(DebugCategory.BROWSER_SDK, "Starting to wait for deeplinks response", { requestId: requestId.substring(0, 10) + "...", timeoutMs });
     
     return new Promise((resolve, reject) => {
       // Set up timeout
       const timeout = setTimeout(() => {
-        // eslint-disable-next-line no-console
-        console.log("📡 COMMUNICATION: Request timed out", requestId);
-        alert("📡 Request timed out after " + (timeoutMs/1000) + " seconds");
+        debug.warn(DebugCategory.BROWSER_SDK, "Deeplinks request timed out", { requestId: requestId.substring(0, 10) + "...", timeoutMs });
         
         this.pendingRequests.delete(requestId);
         this.removePendingRequestFromStorage(requestId);
@@ -124,75 +109,145 @@ export class DeeplinksCommunicator {
 
       // Store pending request in localStorage for cross-tab communication
       this.storePendingRequest(requestId);
-      // eslint-disable-next-line no-console
-      console.log("📡 COMMUNICATION: Stored pending request in localStorage", requestId);
-
-      // We don't call startListening here anymore because it's already listening from initialization
-      // eslint-disable-next-line no-console
-      console.log("📡 COMMUNICATION: Using existing listeners (already started at init)");
+      debug.info(DebugCategory.BROWSER_SDK, "Stored pending deeplinks request", { requestId: requestId.substring(0, 10) + "...", storedCount: this.pendingRequests.size });
+      
+      // Start periodic checking for responses in case the user comes back to this tab
+      const checkInterval = setInterval(() => {
+        debug.info(DebugCategory.BROWSER_SDK, "Periodic check for response", { requestId: requestId.substring(0, 10) + "..." });
+        
+        // Check for stored result first (faster than URL processing)
+        try {
+          const storedResult = localStorage.getItem(`phantom_response_result_${requestId}`);
+          if (storedResult) {
+            debug.info(DebugCategory.BROWSER_SDK, "Found stored sign message result", {
+              requestId: requestId.substring(0, 10) + "..."
+            });
+            
+            const responseData = JSON.parse(storedResult);
+            
+            // Clean up stored result
+            localStorage.removeItem(`phantom_response_result_${requestId}`);
+            
+            // Convert response to expected format
+            const result = {
+              signature: responseData.response.signature || [],
+              publicKey: responseData.response.publicKey || this.session.publicKey || "",
+            };
+            
+            debug.info(DebugCategory.BROWSER_SDK, "Resolving sign message from stored result", {
+              requestId: requestId.substring(0, 10) + "...",
+              hasSignature: !!result.signature.length || !!result.signature,
+              signatureType: typeof result.signature
+            });
+            
+            // Find and resolve the pending request
+            const pendingRequest = this.pendingRequests.get(requestId);
+            if (pendingRequest) {
+              clearInterval(checkInterval);
+              if (pendingRequest.timeout) clearTimeout(pendingRequest.timeout);
+              this.pendingRequests.delete(requestId);
+              this.removePendingRequestFromStorage(requestId);
+              pendingRequest.resolve(result);
+              return;
+            }
+          }
+        } catch (error) {
+          debug.error(DebugCategory.BROWSER_SDK, "Error checking stored result", { error: (error as Error).message });
+        }
+        
+        // Also check URL parameters as backup
+        this.handlePotentialResponse(window.location.hash);
+        this.handlePotentialResponse(window.location.search);
+      }, 1000); // Check every second
+      
+      // Clean up interval when promise resolves/rejects
+      const originalResolve = resolve;
+      const originalReject = reject;
+      
+      const wrappedResolve = (value: T) => {
+        clearInterval(checkInterval);
+        originalResolve(value);
+      };
+      
+      const wrappedReject = (error: Error) => {
+        clearInterval(checkInterval);
+        originalReject(error);
+      };
+      
+      // Update stored promise handlers
+      this.pendingRequests.set(requestId, {
+        id: requestId,
+        resolve: wrappedResolve,
+        reject: wrappedReject,
+        timeout,
+      });
     });
   }
 
   /**
    * Handle potential response from URL or message
    */
-  private handlePotentialResponse(responseData: string): void {
-    // eslint-disable-next-line no-console
-    console.log("📡 COMMUNICATION: Handling potential response", responseData);
-    
+  private async handlePotentialResponse(responseData: string): Promise<void> {
     if (!responseData) {
-      // eslint-disable-next-line no-console
-      console.log("📡 COMMUNICATION: No response data");
       return;
     }
 
     try {
       // Extract parameters from URL fragment or search
       const params = this.parseUrlParams(responseData);
-      // eslint-disable-next-line no-console
-      console.log("📡 COMMUNICATION: Parsed params", params);
+      debug.info(DebugCategory.BROWSER_SDK, "Parsed deeplinks URL params", { keys: Object.keys(params) });
       
       // Look for phantom response parameters (data indicates encrypted response, phantom_encryption_public_key indicates connect response)
       if (params.phantom_response || params.data || params.phantom_encryption_public_key) {
-        // eslint-disable-next-line no-console
-        console.log("📡 COMMUNICATION: Found Phantom response parameters");
-        alert("📡 Found Phantom response in URL!");
+        debug.info(DebugCategory.BROWSER_SDK, "Found Phantom response parameters in URL");
         
-        // If this is a new tab/window that received the response, store it in localStorage for the original tab
+        // Check if there are any pending requests in localStorage
         const pendingRequests = this.getPendingRequestsFromStorage();
-        // eslint-disable-next-line no-console
-        console.log("📡 COMMUNICATION: Pending requests from storage", pendingRequests);
-        // eslint-disable-next-line no-console
-        console.log("📡 COMMUNICATION: Current pending requests", this.pendingRequests.size);
+        debug.info(DebugCategory.BROWSER_SDK, "Checking for pending requests", { 
+          storedPendingCount: pendingRequests.length,
+          memoryPendingCount: this.pendingRequests.size 
+        });
         
-        if (pendingRequests.length > 0 && this.pendingRequests.size === 0) {
-          // This appears to be a response tab - store the response for the original tab
-          // eslint-disable-next-line no-console
-          console.log("📡 COMMUNICATION: This is a response tab, storing in localStorage");
-          alert("📡 Response tab detected, storing for original tab");
+        // Check if this is a connect response (has phantom_encryption_public_key)
+        const isConnectResponse = !!params.phantom_encryption_public_key;
+        
+        // Process if we have pending requests in memory OR if it's a connect response
+        if (this.pendingRequests.size > 0) {
+          debug.info(DebugCategory.BROWSER_SDK, "Processing response in original tab with pending promises", {
+            pendingInMemory: this.pendingRequests.size,
+            pendingInStorage: pendingRequests.length,
+            isConnectResponse
+          });
+          await this.processPhantomResponse(params);
+        } else if (isConnectResponse) {
+          debug.info(DebugCategory.BROWSER_SDK, "Found connect response without pending requests - processing anyway for initialization", {
+            pendingInMemory: this.pendingRequests.size,
+            pendingInStorage: pendingRequests.length,
+            hasPhantomEncryptionKey: !!params.phantom_encryption_public_key
+          });
+          // For connect responses, we should process them even without pending requests
+          // This handles the case where user returns to page after connecting
+          await this.processPhantomResponse(params);
+        } else if (pendingRequests.length > 0) {
+          debug.info(DebugCategory.BROWSER_SDK, "Found stored pending requests but no in-memory promises - processing and storing result for original tab", {
+            pendingInMemory: this.pendingRequests.size,
+            pendingInStorage: pendingRequests.length,
+            currentUrl: window.location.href.substring(0, 100) + "...",
+            isConnectResponse
+          });
           
-          localStorage.setItem("phantom_deeplink_response", JSON.stringify(params));
-          
-          // Optionally close this tab if it was opened by the deeplink
-          if (window.history.length <= 1) {
-            // eslint-disable-next-line no-console
-            console.log("📡 COMMUNICATION: Attempting to close response tab");
-            window.close();
-          }
-          return;
+          // Process the response and store result for original tab to pick up
+          // Use the first pending request ID
+          const requestId = params.request_id || pendingRequests[0];
+          await this.handleSuccessfulResponse(params, requestId);
+        } else {
+          debug.warn(DebugCategory.BROWSER_SDK, "No pending requests found anywhere, ignoring response", {
+            isConnectResponse
+          });
         }
-        
-        // eslint-disable-next-line no-console
-        console.log("📡 COMMUNICATION: Processing response in current tab");
-        this.processPhantomResponse(params);
-      } else {
-        // eslint-disable-next-line no-console
-        console.log("📡 COMMUNICATION: No Phantom parameters found in URL");
       }
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.warn("📡 COMMUNICATION: Failed to handle potential deeplink response:", error);
-      alert("📡 Error handling response: " + (error as Error).message);
+      debug.error(DebugCategory.BROWSER_SDK, "Failed to handle potential deeplink response", { error: (error as Error).message });
     }
   }
 
@@ -233,11 +288,8 @@ export class DeeplinksCommunicator {
   /**
    * Process response from Phantom
    */
-  private processPhantomResponse(params: Record<string, string>): void {
-    // For debugging
-    // eslint-disable-next-line no-console
-    console.log("🔍 RESPONSE: Processing phantom response:", params);
-    alert("🔍 Processing response with keys: " + Object.keys(params).join(", "));
+  private async processPhantomResponse(params: Record<string, string>): Promise<void> {
+    debug.info(DebugCategory.BROWSER_SDK, "Processing Phantom deeplinks response", { keys: Object.keys(params) });
 
     // Find the matching request - try to match any pending request if no request_id
     let requestId = params.request_id;
@@ -248,16 +300,29 @@ export class DeeplinksCommunicator {
       const [firstRequestId, firstRequest] = Array.from(this.pendingRequests.entries())[0];
       requestId = firstRequestId;
       pendingRequest = firstRequest;
-      // eslint-disable-next-line no-console
-      console.log("🔍 RESPONSE: Matched to first pending request:", firstRequestId);
-      alert("🔍 Matched to pending request: " + firstRequestId.substring(0, 10) + "...");
+      debug.info(DebugCategory.BROWSER_SDK, "Matched deeplinks response to pending request", { requestId: firstRequestId.substring(0, 10) + "..." });
     }
 
+    // If no pending request in memory, check if this is a connect response that should be processed anyway
     if (!pendingRequest) {
-      // eslint-disable-next-line no-console
-      console.warn("🔍 RESPONSE: No pending request found for response:", { requestId, params });
-      alert("🔍 ❌ No pending request found!");
-      return;
+      if (params.phantom_encryption_public_key) {
+        debug.info(DebugCategory.BROWSER_SDK, "No pending request in memory but found connect response - processing for initialization", { 
+          requestId, 
+          paramsKeys: Object.keys(params),
+          memoryPendingCount: this.pendingRequests.size 
+        });
+        
+        // For connect responses without pending requests, handle directly via callback
+        await this.handleSuccessfulResponse(params, requestId || 'connect_init');
+        return;
+      } else {
+        debug.warn(DebugCategory.BROWSER_SDK, "No pending request in memory for non-connect response", { 
+          requestId, 
+          paramsKeys: Object.keys(params),
+          memoryPendingCount: this.pendingRequests.size 
+        });
+        return;
+      }
     }
 
     // Clear timeout
@@ -272,25 +337,25 @@ export class DeeplinksCommunicator {
     try {
       // Check for error response
       if (params.errorCode || params.errorMessage) {
-        // eslint-disable-next-line no-console
-        console.log("🔍 RESPONSE: Error response detected");
-        alert("🔍 ❌ Error in response: " + (params.errorMessage || params.errorCode));
+        debug.error(DebugCategory.BROWSER_SDK, "Error in deeplinks response", { errorCode: params.errorCode, errorMessage: params.errorMessage });
         pendingRequest.reject(new Error(params.errorMessage || `Error: ${params.errorCode}`));
         return;
       }
 
       // Handle encrypted response
       if (params.data && params.nonce) {
-        // eslint-disable-next-line no-console
-        console.log("🔍 RESPONSE: Encrypted response detected", {
+        debug.info(DebugCategory.BROWSER_SDK, "Processing encrypted deeplinks response", {
           hasData: !!params.data,
           hasNonce: !!params.nonce,
-          hasSharedSecret: !!this.session.sharedSecret
         });
-        alert("🔍 Encrypted response. Has shared secret: " + (this.session.sharedSecret ? "YES" : "NO"));
         
-        if (!this.session.sharedSecret) {
-          throw new Error("No shared secret available for decryption");
+        // Load session to get Phantom's encryption key
+        const { loadSession } = await import("./session");
+        const storedSession = loadSession();
+        const phantomEncryptionKey = storedSession?.phantomEncryptionPublicKey;
+        
+        if (!phantomEncryptionKey) {
+          throw new Error("No Phantom encryption key available for decryption");
         }
 
         const encryptedPayload: EncryptedPayload = {
@@ -298,29 +363,23 @@ export class DeeplinksCommunicator {
           nonce: params.nonce,
         };
 
-        const decrypted = decryptPayload(encryptedPayload, this.session.sharedSecret);
+        const decrypted = await this.secureCrypto.decryptPayload(encryptedPayload, phantomEncryptionKey);
         
         // Update session if we receive new session info
         if (decrypted.session) {
           this.session.sessionToken = decrypted.session;
         }
         
-        // eslint-disable-next-line no-console
-        console.log("🔍 RESPONSE: Successfully decrypted response");
-        alert("🔍 ✅ Successfully decrypted response");
+        debug.info(DebugCategory.BROWSER_SDK, "Successfully decrypted deeplinks response");
         pendingRequest.resolve(decrypted);
         return;
       }
 
       // Handle plain response (like connect response with phantom_encryption_public_key)
-      // eslint-disable-next-line no-console
-      console.log("🔍 RESPONSE: Plain response detected");
-      alert("🔍 Plain response detected");
+      debug.info(DebugCategory.BROWSER_SDK, "Processing plain deeplinks response");
       pendingRequest.resolve(params);
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("🔍 RESPONSE: Error processing response:", error);
-      alert("🔍 ❌ Error processing response: " + (error as Error).message);
+      debug.error(DebugCategory.BROWSER_SDK, "Error processing deeplinks response", { error: (error as Error).message });
       pendingRequest.reject(error instanceof Error ? error : new Error("Failed to process response"));
     }
   }
@@ -336,17 +395,12 @@ export class DeeplinksCommunicator {
    * Force check current URL for response parameters
    * This is called when initializing in a potentially response tab
    */
-  forceCheckCurrentUrl(): void {
-    // eslint-disable-next-line no-console
-    console.log("🔧 COMMUNICATION: Force checking current URL");
-    alert("🔧 Force checking URL for responses");
+  async forceCheckCurrentUrl(): Promise<void> {
+    debug.info(DebugCategory.BROWSER_SDK, "Force checking current URL for deeplinks response");
     
     // Check hash and search immediately
-    this.handlePotentialResponse(window.location.hash);
-    this.handlePotentialResponse(window.location.search);
-    
-    // Also check for any stored responses
-    this.checkForStoredResponse();
+    await this.handlePotentialResponse(window.location.hash);
+    await this.handlePotentialResponse(window.location.search);
   }
 
   /**
@@ -367,8 +421,19 @@ export class DeeplinksCommunicator {
   private storePendingRequest(requestId: string): void {
     try {
       const existingRequests = this.getPendingRequestsFromStorage();
-      const updatedRequests = [...existingRequests.filter(id => id !== requestId), requestId];
+      
+      // Clean up any old requests that are no longer in memory (they might be stale)
+      const activeRequestIds = Array.from(this.pendingRequests.keys());
+      const cleanRequests = existingRequests.filter(id => activeRequestIds.includes(id));
+      
+      // Add the new request if not already present
+      const updatedRequests = [...cleanRequests.filter(id => id !== requestId), requestId];
       localStorage.setItem("phantom_pending_requests", JSON.stringify(updatedRequests));
+      
+      debug.info(DebugCategory.BROWSER_SDK, "Cleaned up stale pending requests", { 
+        before: existingRequests.length, 
+        after: updatedRequests.length 
+      });
     } catch (error) {
       // eslint-disable-next-line no-console
       console.warn("Failed to store pending request in localStorage:", error);
@@ -405,20 +470,138 @@ export class DeeplinksCommunicator {
     }
   }
 
+
   /**
-   * Check for stored response (for when current tab is the response tab)
+   * Handle successful response without needing to resolve a promise
+   * Used when processing stored requests from new tabs
    */
-  private checkForStoredResponse(): void {
+  private async handleSuccessfulResponse(params: Record<string, string>, requestId: string): Promise<void> {
+    let decryptedResponse: any = null;
+    
     try {
-      const storedResponse = localStorage.getItem("phantom_deeplink_response");
-      if (storedResponse) {
-        const responseData = JSON.parse(storedResponse);
-        this.processPhantomResponse(responseData);
-        localStorage.removeItem("phantom_deeplink_response");
+      // Check for error response
+      if (params.errorCode || params.errorMessage) {
+        debug.error(DebugCategory.BROWSER_SDK, "Error in stored deeplinks response", { errorCode: params.errorCode, errorMessage: params.errorMessage });
+        this.removePendingRequestFromStorage(requestId);
+        return;
       }
+
+      // Check if this is a connect response (has phantom_encryption_public_key)
+      if (params.phantom_encryption_public_key) {
+        debug.info(DebugCategory.BROWSER_SDK, "Processing stored connect response");
+        
+        // For connect responses, if there's encrypted data, it's encrypted with our key, not Phantom's
+        if (params.data && params.nonce) {
+          debug.info(DebugCategory.BROWSER_SDK, "Decrypting connect response data with our key");
+          
+          const encryptedPayload: EncryptedPayload = {
+            data: params.data,
+            nonce: params.nonce,
+          };
+
+          // Use Phantom's public key to decrypt (Phantom encrypted it with our public key, but we use their key for shared secret)
+          decryptedResponse = await this.secureCrypto.decryptPayload(encryptedPayload, params.phantom_encryption_public_key);
+          
+          debug.info(DebugCategory.BROWSER_SDK, "Decrypted connect response data", { 
+            hasSession: !!decryptedResponse.session, 
+            hasPublicKey: !!decryptedResponse.public_key,
+            keys: Object.keys(decryptedResponse)
+          });
+          
+          // Update session if we receive new session info
+          if (decryptedResponse.session) {
+            this.session.sessionToken = decryptedResponse.session;
+            debug.info(DebugCategory.BROWSER_SDK, "Updated session from stored connect response");
+          }
+          
+          // Store decrypted response for callback
+          this._lastDecryptedConnectResponse = decryptedResponse;
+        }
+        
+        debug.info(DebugCategory.BROWSER_SDK, "Connect response processed from storage");
+        
+        // Call the connect success callback if available
+        if (this.onConnectSuccessCallback) {
+          debug.info(DebugCategory.BROWSER_SDK, "Calling connect success callback");
+          const connectResponse = {
+            public_key: this._lastDecryptedConnectResponse?.public_key,
+            session: this.session.sessionToken,
+            phantom_encryption_public_key: params.phantom_encryption_public_key
+          };
+          this.onConnectSuccessCallback(connectResponse);
+        }
+      } else if (params.data && params.nonce) {
+        // Handle regular encrypted response (non-connect)
+        debug.info(DebugCategory.BROWSER_SDK, "Processing stored encrypted deeplinks response");
+        
+        // Load session to get Phantom's encryption key
+        const { loadSession } = await import("./session");
+        const storedSession = loadSession();
+        const phantomEncryptionKey = storedSession?.phantomEncryptionPublicKey;
+        
+        if (!phantomEncryptionKey) {
+          debug.error(DebugCategory.BROWSER_SDK, "No Phantom encryption key available for decryption");
+          this.removePendingRequestFromStorage(requestId);
+          return;
+        }
+
+        const encryptedPayload: EncryptedPayload = {
+          data: params.data,
+          nonce: params.nonce,
+        };
+
+        decryptedResponse = await this.secureCrypto.decryptPayload(encryptedPayload, phantomEncryptionKey);
+        
+        // Update session if we receive new session info
+        if (decryptedResponse.session) {
+          this.session.sessionToken = decryptedResponse.session;
+        }
+        
+        debug.info(DebugCategory.BROWSER_SDK, "Successfully processed stored encrypted response");
+      } else {
+        // Handle plain response
+        debug.info(DebugCategory.BROWSER_SDK, "Processing stored plain deeplinks response");
+      }
+      
+      // Store result for original tab to pick up (for non-connect responses)
+      if (!params.phantom_encryption_public_key) {
+        const responseResult = {
+          requestId,
+          response: decryptedResponse || params,
+          method: 'signMessage',
+          timestamp: Date.now()
+        };
+        
+        try {
+          localStorage.setItem(`phantom_response_result_${requestId}`, JSON.stringify(responseResult));
+          debug.info(DebugCategory.BROWSER_SDK, "Stored sign message result for original tab", { 
+            requestId: requestId.substring(0, 10) + "...",
+            hasSignature: !!(decryptedResponse?.signature || params.signature)
+          });
+        } catch (error) {
+          debug.error(DebugCategory.BROWSER_SDK, "Failed to store response result", { error: (error as Error).message });
+        }
+      }
+      
+      // Call the general response success callback if available
+      if (this.onResponseSuccessCallback) {
+        const responseData = params.phantom_encryption_public_key ? 
+          { ...this._lastDecryptedConnectResponse, phantom_encryption_public_key: params.phantom_encryption_public_key } :
+          decryptedResponse || params;
+        const method = params.phantom_encryption_public_key ? 'connect' : 'signMessage';
+        
+        debug.info(DebugCategory.BROWSER_SDK, "Calling response success callback", { method, requestId: requestId.substring(0, 10) + "..." });
+        this.onResponseSuccessCallback(responseData, requestId, method);
+      }
+
+      // Always clean up the request when done
+      this.removePendingRequestFromStorage(requestId);
+      debug.info(DebugCategory.BROWSER_SDK, "Cleaned up processed request from storage", { requestId: requestId.substring(0, 10) + "..." });
+      
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.warn("Failed to check for stored response:", error);
+      debug.error(DebugCategory.BROWSER_SDK, "Error processing stored deeplinks response", { error: (error as Error).message });
+      // Clean up on error too
+      this.removePendingRequestFromStorage(requestId);
     }
   }
 }

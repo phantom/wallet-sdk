@@ -1,7 +1,34 @@
 import type { ISolanaChain } from "@phantom/chains";
 import type { DeeplinksSession } from "../session";
 import type { DeeplinksCommunicator } from "../communication";
-import { encryptPayload, publicKeyToBase58 } from "../crypto";
+import type { SecureCrypto } from "../secureCrypto";
+import { 
+  generateSignMessageDeeplink, 
+  generateSignTransactionDeeplink,
+  generateSignAndSendTransactionDeeplink,
+  buildRedirectLink,
+  type EncryptedPayload 
+} from "@phantom/deeplinks";
+import bs58 from "bs58";
+import { debug, DebugCategory } from "../../../debug";
+
+// Payload type definitions for each method
+interface SignMessagePayload {
+  message: string; // base58 encoded message
+  display: "utf8" | "hex";
+}
+
+interface SignTransactionPayload {
+  transaction: number[]; // serialized transaction as byte array
+}
+
+interface SignAllTransactionsPayload {
+  transactions: number[][]; // array of serialized transactions
+}
+
+interface SignAndSendTransactionPayload {
+  transaction: number[]; // serialized transaction as byte array
+}
 
 export class DeeplinksSolanaChain implements ISolanaChain {
   private eventListeners: Map<string, Set<(...args: any[]) => void>> = new Map();
@@ -9,6 +36,7 @@ export class DeeplinksSolanaChain implements ISolanaChain {
   constructor(
     private session: DeeplinksSession,
     private communicator: DeeplinksCommunicator,
+    private secureCrypto: SecureCrypto,
   ) {}
 
   // Required wallet adapter properties
@@ -78,32 +106,108 @@ export class DeeplinksSolanaChain implements ISolanaChain {
 
   // Standard wallet adapter signing methods
   async signMessage(message: string | Uint8Array): Promise<{ signature: Uint8Array; publicKey: string }> {
+    // Check if we have a valid session for signing
+    if (!this.session.sessionToken) {
+      const errorMessage = `
+❌ DEEPLINKS SESSION ERROR:
+No valid session found for signing. This usually happens when:
+
+1. You haven't called connect() first
+2. Your browser session doesn't match the mobile app session
+3. The session has expired or is invalid
+
+🔧 SOLUTIONS:
+- Call provider.connect() first to establish a session
+- Or call provider.clearSessionAndReconnect() to force a fresh connection
+- Make sure you're using the same device/browser for connect and sign
+
+The session from connect() must be used for all subsequent signing operations.
+      `.trim();
+      throw new Error(errorMessage);
+    }
+
+    debug.info(DebugCategory.BROWSER_SDK, "Starting sign message with session validation", {
+      hasSession: !!this.session.sessionToken,
+      hasPublicKey: !!this.session.publicKey,
+      sessionLength: this.session.sessionToken?.length || 0
+    });
+
     const requestId = this.communicator.generateRequestId();
     
-    // Convert message to Uint8Array if needed
+    // Convert message to Uint8Array if needed and then to base58
     const messageBytes = typeof message === "string" ? new TextEncoder().encode(message) : message;
+    const messageBase58 = bs58.encode(messageBytes);
     
-    // Prepare request data
-    const requestData = {
-      message: Array.from(messageBytes),
+    debug.info(DebugCategory.BROWSER_SDK, "Message encoding details", {
+      originalType: typeof message,
+      originalLength: typeof message === "string" ? message.length : message.length,
+      base58Length: messageBase58.length,
+      base58Preview: messageBase58.substring(0, 20) + "..."
+    });
+    
+    // Prepare request data according to Phantom documentation
+    const requestData: SignMessagePayload = {
+      message: messageBase58,
+      display: "utf8",
     };
 
     // Build deeplink URL
-    const url = this.buildDeeplinkUrl("signMessage", requestId, requestData);
+    const url = await this.buildEncryptedDeeplinkUrl("signMessage", requestId, requestData);
+    
+    // Debug: Log the exact URL being generated
+    debug.info(DebugCategory.BROWSER_SDK, "Generated sign message deeplink", {
+      requestId: requestId.substring(0, 10) + "...",
+      fullUrl: url,
+      urlLength: url.length,
+      hasMessage: requestData.message.length > 0,
+      display: requestData.display,
+      urlParams: new URL(url).searchParams.toString()
+    });
     
     // Navigate to deeplink
+    debug.info(DebugCategory.BROWSER_SDK, "Navigating to sign message deeplink", {
+      requestId: requestId.substring(0, 10) + "...",
+      urlLength: url.length
+    });
     window.location.href = url;
     
-    // Wait for response
-    const response = await this.communicator.waitForResponse<{
-      signature: number[];
-      publicKey: string;
-    }>(requestId);
+    // Wait for response - the response will come back to this tab via URL parameters
+    debug.info(DebugCategory.BROWSER_SDK, "Waiting for sign message response...", {
+      requestId: requestId.substring(0, 10) + "..."
+    });
+    
+    try {
+      const response = await this.communicator.waitForResponse<{
+        signature: number[];
+        publicKey: string;
+      }>(requestId);
 
-    return {
-      signature: new Uint8Array(response.signature),
-      publicKey: response.publicKey,
-    };
+      debug.info(DebugCategory.BROWSER_SDK, "Sign message response received!", {
+        requestId: requestId.substring(0, 10) + "...",
+        hasSignature: !!response.signature,
+        signatureLength: response.signature?.length || 0,
+        publicKey: response.publicKey?.substring(0, 8) + "..." || "none"
+      });
+
+      const result = {
+        signature: new Uint8Array(response.signature),
+        publicKey: response.publicKey,
+      };
+      
+      debug.info(DebugCategory.BROWSER_SDK, "Sign message completed successfully!", {
+        requestId: requestId.substring(0, 10) + "...",
+        signatureUint8ArrayLength: result.signature.length,
+        publicKey: result.publicKey.substring(0, 8) + "..."
+      });
+      
+      return result;
+    } catch (error) {
+      debug.error(DebugCategory.BROWSER_SDK, "Sign message failed", {
+        requestId: requestId.substring(0, 10) + "...",
+        error: (error as Error).message
+      });
+      throw error;
+    }
   }
 
   async signTransaction<T>(transaction: T): Promise<T> {
@@ -112,12 +216,12 @@ export class DeeplinksSolanaChain implements ISolanaChain {
     // Serialize transaction (assuming it's a Solana transaction)
     const serialized = this.serializeTransaction(transaction as any);
     
-    const requestData = {
+    const requestData: SignTransactionPayload = {
       transaction: Array.from(serialized),
     };
 
     // Build deeplink URL
-    const url = this.buildDeeplinkUrl("signTransaction", requestId, requestData);
+    const url = await this.buildEncryptedDeeplinkUrl("signTransaction", requestId, requestData);
     
     // Navigate to deeplink
     window.location.href = url;
@@ -139,12 +243,12 @@ export class DeeplinksSolanaChain implements ISolanaChain {
     // Serialize all transactions
     const serializedTransactions = transactions.map(tx => Array.from(this.serializeTransaction(tx as any)));
     
-    const requestData = {
+    const requestData: SignAllTransactionsPayload = {
       transactions: serializedTransactions,
     };
 
     // Build deeplink URL
-    const url = this.buildDeeplinkUrl("signAllTransactions", requestId, requestData);
+    const url = await this.buildEncryptedDeeplinkUrl("signTransaction", requestId, requestData); // signAllTransactions uses signTransaction
     
     // Navigate to deeplink
     window.location.href = url;
@@ -166,12 +270,12 @@ export class DeeplinksSolanaChain implements ISolanaChain {
     // Serialize transaction
     const serialized = this.serializeTransaction(transaction as any);
     
-    const requestData = {
+    const requestData: SignAndSendTransactionPayload = {
       transaction: Array.from(serialized),
     };
 
     // Build deeplink URL
-    const url = this.buildDeeplinkUrl("signAndSendTransaction", requestId, requestData);
+    const url = await this.buildEncryptedDeeplinkUrl("signAndSendTransaction", requestId, requestData);
     
     // Navigate to deeplink
     window.location.href = url;
@@ -187,38 +291,93 @@ export class DeeplinksSolanaChain implements ISolanaChain {
   }
 
   /**
-   * Build deeplink URL for Phantom
+   * Build encrypted deeplink URL for wallet operations with proper typing
    */
-  private buildDeeplinkUrl(method: string, requestId: string, data: any): string {
-    const baseUrl = `https://phantom.app/ul/v1/${method}`;
-    const url = new URL(baseUrl);
+  private async buildEncryptedDeeplinkUrl(
+    method: 'signMessage',
+    requestId: string,
+    data: SignMessagePayload
+  ): Promise<string>;
+  private async buildEncryptedDeeplinkUrl(
+    method: 'signTransaction',
+    requestId: string,
+    data: SignTransactionPayload | SignAllTransactionsPayload
+  ): Promise<string>;
+  private async buildEncryptedDeeplinkUrl(
+    method: 'signAndSendTransaction',
+    requestId: string,
+    data: SignAndSendTransactionPayload
+  ): Promise<string>;
+  private async buildEncryptedDeeplinkUrl(
+    method: 'signMessage' | 'signTransaction' | 'signAndSendTransaction',
+    requestId: string,
+    data: SignMessagePayload | SignTransactionPayload | SignAllTransactionsPayload | SignAndSendTransactionPayload
+  ): Promise<string> {
+    // Get Phantom's encryption key from stored session data
+    const { loadSession } = await import("../session");
+    const storedSession = loadSession();
+    const phantomEncryptionKey = storedSession?.phantomEncryptionPublicKey;
     
-    // Add required parameters
-    url.searchParams.set("dapp_encryption_public_key", publicKeyToBase58(this.session.keyPair.publicKey));
-    url.searchParams.set("redirect_link", `${window.location.origin}${window.location.pathname}#phantom_response`);
-    url.searchParams.set("app_url", window.location.origin);
-    
-    // Add request ID for tracking
-    url.searchParams.set("request_id", requestId);
-    
-    // Encrypt and add data if we have a session
-    if (this.session.sessionToken && this.session.sharedSecret) {
-      const payload = {
-        ...data,
-        session: this.session.sessionToken,
-      };
-      
-      const encrypted = encryptPayload(payload, this.session.sharedSecret);
-      url.searchParams.set("data", encrypted.data);
-      url.searchParams.set("nonce", encrypted.nonce);
-    } else {
-      // For connect requests, send data in plain text
-      Object.entries(data).forEach(([key, value]) => {
-        url.searchParams.set(key, typeof value === "string" ? value : JSON.stringify(value));
-      });
+    if (!phantomEncryptionKey) {
+      throw new Error("No Phantom encryption key available - must connect first");
     }
     
-    return url.toString();
+    // Prepare payload with session token
+    const payload = {
+      ...data,
+      session: this.session.sessionToken,
+      request_id: requestId
+    };
+    
+    debug.info(DebugCategory.BROWSER_SDK, "Preparing encrypted payload", {
+      method,
+      hasSession: !!this.session.sessionToken,
+      requestId: requestId.substring(0, 10) + "...",
+      payloadKeys: Object.keys(payload)
+    });
+    
+    // Encrypt the payload
+    const encryptedPayload: EncryptedPayload = await this.secureCrypto.encryptPayload(payload, phantomEncryptionKey);
+    
+    debug.info(DebugCategory.BROWSER_SDK, "Encrypted payload details", {
+      method,
+      hasEncryptedData: !!encryptedPayload.data,
+      hasNonce: !!encryptedPayload.nonce,
+      encryptedDataLength: encryptedPayload.data.length,
+      nonceLength: encryptedPayload.nonce.length
+    });
+    
+    const redirectLink = buildRedirectLink("#phantom_response");
+    
+    // Get our encryption public key for the deeplink
+    const ourPublicKey = this.secureCrypto.getPublicKeyBase58();
+    if (!ourPublicKey) {
+      throw new Error("SecureCrypto not initialized");
+    }
+
+    debug.info(DebugCategory.BROWSER_SDK, "Deeplink parameters", {
+      method,
+      ourPublicKey: ourPublicKey.substring(0, 10) + "...",
+      redirectLink,
+      encryptedData: encryptedPayload.data.substring(0, 50) + "...",
+      nonce: encryptedPayload.nonce.substring(0, 20) + "..."
+    });
+
+    // Generate the appropriate deeplink based on method
+    switch (method) {
+      case 'signMessage':
+        return generateSignMessageDeeplink({ 
+          dappEncryptionPublicKey: ourPublicKey,
+          data: encryptedPayload, 
+          redirectLink 
+        });
+      case 'signTransaction':
+        return generateSignTransactionDeeplink({ data: encryptedPayload, redirectLink });
+      case 'signAndSendTransaction':
+        return generateSignAndSendTransactionDeeplink({ data: encryptedPayload, redirectLink });
+      default:
+        throw new Error(`Unknown method: ${method}`);
+    }
   }
 
   /**

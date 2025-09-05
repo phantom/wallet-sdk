@@ -9,10 +9,15 @@ import { AddressType } from "@phantom/client";
 import { debug, DebugCategory } from "../../debug";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chains";
 
-import { getOrCreateKeypair, encryptPayload, publicKeyToBase58, base58ToPublicKey, createSharedSecret } from "./crypto";
 import { saveSession, loadSession, clearSession, hasValidSession, initializeSessionStorage, type DeeplinksSession } from "./session";
+import { SecureCrypto } from "./secureCrypto";
 import { DeeplinksCommunicator } from "./communication";
 import { DeeplinksSolanaChain } from "./chains/SolanaChain";
+import { 
+  generateConnectDeeplink, 
+  generateDisconnectDeeplink,
+  buildRedirectLink 
+} from "@phantom/deeplinks";
 import { DeeplinksEthereumChain } from "./chains/EthereumChain";
 
 interface DeeplinksProviderConfig {
@@ -25,6 +30,7 @@ export class DeeplinksProvider implements Provider {
   private addressTypes: [AddressType, ...AddressType[]];
   private session: DeeplinksSession;
   private communicator: DeeplinksCommunicator;
+  private secureCrypto: SecureCrypto;
 
   // Chain instances
   private _solanaChain?: ISolanaChain;
@@ -33,23 +39,37 @@ export class DeeplinksProvider implements Provider {
   // Event management
   private eventListeners: Map<EmbeddedProviderEvent, Set<EventCallback>> = new Map();
 
+  // Initialization state tracking
+  private isInitializing: boolean = false;
+  private isInitialized: boolean = false;
+
   constructor(config: DeeplinksProviderConfig) {
     debug.log(DebugCategory.BROWSER_SDK, "Initializing DeeplinksProvider", { config });
 
     this.addressTypes = config.addressTypes;
 
-    // Initialize with temporary session - will be replaced after async initialization
-    // Use a placeholder keypair that will be replaced by secure storage
-    this.session = {
-      keyPair: { publicKey: new Uint8Array(32), secretKey: new Uint8Array(32) },
-    };
+    // Initialize with empty session
+    this.session = {};
+    
+    // Initialize secure crypto manager
+    this.secureCrypto = new SecureCrypto();
 
     // Create communicator
-    this.communicator = new DeeplinksCommunicator(this.session);
+    this.communicator = new DeeplinksCommunicator(this.session, this.secureCrypto);
+    
+    // Set up callback for successful connect responses processed in new tabs
+    this.communicator.setOnConnectSuccess((response) => {
+      this.handleConnectSuccessCallback(response);
+    });
+
+    // Set up callback for all response types (sign message, etc.)
+    this.communicator.setOnResponseSuccess((response, requestId, method) => {
+      this.handleResponseSuccessCallback(response, requestId, method);
+    });
 
     // Create chain instances
     if (this.addressTypes.includes(AddressType.solana)) {
-      this._solanaChain = new DeeplinksSolanaChain(this.session, this.communicator);
+      this._solanaChain = new DeeplinksSolanaChain(this.session, this.communicator, this.secureCrypto);
       debug.log(DebugCategory.BROWSER_SDK, "Solana chain created for deeplinks");
     }
 
@@ -71,28 +91,29 @@ export class DeeplinksProvider implements Provider {
    * Async initialization - loads saved session and starts response handling
    */
   private async initializeAsync(): Promise<void> {
+    // Prevent double initialization
+    if (this.isInitializing || this.isInitialized) {
+      debug.info(DebugCategory.BROWSER_SDK, "Deeplinks already initializing or initialized, skipping");
+      return;
+    }
+    
+    this.isInitializing = true;
+    
     try {
-      // eslint-disable-next-line no-console
-      console.log("🔧 ASYNC: Starting async initialization");
-      alert("🔧 Starting async initialization");
+      debug.info(DebugCategory.BROWSER_SDK, "Starting deeplinks async initialization");
 
-      // Initialize secure storage
-      await initializeSessionStorage();
+      // Initialize session storage
+      initializeSessionStorage();
 
-      // Load or create secure keypair from IndexedDB
-      const keyPair = await getOrCreateKeypair();
-      this.session.keyPair = keyPair;
+      // Initialize secure crypto (generates or loads keypair securely)
+      const publicKey = await this.secureCrypto.init();
       
-      // eslint-disable-next-line no-console
-      console.log("🔧 ASYNC: Loaded/created secure keypair");
-      alert("🔧 Keypair loaded from secure storage");
+      debug.info(DebugCategory.BROWSER_SDK, "SecureCrypto initialized", { publicKeyPrefix: publicKey.substring(0, 8) });
 
       // Try to load existing session data (non-sensitive)
-      const existingSession = await loadSession();
+      const existingSession = loadSession();
       if (existingSession) {
-        // eslint-disable-next-line no-console
-        console.log("🔧 ASYNC: Loaded existing session from storage");
-        alert("🔧 Found existing session in storage");
+        debug.info(DebugCategory.BROWSER_SDK, "Found existing session in storage");
         
         this.session = existingSession;
         
@@ -104,26 +125,33 @@ export class DeeplinksProvider implements Provider {
           }];
           this.connected = true;
           
-          // eslint-disable-next-line no-console
-          console.log("🔧 ASYNC: Restored connection from session");
-          alert("🔧 Auto-connected from saved session!");
+          debug.info(DebugCategory.BROWSER_SDK, "Auto-restored connection from session", { 
+            publicKey: existingSession.publicKey?.substring(0, 8) + "..." 
+          });
+          
+          this.emit("connect", {
+            source: "deeplinks-auto-restore",
+          });
         }
       } else {
-        // eslint-disable-next-line no-console
-        console.log("🔧 ASYNC: No existing session, using secure keypair");
-        alert("🔧 Using secure keypair for new session");
+        debug.info(DebugCategory.BROWSER_SDK, "No existing session, ready for new connection");
       }
 
-      // Start response handling
+      // Always start response handling - we need to listen for sign/transaction responses even when connected
       this.initializeResponseHandling();
       
+      this.isInitialized = true;
+      debug.info(DebugCategory.BROWSER_SDK, "Deeplinks provider initialization complete");
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("🔧 ASYNC: Failed async initialization:", error);
-      alert("🔧 Async init failed: " + (error as Error).message);
+      debug.error(DebugCategory.BROWSER_SDK, "Deeplinks initialization failed", { error: (error as Error).message });
       
-      // Still start response handling with current session
-      this.initializeResponseHandling();
+      // Still start response handling with current session if not connected
+      if (!this.connected) {
+        this.initializeResponseHandling();
+      }
+      throw error;
+    } finally {
+      this.isInitializing = false;
     }
   }
 
@@ -131,9 +159,7 @@ export class DeeplinksProvider implements Provider {
    * Initialize response handling immediately on provider creation
    */
   private initializeResponseHandling(): void {
-    // eslint-disable-next-line no-console
-    console.log("🔧 DEEPLINKS: Initializing response handling");
-    alert("🔧 Starting response detection immediately");
+    debug.info(DebugCategory.BROWSER_SDK, "Initializing deeplinks response handling");
 
     // Start listening for responses immediately
     this.communicator.startListening();
@@ -149,19 +175,41 @@ export class DeeplinksProvider implements Provider {
     const currentUrl = window.location.href;
     const hasResponseParams = currentUrl.includes('phantom_encryption_public_key') || 
                              currentUrl.includes('phantom_response') ||
-                             currentUrl.includes('#phantom_response');
+                             currentUrl.includes('#phantom_response') ||
+                             (currentUrl.includes('nonce=') && currentUrl.includes('data='));
     
     if (hasResponseParams) {
-      // eslint-disable-next-line no-console
-      console.log("🔧 DEEPLINKS: Found response params in current URL", currentUrl);
-      alert("🔧 Found response parameters in current URL!");
+      debug.info(DebugCategory.BROWSER_SDK, "Found deeplinks response params in current URL", { url: currentUrl });
       
-      // Force check the current URL for responses
-      this.communicator.forceCheckCurrentUrl();
+      // Let startListening handle processing regardless of connection state
+      // This allows processing of sign/transaction responses even when already connected
+      debug.info(DebugCategory.BROWSER_SDK, "Response params found, startListening will handle processing");
     } else {
-      // eslint-disable-next-line no-console
-      console.log("🔧 DEEPLINKS: No response params in current URL", currentUrl);
+      debug.info(DebugCategory.BROWSER_SDK, "No response params in current URL, ready to listen for new responses");
     }
+  }
+
+
+  /**
+   * Clear current session and prepare for fresh connect
+   */
+  async clearSessionAndReconnect(): Promise<ConnectResult> {
+    debug.info(DebugCategory.BROWSER_SDK, "Clearing session and forcing reconnect");
+    
+    // Clear current session
+    clearSession();
+    this.session = {};
+    await this.secureCrypto.clear();
+    this.connected = false;
+    this.addresses = [];
+
+    // Emit disconnect event
+    this.emit("disconnect", {
+      source: "deeplinks-session-clear",
+    });
+
+    // Start fresh connect
+    return this.connect();
   }
 
   /**
@@ -190,11 +238,76 @@ export class DeeplinksProvider implements Provider {
     return this._ethereumChain;
   }
 
+  /**
+   * Handle successful connect response processed in new tab
+   */
+  private handleConnectSuccessCallback(response: any): void {
+    debug.info(DebugCategory.BROWSER_SDK, "Handling connect success callback", {
+      hasPublicKey: !!response.public_key,
+      hasSession: !!response.session,
+      hasEncryptionKey: !!response.phantom_encryption_public_key
+    });
+
+    if (!response.public_key || !response.session) {
+      debug.error(DebugCategory.BROWSER_SDK, "Connect success callback missing required data");
+      return;
+    }
+
+    // Update session with response data
+    this.session.sessionToken = response.session;
+    this.session.publicKey = response.public_key;
+
+    // Save session with Phantom's encryption key
+    saveSession(this.session, response.phantom_encryption_public_key);
+
+    // Update internal state
+    this.addresses = [{
+      addressType: AddressType.solana,
+      address: response.public_key,
+    }];
+    this.connected = true;
+
+    debug.info(DebugCategory.BROWSER_SDK, "Provider state updated from connect callback", {
+      connected: this.connected,
+      publicKey: response.public_key.substring(0, 8) + "...",
+      addressCount: this.addresses.length
+    });
+
+    // Clean URL
+    this.communicator.cleanUrl();
+
+    // Emit connect event
+    this.emit("connect", {
+      addresses: this.addresses,
+      source: "deeplinks-new-tab-callback",
+    });
+
+    debug.info(DebugCategory.BROWSER_SDK, "Connect event emitted from callback");
+  }
+
+  /**
+   * Handle successful responses for all methods (sign message, etc.)
+   */
+  private handleResponseSuccessCallback(response: any, requestId: string, method: string): void {
+    debug.info(DebugCategory.BROWSER_SDK, "Handling response success callback", {
+      method,
+      requestId: requestId.substring(0, 10) + "...",
+      hasResponse: !!response,
+      responseKeys: response ? Object.keys(response) : []
+    });
+
+    if (method === 'connect') {
+      // Connect responses are already handled by handleConnectSuccessCallback
+      debug.info(DebugCategory.BROWSER_SDK, "Connect response already handled by connect callback");
+      return;
+    }
+
+    // For sign message and other methods, the response should be handled by direct URL parameter processing
+    // No need for special callback handling since the response comes back to the current tab
+    debug.info(DebugCategory.BROWSER_SDK, "Response callback processed", { method });
+  }
+
   async connect(_authOptions?: AuthOptions): Promise<ConnectResult> {
-    // eslint-disable-next-line no-console
-    console.log("🔗 DEEPLINKS: Starting connect");
-    alert("🔗 Starting deeplinks connect");
-    
     debug.info(DebugCategory.BROWSER_SDK, "Starting deeplinks connect", {
       addressTypes: this.addressTypes,
       hasValidSession: hasValidSession(this.session),
@@ -209,11 +322,9 @@ export class DeeplinksProvider implements Provider {
     try {
       // Check if we already have a valid session
       if (hasValidSession(this.session) && this.session.publicKey) {
-        // eslint-disable-next-line no-console
-        console.log("🔗 DEEPLINKS: Using existing session", this.session.publicKey);
-        alert("🔗 Using existing session: " + this.session.publicKey.substring(0, 8) + "...");
-        
-        debug.log(DebugCategory.BROWSER_SDK, "Using existing deeplinks session");
+        debug.info(DebugCategory.BROWSER_SDK, "Using existing deeplinks session", {
+          publicKey: this.session.publicKey.substring(0, 8) + "..."
+        });
         
         this.addresses = [{
           addressType: AddressType.solana,
@@ -240,17 +351,17 @@ export class DeeplinksProvider implements Provider {
       // Build connect deeplink URL
       const url = this.buildConnectUrl(requestId);
       
-      // eslint-disable-next-line no-console
-      console.log("🔗 DEEPLINKS: Generated URL", { requestId, url });
-      alert("🔗 Opening Phantom with URL: " + url.substring(0, 50) + "...");
-      
-      debug.log(DebugCategory.BROWSER_SDK, "Opening Phantom for connection", { url });
+      debug.info(DebugCategory.BROWSER_SDK, "Opening Phantom for connection", { 
+        requestId: requestId.substring(0, 10) + "...",
+        urlLength: url.length 
+      });
       
       // Navigate to deeplink
       window.location.href = url;
       
-      // eslint-disable-next-line no-console
-      console.log("🔗 DEEPLINKS: Waiting for response, requestId:", requestId);
+      debug.info(DebugCategory.BROWSER_SDK, "Waiting for deeplinks response", { 
+        requestId: requestId.substring(0, 10) + "..." 
+      });
       
       // Wait for response
       const response = await this.communicator.waitForResponse<{
@@ -259,28 +370,28 @@ export class DeeplinksProvider implements Provider {
         phantom_encryption_public_key?: string;
       }>(requestId, 60000); // 60 second timeout for connect
 
-      // eslint-disable-next-line no-console
-      console.log("🔗 DEEPLINKS: Received response", response);
-      alert("🔗 Got response from Phantom!");
+      debug.info(DebugCategory.BROWSER_SDK, "Received deeplinks response", {
+        hasPublicKey: !!response.public_key,
+        hasSession: !!response.session,
+        hasEncryptionKey: !!response.phantom_encryption_public_key
+      });
 
       // Update session with response
       this.session.sessionToken = response.session;
       this.session.publicKey = response.public_key;
       
-      // If we received Phantom's public key, create shared secret
+      // Save session with Phantom's encryption key (if provided)
       let phantomEncryptionKey: string | undefined;
       if (response.phantom_encryption_public_key) {
-        // eslint-disable-next-line no-console
-        console.log("🔗 DEEPLINKS: Creating shared secret");
         phantomEncryptionKey = response.phantom_encryption_public_key;
-        const phantomPublicKey = base58ToPublicKey(phantomEncryptionKey);
-        this.session.sharedSecret = createSharedSecret(this.session.keyPair.secretKey, phantomPublicKey);
+        debug.info(DebugCategory.BROWSER_SDK, "Received Phantom's encryption key");
       }
       
-      // Save session with Phantom's encryption key for future shared secret regeneration
-      await saveSession(this.session, phantomEncryptionKey);
-      // eslint-disable-next-line no-console
-      console.log("🔗 DEEPLINKS: Session saved", this.session);
+      saveSession(this.session, phantomEncryptionKey);
+      debug.info(DebugCategory.BROWSER_SDK, "Session saved successfully", {
+        hasSessionToken: !!this.session.sessionToken,
+        hasPublicKey: !!this.session.publicKey
+      });
 
       // Update internal state
       this.addresses = [{
@@ -302,10 +413,6 @@ export class DeeplinksProvider implements Provider {
         source: "deeplinks-new-session",
       });
 
-      // eslint-disable-next-line no-console
-      console.log("🔗 DEEPLINKS: Connect successful!", result);
-      alert("🔗 Connect successful! Address: " + response.public_key.substring(0, 8) + "...");
-
       debug.info(DebugCategory.BROWSER_SDK, "Deeplinks connect successful", {
         publicKey: response.public_key,
         hasSession: !!response.session,
@@ -313,10 +420,6 @@ export class DeeplinksProvider implements Provider {
 
       return result;
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("🔗 DEEPLINKS: Connect failed", error);
-      alert("🔗 Connect failed: " + (error as Error).message);
-      
       debug.error(DebugCategory.BROWSER_SDK, "Deeplinks connect failed", { error: (error as Error).message });
       
       this.emit("connect_error", {
@@ -328,14 +431,14 @@ export class DeeplinksProvider implements Provider {
     }
   }
 
-  disconnect(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      try {
-        debug.info(DebugCategory.BROWSER_SDK, "Starting deeplinks disconnect");
+  async disconnect(): Promise<void> {
+    try {
+      debug.info(DebugCategory.BROWSER_SDK, "Starting deeplinks disconnect");
+      
       // If we have a session, send disconnect deeplink
       if (hasValidSession(this.session)) {
         const requestId = this.communicator.generateRequestId();
-        const url = this.buildDisconnectUrl(requestId);
+        const url = await this.buildDisconnectUrl(requestId);
         
         // Navigate to disconnect (optional - Phantom may not require this)
         window.location.href = url;
@@ -343,29 +446,28 @@ export class DeeplinksProvider implements Provider {
         // Don't wait for response for disconnect - it's fire and forget
       }
 
-      // Clear session and state
-      clearSession();
-      this.session = {
-        keyPair: generateKeypair(),
-      };
-      
-      this.connected = false;
-      this.addresses = [];
+      // Clear session data
+        clearSession();
+        this.session = {};
+        
+        // Clear secure crypto keys
+        await this.secureCrypto.clear();
+        
+        this.connected = false;
+        this.addresses = [];
 
-      // Stop listening for responses
-      this.communicator.stopListening();
+        // Stop listening for responses
+        this.communicator.stopListening();
 
-      this.emit("disconnect", {
-        source: "deeplinks-disconnect",
-      });
+        this.emit("disconnect", {
+          source: "deeplinks-disconnect",
+        });
 
-      debug.info(DebugCategory.BROWSER_SDK, "Deeplinks disconnect successful");
-        resolve();
+        debug.info(DebugCategory.BROWSER_SDK, "Deeplinks disconnect successful");
       } catch (error) {
         debug.error(DebugCategory.BROWSER_SDK, "Deeplinks disconnect failed", { error: (error as Error).message });
-        reject(error);
+        throw error;
       }
-    });
   }
 
   getAddresses(): WalletAddress[] {
@@ -417,48 +519,53 @@ export class DeeplinksProvider implements Provider {
   }
 
   /**
-   * Build connect deeplink URL
+   * Build connect deeplink URL using the new deeplinks package
    */
   private buildConnectUrl(requestId: string): string {
-    const baseUrl = "https://phantom.app/ul/v1/connect";
-    const url = new URL(baseUrl);
+    const ourPublicKey = this.secureCrypto.getPublicKeyBase58();
+    if (!ourPublicKey) {
+      throw new Error("SecureCrypto not initialized");
+    }
     
-    // Required parameters
-    url.searchParams.set("dapp_encryption_public_key", publicKeyToBase58(this.session.keyPair.publicKey));
-    url.searchParams.set("redirect_link", `${window.location.origin}${window.location.pathname}#phantom_response`);
-    url.searchParams.set("app_url", window.location.origin);
-    url.searchParams.set("request_id", requestId);
+    const url = generateConnectDeeplink({
+      dappEncryptionPublicKey: ourPublicKey,
+      cluster: "mainnet-beta",
+      appUrl: buildRedirectLink(),
+      redirectLink: buildRedirectLink("#phantom_response")
+    });
     
-    // Optional cluster (default to mainnet-beta)
-    url.searchParams.set("cluster", "mainnet-beta");
+    // Add request_id to the generated URL
+    const urlObj = new URL(url);
+    urlObj.searchParams.set("request_id", requestId);
     
-    return url.toString();
+    return urlObj.toString();
   }
 
   /**
-   * Build disconnect deeplink URL
+   * Build disconnect deeplink URL using the new deeplinks package
    */
-  private buildDisconnectUrl(requestId: string): string {
-    const baseUrl = "https://phantom.app/ul/v1/disconnect";
-    const url = new URL(baseUrl);
+  private async buildDisconnectUrl(requestId: string): Promise<string> {
+    let encryptedData;
     
-    // Required parameters
-    url.searchParams.set("dapp_encryption_public_key", publicKeyToBase58(this.session.keyPair.publicKey));
-    url.searchParams.set("redirect_link", `${window.location.origin}${window.location.pathname}#phantom_response`);
-    url.searchParams.set("app_url", window.location.origin);
-    url.searchParams.set("request_id", requestId);
-    
-    // Add session if available
-    if (this.session.sessionToken && this.session.sharedSecret) {
-      const payload = {
-        session: this.session.sessionToken,
-      };
+    // Add encrypted session if available
+    if (this.session.sessionToken) {
+      // Get Phantom's encryption key from stored session data
+      const storedSession = loadSession();
+      const phantomEncryptionKey = storedSession?.phantomEncryptionPublicKey;
       
-      const encrypted = encryptPayload(payload, this.session.sharedSecret);
-      url.searchParams.set("data", encrypted.data);
-      url.searchParams.set("nonce", encrypted.nonce);
+      if (phantomEncryptionKey) {
+        const payload = {
+          session: this.session.sessionToken,
+          request_id: requestId,
+        };
+        
+        encryptedData = await this.secureCrypto.encryptPayload(payload, phantomEncryptionKey);
+      }
     }
     
-    return url.toString();
+    return generateDisconnectDeeplink({
+      data: encryptedData,
+      redirectLink: buildRedirectLink("#phantom_response")
+    });
   }
 }

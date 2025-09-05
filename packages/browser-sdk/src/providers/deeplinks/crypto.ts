@@ -136,6 +136,7 @@ export async function getOrCreateKeypair(): Promise<KeyPair> {
       return existing;
     }
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.warn("Failed to load existing keypair:", error);
   }
   

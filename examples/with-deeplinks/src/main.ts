@@ -27,14 +27,14 @@ const lastResultContent = document.getElementById("lastResultContent") as HTMLPr
 // Initialize SDK
 function initializeSDK() {
   try {
-    alert("⚡ Initializing Deeplinks SDK...");
+    addDebugMessage("⚡ Initializing Deeplinks SDK...");
     
     sdk = new BrowserSDK({
       providerType: "deeplinks",
       addressTypes: [AddressType.solana],
     });
 
-    alert("⚡ BrowserSDK created, setting up events...");
+    addDebugMessage("⚡ BrowserSDK created, setting up events...");
 
     // Configure debug settings
     sdk.configureDebug({
@@ -51,33 +51,28 @@ function initializeSDK() {
     sdk.on("connect_start", (data) => {
       addDebugMessage(`Connect started: ${JSON.stringify(data)}`);
       updateStatus("Connecting...", "connecting");
-      alert("🎯 Connect started event fired!");
     });
 
     sdk.on("connect", (data) => {
       addDebugMessage(`Connected: ${JSON.stringify(data)}`);
       onConnected();
-      alert("🎯 Connect event fired!");
     });
 
     sdk.on("connect_error", (data) => {
       addDebugMessage(`Connect error: ${JSON.stringify(data)}`);
       updateStatus("Connection failed", "error");
-      alert("🎯 Connect error event fired!");
     });
 
     sdk.on("disconnect", (data) => {
       addDebugMessage(`Disconnected: ${JSON.stringify(data)}`);
       onDisconnected();
-      alert("🎯 Disconnect event fired!");
     });
 
     addDebugMessage("Deeplinks SDK initialized successfully");
-    alert("✅ Deeplinks SDK initialized successfully!");
+    addDebugMessage("✅ Deeplinks SDK initialized successfully!");
   } catch (error) {
     addDebugMessage(`Failed to initialize SDK: ${error}`);
     updateLastResult({ error: `Failed to initialize SDK: ${error}` });
-    alert("❌ Failed to initialize SDK: " + error);
   }
 }
 
@@ -203,29 +198,25 @@ async function createSimpleTransaction(): Promise<Transaction> {
 
 // Event handlers
 connectBtn.addEventListener("click", async () => {
-  alert("🚀 Connect button clicked!");
+  addDebugMessage("🚀 Connect button clicked!");
   
   if (!sdk) {
     addDebugMessage("SDK not initialized");
-    alert("❌ SDK not initialized!");
     return;
   }
 
   try {
     updateStatus("Connecting...", "connecting");
     addDebugMessage("🚀 Calling sdk.connect()...");
-    alert("🚀 About to call sdk.connect()");
     
     const result = await sdk.connect();
     
     updateLastResult(result);
     addDebugMessage("Connect successful");
-    alert("🚀 Connect successful! Got " + result.addresses.length + " addresses");
   } catch (error) {
     addDebugMessage(`Connect failed: ${error}`);
     updateLastResult({ error: `Connect failed: ${error}` });
     updateStatus("Connection failed", "error");
-    alert("❌ Connect failed: " + error);
   }
 });
 
