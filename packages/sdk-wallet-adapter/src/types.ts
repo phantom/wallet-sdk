@@ -9,18 +9,6 @@ export interface PhantomSDKWalletAdapterConfig {
   appId: string;
 
   /**
-   * The type of embedded wallet to use
-   * @default 'app-wallet'
-   */
-  embeddedWalletType?: "app-wallet" | "user-wallet";
-
-  /**
-   * The API base URL for the embedded provider
-   * @default 'https://api.phantom.com'
-   */
-  apiBaseUrl?: string;
-
-  /**
    * Network to use
    * @default 'mainnet-beta'
    * TODO: Add support for network switching in the adapter
@@ -28,10 +16,7 @@ export interface PhantomSDKWalletAdapterConfig {
   network?: "mainnet-beta" | "devnet" | "testnet";
 
   /**
-   * The auth options for the embedded provider
+   * The redirect URL for the embedded provider
    */
-  authOptions?: {
-    authUrl?: string;
-    redirectUrl?: string;
-  };
+  redirectUrl?: string;
 }

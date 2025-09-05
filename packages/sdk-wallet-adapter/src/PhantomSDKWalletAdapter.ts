@@ -1,3 +1,4 @@
+import { AddressType, BrowserSDK } from "@phantom/browser-sdk";
 import type { WalletName } from "@solana/wallet-adapter-base";
 import {
   BaseMessageSignerWalletAdapter,
@@ -11,9 +12,8 @@ import {
   WalletSignMessageError,
   WalletSignTransactionError,
 } from "@solana/wallet-adapter-base";
+import type { Transaction, TransactionVersion, VersionedTransaction } from "@solana/web3.js";
 import { PublicKey } from "@solana/web3.js";
-import type { TransactionVersion, Transaction, VersionedTransaction } from "@solana/web3.js";
-import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 import type { PhantomSDKWalletAdapterConfig } from "./types";
 
 export const PhantomSDKWalletName = "Phantom (Invisible)" as const;
@@ -40,12 +40,14 @@ export class PhantomSDKWalletAdapter extends BaseMessageSignerWalletAdapter {
     // Initialize the SDK immediately
     this._sdk = new BrowserSDK({
       providerType: "embedded",
-      apiBaseUrl: config.apiBaseUrl,
+      apiBaseUrl: "https://staging-api.phantom.app/v1/wallets",
       embeddedWalletType: "user-wallet",
       addressTypes: [AddressType.solana],
-      authOptions: config.authOptions,
-      // Pass appId through as part of the config (it's in Partial<EmbeddedProviderConfig>)
-      ...{ appId: config.appId },
+      authOptions: {
+        authUrl: "https://staging-connect.phantom.app/login",
+        redirectUrl: config.redirectUrl,
+      },
+      appId: config.appId,
     } as any);
 
     // Mark as installed since we're using embedded provider
@@ -112,9 +114,6 @@ export class PhantomSDKWalletAdapter extends BaseMessageSignerWalletAdapter {
     });
   }
 
-  /**
-   * Auto-connect to the wallet if there's an existing session
-   */
   async autoConnect(): Promise<void> {
     if (this.connected || this.connecting) return;
 
@@ -223,8 +222,7 @@ export class PhantomSDKWalletAdapter extends BaseMessageSignerWalletAdapter {
       if (!this._sdk || !this._sdk.isConnected()) throw new WalletNotConnectedError();
 
       // Sign and send via SDK's Solana chain interface
-      const solanaChain = (this._sdk as any).solana;
-      const result = await solanaChain.signAndSendTransaction(transaction);
+      const result = await this._sdk.solana.signAndSendTransaction(transaction);
 
       if (!result || !result.signature) {
         throw new WalletSendTransactionError("Transaction failed");
@@ -244,8 +242,7 @@ export class PhantomSDKWalletAdapter extends BaseMessageSignerWalletAdapter {
       if (!this._sdk || !this._sdk.isConnected()) throw new WalletNotConnectedError();
 
       // Sign via SDK's Solana chain interface
-      const solanaChain = (this._sdk as any).solana;
-      const signedTransaction = await solanaChain.signTransaction(transaction);
+      const signedTransaction = await this._sdk.solana.signTransaction(transaction);
 
       return signedTransaction as T;
     } catch (error: any) {
@@ -260,10 +257,8 @@ export class PhantomSDKWalletAdapter extends BaseMessageSignerWalletAdapter {
     try {
       if (!this._sdk || !this._sdk.isConnected()) throw new WalletNotConnectedError();
 
-      const solanaChain = (this._sdk as any).solana;
-
       // Check if SDK supports signAllTransactions
-      if (!solanaChain.signAllTransactions) {
+      if (!this._sdk.solana.signAllTransactions) {
         // Fallback to signing one by one
         const signedTransactions: T[] = [];
         for (const transaction of transactions) {
@@ -274,7 +269,7 @@ export class PhantomSDKWalletAdapter extends BaseMessageSignerWalletAdapter {
       }
 
       // Sign all via SDK's Solana chain interface
-      const signedTransactions = await solanaChain.signAllTransactions(transactions);
+      const signedTransactions = await this._sdk.solana.signAllTransactions(transactions);
 
       return signedTransactions as T[];
     } catch (error: any) {
@@ -289,8 +284,7 @@ export class PhantomSDKWalletAdapter extends BaseMessageSignerWalletAdapter {
     try {
       if (!this._sdk || !this._sdk.isConnected()) throw new WalletNotConnectedError();
 
-      const solanaChain = (this._sdk as any).solana;
-      const result = await solanaChain.signMessage(message);
+      const result = await this._sdk.solana.signMessage(message);
 
       if (!result || !result.signature) {
         throw new WalletSignMessageError("Failed to sign message");

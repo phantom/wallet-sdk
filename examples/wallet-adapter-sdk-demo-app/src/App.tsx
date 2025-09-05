@@ -1,37 +1,27 @@
-import { useMemo } from "react";
-import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
-import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
-import { WalletModalProvider, WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { PhantomSDKWalletAdapter } from "@phantom/sdk-wallet-adapter";
-import { clusterApiUrl } from "@solana/web3.js";
-import { WalletInfo } from "./components/WalletInfo";
+import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
+import { WalletModalProvider, WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { useMemo } from "react";
 import { WalletActions } from "./components/WalletActions";
+import { WalletInfo } from "./components/WalletInfo";
 
 // Import wallet adapter default styles
 import "@solana/wallet-adapter-react-ui/styles.css";
 
 function App() {
-  // Configure network
-  const network = WalletAdapterNetwork.Mainnet;
-  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
-
   // Configure wallets
   const wallets = useMemo(
     () => [
       new PhantomSDKWalletAdapter({
         appId: "11111111-1111-1111-1111-11111111",
-        embeddedWalletType: "user-wallet",
-        apiBaseUrl: "https://staging-api.phantom.app/v1/wallets",
-        authOptions: {
-          authUrl: "https://staging-connect.phantom.app/login",
-        },
+        redirectUrl: "http://localhost:5174",
       }),
     ],
     [],
   );
 
   return (
-    <ConnectionProvider endpoint={endpoint}>
+    <ConnectionProvider endpoint={import.meta.env.VITE_SOLANA_RPC_URL_MAINNET}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
           <div className="app">

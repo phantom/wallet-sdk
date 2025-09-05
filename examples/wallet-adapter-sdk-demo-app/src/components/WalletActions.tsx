@@ -1,13 +1,8 @@
-import { useCallback, useState } from 'react';
-import { useWallet, useConnection } from '@solana/wallet-adapter-react';
-import { 
-  SystemProgram, 
-  Transaction, 
-  PublicKey, 
-  TransactionMessage, 
-  VersionedTransaction 
-} from '@solana/web3.js';
-import { useBalance } from '../hooks/useBalance';
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { SystemProgram, Transaction } from "@solana/web3.js";
+import { useCallback, useState } from "react";
+import { useBalance } from "../hooks/useBalance";
+import { Buffer } from "buffer";
 
 /**
  * Component for wallet actions like signing and sending transactions
@@ -17,7 +12,7 @@ export function WalletActions() {
   const { connection } = useConnection();
   const address = publicKey?.toBase58() || null;
   const { balance } = useBalance(address);
-  
+
   const [isSigningMessage, setIsSigningMessage] = useState(false);
   const [isSigningTransaction, setIsSigningTransaction] = useState(false);
   const [isSendingTransaction, setIsSendingTransaction] = useState(false);
@@ -31,15 +26,15 @@ export function WalletActions() {
     try {
       setIsSigningMessage(true);
       setError(null);
-      
-      const message = new TextEncoder().encode('Hello from Phantom SDK Wallet Adapter!');
+
+      const message = new TextEncoder().encode("Hello from Phantom SDK Wallet Adapter!");
       const signature = await signMessage(message);
-      
-      const signatureBase64 = Buffer.from(signature).toString('base64');
+
+      const signatureBase64 = Buffer.from(signature).toString("base64");
       alert(`Message signed!\nSignature: ${signatureBase64}`);
     } catch (err) {
-      console.error('Error signing message:', err);
-      setError(err instanceof Error ? err.message : 'Failed to sign message');
+      console.error("Error signing message:", err);
+      setError(err instanceof Error ? err.message : "Failed to sign message");
     } finally {
       setIsSigningMessage(false);
     }
@@ -61,18 +56,18 @@ export function WalletActions() {
           fromPubkey: publicKey,
           toPubkey: publicKey,
           lamports: 1000, // 0.000001 SOL
-        })
+        }),
       );
 
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = publicKey;
 
       const signedTransaction = await signTransaction(transaction);
-      
-      alert('Transaction signed successfully! (Not sent to network)');
+
+      alert("Transaction signed successfully! (Not sent to network)");
     } catch (err) {
-      console.error('Error signing transaction:', err);
-      setError(err instanceof Error ? err.message : 'Failed to sign transaction');
+      console.error("Error signing transaction:", err);
+      setError(err instanceof Error ? err.message : "Failed to sign transaction");
     } finally {
       setIsSigningTransaction(false);
     }
@@ -86,7 +81,7 @@ export function WalletActions() {
       setError(null);
 
       // Get recent blockhash
-      const { blockhash } = await connection.getLatestBlockhash();
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
 
       // Create a simple transfer transaction (self-transfer)
       const transaction = new Transaction().add(
@@ -94,21 +89,59 @@ export function WalletActions() {
           fromPubkey: publicKey,
           toPubkey: publicKey,
           lamports: 1000, // 0.000001 SOL
-        })
+        }),
       );
 
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = publicKey;
 
       const signature = await sendTransaction(transaction, connection);
-      
-      // Wait for confirmation
-      await connection.confirmTransaction(signature, 'confirmed');
-      
-      alert(`Transaction sent and confirmed!\nSignature: ${signature}`);
+
+      // Wait for confirmation using polling strategy for better reliability
+      const startTime = Date.now();
+      let confirmed = false;
+      let attempts = 0;
+      const maxAttempts = 30; // 30 seconds timeout
+
+      while (!confirmed && attempts < maxAttempts) {
+        try {
+          const status = await connection.getSignatureStatus(signature);
+
+          if (status && status.value) {
+            if (status.value.err) {
+              throw new Error(`Transaction failed: ${JSON.stringify(status.value.err)}`);
+            }
+
+            if (status.value.confirmationStatus === "confirmed" || status.value.confirmationStatus === "finalized") {
+              confirmed = true;
+              const elapsed = (Date.now() - startTime) / 1000;
+              console.log(`Transaction confirmed in ${elapsed.toFixed(1)} seconds!`);
+              break;
+            }
+          }
+
+          if (!confirmed) {
+            attempts++;
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before next check
+          }
+        } catch (statusError) {
+          console.error("Error checking transaction status:", statusError);
+          break;
+        }
+      }
+
+      if (!confirmed) {
+        // Even if we timeout, the transaction might still be successful
+        console.warn("Transaction confirmation timeout, but transaction may still be successful");
+        alert(
+          `Transaction sent!\nSignature: ${signature}\nNote: Confirmation timed out, but transaction may still be successful. Check Solscan for status.`,
+        );
+      } else {
+        alert(`Transaction sent and confirmed!\nSignature: ${signature}`);
+      }
     } catch (err) {
-      console.error('Error sending transaction:', err);
-      setError(err instanceof Error ? err.message : 'Failed to send transaction');
+      console.error("Error sending transaction:", err);
+      setError(err instanceof Error ? err.message : "Failed to send transaction");
     } finally {
       setIsSendingTransaction(false);
     }
@@ -121,14 +154,10 @@ export function WalletActions() {
   return (
     <section className="section">
       <h2>Wallet Actions</h2>
-      
+
       <div className="button-group">
-        <button
-          onClick={handleSignMessage}
-          disabled={isSigningMessage}
-          className="action-button"
-        >
-          {isSigningMessage ? 'Signing...' : 'Sign Message'}
+        <button onClick={handleSignMessage} disabled={isSigningMessage} className="action-button">
+          {isSigningMessage ? "Signing..." : "Sign Message"}
         </button>
 
         <button
@@ -136,11 +165,7 @@ export function WalletActions() {
           disabled={isSigningTransaction || !hasSufficientBalance}
           className="action-button"
         >
-          {isSigningTransaction 
-            ? 'Signing...' 
-            : !hasSufficientBalance 
-              ? 'Insufficient Balance' 
-              : 'Sign Transaction'}
+          {isSigningTransaction ? "Signing..." : !hasSufficientBalance ? "Insufficient Balance" : "Sign Transaction"}
         </button>
 
         <button
@@ -148,11 +173,11 @@ export function WalletActions() {
           disabled={isSendingTransaction || !hasSufficientBalance}
           className="action-button primary"
         >
-          {isSendingTransaction 
-            ? 'Sending...' 
-            : !hasSufficientBalance 
-              ? 'Insufficient Balance' 
-              : 'Send Transaction (0.000001 SOL)'}
+          {isSendingTransaction
+            ? "Sending..."
+            : !hasSufficientBalance
+              ? "Insufficient Balance"
+              : "Send Transaction (0.000001 SOL)"}
         </button>
       </div>
 
