@@ -4,6 +4,7 @@ import { disconnect } from "./disconnect";
 import { addEventListener, removeEventListener, type PhantomEventCallback } from "./eventListeners";
 import { getAccount } from "./getAccount";
 import { signAndSendTransaction } from "./signAndSendTransaction";
+import { signTransaction } from "./signTransaction";
 import { signIn } from "./signIn";
 import { signMessage } from "./signMessage";
 import type { PhantomEventType } from "./types";
@@ -14,6 +15,7 @@ export type Solana = {
   getAccount: typeof getAccount;
   signMessage: typeof signMessage;
   signIn: typeof signIn;
+  signTransaction: typeof signTransaction;
   signAndSendTransaction: typeof signAndSendTransaction;
   addEventListener: (event: PhantomEventType, callback: PhantomEventCallback) => () => void;
   removeEventListener: (event: PhantomEventType, callback: PhantomEventCallback) => void;
@@ -25,6 +27,7 @@ const solana: Solana = {
   getAccount,
   signMessage,
   signIn,
+  signTransaction,
   signAndSendTransaction,
   addEventListener,
   removeEventListener,

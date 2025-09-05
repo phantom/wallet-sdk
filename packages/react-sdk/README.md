@@ -470,6 +470,16 @@ function EthereumOperations() {
     console.log("Typed data signature:", signature);
   };
 
+  const signTransaction = async () => {
+    const signedTx = await ethereum.signTransaction({
+      to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
+      value: "1000000000000000000", // 1 ETH in wei
+      gas: "21000",
+    });
+    console.log("Transaction signed:", signedTx);
+    // Transaction is signed but not sent - you can broadcast it later
+  };
+
   const sendTransaction = async () => {
     const result = await ethereum.sendTransaction({
       to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
@@ -487,7 +497,8 @@ function EthereumOperations() {
     <div>
       <button onClick={signPersonalMessage}>Sign Personal Message</button>
       <button onClick={signTypedData}>Sign Typed Data</button>
-      <button onClick={sendTransaction}>Send Transaction</button>
+      <button onClick={signTransaction}>Sign Transaction</button>
+      <button onClick={sendTransaction}>Sign & Send Transaction</button>
       <button onClick={switchChain}>Switch to Polygon</button>
       <p>Connected: {ethereum.isConnected ? "Yes" : "No"}</p>
     </div>
@@ -500,7 +511,8 @@ function EthereumOperations() {
 - `request(args)` - EIP-1193 requests
 - `signPersonalMessage(message, address)` - Sign personal message
 - `signTypedData(typedData)` - Sign EIP-712 typed data
-- `sendTransaction(transaction)` - Send transaction
+- `signTransaction(transaction)` - Sign transaction without sending
+- `sendTransaction(transaction)` - Sign and send transaction
 - `switchChain(chainId)` - Switch chains
 - `getChainId()` - Get current chain ID
 - `getAccounts()` - Get connected accounts

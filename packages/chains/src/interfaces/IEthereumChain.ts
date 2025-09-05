@@ -29,6 +29,7 @@ export interface IEthereumChain {
   // Convenience methods (return raw values for standard compliance)
   signPersonalMessage(message: string, address: string): Promise<string>;
   signTypedData(typedData: any, address: string): Promise<string>;
+  signTransaction(transaction: EthTransactionRequest): Promise<string>;
   sendTransaction(transaction: EthTransactionRequest): Promise<string>;
   switchChain(chainId: number): Promise<void>;
   getChainId(): Promise<number>;

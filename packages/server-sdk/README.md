@@ -121,6 +121,72 @@ console.log("Solana address:", solanaAddress);
 console.log("Ethereum address:", ethereumAddress);
 ```
 
+### Transaction Signing Methods
+
+The Server SDK provides two methods for handling transactions:
+
+1. **`signTransaction(params)`** - Signs a transaction without submitting it to the network
+   - Returns the signed transaction 
+   - No network interaction
+   - Useful for offline signing or when you want to broadcast later
+
+2. **`signAndSendTransaction(params)`** - Signs and submits the transaction to the network
+   - Returns both signed transaction and transaction hash
+   - Requires network connectivity
+   - Transaction is immediately broadcast to the blockchain
+
+### Signing Only (No Network Submission)
+
+#### Solana Transaction Signing
+
+```typescript
+import { Transaction, SystemProgram, PublicKey } from "@solana/web3.js";
+
+// Create a Solana transaction
+const transaction = new Transaction().add(
+  SystemProgram.transfer({
+    fromPubkey: new PublicKey(solanaAddress),
+    toPubkey: new PublicKey(recipientAddress),
+    lamports: 1000000, // 0.001 SOL
+  }),
+);
+
+// Set transaction parameters
+transaction.recentBlockhash = blockhash;
+transaction.feePayer = new PublicKey(solanaAddress);
+
+// Sign the transaction (without sending)
+const signed = await sdk.signTransaction({
+  walletId: wallet.walletId,
+  transaction,
+  networkId: NetworkId.SOLANA_MAINNET,
+});
+
+console.log("Signed transaction:", signed.rawTransaction);
+// You can broadcast this transaction later using your own RPC client
+```
+
+#### Ethereum Transaction Signing
+
+```typescript
+// Viem transaction object
+const evmTransaction = {
+  to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
+  value: 1000000000000000000n, // 1 ETH in wei
+  data: "0x",
+  gasLimit: 21000n,
+};
+
+const signed = await sdk.signTransaction({
+  walletId: wallet.walletId,
+  transaction: evmTransaction,
+  networkId: NetworkId.ETHEREUM_MAINNET,
+});
+
+console.log("Signed transaction:", signed.rawTransaction);
+// You can broadcast this signed transaction using your preferred method
+```
+
 ### Signing and Sending Transactions
 
 #### Solana - Native Web3.js Transaction Objects
@@ -279,7 +345,8 @@ For complete API documentation, visit **[docs.phantom.com/server-sdk](https://do
 ### Key Methods
 
 - `createWallet(walletName?)` - Creates a new wallet
-- `signAndSendTransaction(params)` - Signs and optionally submits transactions
+- `signTransaction(params)` - Signs transactions without submitting to network
+- `signAndSendTransaction(params)` - Signs and submits transactions to network
 - `signMessage(params)` - Signs arbitrary messages
 - `getWalletAddresses(walletId, derivationPaths?)` - Retrieves wallet addresses
 - `getWallets(limit?, offset?)` - Lists all wallets with pagination

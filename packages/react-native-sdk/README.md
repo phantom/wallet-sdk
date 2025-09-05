@@ -247,6 +247,9 @@ const solana = useSolana();
 // Sign a message
 const signature = await solana.signMessage("Hello Solana!");
 
+// Sign a transaction (without sending)
+const signedTx = await solana.signTransaction(transaction);
+
 // Sign and send a transaction
 const result = await solana.signAndSendTransaction(transaction);
 ```
@@ -264,7 +267,10 @@ const accounts = await ethereum.getAccounts();
 // Sign a personal message
 const signature = await ethereum.signPersonalMessage("Hello Ethereum!", accounts[0]);
 
-// Send a transaction
+// Sign a transaction (without sending)
+const signedTx = await ethereum.signTransaction(transactionData);
+
+// Sign and send a transaction  
 const result = await ethereum.sendTransaction(transactionData);
 
 // Get current chain ID

@@ -463,6 +463,12 @@ const balance = await sdk.ethereum.request({
   method: "eth_getBalance",
   params: [address, "latest"],
 });
+
+// Sign transaction via RPC (alternative to signTransaction method)
+const signedTx = await sdk.ethereum.request({
+  method: "eth_signTransaction",
+  params: [{ to: "0x...", value: "0x...", gas: "0x..." }],
+});
 ```
 
 #### signPersonalMessage(message, address)
@@ -509,6 +515,20 @@ const typedData = {
 
 const signature = await sdk.ethereum.signTypedData(typedData, address);
 // Returns: { signature: string, rawSignature: string }
+```
+
+#### signTransaction(transaction)
+
+Sign an Ethereum transaction without sending it.
+
+```typescript
+const signedTx = await sdk.ethereum.signTransaction({
+  to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
+  value: "1000000000000000000", // 1 ETH in wei
+  gas: "21000",
+  gasPrice: "20000000000", // 20 gwei
+});
+// Returns: string (hex-encoded signed transaction)
 ```
 
 #### sendTransaction(transaction)

@@ -5,6 +5,13 @@ import type { PhantomClient } from "@phantom/client";
 
 // Mock dependencies
 jest.mock("@phantom/client");
+jest.mock("@phantom/parsers", () => ({
+  parseMessage: jest.fn().mockReturnValue({ base64url: "mock-base64url" }),
+  parseTransactionToBase64Url: jest.fn().mockResolvedValue({ base64url: "mock-base64url", originalFormat: "mock" }),
+  parseSignMessageResponse: jest.fn().mockReturnValue({ signature: "mock-signature", rawSignature: "mock-raw" }),
+  parseTransactionResponse: jest.fn().mockReturnValue({ rawTransaction: "mock-raw-tx" }),
+  parseSolanaTransactionSignature: jest.fn().mockReturnValue({ signature: "mock-signature", fallback: false }),
+}));
 
 // Mock bs58 and base64url dependencies
 jest.mock("bs58", () => ({

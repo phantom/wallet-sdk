@@ -3,6 +3,7 @@ import type { ISolanaChain } from "@phantom/chains";
 import type { EmbeddedProvider } from "../embedded-provider";
 import { NetworkId } from "@phantom/constants";
 import { Buffer } from "buffer";
+import { parseSolanaTransactionSignature } from "@phantom/parsers";
 
 /**
  * Embedded Solana chain implementation that is wallet adapter compliant
@@ -52,11 +53,20 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     };
   }
 
-  signTransaction<T>(_transaction: T): Promise<T> {
+  async signTransaction<T>(transaction: T): Promise<T> {
     this.ensureConnected();
-    // For embedded provider, we need to implement signing without sending
-    // This might require a new method in the EmbeddedProvider
-    throw new Error("signTransaction not yet implemented for embedded provider");
+    const result = await this.provider.signTransaction({
+      transaction,
+      networkId: this.currentNetworkId,
+    });
+    
+    // For Solana, we need to extract the signature from the signed transaction
+    // Since the API returns a base64url encoded signed transaction, we parse it to get the signature
+    const signatureResult = parseSolanaTransactionSignature(result.rawTransaction);
+    
+    // Return the signature as the transaction result
+    // This maintains compatibility with wallet adapter expectations
+    return signatureResult.signature as unknown as T;
   }
 
   async signAndSendTransaction<T>(transaction: T): Promise<{ signature: string }> {
