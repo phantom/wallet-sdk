@@ -108,28 +108,12 @@ export class DeeplinksSolanaChain implements ISolanaChain {
   async signMessage(message: string | Uint8Array): Promise<{ signature: Uint8Array; publicKey: string }> {
     // Check if we have a valid session for signing
     if (!this.session.sessionToken) {
-      const errorMessage = `
-❌ DEEPLINKS SESSION ERROR:
-No valid session found for signing. This usually happens when:
-
-1. You haven't called connect() first
-2. Your browser session doesn't match the mobile app session
-3. The session has expired or is invalid
-
-🔧 SOLUTIONS:
-- Call provider.connect() first to establish a session
-- Or call provider.clearSessionAndReconnect() to force a fresh connection
-- Make sure you're using the same device/browser for connect and sign
-
-The session from connect() must be used for all subsequent signing operations.
-      `.trim();
-      throw new Error(errorMessage);
+      throw new Error("No valid session found. Please call connect() first.");
     }
 
-    debug.info(DebugCategory.BROWSER_SDK, "Starting sign message with session validation", {
+    debug.info(DebugCategory.BROWSER_SDK, "Opening Phantom for message signing", {
       hasSession: !!this.session.sessionToken,
       hasPublicKey: !!this.session.publicKey,
-      sessionLength: this.session.sessionToken?.length || 0
     });
 
     const requestId = this.communicator.generateRequestId();
@@ -137,13 +121,6 @@ The session from connect() must be used for all subsequent signing operations.
     // Convert message to Uint8Array if needed and then to base58
     const messageBytes = typeof message === "string" ? new TextEncoder().encode(message) : message;
     const messageBase58 = bs58.encode(messageBytes);
-    
-    debug.info(DebugCategory.BROWSER_SDK, "Message encoding details", {
-      originalType: typeof message,
-      originalLength: typeof message === "string" ? message.length : message.length,
-      base58Length: messageBase58.length,
-      base58Preview: messageBase58.substring(0, 20) + "..."
-    });
     
     // Prepare request data according to Phantom documentation
     const requestData: SignMessagePayload = {
@@ -154,60 +131,16 @@ The session from connect() must be used for all subsequent signing operations.
     // Build deeplink URL
     const url = await this.buildEncryptedDeeplinkUrl("signMessage", requestId, requestData);
     
-    // Debug: Log the exact URL being generated
-    debug.info(DebugCategory.BROWSER_SDK, "Generated sign message deeplink", {
-      requestId: requestId.substring(0, 10) + "...",
-      fullUrl: url,
-      urlLength: url.length,
-      hasMessage: requestData.message.length > 0,
-      display: requestData.display,
-      urlParams: new URL(url).searchParams.toString()
-    });
-    
-    // Navigate to deeplink
-    debug.info(DebugCategory.BROWSER_SDK, "Navigating to sign message deeplink", {
+    debug.info(DebugCategory.BROWSER_SDK, "Opening Phantom deeplink for signing", {
       requestId: requestId.substring(0, 10) + "...",
       urlLength: url.length
     });
+    
+    // Navigate to deeplink (fire-and-forget)
     window.location.href = url;
     
-    // Wait for response - the response will come back to this tab via URL parameters
-    debug.info(DebugCategory.BROWSER_SDK, "Waiting for sign message response...", {
-      requestId: requestId.substring(0, 10) + "..."
-    });
-    
-    try {
-      const response = await this.communicator.waitForResponse<{
-        signature: number[];
-        publicKey: string;
-      }>(requestId);
-
-      debug.info(DebugCategory.BROWSER_SDK, "Sign message response received!", {
-        requestId: requestId.substring(0, 10) + "...",
-        hasSignature: !!response.signature,
-        signatureLength: response.signature?.length || 0,
-        publicKey: response.publicKey?.substring(0, 8) + "..." || "none"
-      });
-
-      const result = {
-        signature: new Uint8Array(response.signature),
-        publicKey: response.publicKey,
-      };
-      
-      debug.info(DebugCategory.BROWSER_SDK, "Sign message completed successfully!", {
-        requestId: requestId.substring(0, 10) + "...",
-        signatureUint8ArrayLength: result.signature.length,
-        publicKey: result.publicKey.substring(0, 8) + "..."
-      });
-      
-      return result;
-    } catch (error) {
-      debug.error(DebugCategory.BROWSER_SDK, "Sign message failed", {
-        requestId: requestId.substring(0, 10) + "...",
-        error: (error as Error).message
-      });
-      throw error;
-    }
+    // Return a placeholder result - the app should use utility functions to check for success
+    throw new Error("Sign message opened in Phantom. Use deeplinks utility functions to check for success when user returns.");
   }
 
   async signTransaction<T>(transaction: T): Promise<T> {

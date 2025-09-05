@@ -166,3 +166,139 @@ export function buildRedirectLink(basePath?: string): string {
   
   return basePath ? `${origin}${basePath}` : origin;
 }
+
+// URL Response Parsing Utilities
+
+export type DeeplinkResponseType = 'connect' | 'signMessage' | 'signTransaction' | 'signAndSendTransaction' | 'disconnect' | 'error' | 'none';
+
+export type DeeplinkResponseInfo = {
+  type: DeeplinkResponseType;
+  isSuccess: boolean;
+  hasEncryptedData: boolean;
+  hasError: boolean;
+  errorCode?: string;
+  errorMessage?: string;
+  phantomEncryptionPublicKey?: string;
+  requestId?: string;
+  data?: {
+    nonce?: string;
+    encryptedPayload?: string;
+  };
+}
+
+/**
+ * Parse a URL to determine if it contains a Phantom deeplink response
+ * @param url - The URL to parse (defaults to current window.location.href)
+ * @returns Information about the deeplink response
+ */
+export function parseDeeplinkResponse(url?: string): DeeplinkResponseInfo {
+  const urlToParse = url || (typeof window !== "undefined" ? window.location.href : "");
+  
+  if (!urlToParse) {
+    return { type: 'none', isSuccess: false, hasEncryptedData: false, hasError: false };
+  }
+
+  try {
+    const urlObj = new URL(urlToParse);
+    const params = new URLSearchParams(urlObj.search);
+    const hashParams = new URLSearchParams(urlObj.hash.replace('#', ''));
+    
+    // Combine search and hash parameters
+    const allParams = new Map<string, string>();
+    params.forEach((value, key) => allParams.set(key, value));
+    hashParams.forEach((value, key) => allParams.set(key, value));
+    
+    const hasPhantomEncryptionKey = allParams.has('phantom_encryption_public_key');
+    const hasNonce = allParams.has('nonce');
+    const hasData = allParams.has('data');
+    const hasPhantomResponse = urlObj.hash.includes('phantom_response');
+    const hasErrorCode = allParams.has('errorCode');
+    const hasErrorMessage = allParams.has('errorMessage');
+    
+    // Check for error response
+    if (hasErrorCode || hasErrorMessage) {
+      return {
+        type: 'error',
+        isSuccess: false,
+        hasEncryptedData: false,
+        hasError: true,
+        errorCode: allParams.get('errorCode') || undefined,
+        errorMessage: allParams.get('errorMessage') || undefined,
+        requestId: allParams.get('request_id') || undefined
+      };
+    }
+    
+    // No response parameters found
+    if (!hasPhantomEncryptionKey && !hasNonce && !hasData && !hasPhantomResponse) {
+      return { type: 'none', isSuccess: false, hasEncryptedData: false, hasError: false };
+    }
+    
+    const result: DeeplinkResponseInfo = {
+      type: 'none',
+      isSuccess: true,
+      hasEncryptedData: hasNonce && hasData,
+      hasError: false,
+      phantomEncryptionPublicKey: allParams.get('phantom_encryption_public_key') || undefined,
+      requestId: allParams.get('request_id') || undefined,
+      data: (hasNonce || hasData) ? {
+        nonce: allParams.get('nonce') || undefined,
+        encryptedPayload: allParams.get('data') || undefined,
+      } : undefined
+    };
+    
+    // Determine response type based on parameters
+    if (hasPhantomEncryptionKey) {
+      result.type = 'connect';
+    } else if (hasNonce && hasData) {
+      // For encrypted responses, we can't easily distinguish between signMessage and signTransaction
+      // without decrypting, so we use a generic type or let the app determine from context
+      result.type = 'signMessage'; // Default assumption
+    }
+    
+    return result;
+    
+  } catch (error) {
+    return { type: 'none', isSuccess: false, hasEncryptedData: false, hasError: false };
+  }
+}
+
+/**
+ * Check if the current URL indicates a successful Phantom connection
+ * @param url - The URL to check (defaults to current window.location.href)
+ */
+export function isConnectSuccess(url?: string): boolean {
+  const response = parseDeeplinkResponse(url);
+  return response.type === 'connect' && response.isSuccess && !response.hasError;
+}
+
+/**
+ * Check if the current URL indicates a successful message signing
+ * @param url - The URL to check (defaults to current window.location.href)
+ */
+export function isSignMessageSuccess(url?: string): boolean {
+  const response = parseDeeplinkResponse(url);
+  return response.type === 'signMessage' && response.isSuccess && response.hasEncryptedData && !response.hasError;
+}
+
+/**
+ * Check if the current URL indicates a successful transaction signing
+ * @param url - The URL to check (defaults to current window.location.href)
+ */
+export function isSignTransactionSuccess(url?: string): boolean {
+  const response = parseDeeplinkResponse(url);
+  return (response.type === 'signTransaction' || response.type === 'signAndSendTransaction') && 
+         response.isSuccess && response.hasEncryptedData && !response.hasError;
+}
+
+/**
+ * Check if the current URL indicates any Phantom deeplink error
+ * @param url - The URL to check (defaults to current window.location.href)
+ */
+export function isDeeplinkError(url?: string): { hasError: boolean; errorCode?: string; errorMessage?: string } {
+  const response = parseDeeplinkResponse(url);
+  return {
+    hasError: response.hasError,
+    errorCode: response.errorCode,
+    errorMessage: response.errorMessage
+  };
+}

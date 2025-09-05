@@ -1,6 +1,13 @@
 import { BrowserSDK } from "@phantom/browser-sdk";
 import { AddressType } from "@phantom/browser-sdk";
 import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { 
+  isConnectSuccess, 
+  isSignMessageSuccess, 
+  isSignTransactionSuccess, 
+  isDeeplinkError, 
+  parseDeeplinkResponse 
+} from "@phantom/deeplinks";
 
 // Global variables
 let sdk: BrowserSDK | null = null;
@@ -23,6 +30,79 @@ const debugLevel = document.getElementById("debugLevel") as HTMLSelectElement;
 const clearDebugBtn = document.getElementById("clearDebugBtn") as HTMLButtonElement;
 const debugMessages = document.getElementById("debugMessages") as HTMLDivElement;
 const lastResultContent = document.getElementById("lastResultContent") as HTMLPreElement;
+
+// Check for deeplink responses in the current URL
+function checkForDeeplinkResponses() {
+  const currentUrl = window.location.href;
+  const response = parseDeeplinkResponse(currentUrl);
+  
+  addDebugMessage(`Checking URL for deeplink responses: ${response.type}`);
+  
+  // Check for errors first
+  const errorInfo = isDeeplinkError(currentUrl);
+  if (errorInfo.hasError) {
+    addDebugMessage(`❌ Deeplink Error: ${errorInfo.errorCode} - ${errorInfo.errorMessage}`);
+    updateLastResult({ 
+      error: `Deeplink Error: ${errorInfo.errorCode}`, 
+      message: errorInfo.errorMessage,
+      url: currentUrl 
+    });
+    return;
+  }
+  
+  // Check for successful connect
+  if (isConnectSuccess(currentUrl)) {
+    addDebugMessage("✅ Connect Success detected in URL!");
+    updateLastResult({ 
+      success: "Connect successful!", 
+      type: "connect",
+      phantomEncryptionPublicKey: response.phantomEncryptionPublicKey,
+      url: currentUrl 
+    });
+    // Clean URL after processing
+    window.history.replaceState({}, document.title, window.location.pathname);
+    return;
+  }
+  
+  // Check for successful sign message
+  if (isSignMessageSuccess(currentUrl)) {
+    addDebugMessage("✅ Sign Message Success detected in URL!");
+    updateLastResult({ 
+      success: "Message signed successfully!", 
+      type: "signMessage",
+      hasEncryptedData: response.hasEncryptedData,
+      requestId: response.requestId,
+      url: currentUrl 
+    });
+    // Clean URL after processing
+    window.history.replaceState({}, document.title, window.location.pathname);
+    return;
+  }
+  
+  // Check for successful sign transaction
+  if (isSignTransactionSuccess(currentUrl)) {
+    addDebugMessage("✅ Sign Transaction Success detected in URL!");
+    updateLastResult({ 
+      success: "Transaction signed successfully!", 
+      type: "signTransaction",
+      hasEncryptedData: response.hasEncryptedData,
+      requestId: response.requestId,
+      url: currentUrl 
+    });
+    // Clean URL after processing
+    window.history.replaceState({}, document.title, window.location.pathname);
+    return;
+  }
+  
+  if (response.type !== 'none') {
+    addDebugMessage(`📋 Deeplink response detected but not handled: ${response.type}`);
+    updateLastResult({ 
+      info: `Deeplink response: ${response.type}`, 
+      responseDetails: response,
+      url: currentUrl 
+    });
+  }
+}
 
 // Initialize SDK
 function initializeSDK() {
@@ -70,6 +150,10 @@ function initializeSDK() {
 
     addDebugMessage("Deeplinks SDK initialized successfully");
     addDebugMessage("✅ Deeplinks SDK initialized successfully!");
+    
+    // Check for deeplink responses after SDK is initialized
+    checkForDeeplinkResponses();
+    
   } catch (error) {
     addDebugMessage(`Failed to initialize SDK: ${error}`);
     updateLastResult({ error: `Failed to initialize SDK: ${error}` });
@@ -252,12 +336,21 @@ signMessageBtn.addEventListener("click", async () => {
   
   try {
     const message = "Hello from Phantom Deeplinks Demo!";
-    const result = await sdk.solana.signMessage(message);
-    updateLastResult({ message, signature: result });
-    addDebugMessage("Message signed successfully");
+    await sdk.solana.signMessage(message);
+    // This line won't be reached because signMessage throws an error after opening Phantom
   } catch (error) {
-    addDebugMessage(`Sign message failed: ${error}`);
-    updateLastResult({ error: `Sign message failed: ${error}` });
+    const errorMessage = (error as Error).message;
+    if (errorMessage.includes("Sign message opened in Phantom")) {
+      addDebugMessage("🚀 Phantom opened for signing! Check URL when you return for results.");
+      updateLastResult({ 
+        message: "Phantom opened for message signing", 
+        originalMessage: message,
+        instruction: "Use deeplinks utilities to check for success when user returns"
+      });
+    } else {
+      addDebugMessage(`Sign message failed: ${error}`);
+      updateLastResult({ error: `Sign message failed: ${error}` });
+    }
   }
 });
 
@@ -271,12 +364,21 @@ customSignMessageBtn.addEventListener("click", async () => {
   }
   
   try {
-    const result = await sdk.solana.signMessage(message);
-    updateLastResult({ message, signature: result });
-    addDebugMessage("Custom message signed successfully");
+    await sdk.solana.signMessage(message);
+    // This line won't be reached because signMessage throws an error after opening Phantom
   } catch (error) {
-    addDebugMessage(`Sign custom message failed: ${error}`);
-    updateLastResult({ error: `Sign custom message failed: ${error}` });
+    const errorMessage = (error as Error).message;
+    if (errorMessage.includes("Sign message opened in Phantom")) {
+      addDebugMessage("🚀 Phantom opened for custom message signing! Check URL when you return for results.");
+      updateLastResult({ 
+        message: "Phantom opened for custom message signing", 
+        originalMessage: message,
+        instruction: "Use deeplinks utilities to check for success when user returns"
+      });
+    } else {
+      addDebugMessage(`Sign custom message failed: ${error}`);
+      updateLastResult({ error: `Sign custom message failed: ${error}` });
+    }
   }
 });
 
