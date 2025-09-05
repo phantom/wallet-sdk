@@ -50,7 +50,7 @@ export function useEthereum() {
       const chain = getEthereumChain();
       return chain.signTransaction(transaction);
     },
-    [request],
+    [getEthereumChain],
   );
 
   const sendTransaction = useCallback(
