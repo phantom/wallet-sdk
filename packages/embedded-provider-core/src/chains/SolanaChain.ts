@@ -3,7 +3,6 @@ import type { ISolanaChain } from "@phantom/chains";
 import type { EmbeddedProvider } from "../embedded-provider";
 import { NetworkId } from "@phantom/constants";
 import bs58 from "bs58";
-import { Buffer } from "buffer";
 
 /**
  * Embedded Solana chain implementation that is wallet adapter compliant
