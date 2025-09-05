@@ -1,5 +1,15 @@
 # @phantom/chains
 
+## 1.0.0-beta.2
+
+### Patch Changes
+
+- 4675314: New sdk hooks fix for race condition
+- Updated dependencies [98e54ff]
+- Updated dependencies [4675314]
+  - @phantom/parsers@1.0.0-beta.2
+  - @phantom/constants@1.0.0-beta.2
+
 ## 1.0.0-beta.1
 
 ### Patch Changes

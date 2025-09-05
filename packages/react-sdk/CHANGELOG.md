@@ -1,5 +1,17 @@
 # @phantom/react-sdk
 
+## 1.0.0-beta.2
+
+### Patch Changes
+
+- 98e54ff: Fix race condition sdks
+- 4675314: New sdk hooks fix for race condition
+- Updated dependencies [98e54ff]
+- Updated dependencies [4675314]
+  - @phantom/browser-sdk@1.0.0-beta.2
+  - @phantom/chains@1.0.0-beta.2
+  - @phantom/constants@1.0.0-beta.2
+
 ## 1.0.0-beta.1
 
 ### Patch Changes
