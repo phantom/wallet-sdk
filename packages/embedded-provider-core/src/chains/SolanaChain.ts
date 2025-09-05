@@ -2,7 +2,7 @@ import { EventEmitter } from "eventemitter3";
 import type { ISolanaChain } from "@phantom/chains";
 import type { EmbeddedProvider } from "../embedded-provider";
 import { NetworkId } from "@phantom/constants";
-import { Buffer } from "buffer";
+import bs58 from "bs58";
 import { parseSolanaTransactionSignature } from "@phantom/parsers";
 
 /**
@@ -43,9 +43,9 @@ export class EmbeddedSolanaChain implements ISolanaChain {
       networkId: this.currentNetworkId,
     });
 
-    // Convert signature to Uint8Array
+    // Convert signature to Uint8Array - result.signature is base58 encoded from parseSignMessageResponse
     const signature =
-      typeof result.signature === "string" ? new Uint8Array(Buffer.from(result.signature, "base64")) : result.signature;
+      typeof result.signature === "string" ? new Uint8Array(bs58.decode(result.signature)) : result.signature;
 
     return {
       signature,

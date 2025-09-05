@@ -10,21 +10,29 @@ import type { IEthereumChain, EthTransactionRequest } from "@phantom/chains";
 export function useEthereum() {
   const { sdk, isConnected } = usePhantom();
 
+  // Helper to get current chain state - no memoization to avoid race conditions
+  const getEthereumChain = useCallback((): IEthereumChain => {
+    if (!sdk) throw new Error("Phantom SDK not initialized.");
+    if (!sdk.isConnected()) throw new Error("Phantom SDK not connected. Call connect() first.");
+    return sdk.ethereum;
+  }, [sdk]);
+
+  // Memoize the chain only for read-only access - methods use real-time access
   const ethereumChain = useMemo<IEthereumChain | null>(() => {
     if (!sdk || !isConnected) return null;
     try {
       return sdk.ethereum;
     } catch {
-      return null; // SDK not connected yet
+      return null;
     }
   }, [sdk, isConnected]);
 
   const request = useCallback(
     async <T = any>(args: { method: string; params?: unknown[] }): Promise<T> => {
-      if (!ethereumChain) throw new Error("Ethereum chain not available. Ensure SDK is connected.");
-      return ethereumChain.request(args);
+      const chain = getEthereumChain();
+      return chain.request(args);
     },
-    [ethereumChain],
+    [getEthereumChain],
   );
 
   const signPersonalMessage = useCallback(
@@ -37,31 +45,39 @@ export function useEthereum() {
     [request],
   );
 
+  const signTransaction = useCallback(
+    async (transaction: EthTransactionRequest): Promise<string> => {
+      const chain = getEthereumChain();
+      return chain.signTransaction(transaction);
+    },
+    [request],
+  );
+
   const sendTransaction = useCallback(
     async (transaction: EthTransactionRequest) => {
-      if (!ethereumChain) throw new Error("Ethereum chain not available. Ensure SDK is connected.");
-      return ethereumChain.sendTransaction(transaction);
+      const chain = getEthereumChain();
+      return chain.sendTransaction(transaction);
     },
-    [ethereumChain],
+    [getEthereumChain],
   );
 
   const switchChain = useCallback(
     async (chainId: number) => {
-      if (!ethereumChain) throw new Error("Ethereum chain not available. Ensure SDK is connected.");
-      return ethereumChain.switchChain(chainId);
+      const chain = getEthereumChain();
+      return chain.switchChain(chainId);
     },
-    [ethereumChain],
+    [getEthereumChain],
   );
 
   const getChainId = useCallback(async () => {
-    if (!ethereumChain) throw new Error("Ethereum chain not available. Ensure SDK is connected.");
-    return ethereumChain.getChainId();
-  }, [ethereumChain]);
+    const chain = getEthereumChain();
+    return chain.getChainId();
+  }, [getEthereumChain]);
 
   const getAccounts = useCallback(async () => {
-    if (!ethereumChain) throw new Error("Ethereum chain not available. Ensure SDK is connected.");
-    return ethereumChain.getAccounts();
-  }, [ethereumChain]);
+    const chain = getEthereumChain();
+    return chain.getAccounts();
+  }, [getEthereumChain]);
 
   // Common Ethereum operations
   const signMessage = useCallback(
@@ -85,13 +101,6 @@ export function useEthereum() {
     [request, getAccounts],
   );
 
-  const signTransaction = useCallback(
-    async (transaction: EthTransactionRequest) => {
-      if (!ethereumChain) throw new Error("Ethereum chain not available. Ensure SDK is connected.");
-      return ethereumChain.signTransaction(transaction);
-    },
-    [ethereumChain],
-  );
 
   return {
     // Chain instance for advanced usage
@@ -103,8 +112,8 @@ export function useEthereum() {
     // Convenient methods
     signPersonalMessage,
     signMessage,
-    signTypedData,
     signTransaction,
+    signTypedData,
     sendTransaction,
     switchChain,
     getChainId,

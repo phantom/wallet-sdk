@@ -12,6 +12,8 @@ import type { DebugMessage } from "@phantom/browser-sdk"
 import { SystemProgram, PublicKey, Connection, VersionedTransaction, TransactionMessage } from "@solana/web3.js"
 import { parseEther, parseGwei, numberToHex } from "viem"
 import { getBalance } from "./utils/balance"
+import { Buffer } from "buffer"
+import bs58 from "bs58"
 
 type ProviderType = "injected" | "embedded"
 
@@ -203,10 +205,10 @@ function App() {
     }
 
     try {
-      const message = "Hello from Phantom Browser SDK!"
+      const message = "Hello from Phantom SDK!"
       const result = await sdk.solana.signMessage(message)
       console.log("Message signed:", result)
-      alert(`Message signed: ${Buffer.from(result.signature).toString("base64")}`)
+      alert(`Message signed: ${bs58.encode(result.signature)}`)
     } catch (error) {
       console.error("Error signing message:", error)
       setError((error as Error).message || 'Failed to sign message')

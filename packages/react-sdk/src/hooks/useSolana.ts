@@ -10,64 +10,72 @@ import type { ISolanaChain } from "@phantom/chains";
 export function useSolana() {
   const { sdk, isConnected } = usePhantom();
 
+  // Helper to get current chain state - no memoization to avoid race conditions
+  const getSolanaChain = useCallback((): ISolanaChain => {
+    if (!sdk) throw new Error("Phantom SDK not initialized.");
+    if (!sdk.isConnected()) throw new Error("Phantom SDK not connected. Call connect() first.");
+    return sdk.solana;
+  }, [sdk]);
+
+  // Memoize the chain only for read-only access - methods use real-time access
   const solanaChain = useMemo<ISolanaChain | null>(() => {
     if (!sdk || !isConnected) return null;
     try {
       return sdk.solana;
     } catch {
-      return null; // SDK not connected yet
+      return null;
     }
   }, [sdk, isConnected]);
 
   const signMessage = useCallback(
     async (message: string | Uint8Array) => {
-      if (!solanaChain) throw new Error("Solana chain not available. Ensure SDK is connected.");
-      return solanaChain.signMessage(message);
+      const chain = getSolanaChain();
+      return chain.signMessage(message);
     },
-    [solanaChain],
+    [getSolanaChain],
   );
 
   const signTransaction = useCallback(
     async <T>(transaction: T): Promise<T> => {
-      if (!solanaChain) throw new Error("Solana chain not available. Ensure SDK is connected.");
-      return solanaChain.signTransaction(transaction);
+      const chain = getSolanaChain();
+      return chain.signTransaction(transaction);
     },
-    [solanaChain],
+    [getSolanaChain],
   );
 
   const signAndSendTransaction = useCallback(
     async <T>(transaction: T) => {
-      if (!solanaChain) throw new Error("Solana chain not available. Ensure SDK is connected.");
-      return solanaChain.signAndSendTransaction(transaction);
+      const chain = getSolanaChain();
+      return chain.signAndSendTransaction(transaction);
     },
-    [solanaChain],
+    [getSolanaChain],
   );
 
   const connect = useCallback(
     async (options?: { onlyIfTrusted?: boolean }) => {
-      if (!solanaChain) throw new Error("Solana chain not available. Ensure SDK is connected.");
-      return solanaChain.connect(options);
+      const chain = getSolanaChain();
+      return chain.connect(options);
     },
-    [solanaChain],
+    [getSolanaChain],
   );
 
   const disconnect = useCallback(async () => {
-    if (!solanaChain) throw new Error("Solana chain not available. Ensure SDK is connected.");
-    return solanaChain.disconnect();
-  }, [solanaChain]);
+    const chain = getSolanaChain();
+    return chain.disconnect();
+  }, [getSolanaChain]);
 
   const switchNetwork = useCallback(
     async (network: "mainnet" | "devnet") => {
-      if (!solanaChain) throw new Error("Solana chain not available. Ensure SDK is connected.");
-      return solanaChain.switchNetwork?.(network);
+      const chain = getSolanaChain();
+      return chain.switchNetwork?.(network);
     },
-    [solanaChain],
+    [getSolanaChain],
   );
 
   const getPublicKey = useCallback(async () => {
-    if (!solanaChain) return null;
-    return solanaChain.getPublicKey();
-  }, [solanaChain]);
+    if (!sdk || !sdk.isConnected()) return null;
+    return sdk.solana.getPublicKey();
+  }, [sdk]);
 
   return {
     // Chain instance for advanced usage
