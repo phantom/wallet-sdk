@@ -1,12 +1,13 @@
 import { PhantomSDKWalletAdapter } from "@phantom/sdk-wallet-adapter";
 import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
-import { WalletModalProvider, WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { useMemo } from "react";
 import { WalletActions } from "./components/WalletActions";
 import { WalletInfo } from "./components/WalletInfo";
 
 // Import wallet adapter default styles
 import "@solana/wallet-adapter-react-ui/styles.css";
+import { WalletModalProvider } from "./components/WalletModalProvider";
 
 function App() {
   // Configure wallets
@@ -21,7 +22,7 @@ function App() {
   );
 
   return (
-    <ConnectionProvider endpoint={import.meta.env.VITE_SOLANA_RPC_URL_MAINNET}>
+    <ConnectionProvider endpoint={"https://solana-mainnet.g.alchemy.com/v2/Pnb7lrjdZw6df2yXSKDiG"}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
           <div className="app">
