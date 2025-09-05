@@ -62,7 +62,7 @@ export function WalletActions() {
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = publicKey;
 
-      const signedTransaction = await signTransaction(transaction);
+      await signTransaction(transaction);
 
       alert("Transaction signed successfully! (Not sent to network)");
     } catch (err) {
@@ -81,7 +81,7 @@ export function WalletActions() {
       setError(null);
 
       // Get recent blockhash
-      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+      const { blockhash } = await connection.getLatestBlockhash();
 
       // Create a simple transfer transaction (self-transfer)
       const transaction = new Transaction().add(
@@ -98,7 +98,6 @@ export function WalletActions() {
       const signature = await sendTransaction(transaction, connection);
 
       // Wait for confirmation using polling strategy for better reliability
-      const startTime = Date.now();
       let confirmed = false;
       let attempts = 0;
       const maxAttempts = 30; // 30 seconds timeout
@@ -114,8 +113,6 @@ export function WalletActions() {
 
             if (status.value.confirmationStatus === "confirmed" || status.value.confirmationStatus === "finalized") {
               confirmed = true;
-              const elapsed = (Date.now() - startTime) / 1000;
-              console.log(`Transaction confirmed in ${elapsed.toFixed(1)} seconds!`);
               break;
             }
           }
@@ -132,7 +129,6 @@ export function WalletActions() {
 
       if (!confirmed) {
         // Even if we timeout, the transaction might still be successful
-        console.warn("Transaction confirmation timeout, but transaction may still be successful");
         alert(
           `Transaction sent!\nSignature: ${signature}\nNote: Confirmation timed out, but transaction may still be successful. Check Solscan for status.`,
         );
