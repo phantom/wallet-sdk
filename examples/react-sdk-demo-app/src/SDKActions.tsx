@@ -14,6 +14,7 @@ import { SystemProgram, PublicKey, Connection, VersionedTransaction, Transaction
 import { parseEther, parseGwei, numberToHex } from "viem";
 import { useState } from "react";
 import { Buffer } from "buffer";
+import bs58 from "bs58";
 import { useBalance } from "./hooks/useBalance";
 
 interface SDKActionsProps {
@@ -85,15 +86,15 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
     try {
       setIsSigningMessageType(type);
       if (type === "solana") {
-        const result = await signSolanaMessage("Hello, World!");
-        alert(`Message Signed! Signature: ${Buffer.from(result.signature).toString("base64")}`);
+        const result = await signSolanaMessage("Hello from Phantom SDK!");
+        alert(`Message Signed! Signature: ${bs58.encode(result.signature)}`);
       } else {
         const ethAddress = addresses.find(addr => addr.addressType === "Ethereum");
         if (!ethAddress) {
           alert("No Ethereum address found");
           return;
         }
-        const message = "Hello, World!";
+        const message = "Hello from Phantom SDK!";
         const prefixedMessage = "0x" + Buffer.from(message, "utf8").toString("hex");
         const result = await signEthMessage(prefixedMessage, ethAddress.address);
         alert(`Message Signed! Signature: ${result}`);

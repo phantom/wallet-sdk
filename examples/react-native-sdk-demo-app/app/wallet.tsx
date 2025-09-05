@@ -13,6 +13,8 @@ import {
 import { useRouter } from "expo-router";
 import { useAccounts, useSolana, useDisconnect } from "@phantom/react-native-sdk";
 import { useBalance } from "../hooks/useBalance";
+import { Buffer } from "buffer";
+import bs58 from "bs58";
 
 export default function WalletScreen() {
   const router = useRouter();
@@ -24,7 +26,7 @@ export default function WalletScreen() {
   const [signError, setSignError] = useState<Error | null>(null);
   const [txError, setTxError] = useState<Error | null>(null);
 
-  const [messageToSign, setMessageToSign] = useState("Hello from Phantom React Native SDK Demo!");
+  const [messageToSign, setMessageToSign] = useState("Hello from Phantom SDK!");
   const [signedMessage, setSignedMessage] = useState<string | null>(null);
   const [transactionResult, setTransactionResult] = useState<string | null>(null);
   const [transactionError, setTransactionError] = useState<string | null>(null);
@@ -53,8 +55,9 @@ export default function WalletScreen() {
       setSignError(null);
       const result = await signMessage(messageToSign);
 
-      setSignedMessage(result.signature);
-      Alert.alert("Success", `Message signed successfully!\n\nSignature: ${result.signature.slice(0, 20)}...`);
+      const signatureString = bs58.encode(result.signature);
+      setSignedMessage(signatureString);
+      Alert.alert("Success", `Message signed successfully!\n\nSignature: ${signatureString.slice(0, 20)}...`);
     } catch (error) {
       const err = error as Error;
       setSignError(err);
