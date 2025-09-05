@@ -208,7 +208,7 @@ function App() {
       const message = "Hello from Phantom SDK!"
       const result = await sdk.solana.signMessage(message)
       console.log("Message signed:", result)
-      alert(`Message signed: ${bs58.encode(result.signature)}`
+      alert(`Message signed: ${bs58.encode(result.signature)}`)
     } catch (error) {
       console.error("Error signing message:", error)
       setError((error as Error).message || 'Failed to sign message')
