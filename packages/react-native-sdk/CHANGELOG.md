@@ -1,5 +1,22 @@
 # @phantom/react-native-sdk
 
+## 1.0.0-beta.2
+
+### Patch Changes
+
+- 98e54ff: Fix race condition sdks
+- 4675314: New sdk hooks fix for race condition
+- Updated dependencies [98e54ff]
+- Updated dependencies [4675314]
+  - @phantom/embedded-provider-core@1.0.0-beta.2
+  - @phantom/chains@1.0.0-beta.2
+  - @phantom/client@1.0.0-beta.2
+  - @phantom/base64url@1.0.0-beta.2
+  - @phantom/constants@1.0.0-beta.2
+  - @phantom/sdk-types@1.0.0-beta.2
+  - @phantom/crypto@1.0.0-beta.2
+  - @phantom/api-key-stamper@1.0.0-beta.2
+
 ## 1.0.0-beta.1
 
 ### Patch Changes

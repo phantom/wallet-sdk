@@ -1,5 +1,13 @@
 # @phantom/api-key-stamper
 
+## 1.0.0-beta.2
+
+### Patch Changes
+
+- @phantom/base64url@1.0.0-beta.2
+- @phantom/sdk-types@1.0.0-beta.2
+- @phantom/crypto@1.0.0-beta.2
+
 ## 1.0.0-beta.1
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @phantom/parsers
 
+## 1.0.0-beta.2
+
+### Patch Changes
+
+- 98e54ff: Fix race condition sdks
+- 4675314: New sdk hooks fix for race condition
+  - @phantom/base64url@1.0.0-beta.2
+  - @phantom/constants@1.0.0-beta.2
+
 ## 1.0.0-beta.1
 
 ### Patch Changes

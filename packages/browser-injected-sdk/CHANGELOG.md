@@ -1,5 +1,12 @@
 # @phantom/browser-sdk
 
+## 1.0.0-beta.2
+
+### Patch Changes
+
+- 4675314: New sdk hooks fix for race condition
+  - @phantom/constants@1.0.0-beta.2
+
 ## 1.0.0-beta.1
 
 ### Patch Changes
