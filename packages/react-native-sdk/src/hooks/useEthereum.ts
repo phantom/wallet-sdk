@@ -45,10 +45,8 @@ export function useEthereum() {
 
   const signTransaction = useCallback(
     async (transaction: EthTransactionRequest): Promise<string> => {
-      return await request<string>({
-        method: "eth_signTransaction",
-        params: [transaction],
-      });
+      const chain = getEthereumChain();
+      return chain.signTransaction(transaction);
     },
     [request],
   );
