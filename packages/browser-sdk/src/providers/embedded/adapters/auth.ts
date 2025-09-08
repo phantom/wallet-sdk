@@ -6,7 +6,7 @@ import type {
   URLParamsAccessor,
 } from "@phantom/embedded-provider-core";
 import { debug, DebugCategory } from "../../../debug";
-import { DEFAULT_AUTH_URL } from "../../../constants";
+import { DEFAULT_AUTH_URL } from "@phantom/constants";
 
 export class BrowserAuthProvider implements AuthProvider {
   private urlParamsAccessor: URLParamsAccessor;

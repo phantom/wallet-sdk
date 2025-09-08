@@ -3,7 +3,7 @@ import { InjectedProvider } from "./providers/injected";
 import { EmbeddedProvider } from "./providers/embedded";
 import { debug, DebugCategory } from "./debug";
 import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-provider-core";
-
+import { DEFAULT_WALLET_API_URL, DEFAULT_EMBEDDED_WALLET_TYPE, DEFAULT_AUTH_URL } from "@phantom/constants";
 export interface ProviderPreference {
   type: "injected" | "embedded";
   embeddedWalletType?: "app-wallet" | "user-wallet";
@@ -264,7 +264,7 @@ export class ProviderManager implements EventEmitter {
    */
   private setDefaultProvider(): void {
     const defaultType = (this.config.providerType || "embedded") as "injected" | "embedded";
-    const defaultEmbeddedType = (this.config.embeddedWalletType || "app-wallet") as "app-wallet" | "user-wallet";
+    const defaultEmbeddedType = (this.config.embeddedWalletType || "user-wallet") as "app-wallet" | "user-wallet";
 
     this.createProvider(defaultType, defaultEmbeddedType);
     this.switchProvider(defaultType, { embeddedWalletType: defaultEmbeddedType });
@@ -290,12 +290,19 @@ export class ProviderManager implements EventEmitter {
         throw new Error("apiBaseUrl and appId are required for embedded provider");
       }
 
+      const apiBaseUrl = this.config.apiBaseUrl || DEFAULT_WALLET_API_URL;
+      const authUrl = this.config.authOptions?.authUrl || DEFAULT_AUTH_URL;
+
       provider = new EmbeddedProvider({
-        apiBaseUrl: this.config.apiBaseUrl,
+        apiBaseUrl,
         organizationId: this.config.appId,
         appId: this.config.appId,
-        authOptions: this.config.authOptions,
-        embeddedWalletType: embeddedWalletType || "app-wallet",
+        authOptions: {
+          ...(this.config.authOptions || {}),
+          authUrl,
+          redirectUrl: this.config.authOptions?.redirectUrl || window.location.href,
+        },
+        embeddedWalletType: embeddedWalletType || DEFAULT_EMBEDDED_WALLET_TYPE,
         addressTypes: this.config.addressTypes,
         solanaProvider: (this.config.solanaProvider || "web3js") as "web3js" | "kit",
       });

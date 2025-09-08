@@ -361,7 +361,7 @@ import { PhantomProvider, AddressType } from "@phantom/react-native-sdk";
     apiBaseUrl: "https://api.phantom.app/v1/wallets",
     solanaProvider: "web3js",
     authOptions: {
-      authUrl: "https://connect.phantom.app",
+      authUrl: "https://connect.phantom.app/login",
       redirectUrl: "mycompany-wallet://auth/success",
     },
   }}

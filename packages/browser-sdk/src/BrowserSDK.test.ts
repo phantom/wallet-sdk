@@ -67,8 +67,9 @@ describe("BrowserSDK", () => {
         appId: "app-123",
         authOptions: {
           authUrl: "https://auth.phantom.com",
+          redirectUrl: "https://localhost:3000/",
         },
-        embeddedWalletType: "app-wallet",
+        embeddedWalletType: "user-wallet",
         addressTypes: [AddressType.solana],
         solanaProvider: "web3js",
       });
@@ -93,6 +94,7 @@ describe("BrowserSDK", () => {
         appId: "app-123",
         authOptions: {
           authUrl: "https://auth.phantom.com",
+          redirectUrl: "https://localhost:3000/",
         },
         embeddedWalletType: "user-wallet",
         addressTypes: [AddressType.solana],
@@ -134,8 +136,11 @@ describe("BrowserSDK", () => {
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
         organizationId: "app-123",
         appId: "app-123",
-        authUrl: undefined,
-        embeddedWalletType: "app-wallet",
+        authOptions: {
+          authUrl: "https://connect.phantom.app/login",
+          redirectUrl: "https://localhost:3000/",
+        },
+        embeddedWalletType: "user-wallet",
         addressTypes: [AddressType.solana],
         solanaProvider: "kit",
       });
@@ -300,7 +305,9 @@ describe("BrowserSDK", () => {
         addressTypes: [AddressType.solana],
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
         appId: "app-123",
-        authUrl: "https://auth.phantom.com",
+        authOptions: {
+          authUrl: "https://auth.phantom.com",
+        },
         embeddedWalletType: "app-wallet",
       });
     });
