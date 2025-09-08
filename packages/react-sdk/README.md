@@ -96,7 +96,6 @@ function App() {
         providerType: "embedded",
         appId: "your-app-id", // Get your app ID from phantom.com/portal
         addressTypes: [AddressType.solana, AddressType.ethereum],
-        embeddedWalletType: "user-wallet", // optional, defaults to "user-wallet". Can be "app-wallet" or "user-wallet"
       }}
     >
       <YourApp />
@@ -181,26 +180,7 @@ Uses the Phantom browser extension installed by the user.
 
 Creates non-custodial wallets embedded in your application.
 
-#### App Wallet (Recommended for most apps)
-
-- **New wallets** created per application
-- **Unfunded** by default - you need to fund them
-- **Independent** from user's existing Phantom wallet
-
-```tsx
-<PhantomProvider
-  config={{
-    providerType: "embedded",
-    appId: "your-app-id",
-    embeddedWalletType: "app-wallet",
-    addressTypes: [AddressType.solana],
-  }}
->
-  <YourApp />
-</PhantomProvider>
-```
-
-#### User Wallet (For existing Phantom users)
+#### User Wallet
 
 - **Uses Phantom authentication** - user logs in with existing account
 - **Potentially funded** - brings existing wallet balance
@@ -211,7 +191,6 @@ Creates non-custodial wallets embedded in your application.
   config={{
     providerType: "embedded",
     appId: "your-app-id",
-    embeddedWalletType: "user-wallet", // This is the default
     addressTypes: [AddressType.solana, AddressType.ethereum],
   }}
 >
@@ -807,7 +786,7 @@ interface PhantomSDKConfig {
     authUrl?: string; // Custom auth URL (optional, defaults to "https://connect.phantom.app/login")
     redirectUrl?: string; // Custom redirect URL after authentication (optional)
   };
-  embeddedWalletType?: "app-wallet" | "user-wallet"; // Wallet type (optional, defaults to "user-wallet")
+  embeddedWalletType?: "user-wallet"; // Wallet type (optional, defaults to "user-wallet", currently the only supported type)
   solanaProvider?: "web3js" | "kit"; // Solana library choice (optional, defaults to 'web3js')
   autoConnect?: boolean; // Auto-connect to existing session on SDK instantiation (optional, defaults to true for embedded, false for injected)
 }

@@ -68,6 +68,11 @@ export class EmbeddedProvider {
     this.logger = logger;
     this.logger.log("EMBEDDED_PROVIDER", "Initializing EmbeddedProvider", { config });
 
+    // TODO: Re-enable app-wallet support once it's fully implemented
+    if (config.embeddedWalletType === "app-wallet") {
+      throw new Error("app-wallet type is not currently supported. Please use 'user-wallet' instead.");
+    }
+
     this.config = config;
     this.platform = platform;
     this.storage = platform.storage;

@@ -190,7 +190,6 @@ const sdk = new BrowserSDK({
   providerType: "embedded",
   addressTypes: [AddressType.solana, AddressType.ethereum],
   appId: "your-app-id", // Get your app ID from phantom.com/portal
-  embeddedWalletType: "user-wallet", // optional, defaults to "user-wallet". Can be "app-wallet" or "user-wallet"
   authOptions: {
     authUrl: "https://connect.phantom.app/login", // optional, defaults to "https://connect.phantom.app/login"
     redirectUrl: "https://yourapp.com/callback", // optional, defaults to current page
@@ -199,36 +198,19 @@ const sdk = new BrowserSDK({
 });
 ```
 
-### Embedded Wallet Types
-
-#### App Wallet (`'app-wallet'`)
-
-- **New wallets** created per application
-- **Unfunded** by default - you need to fund them
-- **Independent** from user's existing Phantom wallet
-- **Perfect for**: Gaming, DeFi protocols, or apps that need fresh wallets
-
-```typescript
-const sdk = new BrowserSDK({
-  providerType: "embedded",
-  appId: "your-app-id",
-  embeddedWalletType: "app-wallet",
-  addressTypes: [AddressType.solana],
-});
-```
+### Embedded Wallet Type
 
 #### User Wallet (`'user-wallet'`)
 
 - **Uses Phantom authentication** - user logs in with existing Phantom account
 - **Potentially funded** - brings in user's existing wallet balance
 - **Connected** to user's Phantom ecosystem
-- **Perfect for**: Trading platforms, NFT marketplaces, or apps needing funded wallets
+- **Perfect for**: All embedded wallet use cases
 
 ```typescript
 const sdk = new BrowserSDK({
   providerType: "embedded",
   appId: "your-app-id",
-  embeddedWalletType: "user-wallet", // This is the default
   addressTypes: [AddressType.solana, AddressType.ethereum],
 });
 ```
@@ -326,7 +308,7 @@ interface BrowserSDKConfig {
     authUrl?: string; // Custom auth URL (optional, defaults to "https://connect.phantom.app/login")
     redirectUrl?: string; // Custom redirect URL after authentication (optional)
   };
-  embeddedWalletType?: "app-wallet" | "user-wallet"; // Wallet type (optional, defaults to "user-wallet")
+  embeddedWalletType?: "user-wallet"; // Wallet type (optional, defaults to "user-wallet", currently the only supported type)
   solanaProvider?: "web3js" | "kit"; // Solana library choice (optional, defaults to 'web3js')
   autoConnect?: boolean; // Enable auto-connect to existing sessions (optional, defaults to true for embedded)
 }

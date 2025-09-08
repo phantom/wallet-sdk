@@ -92,7 +92,6 @@ export default function App() {
         appId: "your-app-id", // Get your app ID from phantom.com/portal
         scheme: "mywalletapp", // Must match app.json scheme
         addressTypes: [AddressType.solana],
-        embeddedWalletType: "user-wallet", // optional, defaults to "user-wallet". Can be "app-wallet" or "user-wallet"
         authOptions: {
           redirectUrl: "mywalletapp://phantom-auth-callback",
         },
@@ -200,7 +199,7 @@ interface PhantomSDKConfig {
   addressTypes: [AddressType, ...AddressType[]]; // e.g., [AddressType.solana]
   
   // Optional configuration
-  embeddedWalletType?: "user-wallet" | "app-wallet"; // optional, defaults to "user-wallet"
+  embeddedWalletType?: "user-wallet"; // optional, defaults to "user-wallet", currently the only supported type
   apiBaseUrl?: string; // e.g., "https://api.phantom.app/v1/wallets" (optional, has default)
   solanaProvider?: "web3js" | "kit"; // Solana provider to use (optional, defaults to "web3js")
   authOptions?: {
@@ -390,11 +389,9 @@ import { PhantomProvider, AddressType } from '@phantom/react-native-sdk';
 const testConfig = {
   appId: "test-app",
   scheme: "testapp",
-  embeddedWalletType: "app-wallet" as const,
   addressTypes: [AddressType.solana],
 };
 
-// Use app-wallet for testing (no OAuth required)
 <PhantomProvider config={testConfig}>
   <TestApp />
 </PhantomProvider>
