@@ -94,9 +94,9 @@ function App() {
     <PhantomProvider
       config={{
         providerType: "embedded",
-        embeddedWalletType: "app-wallet", // or 'user-wallet'
+        appId: "your-app-id", // Get your app ID from phantom.com/portal
         addressTypes: [AddressType.solana, AddressType.ethereum],
-        apiBaseUrl: "https://api.phantom.app/v1/wallets",
+        embeddedWalletType: "user-wallet", // optional, defaults to "user-wallet". Can be "app-wallet" or "user-wallet"
       }}
     >
       <YourApp />
@@ -191,9 +191,9 @@ Creates non-custodial wallets embedded in your application.
 <PhantomProvider
   config={{
     providerType: "embedded",
+    appId: "your-app-id",
     embeddedWalletType: "app-wallet",
     addressTypes: [AddressType.solana],
-    apiBaseUrl: "https://api.phantom.app/v1/wallets",
   }}
 >
   <YourApp />
@@ -210,9 +210,9 @@ Creates non-custodial wallets embedded in your application.
 <PhantomProvider
   config={{
     providerType: "embedded",
-    embeddedWalletType: "user-wallet",
+    appId: "your-app-id",
+    embeddedWalletType: "user-wallet", // This is the default
     addressTypes: [AddressType.solana, AddressType.ethereum],
-    apiBaseUrl: "https://api.phantom.app/v1/wallets",
   }}
 >
   <YourApp />
@@ -227,9 +227,9 @@ When using `AddressType.solana`, you can choose between two Solana libraries:
 <PhantomProvider
   config={{
     providerType: "embedded",
+    appId: "your-app-id",
     addressTypes: [AddressType.solana],
     solanaProvider: "web3js", // or 'kit'
-    apiBaseUrl: "https://api.phantom.app/v1/wallets",
   }}
 >
   <YourApp />
@@ -799,15 +799,17 @@ interface PhantomSDKConfig {
   addressTypes?: [AddressType, ...AddressType[]]; // Networks to enable (e.g., [AddressType.solana])
 
   // Required for embedded provider only
-  apiBaseUrl?: string; // Phantom API base URL
-  appId: string; // Your app ID
+  appId: string; // Your app ID from phantom.com/portal (required for embedded provider)
+  
+  // Optional configuration
+  apiBaseUrl?: string; // Phantom API base URL (optional, has default)
   authOptions?: {
-    authUrl?: string; // Custom auth URL (optional)
-    redirectUrl?: string; // Custom redirect URL (optional)
+    authUrl?: string; // Custom auth URL (optional, defaults to "https://connect.phantom.app/login")
+    redirectUrl?: string; // Custom redirect URL after authentication (optional)
   };
-  embeddedWalletType?: "app-wallet" | "user-wallet"; // Wallet type
-  solanaProvider?: "web3js" | "kit"; // Solana library choice (default: 'web3js')
-  autoConnect?: boolean; // Auto-connect to existing session on SDK instantiation (default: true for embedded, false for injected)
+  embeddedWalletType?: "app-wallet" | "user-wallet"; // Wallet type (optional, defaults to "user-wallet")
+  solanaProvider?: "web3js" | "kit"; // Solana library choice (optional, defaults to 'web3js')
+  autoConnect?: boolean; // Auto-connect to existing session on SDK instantiation (optional, defaults to true for embedded, false for injected)
 }
 ```
 
@@ -839,6 +841,7 @@ function App() {
   // SDK configuration - static, won't change when debug settings change
   const config: PhantomSDKConfig = {
     providerType: "embedded",
+    appId: "your-app-id",
     // ... other config
   };
 

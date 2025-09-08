@@ -89,12 +89,10 @@ export default function App() {
   return (
     <PhantomProvider
       config={{
-        appId: "your-app-id",
+        appId: "your-app-id", // Get your app ID from phantom.com/portal
         scheme: "mywalletapp", // Must match app.json scheme
-        embeddedWalletType: "user-wallet",
         addressTypes: [AddressType.solana],
-        apiBaseUrl: "https://api.phantom.app/v1/wallets",
-        solanaProvider: "web3js",
+        embeddedWalletType: "user-wallet", // optional, defaults to "user-wallet". Can be "app-wallet" or "user-wallet"
         authOptions: {
           redirectUrl: "mywalletapp://phantom-auth-callback",
         },
@@ -198,15 +196,18 @@ The main provider component that initializes the SDK and provides context to all
 ```typescript
 interface PhantomSDKConfig {
   scheme: string; // Custom URL scheme for your app
-  embeddedWalletType: "user-wallet" | "app-wallet";
+  appId: string; // Your app ID from phantom.com/portal (required)
   addressTypes: [AddressType, ...AddressType[]]; // e.g., [AddressType.solana]
-  apiBaseUrl: string; // e.g., "https://api.phantom.app/v1/wallets"
-  solanaProvider: "web3js" | "kit"; // Solana provider to use
+  
+  // Optional configuration
+  embeddedWalletType?: "user-wallet" | "app-wallet"; // optional, defaults to "user-wallet"
+  apiBaseUrl?: string; // e.g., "https://api.phantom.app/v1/wallets" (optional, has default)
+  solanaProvider?: "web3js" | "kit"; // Solana provider to use (optional, defaults to "web3js")
   authOptions?: {
     authUrl?: string; // Custom auth URL (optional)
     redirectUrl?: string; // Custom redirect URL (optional)
   };
-  autoConnect?: boolean; // Auto-connect to existing session on SDK instantiation (default: true)
+  autoConnect?: boolean; // Auto-connect to existing session on SDK instantiation (optional, defaults to true)
 }
 ```
 
@@ -336,11 +337,9 @@ import { PhantomProvider, AddressType } from "@phantom/react-native-sdk";
 
 <PhantomProvider
   config={{
-    appId: "app_123456789",
+    appId: "your-app-id",
     scheme: "myapp",
-    embeddedWalletType: "user-wallet",
     addressTypes: [AddressType.solana],
-    apiBaseUrl: "https://api.phantom.app/v1/wallets",
   }}
 >
   <App />
@@ -354,14 +353,10 @@ import { PhantomProvider, AddressType } from "@phantom/react-native-sdk";
 
 <PhantomProvider
   config={{
-    appId: "app_123456789",
+    appId: "your-app-id",
     scheme: "mycompany-wallet",
-    embeddedWalletType: "user-wallet",
     addressTypes: [AddressType.solana, AddressType.ethereum],
-    apiBaseUrl: "https://api.phantom.app/v1/wallets",
-    solanaProvider: "web3js",
     authOptions: {
-      authUrl: "https://connect.phantom.app/login",
       redirectUrl: "mycompany-wallet://auth/success",
     },
   }}
@@ -397,8 +392,6 @@ const testConfig = {
   scheme: "testapp",
   embeddedWalletType: "app-wallet" as const,
   addressTypes: [AddressType.solana],
-  apiBaseUrl: "https://api.phantom.app/v1/wallets",
-
 };
 
 // Use app-wallet for testing (no OAuth required)
@@ -450,6 +443,7 @@ import { PhantomProvider, type PhantomSDKConfig, type PhantomDebugConfig } from 
 function App() {
   // SDK configuration - static, won't change when debug settings change
   const config: PhantomSDKConfig = {
+    appId: "your-app-id",
     scheme: "mywalletapp",
     // ... other config
   };
