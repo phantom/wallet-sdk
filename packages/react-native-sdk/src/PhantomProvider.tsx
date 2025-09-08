@@ -11,6 +11,7 @@ import { ExpoURLParamsAccessor } from "./providers/embedded/url-params";
 import { ReactNativeStamper } from "./providers/embedded/stamper";
 import { ExpoLogger } from "./providers/embedded/logger";
 import { Platform } from "react-native";
+import { ANALYTICS_HEADERS } from "@phantom/constants";
 
 interface PhantomContextValue {
   sdk: EmbeddedProvider | null;
@@ -65,12 +66,21 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       organizationId: memoizedConfig.organizationId,
     });
 
+    const platformName = `${Platform.OS}-${Platform.Version}`;
+
     const platform: PlatformAdapter = {
       storage,
       authProvider,
       urlParamsAccessor,
       stamper,
-      name: `${Platform.OS}-${Platform.Version}`,
+      name: platformName,
+      analyticsHeaders: {
+        [ANALYTICS_HEADERS.SDK_TYPE]: "react-native-sdk",
+        [ANALYTICS_HEADERS.PLATFORM]: platformName,
+        [ANALYTICS_HEADERS.APP_ID]: config.appId,
+        [ANALYTICS_HEADERS.WALLET_TYPE]: config.embeddedWalletType as "app-wallet" | "user-wallet",
+        [ANALYTICS_HEADERS.SDK_VERSION]: __SDK_VERSION__, // Replaced at build time
+      },
     };
 
     const sdkInstance = new EmbeddedProvider(memoizedConfig, platform, logger);

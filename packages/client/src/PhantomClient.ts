@@ -35,7 +35,10 @@ import {
   type DerivationInfoAddressFormatEnum,
   type ExternalKmsAuthenticator,
 } from "@phantom/openapi-wallet-service";
-import { DerivationPath, getNetworkConfig } from "./constants";
+import { 
+  DerivationPath, 
+  getNetworkConfig 
+} from "./constants";
 import { deriveSubmissionConfig } from "./caip2-mappings";
 import {
   type PhantomClientConfig,
@@ -76,6 +79,22 @@ export class PhantomClient {
 
     // Create axios instance
     this.axiosInstance = axios.create();
+
+    // Add custom headers interceptor
+    const customHeaders: Record<string, string> = {};
+
+    // Add any additional headers provided in config
+    if (config.headers) {
+      Object.assign(customHeaders, config.headers);
+    }
+
+    // Add headers interceptor if we have any custom headers
+    if (Object.keys(customHeaders).length > 0) {
+      this.axiosInstance.interceptors.request.use(config => {
+        Object.assign(config.headers, customHeaders);
+        return config;
+      });
+    }
 
     // If stamper is provided, add it as an interceptor
     if (stamper) {

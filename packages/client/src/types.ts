@@ -1,8 +1,9 @@
-import { type NetworkId } from "@phantom/constants";
+import { type NetworkId, type SdkAnalyticsHeaders } from "@phantom/constants";
 
 export interface PhantomClientConfig {
   apiBaseUrl: string;
   organizationId?: string;
+  headers?: Partial<SdkAnalyticsHeaders>;
 }
 
 export interface CreateWalletResult {

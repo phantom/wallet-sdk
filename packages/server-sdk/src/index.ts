@@ -9,6 +9,10 @@ import {
   type AddressType,
   type Organization,
 } from "@phantom/client";
+import { 
+  ANALYTICS_HEADERS,
+  type ServerSdkHeaders 
+} from "@phantom/constants";
 import { ApiKeyStamper } from "@phantom/api-key-stamper";
 import { base64urlEncode } from "@phantom/base64url";
 import bs58 from "bs58";
@@ -49,6 +53,41 @@ export interface ServerSignAndSendTransactionParams {
   derivationIndex?: number; // Optional account derivation index (defaults to 0)
 }
 
+/**
+ * Get current Node.js version
+ */
+function getNodeVersion(): string {
+  if (typeof process !== "undefined" && process.version) {
+    return process.version;
+  }
+  return "unknown";
+}
+
+/**
+ * Get SDK version from package.json
+ */
+function getSdkVersion(): string {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const packageJson = require("../package.json");
+    return packageJson.version || "unknown";
+  } catch {
+    return "unknown";
+  }
+}
+
+/**
+ * Helper function to create server SDK analytics headers
+ */
+function createServerSdkHeaders(appId: string): ServerSdkHeaders {
+  return {
+    [ANALYTICS_HEADERS.SDK_TYPE]: "server-sdk",
+    [ANALYTICS_HEADERS.SDK_VERSION]: getSdkVersion(),
+    [ANALYTICS_HEADERS.PLATFORM]: `node-${getNodeVersion()}`,
+    [ANALYTICS_HEADERS.APP_ID]: appId,
+  };
+}
+
 export class ServerSDK {
   private config: ServerSDKConfig;
   client: PhantomClient;
@@ -60,11 +99,15 @@ export class ServerSDK {
       apiSecretKey: config.apiPrivateKey,
     });
 
-    // Initialize the parent PhantomClient with the stamper
+    // Create analytics headers
+    const headers = createServerSdkHeaders(config.appId);
+
+    // Initialize the parent PhantomClient with the stamper and analytics headers
     this.client = new PhantomClient(
       {
         apiBaseUrl: config.apiBaseUrl,
         organizationId: config.organizationId,
+        headers,
       },
       stamper,
     );
@@ -142,11 +185,15 @@ export class ServerSDK {
   }
 
   createOrganization(name: string, keyPair: { publicKey: string; secretKey: string }): Promise<Organization> {
-    // Create a temporary PhantomClient instance with the stamper
+    // Create analytics headers for the temporary client
+    const headers = createServerSdkHeaders(this.config.appId);
+    
+    // Create a temporary PhantomClient instance with the stamper and analytics headers
     const tempClient = new PhantomClient(
       {
         apiBaseUrl: this.config.apiBaseUrl,
         organizationId: this.config.organizationId,
+        headers,
       },
       new ApiKeyStamper({
         apiSecretKey: keyPair.secretKey,

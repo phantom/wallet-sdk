@@ -2,6 +2,7 @@ import type { EmbeddedStorage } from "./storage";
 import type { AuthProvider } from "./auth";
 import type { URLParamsAccessor } from "./url-params";
 import type { StamperWithKeyManagement } from "@phantom/sdk-types";
+import type { ClientSideSdkHeaders  } from "@phantom/constants";
 
 export interface PlatformAdapter {
   name: string; // Platform identifier like "web", "ios", "android", "react-native", etc.
@@ -11,6 +12,7 @@ export interface PlatformAdapter {
   authProvider: AuthProvider;
   urlParamsAccessor: URLParamsAccessor;
   stamper: StamperWithKeyManagement;
+  analyticsHeaders?: Partial<ClientSideSdkHeaders>;
 }
 
 export interface DebugLogger {

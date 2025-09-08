@@ -5,6 +5,7 @@ import { BrowserStorage, BrowserURLParamsAccessor, BrowserAuthProvider, BrowserL
 import { debug, DebugCategory } from "../../debug";
 import { getPlatformName } from "../../utils/browser-detection";
 import type { Provider } from "../../types";
+import { ANALYTICS_HEADERS } from "@phantom/constants";
 
 export class EmbeddedProvider extends CoreEmbeddedProvider implements Provider {
   constructor(config: EmbeddedProviderConfig) {
@@ -26,6 +27,13 @@ export class EmbeddedProvider extends CoreEmbeddedProvider implements Provider {
       urlParamsAccessor,
       stamper,
       name: platformName, // Use detected browser name and version for identification
+      analyticsHeaders: {
+        [ANALYTICS_HEADERS.SDK_TYPE]: "browser-sdk",
+        [ANALYTICS_HEADERS.PLATFORM]: platformName,
+        [ANALYTICS_HEADERS.APP_ID]: config.appId,
+        [ANALYTICS_HEADERS.WALLET_TYPE]: config.embeddedWalletType as "app-wallet" | "user-wallet",
+        [ANALYTICS_HEADERS.SDK_VERSION]: __SDK_VERSION__, // Replaced at build time
+      },
     };
 
     debug.log(DebugCategory.EMBEDDED_PROVIDER, "Detected platform", { platformName });

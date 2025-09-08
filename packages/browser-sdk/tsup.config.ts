@@ -13,10 +13,15 @@ export default defineConfig({
   shims: true,
   esbuildOptions(options) {
     options.packages = "external";
-    // Add buffer polyfill for browser compatibility
+    
+    // Read package version at build time
+    const packageJson = require("./package.json");
+    
+    // Add buffer polyfill for browser compatibility and SDK version replacement
     options.define = {
       ...options.define,
       global: "globalThis",
+      __SDK_VERSION__: JSON.stringify(packageJson.version),
     };
   },
 });
