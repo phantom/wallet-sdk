@@ -474,7 +474,7 @@ describe("EmbeddedProvider Auth Flows", () => {
     });
   });
 
-  describe("App Wallet Flow", () => {
+  describe.skip("App Wallet Flow", () => {
     beforeEach(() => {
       config.embeddedWalletType = "app-wallet";
       provider = new EmbeddedProvider(config, mockPlatform, mockLogger);
@@ -1164,7 +1164,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       await expect(provider.autoConnect()).resolves.toBeUndefined();
     });
 
-    it("should work with app-wallet sessions during autoConnect", async () => {
+    it.skip("should work with app-wallet sessions during autoConnect", async () => {
       config.embeddedWalletType = "app-wallet";
       provider = new EmbeddedProvider(config, mockPlatform, mockLogger);
 

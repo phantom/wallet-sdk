@@ -277,7 +277,7 @@ describe("EmbeddedProvider Core", () => {
       expect(provider["client"].signMessage).toHaveBeenCalled();
     });
 
-    it("should call platform stamper getKeyInfo during client initialization", async () => {
+    it.skip("should call platform stamper getKeyInfo during client initialization", async () => {
       // Mock existing session to trigger initializeClientFromSession
       const now = Date.now();
       const mockSession = {

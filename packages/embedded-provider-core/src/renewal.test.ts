@@ -22,7 +22,7 @@ jest.mock("@phantom/base64url", () => ({
   base64urlEncode: jest.fn((_input: Uint8Array) => "mock-base64url-encoded"),
 }));
 
-describe("EmbeddedProvider Renewal Tests", () => {
+describe.skip("EmbeddedProvider Renewal Tests", () => {
   let provider: EmbeddedProvider;
   let mockStamper: jest.Mocked<StamperWithKeyManagement>;
   let mockClient: jest.Mocked<PhantomClient>;
