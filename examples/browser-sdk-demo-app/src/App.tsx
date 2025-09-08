@@ -51,7 +51,6 @@ function App() {
     if (type === "injected") {
       return new BrowserSDK({
         providerType: "injected",
-        solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       })
     } else {
@@ -63,7 +62,6 @@ function App() {
         authOptions: {
           authUrl: import.meta.env.VITE_AUTH_URL,
         },
-        solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       })
 
