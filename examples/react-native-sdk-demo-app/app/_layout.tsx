@@ -21,7 +21,6 @@ const config: PhantomSDKConfig = {
     redirectUrl: process.env.EXPO_PUBLIC_REDIRECT_URL || "phantom-rn-demo://phantom-auth-callback",
   },
   apiBaseUrl: process.env.EXPO_PUBLIC_WALLET_API || "https://api.phantom.app/v1/wallets",
-  solanaProvider: "web3js",
 };
 
 // Debug configuration - separate to avoid SDK reinstantiation

@@ -198,32 +198,6 @@ Creates non-custodial wallets embedded in your application.
 </PhantomProvider>
 ```
 
-## Solana Provider Configuration
-
-When using `AddressType.solana`, you can choose between two Solana libraries:
-
-```tsx
-<PhantomProvider
-  config={{
-    providerType: "embedded",
-    appId: "your-app-id",
-    addressTypes: [AddressType.solana],
-    solanaProvider: "web3js", // or 'kit'
-  }}
->
-  <YourApp />
-</PhantomProvider>
-```
-
-**Provider Options:**
-
-- `'web3js'` (default) - Uses `@solana/web3.js` library
-- `'kit'` - Uses `@solana/kit` library (modern, TypeScript-first)
-
-**When to use each:**
-
-- **@solana/web3.js**: Better ecosystem compatibility, wider community support
-- **@solana/kit**: Better TypeScript support, modern architecture, smaller bundle size
 
 ## Available Hooks
 
@@ -787,7 +761,6 @@ interface PhantomSDKConfig {
     redirectUrl?: string; // Custom redirect URL after authentication (optional)
   };
   embeddedWalletType?: "user-wallet"; // Wallet type (optional, defaults to "user-wallet", currently the only supported type)
-  solanaProvider?: "web3js" | "kit"; // Solana library choice (optional, defaults to 'web3js')
   autoConnect?: boolean; // Auto-connect to existing session on SDK instantiation (optional, defaults to true for embedded, false for injected)
 }
 ```

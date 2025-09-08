@@ -33,7 +33,6 @@ declare global {
 }
 
 interface InjectedProviderConfig {
-  solanaProvider: "web3js" | "kit";
   addressTypes: [AddressType, ...AddressType[]];
 }
 

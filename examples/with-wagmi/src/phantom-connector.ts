@@ -24,7 +24,6 @@ export function phantomConnector() {
           redirectUrl: `${window.location.origin}/auth-callback`,
         },
         embeddedWalletType: 'user-wallet',
-        solanaProvider: 'web3js',
         addressTypes: [AddressType.ethereum], // Only need Ethereum for wagmi
       })
 

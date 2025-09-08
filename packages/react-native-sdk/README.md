@@ -201,7 +201,6 @@ interface PhantomSDKConfig {
   // Optional configuration
   embeddedWalletType?: "user-wallet"; // optional, defaults to "user-wallet", currently the only supported type
   apiBaseUrl?: string; // e.g., "https://api.phantom.app/v1/wallets" (optional, has default)
-  solanaProvider?: "web3js" | "kit"; // Solana provider to use (optional, defaults to "web3js")
   authOptions?: {
     authUrl?: string; // Custom auth URL (optional)
     redirectUrl?: string; // Custom redirect URL (optional)

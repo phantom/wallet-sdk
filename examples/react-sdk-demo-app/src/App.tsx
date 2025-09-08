@@ -46,8 +46,6 @@ function App() {
       providerType: providerType, // Dynamic provider type
       addressTypes: [AddressType.solana, AddressType.ethereum, AddressType.bitcoinSegwit, AddressType.sui],
 
-      // Solana library choice - matches browser-sdk demo
-      solanaProvider: "web3js", // Using @solana/web3.js
 
       // Embedded wallet configuration (only used when providerType is "embedded")
       ...(providerType === "embedded" && {
@@ -91,7 +89,6 @@ function App() {
   const authConfig: PhantomSDKConfig = useMemo(() => ({
     providerType: "embedded",
     addressTypes: [AddressType.solana, AddressType.ethereum, AddressType.bitcoinSegwit, AddressType.sui],
-    solanaProvider: "web3js",
     appId: import.meta.env.VITE_APP_ID || "your-app-id",
     apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "https://api.phantom.app/v1/wallets",
     embeddedWalletType: "user-wallet", // Auth callback is always for user wallet

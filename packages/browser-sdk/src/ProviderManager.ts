@@ -282,7 +282,6 @@ export class ProviderManager implements EventEmitter {
 
     if (type === "injected") {
       provider = new InjectedProvider({
-        solanaProvider: (this.config.solanaProvider || "web3js") as "web3js" | "kit",
         addressTypes: this.config.addressTypes,
       });
     } else {
@@ -304,7 +303,6 @@ export class ProviderManager implements EventEmitter {
         },
         embeddedWalletType: embeddedWalletType || DEFAULT_EMBEDDED_WALLET_TYPE,
         addressTypes: this.config.addressTypes,
-        solanaProvider: (this.config.solanaProvider || "web3js") as "web3js" | "kit",
       });
     }
 

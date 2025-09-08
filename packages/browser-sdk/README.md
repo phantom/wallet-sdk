@@ -222,28 +222,6 @@ const sdk = new BrowserSDK({
 | `AddressType.solana`   | Solana Mainnet, Devnet, Testnet       |
 | `AddressType.ethereum` | Ethereum, Polygon, Arbitrum, and more |
 
-### Solana Provider Configuration
-
-When using `AddressType.solana`, you can choose between two Solana libraries:
-
-```typescript
-const sdk = new BrowserSDK({
-  providerType: "embedded",
-  appId: "your-app-id",
-  addressTypes: [AddressType.solana],
-  solanaProvider: "web3js", // or 'kit'
-});
-```
-
-**Provider Options:**
-
-- `'web3js'` (default) - Uses `@solana/web3.js` library
-- `'kit'` - Uses `@solana/kit` library (modern, TypeScript-first)
-
-**When to use each:**
-
-- **@solana/web3.js**: Better ecosystem compatibility, wider community support
-- **@solana/kit**: Better TypeScript support, modern architecture, smaller bundle size
 
 ### Auto-Connect Feature
 
@@ -309,7 +287,6 @@ interface BrowserSDKConfig {
     redirectUrl?: string; // Custom redirect URL after authentication (optional)
   };
   embeddedWalletType?: "user-wallet"; // Wallet type (optional, defaults to "user-wallet", currently the only supported type)
-  solanaProvider?: "web3js" | "kit"; // Solana library choice (optional, defaults to 'web3js')
   autoConnect?: boolean; // Enable auto-connect to existing sessions (optional, defaults to true for embedded)
 }
 ```
@@ -797,7 +774,6 @@ import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 const sdk = new BrowserSDK({
   providerType: "injected",
   addressTypes: [AddressType.solana],
-  solanaProvider: "web3js",
 });
 
 await sdk.connect();
@@ -851,7 +827,6 @@ import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 const sdk = new BrowserSDK({
   providerType: "injected",
   addressTypes: [AddressType.solana],
-  solanaProvider: "kit",
 });
 
 await sdk.connect();

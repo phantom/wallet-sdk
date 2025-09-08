@@ -44,7 +44,6 @@ describe("BrowserSDK", () => {
       });
 
       expect(MockInjectedProvider).toHaveBeenCalledWith({
-        solanaProvider: "web3js",
         addressTypes: [AddressType.solana],
       });
       expect(MockEmbeddedProvider).not.toHaveBeenCalled();
@@ -71,7 +70,6 @@ describe("BrowserSDK", () => {
         },
         embeddedWalletType: "user-wallet",
         addressTypes: [AddressType.solana],
-        solanaProvider: "web3js",
       });
       expect(MockInjectedProvider).not.toHaveBeenCalled();
     });
@@ -98,7 +96,6 @@ describe("BrowserSDK", () => {
         },
         embeddedWalletType: "user-wallet",
         addressTypes: [AddressType.solana],
-        solanaProvider: "web3js",
       });
     });
 
@@ -110,41 +107,7 @@ describe("BrowserSDK", () => {
       }).toThrow("apiBaseUrl and appId are required for embedded provider");
     });
 
-    it("should support custom solanaProvider for injected", () => {
-      sdk = new BrowserSDK({
-        providerType: "injected",
-        addressTypes: [AddressType.solana],
-        solanaProvider: "kit",
-      });
 
-      expect(MockInjectedProvider).toHaveBeenCalledWith({
-        solanaProvider: "kit",
-        addressTypes: [AddressType.solana],
-      });
-    });
-
-    it("should support custom solanaProvider for embedded", () => {
-      sdk = new BrowserSDK({
-        providerType: "embedded",
-        apiBaseUrl: "https://api.phantom.app/v1/wallets",
-        appId: "app-123",
-        solanaProvider: "kit",
-        addressTypes: [AddressType.solana],
-      });
-
-      expect(MockEmbeddedProvider).toHaveBeenCalledWith({
-        apiBaseUrl: "https://api.phantom.app/v1/wallets",
-        organizationId: "app-123",
-        appId: "app-123",
-        authOptions: {
-          authUrl: "https://connect.phantom.app/login",
-          redirectUrl: "https://localhost:3000/",
-        },
-        embeddedWalletType: "user-wallet",
-        addressTypes: [AddressType.solana],
-        solanaProvider: "kit",
-      });
-    });
 
     it("should throw error for invalid provider type", () => {
       expect(() => {
