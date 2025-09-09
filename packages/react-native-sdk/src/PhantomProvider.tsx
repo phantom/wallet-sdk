@@ -138,7 +138,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       sdkInstance.off("connect_error", handleConnectError);
       sdkInstance.off("disconnect", handleDisconnect);
     };
-  }, [memoizedConfig, debugConfig]);
+  }, [memoizedConfig, debugConfig, config.appId, config.embeddedWalletType]);
 
   // Initialize auto-connect
   useEffect(() => {

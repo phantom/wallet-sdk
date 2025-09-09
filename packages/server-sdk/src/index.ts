@@ -16,6 +16,7 @@ import {
 import { ApiKeyStamper } from "@phantom/api-key-stamper";
 import { base64urlEncode } from "@phantom/base64url";
 import bs58 from "bs58";
+import packageJson from "../package.json";
 import {
   parseMessage,
   parseTransactionToBase64Url,
@@ -67,13 +68,7 @@ function getNodeVersion(): string {
  * Get SDK version from package.json
  */
 function getSdkVersion(): string {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const packageJson = require("../package.json");
-    return packageJson.version || "unknown";
-  } catch {
-    return "unknown";
-  }
+  return packageJson.version || "unknown";
 }
 
 /**

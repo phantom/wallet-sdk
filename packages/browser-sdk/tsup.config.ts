@@ -1,5 +1,6 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { defineConfig } from "tsup";
+import packageJson from "./package.json";
 
 export default defineConfig({
   entry: ["src/index.ts"],
@@ -13,9 +14,6 @@ export default defineConfig({
   shims: true,
   esbuildOptions(options) {
     options.packages = "external";
-    
-    // Read package version at build time
-    const packageJson = require("./package.json");
     
     // Add buffer polyfill for browser compatibility and SDK version replacement
     options.define = {
