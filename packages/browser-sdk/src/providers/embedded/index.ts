@@ -3,7 +3,7 @@ import type { EmbeddedProviderConfig, PlatformAdapter } from "@phantom/embedded-
 import { IndexedDbStamper } from "@phantom/indexed-db-stamper";
 import { BrowserStorage, BrowserURLParamsAccessor, BrowserAuthProvider, BrowserLogger } from "./adapters";
 import { debug, DebugCategory } from "../../debug";
-import { getPlatformName } from "../../utils/browser-detection";
+import { detectBrowser, getPlatformName } from "../../utils/browser-detection";
 import type { Provider } from "../../types";
 import { ANALYTICS_HEADERS } from "@phantom/constants";
 
@@ -20,6 +20,7 @@ export class EmbeddedProvider extends CoreEmbeddedProvider implements Provider {
     });
 
     const platformName = getPlatformName();
+    const { name: browserName, version} = detectBrowser();
 
     const platform: PlatformAdapter = {
       storage: new BrowserStorage(),
@@ -28,8 +29,9 @@ export class EmbeddedProvider extends CoreEmbeddedProvider implements Provider {
       stamper,
       name: platformName, // Use detected browser name and version for identification
       analyticsHeaders: {
-        [ANALYTICS_HEADERS.SDK_TYPE]: "browser-sdk",
-        [ANALYTICS_HEADERS.PLATFORM]: platformName,
+        [ANALYTICS_HEADERS.SDK_TYPE]: "browser",
+        [ANALYTICS_HEADERS.PLATFORM]: browserName, // firefox, chrome, safari, etc.
+        [ANALYTICS_HEADERS.PLATFORM_VERSION]: version, // Full user agent for more detailed info
         [ANALYTICS_HEADERS.APP_ID]: config.appId,
         [ANALYTICS_HEADERS.WALLET_TYPE]: config.embeddedWalletType as "app-wallet" | "user-wallet",
         [ANALYTICS_HEADERS.SDK_VERSION]: __SDK_VERSION__, // Replaced at build time

@@ -5,6 +5,7 @@
 export interface BrowserInfo {
   name: string;
   version: string;
+  userAgent: string;
 }
 
 /**
@@ -17,7 +18,7 @@ export function parseBrowserFromUserAgent(userAgent: string, hasBraveAPI?: boole
   let version = "unknown";
 
   if (!userAgent || typeof userAgent !== "string") {
-    return { name, version };
+    return { name, version, userAgent: "unknown" };
   }
 
   try {
@@ -113,7 +114,7 @@ export function parseBrowserFromUserAgent(userAgent: string, hasBraveAPI?: boole
     // Browser parsing failed, continuing with fallback
   }
 
-  return { name, version };
+  return { name, version , userAgent };
 }
 
 /**
@@ -122,7 +123,7 @@ export function parseBrowserFromUserAgent(userAgent: string, hasBraveAPI?: boole
 export function detectBrowser(): BrowserInfo {
   // Only run in browser environment
   if (typeof window === "undefined" || !window.navigator?.userAgent) {
-    return { name: "unknown", version: "unknown" };
+    return { name: "unknown", version: "unknown", userAgent: "unknown" };
   }
 
   const userAgent = window.navigator.userAgent;

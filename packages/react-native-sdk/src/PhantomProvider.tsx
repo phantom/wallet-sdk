@@ -75,8 +75,9 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       stamper,
       name: platformName,
       analyticsHeaders: {
-        [ANALYTICS_HEADERS.SDK_TYPE]: "react-native-sdk",
-        [ANALYTICS_HEADERS.PLATFORM]: platformName,
+        [ANALYTICS_HEADERS.SDK_TYPE]: "react-native",
+        [ANALYTICS_HEADERS.PLATFORM]: Platform.OS,
+        [ANALYTICS_HEADERS.PLATFORM_VERSION]: `${Platform.Version}`,
         [ANALYTICS_HEADERS.APP_ID]: config.appId,
         [ANALYTICS_HEADERS.WALLET_TYPE]: config.embeddedWalletType as "app-wallet" | "user-wallet",
         [ANALYTICS_HEADERS.SDK_VERSION]: __SDK_VERSION__, // Replaced at build time
