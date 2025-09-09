@@ -3,7 +3,7 @@ import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import { EmbeddedProvider } from "@phantom/embedded-provider-core";
 import type { EmbeddedProviderConfig, PlatformAdapter } from "@phantom/embedded-provider-core";
 import type { PhantomSDKConfig, PhantomDebugConfig, WalletAddress } from "./types";
-import { DEFAULT_WALLET_API_URL, DEFAULT_EMBEDDED_WALLET_TYPE, DEFAULT_AUTH_URL } from "@phantom/constants";
+import {ANALYTICS_HEADERS, DEFAULT_WALLET_API_URL, DEFAULT_EMBEDDED_WALLET_TYPE, DEFAULT_AUTH_URL } from "@phantom/constants";
 // Platform adapters for React Native/Expo
 import { ExpoSecureStorage } from "./providers/embedded/storage";
 import { ExpoAuthProvider } from "./providers/embedded/auth";
@@ -11,7 +11,6 @@ import { ExpoURLParamsAccessor } from "./providers/embedded/url-params";
 import { ReactNativeStamper } from "./providers/embedded/stamper";
 import { ExpoLogger } from "./providers/embedded/logger";
 import { Platform } from "react-native";
-import { ANALYTICS_HEADERS } from "@phantom/constants";
 
 interface PhantomContextValue {
   sdk: EmbeddedProvider | null;
