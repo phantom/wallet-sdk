@@ -46,6 +46,7 @@ interface StamperResponse {
   expiresAtMs: number;
   username: string;
 }
+
 export class EmbeddedProvider {
   private config: EmbeddedProviderConfig;
   private platform: PlatformAdapter;
@@ -432,6 +433,9 @@ export class EmbeddedProvider {
     const tempClient = new PhantomClient(
       {
         apiBaseUrl: this.config.apiBaseUrl,
+        headers: {
+          ...(this.platform.analyticsHeaders || {})
+        }
       },
       this.stamper,
     );
@@ -800,6 +804,9 @@ export class EmbeddedProvider {
         {
           apiBaseUrl: this.config.apiBaseUrl,
           organizationId: organizationId,
+          headers: {
+          ...(this.platform.analyticsHeaders || {})
+        }
         },
         this.stamper,
       );
@@ -1159,6 +1166,9 @@ export class EmbeddedProvider {
       {
         apiBaseUrl: this.config.apiBaseUrl,
         organizationId: session.organizationId,
+        headers: {
+          ...(this.platform.analyticsHeaders || {})
+        }
       },
       this.stamper,
     );

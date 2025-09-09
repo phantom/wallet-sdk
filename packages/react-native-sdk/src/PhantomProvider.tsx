@@ -3,7 +3,7 @@ import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import { EmbeddedProvider } from "@phantom/embedded-provider-core";
 import type { EmbeddedProviderConfig, PlatformAdapter } from "@phantom/embedded-provider-core";
 import type { PhantomSDKConfig, PhantomDebugConfig, WalletAddress } from "./types";
-import { DEFAULT_WALLET_API_URL, DEFAULT_EMBEDDED_WALLET_TYPE, DEFAULT_AUTH_URL } from "@phantom/constants";
+import {ANALYTICS_HEADERS, DEFAULT_WALLET_API_URL, DEFAULT_EMBEDDED_WALLET_TYPE, DEFAULT_AUTH_URL } from "@phantom/constants";
 // Platform adapters for React Native/Expo
 import { ExpoSecureStorage } from "./providers/embedded/storage";
 import { ExpoAuthProvider } from "./providers/embedded/auth";
@@ -69,12 +69,22 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       organizationId: memoizedConfig.organizationId,
     });
 
+    const platformName = `${Platform.OS}-${Platform.Version}`;
+
     const platform: PlatformAdapter = {
       storage,
       authProvider,
       urlParamsAccessor,
       stamper,
-      name: `${Platform.OS}-${Platform.Version}`,
+      name: platformName,
+      analyticsHeaders: {
+        [ANALYTICS_HEADERS.SDK_TYPE]: "react-native",
+        [ANALYTICS_HEADERS.PLATFORM]: Platform.OS,
+        [ANALYTICS_HEADERS.PLATFORM_VERSION]: `${Platform.Version}`,
+        [ANALYTICS_HEADERS.APP_ID]: config.appId,
+        [ANALYTICS_HEADERS.WALLET_TYPE]: config.embeddedWalletType as "app-wallet" | "user-wallet",
+        [ANALYTICS_HEADERS.SDK_VERSION]: __SDK_VERSION__, // Replaced at build time
+      },
     };
 
     const sdkInstance = new EmbeddedProvider(memoizedConfig, platform, logger);
@@ -131,7 +141,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       sdkInstance.off("connect_error", handleConnectError);
       sdkInstance.off("disconnect", handleDisconnect);
     };
-  }, [memoizedConfig, debugConfig]);
+  }, [memoizedConfig, debugConfig, config.appId, config.embeddedWalletType]);
 
   // Initialize auto-connect
   useEffect(() => {
