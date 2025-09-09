@@ -1,7 +1,6 @@
 import * as WebBrowser from "expo-web-browser";
 import type { AuthProvider, AuthResult, PhantomConnectOptions, JWTAuthOptions } from "@phantom/embedded-provider-core";
-
-const DEFAULT_AUTH_URL = "https://auth.phantom.app";
+import { DEFAULT_AUTH_URL } from "@phantom/constants";
 
 export class ExpoAuthProvider implements AuthProvider {
   async authenticate(options: PhantomConnectOptions | JWTAuthOptions): Promise<void | AuthResult> {

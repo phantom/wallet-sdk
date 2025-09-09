@@ -94,9 +94,8 @@ function App() {
     <PhantomProvider
       config={{
         providerType: "embedded",
-        embeddedWalletType: "app-wallet", // or 'user-wallet'
+        appId: "your-app-id", // Get your app ID from phantom.com/portal
         addressTypes: [AddressType.solana, AddressType.ethereum],
-        apiBaseUrl: "https://api.phantom.app/v1/wallets",
       }}
     >
       <YourApp />
@@ -181,26 +180,7 @@ Uses the Phantom browser extension installed by the user.
 
 Creates non-custodial wallets embedded in your application.
 
-#### App Wallet (Recommended for most apps)
-
-- **New wallets** created per application
-- **Unfunded** by default - you need to fund them
-- **Independent** from user's existing Phantom wallet
-
-```tsx
-<PhantomProvider
-  config={{
-    providerType: "embedded",
-    embeddedWalletType: "app-wallet",
-    addressTypes: [AddressType.solana],
-    apiBaseUrl: "https://api.phantom.app/v1/wallets",
-  }}
->
-  <YourApp />
-</PhantomProvider>
-```
-
-#### User Wallet (For existing Phantom users)
+#### User Wallet
 
 - **Uses Phantom authentication** - user logs in with existing account
 - **Potentially funded** - brings existing wallet balance
@@ -210,41 +190,14 @@ Creates non-custodial wallets embedded in your application.
 <PhantomProvider
   config={{
     providerType: "embedded",
-    embeddedWalletType: "user-wallet",
+    appId: "your-app-id",
     addressTypes: [AddressType.solana, AddressType.ethereum],
-    apiBaseUrl: "https://api.phantom.app/v1/wallets",
   }}
 >
   <YourApp />
 </PhantomProvider>
 ```
 
-## Solana Provider Configuration
-
-When using `AddressType.solana`, you can choose between two Solana libraries:
-
-```tsx
-<PhantomProvider
-  config={{
-    providerType: "embedded",
-    addressTypes: [AddressType.solana],
-    solanaProvider: "web3js", // or 'kit'
-    apiBaseUrl: "https://api.phantom.app/v1/wallets",
-  }}
->
-  <YourApp />
-</PhantomProvider>
-```
-
-**Provider Options:**
-
-- `'web3js'` (default) - Uses `@solana/web3.js` library
-- `'kit'` - Uses `@solana/kit` library (modern, TypeScript-first)
-
-**When to use each:**
-
-- **@solana/web3.js**: Better ecosystem compatibility, wider community support
-- **@solana/kit**: Better TypeScript support, modern architecture, smaller bundle size
 
 ## Available Hooks
 
@@ -799,15 +752,16 @@ interface PhantomSDKConfig {
   addressTypes?: [AddressType, ...AddressType[]]; // Networks to enable (e.g., [AddressType.solana])
 
   // Required for embedded provider only
-  apiBaseUrl?: string; // Phantom API base URL
-  appId: string; // Your app ID
+  appId: string; // Your app ID from phantom.com/portal (required for embedded provider)
+  
+  // Optional configuration
+  apiBaseUrl?: string; // Phantom API base URL (optional, has default)
   authOptions?: {
-    authUrl?: string; // Custom auth URL (optional)
-    redirectUrl?: string; // Custom redirect URL (optional)
+    authUrl?: string; // Custom auth URL (optional, defaults to "https://connect.phantom.app/login")
+    redirectUrl?: string; // Custom redirect URL after authentication (optional)
   };
-  embeddedWalletType?: "app-wallet" | "user-wallet"; // Wallet type
-  solanaProvider?: "web3js" | "kit"; // Solana library choice (default: 'web3js')
-  autoConnect?: boolean; // Auto-connect to existing session on SDK instantiation (default: true for embedded, false for injected)
+  embeddedWalletType?: "user-wallet"; // Wallet type (optional, defaults to "user-wallet", currently the only supported type)
+  autoConnect?: boolean; // Auto-connect to existing session on SDK instantiation (optional, defaults to true for embedded, false for injected)
 }
 ```
 
@@ -839,6 +793,7 @@ function App() {
   // SDK configuration - static, won't change when debug settings change
   const config: PhantomSDKConfig = {
     providerType: "embedded",
+    appId: "your-app-id",
     // ... other config
   };
 

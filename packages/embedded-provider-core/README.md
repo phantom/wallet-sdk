@@ -60,7 +60,6 @@ const config: EmbeddedProviderConfig = {
   appId: "your-app-id",
   embeddedWalletType: "user-wallet", // or 'app-wallet'
   addressTypes: ["solana", "ethereum"],
-  solanaProvider: "web3js",
   authOptions: {
     authUrl: "https://auth.phantom.app",
     redirectUrl: "https://your-app.com/callback",
@@ -276,7 +275,6 @@ interface EmbeddedProviderConfig {
   addressTypes: [AddressType, ...AddressType[]]; // Supported blockchain addresses
 
   // Optional
-  solanaProvider?: "web3js" | "kit"; // Solana library preference
   authOptions?: {
     authUrl?: string; // Custom auth URL
     redirectUrl?: string; // OAuth redirect URL

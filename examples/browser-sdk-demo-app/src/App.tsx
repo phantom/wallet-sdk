@@ -4,8 +4,6 @@ import {
   AddressType,
   debug,
   DebugLevel,
-  DEFAULT_AUTH_URL,
-  DEFAULT_WALLET_API_URL,
   NetworkId,
 } from "@phantom/browser-sdk"
 import type { DebugMessage } from "@phantom/browser-sdk"
@@ -53,19 +51,17 @@ function App() {
     if (type === "injected") {
       return new BrowserSDK({
         providerType: "injected",
-        solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       })
     } else {
       const embeddedSdk = new BrowserSDK({
         providerType: "embedded",
-        apiBaseUrl: import.meta.env.VITE_WALLET_API || DEFAULT_WALLET_API_URL,
+        apiBaseUrl: import.meta.env.VITE_WALLET_API,
         appId: import.meta.env.VITE_APP_ID || "your-app-id",
         embeddedWalletType: "user-wallet",
         authOptions: {
-          authUrl: import.meta.env.VITE_AUTH_URL || DEFAULT_AUTH_URL,
+          authUrl: import.meta.env.VITE_AUTH_URL,
         },
-        solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       })
 

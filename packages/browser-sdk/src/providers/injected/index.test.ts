@@ -90,7 +90,6 @@ describe("InjectedProvider", () => {
       const mockPublicKey = "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH";
 
       const provider = new InjectedProvider({
-        solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
 
@@ -116,7 +115,6 @@ describe("InjectedProvider", () => {
       createPhantom.mockReturnValue(mockPhantomObject);
 
       const provider = new InjectedProvider({
-        solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
 
@@ -139,7 +137,6 @@ describe("InjectedProvider", () => {
       createPhantom.mockReturnValue(mockPhantomObject);
 
       const provider = new InjectedProvider({
-        solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
 
@@ -156,7 +153,6 @@ describe("InjectedProvider", () => {
       createPhantom.mockReturnValue(mockPhantomObject);
 
       const provider = new InjectedProvider({
-        solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
 
@@ -167,7 +163,6 @@ describe("InjectedProvider", () => {
   describe("disconnect", () => {
     it("should disconnect from providers", async () => {
       const provider = new InjectedProvider({
-        solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
 
@@ -187,7 +182,6 @@ describe("InjectedProvider", () => {
 
     beforeEach(async () => {
       provider = new InjectedProvider({
-        solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
 
@@ -219,7 +213,6 @@ describe("InjectedProvider", () => {
 
     it("should work when not connected with mock", async () => {
       const disconnectedProvider = new InjectedProvider({
-        solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
       // Provider is not connected, but mocked solana will still work
@@ -236,7 +229,6 @@ describe("InjectedProvider", () => {
 
     beforeEach(async () => {
       provider = new InjectedProvider({
-        solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
 
@@ -271,7 +263,6 @@ describe("InjectedProvider", () => {
 
     it("should work when not connected with mock", async () => {
       const disconnectedProvider = new InjectedProvider({
-        solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
 
@@ -286,7 +277,6 @@ describe("InjectedProvider", () => {
   describe("getAddresses", () => {
     it("should return empty array when not connected", () => {
       const provider = new InjectedProvider({
-        solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
       const addresses = provider.getAddresses();
@@ -295,7 +285,6 @@ describe("InjectedProvider", () => {
 
     it("should return addresses after connection", async () => {
       const provider = new InjectedProvider({
-        solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
 
@@ -310,7 +299,6 @@ describe("InjectedProvider", () => {
   describe("isConnected", () => {
     it("should return false initially", () => {
       const provider = new InjectedProvider({
-        solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
       expect(provider.isConnected()).toBe(false);
@@ -318,7 +306,6 @@ describe("InjectedProvider", () => {
 
     it("should return true after connection", async () => {
       const provider = new InjectedProvider({
-        solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
 
@@ -328,7 +315,6 @@ describe("InjectedProvider", () => {
 
     it("should return false after disconnection", async () => {
       const provider = new InjectedProvider({
-        solanaProvider: "web3js",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
 

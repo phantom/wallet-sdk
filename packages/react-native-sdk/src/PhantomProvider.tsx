@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import { EmbeddedProvider } from "@phantom/embedded-provider-core";
-import type { PlatformAdapter } from "@phantom/embedded-provider-core";
+import type { EmbeddedProviderConfig, PlatformAdapter } from "@phantom/embedded-provider-core";
 import type { PhantomSDKConfig, PhantomDebugConfig, WalletAddress } from "./types";
-
+import { DEFAULT_WALLET_API_URL, DEFAULT_EMBEDDED_WALLET_TYPE, DEFAULT_AUTH_URL } from "@phantom/constants";
 // Platform adapters for React Native/Expo
 import { ExpoSecureStorage } from "./providers/embedded/storage";
 import { ExpoAuthProvider } from "./providers/embedded/auth";
@@ -40,16 +40,20 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   const [sdk, setSdk] = useState<EmbeddedProvider | null>(null);
 
   // Memoized config to avoid unnecessary SDK recreation
-  const memoizedConfig: PhantomSDKConfig = useMemo(() => {
+  const memoizedConfig: EmbeddedProviderConfig = useMemo(() => {
     // Build redirect URL if not provided
     const redirectUrl = config.authOptions?.redirectUrl || `${config.scheme}://phantom-auth-callback`;
 
     // Merge config with redirect URL
     return {
       ...config,
+      apiBaseUrl: config.apiBaseUrl || DEFAULT_WALLET_API_URL,
+      embeddedWalletType: config.embeddedWalletType || DEFAULT_EMBEDDED_WALLET_TYPE,
       authOptions: {
-        ...(config.authOptions || {}),
+        ...(config.authOptions || {
+        }),
         redirectUrl,
+        authUrl: config.authOptions?.authUrl || DEFAULT_AUTH_URL,
       },
     };
   }, [config]);

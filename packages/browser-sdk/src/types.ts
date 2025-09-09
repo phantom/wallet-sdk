@@ -20,7 +20,7 @@ export interface DebugConfig {
   callback?: DebugCallback;
 }
 
-export interface BrowserSDKConfig extends Partial<EmbeddedProviderConfig> {
+export interface BrowserSDKConfig extends Partial<Omit<EmbeddedProviderConfig, "authOptions">> {
   providerType: "injected" | "embedded" | (string & Record<never, never>);
   addressTypes: [AddressType, ...AddressType[]];
   // Required for embedded provider, optional for injected
@@ -29,6 +29,11 @@ export interface BrowserSDKConfig extends Partial<EmbeddedProviderConfig> {
   embeddedWalletType?: "app-wallet" | "user-wallet" | (string & Record<never, never>);
   // Auto-connect to existing sessions (default: true)
   autoConnect?: boolean;
+  authOptions?: {
+    authUrl?: string;
+    redirectUrl?: string;
+  };
+  
 }
 
 // Re-export types from core for convenience
