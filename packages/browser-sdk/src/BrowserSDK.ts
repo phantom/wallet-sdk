@@ -5,6 +5,7 @@ import { waitForPhantomExtension } from "./waitForPhantomExtension";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chains";
 import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-provider-core";
 import type { InjectedProvider } from "./providers/injected";
+import { DEFAULT_EMBEDDED_WALLET_TYPE } from "@phantom/constants";
 import type {
   AutoConfirmEnableParams,
   AutoConfirmResult,
@@ -40,7 +41,7 @@ export class BrowserSDK {
       throw new Error(`Invalid providerType: ${config.providerType}. Must be "injected" or "embedded".`);
     }
 
-    const embeddedWalletType = config.embeddedWalletType || "app-wallet";
+    const embeddedWalletType = config.embeddedWalletType || DEFAULT_EMBEDDED_WALLET_TYPE;
 
     // Validate embeddedWalletType if provided
     if (config.providerType === "embedded" && !["app-wallet", "user-wallet"].includes(embeddedWalletType)) {

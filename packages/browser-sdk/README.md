@@ -44,8 +44,7 @@ import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 const sdk = new BrowserSDK({
   providerType: "embedded",
   addressTypes: [AddressType.solana, AddressType.ethereum],
-  apiBaseUrl: "https://api.phantom.app/v1/wallets",
-  appId: "your-app-id",
+  appId: "your-app-id", // Get your app ID from phantom.com/portal
 });
 
 const { addresses } = await sdk.connect();
@@ -190,48 +189,29 @@ Creates a non-custodial wallet embedded in your application. Requires API config
 const sdk = new BrowserSDK({
   providerType: "embedded",
   addressTypes: [AddressType.solana, AddressType.ethereum],
-  apiBaseUrl: "https://api.phantom.app/v1/wallets",
-  appId: "your-app-id",
-  embeddedWalletType: "app-wallet", // or 'user-wallet'
+  appId: "your-app-id", // Get your app ID from phantom.com/portal
   authOptions: {
-    authUrl: "https://auth.phantom.app", // optional, defaults to "https://connect.phantom.app"
+    authUrl: "https://connect.phantom.app/login", // optional, defaults to "https://connect.phantom.app/login"
     redirectUrl: "https://yourapp.com/callback", // optional, defaults to current page
   },
   autoConnect: true, // optional, auto-connect to existing session (default: true for embedded)
 });
 ```
 
-### Embedded Wallet Types
-
-#### App Wallet (`'app-wallet'`)
-
-- **New wallets** created per application
-- **Unfunded** by default - you need to fund them
-- **Independent** from user's existing Phantom wallet
-- **Perfect for**: Gaming, DeFi protocols, or apps that need fresh wallets
-
-```typescript
-const sdk = new BrowserSDK({
-  providerType: "embedded",
-  embeddedWalletType: "app-wallet",
-  addressTypes: [AddressType.solana],
-  // ... other config
-});
-```
+### Embedded Wallet Type
 
 #### User Wallet (`'user-wallet'`)
 
 - **Uses Phantom authentication** - user logs in with existing Phantom account
 - **Potentially funded** - brings in user's existing wallet balance
 - **Connected** to user's Phantom ecosystem
-- **Perfect for**: Trading platforms, NFT marketplaces, or apps needing funded wallets
+- **Perfect for**: All embedded wallet use cases
 
 ```typescript
 const sdk = new BrowserSDK({
   providerType: "embedded",
-  embeddedWalletType: "user-wallet",
+  appId: "your-app-id",
   addressTypes: [AddressType.solana, AddressType.ethereum],
-  // ... other config
 });
 ```
 
@@ -242,28 +222,6 @@ const sdk = new BrowserSDK({
 | `AddressType.solana`   | Solana Mainnet, Devnet, Testnet       |
 | `AddressType.ethereum` | Ethereum, Polygon, Arbitrum, and more |
 
-### Solana Provider Configuration
-
-When using `AddressType.solana`, you can choose between two Solana libraries:
-
-```typescript
-const sdk = new BrowserSDK({
-  providerType: "embedded",
-  addressTypes: [AddressType.solana],
-  solanaProvider: "web3js", // or 'kit'
-  // ... other config
-});
-```
-
-**Provider Options:**
-
-- `'web3js'` (default) - Uses `@solana/web3.js` library
-- `'kit'` - Uses `@solana/kit` library (modern, TypeScript-first)
-
-**When to use each:**
-
-- **@solana/web3.js**: Better ecosystem compatibility, wider community support
-- **@solana/kit**: Better TypeScript support, modern architecture, smaller bundle size
 
 ### Auto-Connect Feature
 
@@ -272,8 +230,8 @@ The SDK can automatically reconnect to existing sessions when instantiated, prov
 ```typescript
 const sdk = new BrowserSDK({
   providerType: "embedded",
+  appId: "your-app-id",
   addressTypes: [AddressType.solana],
-  // ... other config
   autoConnect: true, // Default: true for embedded, false for injected
 });
 
@@ -295,8 +253,8 @@ if (sdk.isConnected()) {
 ```typescript
 const sdk = new BrowserSDK({
   providerType: "embedded",
+  appId: "your-app-id",
   addressTypes: [AddressType.solana],
-  // ... other config
   autoConnect: false, // Disable auto-connect
 });
 
@@ -320,15 +278,16 @@ interface BrowserSDKConfig {
   addressTypes?: [AddressType, ...AddressType[]]; // Networks to enable (e.g., [AddressType.solana])
 
   // Required for embedded provider only
-  apiBaseUrl?: string; // Phantom API base URL
-  appId?: string; // Your app ID (required for embedded provider)
+  appId?: string; // Your app ID from phantom.com/portal (required for embedded provider)
+  
+  // Optional configuration
+  apiBaseUrl?: string; // Phantom API base URL (optional, has default)
   authOptions?: {
-    authUrl?: string; // Custom auth URL (default: "https://connect.phantom.app")
-    redirectUrl?: string; // Custom redirect URL after authentication
+    authUrl?: string; // Custom auth URL (optional, defaults to "https://connect.phantom.app/login")
+    redirectUrl?: string; // Custom redirect URL after authentication (optional)
   };
-  embeddedWalletType?: "app-wallet" | "user-wallet"; // Wallet type
-  solanaProvider?: "web3js" | "kit"; // Solana library choice (default: 'web3js')
-  autoConnect?: boolean; // Enable auto-connect to existing sessions (default: true)
+  embeddedWalletType?: "user-wallet"; // Wallet type (optional, defaults to "user-wallet", currently the only supported type)
+  autoConnect?: boolean; // Enable auto-connect to existing sessions (optional, defaults to true for embedded)
 }
 ```
 
@@ -748,7 +707,7 @@ import { BrowserSDK, DebugLevel } from "@phantom/browser-sdk";
 
 const sdk = new BrowserSDK({
   providerType: "embedded",
-  // ... other config
+  appId: "your-app-id",
 });
 
 // Store debug messages
@@ -815,7 +774,6 @@ import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 const sdk = new BrowserSDK({
   providerType: "injected",
   addressTypes: [AddressType.solana],
-  solanaProvider: "web3js",
 });
 
 await sdk.connect();
@@ -869,7 +827,6 @@ import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 const sdk = new BrowserSDK({
   providerType: "injected",
   addressTypes: [AddressType.solana],
-  solanaProvider: "kit",
 });
 
 await sdk.connect();

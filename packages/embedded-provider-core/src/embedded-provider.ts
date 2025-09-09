@@ -68,6 +68,11 @@ export class EmbeddedProvider {
     this.logger = logger;
     this.logger.log("EMBEDDED_PROVIDER", "Initializing EmbeddedProvider", { config });
 
+    // TODO: Re-enable app-wallet support once it's fully implemented
+    if (config.embeddedWalletType === "app-wallet") {
+      throw new Error("app-wallet type is not currently supported. Please use 'user-wallet' instead.");
+    }
+
     this.config = config;
     this.platform = platform;
     this.storage = platform.storage;
@@ -75,9 +80,6 @@ export class EmbeddedProvider {
     this.urlParamsAccessor = platform.urlParamsAccessor;
     this.stamper = platform.stamper;
     this.jwtAuth = new JWTAuth();
-
-    // Store solana provider config (unused for now)
-    config.solanaProvider;
 
     // Initialize chain instances
     this.solana = new EmbeddedSolanaChain(this);
@@ -899,8 +901,8 @@ export class EmbeddedProvider {
   ): Promise<Session | null> {
     this.logger.info("EMBEDDED_PROVIDER", "Using Phantom Connect authentication flow (redirect-based)", {
       provider: authOptions?.provider,
-      hasRedirectUrl: !!this.config.authOptions?.redirectUrl,
-      authUrl: this.config.authOptions?.authUrl,
+      hasRedirectUrl: !!this.config.authOptions.redirectUrl,
+      authUrl: this.config.authOptions.authUrl,
     });
 
     // Use Phantom Connect authentication flow (redirect-based)
@@ -938,7 +940,7 @@ export class EmbeddedProvider {
       parentOrganizationId: this.config.organizationId,
       appId: this.config.appId,
       provider: authOptions?.provider,
-      authUrl: this.config.authOptions?.authUrl,
+      authUrl: this.config.authOptions.authUrl,
     });
 
     // Start the authentication flow (this will redirect the user in the browser, or handle it in React Native)
@@ -947,9 +949,9 @@ export class EmbeddedProvider {
       appId: this.config.appId,
       parentOrganizationId: this.config.organizationId,
       provider: authOptions?.provider as "google" | "apple" | undefined,
-      redirectUrl: this.config.authOptions?.redirectUrl,
+      redirectUrl: this.config.authOptions.redirectUrl,
       customAuthData: authOptions?.customAuthData,
-      authUrl: this.config.authOptions?.authUrl,
+      authUrl: this.config.authOptions.authUrl,
       sessionId: sessionId,
     });
 
