@@ -8,7 +8,7 @@ export interface PhantomSDKConfig extends BrowserSDKConfig {}
 export interface PhantomDebugConfig extends DebugConfig {}
 
 export interface ConnectOptions {
-  providerType?: "injected" | "embedded";
+  providerType?: "injected" | "embedded" | "deeplink";
   embeddedWalletType?: "app-wallet" | "user-wallet";
   authOptions?: AuthOptions;
 }
@@ -20,7 +20,7 @@ interface PhantomContextValue {
   connectError: Error | null;
   addresses: WalletAddress[];
   walletId: string | null;
-  currentProviderType: "injected" | "embedded" | null;
+  currentProviderType: "injected" | "embedded" | "deeplink" | null;
   isPhantomAvailable: boolean;
 }
 
@@ -47,7 +47,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   const [connectError, setConnectError] = useState<Error | null>(null);
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
   const [walletId, setWalletId] = useState<string | null>(null);
-  const [currentProviderType, setCurrentProviderType] = useState<"injected" | "embedded" | null>(
+  const [currentProviderType, setCurrentProviderType] = useState<"injected" | "embedded" | "deeplink" | null>(
     (memoizedConfig.providerType as any) || null,
   );
   const [isPhantomAvailable, setIsPhantomAvailable] = useState(false);

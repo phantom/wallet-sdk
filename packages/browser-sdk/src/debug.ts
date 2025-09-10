@@ -95,6 +95,7 @@ export const DebugCategory = {
   PROVIDER_MANAGER: "ProviderManager",
   EMBEDDED_PROVIDER: "EmbeddedProvider",
   INJECTED_PROVIDER: "InjectedProvider",
+  DEEPLINK_PROVIDER: "DeepLinkProvider",
   PHANTOM_CONNECT_AUTH: "PhantomConnectAuth",
   JWT_AUTH: "JWTAuth",
   STORAGE: "Storage",

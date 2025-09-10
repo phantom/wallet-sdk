@@ -86,7 +86,8 @@ export class ProviderManager implements EventEmitter {
   getCurrentProviderInfo(): ProviderPreference | null {
     if (!this.currentProviderKey) return null;
 
-    const [type, embeddedWalletType] = this.currentProviderKey.split("-");
+    const parts = this.currentProviderKey.split("-");
+    const [type, embeddedWalletType] = parts;
     return {
       type: type as "injected" | "embedded",
       embeddedWalletType: embeddedWalletType as "app-wallet" | "user-wallet" | undefined,
@@ -284,9 +285,9 @@ export class ProviderManager implements EventEmitter {
       provider = new InjectedProvider({
         addressTypes: this.config.addressTypes,
       });
-    } else {
-      if (!this.config.apiBaseUrl || !this.config.appId) {
-        throw new Error("apiBaseUrl and appId are required for embedded provider");
+    } else if (type === "embedded") {
+      if (!this.config.appId) {
+        throw new Error("appId is required for embedded provider");
       }
 
       const apiBaseUrl = this.config.apiBaseUrl || DEFAULT_WALLET_API_URL;
@@ -304,6 +305,8 @@ export class ProviderManager implements EventEmitter {
         embeddedWalletType: embeddedWalletType || DEFAULT_EMBEDDED_WALLET_TYPE,
         addressTypes: this.config.addressTypes,
       });
+    } else {
+      throw new Error(`Unsupported provider type: ${type}`);
     }
 
     this.providers.set(key, provider);
@@ -315,8 +318,10 @@ export class ProviderManager implements EventEmitter {
   private getProviderKey(type: "injected" | "embedded", embeddedWalletType?: "app-wallet" | "user-wallet"): string {
     if (type === "injected") {
       return "injected";
+    } else if (type === "embedded") {
+      return `embedded-${embeddedWalletType || "app-wallet"}`;
     }
-    return `embedded-${embeddedWalletType || "app-wallet"}`;
+    throw new Error(`Unsupported provider type: ${type}`);
   }
 
   /**

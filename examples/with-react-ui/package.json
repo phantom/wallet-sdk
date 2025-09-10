@@ -1,0 +1,28 @@
+{
+  "name": "@phantom/with-react-ui",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "predev": "yarn workspace @phantom/react-ui build && yarn workspace @phantom/react-sdk build && yarn workspace @phantom/browser-sdk build",
+    "dev": "vite --port 5178",
+    "prebuild": "yarn workspace @phantom/react-ui build && yarn workspace @phantom/react-sdk build && yarn workspace @phantom/browser-sdk build",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "check-types": "tsc --noEmit",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@phantom/react-ui": "workspace:^",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "vite": "^6.3.5"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react": "^4.4.1",
+    "globals": "^16.0.0",
+    "typescript": "~5.8.3"
+  }
+}

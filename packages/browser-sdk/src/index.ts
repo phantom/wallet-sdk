@@ -17,8 +17,11 @@ export {
   parseBrowserFromUserAgent,
   getPlatformName,
   getBrowserDisplayName,
+  isMobileDevice,
 } from "./utils/browser-detection";
 export type { BrowserInfo } from "./utils/browser-detection";
+
+export { getDeeplinkToPhantom } from "./utils/deeplink";
 
 // Extension detection
 export { waitForPhantomExtension } from "./waitForPhantomExtension";
