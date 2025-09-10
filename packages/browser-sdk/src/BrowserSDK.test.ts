@@ -104,7 +104,7 @@ describe("BrowserSDK", () => {
         new BrowserSDK({
           providerType: "embedded",
         });
-      }).toThrow("apiBaseUrl and appId are required for embedded provider");
+      }).toThrow("appId is required for embedded provider");
     });
 
 

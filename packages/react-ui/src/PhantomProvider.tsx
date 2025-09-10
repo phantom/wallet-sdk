@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from "react";
-import { useConnect as useBaseConnect, usePhantom, PhantomProvider as BasePhantomProvider , PhantomSDKConfig, useIsExtensionInstalled} from "@phantom/react-sdk";
+import { useConnect as useBaseConnect, usePhantom, PhantomProvider as BasePhantomProvider, useIsExtensionInstalled, type PhantomSDKConfig} from "@phantom/react-sdk";
 import { isMobileDevice, getDeeplinkToPhantom } from "@phantom/browser-sdk";
 
 export interface PhantomUIProviderProps {
@@ -24,7 +24,7 @@ interface PhantomUIContextValue {
   hideConnectionModal: () => void;
   connectWithAuthProvider: (provider?: "google" | "apple") => Promise<void>;
   connectWithInjected: () => Promise<void>;
-  connectWithDeeplink: () => Promise<void>;
+  connectWithDeeplink: () => void;
   isMobile: boolean;
 }
 
@@ -140,7 +140,7 @@ function PhantomUIProvider({ children, theme = "light", customTheme }: Omit<Phan
   }, [sdk, baseConnect]);
 
   // Connect with deeplink (redirect to Phantom mobile app)
-  const connectWithDeeplink = useCallback(async () => {
+  const connectWithDeeplink = useCallback(() => {
     try {
       setConnectionState(prev => ({
         ...prev,
