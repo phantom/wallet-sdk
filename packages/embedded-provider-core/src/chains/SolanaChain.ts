@@ -68,9 +68,8 @@ export class EmbeddedSolanaChain implements ISolanaChain {
       // Return the parsed signed transaction object
       return signedResult.transaction as Transaction | VersionedTransaction;
     } else {
-      // If parsing failed, return the original transaction as fallback
-      console.warn("Failed to parse signed transaction, returning original transaction");
-      return transaction;
+      // If parsing failed, throw an error
+      throw new Error("Failed to parse signed transaction");
     }
   }
 
