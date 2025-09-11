@@ -150,3 +150,54 @@ export function getBrowserDisplayName(): string {
   const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1);
   return version !== "unknown" ? `${capitalizedName} ${version}` : capitalizedName;
 }
+
+/**
+ * Detect if the current device is a mobile device
+ * Checks user agent for mobile indicators and screen size
+ */
+export function isMobileDevice(): boolean {
+  // Only run in browser environment
+  if (typeof window === "undefined" || !window.navigator?.userAgent) {
+    return false;
+  }
+
+  const userAgent = window.navigator.userAgent.toLowerCase();
+  
+  // Check for mobile user agent patterns
+  const mobilePatterns = [
+    /android/,
+    /iphone|ipad|ipod/,
+    /blackberry/,
+    /windows phone/,
+    /mobile/,
+    /tablet/,
+    /silk/,
+    /kindle/,
+    /opera mini/,
+    /opera mobi/
+  ];
+
+  const isMobileUA = mobilePatterns.some(pattern => pattern.test(userAgent));
+
+  // Also check screen size as additional indicator
+  let isSmallScreen = false;
+  try {
+    // Check if screen is smaller than typical tablet size
+    isSmallScreen = window.screen.width <= 768 || window.screen.height <= 768;
+  } catch (error) {
+    // If screen API is not available, rely on user agent only
+    isSmallScreen = false;
+  }
+
+  // Also check for touch capability as additional indicator
+  let isTouchDevice = false;
+  try {
+    isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  } catch (error) {
+    // If touch API is not available, rely on other indicators
+    isTouchDevice = false;
+  }
+
+  // Consider it mobile if UA indicates mobile OR (small screen AND touch capability)
+  return isMobileUA || (isSmallScreen && isTouchDevice);
+}

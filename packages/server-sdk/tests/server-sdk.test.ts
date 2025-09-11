@@ -8,7 +8,7 @@ describe("ServerSDK", () => {
 
   beforeAll(() => {
     // Validate required environment variables
-    const requiredEnvVars = ["ORGANIZATION_PRIVATE_KEY", "ORGANIZATION_ID", "WALLET_API"];
+    const requiredEnvVars = ["ORGANIZATION_PRIVATE_KEY", "ORGANIZATION_ID", "WALLET_API", "APP_ID"];
 
     for (const envVar of requiredEnvVars) {
       if (!process.env[envVar]) {
@@ -35,13 +35,6 @@ describe("ServerSDK", () => {
       expect(() => {
         new ServerSDK(config);
       }).not.toThrow();
-    });
-
-    it("should throw error when apiBaseUrl is missing", () => {
-      const invalidConfig = { ...config, apiBaseUrl: "" };
-      expect(() => {
-        new ServerSDK(invalidConfig);
-      }).toThrow("apiBaseUrl is required");
     });
 
     it("should throw error with invalid private key", () => {

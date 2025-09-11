@@ -32,8 +32,7 @@ The `@phantom/react-ui` package is a lightweight wrapper around `@phantom/react-
 - **Customizable theming**: CSS variables for styling
 
 ```tsx
-import { PhantomProvider, useSolana, useEthereum } from "@phantom/react-sdk";
-import { PhantomUIProvider, useConnect } from "@phantom/react-ui";
+import { PhantomProvider, useConnect , useSolana, useEthereum } from "@phantom/react-ui";
 import { AddressType } from "@phantom/browser-sdk";
 
 function App() {
@@ -46,9 +45,7 @@ function App() {
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
       }}
     >
-      <PhantomUIProvider>
         <WalletComponent />
-      </PhantomUIProvider>
     </PhantomProvider>
   );
 }
@@ -179,15 +176,15 @@ Customize the modal appearance using CSS variables:
 Apply themes via the `theme` prop or CSS:
 
 ```tsx
-<PhantomUIProvider theme="dark">
+<PhantomProvider theme="dark">
   <App />
-</PhantomUIProvider>
+</PhantomProvider>
 
 // Or via CSS
 <div data-theme="dark">
-  <PhantomUIProvider>
+  <PhantomProvider>
     <App />
-  </PhantomUIProvider>
+  </PhantomProvider>
 </div>
 ```
 
@@ -205,14 +202,14 @@ import { PhantomProvider, useConnect } from "@phantom/react-sdk";
 
 ```tsx
 import { PhantomProvider } from "@phantom/react-sdk";
-import { PhantomUIProvider, useConnect } from "@phantom/react-ui";
+import { PhantomProvider, useConnect } from "@phantom/react-ui";
 ```
 
 That's it! All other hooks work exactly the same.
 
 ## Architecture
 
-- **`PhantomUIProvider`**: Provides modal context and connection UI
+- **`PhantomProvider`**: Provides modal context and connection UI
 - **`useConnect`**: Enhanced with modal functionality
 - **All other hooks**: Direct re-exports from `@phantom/react-sdk`
 

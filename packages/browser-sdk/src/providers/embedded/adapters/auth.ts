@@ -15,6 +15,14 @@ export class BrowserAuthProvider implements AuthProvider {
     this.urlParamsAccessor = urlParamsAccessor;
   }
 
+  private getValidatedCurrentUrl(): string {
+    const currentUrl = window.location.href;
+    if (!currentUrl.startsWith('http:') && !currentUrl.startsWith('https:')) {
+      throw new Error('Invalid URL protocol - only HTTP/HTTPS URLs are supported');
+    }
+    return currentUrl;
+  }
+
   authenticate(options: PhantomConnectOptions | JWTAuthOptions): Promise<void | AuthResult> {
     return new Promise<void>(resolve => {
       // Check if this is JWT auth
@@ -40,7 +48,7 @@ export class BrowserAuthProvider implements AuthProvider {
         organization_id: phantomOptions.organizationId,
         parent_organization_id: phantomOptions.parentOrganizationId,
         app_id: phantomOptions.appId,
-        redirect_uri: phantomOptions.redirectUrl || (typeof window !== "undefined" ? window.location.href : ""),
+        redirect_uri: phantomOptions.redirectUrl || (typeof window !== "undefined" ? this.getValidatedCurrentUrl() : ""),
         session_id: phantomOptions.sessionId,
         clear_previous_session: true.toString(),
       });
@@ -78,6 +86,11 @@ export class BrowserAuthProvider implements AuthProvider {
 
       const authUrl = `${baseUrl}?${params.toString()}`;
       debug.info(DebugCategory.PHANTOM_CONNECT_AUTH, "Redirecting to Phantom Connect", { authUrl });
+
+      // Validate auth URL before redirect
+      if (!authUrl.startsWith('https:')) {
+        throw new Error('Invalid auth URL - only HTTPS URLs are allowed for authentication');
+      }
 
       // Redirect to Phantom Connect
       window.location.href = authUrl;
