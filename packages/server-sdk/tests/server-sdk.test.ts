@@ -8,7 +8,7 @@ describe("ServerSDK", () => {
 
   beforeAll(() => {
     // Validate required environment variables
-    const requiredEnvVars = ["ORGANIZATION_PRIVATE_KEY", "ORGANIZATION_ID", "WALLET_API"];
+    const requiredEnvVars = ["ORGANIZATION_PRIVATE_KEY", "ORGANIZATION_ID", "WALLET_API", "APP_ID"];
 
     for (const envVar of requiredEnvVars) {
       if (!process.env[envVar]) {
@@ -21,7 +21,7 @@ describe("ServerSDK", () => {
     // Initialize config from environment variables
     config = {
       organizationId: process.env.ORGANIZATION_ID!,
-      appId: process.env.APP_ID! || "12345678-1234-1234-1234-123456789012",
+      appId: process.env.APP_ID!,
       apiPrivateKey: process.env.ORGANIZATION_PRIVATE_KEY!,
       apiBaseUrl: process.env.WALLET_API!,
       solanaRpcUrl: process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com",
