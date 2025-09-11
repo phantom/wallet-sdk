@@ -3,7 +3,7 @@ import type { ISolanaChain } from "@phantom/chains";
 import type { EmbeddedProvider } from "../embedded-provider";
 import { NetworkId } from "@phantom/constants";
 import bs58 from "bs58";
-import { parseSolanaTransactionSignature } from "@phantom/parsers";
+import { parseSolanaSignedTransaction } from "@phantom/parsers";
 import type { Transaction, VersionedTransaction } from "@phantom/sdk-types";
 
 /**
@@ -61,13 +61,17 @@ export class EmbeddedSolanaChain implements ISolanaChain {
       networkId: this.currentNetworkId,
     });
     
-    // For Solana, we need to extract the signature from the signed transaction
-    // Since the API returns a base64url encoded signed transaction, we parse it to get the signature
-    const signatureResult = parseSolanaTransactionSignature(result.rawTransaction);
+    // Parse the signed transaction from the API response
+    const signedResult = parseSolanaSignedTransaction(result.rawTransaction);
     
-    // Return the signature as the transaction result
-    // This maintains compatibility with wallet adapter expectations
-    return signatureResult.signature as unknown as Transaction | VersionedTransaction;
+    if (signedResult.transaction && !signedResult.fallback) {
+      // Return the parsed signed transaction object
+      return signedResult.transaction as Transaction | VersionedTransaction;
+    } else {
+      // If parsing failed, return the original transaction as fallback
+      console.warn("Failed to parse signed transaction, returning original transaction");
+      return transaction;
+    }
   }
 
   async signAndSendTransaction(transaction: Transaction | VersionedTransaction): Promise<{ signature: string }> {
