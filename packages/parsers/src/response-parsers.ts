@@ -8,7 +8,7 @@ import { getExplorerUrl } from "@phantom/constants";
 import { base64urlDecode } from "@phantom/base64url";
 import { Buffer } from "buffer";
 import bs58 from "bs58";
-import { Transaction } from "@phantom/sdk-types";
+import { Transaction } from "@solana/web3.js";
 
 export interface ParsedSignatureResult {
   signature: string; // Human-readable signature (hex/base58)

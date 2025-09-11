@@ -2,8 +2,8 @@ import type { Buffer } from "buffer";
 import type { Algorithm } from "@phantom/openapi-wallet-service";
 export { Algorithm } from "@phantom/openapi-wallet-service";
 
-// Re-export Solana transaction types
-export { Transaction, VersionedTransaction } from "@solana/web3.js";
+// Re-export Solana transaction types (type-only to avoid runtime dependency)
+export type { Transaction, VersionedTransaction } from "@solana/web3.js";
 // Stamper interface - takes Buffer data and returns complete X-Phantom-Stamp header value
 export interface Stamper {
   stamp(params: { data: Buffer; type?: "PKI"; idToken?: never; salt?: never }): Promise<string>;
