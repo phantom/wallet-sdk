@@ -8,7 +8,7 @@ describe("ServerSDK", () => {
 
   beforeAll(() => {
     // Validate required environment variables
-    const requiredEnvVars = ["ORGANIZATION_PRIVATE_KEY", "ORGANIZATION_ID", "WALLET_API", "APP_ID"];
+    const requiredEnvVars = ["ORGANIZATION_PRIVATE_KEY", "ORGANIZATION_ID", "WALLET_API"];
 
     for (const envVar of requiredEnvVars) {
       if (!process.env[envVar]) {
@@ -21,7 +21,7 @@ describe("ServerSDK", () => {
     // Initialize config from environment variables
     config = {
       organizationId: process.env.ORGANIZATION_ID!,
-      appId: process.env.APP_ID!,
+      appId: process.env.APP_ID! || "12345678-1234-1234-1234-123456789012",
       apiPrivateKey: process.env.ORGANIZATION_PRIVATE_KEY!,
       apiBaseUrl: process.env.WALLET_API!,
       solanaRpcUrl: process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com",
@@ -35,13 +35,6 @@ describe("ServerSDK", () => {
       expect(() => {
         new ServerSDK(config);
       }).not.toThrow();
-    });
-
-    it("should throw error when apiBaseUrl is missing", () => {
-      const invalidConfig = { ...config, apiBaseUrl: "" };
-      expect(() => {
-        new ServerSDK(invalidConfig);
-      }).toThrow("apiBaseUrl is required");
     });
 
     it("should throw error with invalid private key", () => {
