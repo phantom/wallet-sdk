@@ -8,7 +8,7 @@ describe("ServerSDK", () => {
 
   beforeAll(() => {
     // Validate required environment variables
-    const requiredEnvVars = ["ORGANIZATION_PRIVATE_KEY", "ORGANIZATION_ID", "WALLET_API"];
+    const requiredEnvVars = ["ORGANIZATION_PRIVATE_KEY", "ORGANIZATION_ID", "WALLET_API", "APP_ID"];
 
     for (const envVar of requiredEnvVars) {
       if (!process.env[envVar]) {

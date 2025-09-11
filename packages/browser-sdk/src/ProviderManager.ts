@@ -32,7 +32,7 @@ export class ProviderManager implements EventEmitter {
   constructor(config: BrowserSDKConfig) {
     debug.log(DebugCategory.PROVIDER_MANAGER, "Initializing ProviderManager", { config });
     this.config = config;
-
+    
     // Initialize default provider based on config
     debug.log(DebugCategory.PROVIDER_MANAGER, "Setting default provider");
     this.setDefaultProvider();
@@ -42,6 +42,15 @@ export class ProviderManager implements EventEmitter {
     debug.info(DebugCategory.PROVIDER_MANAGER, "ProviderManager initialized", {
       currentProviderKey: this.currentProviderKey,
     });
+  }
+
+  private getValidatedCurrentUrl(): string {
+    if (typeof window === 'undefined') return '';
+    const currentUrl = window.location.href;
+    if (!currentUrl.startsWith('http:') && !currentUrl.startsWith('https:')) {
+      throw new Error('Invalid URL protocol - only HTTP/HTTPS URLs are supported');
+    }
+    return currentUrl;
   }
 
   /**
@@ -300,7 +309,7 @@ export class ProviderManager implements EventEmitter {
         authOptions: {
           ...(this.config.authOptions || {}),
           authUrl,
-          redirectUrl: this.config.authOptions?.redirectUrl || window.location.href,
+          redirectUrl: this.config.authOptions?.redirectUrl || this.getValidatedCurrentUrl(),
         },
         embeddedWalletType: embeddedWalletType || DEFAULT_EMBEDDED_WALLET_TYPE,
         addressTypes: this.config.addressTypes,
