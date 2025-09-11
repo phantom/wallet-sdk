@@ -1,5 +1,11 @@
 # @phantom/constants
 
+## 1.0.0-beta.3
+
+### Patch Changes
+
+- a290d0e: Change sdk optional parameters
+
 ## 1.0.0-beta.2
 
 ## 1.0.0-beta.1

@@ -1,5 +1,13 @@
 # @phantom/parsers
 
+## 1.0.0-beta.3
+
+### Patch Changes
+
+- Updated dependencies [a290d0e]
+  - @phantom/constants@1.0.0-beta.3
+  - @phantom/base64url@1.0.0-beta.3
+
 ## 1.0.0-beta.2
 
 ### Patch Changes
