@@ -829,7 +829,7 @@ export class EmbeddedProvider {
         createdAt: now,
         lastUsed: now,
         authenticatorCreatedAt: now,
-        authenticatorExpiresAt: expiresInMs,
+        authenticatorExpiresAt: Date.now() + expiresInMs,
         lastRenewalAttempt: undefined,
         username,
       };
