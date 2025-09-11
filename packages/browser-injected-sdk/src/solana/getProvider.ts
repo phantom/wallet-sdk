@@ -1,5 +1,4 @@
 import { InjectedSolanaStrategy } from "./strategies/injected";
-import { DeepLinkSolanaStrategy } from "./strategies/deeplinks";
 import type { SolanaStrategy } from "./strategies/types";
 import { ProviderStrategy } from "../types";
 
@@ -17,8 +16,6 @@ export async function getProvider(strategy: ProviderStrategy = ProviderStrategy.
     } catch (error) {
       throw new Error("Provider not found.");
     }
-  } else if (strategy === "deeplink") {
-    return new DeepLinkSolanaStrategy();
   } else {
     throw new Error("Invalid provider type.");
   }

@@ -73,10 +73,6 @@ export class PhantomClient {
   constructor(config: PhantomClientConfig, stamper?: Stamper) {
     this.config = config;
 
-    if (!config.apiBaseUrl) {
-      throw new Error("apiBaseUrl is required");
-    }
-
     // Create axios instance
     this.axiosInstance = axios.create();
 

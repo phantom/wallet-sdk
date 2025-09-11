@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 // import { useConnect as useBaseConnect } from "@phantom/react-sdk";
-import { usePhantomUI } from "../PhantomUIProvider";
+import { usePhantomUI } from "../PhantomProvider";
 
 export interface UseConnectResult {
   connect: () => void;

@@ -41,6 +41,7 @@ jobs:
         env:
           ORGANIZATION_PRIVATE_KEY: ${{ secrets.ORGANIZATION_PRIVATE_KEY }}
           ORGANIZATION_ID: ${{ secrets.ORGANIZATION_ID }}
+          APP_ID: ${{ secrets.APP_ID }}
           WALLET_API: ${{ secrets.WALLET_API }}
           SOLANA_RPC_URL: ${{ secrets.SOLANA_RPC_URL }}
 

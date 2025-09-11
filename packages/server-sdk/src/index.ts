@@ -11,6 +11,7 @@ import {
 } from "@phantom/client";
 import { 
   ANALYTICS_HEADERS,
+  DEFAULT_WALLET_API_URL,
   type ServerSdkHeaders 
 } from "@phantom/constants";
 import { ApiKeyStamper } from "@phantom/api-key-stamper";
@@ -29,7 +30,7 @@ import {
 export interface ServerSDKConfig {
   organizationId: string;
   appId: string;
-  apiBaseUrl: string;
+  apiBaseUrl?: string;
   apiPrivateKey: string;
 }
 
@@ -101,7 +102,7 @@ export class ServerSDK {
     // Initialize the parent PhantomClient with the stamper and analytics headers
     this.client = new PhantomClient(
       {
-        apiBaseUrl: config.apiBaseUrl,
+        apiBaseUrl: config.apiBaseUrl || DEFAULT_WALLET_API_URL,
         organizationId: config.organizationId,
         headers,
       },
@@ -187,7 +188,7 @@ export class ServerSDK {
     // Create a temporary PhantomClient instance with the stamper and analytics headers
     const tempClient = new PhantomClient(
       {
-        apiBaseUrl: this.config.apiBaseUrl,
+        apiBaseUrl: this.config.apiBaseUrl || DEFAULT_WALLET_API_URL,
         organizationId: this.config.organizationId,
         headers,
       },

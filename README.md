@@ -196,10 +196,10 @@ await sdk.signAndSendTransaction({
 **[@phantom/react-ui](./packages/react-ui/README.md)** - Pre-built React UI components with automatic modal injection and chain-specific operations.
 
 ```tsx
-import { PhantomUIProvider, useConnect, useSolana, useEthereum, AddressType } from "@phantom/react-ui";
+import { PhantomProvider, useConnect, useSolana, useEthereum, AddressType } from "@phantom/react-ui";
 
 // App wrapper - includes react-sdk + UI theme
-<PhantomUIProvider
+<PhantomProvider
   config={{
     providerType: "embedded", // or "injected"
     addressTypes: [AddressType.solana, AddressType.ethereum],
@@ -209,7 +209,7 @@ import { PhantomUIProvider, useConnect, useSolana, useEthereum, AddressType } fr
   theme="dark"
 >
   <App />
-</PhantomUIProvider>;
+</PhantomProvider>;
 
 // Component - UI appears automatically
 function WalletOperations() {

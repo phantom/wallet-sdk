@@ -3,7 +3,7 @@
   "version": "2.0.0-beta.1",
   "description": "React UI components for Phantom Wallet SDK with built-in transaction and connection modals",
   "main": "dist/index.js",
-  "module": "dist/index.esm.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
     "?pack-release": "When https://github.com/changesets/changesets/issues/432 has a solution we can remove this trick",
