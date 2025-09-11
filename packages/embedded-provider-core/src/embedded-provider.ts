@@ -43,7 +43,7 @@ export type EventCallback = (data?: any) => void;
 interface StamperResponse {
   organizationId: string;
   stamperInfo: StamperInfo;
-  expiresAtMs: number;
+  expiresInMs: number;
   username: string;
 }
 
@@ -454,7 +454,7 @@ export class EmbeddedProvider {
 
     // Convert base58 public key to base64url format as required by the API
     const base64urlPublicKey = base64urlEncode(bs58.decode(stamperInfo.publicKey));
-    const expiresAtMs = Date.now() + AUTHENTICATOR_EXPIRATION_TIME_MS;
+    const expiresInMs = AUTHENTICATOR_EXPIRATION_TIME_MS;
 
     const username = `user-${shortPubKey}`;
     const { organizationId } = await tempClient.createOrganization(organizationName, [
@@ -468,14 +468,14 @@ export class EmbeddedProvider {
             publicKey: base64urlPublicKey,
             algorithm: "Ed25519",
             // Commented for now until KMS supports fully expirable organizations
-            // expiresAtMs: expiresAtMs,
+            // expiresInMs: expiresInMs,
           } as any,
         ],
       },
     ]);
     this.logger.info("EMBEDDED_PROVIDER", "Organization created", { organizationId });
 
-    return { organizationId, stamperInfo, expiresAtMs, username };
+    return { organizationId, stamperInfo, expiresInMs, username };
   }
 
   async connect(authOptions?: AuthOptions): Promise<ConnectResult> {
@@ -519,8 +519,8 @@ export class EmbeddedProvider {
 
       // No existing connection available, create new one
       this.logger.info("EMBEDDED_PROVIDER", "No existing connection, creating new auth flow");
-      const { organizationId, stamperInfo, expiresAtMs, username } = await this.createOrganizationAndStamper();
-      const session = await this.handleAuthFlow(organizationId, stamperInfo, authOptions, expiresAtMs, username);
+      const { organizationId, stamperInfo, expiresInMs, username } = await this.createOrganizationAndStamper();
+      const session = await this.handleAuthFlow(organizationId, stamperInfo, authOptions, expiresInMs, username);
 
       // If session is null here, it means we're doing a redirect
       if (!session) {
@@ -774,7 +774,7 @@ export class EmbeddedProvider {
     organizationId: string,
     stamperInfo: StamperInfo,
     authOptions: AuthOptions | undefined,
-    expiresAtMs: number,
+    expiresInMs: number,
     username: string,
   ): Promise<Session | null> {
     if (this.config.embeddedWalletType === "user-wallet") {
@@ -784,7 +784,7 @@ export class EmbeddedProvider {
 
       // Route to appropriate authentication flow based on authOptions
       if (authOptions?.provider === "jwt") {
-        return await this.handleJWTAuth(organizationId, stamperInfo, authOptions, expiresAtMs, username);
+        return await this.handleJWTAuth(organizationId, stamperInfo, authOptions, expiresInMs, username);
       } else {
         // This will redirect in browser, so we don't return a session
         // In react-native this will return an auth result
@@ -829,7 +829,7 @@ export class EmbeddedProvider {
         createdAt: now,
         lastUsed: now,
         authenticatorCreatedAt: now,
-        authenticatorExpiresAt: expiresAtMs,
+        authenticatorExpiresAt: Date.now() + expiresInMs,
         lastRenewalAttempt: undefined,
         username,
       };
@@ -849,7 +849,7 @@ export class EmbeddedProvider {
     organizationId: string,
     stamperInfo: StamperInfo,
     authOptions: AuthOptions,
-    expiresAtMs: number,
+    expiresInMs: number,
     username: string,
   ): Promise<Session> {
     this.logger.info("EMBEDDED_PROVIDER", "Using JWT authentication flow");
@@ -886,7 +886,7 @@ export class EmbeddedProvider {
       createdAt: now,
       lastUsed: now,
       authenticatorCreatedAt: now,
-      authenticatorExpiresAt: expiresAtMs,
+      authenticatorExpiresAt: Date.now() + expiresInMs,
       lastRenewalAttempt: undefined,
       username,
     };
@@ -1089,7 +1089,7 @@ export class EmbeddedProvider {
 
       // Step 2: Convert public key and set expiration
       const base64urlPublicKey = base64urlEncode(bs58.decode(newKeyInfo.publicKey));
-      const expiresAtMs = Date.now() + AUTHENTICATOR_EXPIRATION_TIME_MS;
+      const expiresInMs = AUTHENTICATOR_EXPIRATION_TIME_MS;
 
       // Step 3: Create new authenticator with replaceExpirable=true
       let authenticatorResult;
@@ -1104,7 +1104,7 @@ export class EmbeddedProvider {
             publicKey: base64urlPublicKey,
             algorithm: "Ed25519",
             // Commented for now until KMS supports fully expiring organizations
-            // expiresAtMs: expiresAtMs,
+            // expiresInMs: expiresInMs,
           } as any,
           replaceExpirable: true,
         } as any);
@@ -1130,13 +1130,13 @@ export class EmbeddedProvider {
       const now = Date.now();
       session.stamperInfo = newKeyInfo;
       session.authenticatorCreatedAt = now;
-      session.authenticatorExpiresAt = expiresAtMs;
+      session.authenticatorExpiresAt = Date.now() + expiresInMs;
       session.lastRenewalAttempt = now;
       await this.storage.saveSession(session);
 
       this.logger.info("EMBEDDED_PROVIDER", "Authenticator renewal completed successfully", {
         newKeyId: newKeyInfo.keyId,
-        expiresAt: new Date(expiresAtMs).toISOString(),
+        expiresAt: new Date(Date.now() + expiresInMs).toISOString(),
       });
     } catch (error) {
       // Rollback rotation on any failure
