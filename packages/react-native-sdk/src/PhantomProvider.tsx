@@ -13,7 +13,7 @@ import { ExpoLogger } from "./providers/embedded/logger";
 import { Platform } from "react-native";
 
 interface PhantomContextValue {
-  sdk: EmbeddedProvider | null;
+  sdk: EmbeddedProvider;
   isConnected: boolean;
   isConnecting: boolean;
   connectError: Error | null;
@@ -36,7 +36,6 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   const [connectError, setConnectError] = useState<Error | null>(null);
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
   const [walletId, setWalletId] = useState<string | null>(null);
-  const [sdk, setSdk] = useState<EmbeddedProvider | null>(null);
 
   // Memoized config to avoid unnecessary SDK recreation
   const memoizedConfig: EmbeddedProviderConfig = useMemo(() => {
@@ -57,8 +56,8 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
     };
   }, [config]);
 
-  // SDK initialization and cleanup with proper event listener management
-  useEffect(() => {
+  // Eager initialization - SDK created immediately and never null
+  const sdk = useMemo(() => {
     // Create platform adapters
     const storage = new ExpoSecureStorage();
     const authProvider = new ExpoAuthProvider();
@@ -87,7 +86,11 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       },
     };
 
-    const sdkInstance = new EmbeddedProvider(memoizedConfig, platform, logger);
+    return new EmbeddedProvider(memoizedConfig, platform, logger);
+  }, [memoizedConfig, debugConfig, config.appId, config.embeddedWalletType]);
+
+  // Event listener management - SDK already exists
+  useEffect(() => {
 
     // Event handlers that need to be referenced for cleanup
     const handleConnectStart = () => {
@@ -99,14 +102,14 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       try {
         setIsConnected(true);
         setIsConnecting(false);
-        const addrs = await sdkInstance.getAddresses();
+        const addrs = await sdk.getAddresses();
         setAddresses(addrs);
       } catch (err) {
         console.error("Error connecting:", err);
 
         // Call disconnect to reset state if an error occurs
         try {
-          await sdkInstance.disconnect();
+          await sdk.disconnect();
         } catch (err) {
           console.error("Error disconnecting:", err);
         }
@@ -126,26 +129,23 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       setWalletId(null);
     };
 
-    // Add event listeners immediately when SDK is created to avoid race conditions
-    sdkInstance.on("connect_start", handleConnectStart);
-    sdkInstance.on("connect", handleConnect);
-    sdkInstance.on("connect_error", handleConnectError);
-    sdkInstance.on("disconnect", handleDisconnect);
+    // Add event listeners to SDK
+    sdk.on("connect_start", handleConnectStart);
+    sdk.on("connect", handleConnect);
+    sdk.on("connect_error", handleConnectError);
+    sdk.on("disconnect", handleDisconnect);
 
-    setSdk(sdkInstance);
-
-    // Cleanup function to remove event listeners when SDK is recreated or component unmounts
+    // Cleanup function to remove event listeners when SDK changes or component unmounts
     return () => {
-      sdkInstance.off("connect_start", handleConnectStart);
-      sdkInstance.off("connect", handleConnect);
-      sdkInstance.off("connect_error", handleConnectError);
-      sdkInstance.off("disconnect", handleDisconnect);
+      sdk.off("connect_start", handleConnectStart);
+      sdk.off("connect", handleConnect);
+      sdk.off("connect_error", handleConnectError);
+      sdk.off("disconnect", handleDisconnect);
     };
-  }, [memoizedConfig, debugConfig, config.appId, config.embeddedWalletType]);
+  }, [sdk]);
 
   // Initialize auto-connect
   useEffect(() => {
-    if (!sdk) return;
 
     // Attempt auto-connect if enabled
     if (config.autoConnect !== false) {

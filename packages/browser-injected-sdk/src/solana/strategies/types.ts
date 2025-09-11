@@ -18,6 +18,9 @@ export interface SolanaStrategy {
   signAndSendTransaction: (
     transaction: VersionedTransaction | Transaction,
   ) => Promise<{ signature: string; address?: string }>;
+  signAndSendAllTransactions: (
+    transactions: (VersionedTransaction | Transaction)[],
+  ) => Promise<{ signatures: string[]; address?: string }>;
   signTransaction: (transaction: VersionedTransaction | Transaction) => Promise<VersionedTransaction | Transaction>;
   signAllTransactions: (
     transactions: (VersionedTransaction | Transaction)[],

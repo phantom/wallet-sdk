@@ -25,13 +25,8 @@ interface SDKActionsProps {
 export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
   const { connect, isConnecting, error: connectError } = useConnect();
   const { disconnect, isDisconnecting } = useDisconnect();
-  const { signMessage: signSolanaMessage, signTransaction: signSolanaTransaction, signAndSendTransaction } = useSolana();
-  const {
-    signPersonalMessage: signEthMessage,
-    signTypedData: signEthTypedData,
-    signTransaction: signEthTransaction,
-    sendTransaction: sendEthTransaction,
-  } = useEthereum();
+  const { solana } = useSolana();
+  const { ethereum } = useEthereum();
   const { isConnected, currentProviderType } = usePhantom();
   const autoConfirm = useAutoConfirm();
   const addresses = useAccounts();
@@ -88,7 +83,11 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
     try {
       setIsSigningMessageType(type);
       if (type === "solana") {
-        const result = await signSolanaMessage("Hello from Phantom SDK!");
+        const result = await solana?.signMessage("Hello from Phantom SDK!");
+        if (!result) {
+          alert("Solana chain not available");
+          return;
+        }
         alert(`Message Signed! Signature: ${bs58.encode(result.signature)}`);
       } else {
         const ethAddress = addresses.find(addr => addr.addressType === "Ethereum");
@@ -98,7 +97,11 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
         }
         const message = "Hello from Phantom SDK!";
         const prefixedMessage = "0x" + Buffer.from(message, "utf8").toString("hex");
-        const result = await signEthMessage(prefixedMessage, ethAddress.address);
+        const result = await ethereum?.signPersonalMessage(prefixedMessage, ethAddress.address);
+        if (!result) {
+          alert("Ethereum chain not available");
+          return;
+        }
         alert(`Message Signed! Signature: ${result}`);
       }
     } catch (error) {
@@ -163,7 +166,11 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
         },
       };
 
-      const result = await signEthTypedData(typedData);
+      const result = await ethereum?.signTypedData(typedData, ethAddress.address);
+      if (!result) {
+        alert("Ethereum chain not available");
+        return;
+      }
       alert(`Typed Data Signed! Signature: ${result}`);
     } catch (error) {
       console.error("Error signing typed data:", error);
@@ -207,7 +214,11 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
 
         const transaction = new VersionedTransaction(messageV0);
 
-        const result = await signSolanaTransaction(transaction);
+        const result = await solana?.signTransaction(transaction);
+        if (!result) {
+          alert("Solana chain not available");
+          return;
+        }
         alert(`Transaction signed! Signature: ${JSON.stringify(result)}`);
       } else {
         // Ethereum
@@ -226,7 +237,11 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
           gasPrice: numberToHex(parseGwei("20")), // 20 gwei in hex
         };
 
-        const result = await signEthTransaction(transactionParams);
+        const result = await ethereum?.signTransaction(transactionParams);
+        if (!result) {
+          alert("Ethereum chain not available");
+          return;
+        }
         alert(`Transaction signed! Signature: ${result}`);
       }
     } catch (error) {
@@ -266,7 +281,11 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
 
       const transaction = new VersionedTransaction(messageV0);
 
-      const result = await signAndSendTransaction(transaction);
+      const result = await solana?.signAndSendTransaction(transaction);
+      if (!result) {
+        alert("Solana chain not available");
+        return;
+      }
 
       alert(`Transaction sent! Signature: ${result.signature}`);
     } catch (error) {
@@ -301,7 +320,11 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
         gasPrice: numberToHex(parseGwei("20")), // 20 gwei in hex
       };
 
-      const result = await sendEthTransaction(transactionParams);
+      const result = await ethereum?.sendTransaction(transactionParams);
+      if (!result) {
+        alert("Ethereum chain not available");
+        return;
+      }
       alert(`Ethereum transaction sent! Hash: ${result}`);
     } catch (error) {
       console.error("Error sending Ethereum transaction:", error);
