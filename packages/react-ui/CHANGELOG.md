@@ -1,5 +1,18 @@
 # @phantom/react-ui
 
+## 2.0.0-beta.2
+
+### Patch Changes
+
+- a290d0e: Change sdk optional parameters
+- 1935986: Fix hooks interfaces and add signAllTransactions
+- Updated dependencies [a290d0e]
+- Updated dependencies [1935986]
+  - @phantom/browser-sdk@1.0.0-beta.3
+  - @phantom/react-sdk@1.0.0-beta.3
+  - @phantom/client@1.0.0-beta.3
+  - @phantom/parsers@1.0.0-beta.3
+
 ## 2.0.0-beta.1
 
 ### Patch Changes

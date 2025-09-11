@@ -25,12 +25,15 @@
     "@phantom/react-ui": "1.2.5",
     "@phantom/sdk-types": "0.1.4",
     "@phantom/server-sdk": "0.2.4",
-    "with-wagmi": "0.1.0"
+    "with-wagmi": "0.1.0",
+    "@phantom/with-react-ui": "0.0.1"
   },
   "changesets": [
     "cute-days-yell",
+    "fancy-symbols-enter",
     "fast-camels-smoke",
     "gold-eagles-make",
-    "new-worlds-switch"
+    "new-worlds-switch",
+    "ten-seas-juggle"
   ]
 }
