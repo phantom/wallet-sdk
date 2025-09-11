@@ -517,11 +517,11 @@
 }
 
 .phantom-ui-error {
-  background: #fee;
-  border: 1px solid #fcc;
+  background: var(--bg-error, #fee);
+  border: 1px solid var(--border-error, #fcc);
   border-radius: 6px;
   padding: 12px;
-  color: #c00;
+  color: var(--text-error, #c00);
   margin-bottom: 16px;
   font-size: 14px;
 }
@@ -544,15 +544,15 @@
   cursor: pointer;
   transition: all 0.2s;
   text-decoration: none;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border-light, #e5e5e5);
   min-height: 48px;
   width: 100%;
-  background: #ffffff;
-  color: #000000;
+  background: var(--bg-primary, #ffffff);
+  color: var(--text-primary, #000000);
 }
 
 .phantom-ui-provider-button:hover:not(:disabled) {
-  background: #f8f9fa;
+  background: var(--bg-secondary, #f8f9fa);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
@@ -565,25 +565,25 @@
 }
 
 .phantom-ui-provider-button-mobile {
-  background: #ab9ff2;
-  color: #ffffff;
-  border-color: #ab9ff2;
+  background: var(--bg-accent, #ab9ff2);
+  color: var(--text-inverse, #ffffff);
+  border-color: var(--border-accent, #ab9ff2);
   margin-bottom: 8px;
 }
 
 .phantom-ui-provider-button-mobile:hover:not(:disabled) {
-  background: #9a8cf0;
-  border-color: #9a8cf0;
+  background: var(--bg-accent-hover, #9a8cf0);
+  border-color: var(--border-accent-hover, #9a8cf0);
 }
 
 .phantom-ui-provider-button-secondary {
   background: transparent;
-  border-color: #d1d5db;
+  border-color: var(--border-secondary, #d1d5db);
 }
 
 .phantom-ui-provider-button-secondary:hover:not(:disabled) {
-  background: #f9fafb;
-  border-color: #ab9ff2;
+  background: var(--bg-hover, #f9fafb);
+  border-color: var(--border-accent, #ab9ff2);
 }
 
 /* Dark theme support */
@@ -606,21 +606,21 @@
 }
 
 .dark .phantom-ui-provider-button {
-  background: #374151;
-  color: #ffffff;
-  border-color: #4b5563;
+  background: var(--bg-secondary, #374151);
+  color: var(--text-primary, #ffffff);
+  border-color: var(--border-primary, #4b5563);
 }
 
 .dark .phantom-ui-provider-button:hover:not(:disabled) {
-  background: #4b5563;
+  background: var(--bg-hover, #4b5563);
 }
 
 .dark .phantom-ui-provider-button-secondary {
   background: transparent;
-  border-color: #6b7280;
+  border-color: var(--border-secondary, #6b7280);
 }
 
 .dark .phantom-ui-provider-button-secondary:hover:not(:disabled) {
-  background: #374151;
-  border-color: #ab9ff2;
+  background: var(--bg-secondary, #374151);
+  border-color: var(--border-accent, #ab9ff2);
 }

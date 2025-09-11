@@ -8,7 +8,6 @@
     "dev": "vite --port 5178",
     "prebuild": "yarn workspace @phantom/react-ui build && yarn workspace @phantom/react-sdk build && yarn workspace @phantom/browser-sdk build",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
     "check-types": "tsc --noEmit",
     "preview": "vite preview"
   },
