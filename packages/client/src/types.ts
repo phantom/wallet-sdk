@@ -89,14 +89,14 @@ export type AuthenticatorConfig =
       authenticatorName: string;
       publicKey: string; // base64url encoded public key (required for keypair)
       algorithm: "Ed25519";
-      expiresAtMs?: number; // Optional expiration timestamp in milliseconds
+      expiresInMs?: number; // Optional expiration timestamp in milliseconds
     }
   | {
       authenticatorKind: "passkey";
       authenticatorName: string;
       publicKey: string; // base64url encoded public key (required for passkey)
       algorithm: "Ed25519" | "ECDSA";
-      expiresAtMs?: number; // Optional expiration timestamp in milliseconds
+      expiresInMs?: number; // Optional expiration timestamp in milliseconds
     }
   | {
       authenticatorKind: "oidc";
@@ -106,7 +106,7 @@ export type AuthenticatorConfig =
         sub: string;
         iss: string;
       };
-      expiresAtMs?: number; // Optional expiration timestamp in milliseconds
+      expiresInMs?: number; // Optional expiration timestamp in milliseconds
     };
 
 export interface UserConfig {
