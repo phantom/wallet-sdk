@@ -1,4 +1,4 @@
-import type { Transaction, VersionedTransaction } from "@solana/web3.js";
+import type { Transaction, VersionedTransaction } from "@phantom/sdk-types";
 
 // Re-export native @solana/web3.js types
 export type { Transaction, VersionedTransaction };

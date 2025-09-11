@@ -35,6 +35,7 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
   const [isSigningOnlyTransaction, setIsSigningOnlyTransaction] = useState<"solana" | "ethereum" | null>(null);
   const [isSigningAndSendingTransaction, setIsSigningAndSendingTransaction] = useState(false);
   const [isSendingEthTransaction, setIsSendingEthTransaction] = useState(false);
+  const [isSigningAllTransactions, setIsSigningAllTransactions] = useState(false);
 
   const solanaAddress = addresses?.find(addr => addr.addressType === "Solana")?.address || null;
   const ethereumAddress = addresses?.find(addr => addr.addressType === "Ethereum")?.address || null;
@@ -334,6 +335,52 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
     }
   };
 
+  const onSignAllTransactions = async () => {
+    if (!isConnected || !solanaAddress) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+    try {
+      setIsSigningAllTransactions(true);
+      // Create connection to get recent blockhash
+      const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL_MAINNET || "https://api.mainnet-beta.solana.com";
+      const connection = new Connection(rpcUrl);
+
+      // Get recent blockhash
+      const { blockhash } = await connection.getLatestBlockhash();
+
+      // Create 2 transactions for demo
+      const transactions = [];
+      for (let i = 0; i < 2; i++) {
+        const transferInstruction = SystemProgram.transfer({
+          fromPubkey: new PublicKey(solanaAddress),
+          toPubkey: new PublicKey(solanaAddress), // Self-transfer for demo
+          lamports: 1000 + i, // Slightly different amounts: 0.000001 and 0.000002 SOL
+        });
+
+        const messageV0 = new TransactionMessage({
+          payerKey: new PublicKey(solanaAddress),
+          recentBlockhash: blockhash,
+          instructions: [transferInstruction],
+        }).compileToV0Message();
+
+        transactions.push(new VersionedTransaction(messageV0));
+      }
+
+      const results = await solana.signAllTransactions(transactions);
+      if (!results) {
+        alert("Solana chain not available");
+        return;
+      }
+      alert(`All transactions signed! Results: ${JSON.stringify(results)}`);
+    } catch (error) {
+      console.error("Error signing all transactions:", error);
+      alert(`Error signing all transactions: ${(error as Error).message || error}`);
+    } finally {
+      setIsSigningAllTransactions(false);
+    }
+  };
+
   // Auto-confirm handlers
   const onEnableAutoConfirm = async () => {
     try {
@@ -559,6 +606,16 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
               : !hasEthereumBalance
                 ? "Insufficient Balance"
                 : "Sign & Send Transaction (Ethereum)"}
+          </button>
+          <button
+            onClick={onSignAllTransactions}
+            disabled={!isConnected || isSigningAllTransactions || !hasSolanaBalance}
+          >
+            {isSigningAllTransactions
+              ? "Signing All..."
+              : !hasSolanaBalance
+                ? "Insufficient Balance"
+                : "Sign All Transactions (Solana)"}
           </button>
 
           <button onClick={onDisconnect} disabled={!isConnected || isDisconnecting}>

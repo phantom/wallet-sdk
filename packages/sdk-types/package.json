@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "@phantom/openapi-wallet-service": "^0.1.9",
+    "@solana/web3.js": "^1.95.4",
     "buffer": "^6.0.3"
   },
   "files": [

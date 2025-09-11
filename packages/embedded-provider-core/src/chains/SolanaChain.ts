@@ -4,6 +4,7 @@ import type { EmbeddedProvider } from "../embedded-provider";
 import { NetworkId } from "@phantom/constants";
 import bs58 from "bs58";
 import { parseSolanaTransactionSignature } from "@phantom/parsers";
+import type { Transaction, VersionedTransaction } from "@phantom/sdk-types";
 
 /**
  * Embedded Solana chain implementation that is wallet adapter compliant
@@ -53,7 +54,7 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     };
   }
 
-  async signTransaction<T>(transaction: T): Promise<T> {
+  async signTransaction(transaction: Transaction | VersionedTransaction): Promise<Transaction | VersionedTransaction> {
     this.ensureConnected();
     const result = await this.provider.signTransaction({
       transaction,
@@ -66,10 +67,10 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     
     // Return the signature as the transaction result
     // This maintains compatibility with wallet adapter expectations
-    return signatureResult.signature as unknown as T;
+    return signatureResult.signature as unknown as Transaction | VersionedTransaction;
   }
 
-  async signAndSendTransaction<T>(transaction: T): Promise<{ signature: string }> {
+  async signAndSendTransaction(transaction: Transaction | VersionedTransaction): Promise<{ signature: string }> {
     this.ensureConnected();
     const result = await this.provider.signAndSendTransaction({
       transaction,
@@ -81,12 +82,12 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     return { signature: result.hash };
   }
 
-  async signAllTransactions<T>(transactions: T[]): Promise<T[]> {
+  async signAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<(Transaction | VersionedTransaction)[]> {
     const results = await Promise.all(transactions.map(tx => this.signTransaction(tx)));
     return results;
   }
 
-  async signAndSendAllTransactions<T>(transactions: T[]): Promise<{ signatures: string[] }> {
+  async signAndSendAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<{ signatures: string[] }> {
     const results = await Promise.all(transactions.map(tx => this.signAndSendTransaction(tx)));
     return { signatures: results.map(result => result.signature) };
   }

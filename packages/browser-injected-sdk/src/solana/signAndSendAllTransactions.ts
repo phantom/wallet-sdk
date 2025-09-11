@@ -1,5 +1,5 @@
 import { getProvider } from "./getProvider";
-import { type VersionedTransaction, type Transaction } from "@solana/web3.js";
+import { type VersionedTransaction, type Transaction } from "@phantom/sdk-types";
 
 /**
  * Signs and sends all transactions using the Phantom provider.

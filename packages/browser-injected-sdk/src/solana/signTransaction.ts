@@ -1,4 +1,4 @@
-import type { VersionedTransaction, Transaction } from "@solana/web3.js";
+import type { VersionedTransaction, Transaction } from "@phantom/sdk-types";
 import { getProvider } from "./getProvider";
 
 /**
