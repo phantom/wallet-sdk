@@ -83,7 +83,7 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
     try {
       setIsSigningMessageType(type);
       if (type === "solana") {
-        const result = await solana?.signMessage("Hello from Phantom SDK!");
+        const result = await solana.signMessage("Hello from Phantom SDK!");
         if (!result) {
           alert("Solana chain not available");
           return;
@@ -214,7 +214,7 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
 
         const transaction = new VersionedTransaction(messageV0);
 
-        const result = await solana?.signTransaction(transaction);
+        const result = await solana.signTransaction(transaction);
         if (!result) {
           alert("Solana chain not available");
           return;
@@ -281,7 +281,7 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
 
       const transaction = new VersionedTransaction(messageV0);
 
-      const result = await solana?.signAndSendTransaction(transaction);
+      const result = await solana.signAndSendTransaction(transaction);
       if (!result) {
         alert("Solana chain not available");
         return;

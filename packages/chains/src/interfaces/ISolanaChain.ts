@@ -13,6 +13,7 @@ export interface ISolanaChain {
   signTransaction<T>(transaction: T): Promise<T>;
   signAndSendTransaction<T>(transaction: T): Promise<{ signature: string }>;
   signAllTransactions?<T>(transactions: T[]): Promise<T[]>;
+  signAndSendAllTransactions?<T>(transactions: T[]): Promise<{ signatures: string[] }>;
 
   // Network switching
   switchNetwork?(network: "mainnet" | "devnet"): Promise<void>;

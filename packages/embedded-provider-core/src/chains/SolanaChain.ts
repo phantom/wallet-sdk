@@ -86,6 +86,11 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     return results;
   }
 
+  async signAndSendAllTransactions<T>(transactions: T[]): Promise<{ signatures: string[] }> {
+    const results = await Promise.all(transactions.map(tx => this.signAndSendTransaction(tx)));
+    return { signatures: results.map(result => result.signature) };
+  }
+
   connect(_options?: { onlyIfTrusted?: boolean }): Promise<{ publicKey: string }> {
     if (!this.provider.isConnected()) {
       throw new Error("Provider not connected. Call provider connect first.");

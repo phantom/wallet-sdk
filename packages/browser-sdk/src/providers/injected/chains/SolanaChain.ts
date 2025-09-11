@@ -103,6 +103,19 @@ export class InjectedSolanaChain implements ISolanaChain {
     }
   }
 
+  async signAndSendAllTransactions<T>(transactions: T[]): Promise<{ signatures: string[] }> {
+    if (!this.callbacks.isConnected()) {
+      return Promise.reject(new Error("Provider not connected. Call provider connect first."));
+    }
+
+    try {
+      const result = await this.phantom.solana.signAndSendAllTransactions(transactions as any[]);
+      return { signatures: result.signatures };
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
 
   switchNetwork(_network: "mainnet" | "devnet"): Promise<void> {
     return Promise.resolve();
