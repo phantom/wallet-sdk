@@ -86,8 +86,8 @@ dotenv.config();
 // Initialize the SDK
 const sdk = new ServerSDK({
   organizationId: process.env.ORGANIZATION_ID!,
+  appId: process.env.APP_ID!,
   apiPrivateKey: process.env.PRIVATE_KEY!,
-  apiBaseUrl: process.env.API_URL!,
 });
 
 // Create a wallet
