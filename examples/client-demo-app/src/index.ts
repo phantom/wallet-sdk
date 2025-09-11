@@ -66,7 +66,9 @@ async function main() {
     const organization = await client.createOrganization("Demo Organization", [
       {
         username: `demo-user-${Date.now()}`,
-        role: "ADMIN",
+        policy: {
+          type : "ROOT",
+        },
         authenticators: [
           {
             authenticatorName: `demo-auth-${Date.now()}`,
