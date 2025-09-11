@@ -131,6 +131,29 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
     };
   }
 
+  public async signAndSendAllTransactions(
+    transactions: (Transaction | VersionedTransaction)[],
+  ): Promise<{ signatures: string[]; address?: string }> {
+    const provider = this.#getProvider();
+    if (!provider) {
+      throw new Error("Provider not found.");
+    }
+
+    if (!provider.isConnected) {
+      throw new Error("Provider is not connected.");
+    }
+
+    if (!provider.signAndSendAllTransactions) {
+      throw new Error("Provider does not support signAndSendAllTransactions.");
+    }
+
+    const results = await provider.signAndSendAllTransactions(transactions);
+    return {
+      signatures: results.signatures,
+      address: results.publicKey,
+    };
+  }
+
   public async signTransaction(
     transaction: Transaction | VersionedTransaction,
   ): Promise<Transaction | VersionedTransaction> {

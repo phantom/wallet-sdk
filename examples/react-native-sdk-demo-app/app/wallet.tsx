@@ -13,13 +13,12 @@ import {
 import { useRouter } from "expo-router";
 import { useAccounts, useSolana, useDisconnect } from "@phantom/react-native-sdk";
 import { useBalance } from "../hooks/useBalance";
-import { Buffer } from "buffer";
 import bs58 from "bs58";
 
 export default function WalletScreen() {
   const router = useRouter();
   const { isConnected, addresses, walletId } = useAccounts();
-  const { signMessage, signAndSendTransaction } = useSolana();
+  const { solana } = useSolana();
   const { disconnect, isDisconnecting } = useDisconnect();
   const [isSigningMessage, setIsSigningMessage] = useState(false);
   const [isSigningTx, setIsSigningTx] = useState(false);
@@ -53,7 +52,8 @@ export default function WalletScreen() {
     try {
       setIsSigningMessage(true);
       setSignError(null);
-      const result = await signMessage(messageToSign);
+      if (!solana) throw new Error("Solana not available");
+      const result = await solana.signMessage(messageToSign);
 
       const signatureString = bs58.encode(result.signature);
       setSignedMessage(signatureString);
@@ -135,7 +135,8 @@ export default function WalletScreen() {
       // Sign and send the transaction
       setIsSigningTx(true);
       setTxError(null);
-      const result = await signAndSendTransaction(transaction);
+      if (!solana) throw new Error("Solana not available");
+      const result = await solana.signAndSendTransaction(transaction);
 
       // Set success state
       setTransactionResult(`Transaction sent successfully!\n\nSignature: ${result.signature}`);
