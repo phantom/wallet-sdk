@@ -1,5 +1,15 @@
 # @phantom/react-sdk
 
+## 1.0.0-beta.4
+
+### Patch Changes
+
+- 213052a: Updated types for chains
+- Updated dependencies [213052a]
+  - @phantom/browser-sdk@1.0.0-beta.4
+  - @phantom/constants@1.0.0-beta.4
+  - @phantom/chains@1.0.0-beta.4
+
 ## 1.0.0-beta.3
 
 ### Patch Changes

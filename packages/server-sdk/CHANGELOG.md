@@ -1,5 +1,16 @@
 # @phantom/server-sdk
 
+## 1.0.0-beta.4
+
+### Patch Changes
+
+- 213052a: Updated types for chains
+  - @phantom/base64url@1.0.0-beta.4
+  - @phantom/constants@1.0.0-beta.4
+  - @phantom/parsers@1.0.0-beta.4
+  - @phantom/api-key-stamper@1.0.0-beta.4
+  - @phantom/client@1.0.0-beta.4
+
 ## 1.0.0-beta.3
 
 ### Patch Changes
