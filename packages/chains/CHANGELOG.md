@@ -1,5 +1,14 @@
 # @phantom/chains
 
+## 1.0.0-beta.4
+
+### Patch Changes
+
+- Updated dependencies [213052a]
+  - @phantom/sdk-types@1.0.0-beta.4
+  - @phantom/constants@1.0.0-beta.4
+  - @phantom/parsers@1.0.0-beta.4
+
 ## 1.0.0-beta.3
 
 ### Patch Changes

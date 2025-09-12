@@ -26,12 +26,14 @@
     "@phantom/sdk-types": "0.1.4",
     "@phantom/server-sdk": "0.2.4",
     "with-wagmi": "0.1.0",
-    "@phantom/with-react-ui": "0.0.1"
+    "@phantom/with-react-ui": "0.0.1",
+    "@phantom/utils": "1.0.0-beta.3"
   },
   "changesets": [
     "cute-days-yell",
     "fancy-symbols-enter",
     "fast-camels-smoke",
+    "few-mangos-bake",
     "gold-eagles-make",
     "new-worlds-switch",
     "ten-seas-juggle"

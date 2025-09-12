@@ -1,5 +1,11 @@
 # @phantom/sdk-types
 
+## 1.0.0-beta.4
+
+### Patch Changes
+
+- 213052a: Updated types for chains
+
 ## 1.0.0-beta.3
 
 ## 1.0.0-beta.2
