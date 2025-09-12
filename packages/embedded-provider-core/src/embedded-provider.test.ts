@@ -217,7 +217,7 @@ describe("EmbeddedProvider Core", () => {
 
       // Verify createOrganization was called with organization name and users array
       expect(mockCreateOrganization).toHaveBeenCalledWith(
-        expect.stringMatching(/^test-org-id-test-platform-11111111$/), // organization name with platform info
+        expect.stringMatching(/^test-org-test-platform-11111111$/), // organization name with platform info (first 8 chars)
         expect.arrayContaining([
           expect.objectContaining({
             username: expect.stringContaining("user-"),

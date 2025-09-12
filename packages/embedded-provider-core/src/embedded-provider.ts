@@ -444,7 +444,10 @@ export class EmbeddedProvider {
     // organization name is a combination of this organizationId and this userId, which will be a unique identifier
     const platformName = this.platform.name || "unknown";
     const shortPubKey = stamperInfo.publicKey.slice(0, 8);
-    const organizationName = `${this.config.organizationId}-${platformName}-${shortPubKey}`;
+    
+    
+    
+    const organizationName = `${this.config.organizationId.substring(0, 8)}-${platformName}-${shortPubKey}`;
 
     this.logger.log("EMBEDDED_PROVIDER", "Creating organization", {
       organizationName,
