@@ -464,14 +464,37 @@ export class PhantomClient {
    * @param name Organization name
    * @param users Array of users with their authenticators
    */
+  private validateNameLength(name: string, type: string): void {
+    const MAX_NAME_LENGTH = 64;
+    if (name.length > MAX_NAME_LENGTH) {
+      throw new Error(`${type} name cannot exceed ${MAX_NAME_LENGTH} characters. Current length: ${name.length}`);
+    }
+  }
+
   async createOrganization(name: string, users: UserConfig[], tags?: string[]): Promise<ExternalKmsOrganization> {
     try {
       if (!name) {
         throw new Error("Organization name is required");
       }
 
+      // Validate organization name length
+      this.validateNameLength(name, "Organization");
+
       if (!users || users.length === 0) {
         throw new Error("At least one user is required");
+      }
+
+      // Validate user names and authenticator names
+      for (const user of users) {
+        if (user.username) {
+          this.validateNameLength(user.username, "Username");
+        }
+        
+        for (const auth of user.authenticators) {
+          if (auth.authenticatorName) {
+            this.validateNameLength(auth.authenticatorName, "Authenticator");
+          }
+        }
       }
 
       const params: CreateOrganizationRequest = {
@@ -505,6 +528,17 @@ export class PhantomClient {
    */
   async createAuthenticator(params: CreateAuthenticatorParams): Promise<ExternalKmsAuthenticator> {
     try {
+      // Validate name lengths
+      if (params.username) {
+        this.validateNameLength(params.username, "Username");
+      }
+      if (params.authenticatorName) {
+        this.validateNameLength(params.authenticatorName, "Authenticator");
+      }
+      if (params.authenticator?.authenticatorName) {
+        this.validateNameLength(params.authenticator.authenticatorName, "Authenticator");
+      }
+
       const requestParams: CreateAuthenticatorRequest = {
         organizationId: params.organizationId,
         username: params.username,
