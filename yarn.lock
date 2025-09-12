@@ -5034,6 +5034,7 @@ __metadata:
     "@phantom/crypto": "workspace:^"
     "@phantom/openapi-wallet-service": "npm:^0.1.9"
     "@phantom/sdk-types": "workspace:^"
+    "@phantom/utils": "workspace:^"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
     axios: "npm:^1.10.0"
@@ -5097,6 +5098,7 @@ __metadata:
     "@phantom/constants": "workspace:^"
     "@phantom/parsers": "workspace:^"
     "@phantom/sdk-types": "workspace:^"
+    "@phantom/utils": "workspace:^"
     "@types/jest": "npm:^29.5.5"
     "@types/node": "npm:^20.11.0"
     bs58: "npm:^6.0.0"
@@ -5401,10 +5403,27 @@ __metadata:
     "@phantom/client": "workspace:^"
     "@phantom/constants": "workspace:^"
     "@phantom/parsers": "workspace:^"
+    "@phantom/utils": "workspace:^"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
     bs58: "npm:^6.0.0"
     dotenv: "npm:^16.4.1"
+    eslint: "npm:8.53.0"
+    jest: "npm:^29.7.0"
+    prettier: "npm:^3.5.2"
+    rimraf: "npm:^6.0.1"
+    ts-jest: "npm:^29.1.2"
+    tsup: "npm:^6.7.0"
+    typescript: "npm:^5.0.4"
+  languageName: unknown
+  linkType: soft
+
+"@phantom/utils@workspace:^, @phantom/utils@workspace:packages/utils":
+  version: 0.0.0-use.local
+  resolution: "@phantom/utils@workspace:packages/utils"
+  dependencies:
+    "@types/jest": "npm:^29.5.12"
+    "@types/node": "npm:^20.11.0"
     eslint: "npm:8.53.0"
     jest: "npm:^29.7.0"
     prettier: "npm:^3.5.2"

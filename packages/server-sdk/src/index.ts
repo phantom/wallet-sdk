@@ -9,6 +9,7 @@ import {
   type AddressType,
   type Organization,
 } from "@phantom/client";
+import { randomUUID } from "@phantom/utils";
 import { 
   ANALYTICS_HEADERS,
   DEFAULT_WALLET_API_URL,
@@ -203,7 +204,7 @@ export class ServerSDK {
 
     return tempClient.createOrganization(name, [
       {
-        username: `user-${Date.now()}`,
+        username: `user-${randomUUID()}`,
         role: "ADMIN",
         authenticators: [
           {

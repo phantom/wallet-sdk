@@ -1,4 +1,5 @@
 import { PhantomClient } from "@phantom/client";
+import { randomUUID } from "@phantom/utils";
 import { base64urlEncode } from "@phantom/base64url";
 import bs58 from "bs58";
 import {
@@ -459,7 +460,7 @@ export class EmbeddedProvider {
     const base64urlPublicKey = base64urlEncode(bs58.decode(stamperInfo.publicKey));
     const expiresInMs = AUTHENTICATOR_EXPIRATION_TIME_MS;
 
-    const username = `user-${shortPubKey}`;
+    const username = `user-${randomUUID()}`;
     const { organizationId } = await tempClient.createOrganization(organizationName, [
       {
         username,
@@ -934,7 +935,7 @@ export class EmbeddedProvider {
       authenticatorCreatedAt: now,
       authenticatorExpiresAt: now + AUTHENTICATOR_EXPIRATION_TIME_MS,
       lastRenewalAttempt: undefined,
-      username: username || `user-${stamperInfo.keyId.substring(0, 8)}`,
+      username: username || `user-${randomUUID()}`,
     };
     this.logger.log("EMBEDDED_PROVIDER", "Saving temporary session before redirect", {
       sessionId: tempSession.sessionId,
