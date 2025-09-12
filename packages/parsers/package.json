@@ -1,6 +1,6 @@
 {
   "name": "@phantom/parsers",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-beta.3",
   "description": "Transaction and message parsers for Phantom Wallet SDK",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -31,6 +31,7 @@
   "dependencies": {
     "@phantom/base64url": "workspace:^",
     "@phantom/constants": "workspace:^",
+    "@phantom/sdk-types": "workspace:^",
     "@solana/transactions": "^2.0.0",
     "@solana/web3.js": "^1.95.0",
     "bs58": "^6.0.0",
@@ -44,6 +45,7 @@
   },
   "devDependencies": {
     "@solana/kit": "^2.1.1",
+    "@solana/web3.js": "^1.95.0",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.0",
     "dotenv": "^16.4.5",

@@ -1,4 +1,4 @@
-import type { VersionedTransaction, Transaction } from "@solana/web3.js";
+import type { VersionedTransaction, Transaction } from "@phantom/sdk-types";
 import type { DisplayEncoding, SolanaSignInData } from "../types";
 import type { ProviderStrategy } from "../../types";
 
@@ -18,6 +18,9 @@ export interface SolanaStrategy {
   signAndSendTransaction: (
     transaction: VersionedTransaction | Transaction,
   ) => Promise<{ signature: string; address?: string }>;
+  signAndSendAllTransactions: (
+    transactions: (VersionedTransaction | Transaction)[],
+  ) => Promise<{ signatures: string[]; address?: string }>;
   signTransaction: (transaction: VersionedTransaction | Transaction) => Promise<VersionedTransaction | Transaction>;
   signAllTransactions: (
     transactions: (VersionedTransaction | Transaction)[],

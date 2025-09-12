@@ -1,4 +1,4 @@
-import type { Transaction, VersionedTransaction } from "@solana/web3.js";
+import type { Transaction, VersionedTransaction } from "@phantom/sdk-types";
 
 // Re-export native @solana/web3.js types
 export type { Transaction, VersionedTransaction };
@@ -51,6 +51,7 @@ export interface PhantomSolanaProvider {
     transaction: any,
     options?: SendOptions,
   ) => Promise<{ signature: string; publicKey?: string }>;
+  signAndSendAllTransactions: (transactions: any[], options?: SendOptions) => Promise<{ signatures: string[]; publicKey?: string }>;
   signAllTransactions: (transactions: any[]) => Promise<any[]>;
   signTransaction: (transaction: any) => Promise<any>;
   on: (event: "connect" | "disconnect" | "accountChanged", handler: (publicKey?: PublicKey) => void) => void;

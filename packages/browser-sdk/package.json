@@ -1,6 +1,6 @@
 {
   "name": "@phantom/browser-sdk",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-beta.3",
   "description": "Browser SDK for Phantom Wallet",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -36,6 +36,7 @@
     "@phantom/embedded-provider-core": "workspace:^",
     "@phantom/indexed-db-stamper": "workspace:^",
     "@phantom/parsers": "workspace:^",
+    "@phantom/sdk-types": "workspace:^",
     "axios": "^1.10.0",
     "bs58": "^6.0.0",
     "buffer": "^6.0.3",

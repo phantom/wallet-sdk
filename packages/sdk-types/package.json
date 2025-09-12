@@ -1,6 +1,6 @@
 {
   "name": "@phantom/sdk-types",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-beta.3",
   "description": "Common types for Phantom SDK packages",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "@phantom/openapi-wallet-service": "^0.1.9",
+    "@solana/web3.js": "^1.95.4",
     "buffer": "^6.0.3"
   },
   "files": [

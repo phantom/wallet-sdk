@@ -1,3 +1,5 @@
+import type { Transaction, VersionedTransaction } from "@phantom/sdk-types";
+
 // Now directly wallet-adapter compliant
 export interface ISolanaChain {
   // Wallet adapter required properties
@@ -10,12 +12,13 @@ export interface ISolanaChain {
 
   // Standard wallet adapter signing methods
   signMessage(message: string | Uint8Array): Promise<{ signature: Uint8Array; publicKey: string }>;
-  signTransaction<T>(transaction: T): Promise<T>;
-  signAndSendTransaction<T>(transaction: T): Promise<{ signature: string }>;
-  signAllTransactions?<T>(transactions: T[]): Promise<T[]>;
+  signTransaction(transaction: Transaction | VersionedTransaction): Promise<Transaction | VersionedTransaction>;
+  signAndSendTransaction(transaction: Transaction | VersionedTransaction): Promise<{ signature: string }>;
+  signAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<(Transaction | VersionedTransaction)[]>;
+  signAndSendAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<{ signatures: string[] }>;
 
   // Network switching
-  switchNetwork?(network: "mainnet" | "devnet"): Promise<void>;
+  switchNetwork(network: "mainnet" | "devnet"): Promise<void>;
 
   // Legacy compatibility methods
   getPublicKey(): Promise<string | null>;

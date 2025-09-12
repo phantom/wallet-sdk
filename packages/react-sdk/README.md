@@ -345,7 +345,7 @@ function SolanaOperations() {
 
     // Sign and send
     const result = await solana.signAndSendTransaction(transaction);
-    console.log("Transaction sent:", result.hash);
+    console.log("Transaction sent:", result.signature);
   };
 
   const switchNetwork = async () => {
@@ -640,7 +640,7 @@ function SolanaExample() {
 
     // Sign and send using chain-specific hook
     const result = await solana.signAndSendTransaction(transaction);
-    console.log("Transaction sent:", result.hash);
+    console.log("Transaction sent:", result.signature);
   };
 
   return <button onClick={sendTransaction}>Send SOL</button>;
@@ -679,7 +679,7 @@ function SolanaKitExample() {
 
     // Sign and send using chain-specific hook
     const result = await solana.signAndSendTransaction(transaction);
-    console.log("Transaction sent:", result.hash);
+    console.log("Transaction sent:", result.signature);
   };
 
   return <button onClick={sendTransaction}>Send SOL</button>;

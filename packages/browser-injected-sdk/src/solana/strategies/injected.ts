@@ -1,6 +1,6 @@
 import type { SolanaStrategy } from "./types";
 import type { DisplayEncoding, PhantomSolanaProvider, SolanaSignInData } from "../types";
-import type { Transaction, VersionedTransaction } from "@solana/web3.js";
+import type { Transaction, VersionedTransaction } from "@phantom/sdk-types";
 import { ProviderStrategy } from "../../types";
 
 const MAX_RETRIES = 4;
@@ -128,6 +128,29 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
     return {
       signature: result.signature,
       address: result.publicKey,
+    };
+  }
+
+  public async signAndSendAllTransactions(
+    transactions: (Transaction | VersionedTransaction)[],
+  ): Promise<{ signatures: string[]; address?: string }> {
+    const provider = this.#getProvider();
+    if (!provider) {
+      throw new Error("Provider not found.");
+    }
+
+    if (!provider.isConnected) {
+      throw new Error("Provider is not connected.");
+    }
+
+    if (!provider.signAndSendAllTransactions) {
+      throw new Error("Provider does not support signAndSendAllTransactions.");
+    }
+
+    const results = await provider.signAndSendAllTransactions(transactions);
+    return {
+      signatures: results.signatures,
+      address: results.publicKey,
     };
   }
 

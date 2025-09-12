@@ -14,7 +14,7 @@ export interface ConnectOptions {
 }
 
 interface PhantomContextValue {
-  sdk: BrowserSDK | null;
+  sdk: BrowserSDK;
   isConnected: boolean;
   isConnecting: boolean;
   connectError: Error | null;
@@ -51,14 +51,14 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
     (memoizedConfig.providerType as any) || null,
   );
   const [isPhantomAvailable, setIsPhantomAvailable] = useState(false);
-  const [sdk, setSdk] = useState<BrowserSDK | null>(null);
+
+  // Eager initialization - SDK created immediately and never null
+  const sdk = useMemo(() => new BrowserSDK(memoizedConfig), [memoizedConfig]);
 
   
 
-  // SDK initialization and cleanup with event listener management
+  // Event listener management - SDK already exists
   useEffect(() => {
-    const sdkInstance = new BrowserSDK(memoizedConfig);
-
     // Event handlers that need to be referenced for cleanup
     const handleConnectStart = () => {
       setIsConnecting(true);
@@ -71,18 +71,18 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
         setIsConnecting(false);
 
         // Update current provider type
-        const providerInfo = sdkInstance.getCurrentProviderInfo();
+        const providerInfo = sdk.getCurrentProviderInfo();
         setCurrentProviderType(providerInfo?.type || null);
 
-        const addrs = await sdkInstance.getAddresses();
+        const addrs = await sdk.getAddresses();
         setAddresses(addrs);
-        setWalletId(sdkInstance.getWalletId());
+        setWalletId(sdk.getWalletId());
       } catch (err) {
         console.error("Error connecting:", err);
 
         // Call disconnect to reset state if an error occurs
         try {
-          await sdkInstance.disconnect();
+          await sdk.disconnect();
         } catch (err) {
           console.error("Error disconnecting:", err);
         }
@@ -103,22 +103,20 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       setWalletId(null);
     };
 
-    // Add event listeners immediately when SDK is created to avoid race conditions
-    sdkInstance.on("connect_start", handleConnectStart);
-    sdkInstance.on("connect", handleConnect);
-    sdkInstance.on("connect_error", handleConnectError);
-    sdkInstance.on("disconnect", handleDisconnect);
+    // Add event listeners to SDK
+    sdk.on("connect_start", handleConnectStart);
+    sdk.on("connect", handleConnect);
+    sdk.on("connect_error", handleConnectError);
+    sdk.on("disconnect", handleDisconnect);
 
-    setSdk(sdkInstance);
-
-    // Cleanup function to remove event listeners when SDK is recreated or component unmounts
+    // Cleanup function to remove event listeners when SDK changes or component unmounts
     return () => {
-      sdkInstance.off("connect_start", handleConnectStart);
-      sdkInstance.off("connect", handleConnect);
-      sdkInstance.off("connect_error", handleConnectError);
-      sdkInstance.off("disconnect", handleDisconnect);
+      sdk.off("connect_start", handleConnectStart);
+      sdk.off("connect", handleConnect);
+      sdk.off("connect_error", handleConnectError);
+      sdk.off("disconnect", handleDisconnect);
     };
-  }, [memoizedConfig]);
+  }, [sdk]);
 
   // Handle debug configuration changes separately to avoid SDK reinstantiation
   useEffect(() => {

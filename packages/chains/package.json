@@ -1,6 +1,6 @@
 {
   "name": "@phantom/chains",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-beta.3",
   "description": "Shared chain interfaces for Phantom SDK",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -44,7 +44,8 @@
   },
   "dependencies": {
     "@phantom/constants": "workspace:^",
-    "@phantom/parsers": "workspace:^"
+    "@phantom/parsers": "workspace:^",
+    "@phantom/sdk-types": "workspace:^"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",

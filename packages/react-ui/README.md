@@ -62,14 +62,18 @@ function WalletComponent() {
 
   const sendSolanaTransaction = async () => {
     // Use standard Solana hook - no UI wrapper needed
-    const result = await solana.signAndSendTransaction(transaction);
-    console.log("Transaction sent:", result.signature);
+    if (solana.isAvailable) {
+      const result = await solana.solana.signAndSendTransaction(transaction);
+      console.log("Transaction sent:", result.signature);
+    }
   };
 
   const sendEthereumTransaction = async () => {
     // Use standard Ethereum hook - no UI wrapper needed
-    const result = await ethereum.sendTransaction(transaction);
-    console.log("Transaction sent:", result);
+    if (ethereum.isAvailable) {
+      const result = await ethereum.ethereum.sendTransaction(transaction);
+      console.log("Transaction sent:", result);
+    }
   };
 
   return (

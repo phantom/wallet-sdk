@@ -1,5 +1,21 @@
 # @phantom/embedded-provider-core
 
+## 1.0.0-beta.3
+
+### Patch Changes
+
+- a290d0e: Change sdk optional parameters
+- 1935986: Fix hooks interfaces and add signAllTransactions
+- Updated dependencies [a290d0e]
+- Updated dependencies [1935986]
+  - @phantom/constants@1.0.0-beta.3
+  - @phantom/chains@1.0.0-beta.3
+  - @phantom/client@1.0.0-beta.3
+  - @phantom/base64url@1.0.0-beta.3
+  - @phantom/sdk-types@1.0.0-beta.3
+  - @phantom/parsers@1.0.0-beta.3
+  - @phantom/api-key-stamper@1.0.0-beta.3
+
 ## 1.0.0-beta.2
 
 ### Patch Changes

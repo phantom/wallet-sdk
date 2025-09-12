@@ -129,8 +129,10 @@ export function WalletScreen() {
 
   const handleSignSolanaMessage = async () => {
     try {
-      const signature = await solana.signMessage("Hello from Solana!");
-      Alert.alert("Solana Signed!", `Signature: ${signature.signature.slice(0, 10)}...`);
+      if (solana.isAvailable) {
+        const signature = await solana.solana.signMessage("Hello from Solana!");
+        Alert.alert("Solana Signed!", `Signature: ${signature.signature.slice(0, 10)}...`);
+      }
     } catch (error) {
       Alert.alert("Error", `Failed to sign: ${error.message}`);
     }
@@ -138,9 +140,11 @@ export function WalletScreen() {
 
   const handleSignEthereumMessage = async () => {
     try {
-      const accounts = await ethereum.getAccounts();
-      const signature = await ethereum.signPersonalMessage("Hello from Ethereum!", accounts[0]);
-      Alert.alert("Ethereum Signed!", `Signature: ${signature.signature.slice(0, 10)}...`);
+      if (ethereum.isAvailable) {
+        const accounts = await ethereum.ethereum.getAccounts();
+        const signature = await ethereum.ethereum.signPersonalMessage("Hello from Ethereum!", accounts[0]);
+        Alert.alert("Ethereum Signed!", `Signature: ${signature.slice(0, 10)}...`);
+      }
     } catch (error) {
       Alert.alert("Error", `Failed to sign: ${error.message}`);
     }
@@ -241,16 +245,18 @@ const {
 Provides access to Solana-specific operations.
 
 ```typescript
-const solana = useSolana();
+const { solana, isAvailable } = useSolana();
 
-// Sign a message
-const signature = await solana.signMessage("Hello Solana!");
+if (isAvailable) {
+  // Sign a message
+  const signature = await solana.signMessage("Hello Solana!");
 
-// Sign a transaction (without sending)
-const signedTx = await solana.signTransaction(transaction);
+  // Sign a transaction (without sending)
+  const signedTx = await solana.signTransaction(transaction);
 
-// Sign and send a transaction
-const result = await solana.signAndSendTransaction(transaction);
+  // Sign and send a transaction
+  const result = await solana.signAndSendTransaction(transaction);
+}
 ```
 
 #### useEthereum
@@ -258,22 +264,24 @@ const result = await solana.signAndSendTransaction(transaction);
 Provides access to Ethereum-specific operations.
 
 ```typescript
-const ethereum = useEthereum();
+const { ethereum, isAvailable } = useEthereum();
 
-// Get accounts
-const accounts = await ethereum.getAccounts();
+if (isAvailable) {
+  // Get accounts
+  const accounts = await ethereum.getAccounts();
 
-// Sign a personal message
-const signature = await ethereum.signPersonalMessage("Hello Ethereum!", accounts[0]);
+  // Sign a personal message
+  const signature = await ethereum.signPersonalMessage("Hello Ethereum!", accounts[0]);
 
-// Sign a transaction (without sending)
-const signedTx = await ethereum.signTransaction(transactionData);
+  // Sign a transaction (without sending)
+  const signedTx = await ethereum.signTransaction(transactionData);
 
-// Sign and send a transaction  
-const result = await ethereum.sendTransaction(transactionData);
+  // Sign and send a transaction  
+  const result = await ethereum.sendTransaction(transactionData);
 
-// Get current chain ID
-const chainId = await ethereum.getChainId();
+  // Get current chain ID
+  const chainId = await ethereum.getChainId();
+}
 ```
 
 #### useDisconnect
