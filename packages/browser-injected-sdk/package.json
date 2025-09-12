@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@phantom/constants": "workspace:^",
-    "@solana/web3.js": "^1.98.2"
+    "@phantom/sdk-types": "workspace:^"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",

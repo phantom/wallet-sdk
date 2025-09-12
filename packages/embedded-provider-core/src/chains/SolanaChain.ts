@@ -3,7 +3,8 @@ import type { ISolanaChain } from "@phantom/chains";
 import type { EmbeddedProvider } from "../embedded-provider";
 import { NetworkId } from "@phantom/constants";
 import bs58 from "bs58";
-import { parseSolanaTransactionSignature } from "@phantom/parsers";
+import { parseSolanaSignedTransaction } from "@phantom/parsers";
+import type { Transaction, VersionedTransaction } from "@phantom/sdk-types";
 
 /**
  * Embedded Solana chain implementation that is wallet adapter compliant
@@ -53,23 +54,26 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     };
   }
 
-  async signTransaction<T>(transaction: T): Promise<T> {
+  async signTransaction(transaction: Transaction | VersionedTransaction): Promise<Transaction | VersionedTransaction> {
     this.ensureConnected();
     const result = await this.provider.signTransaction({
       transaction,
       networkId: this.currentNetworkId,
     });
     
-    // For Solana, we need to extract the signature from the signed transaction
-    // Since the API returns a base64url encoded signed transaction, we parse it to get the signature
-    const signatureResult = parseSolanaTransactionSignature(result.rawTransaction);
+    // Parse the signed transaction from the API response
+    const signedResult = parseSolanaSignedTransaction(result.rawTransaction);
     
-    // Return the signature as the transaction result
-    // This maintains compatibility with wallet adapter expectations
-    return signatureResult.signature as unknown as T;
+    if (signedResult.transaction && !signedResult.fallback) {
+      // Return the parsed signed transaction object
+      return signedResult.transaction as Transaction | VersionedTransaction;
+    } else {
+      // If parsing failed, throw an error
+      throw new Error("Failed to parse signed transaction");
+    }
   }
 
-  async signAndSendTransaction<T>(transaction: T): Promise<{ signature: string }> {
+  async signAndSendTransaction(transaction: Transaction | VersionedTransaction): Promise<{ signature: string }> {
     this.ensureConnected();
     const result = await this.provider.signAndSendTransaction({
       transaction,
@@ -81,12 +85,12 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     return { signature: result.hash };
   }
 
-  async signAllTransactions<T>(transactions: T[]): Promise<T[]> {
+  async signAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<(Transaction | VersionedTransaction)[]> {
     const results = await Promise.all(transactions.map(tx => this.signTransaction(tx)));
     return results;
   }
 
-  async signAndSendAllTransactions<T>(transactions: T[]): Promise<{ signatures: string[] }> {
+  async signAndSendAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<{ signatures: string[] }> {
     const results = await Promise.all(transactions.map(tx => this.signAndSendTransaction(tx)));
     return { signatures: results.map(result => result.signature) };
   }

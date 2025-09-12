@@ -1,6 +1,6 @@
 import type { PhantomSolanaProvider } from "../types";
 import { InjectedSolanaStrategy } from "./injected";
-import type { Transaction } from "@solana/web3.js";
+import type { Transaction } from "@phantom/sdk-types";
 
 const mockTransaction = {} as Transaction;
 

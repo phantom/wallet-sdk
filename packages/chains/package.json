@@ -44,7 +44,8 @@
   },
   "dependencies": {
     "@phantom/constants": "workspace:^",
-    "@phantom/parsers": "workspace:^"
+    "@phantom/parsers": "workspace:^",
+    "@phantom/sdk-types": "workspace:^"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",

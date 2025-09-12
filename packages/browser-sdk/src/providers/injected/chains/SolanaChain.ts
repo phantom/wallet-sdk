@@ -5,6 +5,7 @@ import type { Extension } from "@phantom/browser-injected-sdk";
 import { AddressType } from "@phantom/client";
 import { Buffer } from "buffer";
 import type { ChainCallbacks } from "./ChainCallbacks";
+import type { Transaction, VersionedTransaction } from "@phantom/sdk-types";
 
 interface PhantomExtended {
   extension: Extension;
@@ -72,38 +73,38 @@ export class InjectedSolanaChain implements ISolanaChain {
     };
   }
 
-  async signTransaction<T>(transaction: T): Promise<T> {
+  async signTransaction(transaction: Transaction | VersionedTransaction): Promise<Transaction | VersionedTransaction> {
     if (!this.callbacks.isConnected()) {
       return Promise.reject(new Error("Provider not connected. Call provider connect first."));
     }
 
     try {
       const result = await this.phantom.solana.signTransaction(transaction as any);
-      return result as T;
+      return result as Transaction | VersionedTransaction;
     } catch (error) {
       return Promise.reject(error);
     }
   }
 
-  async signAndSendTransaction<T>(transaction: T): Promise<{ signature: string }> {
+  async signAndSendTransaction(transaction: Transaction | VersionedTransaction): Promise<{ signature: string }> {
     const result = await this.phantom.solana.signAndSendTransaction(transaction as any);
     return { signature: result.signature };
   }
 
-  async signAllTransactions<T>(transactions: T[]): Promise<T[]> {
+  async signAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<(Transaction | VersionedTransaction)[]> {
     if (!this.callbacks.isConnected()) {
       return Promise.reject(new Error("Provider not connected. Call provider connect first."));
     }
 
     try {
       const result = await this.phantom.solana.signAllTransactions(transactions as any[]);
-      return result as T[];
+      return result as (Transaction | VersionedTransaction)[];
     } catch (error) {
       return Promise.reject(error);
     }
   }
 
-  async signAndSendAllTransactions<T>(transactions: T[]): Promise<{ signatures: string[] }> {
+  async signAndSendAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<{ signatures: string[] }> {
     if (!this.callbacks.isConnected()) {
       return Promise.reject(new Error("Provider not connected. Call provider connect first."));
     }
