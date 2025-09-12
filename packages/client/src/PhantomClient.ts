@@ -57,6 +57,7 @@ import {
 } from "./types";
 
 import type { Stamper } from "@phantom/sdk-types";
+import { randomUUID } from "@phantom/utils";
 
 // TODO(napas): Auto generate this from the OpenAPI spec
 export interface SubmissionConfig {
@@ -497,11 +498,13 @@ export class PhantomClient {
         }
       }
 
+     
+
       const params: CreateOrganizationRequest = {
         organizationName: name,
         users: users.map(userConfig => ({
           role: userConfig.role === "ADMIN" ? KmsUserRole.admin : KmsUserRole.user,
-          username: userConfig.username || `user-${Date.now()}`,
+          username: userConfig.username || `user-${randomUUID()}}`,
           authenticators: userConfig.authenticators as any,
         })),
         tags,
