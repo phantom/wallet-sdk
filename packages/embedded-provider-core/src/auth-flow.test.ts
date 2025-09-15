@@ -458,7 +458,6 @@ describe("EmbeddedProvider Auth Flows", () => {
         expect.objectContaining({
           provider: "google",
           organizationId: "new-org-id",
-          parentOrganizationId: "test-org-id",
           appId: "test-app-id",
         }),
       );
@@ -617,7 +616,6 @@ describe("EmbeddedProvider Auth Flows", () => {
 
       expect(mockJWTAuth.authenticate).toHaveBeenCalledWith({
         organizationId: "new-org-id",
-        parentOrganizationId: "test-org-id",
         appId: "test-app-id",
         jwtToken: "valid-jwt-token",
         customAuthData: undefined,
@@ -799,7 +797,6 @@ describe("EmbeddedProvider Auth Flows", () => {
       expect(mockAuthProvider.authenticate).toHaveBeenCalledWith(
         expect.objectContaining({
           organizationId: "new-org-id",
-          parentOrganizationId: "test-org-id",
           appId: "test-app-id",
           sessionId: expect.any(String),
         }),

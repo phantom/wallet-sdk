@@ -141,7 +141,6 @@ describe("EmbeddedProvider Core", () => {
       expect(mockPlatform.authProvider.authenticate).toHaveBeenCalledWith(
         expect.objectContaining({
           provider: "google",
-          parentOrganizationId: config.organizationId,
         }),
       );
     });
@@ -217,7 +216,7 @@ describe("EmbeddedProvider Core", () => {
 
       // Verify createOrganization was called with organization name and users array
       expect(mockCreateOrganization).toHaveBeenCalledWith(
-        expect.stringMatching(/^test-org-test-platform-11111111$/), // organization name with platform info (first 8 chars)
+        expect.stringMatching(/^test-app-test-platform-11111111$/), // organization name with platform info (first 8 chars)
         expect.arrayContaining([
           expect.objectContaining({
             username: expect.stringContaining("user-"),

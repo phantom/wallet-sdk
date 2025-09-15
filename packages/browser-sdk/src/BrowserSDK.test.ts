@@ -62,7 +62,6 @@ describe("BrowserSDK", () => {
 
       expect(MockEmbeddedProvider).toHaveBeenCalledWith({
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
-        organizationId: "app-123",
         appId: "app-123",
         authOptions: {
           authUrl: "https://auth.phantom.com",
@@ -88,7 +87,6 @@ describe("BrowserSDK", () => {
 
       expect(MockEmbeddedProvider).toHaveBeenCalledWith({
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
-        organizationId: "app-123",
         appId: "app-123",
         authOptions: {
           authUrl: "https://auth.phantom.com",
