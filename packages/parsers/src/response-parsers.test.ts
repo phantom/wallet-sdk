@@ -247,7 +247,7 @@ describe("Response Parsing", () => {
           expect(serialized.length).toBeGreaterThan(0);
 
         } catch (serializeError) {
-
+          throw new Error("Failed to serialize the parsed transaction");
         }
       }
     });
