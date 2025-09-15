@@ -8,7 +8,7 @@ import { getExplorerUrl } from "@phantom/constants";
 import { base64urlDecode } from "@phantom/base64url";
 import { Buffer } from "buffer";
 import bs58 from "bs58";
-import { Transaction } from "@solana/web3.js";
+import { Transaction, VersionedTransaction } from "@solana/web3.js";
 
 export interface ParsedSignatureResult {
   signature: string; // Human-readable signature (hex/base58)
@@ -160,26 +160,31 @@ function parseBitcoinSignatureResponse(base64Response: string): ParsedSignatureR
 
 /**
  * Parse Solana signed transaction from base64url encoded transaction bytes
+ * Supports both legacy Transaction and VersionedTransaction formats
  */
-export function parseSolanaSignedTransaction(base64RawTransaction: string): {
-  transaction: Transaction | null;
-  fallback: boolean;
-} {
+export function parseSolanaSignedTransaction(base64RawTransaction: string): Transaction | VersionedTransaction | null {
   try {
     // Use @solana/web3.js to properly parse the transaction
     const transactionBytes = Buffer.from(base64RawTransaction, "base64url");
-    const transaction = Transaction.from(transactionBytes);
-
-    return {
-      transaction,
-      fallback: false,
-    };
+    
+    // First try to parse as a legacy Transaction
+    try {
+      const transaction = Transaction.from(transactionBytes);
+      return transaction;
+    } catch (legacyError) {
+      // If legacy parsing fails, try as VersionedTransaction
+      // Legacy parsing fails with specific error for versioned messages
+      if (legacyError instanceof Error && legacyError.message.includes("Versioned messages")) {
+        const versionedTransaction = VersionedTransaction.deserialize(transactionBytes);
+        return versionedTransaction;
+      }
+      // Re-throw if it's a different error
+      throw legacyError;
+    }
   } catch (error) {
-    // Fallback: return null transaction
-    return {
-      transaction: null,
-      fallback: true,
-    };
-  }
+    // Fallback: return null if both parsing methods fail
+    return null;
+  };
 }
+
 
