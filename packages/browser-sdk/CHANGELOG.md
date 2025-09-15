@@ -6,7 +6,7 @@
 
 - 6622863: Fixed exported types
 - Updated dependencies [6622863]
-  - @phantom/chains@1.0.0-beta.5
+  - @phantom/chain-interfaces@1.0.0-beta.5
   - @phantom/base64url@1.0.0-beta.5
   - @phantom/constants@1.0.0-beta.5
   - @phantom/sdk-types@1.0.0-beta.5
@@ -23,7 +23,7 @@
   - @phantom/sdk-types@1.0.0-beta.4
   - @phantom/base64url@1.0.0-beta.4
   - @phantom/constants@1.0.0-beta.4
-  - @phantom/chains@1.0.0-beta.4
+  - @phantom/chain-interfaces@1.0.0-beta.4
   - @phantom/parsers@1.0.0-beta.4
   - @phantom/client@1.0.0-beta.4
   - @phantom/embedded-provider-core@1.0.0-beta.4
@@ -39,7 +39,7 @@
   - @phantom/embedded-provider-core@1.0.0-beta.3
   - @phantom/constants@1.0.0-beta.3
   - @phantom/browser-injected-sdk@1.0.0-beta.3
-  - @phantom/chains@1.0.0-beta.3
+  - @phantom/chain-interfaces@1.0.0-beta.3
   - @phantom/client@1.0.0-beta.3
   - @phantom/base64url@1.0.0-beta.3
   - @phantom/parsers@1.0.0-beta.3
@@ -55,7 +55,7 @@
   - @phantom/embedded-provider-core@1.0.0-beta.2
   - @phantom/parsers@1.0.0-beta.2
   - @phantom/browser-injected-sdk@1.0.0-beta.2
-  - @phantom/chains@1.0.0-beta.2
+  - @phantom/chain-interfaces@1.0.0-beta.2
   - @phantom/client@1.0.0-beta.2
   - @phantom/base64url@1.0.0-beta.2
   - @phantom/constants@1.0.0-beta.2
@@ -68,7 +68,7 @@
 - Updated dependencies [8cd9ac7]
   - @phantom/base64url@1.0.0-beta.1
   - @phantom/browser-injected-sdk@1.0.0-beta.1
-  - @phantom/chains@1.0.0-beta.1
+  - @phantom/chain-interfaces@1.0.0-beta.1
   - @phantom/client@1.0.0-beta.1
   - @phantom/constants@1.0.0-beta.1
   - @phantom/embedded-provider-core@1.0.0-beta.1
@@ -92,7 +92,7 @@
   - @phantom/browser-injected-sdk@1.0.0-beta.0
   - @phantom/constants@1.0.0-beta.0
   - @phantom/parsers@1.0.0-beta.0
-  - @phantom/chains@1.0.0-beta.0
+  - @phantom/chain-interfaces@1.0.0-beta.0
   - @phantom/base64url@1.0.0-beta.0
 
 ## 0.3.9

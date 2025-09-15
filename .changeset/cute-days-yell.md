@@ -5,7 +5,7 @@
 "@phantom/wallet-sdk": patch
 "@phantom/browser-injected-sdk": patch
 "@phantom/browser-sdk": patch
-"@phantom/chains": patch
+"@phantom/chain-interfaces": patch
 "@phantom/client": patch
 "@phantom/constants": patch
 "@phantom/crypto": patch
