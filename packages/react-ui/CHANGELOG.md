@@ -1,5 +1,16 @@
 # @phantom/react-ui
 
+## 2.0.0-beta.3
+
+### Patch Changes
+
+- 6622863: Fixed exported types
+- Updated dependencies [6622863]
+  - @phantom/browser-sdk@1.0.0-beta.5
+  - @phantom/react-sdk@1.0.0-beta.5
+  - @phantom/parsers@1.0.0-beta.5
+  - @phantom/client@1.0.0-beta.5
+
 ## 2.0.0-beta.2
 
 ### Patch Changes

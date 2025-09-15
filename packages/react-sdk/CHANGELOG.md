@@ -1,5 +1,15 @@
 # @phantom/react-sdk
 
+## 1.0.0-beta.5
+
+### Patch Changes
+
+- 6622863: Fixed exported types
+- Updated dependencies [6622863]
+  - @phantom/chains@1.0.0-beta.5
+  - @phantom/browser-sdk@1.0.0-beta.5
+  - @phantom/constants@1.0.0-beta.5
+
 ## 1.0.0-beta.4
 
 ### Patch Changes
