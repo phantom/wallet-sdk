@@ -1,5 +1,5 @@
 import { EventEmitter } from "eventemitter3";
-import type { ISolanaChain } from "@phantom/chains";
+import type { ISolanaChain } from "@phantom/chain-interfaces";
 import type { Solana } from "@phantom/browser-injected-sdk/solana";
 import type { Extension } from "@phantom/browser-injected-sdk";
 import { AddressType } from "@phantom/client";

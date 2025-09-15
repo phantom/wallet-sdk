@@ -1,5 +1,5 @@
 import { EventEmitter } from "eventemitter3";
-import type { ISolanaChain } from "@phantom/chains";
+import type { ISolanaChain } from "@phantom/chain-interfaces";
 import type { EmbeddedProvider } from "../embedded-provider";
 import { NetworkId } from "@phantom/constants";
 import bs58 from "bs58";

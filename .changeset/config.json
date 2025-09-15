@@ -7,7 +7,7 @@
       "@phantom/base64url",
       "@phantom/constants",
       "@phantom/sdk-types",
-      "@phantom/chains",
+      "@phantom/chain-interfaces",
       "@phantom/parsers",
       "@phantom/crypto",
       "@phantom/api-key-stamper"
