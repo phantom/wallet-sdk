@@ -47,6 +47,7 @@ export interface ServerSignTransactionParams {
   transaction: any; // Various transaction formats - automatically parsed
   networkId: NetworkId;
   derivationIndex?: number; // Optional account derivation index (defaults to 0)
+  account?: string; // Optional specific account address to use for simulation
 }
 
 export interface ServerSignAndSendTransactionParams {
@@ -54,6 +55,7 @@ export interface ServerSignAndSendTransactionParams {
   transaction: any; // Various transaction formats - automatically parsed
   networkId: NetworkId;
   derivationIndex?: number; // Optional account derivation index (defaults to 0)
+  account?: string; // Optional specific account address to use for simulation
 }
 
 /**
@@ -150,6 +152,7 @@ export class ServerSDK {
       transaction: parsedTransaction.base64url,
       networkId: params.networkId,
       derivationIndex: params.derivationIndex,
+      account: params.account,
     };
 
     // Get raw response from client
@@ -174,6 +177,7 @@ export class ServerSDK {
       transaction: parsedTransaction.base64url,
       networkId: params.networkId,
       derivationIndex: params.derivationIndex,
+      account: params.account,
     };
     // Get raw response from client
     const rawResponse = await this.client.signAndSendTransaction(signAndSendParams);

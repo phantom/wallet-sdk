@@ -32,7 +32,7 @@ import {
   type ExternalDerivedAccount,
   KmsUserRole,
   type ExternalKmsOrganization,
-  type DerivationInfoAddressFormatEnum,
+  type DerivationInfoAddressFormatEnum as AddressType,
   type ExternalKmsAuthenticator,
 } from "@phantom/openapi-wallet-service";
 import { 
@@ -63,6 +63,10 @@ import { randomUUID } from "@phantom/utils";
 export interface SubmissionConfig {
   chain: string; // e.g., 'solana', 'ethereum', 'polygon'
   network: string; // e.g., 'mainnet', 'devnet', 'sepolia'
+}
+
+export interface SimulationConfig {
+  account: string; // The address/account that is signing the transaction
 }
 
 export class PhantomClient {
@@ -187,7 +191,7 @@ export class PhantomClient {
    */
   private async performTransactionSigning(
     params: SignTransactionParams, 
-    includeSubmissionConfig: boolean
+    includeSubmissionConfig: boolean,
   ): Promise<{ signedTransaction: string; hash?: string }> {
     const walletId = params.walletId;
     const transactionParam = params.transaction;
@@ -214,6 +218,7 @@ export class PhantomClient {
         }
       }
 
+
       // Get network configuration with custom derivation index
       const networkConfig = getNetworkConfig(networkIdParam, derivationIndex);
 
@@ -227,8 +232,11 @@ export class PhantomClient {
         addressFormat: networkConfig.addressFormat,
       };
 
-      // Sign transaction request - only include submissionConfig if available
-      const signRequest: SignTransactionRequest & { submissionConfig?: SubmissionConfig } = {
+      // Sign transaction request - include configs if available
+      const signRequest: SignTransactionRequest & { 
+        submissionConfig?: SubmissionConfig;
+        simulationConfig?: SimulationConfig;
+      } = {
         organizationId: this.config.organizationId,
         walletId: walletId,
         transaction: encodedTransaction as any,
@@ -238,6 +246,13 @@ export class PhantomClient {
       // Add submission config if available and requested
       if (includeSubmissionConfig && submissionConfig) {
         signRequest.submissionConfig = submissionConfig;
+      }
+
+      // Add simulation config if provided
+      if (params.account) {
+        signRequest.simulationConfig = {
+          account: params.account,
+        };
       }
 
       const request: SignTransaction = {
@@ -265,8 +280,10 @@ export class PhantomClient {
   /**
    * Sign a transaction
    */
-  async signTransaction(params: SignTransactionParams): Promise<SignedTransactionResult> {
+  async signTransaction(params: SignTransactionParams,): Promise<SignedTransactionResult> {
+   
     const result = await this.performTransactionSigning(params, false);
+
     return {
       rawTransaction: result.signedTransaction,
     };
@@ -276,6 +293,7 @@ export class PhantomClient {
    * Sign and send a transaction
    */
   async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<SignedTransaction> {
+   
     const result = await this.performTransactionSigning(params, true);
     return {
       rawTransaction: result.signedTransaction,
@@ -287,7 +305,7 @@ export class PhantomClient {
     walletId: string,
     derivationPaths?: string[],
     derivationIndex?: number,
-  ): Promise<{ addressType: DerivationInfoAddressFormatEnum; address: string }[]> {
+  ): Promise<{ addressType: AddressType; address: string }[]> {
     try {
       const accountIndex = derivationIndex ?? 0;
       const paths = derivationPaths || [
@@ -310,10 +328,12 @@ export class PhantomClient {
       const accountsResponse = await this.kmsApi.postKmsRpc(requestAccounts);
       const accountsResult = (accountsResponse.data as any).result as (ExternalDerivedAccount & { address: string })[];
 
-      return accountsResult.map(account => ({
+      const addresses = accountsResult.map(account => ({
         addressType: account.addressFormat,
         address: account.address,
       }));
+
+      return addresses;
     } catch (error: any) {
       console.error("Failed to get wallet addresses:", error.response?.data || error.message);
       throw new Error(`Failed to get wallet addresses: ${error.response?.data?.message || error.message}`);
