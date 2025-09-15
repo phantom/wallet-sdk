@@ -14,6 +14,7 @@ const config = {
     "<rootDir>/packages/embedded-provider-core/jest.config.js",
     "<rootDir>/packages/server-sdk/jest.config.js",
     "<rootDir>/packages/utils/jest.config.js",
+    "<rootDir>/packages/chain-interfaces/jest.config.js",
     "<rootDir>/examples/browser-embedded-sdk-demo-app",
     "<rootDir>/examples/react-sdk-demo-app",
     "<rootDir>/examples/browser-sdk-demo-app",

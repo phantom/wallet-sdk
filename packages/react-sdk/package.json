@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@phantom/browser-sdk": "workspace:^",
-    "@phantom/chains": "workspace:^",
+    "@phantom/chain-interfaces": "workspace:^",
     "@phantom/constants": "workspace:^"
   },
   "devDependencies": {

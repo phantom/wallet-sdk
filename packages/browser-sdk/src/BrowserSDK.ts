@@ -2,7 +2,7 @@ import type { BrowserSDKConfig, ConnectResult, WalletAddress, AuthOptions } from
 import { ProviderManager, type SwitchProviderOptions, type ProviderPreference } from "./ProviderManager";
 import { debug, DebugCategory, type DebugLevel, type DebugCallback } from "./debug";
 import { waitForPhantomExtension } from "./waitForPhantomExtension";
-import type { ISolanaChain, IEthereumChain } from "@phantom/chains";
+import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
 import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-provider-core";
 import type { InjectedProvider } from "./providers/injected";
 import { DEFAULT_EMBEDDED_WALLET_TYPE } from "@phantom/constants";

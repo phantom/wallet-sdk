@@ -21,7 +21,7 @@ interface PhantomExtended {
 }
 import { debug, DebugCategory } from "../../debug";
 import { InjectedSolanaChain, InjectedEthereumChain, type ChainCallbacks } from "./chains";
-import type { ISolanaChain, IEthereumChain } from "@phantom/chains";
+import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
 
 declare global {
   interface Window {
