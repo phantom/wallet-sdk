@@ -423,7 +423,7 @@ adb shell am start -W -a android.intent.action.VIEW -d "myapp://phantom-auth-cal
    - Check `app.json` (Expo) or platform-specific configuration
 
 2. **"Authentication failed"**
-   - Verify your organization ID is correct
+   - Verify your app ID is correct
    - Check network connectivity
    - Ensure redirect URL matches your scheme
 

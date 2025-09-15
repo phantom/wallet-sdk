@@ -64,8 +64,8 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
     const urlParamsAccessor = new ExpoURLParamsAccessor();
     const logger = new ExpoLogger(debugConfig?.enabled || false);
     const stamper = new ReactNativeStamper({
-      keyPrefix: `phantom-rn-${memoizedConfig.organizationId}`,
-      organizationId: memoizedConfig.organizationId,
+      keyPrefix: `phantom-rn-${memoizedConfig.appId}`,
+      appId: memoizedConfig.appId,
     });
 
     const platformName = `${Platform.OS}-${Platform.Version}`;

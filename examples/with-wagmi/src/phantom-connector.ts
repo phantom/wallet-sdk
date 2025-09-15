@@ -16,7 +16,6 @@ export function phantomConnector() {
       sdk = new BrowserSDK({
         providerType: 'embedded',
         appId: "test-app-id",
-        organizationId: "test-org-id",
         apiBaseUrl: 'https://staging-api.phantom.app/v1/wallets',
 
         authOptions: {

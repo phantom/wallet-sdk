@@ -7,7 +7,6 @@ export interface AuthResult {
 
 export interface PhantomConnectOptions {
   organizationId: string;
-  parentOrganizationId: string;
   appId: string;
   provider?: "google" | "apple";
   redirectUrl?: string;
@@ -19,7 +18,6 @@ export interface PhantomConnectOptions {
 export interface JWTAuthOptions {
   appId: string;
   organizationId: string;
-  parentOrganizationId: string;
   jwtToken: string;
   customAuthData?: Record<string, any>;
 }

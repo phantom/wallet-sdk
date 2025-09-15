@@ -1,4 +1,4 @@
-import type { BrowserSDKConfig, Provider, ConnectResult, WalletAddress, AuthOptions } from "./types";
+import { type BrowserSDKConfig, type Provider, type ConnectResult, type WalletAddress, type AuthOptions, AddressType } from "./types";
 import { InjectedProvider } from "./providers/injected";
 import { EmbeddedProvider } from "./providers/embedded";
 import { debug, DebugCategory } from "./debug";
@@ -292,7 +292,7 @@ export class ProviderManager implements EventEmitter {
 
     if (type === "injected") {
       provider = new InjectedProvider({
-        addressTypes: this.config.addressTypes,
+        addressTypes: this.config.addressTypes || [AddressType.solana],
       });
     } else if (type === "embedded") {
       if (!this.config.appId) {
@@ -304,7 +304,6 @@ export class ProviderManager implements EventEmitter {
 
       provider = new EmbeddedProvider({
         apiBaseUrl,
-        organizationId: this.config.appId,
         appId: this.config.appId,
         authOptions: {
           ...(this.config.authOptions || {}),
@@ -312,7 +311,7 @@ export class ProviderManager implements EventEmitter {
           redirectUrl: this.config.authOptions?.redirectUrl || this.getValidatedCurrentUrl(),
         },
         embeddedWalletType: embeddedWalletType || DEFAULT_EMBEDDED_WALLET_TYPE,
-        addressTypes: this.config.addressTypes,
+        addressTypes: this.config.addressTypes || [AddressType.solana],
       });
     } else {
       throw new Error(`Unsupported provider type: ${type}`);

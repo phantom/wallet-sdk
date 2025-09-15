@@ -25,8 +25,7 @@ export class JWTAuth {
           "X-PHANTOM-APPID": options.appId,
         },
         body: JSON.stringify({
-          organizationId: options.organizationId,
-          parentOrganizationId: options.parentOrganizationId,
+          appId: options.appId,
           customAuthData: options.customAuthData,
         }),
       });

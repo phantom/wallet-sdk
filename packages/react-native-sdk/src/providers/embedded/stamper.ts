@@ -8,7 +8,7 @@ import type { Buffer } from "buffer";
 
 export interface ReactNativeStamperConfig {
   keyPrefix?: string;
-  organizationId?: string;
+  appId?: string;
 }
 
 // Re-export for backwards compatibility
@@ -29,7 +29,7 @@ interface StoredKeyRecord {
  */
 export class ReactNativeStamper implements StamperWithKeyManagement {
   private keyPrefix: string;
-  private organizationId: string;
+  private appId: string;
   private activeKeyRecord: StoredKeyRecord | null = null;
   private pendingKeyRecord: StoredKeyRecord | null = null;
   algorithm = Algorithm.ed25519;
@@ -39,7 +39,7 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
 
   constructor(config: ReactNativeStamperConfig = {}) {
     this.keyPrefix = config.keyPrefix || "phantom-rn-stamper";
-    this.organizationId = config.organizationId || "default";
+    this.appId = config.appId || "default";
   }
 
   /**
@@ -251,11 +251,11 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
   }
 
   private getActiveKeyName(): string {
-    return `${this.keyPrefix}-${this.organizationId}-active`;
+    return `${this.keyPrefix}-${this.appId}-active`;
   }
 
   private getPendingKeyName(): string {
-    return `${this.keyPrefix}-${this.organizationId}-pending`;
+    return `${this.keyPrefix}-${this.appId}-pending`;
   }
 }
 

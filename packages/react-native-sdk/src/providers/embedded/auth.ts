@@ -13,7 +13,7 @@ export class ExpoAuthProvider implements AuthProvider {
 
     // Handle redirect-based authentication
     const phantomOptions = options as PhantomConnectOptions;
-    const { authUrl, redirectUrl, organizationId, parentOrganizationId, sessionId, provider, customAuthData, appId } =
+    const { authUrl, redirectUrl, organizationId, sessionId, provider, customAuthData, appId } =
       phantomOptions;
 
     if (!redirectUrl) {
@@ -30,7 +30,6 @@ export class ExpoAuthProvider implements AuthProvider {
 
       const params = new URLSearchParams({
         organization_id: organizationId,
-        parent_organization_id: parentOrganizationId,
         app_id: appId,
         redirect_uri: redirectUrl,
         session_id: sessionId,
@@ -59,7 +58,6 @@ export class ExpoAuthProvider implements AuthProvider {
         baseUrl,
         redirectUrl,
         organizationId,
-        parentOrganizationId,
         sessionId,
         provider,
         hasCustomData: !!customAuthData,
