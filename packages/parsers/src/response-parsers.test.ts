@@ -212,62 +212,76 @@ describe("Response Parsing", () => {
       }
     });
 
-    it("should handle real transaction from API", () => {
+    it("should handle real transaction from API and return actual object", () => {
       // Real transaction from the API that was failing
       const realTransaction = "AbRdyl4GljepGZRbuACGx7TlNyDaulRonkhfTuuMvs3MblTXd1N6PjEwFLD9AwiZvVTMqrEFbIwaQRHOFquFygCAAQABAnwN13utnim-rGHMhoveMUcnt5an_UXb_rTO9JKXN38_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACxZajcGon7qaDgjOX_3mV4C7LdWpydUOj3GK0KM2q-CgEBAgAADAIAAADoAwAAAAAAAAA";
 
-      console.log("Testing real transaction:", realTransaction.substring(0, 50) + "...");
+      console.log("🧪 Testing real transaction with detailed object inspection...");
       
       const result = parseSolanaSignedTransaction(realTransaction);
       
-      if (result === null) {
-        console.log("❌ Real transaction parsing failed - returned null");
-        
-        // Let's try to understand why it's failing by testing the base64url decoding step
-        try {
-          const transactionBytes = Buffer.from(realTransaction, "base64url");
-          console.log("✅ Base64url decoding successful. Length:", transactionBytes.length);
-          console.log("First 20 bytes:", Array.from(transactionBytes.slice(0, 20)).map(b => b.toString(16).padStart(2, '0')).join(' '));
-          
-          // Now let's see if it's a versioned transaction vs legacy transaction
-          try {
-            // Try parsing as legacy transaction first
-            const { Transaction } = require("@solana/web3.js");
-            const legacyTx = Transaction.from(transactionBytes);
-            console.log("✅ Successfully parsed as Legacy Transaction");
-            console.log("Signatures:", legacyTx.signatures.length);
-            console.log("Instructions:", legacyTx.instructions.length);
-          } catch (legacyError) {
-            console.log("❌ Legacy Transaction parsing failed:", legacyError.message);
-            
-            // Try parsing as versioned transaction
-            try {
-              const { VersionedTransaction } = require("@solana/web3.js");
-              const versionedTx = VersionedTransaction.deserialize(transactionBytes);
-              console.log("✅ Successfully parsed as VersionedTransaction");
-              console.log("Version:", versionedTx.version);
-              console.log("Signatures:", versionedTx.signatures.length);
-              console.log("Message type:", typeof versionedTx.message);
-            } catch (versionedError) {
-              console.log("❌ VersionedTransaction parsing also failed:", versionedError.message);
-            }
-          }
-        } catch (base64Error) {
-          console.log("❌ Base64url decoding failed:", base64Error.message);
-        }
-      } else {
-        console.log("✅ Real transaction parsing successful!");
-        console.log("Transaction type:", result.constructor.name);
-        console.log("Signatures:", result.signatures?.length || 'N/A');
-      }
-
-      // Now we expect this to succeed since we handle both legacy and versioned transactions
+      // First, verify it's not null and is defined
       expect(result).not.toBeNull();
       expect(result).toBeDefined();
+      console.log("✅ Result is not null and is defined");
+
+      // Assert it's actually a transaction object
+      expect(result).toBeInstanceOf(Object);
+      console.log("✅ Result is an object instance");
       
-      // This should be a VersionedTransaction based on our debugging output
       if (result !== null) {
+        // Verify it's specifically a VersionedTransaction
         expect(result.constructor.name).toBe("VersionedTransaction");
+        console.log("✅ Result is a VersionedTransaction instance");
+        
+        // Test that it has the expected properties of a VersionedTransaction
+        expect(result).toHaveProperty('version');
+        expect(result).toHaveProperty('message');
+        expect(result).toHaveProperty('signatures');
+        console.log("✅ Result has expected VersionedTransaction properties");
+        
+        // Access and verify specific properties
+        console.log("📊 Transaction details:");
+        console.log("  - Version:", result.version);
+        console.log("  - Signatures count:", result.signatures.length);
+        console.log("  - Message type:", typeof result.message);
+        console.log("  - Has message.header:", result.message && typeof result.message === 'object' && 'header' in result.message);
+        
+        // Assert specific values we expect
+        expect(result.version).toBe(0); // Should be version 0
+        expect(result.signatures).toHaveLength(1); // Should have 1 signature
+        expect(result.message).toBeDefined();
+        expect(typeof result.message).toBe('object');
+        
+        console.log("✅ All property assertions passed - this is a real VersionedTransaction object!");
+        
+        // Try to access message properties to prove it's fully parsed
+        if (result.message && typeof result.message === 'object' && 'header' in result.message) {
+          const message = result.message as any;
+          console.log("📋 Message details:");
+          console.log("  - Header exists:", !!message.header);
+          if (message.header) {
+            console.log("  - Num required signatures:", message.header.numRequiredSignatures);
+            console.log("  - Num readonly signed accounts:", message.header.numReadonlySignedAccounts);  
+            console.log("  - Num readonly unsigned accounts:", message.header.numReadonlyUnsignedAccounts);
+          }
+          if (message.staticAccountKeys) {
+            console.log("  - Static account keys count:", message.staticAccountKeys.length);
+          }
+          if (message.compiledInstructions) {
+            console.log("  - Compiled instructions count:", message.compiledInstructions.length);
+          }
+        }
+        
+        // Final verification: try to serialize it back (proves it's a real object)
+        try {
+          const serialized = result.serialize();
+          expect(serialized).toBeInstanceOf(Uint8Array);
+          expect(serialized.length).toBeGreaterThan(0);
+          console.log("✅ Transaction can be serialized back to bytes (", serialized.length, "bytes) - definitely real!");
+        } catch (serializeError) {
+          console.log("⚠️  Serialization test failed:", serializeError);
+        }
       }
     });
 

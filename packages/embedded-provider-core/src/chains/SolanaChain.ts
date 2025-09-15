@@ -60,10 +60,8 @@ export class EmbeddedSolanaChain implements ISolanaChain {
       transaction,
       networkId: this.currentNetworkId,
     });
-    
     // Parse the signed transaction from the API response
     const signedResult = parseSolanaSignedTransaction(result.rawTransaction);
-    
     if (signedResult) {
       // Return the parsed signed transaction object
       return signedResult as Transaction | VersionedTransaction;

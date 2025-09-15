@@ -164,8 +164,8 @@ function parseBitcoinSignatureResponse(base64Response: string): ParsedSignatureR
  */
 export function parseSolanaSignedTransaction(base64RawTransaction: string): Transaction | VersionedTransaction | null {
   try {
-    // Use @solana/web3.js to properly parse the transaction
-    const transactionBytes = Buffer.from(base64RawTransaction, "base64url");
+    // Use @phantom/base64url utility for proper browser compatibility
+    const transactionBytes = base64urlDecode(base64RawTransaction);
     
     // First try to parse as a legacy Transaction
     try {
