@@ -188,7 +188,7 @@ describe("Response Parsing", () => {
       // Create invalid transaction data that will fail Transaction.from() parsing
       const mockBytes = new Uint8Array(200);
       mockBytes.fill(42, 0, 200);
-      
+
       const base64Transaction = base64urlEncode(mockBytes);
 
       const result = parseSolanaSignedTransaction(base64Transaction);
@@ -199,7 +199,7 @@ describe("Response Parsing", () => {
     it("should handle various input sizes", () => {
       // Test with different input sizes that will fail parsing
       const sizes = [64, 100, 200, 500];
-      
+
       for (const size of sizes) {
         const mockBytes = new Uint8Array(size);
         mockBytes.fill(42, 0, size);
@@ -216,71 +216,38 @@ describe("Response Parsing", () => {
       // Real transaction from the API that was failing
       const realTransaction = "AbRdyl4GljepGZRbuACGx7TlNyDaulRonkhfTuuMvs3MblTXd1N6PjEwFLD9AwiZvVTMqrEFbIwaQRHOFquFygCAAQABAnwN13utnim-rGHMhoveMUcnt5an_UXb_rTO9JKXN38_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACxZajcGon7qaDgjOX_3mV4C7LdWpydUOj3GK0KM2q-CgEBAgAADAIAAADoAwAAAAAAAAA";
 
-      console.log("🧪 Testing real transaction with detailed object inspection...");
-      
       const result = parseSolanaSignedTransaction(realTransaction);
-      
+
       // First, verify it's not null and is defined
       expect(result).not.toBeNull();
       expect(result).toBeDefined();
-      console.log("✅ Result is not null and is defined");
 
       // Assert it's actually a transaction object
       expect(result).toBeInstanceOf(Object);
-      console.log("✅ Result is an object instance");
-      
+
       if (result !== null) {
         // Verify it's specifically a VersionedTransaction
         expect(result.constructor.name).toBe("VersionedTransaction");
-        console.log("✅ Result is a VersionedTransaction instance");
-        
+
         // Test that it has the expected properties of a VersionedTransaction
         expect(result).toHaveProperty('version');
         expect(result).toHaveProperty('message');
         expect(result).toHaveProperty('signatures');
-        console.log("✅ Result has expected VersionedTransaction properties");
-        
-        // Access and verify specific properties
-        console.log("📊 Transaction details:");
-        console.log("  - Version:", result.version);
-        console.log("  - Signatures count:", result.signatures.length);
-        console.log("  - Message type:", typeof result.message);
-        console.log("  - Has message.header:", result.message && typeof result.message === 'object' && 'header' in result.message);
-        
+
         // Assert specific values we expect
         expect(result.version).toBe(0); // Should be version 0
         expect(result.signatures).toHaveLength(1); // Should have 1 signature
         expect(result.message).toBeDefined();
         expect(typeof result.message).toBe('object');
-        
-        console.log("✅ All property assertions passed - this is a real VersionedTransaction object!");
-        
-        // Try to access message properties to prove it's fully parsed
-        if (result.message && typeof result.message === 'object' && 'header' in result.message) {
-          const message = result.message as any;
-          console.log("📋 Message details:");
-          console.log("  - Header exists:", !!message.header);
-          if (message.header) {
-            console.log("  - Num required signatures:", message.header.numRequiredSignatures);
-            console.log("  - Num readonly signed accounts:", message.header.numReadonlySignedAccounts);  
-            console.log("  - Num readonly unsigned accounts:", message.header.numReadonlyUnsignedAccounts);
-          }
-          if (message.staticAccountKeys) {
-            console.log("  - Static account keys count:", message.staticAccountKeys.length);
-          }
-          if (message.compiledInstructions) {
-            console.log("  - Compiled instructions count:", message.compiledInstructions.length);
-          }
-        }
-        
+
         // Final verification: try to serialize it back (proves it's a real object)
         try {
           const serialized = result.serialize();
           expect(serialized).toBeInstanceOf(Uint8Array);
           expect(serialized.length).toBeGreaterThan(0);
-          console.log("✅ Transaction can be serialized back to bytes (", serialized.length, "bytes) - definitely real!");
+
         } catch (serializeError) {
-          console.log("⚠️  Serialization test failed:", serializeError);
+
         }
       }
     });
@@ -288,11 +255,11 @@ describe("Response Parsing", () => {
     it("should handle both legacy and versioned transactions", () => {
       // Test the real versioned transaction
       const versionedTransaction = "AbRdyl4GljepGZRbuACGx7TlNyDaulRonkhfTuuMvs3MblTXd1N6PjEwFLD9AwiZvVTMqrEFbIwaQRHOFquFygCAAQABAnwN13utnim-rGHMhoveMUcnt5an_UXb_rTO9JKXN38_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACxZajcGon7qaDgjOX_3mV4C7LdWpydUOj3GK0KM2q-CgEBAgAADAIAAADoAwAAAAAAAAA";
-      
+
       const versionedResult = parseSolanaSignedTransaction(versionedTransaction);
       expect(versionedResult).not.toBeNull();
       expect(versionedResult?.constructor.name).toBe("VersionedTransaction");
-      
+
       // Note: We'd need a real legacy transaction to test that path properly
       // For now, let's test that invalid transactions still return null
       const invalidTransaction = "invalid-base64!!!";
