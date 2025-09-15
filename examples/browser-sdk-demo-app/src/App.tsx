@@ -281,7 +281,7 @@ function App() {
       const result = await sdk.solana.signTransaction(transaction)
 
       console.log("Transaction signed:", result)
-      alert(`Transaction signed: ${JSON.stringify(result)}`)
+      alert(`Transaction signed: ${result}`)
     } catch (error) {
       console.error("Error signing transaction:", error)
       setError((error as Error).message || 'Failed to sign transaction')
