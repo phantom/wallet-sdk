@@ -446,9 +446,7 @@ export class EmbeddedProvider {
     const platformName = this.platform.name || "unknown";
     const shortPubKey = stamperInfo.publicKey.slice(0, 8);
     
-    
-    
-    const organizationName = `${this.config.organizationId.substring(0, 8)}-${platformName}-${shortPubKey}`;
+    const organizationName = `${this.config.appId.substring(0, 8)}-${platformName}-${shortPubKey}`;
 
     this.logger.log("EMBEDDED_PROVIDER", "Creating organization", {
       organizationName,
@@ -794,7 +792,6 @@ export class EmbeddedProvider {
         // In react-native this will return an auth result
         this.logger.info("EMBEDDED_PROVIDER", "Starting redirect-based authentication flow", {
           organizationId,
-          parentOrganizationId: this.config.organizationId,
           provider: authOptions?.provider,
         });
         return await this.handleRedirectAuth(organizationId, stamperInfo, authOptions, username);
@@ -868,7 +865,6 @@ export class EmbeddedProvider {
     const authResult = await this.jwtAuth.authenticate({
       organizationId,
       appId: this.config.appId,
-      parentOrganizationId: this.config.organizationId,
       jwtToken: authOptions.jwtToken,
       customAuthData: authOptions.customAuthData,
     });
@@ -948,7 +944,6 @@ export class EmbeddedProvider {
 
     this.logger.info("EMBEDDED_PROVIDER", "Starting Phantom Connect redirect", {
       organizationId,
-      parentOrganizationId: this.config.organizationId,
       appId: this.config.appId,
       provider: authOptions?.provider,
       authUrl: this.config.authOptions.authUrl,
@@ -958,7 +953,6 @@ export class EmbeddedProvider {
     const authResult = await this.authProvider.authenticate({
       organizationId: organizationId,
       appId: this.config.appId,
-      parentOrganizationId: this.config.organizationId,
       provider: authOptions?.provider as "google" | "apple" | undefined,
       redirectUrl: this.config.authOptions.redirectUrl,
       customAuthData: authOptions?.customAuthData,

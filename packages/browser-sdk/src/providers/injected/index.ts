@@ -33,13 +33,13 @@ declare global {
 }
 
 interface InjectedProviderConfig {
-  addressTypes: [AddressType, ...AddressType[]];
+  addressTypes: AddressType[];
 }
 
 export class InjectedProvider implements Provider {
   private connected: boolean = false;
   private addresses: WalletAddress[] = [];
-  private addressTypes: [AddressType, ...AddressType[]];
+  private addressTypes: AddressType[];
   private phantom: PhantomExtended;
 
   // Chain instances
