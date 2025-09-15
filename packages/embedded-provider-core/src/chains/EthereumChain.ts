@@ -1,5 +1,5 @@
 import { EventEmitter } from "eventemitter3";
-import type { IEthereumChain, EthTransactionRequest } from "@phantom/chains";
+import type { IEthereumChain, EthTransactionRequest } from "@phantom/chain-interfaces";
 import type { EmbeddedProvider } from "../embedded-provider";
 import { NetworkId, chainIdToNetworkId, networkIdToChainId } from "@phantom/constants";
 import { base64urlDecode } from "@phantom/base64url";

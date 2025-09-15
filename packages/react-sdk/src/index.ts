@@ -18,4 +18,4 @@ export type {
 } from "@phantom/browser-sdk";
 
 // Re-export chain interfaces
-export type { ISolanaChain, IEthereumChain, EthTransactionRequest } from "@phantom/chains";
+export type { ISolanaChain, IEthereumChain, EthTransactionRequest } from "@phantom/chain-interfaces";

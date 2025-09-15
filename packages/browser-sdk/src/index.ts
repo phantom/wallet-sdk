@@ -2,7 +2,7 @@
 export { BrowserSDK } from "./BrowserSDK";
 
 // Chain interfaces (from shared package)
-export type { ISolanaChain, IEthereumChain, EthTransactionRequest } from "@phantom/chains";
+export type { ISolanaChain, IEthereumChain, EthTransactionRequest } from "@phantom/chain-interfaces";
 
 // Types
 export * from "./types";

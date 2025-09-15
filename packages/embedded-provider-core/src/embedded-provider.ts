@@ -37,7 +37,7 @@ import { generateSessionId } from "./utils/session";
 import { retryWithBackoff } from "./utils/retry";
 import type { StamperWithKeyManagement } from "@phantom/sdk-types";
 import { EmbeddedSolanaChain, EmbeddedEthereumChain } from "./chains";
-import type { ISolanaChain, IEthereumChain } from "@phantom/chains";
+import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
 
 export type EmbeddedProviderEvent = "connect" | "connect_start" | "connect_error" | "disconnect" | "error";
 export type EventCallback = (data?: any) => void;

@@ -8,7 +8,7 @@ import type {
   AuthOptions,
   EmbeddedProviderConfig,
 } from "@phantom/embedded-provider-core";
-import type { ISolanaChain, IEthereumChain } from "@phantom/chains";
+import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
 import { AddressType } from "@phantom/client";
 
 import type { DebugCallback, DebugLevel } from "./debug";

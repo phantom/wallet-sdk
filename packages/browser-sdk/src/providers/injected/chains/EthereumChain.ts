@@ -1,5 +1,5 @@
 import { EventEmitter } from "eventemitter3";
-import type { IEthereumChain, EthTransactionRequest } from "@phantom/chains";
+import type { IEthereumChain, EthTransactionRequest } from "@phantom/chain-interfaces";
 import type { Ethereum } from "@phantom/browser-injected-sdk/ethereum";
 import type { Extension } from "@phantom/browser-injected-sdk";
 import { AddressType } from "@phantom/client";

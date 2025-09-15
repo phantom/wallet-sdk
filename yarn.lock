@@ -4978,7 +4978,7 @@ __metadata:
   dependencies:
     "@phantom/base64url": "workspace:^"
     "@phantom/browser-injected-sdk": "workspace:^"
-    "@phantom/chains": "workspace:^"
+    "@phantom/chain-interfaces": "workspace:^"
     "@phantom/client": "workspace:^"
     "@phantom/constants": "workspace:^"
     "@phantom/embedded-provider-core": "workspace:^"
@@ -5005,9 +5005,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/chains@workspace:^, @phantom/chains@workspace:packages/chains":
+"@phantom/chain-interfaces@workspace:^, @phantom/chain-interfaces@workspace:packages/chain-interfaces":
   version: 0.0.0-use.local
-  resolution: "@phantom/chains@workspace:packages/chains"
+  resolution: "@phantom/chain-interfaces@workspace:packages/chain-interfaces"
   dependencies:
     "@phantom/constants": "workspace:^"
     "@phantom/parsers": "workspace:^"
@@ -5093,7 +5093,7 @@ __metadata:
   dependencies:
     "@phantom/api-key-stamper": "workspace:^"
     "@phantom/base64url": "workspace:^"
-    "@phantom/chains": "workspace:^"
+    "@phantom/chain-interfaces": "workspace:^"
     "@phantom/client": "workspace:^"
     "@phantom/constants": "workspace:^"
     "@phantom/parsers": "workspace:^"
@@ -5222,7 +5222,7 @@ __metadata:
   dependencies:
     "@phantom/api-key-stamper": "workspace:^"
     "@phantom/base64url": "workspace:^"
-    "@phantom/chains": "workspace:^"
+    "@phantom/chain-interfaces": "workspace:^"
     "@phantom/client": "workspace:^"
     "@phantom/constants": "workspace:^"
     "@phantom/crypto": "workspace:^"
@@ -5290,7 +5290,7 @@ __metadata:
   resolution: "@phantom/react-sdk@workspace:packages/react-sdk"
   dependencies:
     "@phantom/browser-sdk": "workspace:^"
-    "@phantom/chains": "workspace:^"
+    "@phantom/chain-interfaces": "workspace:^"
     "@phantom/constants": "workspace:^"
     "@testing-library/dom": "npm:^10.4.0"
     "@testing-library/react": "npm:^16.3.0"
