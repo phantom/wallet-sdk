@@ -241,14 +241,11 @@ describe("Response Parsing", () => {
         expect(typeof result.message).toBe('object');
 
         // Final verification: try to serialize it back (proves it's a real object)
-        try {
-          const serialized = result.serialize();
-          expect(serialized).toBeInstanceOf(Uint8Array);
-          expect(serialized.length).toBeGreaterThan(0);
-
-        } catch (serializeError) {
-
-        }
+       
+        const serialized = result.serialize();
+        expect(serialized).toBeInstanceOf(Uint8Array);
+        expect(serialized.length).toBeGreaterThan(0);
+      
       }
     });
 
