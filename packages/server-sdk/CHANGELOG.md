@@ -1,5 +1,16 @@
 # @phantom/server-sdk
 
+## 1.0.0-beta.6
+
+### Patch Changes
+
+- a6c3981: Fix chains dependency
+  - @phantom/base64url@1.0.0-beta.6
+  - @phantom/constants@1.0.0-beta.6
+  - @phantom/parsers@1.0.0-beta.6
+  - @phantom/api-key-stamper@1.0.0-beta.6
+  - @phantom/client@1.0.0-beta.6
+
 ## 1.0.0-beta.5
 
 ### Patch Changes
