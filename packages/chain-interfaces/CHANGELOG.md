@@ -1,5 +1,14 @@
 # @phantom/chain-interfaces
 
+## 1.0.0-beta.6
+
+### Patch Changes
+
+- a6c3981: Fix chains dependency
+  - @phantom/constants@1.0.0-beta.6
+  - @phantom/sdk-types@1.0.0-beta.6
+  - @phantom/parsers@1.0.0-beta.6
+
 ## 1.0.0-beta.5
 
 ### Patch Changes

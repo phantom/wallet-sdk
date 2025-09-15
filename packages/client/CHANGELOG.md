@@ -1,5 +1,15 @@
 # @phantom/client
 
+## 1.0.0-beta.6
+
+### Patch Changes
+
+- @phantom/base64url@1.0.0-beta.6
+- @phantom/constants@1.0.0-beta.6
+- @phantom/sdk-types@1.0.0-beta.6
+- @phantom/crypto@1.0.0-beta.6
+- @phantom/api-key-stamper@1.0.0-beta.6
+
 ## 1.0.0-beta.5
 
 ### Patch Changes
