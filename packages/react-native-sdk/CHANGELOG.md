@@ -1,5 +1,20 @@
 # @phantom/react-native-sdk
 
+## 1.0.0-beta.5
+
+### Patch Changes
+
+- 6622863: Fixed exported types
+- Updated dependencies [6622863]
+  - @phantom/chains@1.0.0-beta.5
+  - @phantom/base64url@1.0.0-beta.5
+  - @phantom/constants@1.0.0-beta.5
+  - @phantom/sdk-types@1.0.0-beta.5
+  - @phantom/crypto@1.0.0-beta.5
+  - @phantom/api-key-stamper@1.0.0-beta.5
+  - @phantom/client@1.0.0-beta.5
+  - @phantom/embedded-provider-core@1.0.0-beta.5
+
 ## 1.0.0-beta.4
 
 ### Patch Changes
