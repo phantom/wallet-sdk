@@ -1,4 +1,5 @@
-import { PhantomClient } from "@phantom/client";
+import { AddressType, PhantomClient } from "@phantom/client";
+import type { NetworkId } from "@phantom/constants";
 import { randomUUID } from "@phantom/utils";
 import { base64urlEncode } from "@phantom/base64url";
 import bs58 from "bs58";
@@ -123,6 +124,43 @@ export class EmbeddedProvider {
         }
       });
     }
+  }
+
+  /**
+   * Get the appropriate address for a given network ID from available addresses
+   */
+  private getAddressForNetwork(networkId: NetworkId): string | undefined {
+    // Extract the chain name from network ID format (e.g., "solana:mainnet" -> "solana")
+    const network = networkId.split(":")[0].toLowerCase();
+    
+    // Map network to address type
+    let targetAddressType: string;
+    switch (network) {
+      case "solana":
+        targetAddressType = AddressType.solana;
+        break;
+      case "eip155": // EVM chains use eip155 prefix
+        targetAddressType = AddressType.ethereum;
+        break;
+      case "bitcoin":
+      case "btc":
+        targetAddressType = AddressType.bitcoinSegwit;
+        break;
+      case "sui":
+        targetAddressType = AddressType.sui;
+        break;
+      default:
+        // Default to ethereum for unknown networks
+        targetAddressType = AddressType.ethereum;
+        break;
+    }
+    
+    // Find the matching address from available addresses
+    const matchingAddress = this.addresses.find(addr => 
+      addr.addressType.toLowerCase() === targetAddressType.toLowerCase()
+    );
+    
+    return matchingAddress?.address;
   }
 
   private async getAndFilterWalletAddresses(walletId: string): Promise<WalletAddress[]> {
@@ -702,6 +740,7 @@ export class EmbeddedProvider {
       transaction: parsedTransaction.base64url,
       networkId: params.networkId,
       derivationIndex: derivationIndex,
+      account: this.getAddressForNetwork(params.networkId),
     });
 
     this.logger.info("EMBEDDED_PROVIDER", "Transaction signed successfully", {
@@ -746,6 +785,7 @@ export class EmbeddedProvider {
       transaction: parsedTransaction.base64url,
       networkId: params.networkId,
       derivationIndex: derivationIndex,
+      account: this.getAddressForNetwork(params.networkId),
     });
 
     this.logger.info("EMBEDDED_PROVIDER", "Transaction signed and sent successfully", {

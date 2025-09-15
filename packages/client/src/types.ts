@@ -54,6 +54,7 @@ export interface SignTransactionParams {
   transaction: Transaction; // base64url encoded transaction
   networkId: NetworkId;
   derivationIndex?: number; // Optional account derivation index (defaults to 0)
+  account?: string; // Optional specific account address to use
 }
 
 export interface SignAndSendTransactionParams {
@@ -61,7 +62,9 @@ export interface SignAndSendTransactionParams {
   transaction: Transaction; // base64url encoded transaction
   networkId: NetworkId;
   derivationIndex?: number; // Optional account derivation index (defaults to 0)
+  account?: string; // Optional specific account address to use
 }
+
 
 export interface GetWalletWithTagParams {
   organizationId: string;

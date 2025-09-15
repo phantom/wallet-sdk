@@ -6,7 +6,7 @@
 
 - 6622863: Fixed exported types
 - Updated dependencies [6622863]
-  - @phantom/chains@1.0.0-beta.5
+  - @phantom/chain-interfaces@1.0.0-beta.5
   - @phantom/base64url@1.0.0-beta.5
   - @phantom/constants@1.0.0-beta.5
   - @phantom/sdk-types@1.0.0-beta.5
@@ -24,7 +24,7 @@
   - @phantom/sdk-types@1.0.0-beta.4
   - @phantom/base64url@1.0.0-beta.4
   - @phantom/constants@1.0.0-beta.4
-  - @phantom/chains@1.0.0-beta.4
+  - @phantom/chain-interfaces@1.0.0-beta.4
   - @phantom/crypto@1.0.0-beta.4
   - @phantom/api-key-stamper@1.0.0-beta.4
   - @phantom/client@1.0.0-beta.4
@@ -40,7 +40,7 @@
 - Updated dependencies [1935986]
   - @phantom/embedded-provider-core@1.0.0-beta.3
   - @phantom/constants@1.0.0-beta.3
-  - @phantom/chains@1.0.0-beta.3
+  - @phantom/chain-interfaces@1.0.0-beta.3
   - @phantom/client@1.0.0-beta.3
   - @phantom/base64url@1.0.0-beta.3
   - @phantom/sdk-types@1.0.0-beta.3
@@ -56,7 +56,7 @@
 - Updated dependencies [98e54ff]
 - Updated dependencies [4675314]
   - @phantom/embedded-provider-core@1.0.0-beta.2
-  - @phantom/chains@1.0.0-beta.2
+  - @phantom/chain-interfaces@1.0.0-beta.2
   - @phantom/client@1.0.0-beta.2
   - @phantom/base64url@1.0.0-beta.2
   - @phantom/constants@1.0.0-beta.2
@@ -72,7 +72,7 @@
 - Updated dependencies [8cd9ac7]
   - @phantom/api-key-stamper@1.0.0-beta.1
   - @phantom/base64url@1.0.0-beta.1
-  - @phantom/chains@1.0.0-beta.1
+  - @phantom/chain-interfaces@1.0.0-beta.1
   - @phantom/client@1.0.0-beta.1
   - @phantom/constants@1.0.0-beta.1
   - @phantom/crypto@1.0.0-beta.1
@@ -95,7 +95,7 @@
   - @phantom/client@1.0.0-beta.0
   - @phantom/constants@1.0.0-beta.0
   - @phantom/parsers@1.0.0-beta.0
-  - @phantom/chains@1.0.0-beta.0
+  - @phantom/chain-interfaces@1.0.0-beta.0
   - @phantom/api-key-stamper@1.0.0-beta.0
   - @phantom/base64url@1.0.0-beta.0
   - @phantom/crypto@1.0.0-beta.0

@@ -6,7 +6,7 @@
 
 - 6622863: Fixed exported types
 - Updated dependencies [6622863]
-  - @phantom/chains@1.0.0-beta.5
+  - @phantom/chain-interfaces@1.0.0-beta.5
   - @phantom/browser-sdk@1.0.0-beta.5
   - @phantom/constants@1.0.0-beta.5
 
@@ -18,7 +18,7 @@
 - Updated dependencies [213052a]
   - @phantom/browser-sdk@1.0.0-beta.4
   - @phantom/constants@1.0.0-beta.4
-  - @phantom/chains@1.0.0-beta.4
+  - @phantom/chain-interfaces@1.0.0-beta.4
 
 ## 1.0.0-beta.3
 
@@ -30,7 +30,7 @@
 - Updated dependencies [1935986]
   - @phantom/browser-sdk@1.0.0-beta.3
   - @phantom/constants@1.0.0-beta.3
-  - @phantom/chains@1.0.0-beta.3
+  - @phantom/chain-interfaces@1.0.0-beta.3
 
 ## 1.0.0-beta.2
 
@@ -41,7 +41,7 @@
 - Updated dependencies [98e54ff]
 - Updated dependencies [4675314]
   - @phantom/browser-sdk@1.0.0-beta.2
-  - @phantom/chains@1.0.0-beta.2
+  - @phantom/chain-interfaces@1.0.0-beta.2
   - @phantom/constants@1.0.0-beta.2
 
 ## 1.0.0-beta.1
@@ -51,7 +51,7 @@
 - 8cd9ac7: Release with new interfaces, appId
 - Updated dependencies [8cd9ac7]
   - @phantom/browser-sdk@1.0.0-beta.1
-  - @phantom/chains@1.0.0-beta.1
+  - @phantom/chain-interfaces@1.0.0-beta.1
   - @phantom/constants@1.0.0-beta.1
 
 ## 1.0.0-beta.0
@@ -67,7 +67,7 @@
 - Updated dependencies
   - @phantom/browser-sdk@1.0.0-beta.0
   - @phantom/constants@1.0.0-beta.0
-  - @phantom/chains@1.0.0-beta.0
+  - @phantom/chain-interfaces@1.0.0-beta.0
 
 ## 0.3.9
 

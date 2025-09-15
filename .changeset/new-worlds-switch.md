@@ -10,7 +10,7 @@
 "@phantom/sdk-types": major
 "@phantom/react-ui": major
 "@phantom/parsers": major
-"@phantom/chains": major
+"@phantom/chain-interfaces": major
 "@phantom/client": major
 "@phantom/api-key-stamper": major
 "@phantom/base64url": major
