@@ -276,6 +276,120 @@ export class InjectedProvider implements Provider {
     return this.connected;
   }
 
+  /**
+   * Attempt auto-connection using onlyIfTrusted parameter
+   * This will only connect if the dApp is already trusted by the user
+   * Should be called after setting up event listeners
+   */
+  async autoConnect(): Promise<void> {
+    debug.log(DebugCategory.INJECTED_PROVIDER, "Attempting auto-connect with onlyIfTrusted=true");
+
+    // Emit connect_start event for auto-connect
+    this.emit("connect_start", {
+      source: "auto-connect",
+      providerType: "injected",
+    });
+
+    try {
+      if (!this.phantom.extension?.isInstalled?.()) {
+        debug.warn(DebugCategory.INJECTED_PROVIDER, "Phantom wallet extension not found for auto-connect");
+        
+        // Emit connect_error event for auto-connect failure
+        this.emit("connect_error", {
+          error: "Phantom wallet not found",
+          source: "auto-connect",
+        });
+        
+        return; // Silently fail for auto-connect
+      }
+
+      const connectedAddresses: WalletAddress[] = [];
+
+      // Try Solana auto-connect if enabled
+      if (this.addressTypes.includes(AddressType.solana)) {
+        debug.log(DebugCategory.INJECTED_PROVIDER, "Attempting Solana auto-connect");
+        try {
+          // Use onlyIfTrusted=true for silent connection
+          const publicKey = await this.phantom.solana.connect({ onlyIfTrusted: true });
+          if (publicKey) {
+            connectedAddresses.push({
+              addressType: AddressType.solana,
+              address: publicKey,
+            });
+            debug.info(DebugCategory.INJECTED_PROVIDER, "Solana auto-connected successfully", { address: publicKey });
+          }
+        } catch (err) {
+          // Silently fail for auto-connect
+          debug.log(DebugCategory.INJECTED_PROVIDER, "Solana auto-connect failed (expected if not trusted)", { error: err });
+        }
+      }
+
+      // Try Ethereum auto-connect if enabled
+      if (this.addressTypes.includes(AddressType.ethereum)) {
+        debug.log(DebugCategory.INJECTED_PROVIDER, "Attempting Ethereum auto-connect");
+        try {
+          // Use onlyIfTrusted=true for silent connection
+          const accounts = await this.phantom.ethereum.connect({ onlyIfTrusted: true });
+          if (accounts && accounts.length > 0) {
+            connectedAddresses.push(
+              ...accounts.map((address: string) => ({
+                addressType: AddressType.ethereum,
+                address,
+              })),
+            );
+            debug.info(DebugCategory.INJECTED_PROVIDER, "Ethereum auto-connected successfully", { addresses: accounts });
+          }
+        } catch (err) {
+          // Silently fail for auto-connect
+          debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum auto-connect failed (expected if not trusted)", { error: err });
+        }
+      }
+
+      if (connectedAddresses.length === 0) {
+        debug.log(DebugCategory.INJECTED_PROVIDER, "Auto-connect failed: no trusted connections available");
+        
+        // Emit connect_error for auto-connect failure
+        this.emit("connect_error", {
+          error: "No trusted connections available",
+          source: "auto-connect",
+        });
+        
+        return; // Silently fail for auto-connect
+      }
+
+      // Success! Update state
+      this.addresses = connectedAddresses;
+      this.connected = true;
+
+      // Initialize event handling for newly connected chains
+      this.initializeEvents();
+
+      // Emit connect event for successful auto-connection
+      this.emit("connect", {
+        addresses: this.addresses,
+        source: "auto-connect",
+      });
+
+      debug.info(DebugCategory.INJECTED_PROVIDER, "Auto-connect successful", {
+        addressCount: connectedAddresses.length,
+        addresses: connectedAddresses.map(addr => ({ type: addr.addressType, address: addr.address.substring(0, 8) + "..." }))
+      });
+
+    } catch (error) {
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Auto-connect failed with error", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+
+      // Emit connect_error for auto-connect failure
+      this.emit("connect_error", {
+        error: error instanceof Error ? error.message : "Auto-connect failed",
+        source: "auto-connect",
+      });
+
+      // Silently fail for auto-connect (don't throw)
+    }
+  }
+
   // AutoConfirm methods - only available for injected providers
   async enableAutoConfirm(params: AutoConfirmEnableParams): Promise<AutoConfirmResult> {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Enabling autoConfirm", { params });

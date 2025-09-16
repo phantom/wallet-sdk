@@ -85,10 +85,18 @@ export class BrowserSDK {
   /**
    * Connect to the wallet
    */
-  async connect(options?: AuthOptions): Promise<ConnectResult> {
+  async connect(options?: AuthOptions & {
+    providerType?: "injected" | "embedded";
+  }): Promise<ConnectResult> {
     debug.info(DebugCategory.BROWSER_SDK, "Starting connection", options);
 
     try {
+      if (options?.providerType && options.providerType !== this.providerManager.getCurrentProviderInfo()?.type) {
+        debug.info(DebugCategory.BROWSER_SDK, "Switching provider before connect", {
+          providerType: options.providerType,
+        });
+        await this.providerManager.switchProvider(options.providerType);
+      }
       const result = await this.providerManager.connect(options);
 
       debug.info(DebugCategory.BROWSER_SDK, "Connection successful", {
@@ -195,15 +203,20 @@ export class BrowserSDK {
   }
 
   /**
-   * Attempt auto-connection using existing session
+   * Attempt auto-connection using existing session or trusted connection
    * Should be called after setting up event listeners
-   * Only works with embedded providers
+   * Works with both embedded and injected providers:
+   * - Embedded providers: Uses existing session if available
+   * - Injected providers: Attempts trusted connection using onlyIfTrusted=true
    */
   async autoConnect(): Promise<void> {
     debug.log(DebugCategory.BROWSER_SDK, "Attempting auto-connect");
     const currentProvider = this.providerManager.getCurrentProvider();
     if (currentProvider && "autoConnect" in currentProvider) {
       await (currentProvider as any).autoConnect();
+      debug.log(DebugCategory.BROWSER_SDK, "Auto-connect completed for provider", {
+        providerType: this.getCurrentProviderInfo()?.type,
+      });
     } else {
       debug.warn(DebugCategory.BROWSER_SDK, "Current provider does not support auto-connect", {
         providerType: this.getCurrentProviderInfo()?.type,
