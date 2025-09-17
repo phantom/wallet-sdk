@@ -1,5 +1,13 @@
 # @phantom/react-sdk
 
+## 1.0.0-beta.7
+
+### Patch Changes
+
+- 74885d4: Fix, injected provider change accounts
+- Updated dependencies [74885d4]
+  - @phantom/browser-sdk@1.0.0-beta.7
+
 ## 1.0.0-beta.6
 
 ### Patch Changes
