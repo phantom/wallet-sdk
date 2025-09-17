@@ -1,4 +1,4 @@
-import type { BrowserSDKConfig, ConnectResult, WalletAddress, AuthOptions } from "./types";
+import type { BrowserSDKConfig, ConnectResult, WalletAddress, BrowserAuthOptions } from "./types";
 import { ProviderManager, type SwitchProviderOptions, type ProviderPreference } from "./ProviderManager";
 import { debug, DebugCategory, type DebugLevel, type DebugCallback } from "./debug";
 import { waitForPhantomExtension } from "./waitForPhantomExtension";
@@ -30,21 +30,21 @@ export class BrowserSDK {
 
   constructor(config: BrowserSDKConfig) {
     debug.info(DebugCategory.BROWSER_SDK, "Initializing BrowserSDK", {
-      providerType: config.providerType,
+      appId: config.appId,
       embeddedWalletType: config.embeddedWalletType,
       addressTypes: config.addressTypes,
     });
 
-    // Validate providerType
-    if (!["injected", "embedded"].includes(config.providerType)) {
-      debug.error(DebugCategory.BROWSER_SDK, "Invalid providerType", { providerType: config.providerType });
-      throw new Error(`Invalid providerType: ${config.providerType}. Must be "injected" or "embedded".`);
+    // Validate required appId
+    if (!config.appId) {
+      debug.error(DebugCategory.BROWSER_SDK, "Missing required appId");
+      throw new Error("appId is required for BrowserSDK initialization");
     }
 
     const embeddedWalletType = config.embeddedWalletType || DEFAULT_EMBEDDED_WALLET_TYPE;
 
     // Validate embeddedWalletType if provided
-    if (config.providerType === "embedded" && !["app-wallet", "user-wallet"].includes(embeddedWalletType)) {
+    if (config.embeddedWalletType && !["app-wallet", "user-wallet"].includes(embeddedWalletType)) {
       debug.error(DebugCategory.BROWSER_SDK, "Invalid embeddedWalletType", {
         embeddedWalletType: config.embeddedWalletType,
       });
@@ -53,6 +53,8 @@ export class BrowserSDK {
       );
     }
 
+    // Create ProviderManager with the unified config
+    // The ProviderManager will handle provider switching dynamically
     this.providerManager = new ProviderManager(config);
   }
 
@@ -83,11 +85,9 @@ export class BrowserSDK {
   // ===== CONNECTION MANAGEMENT =====
 
   /**
-   * Connect to the wallet
+   * Connect to the wallet with optional provider type selection
    */
-  async connect(options?: AuthOptions & {
-    providerType?: "injected" | "embedded";
-  }): Promise<ConnectResult> {
+  async connect(options?: BrowserAuthOptions): Promise<ConnectResult> {
     debug.info(DebugCategory.BROWSER_SDK, "Starting connection", options);
 
     try {
@@ -203,24 +203,84 @@ export class BrowserSDK {
   }
 
   /**
-   * Attempt auto-connection using existing session or trusted connection
+   * Smart auto-connection that determines the best provider to use
+   * Uses heuristics to decide between embedded and injected providers:
+   * 1. Check if coming back from authentication callback (has URL params)
+   * 2. Check if embedded provider has a recoverable session
+   * 3. Check if Phantom extension is installed for trusted connection
+   * 4. Fall back to no auto-connection
    * Should be called after setting up event listeners
-   * Works with both embedded and injected providers:
-   * - Embedded providers: Uses existing session if available
-   * - Injected providers: Attempts trusted connection using onlyIfTrusted=true
    */
   async autoConnect(): Promise<void> {
-    debug.log(DebugCategory.BROWSER_SDK, "Attempting auto-connect");
-    const currentProvider = this.providerManager.getCurrentProvider();
-    if (currentProvider && "autoConnect" in currentProvider) {
-      await (currentProvider as any).autoConnect();
-      debug.log(DebugCategory.BROWSER_SDK, "Auto-connect completed for provider", {
-        providerType: this.getCurrentProviderInfo()?.type,
+    debug.log(DebugCategory.BROWSER_SDK, "Starting smart auto-connect");
+
+    try {
+      // Step 1: Check if we have an embedded provider instance to query for session info
+      let embeddedProvider: any = null;
+      try {
+        // Try to get or create embedded provider for session checks
+        await this.providerManager.switchProvider("embedded");
+        embeddedProvider = this.providerManager.getCurrentProvider();
+      } catch (error) {
+        debug.log(DebugCategory.BROWSER_SDK, "Could not access embedded provider for session checks", { error });
+      }
+
+      // Step 2: Check session recovery capabilities
+      let sessionInfo: any = null;
+      if (embeddedProvider && "getSessionRecoveryInfo" in embeddedProvider) {
+        sessionInfo = await embeddedProvider.getSessionRecoveryInfo();
+        debug.log(DebugCategory.BROWSER_SDK, "Session recovery info", sessionInfo);
+      }
+
+      // Step 3: Check if Phantom extension is available
+      const isExtensionInstalled = await BrowserSDK.isPhantomInstalled(1000); // 1 second timeout
+      debug.log(DebugCategory.BROWSER_SDK, "Extension installation check", { isExtensionInstalled });
+
+      // Step 4: Apply heuristics to determine best provider
+      let selectedProvider: "embedded" | "injected" | null = null;
+
+      if (sessionInfo?.canAutoRecover) {
+        // Priority 1: Embedded provider can auto-recover session
+        selectedProvider = "embedded";
+        debug.info(DebugCategory.BROWSER_SDK, "Auto-connect: Using embedded provider (can recover session)", {
+          hasCompletedSession: sessionInfo.sessionStatus === "completed",
+          hasPendingWithUrl: sessionInfo.hasUrlParams,
+        });
+      } else if (isExtensionInstalled) {
+        // Priority 2: Try injected provider if extension is available
+        selectedProvider = "injected";
+        debug.info(DebugCategory.BROWSER_SDK, "Auto-connect: Using injected provider (extension available)");
+      } else {
+        // No auto-connect possible
+        debug.info(DebugCategory.BROWSER_SDK, "Auto-connect: No suitable provider found", {
+          hasSession: sessionInfo?.hasSession,
+          sessionCanRecover: sessionInfo?.canAutoRecover,
+          extensionInstalled: isExtensionInstalled,
+        });
+        return;
+      }
+
+      // Step 5: Switch to selected provider and attempt auto-connect
+      await this.providerManager.switchProvider(selectedProvider);
+      const provider = this.providerManager.getCurrentProvider();
+
+      if (provider && "autoConnect" in provider) {
+        await (provider as any).autoConnect();
+        debug.info(DebugCategory.BROWSER_SDK, "Smart auto-connect successful", {
+          selectedProvider,
+          connected: this.isConnected(),
+        });
+      } else {
+        debug.warn(DebugCategory.BROWSER_SDK, "Selected provider does not support auto-connect", {
+          selectedProvider,
+        });
+      }
+
+    } catch (error) {
+      debug.warn(DebugCategory.BROWSER_SDK, "Smart auto-connect failed", {
+        error: error instanceof Error ? error.message : String(error),
       });
-    } else {
-      debug.warn(DebugCategory.BROWSER_SDK, "Current provider does not support auto-connect", {
-        providerType: this.getCurrentProviderInfo()?.type,
-      });
+      // Auto-connect failures should not throw - they should fail silently
     }
   }
 

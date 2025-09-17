@@ -5,6 +5,7 @@ const config: PhantomSDKConfig = {
   providerType: "embedded" as const,
   addressTypes: [AddressType.solana, AddressType.ethereum] as const,
   appId: "7b91c1dd-c3c2-4088-8db3-3e9e6b72ce96",
+  autoConnect: true
 };
 
 function App() {

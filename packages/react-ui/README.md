@@ -39,10 +39,8 @@ function App() {
   return (
     <PhantomProvider
       config={{
-        providerType: "embedded",
-        embeddedWalletType: "user-wallet",
+        appId: "your-app-id", // Get your app ID from phantom.com/portal
         addressTypes: [AddressType.solana, AddressType.ethereum],
-        apiBaseUrl: "https://api.phantom.app/v1/wallets",
       }}
     >
         <WalletComponent />
@@ -56,8 +54,17 @@ function WalletComponent() {
   const ethereum = useEthereum(); // Standard from react-sdk
 
   const handleConnect = () => {
-    // Shows connection modal automatically
+    // Shows connection modal with smart auto-connect
     connect();
+  };
+
+  // You can also specify provider type if needed
+  const handleConnectEmbedded = () => {
+    connect({ providerType: "embedded" });
+  };
+
+  const handleConnectInjected = () => {
+    connect({ providerType: "injected" });
   };
 
   const sendSolanaTransaction = async () => {
@@ -92,8 +99,15 @@ function WalletComponent() {
 
 ### Enhanced Hooks
 
-- **`useConnect`**: Shows a connection modal with provider selection (injected/embedded)
+- **`useConnect`**: Shows a connection modal with smart auto-connect and provider selection
 - All other hooks are **re-exported directly** from `@phantom/react-sdk`
+
+### Smart Auto-Connect in UI
+
+The connection modal includes smart auto-connect functionality that:
+1. **Checks for session recovery** (embedded wallets)
+2. **Detects extension availability** (injected provider)
+3. **Falls back to manual selection** if needed
 
 ### Standard Hooks (Re-exported)
 
@@ -133,11 +147,14 @@ function ConnectButton() {
 
 ### Connection Modal Features
 
-- Provider selection (Browser Extension vs Embedded Wallet)
-- Error handling with clear messages
-- Loading states during connection
-- Responsive design for mobile/desktop
-- Keyboard navigation support
+- **Smart auto-connect** with intelligent provider selection
+- **Provider selection** (Browser Extension vs Embedded Wallet) when needed
+- **Session recovery** for returning embedded wallet users
+- **Extension detection** with installation prompts
+- **Error handling** with clear messages
+- **Loading states** during connection
+- **Responsive design** for mobile/desktop
+- **Keyboard navigation** support
 
 ## Theming
 

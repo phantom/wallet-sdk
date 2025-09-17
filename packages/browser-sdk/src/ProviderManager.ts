@@ -1,4 +1,4 @@
-import { type BrowserSDKConfig, type Provider, type ConnectResult, type WalletAddress, type AuthOptions, AddressType } from "./types";
+import { type BrowserSDKConfig, type Provider, type ConnectResult, type WalletAddress, type BrowserAuthOptions, AddressType } from "./types";
 import { InjectedProvider } from "./providers/injected";
 import { EmbeddedProvider } from "./providers/embedded";
 import { debug, DebugCategory } from "./debug";
@@ -106,7 +106,7 @@ export class ProviderManager implements EventEmitter {
   /**
    * Connect using the current provider
    */
-  async connect(authOptions?: AuthOptions): Promise<ConnectResult> {
+  async connect(authOptions?: BrowserAuthOptions): Promise<ConnectResult> {
     debug.info(DebugCategory.PROVIDER_MANAGER, "Starting connection", {
       currentProviderKey: this.currentProviderKey,
       authOptions: authOptions ? { provider: authOptions.provider, hasJwtToken: !!authOptions.jwtToken } : undefined,
@@ -273,11 +273,18 @@ export class ProviderManager implements EventEmitter {
    * Set default provider based on initial config
    */
   private setDefaultProvider(): void {
-    const defaultType = (this.config.providerType || "embedded") as "injected" | "embedded";
-    const defaultEmbeddedType = (this.config.embeddedWalletType || "user-wallet") as "app-wallet" | "user-wallet";
+    // With unified config, we default to embedded provider since it requires more setup
+    // The smart auto-connect will switch to the appropriate provider automatically
+    const defaultType = "embedded";
+    const defaultEmbeddedType = (this.config.embeddedWalletType || DEFAULT_EMBEDDED_WALLET_TYPE) as "app-wallet" | "user-wallet";
 
     this.createProvider(defaultType, defaultEmbeddedType);
     this.switchProvider(defaultType, { embeddedWalletType: defaultEmbeddedType });
+    
+    debug.log(DebugCategory.PROVIDER_MANAGER, "Default provider set (will be switched during auto-connect)", {
+      defaultType,
+      defaultEmbeddedType,
+    });
   }
 
   /**

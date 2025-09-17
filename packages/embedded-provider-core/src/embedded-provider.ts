@@ -1183,6 +1183,87 @@ export class EmbeddedProvider {
     }
   }
 
+  // ===== SESSION DETECTION METHODS FOR SMART AUTO-CONNECT =====
+
+  /**
+   * Check if there's a completed session that can be used for auto-connect
+   */
+  async hasCompletedSession(): Promise<boolean> {
+    try {
+      const session = await this.storage.getSession();
+      return session?.status === "completed";
+    } catch (error) {
+      this.logger.warn("EMBEDDED_PROVIDER", "Failed to check completed session", { error });
+      return false;
+    }
+  }
+
+  /**
+   * Check if there's a pending session that might be recoverable from URL parameters
+   */
+  async hasPendingSessionWithUrlParams(): Promise<boolean> {
+    try {
+      const session = await this.storage.getSession();
+      if (session?.status !== "pending") {
+        return false;
+      }
+
+      // Check if we have URL parameters that match the pending session
+      const urlSessionId = this.urlParamsAccessor.getParam("session_id");
+      const urlWalletId = this.urlParamsAccessor.getParam("wallet_id");
+      
+      return !!(urlSessionId || urlWalletId);
+    } catch (error) {
+      this.logger.warn("EMBEDDED_PROVIDER", "Failed to check pending session with URL params", { error });
+      return false;
+    }
+  }
+
+  /**
+   * Check if there's any session that could potentially be recovered
+   */
+  async canRecoverSession(): Promise<boolean> {
+    const hasCompleted = await this.hasCompletedSession();
+    const hasPendingWithUrl = await this.hasPendingSessionWithUrlParams();
+    return hasCompleted || hasPendingWithUrl;
+  }
+
+  /**
+   * Get session recovery information for debugging/analytics
+   */
+  async getSessionRecoveryInfo(): Promise<{
+    hasSession: boolean;
+    sessionStatus?: "completed" | "pending";
+    hasUrlParams: boolean;
+    urlParams: { sessionId?: string; walletId?: string };
+    canAutoRecover: boolean;
+  }> {
+    try {
+      const session = await this.storage.getSession();
+      const urlSessionId = this.urlParamsAccessor.getParam("session_id");
+      const urlWalletId = this.urlParamsAccessor.getParam("wallet_id");
+      
+      return {
+        hasSession: !!session,
+        sessionStatus: session?.status,
+        hasUrlParams: !!(urlSessionId || urlWalletId),
+        urlParams: {
+          sessionId: urlSessionId || undefined,
+          walletId: urlWalletId || undefined,
+        },
+        canAutoRecover: await this.canRecoverSession(),
+      };
+    } catch (error) {
+      this.logger.warn("EMBEDDED_PROVIDER", "Failed to get session recovery info", { error });
+      return {
+        hasSession: false,
+        hasUrlParams: false,
+        urlParams: {},
+        canAutoRecover: false,
+      };
+    }
+  }
+
   /*
    * We use this method to initialize the PhantomClient and fetch wallet addresses from a completed session.
    * This is the final step that sets up the provider's client state and retrieves available addresses.

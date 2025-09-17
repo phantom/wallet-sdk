@@ -226,7 +226,7 @@ function PhantomUIProvider({ children, theme = "light", customTheme }: Omit<Phan
                 )}
 
                 {/* No extension installed - show embedded options */}
-                {!isExtensionInstalled.isInstalled && (
+                {!(isMobile && isExtensionInstalled.isInstalled) && (
                   <button
                     className="phantom-ui-provider-button"
                     onClick={() => connectWithAuthProvider("google")}

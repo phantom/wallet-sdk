@@ -21,19 +21,17 @@ export interface DebugConfig {
 }
 
 export interface BrowserSDKConfig extends Partial<Omit<EmbeddedProviderConfig, "authOptions">> {
-  providerType: "injected" | "embedded" | (string & Record<never, never>);
+  // Core configuration - works for both provider types
+  appId: string; // Required - the app id retrieved from phantom.com/portal
   addressTypes: [AddressType, ...AddressType[]];
-  // Required for embedded provider, optional for injected
+  
+  // Optional configuration
   apiBaseUrl?: string;
-  appId?: string; // the app id retrieved from phantom.com/portal (required for embedded provider)
   embeddedWalletType?: "app-wallet" | "user-wallet" | (string & Record<never, never>);
-  // Auto-connect to existing sessions (default: true)
-  autoConnect?: boolean;
   authOptions?: {
     authUrl?: string;
     redirectUrl?: string;
   };
-  
 }
 
 // Re-export types from core for convenience
@@ -52,8 +50,13 @@ export type {
 // Re-export enums from client for convenience
 export { AddressType };
 
+// Extended AuthOptions to include provider selection
+export interface BrowserAuthOptions extends AuthOptions {
+  providerType?: "injected" | "embedded";
+}
+
 export interface Provider {
-  connect(authOptions?: AuthOptions): Promise<ConnectResult>;
+  connect(authOptions?: BrowserAuthOptions): Promise<ConnectResult>;
   disconnect(): Promise<void>;
   getAddresses(): WalletAddress[];
   isConnected(): boolean;

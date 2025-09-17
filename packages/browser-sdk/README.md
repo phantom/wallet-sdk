@@ -8,21 +8,27 @@ Browser SDK for Phantom Wallet supporting both injected and embedded non-custodi
 npm install @phantom/browser-sdk
 ```
 
-### Injected Provider (Browser Extension)
+### Unified Configuration with Smart Auto-Connect
 
 ```typescript
 import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 
-// Connect to Phantom browser extension
+// Unified configuration - no need to choose provider type upfront
 const sdk = new BrowserSDK({
-  providerType: "injected",
+  appId: "your-app-id", // Get your app ID from phantom.com/portal
   addressTypes: [AddressType.solana, AddressType.ethereum],
 });
 
-const { addresses } = await sdk.connect();
-console.log("Connected addresses:", addresses);
+// Smart auto-connect automatically chooses the best provider
+await sdk.autoConnect();
 
-// Chain-specific operations
+// If not auto-connected, connect manually
+if (!sdk.isConnected()) {
+  const { addresses } = await sdk.connect();
+  console.log("Connected addresses:", addresses);
+}
+
+// Chain-specific operations work the same regardless of provider
 const message = "Hello from Phantom!";
 const solanaSignature = await sdk.solana.signMessage(message);
 
@@ -35,54 +41,58 @@ const solanaResult = await sdk.solana.signAndSendTransaction(mySolanaTransaction
 const ethResult = await sdk.ethereum.sendTransaction(myEthTransaction);
 ```
 
-### Embedded Provider
+### Manual Provider Selection
+
+You can still specify which provider to use if needed:
 
 ```typescript
-import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
+// Connect with injected provider (browser extension)
+const { addresses } = await sdk.connect({ providerType: "injected" });
 
-// Create embedded non-custodial wallet
-const sdk = new BrowserSDK({
-  providerType: "embedded",
-  addressTypes: [AddressType.solana, AddressType.ethereum],
-  appId: "your-app-id", // Get your app ID from phantom.com/portal
-});
+// Connect with embedded provider 
+const { addresses } = await sdk.connect({ providerType: "embedded" });
 
-const { addresses } = await sdk.connect();
-console.log("Addresses:", addresses);
-
-// Use chain-specific APIs
-const solanaResult = await sdk.solana.signAndSendTransaction(mySolanaTransaction);
-const ethResult = await sdk.ethereum.sendTransaction(myEthTransaction);
+// Switch between providers after initialization
+await sdk.switchProvider("injected");
+await sdk.switchProvider("embedded");
 ```
 
 ## Features
 
 - **🔒 Non-Custodial**: Full user control of private keys for both injected and embedded wallets
-- **🌐 Dual Provider Support**: Works with Phantom browser extension or creates embedded wallets
+- **🧠 Smart Auto-Connect**: Automatically determines the best provider using intelligent heuristics
+- **🌐 Dynamic Provider Switching**: Switch between Phantom extension and embedded wallets at runtime
 - **⛓️ Chain-Specific APIs**: Dedicated interfaces for Solana and Ethereum operations
 - **🛠️ Native Transactions**: Work with blockchain-native objects, not base64url strings
 - **🔗 Multi-Chain**: Solana and Ethereum support with dedicated methods
 - **⚡ TypeScript**: Full type safety for all transaction formats
-- **🎯 Unified API**: Same interface for both injected and embedded providers
+- **🎯 Unified Configuration**: Single configuration works for all provider types
 
 ## Connection Flow
 
-After instantiating the SDK, use `sdk.connect()` to establish a connection to the wallet:
+The SDK provides multiple ways to establish connections:
+
+### Recommended: Smart Auto-Connect
 
 ```typescript
 import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 
-// 1. Create SDK instance
+// 1. Create SDK instance with unified configuration
 const sdk = new BrowserSDK({
-  providerType: "injected",
+  appId: "your-app-id", // Get your app ID from phantom.com/portal
   addressTypes: [AddressType.solana, AddressType.ethereum],
 });
 
-// 2. Connect to wallet
-const { addresses } = await sdk.connect();
-console.log("Connected addresses:", addresses);
+// 2. Smart auto-connect (chooses best available provider)
+await sdk.autoConnect();
 
-// 3. Use chain-specific methods
+// 3. Check if connected, connect manually if needed
+if (!sdk.isConnected()) {
+  const { addresses } = await sdk.connect();
+  console.log("Connected addresses:", addresses);
+}
+
+// 4. Use chain-specific methods
 const signature = await sdk.solana.signMessage("Hello!");
 const ethResult = await sdk.ethereum.sendTransaction({
   to: "0x...",
@@ -91,26 +101,38 @@ const ethResult = await sdk.ethereum.sendTransaction({
 });
 ```
 
-### Connection Options
-
-For embedded user-wallets, you can specify authentication providers:
+### Manual Provider Selection
 
 ```typescript
-// Default: Show provider selection screen
+// Connect with specific provider
+const { addresses } = await sdk.connect({ providerType: "injected" });
+
+// Or switch providers dynamically
+await sdk.switchProvider("embedded");
+const { addresses } = await sdk.connect();
+```
+
+### Connection Options
+
+You can specify provider type and authentication options during connection:
+
+```typescript
+// Default: Use smart auto-connect heuristics
 const result = await sdk.connect();
 
-// Google authentication (skips provider selection)
+// Force specific provider
+const result = await sdk.connect({ providerType: "injected" });
+const result = await sdk.connect({ providerType: "embedded" });
+
+// Embedded authentication options
 const result = await sdk.connect({
-  authOptions: {
-    provider: "google",
-  },
+  providerType: "embedded",
+  provider: "google", // Skip provider selection screen
 });
 
-// Apple authentication (skips provider selection)
 const result = await sdk.connect({
-  authOptions: {
-    provider: "apple",
-  },
+  providerType: "embedded", 
+  provider: "apple",
 });
 ```
 
@@ -170,48 +192,58 @@ const isConnected = sdk.ethereum.isConnected();
 
 ## Provider Types
 
-### Injected Provider
+The SDK automatically manages provider selection, but you can still understand and control which provider is used:
 
-Uses the Phantom browser extension installed by the user. No additional configuration needed.
+### Smart Provider Selection
 
-```typescript
-const sdk = new BrowserSDK({
-  providerType: "injected",
-  addressTypes: [AddressType.solana, AddressType.ethereum],
-});
-```
+The SDK uses intelligent heuristics to determine the best provider:
 
-### Embedded Provider
-
-Creates a non-custodial wallet embedded in your application. Requires API configuration.
+1. **Session Recovery**: Checks if an embedded wallet session can be recovered
+2. **Extension Detection**: Looks for installed Phantom browser extension
+3. **Fallback**: Prompts user for manual selection
 
 ```typescript
 const sdk = new BrowserSDK({
-  providerType: "embedded",
+  appId: "your-app-id", // Required for embedded wallets
   addressTypes: [AddressType.solana, AddressType.ethereum],
-  appId: "your-app-id", // Get your app ID from phantom.com/portal
-  authOptions: {
-    authUrl: "https://connect.phantom.app/login", // optional, defaults to "https://connect.phantom.app/login"
-    redirectUrl: "https://yourapp.com/callback", // optional, defaults to current page
-  },
-  autoConnect: true, // optional, auto-connect to existing session (default: true for embedded)
 });
+
+// Smart auto-connect chooses automatically
+await sdk.autoConnect();
 ```
 
-### Embedded Wallet Type
+### Manual Provider Control
+
+```typescript
+// Force specific provider during connection
+await sdk.connect({ providerType: "injected" }); // Use browser extension
+await sdk.connect({ providerType: "embedded" }); // Use embedded wallet
+
+// Switch providers at runtime
+await sdk.switchProvider("injected");
+await sdk.switchProvider("embedded");
+
+// Check current provider
+const providerInfo = sdk.getCurrentProviderInfo();
+console.log("Current provider:", providerInfo?.type); // "injected" or "embedded"
+```
+
+### Embedded Wallet Configuration
+
+The SDK supports user wallets that integrate with the Phantom ecosystem:
 
 #### User Wallet (`'user-wallet'`)
 
-- **Uses Phantom authentication** - user logs in with existing Phantom account
+- **Uses Phantom authentication** - user logs in with existing Phantom account  
 - **Potentially funded** - brings in user's existing wallet balance
 - **Connected** to user's Phantom ecosystem
 - **Perfect for**: All embedded wallet use cases
 
 ```typescript
 const sdk = new BrowserSDK({
-  providerType: "embedded",
   appId: "your-app-id",
   addressTypes: [AddressType.solana, AddressType.ethereum],
+  embeddedWalletType: "user-wallet", // Default, can be omitted
 });
 ```
 
@@ -223,43 +255,40 @@ const sdk = new BrowserSDK({
 | `AddressType.ethereum` | Ethereum, Polygon, Arbitrum, and more |
 
 
-### Auto-Connect Feature
+### Smart Auto-Connect Feature
 
-The SDK can automatically reconnect to existing sessions when instantiated, providing a seamless user experience.
+The SDK provides intelligent auto-connect that determines the best provider and automatically connects when possible.
 
 ```typescript
 const sdk = new BrowserSDK({
-  providerType: "embedded",
   appId: "your-app-id",
   addressTypes: [AddressType.solana],
-  autoConnect: true, // Default: true for embedded, false for injected
 });
 
-// SDK will automatically check for existing valid session and connect in background
-// No need to call connect() if user already has a session
+// Smart auto-connect with heuristics
+await sdk.autoConnect();
 
-// Check if already connected
+// Check if auto-connect was successful
 if (sdk.isConnected()) {
-  console.log("Already connected!");
-  const addresses = await sdk.getAddresses();
+  console.log("Auto-connected successfully!");
+  console.log("Using provider:", sdk.getCurrentProviderInfo()?.type);
+  const addresses = sdk.getAddresses();
 } else {
-  // First time or session expired, need to connect manually
-  await sdk.connect();
+  // Auto-connect failed, manual connection needed
+  const { addresses } = await sdk.connect();
 }
 ```
 
-**Disabling Auto-Connect:**
+**Auto-Connect Heuristics:**
+
+1. **Session Recovery Priority**: If an embedded wallet has a recoverable session, use embedded provider
+2. **Extension Fallback**: If no session but Phantom extension is installed, use injected provider  
+3. **Manual Selection**: If neither condition is met, prompt user for provider selection
 
 ```typescript
-const sdk = new BrowserSDK({
-  providerType: "embedded",
-  appId: "your-app-id",
-  addressTypes: [AddressType.solana],
-  autoConnect: false, // Disable auto-connect
-});
-
-// Now you must manually call connect() every time
-await sdk.connect();
+// You can also check what auto-connect would do without connecting
+const isExtensionAvailable = await BrowserSDK.isPhantomInstalled();
+console.log("Extension available:", isExtensionAvailable);
 ```
 
 ## API Reference
@@ -274,11 +303,9 @@ new BrowserSDK(config: BrowserSDKConfig)
 
 ```typescript
 interface BrowserSDKConfig {
-  providerType: "injected" | "embedded";
-  addressTypes?: [AddressType, ...AddressType[]]; // Networks to enable (e.g., [AddressType.solana])
-
-  // Required for embedded provider only
-  appId?: string; // Your app ID from phantom.com/portal (required for embedded provider)
+  // Required configuration
+  appId: string; // Your app ID from phantom.com/portal
+  addressTypes: [AddressType, ...AddressType[]]; // Networks to enable (e.g., [AddressType.solana])
   
   // Optional configuration
   apiBaseUrl?: string; // Phantom API base URL (optional, has default)
@@ -286,37 +313,84 @@ interface BrowserSDKConfig {
     authUrl?: string; // Custom auth URL (optional, defaults to "https://connect.phantom.app/login")
     redirectUrl?: string; // Custom redirect URL after authentication (optional)
   };
-  embeddedWalletType?: "user-wallet"; // Wallet type (optional, defaults to "user-wallet", currently the only supported type)
-  autoConnect?: boolean; // Enable auto-connect to existing sessions (optional, defaults to true for embedded)
+  embeddedWalletType?: "user-wallet"; // Wallet type (optional, defaults to "user-wallet")
 }
 ```
 
 ### Extension Detection
 
-For injected provider usage, you can check if the Phantom extension is installed:
+You can check if the Phantom extension is installed for smart provider selection:
 
 ```typescript
-import { waitForPhantomExtension } from "@phantom/browser-sdk";
-
-const isAvailable = await waitForPhantomExtension(5000);
+// Static method on BrowserSDK
+const isAvailable = await BrowserSDK.isPhantomInstalled(5000); // 5 second timeout
 
 if (isAvailable) {
   console.log("Phantom extension is available!");
 } else {
   console.log("Phantom extension not found");
 }
+
+// Using the utility function directly
+import { waitForPhantomExtension } from "@phantom/browser-sdk";
+const isAvailable = await waitForPhantomExtension(5000);
 ```
 
 ### Core Methods
 
-#### connect()
+#### autoConnect()
 
-Connect to wallet and get addresses for configured AddressTypes.
+Smart auto-connect that determines the best provider and connects automatically.
 
 ```typescript
+await sdk.autoConnect();
+// Uses intelligent heuristics to choose and connect to the best available provider
+// Fails silently if no suitable provider is found
+```
+
+#### connect(options?)
+
+Connect to wallet with optional provider selection and authentication options.
+
+```typescript
+// Smart connection (uses heuristics)
 const result = await sdk.connect();
+
+// Force specific provider
+const result = await sdk.connect({ providerType: "injected" });
+const result = await sdk.connect({ providerType: "embedded" });
+
+// With authentication options for embedded provider
+const result = await sdk.connect({ 
+  providerType: "embedded",
+  provider: "google" 
+});
+
 // Returns: { walletId?: string, addresses: WalletAddress[] }
-// addresses only includes types from addressTypes config
+```
+
+#### switchProvider(type, options?)
+
+Switch to a different provider type at runtime.
+
+```typescript
+// Switch to injected provider (browser extension)
+await sdk.switchProvider("injected");
+
+// Switch to embedded provider with options
+await sdk.switchProvider("embedded", { 
+  embeddedWalletType: "user-wallet" 
+});
+```
+
+#### getCurrentProviderInfo()
+
+Get information about the currently active provider.
+
+```typescript
+const info = sdk.getCurrentProviderInfo();
+console.log("Provider type:", info?.type); // "injected" | "embedded" | null
+console.log("Embedded wallet type:", info?.embeddedWalletType); // "user-wallet" | undefined
 ```
 
 #### getAddresses()
@@ -706,8 +780,8 @@ interface DebugMessage {
 import { BrowserSDK, DebugLevel } from "@phantom/browser-sdk";
 
 const sdk = new BrowserSDK({
-  providerType: "embedded",
   appId: "your-app-id",
+  addressTypes: [AddressType.solana],
 });
 
 // Store debug messages
@@ -772,11 +846,15 @@ import {
 import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 
 const sdk = new BrowserSDK({
-  providerType: "injected",
+  appId: "your-app-id",
   addressTypes: [AddressType.solana],
 });
 
-await sdk.connect();
+// Smart auto-connect or manual connection
+await sdk.autoConnect();
+if (!sdk.isConnected()) {
+  await sdk.connect();
+}
 
 // Get recent blockhash
 const connection = new Connection("https://api.mainnet-beta.solana.com");
@@ -825,11 +903,15 @@ import {
 import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 
 const sdk = new BrowserSDK({
-  providerType: "injected",
+  appId: "your-app-id",
   addressTypes: [AddressType.solana],
 });
 
-await sdk.connect();
+// Smart auto-connect or manual connection
+await sdk.autoConnect();
+if (!sdk.isConnected()) {
+  await sdk.connect();
+}
 
 // Create transaction with @solana/kit
 const rpc = createSolanaRpc("https://api.mainnet-beta.solana.com");
@@ -855,11 +937,15 @@ console.log("Transaction signature:", result.hash);
 import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 
 const sdk = new BrowserSDK({
-  providerType: "injected",
+  appId: "your-app-id",
   addressTypes: [AddressType.ethereum],
 });
 
-await sdk.connect();
+// Smart auto-connect or manual connection
+await sdk.autoConnect();
+if (!sdk.isConnected()) {
+  await sdk.connect();
+}
 
 // Simple ETH transfer
 const result = await sdk.ethereum.sendTransaction({
@@ -889,10 +975,15 @@ import { parseEther, parseGwei, encodeFunctionData } from "viem";
 import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 
 const sdk = new BrowserSDK({
-  providerType: "embedded",
+  appId: "your-app-id",
   addressTypes: [AddressType.ethereum],
-  // ... config
 });
+
+// Smart auto-connect or manual connection
+await sdk.autoConnect();
+if (!sdk.isConnected()) {
+  await sdk.connect();
+}
 
 // Simple transfer with viem utilities
 const result = await sdk.ethereum.sendTransaction({

@@ -31,7 +31,7 @@ npm install @phantom/react-sdk @solana/kit viem
 
 ## Quick Start
 
-### Basic Setup with Chain-Specific Operations
+### Basic Setup with Smart Auto-Connect
 
 ```tsx
 import { PhantomProvider, useConnect, useSolana, useEthereum } from "@phantom/react-sdk";
@@ -41,7 +41,7 @@ function App() {
   return (
     <PhantomProvider
       config={{
-        providerType: "injected", // Uses Phantom browser extension
+        appId: "your-app-id", // Get your app ID from phantom.com/portal
         addressTypes: [AddressType.solana, AddressType.ethereum],
       }}
     >
@@ -83,23 +83,50 @@ function WalletComponent() {
 }
 ```
 
-### Embedded Wallet Setup
+### Provider Type Selection
+
+The SDK uses smart auto-connect to determine the best provider automatically. You can also specify a provider type if needed:
 
 ```tsx
-import { PhantomProvider } from "@phantom/react-sdk";
+import { PhantomProvider, useConnect } from "@phantom/react-sdk";
 import { AddressType } from "@phantom/browser-sdk";
 
 function App() {
   return (
     <PhantomProvider
       config={{
-        providerType: "embedded",
         appId: "your-app-id", // Get your app ID from phantom.com/portal
         addressTypes: [AddressType.solana, AddressType.ethereum],
       }}
     >
       <YourApp />
     </PhantomProvider>
+  );
+}
+
+function YourApp() {
+  const { connect } = useConnect();
+
+  // Use smart auto-connect (recommended)
+  const handleSmartConnect = async () => {
+    await connect(); // SDK automatically chooses best provider
+  };
+
+  // Or specify provider type explicitly
+  const handleConnectEmbedded = async () => {
+    await connect({ providerType: "embedded" });
+  };
+
+  const handleConnectInjected = async () => {
+    await connect({ providerType: "injected" });
+  };
+
+  return (
+    <div>
+      <button onClick={handleSmartConnect}>Smart Connect</button>
+      <button onClick={handleConnectEmbedded}>Connect Embedded</button>
+      <button onClick={handleConnectInjected}>Connect Extension</button>
+    </div>
   );
 }
 ```
@@ -159,44 +186,66 @@ await connect({
 });
 ```
 
+## Auto-Connect Behavior
+
+### Smart Auto-Connect
+
+The SDK automatically determines the best provider to use based on:
+
+1. **Session Recovery**: If an embedded wallet has a recoverable session
+2. **Extension Detection**: If Phantom browser extension is available
+3. **Fallback**: Manual connection required if neither option is available
+
+```tsx
+import { PhantomProvider, usePhantom } from "@phantom/react-sdk";
+
+function App() {
+  return (
+    <PhantomProvider
+      config={{
+        appId: "your-app-id",
+        addressTypes: [AddressType.solana, AddressType.ethereum],
+      }}
+    >
+      <AutoConnectExample />
+    </PhantomProvider>
+  );
+}
+
+function AutoConnectExample() {
+  const { isConnected } = usePhantom();
+
+  // Smart auto-connect happens automatically after provider setup
+  useEffect(() => {
+    // Auto-connect logic runs automatically
+    console.log("Connection status:", isConnected);
+  }, [isConnected]);
+
+  return (
+    <div>
+      {isConnected ? (
+        <p>✅ Auto-connected successfully!</p>
+      ) : (
+        <p>Manual connection required</p>
+      )}
+    </div>
+  );
+}
+```
+
 ## Provider Types
 
 ### Injected Provider
 
-Uses the Phantom browser extension installed by the user.
-
-```tsx
-<PhantomProvider
-  config={{
-    providerType: "injected",
-    addressTypes: [AddressType.solana, AddressType.ethereum],
-  }}
->
-  <YourApp />
-</PhantomProvider>
-```
+- Uses the Phantom browser extension
+- Requires extension to be installed
+- Connects to existing wallet with balances
 
 ### Embedded Provider
 
-Creates non-custodial wallets embedded in your application.
-
-#### User Wallet
-
-- **Uses Phantom authentication** - user logs in with existing account
-- **Potentially funded** - brings existing wallet balance
-- **Connected** to user's Phantom ecosystem
-
-```tsx
-<PhantomProvider
-  config={{
-    providerType: "embedded",
-    appId: "your-app-id",
-    addressTypes: [AddressType.solana, AddressType.ethereum],
-  }}
->
-  <YourApp />
-</PhantomProvider>
-```
+- Creates non-custodial wallets in your app
+- Uses Phantom authentication system
+- Potentially funded wallets from user's ecosystem
 
 
 ## Available Hooks
@@ -748,11 +797,11 @@ Quick reference of all available hooks:
 
 ```typescript
 interface PhantomSDKConfig {
-  providerType: "injected" | "embedded";
-  addressTypes?: [AddressType, ...AddressType[]]; // Networks to enable (e.g., [AddressType.solana])
-
-  // Required for embedded provider only
-  appId: string; // Your app ID from phantom.com/portal (required for embedded provider)
+  // Required
+  appId: string; // Your app ID from phantom.com/portal
+  
+  // Networks to enable (optional, defaults to all)
+  addressTypes?: [AddressType, ...AddressType[]]; // e.g., [AddressType.solana, AddressType.ethereum]
   
   // Optional configuration
   apiBaseUrl?: string; // Phantom API base URL (optional, has default)
@@ -760,8 +809,15 @@ interface PhantomSDKConfig {
     authUrl?: string; // Custom auth URL (optional, defaults to "https://connect.phantom.app/login")
     redirectUrl?: string; // Custom redirect URL after authentication (optional)
   };
-  embeddedWalletType?: "user-wallet"; // Wallet type (optional, defaults to "user-wallet", currently the only supported type)
-  autoConnect?: boolean; // Auto-connect to existing session on SDK instantiation (optional, defaults to true for embedded, false for injected)
+  embeddedWalletType?: "user-wallet"; // Wallet type (optional, defaults to "user-wallet")
+}
+
+// Provider type can be specified in connect() method
+interface BrowserAuthOptions {
+  providerType?: "injected" | "embedded"; // Optional provider selection
+  authOptions?: {
+    provider?: "google" | "apple"; // Auth provider for embedded wallets
+  };
 }
 ```
 
@@ -792,8 +848,8 @@ function App() {
 
   // SDK configuration - static, won't change when debug settings change
   const config: PhantomSDKConfig = {
-    providerType: "embedded",
     appId: "your-app-id",
+    addressTypes: [AddressType.solana, AddressType.ethereum],
     // ... other config
   };
 
