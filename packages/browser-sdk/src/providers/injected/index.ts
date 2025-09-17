@@ -412,9 +412,9 @@ export class InjectedProvider implements Provider {
     };
 
     // Add event listeners using browser-injected-sdk
-    const cleanupConnect = (this.phantom as any).solana.addEventListener("connect", handleSolanaConnect);
-    const cleanupDisconnect = (this.phantom as any).solana.addEventListener("disconnect", handleSolanaDisconnect);
-    const cleanupAccountChanged = (this.phantom as any).solana.addEventListener(
+    const cleanupConnect = this.phantom.solana.addEventListener("connect", handleSolanaConnect);
+    const cleanupDisconnect = this.phantom.solana.addEventListener("disconnect", handleSolanaDisconnect);
+    const cleanupAccountChanged = this.phantom.solana.addEventListener(
       "accountChanged",
       handleSolanaAccountChanged,
     );
@@ -463,32 +463,41 @@ export class InjectedProvider implements Provider {
       });
     };
 
-    // Map Ethereum account changed to reconnect event
+    // Map Ethereum account changed to reconnect event or disconnect
     const handleEthereumAccountsChanged = (accounts: string[]) => {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum accounts changed event received", { accounts });
 
       // Update Ethereum addresses
       this.addresses = this.addresses.filter(addr => addr.addressType !== AddressType.ethereum);
+
       if (accounts && accounts.length > 0) {
+        // User switched to a connected account - add new addresses
         this.addresses.push(
           ...accounts.map(address => ({
             addressType: AddressType.ethereum,
             address,
           })),
         );
-      }
 
-      // Emit as a new connect event (account change = reconnection)
-      this.emit("connect", {
-        addresses: this.addresses,
-        source: "injected-extension-account-change",
-      });
+        // Emit as a new connect event (account change = reconnection)
+        this.emit("connect", {
+          addresses: this.addresses,
+          source: "injected-extension-account-change",
+        });
+      } else {
+        // User switched to unconnected account - treat as disconnect
+        this.connected = this.addresses.length > 0;
+
+        this.emit("disconnect", {
+          source: "injected-extension-account-change",
+        });
+      }
     };
 
     // Add event listeners using browser-injected-sdk
-    const cleanupConnect = (this.phantom as any).ethereum.addEventListener("connect", handleEthereumConnect);
-    const cleanupDisconnect = (this.phantom as any).ethereum.addEventListener("disconnect", handleEthereumDisconnect);
-    const cleanupAccountsChanged = (this.phantom as any).ethereum.addEventListener(
+    const cleanupConnect = this.phantom.ethereum.addEventListener("connect", handleEthereumConnect);
+    const cleanupDisconnect = this.phantom.ethereum.addEventListener("disconnect", handleEthereumDisconnect);
+    const cleanupAccountsChanged = this.phantom.ethereum.addEventListener(
       "accountsChanged",
       handleEthereumAccountsChanged,
     );

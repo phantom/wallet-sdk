@@ -1,7 +1,7 @@
 import type { Plugin } from "../index";
 import { connect } from "./connect";
 import { disconnect } from "./disconnect";
-import { addEventListener, removeEventListener, type PhantomEventCallback } from "./eventListeners";
+import { addEventListener, removeEventListener, triggerEvent, type PhantomEventCallback } from "./eventListeners";
 import { getAccount } from "./getAccount";
 import { signAndSendTransaction } from "./signAndSendTransaction";
 import { signAndSendAllTransactions } from "./signAndSendAllTransactions";
@@ -9,7 +9,7 @@ import { signTransaction } from "./signTransaction";
 import { signAllTransactions } from "./signAllTransactions";
 import { signIn } from "./signIn";
 import { signMessage } from "./signMessage";
-import type { PhantomEventType } from "./types";
+import type { PhantomEventType, PhantomSolanaProvider } from "./types";
 
 export type Solana = {
   connect: typeof connect;
@@ -42,6 +42,23 @@ const solana: Solana = {
 export function createSolanaPlugin(): Plugin<Solana> {
   return {
     name: "solana",
-    create: () => solana,
+    create: () => {
+      // Forward native provider events to browser-injected-sdk events
+      try {
+        const provider = (window as any)?.phantom?.solana as PhantomSolanaProvider;
+        if (provider) {
+          provider.on("connect", (publicKey?: { toString: () => string }) => {
+            if (publicKey) triggerEvent("connect", publicKey.toString());
+          });
+          provider.on("disconnect", () => triggerEvent("disconnect"));
+          provider.on("accountChanged", (publicKey?: { toString: () => string }) => {
+            if (publicKey) triggerEvent("accountChanged", publicKey.toString());
+          });
+        }
+      } catch (error) {
+        // Silently ignore if native provider unavailable
+      }
+      return solana;
+    },
   };
 }
