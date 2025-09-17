@@ -1,5 +1,11 @@
 # @phantom/browser-sdk
 
+## 1.0.0-beta.4
+
+### Patch Changes
+
+- 74885d4: Fix, injected provider change accounts
+
 ## 1.0.0-beta.3
 
 ### Patch Changes
