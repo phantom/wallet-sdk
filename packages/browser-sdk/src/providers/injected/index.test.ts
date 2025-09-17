@@ -323,4 +323,129 @@ describe("InjectedProvider", () => {
       expect(provider.isConnected()).toBe(false);
     });
   });
+
+  describe("account change events", () => {
+    let provider: InjectedProvider;
+    let connectCallback: jest.Mock;
+    let disconnectCallback: jest.Mock;
+
+    beforeEach(async () => {
+      provider = new InjectedProvider({
+        addressTypes: [AddressType.solana, AddressType.ethereum],
+      });
+
+      connectCallback = jest.fn();
+      disconnectCallback = jest.fn();
+
+      provider.on("connect", connectCallback);
+      provider.on("disconnect", disconnectCallback);
+
+      // Connect initially
+      await provider.connect();
+    });
+
+    describe("Ethereum account changes", () => {
+      it("should emit connect event when switching to a connected account", () => {
+        // Simulate Ethereum accountsChanged event with new addresses
+        const newAccounts = ["0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E"];
+
+        // Find and call the Ethereum accountsChanged handler that was set up
+        const addEventListenerCalls = mockPhantomObject.ethereum.addEventListener.mock.calls;
+        const accountsChangedCall = addEventListenerCalls.find(call => call[0] === "accountsChanged");
+        expect(accountsChangedCall).toBeDefined();
+
+        const accountsChangedHandler = accountsChangedCall[1];
+        accountsChangedHandler(newAccounts);
+
+        // Should emit connect event with new addresses
+        expect(connectCallback).toHaveBeenCalledWith({
+          addresses: [
+            { addressType: AddressType.solana, address: "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH" },
+            { addressType: AddressType.ethereum, address: newAccounts[0] }
+          ],
+          source: "injected-extension-account-change",
+        });
+        expect(disconnectCallback).not.toHaveBeenCalled();
+      });
+
+      it("should emit disconnect event when switching to unconnected account", () => {
+        // Reset mock calls from initial connection
+        connectCallback.mockClear();
+        disconnectCallback.mockClear();
+
+        // Simulate Ethereum accountsChanged event with empty accounts array
+        const emptyAccounts: string[] = [];
+
+        // Find and call the Ethereum accountsChanged handler
+        const addEventListenerCalls = mockPhantomObject.ethereum.addEventListener.mock.calls;
+        const accountsChangedCall = addEventListenerCalls.find(call => call[0] === "accountsChanged");
+        expect(accountsChangedCall).toBeDefined();
+
+        const accountsChangedHandler = accountsChangedCall[1];
+        accountsChangedHandler(emptyAccounts);
+
+        // Should emit disconnect event (not connect with empty addresses)
+        expect(disconnectCallback).toHaveBeenCalledWith({
+          source: "injected-extension-account-change",
+        });
+        expect(connectCallback).not.toHaveBeenCalled();
+      });
+
+      it("should maintain Solana connection when Ethereum switches to unconnected", () => {
+        // Reset mock calls from initial connection
+        connectCallback.mockClear();
+        disconnectCallback.mockClear();
+
+        // Simulate Ethereum accountsChanged event with empty accounts
+        const emptyAccounts: string[] = [];
+
+        const addEventListenerCalls = mockPhantomObject.ethereum.addEventListener.mock.calls;
+        const accountsChangedCall = addEventListenerCalls.find(call => call[0] === "accountsChanged");
+        const accountsChangedHandler = accountsChangedCall[1];
+        accountsChangedHandler(emptyAccounts);
+
+        // Provider should still be connected (because Solana is still connected)
+        expect(provider.isConnected()).toBe(true);
+        expect(provider.getAddresses()).toEqual([
+          { addressType: AddressType.solana, address: "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH" }
+        ]);
+      });
+    });
+
+    describe("Solana account changes", () => {
+      it("should emit connect event when switching to different Solana account", () => {
+        // Reset mock calls from initial connection
+        connectCallback.mockClear();
+        disconnectCallback.mockClear();
+
+        // Simulate Solana accountChanged event with new public key
+        const newPublicKey = "DifferentSolanaPublicKeyHere123456789ABCDEF";
+
+        // Find and call the Solana accountChanged handler that was registered with browser-injected-SDK
+        const addEventListenerCalls = mockPhantomObject.solana.addEventListener.mock.calls;
+
+        // There might be multiple accountChanged listeners, get the last one (most recent)
+        const accountChangedCalls = addEventListenerCalls.filter(call => call[0] === "accountChanged");
+        expect(accountChangedCalls.length).toBeGreaterThan(0);
+
+        const accountChangedCall = accountChangedCalls[accountChangedCalls.length - 1]; // Use the last one
+        const accountChangedHandler = accountChangedCall[1];
+        accountChangedHandler(newPublicKey);
+
+        // Should emit connect event with updated Solana address (but no Ethereum addresses since not added during initial connect)
+        expect(connectCallback).toHaveBeenCalledWith({
+          addresses: [
+            { addressType: AddressType.solana, address: newPublicKey }
+          ],
+          source: "injected-extension-account-change",
+        });
+        expect(disconnectCallback).not.toHaveBeenCalled();
+
+        // Verify the provider state was updated
+        expect(provider.getAddresses()).toEqual([
+          { addressType: AddressType.solana, address: newPublicKey }
+        ]);
+      });
+    });
+  });
 });
