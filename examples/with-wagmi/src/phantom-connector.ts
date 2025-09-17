@@ -14,10 +14,8 @@ export function phantomConnector() {
   const initializeSdk = async () => {
     if (!sdk) {
       sdk = new BrowserSDK({
-        providerType: 'embedded',
         appId: "test-app-id",
         apiBaseUrl: 'https://staging-api.phantom.app/v1/wallets',
-
         authOptions: {
           authUrl: 'https://staging-connect.phantom.app/login',
           redirectUrl: `${window.location.origin}/auth-callback`,

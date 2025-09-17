@@ -48,22 +48,20 @@ function App() {
     debug.setLevel(debugLevel)
     debug.setCallback(handleDebugMessage)
 
+    const sdkConfig = {
+      apiBaseUrl: import.meta.env.VITE_WALLET_API,
+      appId: import.meta.env.VITE_APP_ID || "your-app-id",
+      embeddedWalletType: "user-wallet" as const,
+      authOptions: {
+        authUrl: import.meta.env.VITE_AUTH_URL,
+      },
+      addressTypes: [AddressType.solana, AddressType.ethereum] as [AddressType, ...AddressType[]],
+    }
+
     if (type === "injected") {
-      return new BrowserSDK({
-        providerType: "injected",
-        addressTypes: [AddressType.solana, AddressType.ethereum],
-      })
+      return new BrowserSDK(sdkConfig)
     } else {
-      const embeddedSdk = new BrowserSDK({
-        providerType: "embedded",
-        apiBaseUrl: import.meta.env.VITE_WALLET_API,
-        appId: import.meta.env.VITE_APP_ID || "your-app-id",
-        embeddedWalletType: "user-wallet",
-        authOptions: {
-          authUrl: import.meta.env.VITE_AUTH_URL,
-        },
-        addressTypes: [AddressType.solana, AddressType.ethereum],
-      })
+      const embeddedSdk = new BrowserSDK(sdkConfig)
 
       embeddedSdk.on("connect_start", data => {
         console.log("Embedded SDK connect started:", data)
@@ -143,7 +141,7 @@ function App() {
     setError(null)
     
     try {
-      const result = await sdk.connect()
+      const result = await sdk.connect({ providerType })
       setAddresses(result.addresses)
       setIsConnected(true)
       await updateBalance(result.addresses)

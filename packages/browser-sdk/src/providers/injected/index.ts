@@ -153,7 +153,7 @@ export class InjectedProvider implements Provider {
       if (this.addressTypes.includes(AddressType.solana)) {
         debug.log(DebugCategory.INJECTED_PROVIDER, "Attempting Solana connection");
         try {
-          const publicKey = await this.phantom.solana.connect();
+          const publicKey = await this.phantom.solana.connect({});
           if (publicKey) {
             connectedAddresses.push({
               addressType: AddressType.solana,
@@ -329,7 +329,7 @@ export class InjectedProvider implements Provider {
         debug.log(DebugCategory.INJECTED_PROVIDER, "Attempting Ethereum auto-connect");
         try {
           // Use onlyIfTrusted=true for silent connection
-          const accounts = await this.phantom.ethereum.connect({ onlyIfTrusted: true });
+          const accounts = await this.phantom.ethereum.connect();
           if (accounts && accounts.length > 0) {
             connectedAddresses.push(
               ...accounts.map((address: string) => ({
@@ -361,8 +361,7 @@ export class InjectedProvider implements Provider {
       this.addresses = connectedAddresses;
       this.connected = true;
 
-      // Initialize event handling for newly connected chains
-      this.initializeEvents();
+      // Event handling is initialized in constructor
 
       // Emit connect event for successful auto-connection
       this.emit("connect", {

@@ -3,7 +3,7 @@ import { InjectedProvider } from "./providers/injected";
 import { EmbeddedProvider } from "./providers/embedded";
 import { ProviderManager } from "./ProviderManager";
 import { cleanupWindowMock } from "./test-utils/mockWindow";
-import { waitForPhantomExtension } from "./waitForPhantomExtension";
+import { waitForPhantomExtension as _waitForPhantomExtension } from "./waitForPhantomExtension";
 import { AddressType } from "@phantom/client";
 
 // Mock parsers to prevent ESM module parsing issues
@@ -25,8 +25,8 @@ jest.mock("./providers/embedded");
 jest.mock("./ProviderManager");
 jest.mock("./waitForPhantomExtension");
 
-const MockInjectedProvider = InjectedProvider as jest.MockedClass<typeof InjectedProvider>;
-const MockEmbeddedProvider = EmbeddedProvider as jest.MockedClass<typeof EmbeddedProvider>;
+const _MockInjectedProvider = InjectedProvider as jest.MockedClass<typeof InjectedProvider>;
+const _MockEmbeddedProvider = EmbeddedProvider as jest.MockedClass<typeof EmbeddedProvider>;
 const MockProviderManager = ProviderManager as jest.MockedClass<typeof ProviderManager>;
 
 describe("BrowserSDK", () => {

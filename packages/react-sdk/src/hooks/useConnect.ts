@@ -1,12 +1,12 @@
 import { useCallback } from "react";
 import { usePhantom } from "../PhantomProvider";
-import type { AuthOptions } from "@phantom/browser-sdk";
+import type { BrowserAuthOptions } from "@phantom/browser-sdk";
 
 export function useConnect() {
   const { sdk, isConnecting, connectError, currentProviderType, isPhantomAvailable } = usePhantom();
 
   const connect = useCallback(
-    async (options?: AuthOptions) => {
+    async (options?: BrowserAuthOptions) => {
       if (!sdk) {
         throw new Error("SDK not initialized");
       }

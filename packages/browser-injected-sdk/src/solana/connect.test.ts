@@ -38,7 +38,7 @@ describe("connect", () => {
   it("should perform regular non-eager connect when app is not trusted", async () => {
     const mockCallback = jest.fn();
     addEventListener("connect", mockCallback);
-    const publicKey = await connect();
+    const publicKey = await connect({});
     (mockProvider.connect as jest.Mock).mockImplementation(() => ({
       publicKey: { toString: () => "123" } as any,
     }));
@@ -55,7 +55,7 @@ describe("connect", () => {
     addEventListener("connect", mockCallback);
     // Ensure this mock resolves with a string to match what connect() returns
     (mockProvider.connect as jest.Mock).mockImplementation(async () => Promise.resolve("123"));
-    const publicKey = await connect();
+    const publicKey = await connect({});
     expect(mockDefaultGetProvider).toHaveBeenCalledTimes(1);
     expect(publicKey).toBeDefined();
     expect(triggerEventSpy).toHaveBeenCalledWith("connect", publicKey);
@@ -64,7 +64,7 @@ describe("connect", () => {
 
   it("should return public key immediately when app is already connected", async () => {
     mockProvider.isConnected = true;
-    const publicKey = await connect();
+    const publicKey = await connect({});
     expect(mockDefaultGetProvider).toHaveBeenCalledTimes(1);
     expect(publicKey).toBeDefined();
     expect(triggerEventSpy).not.toHaveBeenCalled();
@@ -77,13 +77,13 @@ describe("connect", () => {
       await new Promise(resolve => setTimeout(resolve, 100));
       throw new Error("Failed to connect");
     });
-    await expect(connect()).rejects.toThrow("Failed to connect to Phantom.");
+    await expect(connect({})).rejects.toThrow("Failed to connect to Phantom.");
     expect(mockDefaultGetProvider).toHaveBeenCalledTimes(1);
     expect(triggerEventSpy).not.toHaveBeenCalled();
   });
   it("should throw error when provider is not properly injected", async () => {
     mockDefaultGetProvider.mockReturnValue(Promise.resolve(null));
-    await expect(connect()).rejects.toThrow("Provider not found.");
+    await expect(connect({})).rejects.toThrow("Provider not found.");
     expect(triggerEventSpy).not.toHaveBeenCalled();
     expect(mockDefaultGetProvider).toHaveBeenCalledTimes(1);
   });

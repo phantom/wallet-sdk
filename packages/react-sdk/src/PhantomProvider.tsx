@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import { BrowserSDK } from "@phantom/browser-sdk";
-import type { BrowserSDKConfig, WalletAddress, AuthOptions, DebugConfig } from "@phantom/browser-sdk";
+import type { BrowserSDKConfig, WalletAddress, BrowserAuthOptions, DebugConfig } from "@phantom/browser-sdk";
 
 export interface PhantomSDKConfig extends BrowserSDKConfig {}
 
@@ -10,7 +10,7 @@ export interface PhantomDebugConfig extends DebugConfig {}
 export interface ConnectOptions {
   providerType?: "injected" | "embedded";
   embeddedWalletType?: "app-wallet" | "user-wallet";
-  authOptions?: AuthOptions;
+  authOptions?: BrowserAuthOptions;
 }
 
 interface PhantomContextValue {
@@ -37,8 +37,6 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   const memoizedConfig: BrowserSDKConfig = useMemo(() => {
     return {
       ...config,
-      // Use providerType if provided, default to embedded
-      providerType: config.providerType || "embedded",
     };
   }, [config]);
   
@@ -47,9 +45,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   const [connectError, setConnectError] = useState<Error | null>(null);
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
   const [walletId, setWalletId] = useState<string | null>(null);
-  const [currentProviderType, setCurrentProviderType] = useState<"injected" | "embedded" | null>(
-    (memoizedConfig.providerType as any) || null,
-  );
+  const [currentProviderType, setCurrentProviderType] = useState<"injected" | "embedded" | null>(null);
   const [isPhantomAvailable, setIsPhantomAvailable] = useState(false);
 
   // Eager initialization - SDK created immediately and never null
@@ -139,16 +135,14 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
         setIsPhantomAvailable(false);
       }
 
-      // Attempt auto-connect if enabled
-      if (memoizedConfig.autoConnect !== false) {
-        sdk.autoConnect().catch(() => {
-          // Silent fail - auto-connect is optional and shouldn't break the app
-        });
-      }
+      // Attempt auto-connect by default
+      sdk.autoConnect().catch(() => {
+        // Silent fail - auto-connect is optional and shouldn't break the app
+      });
     };
 
     initialize();
-  }, [sdk, memoizedConfig.autoConnect]);
+  }, [sdk]);
 
   // Memoize context value to prevent unnecessary re-renders
   const value: PhantomContextValue = useMemo(
