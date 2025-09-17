@@ -1233,7 +1233,7 @@ export class EmbeddedProvider {
    */
   async getSessionRecoveryInfo(): Promise<{
     hasSession: boolean;
-    sessionStatus?: "completed" | "pending";
+    sessionStatus?: "completed" | "pending" | "failed";
     hasUrlParams: boolean;
     urlParams: { sessionId?: string; walletId?: string };
     canAutoRecover: boolean;
