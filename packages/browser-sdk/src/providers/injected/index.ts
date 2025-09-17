@@ -32,7 +32,7 @@ declare global {
   }
 }
 
-interface InjectedProviderConfig {
+export interface InjectedProviderConfig {
   addressTypes: AddressType[];
 }
 
@@ -414,10 +414,7 @@ export class InjectedProvider implements Provider {
     // Add event listeners using browser-injected-sdk
     const cleanupConnect = this.phantom.solana.addEventListener("connect", handleSolanaConnect);
     const cleanupDisconnect = this.phantom.solana.addEventListener("disconnect", handleSolanaDisconnect);
-    const cleanupAccountChanged = this.phantom.solana.addEventListener(
-      "accountChanged",
-      handleSolanaAccountChanged,
-    );
+    const cleanupAccountChanged = this.phantom.solana.addEventListener("accountChanged", handleSolanaAccountChanged);
 
     // Store cleanup functions
     this.browserInjectedCleanupFunctions.push(cleanupConnect, cleanupDisconnect, cleanupAccountChanged);

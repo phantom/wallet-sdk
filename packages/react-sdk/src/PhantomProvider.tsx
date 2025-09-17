@@ -3,7 +3,7 @@ import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import { BrowserSDK } from "@phantom/browser-sdk";
 import type { BrowserSDKConfig, WalletAddress, AuthOptions, DebugConfig } from "@phantom/browser-sdk";
 
-export interface PhantomSDKConfig extends BrowserSDKConfig {}
+export type PhantomSDKConfig = BrowserSDKConfig;
 
 export interface PhantomDebugConfig extends DebugConfig {}
 
@@ -34,14 +34,8 @@ export interface PhantomProviderProps {
 
 export function PhantomProvider({ children, config, debugConfig }: PhantomProviderProps) {
   // Memoized config to avoid unnecessary SDK recreation
-  const memoizedConfig: BrowserSDKConfig = useMemo(() => {
-    return {
-      ...config,
-      // Use providerType if provided, default to embedded
-      providerType: config.providerType || "embedded",
-    };
-  }, [config]);
-  
+  const memoizedConfig: BrowserSDKConfig = useMemo(() => config, [config]);
+
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectError, setConnectError] = useState<Error | null>(null);
@@ -54,8 +48,6 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
 
   // Eager initialization - SDK created immediately and never null
   const sdk = useMemo(() => new BrowserSDK(memoizedConfig), [memoizedConfig]);
-
-  
 
   // Event listener management - SDK already exists
   useEffect(() => {
