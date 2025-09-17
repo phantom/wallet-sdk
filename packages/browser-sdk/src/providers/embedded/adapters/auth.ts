@@ -8,6 +8,8 @@ import type {
 import { debug, DebugCategory } from "../../../debug";
 import { DEFAULT_AUTH_URL } from "@phantom/constants";
 
+declare const __SDK_VERSION__: string;
+
 export class BrowserAuthProvider implements AuthProvider {
   private urlParamsAccessor: URLParamsAccessor;
 
@@ -49,6 +51,7 @@ export class BrowserAuthProvider implements AuthProvider {
         redirect_uri: phantomOptions.redirectUrl || (typeof window !== "undefined" ? this.getValidatedCurrentUrl() : ""),
         session_id: phantomOptions.sessionId,
         clear_previous_session: true.toString(),
+        sdk_version: __SDK_VERSION__,
       });
 
       // Add provider if specified (will skip provider selection)
