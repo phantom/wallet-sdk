@@ -12,6 +12,7 @@ import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
 import { AddressType } from "@phantom/client";
 
 import type { DebugCallback, DebugLevel } from "./debug";
+import type { InjectedProviderConfig } from "./providers/injected";
 
 // Debug configuration - separate from SDK config to avoid unnecessary reinstantiation
 export interface DebugConfig {
@@ -20,20 +21,36 @@ export interface DebugConfig {
   callback?: DebugCallback;
 }
 
-export interface BrowserSDKConfig extends Partial<Omit<EmbeddedProviderConfig, "authOptions">> {
-  providerType: "injected" | "embedded" | (string & Record<never, never>);
-  addressTypes: [AddressType, ...AddressType[]];
-  // Required for embedded provider, optional for injected
+export type BrowserSDKConfig = Prettify<
+  (ExtendedEmbeddedProviderConfig | ExtendedInjectedProviderConfig) & {
+    autoConnect?: boolean;
+  }
+>;
+
+// Improves display of a merged type on hover
+type Prettify<T> = {
+  [K in keyof T]: T[K];
+  // eslint-disable-next-line @typescript-eslint/ban-types
+} & {};
+
+interface ExtendedEmbeddedProviderConfig
+  extends Omit<EmbeddedProviderConfig, "authOptions" | "apiBaseUrl" | "embeddedWalletType"> {
+  providerType: "embedded";
+  // Optional in the SDK
   apiBaseUrl?: string;
-  appId?: string; // the app id retrieved from phantom.com/portal (required for embedded provider)
-  embeddedWalletType?: "app-wallet" | "user-wallet" | (string & Record<never, never>);
-  // Auto-connect to existing sessions (default: true)
-  autoConnect?: boolean;
+  embeddedWalletType?: "app-wallet" | "user-wallet";
   authOptions?: {
     authUrl?: string;
     redirectUrl?: string;
   };
-  
+}
+
+interface ExtendedInjectedProviderConfig extends InjectedProviderConfig {
+  providerType: "injected";
+  // Omitted EmbeddedProviderConfig properties
+  appId?: never;
+  authOptions?: never;
+  embeddedWalletType?: never;
 }
 
 // Re-export types from core for convenience
