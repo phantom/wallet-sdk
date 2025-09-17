@@ -2,6 +2,8 @@ import * as WebBrowser from "expo-web-browser";
 import type { AuthProvider, AuthResult, PhantomConnectOptions, JWTAuthOptions } from "@phantom/embedded-provider-core";
 import { DEFAULT_AUTH_URL } from "@phantom/constants";
 
+declare const __SDK_VERSION__: string;
+
 export class ExpoAuthProvider implements AuthProvider {
   async authenticate(options: PhantomConnectOptions | JWTAuthOptions): Promise<void | AuthResult> {
     // Handle JWT authentication
@@ -34,6 +36,7 @@ export class ExpoAuthProvider implements AuthProvider {
         redirect_uri: redirectUrl,
         session_id: sessionId,
         clear_previous_session: "true",
+        sdk_version: __SDK_VERSION__,
       });
 
       // Add provider if specified (will skip provider selection)
