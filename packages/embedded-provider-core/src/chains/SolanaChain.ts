@@ -3,7 +3,6 @@ import type { ISolanaChain } from "@phantom/chain-interfaces";
 import type { EmbeddedProvider } from "../embedded-provider";
 import { NetworkId } from "@phantom/constants";
 import bs58 from "bs58";
-import { parseSolanaSignedTransaction } from "@phantom/parsers";
 import type { Transaction, VersionedTransaction } from "@phantom/sdk-types";
 
 /**
@@ -54,8 +53,8 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     };
   }
 
-  async signTransaction(transaction: Transaction | VersionedTransaction): Promise<Transaction | VersionedTransaction> {
-    throw new Error("signTransaction is not supported in embedded provider. Use signAndSendTransaction instead.");
+  signTransaction(_transaction: Transaction | VersionedTransaction): Promise<Transaction | VersionedTransaction> {
+    return Promise.reject(new Error("signTransaction is not supported in embedded provider. Use signAndSendTransaction instead."));
   }
 
   async signAndSendTransaction(transaction: Transaction | VersionedTransaction): Promise<{ signature: string }> {
@@ -70,8 +69,8 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     return { signature: result.hash };
   }
 
-  async signAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<(Transaction | VersionedTransaction)[]> {
-    throw new Error("signAllTransactions is not supported in embedded provider. Use signAndSendAllTransactions instead.");
+  signAllTransactions(_transactions: (Transaction | VersionedTransaction)[]): Promise<(Transaction | VersionedTransaction)[]> {
+    return Promise.reject(new Error("signAllTransactions is not supported in embedded provider. Use signAndSendAllTransactions instead."));
   }
 
   async signAndSendAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<{ signatures: string[] }> {
