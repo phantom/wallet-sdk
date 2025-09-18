@@ -76,18 +76,7 @@ export class EmbeddedEthereumChain implements IEthereumChain {
   }
 
   async signTransaction(transaction: EthTransactionRequest): Promise<string> {
-    const result = await this.provider.signTransaction({
-      transaction,
-      networkId: this.currentNetworkId,
-    });
-    // Convert base64url encoded signature to hex format for Ethereum (same logic as parseEVMSignatureResponse)
-    try {
-      const signatureBytes = base64urlDecode(result.rawTransaction);
-      return "0x" + Buffer.from(signatureBytes).toString("hex");
-    } catch (error) {
-      // Fallback: assume it's already hex format
-      return result.rawTransaction.startsWith("0x") ? result.rawTransaction : "0x" + result.rawTransaction;
-    }
+    throw new Error("signTransaction is not supported in embedded provider. Use sendTransaction instead.");
   }
 
   async sendTransaction(transaction: EthTransactionRequest): Promise<string> {
@@ -184,19 +173,7 @@ export class EmbeddedEthereumChain implements IEthereumChain {
       }
 
       case "eth_signTransaction": {
-        const [transaction] = args.params as [EthTransactionRequest];
-        // If the transaction has a chainId, use that NetworkId
-        const networkIdFromTx = transaction.chainId
-          ? chainIdToNetworkId(
-              typeof transaction.chainId === "number" ? transaction.chainId : parseInt(transaction.chainId, 16),
-            )
-          : null;
-
-        const signResult = await this.provider.signTransaction({
-          transaction,
-          networkId: networkIdFromTx || this.currentNetworkId,
-        });
-        return signResult.rawTransaction as T;
+        throw new Error("eth_signTransaction is not supported in embedded provider. Use eth_sendTransaction instead.");
       }
 
       case "eth_sendTransaction": {

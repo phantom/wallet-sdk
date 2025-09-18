@@ -55,20 +55,7 @@ export class EmbeddedSolanaChain implements ISolanaChain {
   }
 
   async signTransaction(transaction: Transaction | VersionedTransaction): Promise<Transaction | VersionedTransaction> {
-    this.ensureConnected();
-    const result = await this.provider.signTransaction({
-      transaction,
-      networkId: this.currentNetworkId,
-    });
-    // Parse the signed transaction from the API response
-    const signedResult = parseSolanaSignedTransaction(result.rawTransaction);
-    if (signedResult) {
-      // Return the parsed signed transaction object
-      return signedResult as Transaction | VersionedTransaction;
-    } else {
-      // If parsing failed, throw an error
-      throw new Error("Failed to parse signed transaction");
-    }
+    throw new Error("signTransaction is not supported in embedded provider. Use signAndSendTransaction instead.");
   }
 
   async signAndSendTransaction(transaction: Transaction | VersionedTransaction): Promise<{ signature: string }> {
@@ -84,8 +71,7 @@ export class EmbeddedSolanaChain implements ISolanaChain {
   }
 
   async signAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<(Transaction | VersionedTransaction)[]> {
-    const results = await Promise.all(transactions.map(tx => this.signTransaction(tx)));
-    return results;
+    throw new Error("signAllTransactions is not supported in embedded provider. Use signAndSendAllTransactions instead.");
   }
 
   async signAndSendAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<{ signatures: string[] }> {
