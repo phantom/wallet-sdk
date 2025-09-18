@@ -14,7 +14,7 @@ export interface ConnectOptions {
 }
 
 interface PhantomContextValue {
-  sdk: BrowserSDK;
+  sdk: BrowserSDK | null;
   isConnected: boolean;
   isConnecting: boolean;
   connectError: Error | null;
@@ -22,6 +22,7 @@ interface PhantomContextValue {
   walletId: string | null;
   currentProviderType: "injected" | "embedded" | null;
   isPhantomAvailable: boolean;
+  isClient: boolean;
 }
 
 const PhantomContext = createContext<PhantomContextValue | undefined>(undefined);
@@ -36,6 +37,8 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   // Memoized config to avoid unnecessary SDK recreation
   const memoizedConfig: BrowserSDKConfig = useMemo(() => config, [config]);
 
+  const [sdk, setSdk] = useState<BrowserSDK | null>(null);
+  const [isClient, setIsClient] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectError, setConnectError] = useState<Error | null>(null);
@@ -46,13 +49,29 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   );
   const [isPhantomAvailable, setIsPhantomAvailable] = useState(false);
 
-  // Create SDK - always use real BrowserSDK since components should be client-only
-  const sdk: BrowserSDK = useMemo(() => {
-    return new BrowserSDK(memoizedConfig);
-  }, [memoizedConfig]);
-
-  // Event listener management - SDK always exists
+  // Initialize client flag
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Create SDK only on client side
+  useEffect(() => {
+    if (!isClient) return;
+
+    const sdkInstance = new BrowserSDK(memoizedConfig);
+    setSdk(sdkInstance);
+
+    return () => {
+      // Cleanup SDK if needed
+      sdkInstance.disconnect().catch(() => {
+        // Silent fail on cleanup
+      });
+    };
+  }, [isClient, memoizedConfig]);
+
+  // Event listener management - only when SDK exists
+  useEffect(() => {
+    if (!sdk) return;
     // Event handlers that need to be referenced for cleanup
     const handleConnectStart = () => {
       setIsConnecting(true);
@@ -114,15 +133,15 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
 
   // Handle debug configuration changes separately to avoid SDK reinstantiation
   useEffect(() => {
-    if (!debugConfig) return;
-    
+    if (!debugConfig || !sdk) return;
+
     sdk.configureDebug(debugConfig);
   }, [sdk, debugConfig]);
 
   // Initialize connection state and auto-connect - only on client side
   useEffect(() => {
-    // Skip initialization on server-side (MockBrowserSDK)
-    if (typeof window === "undefined") return;
+    // Skip initialization if not on client or SDK not ready
+    if (!isClient || !sdk) return;
 
     const initialize = async () => {
       // Check if Phantom extension is available (only for injected provider)
@@ -143,7 +162,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
     };
 
     initialize();
-  }, [sdk, memoizedConfig.autoConnect]);
+  }, [sdk, memoizedConfig.autoConnect, isClient]);
 
   // Memoize context value to prevent unnecessary re-renders
   const value: PhantomContextValue = useMemo(
@@ -156,8 +175,9 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       walletId,
       currentProviderType,
       isPhantomAvailable,
+      isClient,
     }),
-    [sdk, isConnected, isConnecting, connectError, addresses, walletId, currentProviderType, isPhantomAvailable],
+    [sdk, isConnected, isConnecting, connectError, addresses, walletId, currentProviderType, isPhantomAvailable, isClient],
   );
 
   return <PhantomContext.Provider value={value}>{children}</PhantomContext.Provider>;

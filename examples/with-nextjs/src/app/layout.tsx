@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ClientProvider } from "@/components/ClientProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,9 +14,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Phantom SDK Next.js Example",
-  description: "Example app using Phantom React SDK with Next.js",
+  description: "Example app using Phantom React SDK with Next.js - Server Side Rendered",
 };
 
+// This layout is server-side rendered
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -28,9 +28,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ClientProvider>
-          {children}
-        </ClientProvider>
+        {/* No client provider here - children can decide when to be client-side */}
+        {children}
       </body>
     </html>
   );
