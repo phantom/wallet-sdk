@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import { BrowserSDK } from "@phantom/browser-sdk";
 import type { BrowserSDKConfig, WalletAddress, AuthOptions, DebugConfig } from "@phantom/browser-sdk";
-import { MockBrowserSDK } from "./MockBrowserSDK";
 
 export type PhantomSDKConfig = BrowserSDKConfig;
 
@@ -15,7 +14,7 @@ export interface ConnectOptions {
 }
 
 interface PhantomContextValue {
-  sdk: BrowserSDK | MockBrowserSDK;
+  sdk: BrowserSDK;
   isConnected: boolean;
   isConnecting: boolean;
   connectError: Error | null;
@@ -47,15 +46,9 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   );
   const [isPhantomAvailable, setIsPhantomAvailable] = useState(false);
 
-  // Create appropriate SDK based on environment - always defined, never null
-  const sdk: BrowserSDK | MockBrowserSDK = useMemo(() => {
-    if (typeof window === "undefined") {
-      // Server-side: return mock SDK that handles SSR gracefully
-      return new MockBrowserSDK(memoizedConfig);
-    } else {
-      // Client-side: return real BrowserSDK
-      return new BrowserSDK(memoizedConfig);
-    }
+  // Create SDK - always use real BrowserSDK since components should be client-only
+  const sdk: BrowserSDK = useMemo(() => {
+    return new BrowserSDK(memoizedConfig);
   }, [memoizedConfig]);
 
   // Event listener management - SDK always exists
