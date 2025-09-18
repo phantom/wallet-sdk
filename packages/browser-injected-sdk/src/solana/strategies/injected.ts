@@ -39,6 +39,10 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
     return (window as any)?.phantom?.solana as PhantomSolanaProvider;
   }
 
+  public getProvider(): PhantomSolanaProvider | null {
+    return this.#getProvider() || null;
+  }
+
   public get isConnected(): boolean {
     const provider = this.#getProvider();
     return provider?.isConnected && provider.publicKey ? true : false;

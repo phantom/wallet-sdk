@@ -38,6 +38,10 @@ export class InjectedEthereumStrategy implements EthereumStrategy {
     return (window as any)?.phantom?.ethereum as PhantomEthereumProvider;
   }
 
+  public getProvider(): PhantomEthereumProvider | null {
+    return this.#getProvider() || null;
+  }
+
   public get isConnected(): boolean {
     const provider = this.#getProvider();
     return provider?.isConnected && provider.selectedAddress ? true : false;

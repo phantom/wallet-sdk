@@ -202,8 +202,8 @@ export class BrowserSDK {
   async autoConnect(): Promise<void> {
     debug.log(DebugCategory.BROWSER_SDK, "Attempting auto-connect");
     const currentProvider = this.providerManager.getCurrentProvider();
-    if (currentProvider && "autoConnect" in currentProvider) {
-      await (currentProvider as any).autoConnect();
+    if (currentProvider) {
+      await currentProvider.autoConnect();
     } else {
       debug.warn(DebugCategory.BROWSER_SDK, "Current provider does not support auto-connect", {
         providerType: this.getCurrentProviderInfo()?.type,
