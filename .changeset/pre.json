@@ -27,9 +27,12 @@
     "@phantom/server-sdk": "0.2.4",
     "with-wagmi": "0.1.0",
     "@phantom/with-react-ui": "0.0.1",
-    "@phantom/utils": "1.0.0-beta.3"
+    "@phantom/utils": "1.0.0-beta.3",
+    "with-nextjs": "0.1.0"
   },
   "changesets": [
+    "clear-parts-battle",
+    "cuddly-rivers-rule",
     "cute-days-yell",
     "fancy-lands-spend",
     "fancy-symbols-enter",
