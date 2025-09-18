@@ -1,15 +1,19 @@
 "use client";
-import { useConnect, useSolana } from "@phantom/react-sdk";
+import { useAccounts, useConnect, useDisconnect, useSolana } from "@phantom/react-sdk";
 import { useState } from "react";
 
 export default function Home() {
-  const { isConnected, connect, disconnect, addresses } = useConnect();
-  const solana = useSolana();
+  const { connect } = useConnect();
+  const { disconnect } = useDisconnect();
+  const addresses = useAccounts();
+  const isConnected = addresses && addresses.length > 0;
+
+  const { solana } = useSolana();
   const [signatureResult, setSignatureResult] = useState<string>("");
 
   const handleSignMessage = async () => {
-    if (!solana || !isConnected) return;
-    
+    if (!solana || isConnected) return;
+
     try {
       const message = "Hello from Phantom SDK with Next.js!";
       const result = await solana.signMessage(message);
@@ -35,7 +39,7 @@ export default function Home() {
         <div className="space-y-4">
           {!isConnected ? (
             <button
-              onClick={connect}
+              onClick={() => connect()}
               className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
             >
               Connect Phantom Wallet
@@ -69,7 +73,7 @@ export default function Home() {
               )}
 
               <button
-                onClick={disconnect}
+                onClick={() => disconnect()}
                 className="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
               >
                 Disconnect
