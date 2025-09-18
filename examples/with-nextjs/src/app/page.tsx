@@ -1,8 +1,10 @@
 "use client";
 import { useAccounts, useConnect, useDisconnect, useSolana } from "@phantom/react-sdk";
 import { useState } from "react";
+import bs58 from "bs58";
 
 export default function Home() {
+
   const { connect } = useConnect();
   const { disconnect } = useDisconnect();
   const addresses = useAccounts();
@@ -12,12 +14,11 @@ export default function Home() {
   const [signatureResult, setSignatureResult] = useState<string>("");
 
   const handleSignMessage = async () => {
-    if (!solana || isConnected) return;
-
+    if (!solana || !isConnected) return;
     try {
       const message = "Hello from Phantom SDK with Next.js!";
       const result = await solana.signMessage(message);
-      setSignatureResult(`Message signed! Signature: ${result.signature.slice(0, 20)}...`);
+      setSignatureResult(`Message signed! Signature: ${bs58.encode(result.signature)}...`);
     } catch (error) {
       console.error("Failed to sign message:", error);
       setSignatureResult("Failed to sign message");

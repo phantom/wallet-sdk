@@ -34,7 +34,10 @@ export class InjectedEthereumStrategy implements EthereumStrategy {
     });
   }
 
-  #getProvider(): PhantomEthereumProvider {
+  #getProvider(): PhantomEthereumProvider | undefined {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
     return (window as any)?.phantom?.ethereum as PhantomEthereumProvider;
   }
 

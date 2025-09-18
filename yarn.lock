@@ -27223,6 +27223,7 @@ __metadata:
     "@types/node": "npm:^20"
     "@types/react": "npm:^19"
     "@types/react-dom": "npm:^19"
+    bs58: "npm:^6.0.0"
     eslint: "npm:^9"
     eslint-config-next: "npm:15.5.3"
     next: "npm:15.5.3"
