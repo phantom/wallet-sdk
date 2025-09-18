@@ -74,6 +74,7 @@ export interface Provider {
   disconnect(): Promise<void>;
   getAddresses(): WalletAddress[];
   isConnected(): boolean;
+  autoConnect(): Promise<void>;
 
   // Chain access - providers expose their chains directly
   solana: ISolanaChain;

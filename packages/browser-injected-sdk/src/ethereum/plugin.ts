@@ -8,7 +8,7 @@ import { signIn } from "./signIn";
 import { sendTransaction, signTransaction } from "./sendTransaction";
 import { getChainId, switchChain } from "./chainUtils";
 import { getProvider } from "./getProvider";
-import type { EthereumEventType, PhantomEthereumProvider } from "./types";
+import type { EthereumEventType } from "./types";
 
 export type Ethereum = {
   connect: typeof connect;
@@ -44,26 +44,32 @@ const ethereum: Ethereum = {
   removeEventListener,
 };
 
+async function bindProviderEvents(): Promise<void> {
+  try {
+    const strategy = await getProvider();
+    const provider = strategy.getProvider();
+    
+    if (provider) {
+      provider.on("connect", () => {
+        provider.request({ method: "eth_accounts" }).then((accounts: string[]) => {
+          if (accounts?.length > 0) triggerEvent("connect", accounts);
+        }).catch(() => {});
+      });
+      provider.on("disconnect", () => triggerEvent("disconnect", []));
+      provider.on("accountsChanged", (accounts: string[]) => triggerEvent("accountsChanged", accounts));
+      provider.on("chainChanged", (chainId: string) => triggerEvent("chainChanged", chainId));
+    }
+  } catch (error) {
+    // Silently ignore if native provider unavailable
+  }
+}
+
 export function createEthereumPlugin(): Plugin<Ethereum> {
   return {
     name: "ethereum",
     create: () => {
-      // Forward native provider events to browser-injected-sdk events
-      try {
-        const provider = (window as any)?.phantom?.ethereum as PhantomEthereumProvider;
-        if (provider) {
-          provider.on("connect", () => {
-            provider.request({ method: "eth_accounts" }).then((accounts: string[]) => {
-              if (accounts?.length > 0) triggerEvent("connect", accounts);
-            }).catch(() => {});
-          });
-          provider.on("disconnect", () => triggerEvent("disconnect", []));
-          provider.on("accountsChanged", (accounts: string[]) => triggerEvent("accountsChanged", accounts));
-          provider.on("chainChanged", (chainId: string) => triggerEvent("chainChanged", chainId));
-        }
-      } catch (error) {
-        // Silently ignore if native provider unavailable
-      }
+      // Bind events asynchronously without waiting for completion
+      bindProviderEvents();
       return ethereum;
     },
   };

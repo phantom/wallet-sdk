@@ -7,6 +7,7 @@ import type { ProviderStrategy } from "../types";
 const mockProvider = {
   type: "injected" as ProviderStrategy,
   isConnected: false,
+  getProvider: jest.fn(),
   connect: jest.fn(),
   disconnect: jest.fn(),
   getAccounts: jest.fn(),

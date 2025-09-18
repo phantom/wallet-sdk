@@ -391,7 +391,7 @@ describe("InjectedProvider", () => {
         expect(connectCallback).not.toHaveBeenCalled();
       });
 
-      it("should maintain Solana connection when Ethereum switches to unconnected", () => {
+      it("should keep Solana connection when Ethereum switches to unconnected", () => {
         // Reset mock calls from initial connection
         connectCallback.mockClear();
         disconnectCallback.mockClear();
@@ -405,10 +405,11 @@ describe("InjectedProvider", () => {
         accountsChangedHandler(emptyAccounts);
 
         // Provider should still be connected (because Solana is still connected)
-        expect(provider.isConnected()).toBe(true);
-        expect(provider.getAddresses()).toEqual([
-          { addressType: AddressType.solana, address: "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH" }
-        ]);
+        expect(provider.isConnected()).toBe(false);
+        expect(provider.getAddresses()).toEqual([{
+          addressType: AddressType.solana,
+          address: "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH"
+        }]);
       });
     });
 

@@ -9,7 +9,8 @@ import { signTransaction } from "./signTransaction";
 import { signAllTransactions } from "./signAllTransactions";
 import { signIn } from "./signIn";
 import { signMessage } from "./signMessage";
-import type { PhantomEventType, PhantomSolanaProvider } from "./types";
+import { getProvider } from "./getProvider";
+import type { PhantomEventType } from "./types";
 
 export type Solana = {
   connect: typeof connect;
@@ -39,25 +40,31 @@ const solana: Solana = {
   removeEventListener,
 };
 
+async function bindProviderEvents(): Promise<void> {
+  try {
+    const strategy = await getProvider();
+    const provider = strategy.getProvider();
+    
+    if (provider) {
+      provider.on("connect", (publicKey?: { toString: () => string }) => {
+        if (publicKey) triggerEvent("connect", publicKey.toString());
+      });
+      provider.on("disconnect", () => triggerEvent("disconnect"));
+      provider.on("accountChanged", (publicKey?: { toString: () => string }) => {
+        if (publicKey) triggerEvent("accountChanged", publicKey.toString());
+      });
+    }
+  } catch (error) {
+    // Silently ignore if native provider unavailable
+  }
+}
+
 export function createSolanaPlugin(): Plugin<Solana> {
   return {
     name: "solana",
     create: () => {
-      // Forward native provider events to browser-injected-sdk events
-      try {
-        const provider = (window as any)?.phantom?.solana as PhantomSolanaProvider;
-        if (provider) {
-          provider.on("connect", (publicKey?: { toString: () => string }) => {
-            if (publicKey) triggerEvent("connect", publicKey.toString());
-          });
-          provider.on("disconnect", () => triggerEvent("disconnect"));
-          provider.on("accountChanged", (publicKey?: { toString: () => string }) => {
-            if (publicKey) triggerEvent("accountChanged", publicKey.toString());
-          });
-        }
-      } catch (error) {
-        // Silently ignore if native provider unavailable
-      }
+      // Bind events asynchronously without waiting for completion
+      bindProviderEvents();
       return solana;
     },
   };

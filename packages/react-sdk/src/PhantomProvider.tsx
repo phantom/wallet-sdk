@@ -46,10 +46,12 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   );
   const [isPhantomAvailable, setIsPhantomAvailable] = useState(false);
 
-  // Eager initialization - SDK created immediately and never null
-  const sdk = useMemo(() => new BrowserSDK(memoizedConfig), [memoizedConfig]);
+  // Create SDK - always use real BrowserSDK since components should be client-only
+  const sdk: BrowserSDK = useMemo(() => {
+    return new BrowserSDK(memoizedConfig);
+  }, [memoizedConfig]);
 
-  // Event listener management - SDK already exists
+  // Event listener management - SDK always exists
   useEffect(() => {
     // Event handlers that need to be referenced for cleanup
     const handleConnectStart = () => {
@@ -112,14 +114,15 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
 
   // Handle debug configuration changes separately to avoid SDK reinstantiation
   useEffect(() => {
-    if (!sdk || !debugConfig) return;
-
+    if (!debugConfig) return;
+    
     sdk.configureDebug(debugConfig);
   }, [sdk, debugConfig]);
 
-  // Initialize connection state and auto-connect
+  // Initialize connection state and auto-connect - only on client side
   useEffect(() => {
-    if (!sdk) return;
+    // Skip initialization on server-side (MockBrowserSDK)
+    if (typeof window === "undefined") return;
 
     const initialize = async () => {
       // Check if Phantom extension is available (only for injected provider)
