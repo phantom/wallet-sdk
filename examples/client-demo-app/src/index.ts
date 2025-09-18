@@ -51,8 +51,11 @@ async function main() {
   const client = new PhantomClient(
     {
       apiBaseUrl: "https://staging-api.phantom.app/v1/wallets",
+      headers: {
+        "x-app-id": "2b4308d3-e072-4f31-b890-4bd14ed6e546",
+      }
     },
-    stamper,
+    stamper
   );
 
   console.log("✅ Phantom Client initialized");
