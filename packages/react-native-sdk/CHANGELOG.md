@@ -1,5 +1,12 @@
 # @phantom/react-native-sdk
 
+## 1.0.0-beta.8
+
+### Patch Changes
+
+- @phantom/client@1.0.0-beta.8
+- @phantom/embedded-provider-core@1.0.0-beta.8
+
 ## 1.0.0-beta.7
 
 ### Patch Changes

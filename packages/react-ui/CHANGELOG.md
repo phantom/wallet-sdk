@@ -1,5 +1,16 @@
 # @phantom/react-ui
 
+## 2.0.0-beta.4
+
+### Patch Changes
+
+- fb3160f: Add autoconnect for injected provider, fix issues with server side rendering instantiation in react-sdk
+- Updated dependencies [d8c7017]
+- Updated dependencies [fb3160f]
+  - @phantom/browser-sdk@1.0.0-beta.8
+  - @phantom/react-sdk@1.0.0-beta.8
+  - @phantom/client@1.0.0-beta.8
+
 ## 2.0.0-beta.3
 
 ### Patch Changes
