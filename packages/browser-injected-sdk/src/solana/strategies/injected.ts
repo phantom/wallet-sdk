@@ -35,7 +35,10 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
     });
   }
 
-  #getProvider(): PhantomSolanaProvider {
+  #getProvider(): PhantomSolanaProvider | undefined {
+    if (typeof window === "undefined") {
+      return undefined ;
+    }
     return (window as any)?.phantom?.solana as PhantomSolanaProvider;
   }
 
