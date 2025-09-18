@@ -8,7 +8,7 @@ import { signIn } from "./signIn";
 import { sendTransaction, signTransaction } from "./sendTransaction";
 import { getChainId, switchChain } from "./chainUtils";
 import { getProvider } from "./getProvider";
-import type { EthereumEventType, PhantomEthereumProvider } from "./types";
+import type { EthereumEventType } from "./types";
 
 export type Ethereum = {
   connect: typeof connect;

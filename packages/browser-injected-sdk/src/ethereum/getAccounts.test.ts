@@ -6,6 +6,7 @@ import * as getProviderModule from "./getProvider";
 const mockProvider = {
   type: "injected" as ProviderStrategy,
   isConnected: true,
+  getProvider: jest.fn(),
   connect: jest.fn(),
   disconnect: jest.fn(),
   getAccounts: jest.fn(),

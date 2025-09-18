@@ -46,16 +46,16 @@ export class MockBrowserSDK {
   }
 
   // Connection Management - throw errors for actual connection operations
-  async connect(_options?: AuthOptions): Promise<ConnectResult> {
-    throw new Error("Connection is not available during server-side rendering");
+  connect(_options?: AuthOptions): Promise<ConnectResult> {
+    return Promise.reject(new Error("Connection is not available during server-side rendering"));
   }
 
-  async disconnect(): Promise<void> {
-    throw new Error("Disconnect is not available during server-side rendering");
+  disconnect(): Promise<void> {
+    return Promise.reject(new Error("Disconnect is not available during server-side rendering"));
   }
 
-  async switchProvider(_type: "injected" | "embedded", _options?: any): Promise<void> {
-    throw new Error("Provider switching is not available during server-side rendering");
+  switchProvider(_type: "injected" | "embedded", _options?: any): Promise<void> {
+    return Promise.reject(new Error("Provider switching is not available during server-side rendering"));
   }
 
   // State Queries - return safe defaults
@@ -76,8 +76,8 @@ export class MockBrowserSDK {
   }
 
   // Utility Methods
-  static async isPhantomInstalled(_timeoutMs?: number): Promise<boolean> {
-    return false; // Always false during SSR
+  static isPhantomInstalled(_timeoutMs?: number): Promise<boolean> {
+    return Promise.resolve(false); // Always false during SSR
   }
 
   // Event Management - no-op implementations
@@ -115,19 +115,19 @@ export class MockBrowserSDK {
   }
 
   // Auto-confirm Methods - throw errors since these require actual connection
-  async enableAutoConfirm(_params: AutoConfirmEnableParams): Promise<AutoConfirmResult> {
-    throw new Error("Auto-confirm is not available during server-side rendering");
+  enableAutoConfirm(_params: AutoConfirmEnableParams): Promise<AutoConfirmResult> {
+    return Promise.reject(new Error("Auto-confirm is not available during server-side rendering"));
   }
 
-  async disableAutoConfirm(): Promise<void> {
-    throw new Error("Auto-confirm is not available during server-side rendering");
+  disableAutoConfirm(): Promise<void> {
+    return Promise.reject(new Error("Auto-confirm is not available during server-side rendering"));
   }
 
-  async getAutoConfirmStatus(): Promise<AutoConfirmResult> {
-    throw new Error("Auto-confirm status is not available during server-side rendering");
+  getAutoConfirmStatus(): Promise<AutoConfirmResult> {
+    return Promise.reject(new Error("Auto-confirm status is not available during server-side rendering"));
   }
 
-  async getSupportedAutoConfirmChains(): Promise<AutoConfirmSupportedChainsResult> {
-    throw new Error("Auto-confirm chains are not available during server-side rendering");
+  getSupportedAutoConfirmChains(): Promise<AutoConfirmSupportedChainsResult> {
+    return Promise.reject(new Error("Auto-confirm chains are not available during server-side rendering"));
   }
 }
