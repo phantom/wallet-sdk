@@ -1,5 +1,12 @@
 # @phantom/browser-sdk
 
+## 1.0.0-beta.5
+
+### Patch Changes
+
+- d8c7017: Updates on react sdk instantiation and autoconnect for injected
+- fb3160f: Add autoconnect for injected provider, fix issues with server side rendering instantiation in react-sdk
+
 ## 1.0.0-beta.4
 
 ### Patch Changes
