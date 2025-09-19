@@ -1,5 +1,15 @@
 # @phantom/react-ui
 
+## 2.0.0-beta.5
+
+### Patch Changes
+
+- 92fe48f: Avoid cleanup on redirect
+- Updated dependencies [92fe48f]
+  - @phantom/browser-sdk@1.0.0-beta.9
+  - @phantom/react-sdk@1.0.0-beta.9
+  - @phantom/client@1.0.0-beta.9
+
 ## 2.0.0-beta.4
 
 ### Patch Changes
