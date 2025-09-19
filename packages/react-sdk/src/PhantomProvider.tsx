@@ -61,12 +61,8 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
     const sdkInstance = new BrowserSDK(memoizedConfig);
     setSdk(sdkInstance);
 
-    return () => {
-      // Cleanup SDK if needed
-      sdkInstance.disconnect().catch(() => {
-        // Silent fail on cleanup
-      });
-    };
+    // No cleanup - let the SDK persist across page navigations
+    // The SDK manages its own state and should only disconnect when explicitly called
   }, [isClient, memoizedConfig]);
 
   // Event listener management - only when SDK exists
