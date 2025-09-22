@@ -9,7 +9,7 @@ import {
   type AddressType,
   type Organization,
 } from "@phantom/client";
-import { randomUUID } from "@phantom/utils";
+import { randomUUID, getSecureTimestampSync } from "@phantom/utils";
 import { 
   ANALYTICS_HEADERS,
   DEFAULT_WALLET_API_URL,
@@ -212,7 +212,7 @@ export class ServerSDK {
         role: "ADMIN",
         authenticators: [
           {
-            authenticatorName: `auth-${Date.now()}`,
+            authenticatorName: `auth-${getSecureTimestampSync()}`,
             authenticatorKind: "keypair",
             publicKey: base64urlPublicKey,
             algorithm: "Ed25519",

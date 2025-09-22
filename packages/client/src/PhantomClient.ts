@@ -57,7 +57,7 @@ import {
 } from "./types";
 
 import type { Stamper } from "@phantom/sdk-types";
-import { randomUUID } from "@phantom/utils";
+import { randomUUID, getSecureTimestamp } from "@phantom/utils";
 
 // TODO(napas): Auto generate this from the OpenAPI spec
 export interface SubmissionConfig {
@@ -127,10 +127,13 @@ export class PhantomClient {
       if (!this.config.organizationId) {
         throw new Error("organizationId is required to create a wallet");
       }
+
+      const timestamp = await getSecureTimestamp();
+
       // Create wallet request
       const walletRequest: any = {
         organizationId: this.config.organizationId,
-        walletName: walletName || `Wallet ${Date.now()}`,
+        walletName: walletName || `Wallet ${timestamp}`,
         accounts: [
           DerivationPath.Solana(),
           DerivationPath.Ethereum(),
@@ -143,7 +146,7 @@ export class PhantomClient {
       const request: CreateWallet = {
         method: CreateWalletMethodEnum.createWallet,
         params: walletRequest,
-        timestampMs: Date.now(),
+        timestampMs: timestamp,
       } as any;
 
       const response = await this.kmsApi.postKmsRpc(request);
@@ -164,7 +167,7 @@ export class PhantomClient {
           organizationId: this.config.organizationId,
           walletId: walletResult.walletId,
         },
-        timestampMs: Date.now(),
+        timestampMs: timestamp,
       } as any;
 
       // Fetching accounts for wallet
@@ -258,7 +261,7 @@ export class PhantomClient {
       const request: SignTransaction = {
         method: SignTransactionMethodEnum.signTransaction,
         params: signRequest,
-        timestampMs: Date.now(),
+        timestampMs: await getSecureTimestamp(),
       } as any;
 
       const response = await this.kmsApi.postKmsRpc(request);
@@ -322,7 +325,7 @@ export class PhantomClient {
           organizationId: this.config.organizationId,
           walletId: walletId,
         },
-        timestampMs: Date.now(),
+        timestampMs: await getSecureTimestamp(),
       } as any;
 
       const accountsResponse = await this.kmsApi.postKmsRpc(requestAccounts);
@@ -380,7 +383,7 @@ export class PhantomClient {
       const request: SignRawPayload = {
         method: SignRawPayloadMethodEnum.signRawPayload,
         params: signRequest,
-        timestampMs: Date.now(),
+        timestampMs: await getSecureTimestamp(),
       } as any;
 
       const response = await this.kmsApi.postKmsRpc(request);
@@ -403,7 +406,7 @@ export class PhantomClient {
           limit: limit || 20,
           offset: offset || 0,
         },
-        timestampMs: Date.now(),
+        timestampMs: await getSecureTimestamp(),
       };
 
       // Fetching wallets for organization
@@ -443,7 +446,7 @@ export class PhantomClient {
         params: {
           organizationId: organizationId,
         },
-        timestampMs: Date.now(),
+        timestampMs: await getSecureTimestamp(),
       };
 
       const response = await this.kmsApi.postKmsRpc(request as any);
@@ -457,16 +460,18 @@ export class PhantomClient {
 
   async getOrCreateOrganization(tag: string, publicKey: string): Promise<ExternalKmsOrganization> {
     try {
+      const timestamp = await getSecureTimestamp();
+
       // First, try to get the organization
       // Since there's no explicit getOrganization method, we'll create it
       // This assumes the API returns existing org if it already exists
       return await this.createOrganization(tag, [
         {
-          username: `user-${Date.now()}`,
+          username: `user-${timestamp}`,
           role: KmsUserRole.admin,
           authenticators: [
             {
-              authenticatorName: `auth-${Date.now()}`,
+              authenticatorName: `auth-${timestamp}`,
               authenticatorKind: "keypair",
               publicKey: publicKey,
               algorithm: "Ed25519",
@@ -533,7 +538,7 @@ export class PhantomClient {
       const request: CreateOrganization = {
         method: CreateOrganizationMethodEnum.createOrganization,
         params: params,
-        timestampMs: Date.now(),
+        timestampMs: await getSecureTimestamp(),
       } as any;
 
       const response = await this.kmsApi.postKmsRpc(request);
@@ -573,7 +578,7 @@ export class PhantomClient {
       const request: CreateAuthenticator = {
         method: CreateAuthenticatorMethodEnum.createAuthenticator,
         params: requestParams,
-        timestampMs: Date.now(),
+        timestampMs: await getSecureTimestamp(),
       } as any;
 
       const response = await this.kmsApi.postKmsRpc(request);
@@ -600,7 +605,7 @@ export class PhantomClient {
       const request: DeleteAuthenticator = {
         method: DeleteAuthenticatorMethodEnum.deleteAuthenticator,
         params: requestParams,
-        timestampMs: Date.now(),
+        timestampMs: await getSecureTimestamp(),
       } as any;
 
       const response = await this.kmsApi.postKmsRpc(request);
@@ -618,7 +623,7 @@ export class PhantomClient {
       const request: GrantOrganizationAccess = {
         method: GrantOrganizationAccessMethodEnum.grantOrganizationAccess,
         params: params,
-        timestampMs: Date.now(),
+        timestampMs: await getSecureTimestamp(),
       } as any;
 
       // Granting organization access with request
@@ -647,7 +652,7 @@ export class PhantomClient {
           tag: params.tag,
           derivationPaths: params.derivationPaths,
         },
-        timestampMs: Date.now(),
+        timestampMs: await getSecureTimestamp(),
       };
 
       const response = await this.kmsApi.postKmsRpc(request as any);
