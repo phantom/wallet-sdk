@@ -55,11 +55,6 @@ class TimeService {
       return timestamp;
     } catch (error) {
       // Fallback to Date.now() if the time service is unavailable
-      // Only log in development/debug environments
-      if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
-        console.warn('Failed to fetch secure time, falling back to local time:', error);
-      }
       return Date.now();
     }
   }

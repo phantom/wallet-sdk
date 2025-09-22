@@ -97,7 +97,7 @@ describe('TimeService', () => {
       const mockTimestamp = 1234567890;
       (fetch as jest.Mock).mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve({ timestamp: mockTimestamp }),
+        text: () => Promise.resolve(mockTimestamp.toString()),
       });
 
       // Populate cache
