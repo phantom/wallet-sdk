@@ -1,5 +1,14 @@
 # @phantom/embedded-provider-core
 
+## 1.0.0-beta.10
+
+### Patch Changes
+
+- 3f4c617: Fix utils version
+- Updated dependencies [3f4c617]
+  - @phantom/client@1.0.0-beta.10
+  - @phantom/utils@1.0.0-beta.4
+
 ## 1.0.0-beta.9
 
 ### Patch Changes

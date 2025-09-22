@@ -1,5 +1,13 @@
 # @phantom/react-sdk
 
+## 1.0.0-beta.10
+
+### Patch Changes
+
+- 3f4c617: Fix utils version
+- Updated dependencies [3f4c617]
+  - @phantom/browser-sdk@1.0.0-beta.10
+
 ## 1.0.0-beta.9
 
 ### Patch Changes
