@@ -1,12 +1,15 @@
-import { timeService, getSecureTimestamp, getSecureTimestampSync } from './time';
+import { getSecureTimestamp, getSecureTimestampSync, __clearTimeCache } from './time';
 
 // Mock fetch globally
 global.fetch = jest.fn();
 
+// Set test environment
+process.env.NODE_ENV = 'test';
+
 describe('TimeService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    timeService.clearCache();
+    __clearTimeCache();
   });
 
   describe('now()', () => {
@@ -14,10 +17,10 @@ describe('TimeService', () => {
       const mockTimestamp = 1234567890;
       (fetch as jest.Mock).mockResolvedValue({
         ok: true,
-        text: async () => mockTimestamp.toString(),
+        text: () => Promise.resolve(mockTimestamp.toString()),
       });
 
-      const result = await timeService.now();
+      const result = await getSecureTimestamp();
 
       expect(fetch).toHaveBeenCalledWith('https://time.phantom.app/utc');
       expect(result).toBe(mockTimestamp);
@@ -27,14 +30,14 @@ describe('TimeService', () => {
       const mockTimestamp = 1234567890;
       (fetch as jest.Mock).mockResolvedValue({
         ok: true,
-        text: async () => mockTimestamp.toString(),
+        text: () => Promise.resolve(mockTimestamp.toString()),
       });
 
       // First call
-      await timeService.now();
+      await getSecureTimestamp();
 
       // Second call should use cache
-      const result = await timeService.now();
+      const result = await getSecureTimestamp();
 
       expect(fetch).toHaveBeenCalledTimes(1);
       expect(result).toBeGreaterThanOrEqual(mockTimestamp);
@@ -47,18 +50,11 @@ describe('TimeService', () => {
 
       (fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
 
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-
-      const result = await timeService.now();
+      const result = await getSecureTimestamp();
 
       expect(result).toBe(mockLocalTime);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Failed to fetch secure time, falling back to local time:',
-        expect.any(Error)
-      );
 
       Date.now = originalDateNow;
-      consoleSpy.mockRestore();
     });
 
     it('should fall back to Date.now() when API returns non-ok status', async () => {
@@ -71,15 +67,11 @@ describe('TimeService', () => {
         status: 500,
       });
 
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-
-      const result = await timeService.now();
+      const result = await getSecureTimestamp();
 
       expect(result).toBe(mockLocalTime);
-      expect(consoleSpy).toHaveBeenCalled();
 
       Date.now = originalDateNow;
-      consoleSpy.mockRestore();
     });
 
     it('should fall back to Date.now() when API returns invalid timestamp', async () => {
@@ -89,21 +81,14 @@ describe('TimeService', () => {
 
       (fetch as jest.Mock).mockResolvedValue({
         ok: true,
-        text: async () => 'invalid-timestamp',
+        text: () => Promise.resolve('invalid-timestamp'),
       });
 
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-
-      const result = await timeService.now();
+      const result = await getSecureTimestamp();
 
       expect(result).toBe(mockLocalTime);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Failed to fetch secure time, falling back to local time:',
-        expect.any(Error)
-      );
 
       Date.now = originalDateNow;
-      consoleSpy.mockRestore();
     });
   });
 
@@ -112,14 +97,14 @@ describe('TimeService', () => {
       const mockTimestamp = 1234567890;
       (fetch as jest.Mock).mockResolvedValue({
         ok: true,
-        json: async () => ({ timestamp: mockTimestamp }),
+        json: () => Promise.resolve({ timestamp: mockTimestamp }),
       });
 
       // Populate cache
-      await timeService.now();
+      await getSecureTimestamp();
 
       // Use sync version
-      const result = timeService.nowSync();
+      const result = getSecureTimestampSync();
 
       expect(result).toBeGreaterThanOrEqual(mockTimestamp);
     });
@@ -129,7 +114,7 @@ describe('TimeService', () => {
       const mockLocalTime = 9876543210;
       Date.now = jest.fn(() => mockLocalTime);
 
-      const result = timeService.nowSync();
+      const result = getSecureTimestampSync();
 
       expect(result).toBe(mockLocalTime);
 
@@ -142,7 +127,7 @@ describe('TimeService', () => {
       const mockTimestamp = 1234567890;
       (fetch as jest.Mock).mockResolvedValue({
         ok: true,
-        text: async () => mockTimestamp.toString(),
+        text: () => Promise.resolve(mockTimestamp.toString()),
       });
 
       const result = await getSecureTimestamp();

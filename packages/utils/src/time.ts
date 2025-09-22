@@ -55,7 +55,11 @@ class TimeService {
       return timestamp;
     } catch (error) {
       // Fallback to Date.now() if the time service is unavailable
-      console.warn('Failed to fetch secure time, falling back to local time:', error);
+      // Only log in development/debug environments
+      if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.warn('Failed to fetch secure time, falling back to local time:', error);
+      }
       return Date.now();
     }
   }
@@ -82,9 +86,16 @@ class TimeService {
   }
 }
 
-// Export singleton instance
-export const timeService = TimeService.getInstance();
+// Create singleton instance
+const timeService = TimeService.getInstance();
 
-// Convenience function for getting secure timestamp
+// Convenience functions for getting secure timestamp
 export const getSecureTimestamp = () => timeService.now();
 export const getSecureTimestampSync = () => timeService.nowSync();
+
+// Test helper - only export in test environments
+export const __clearTimeCache = () => {
+  if (process.env.NODE_ENV === 'test') {
+    timeService.clearCache();
+  }
+};
