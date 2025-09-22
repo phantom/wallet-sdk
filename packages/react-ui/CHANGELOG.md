@@ -1,5 +1,15 @@
 # @phantom/react-ui
 
+## 2.0.0-beta.6
+
+### Patch Changes
+
+- 3f4c617: Fix utils version
+- Updated dependencies [3f4c617]
+  - @phantom/browser-sdk@1.0.0-beta.10
+  - @phantom/client@1.0.0-beta.10
+  - @phantom/react-sdk@1.0.0-beta.10
+
 ## 2.0.0-beta.5
 
 ### Patch Changes
