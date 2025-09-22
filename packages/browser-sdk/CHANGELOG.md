@@ -1,5 +1,13 @@
 # @phantom/browser-sdk
 
+## 1.0.0-beta.9
+
+### Patch Changes
+
+- 92fe48f: Avoid cleanup on redirect
+  - @phantom/client@1.0.0-beta.9
+  - @phantom/embedded-provider-core@1.0.0-beta.9
+
 ## 1.0.0-beta.8
 
 ### Patch Changes
