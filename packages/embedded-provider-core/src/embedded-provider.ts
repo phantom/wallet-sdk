@@ -975,8 +975,8 @@ export class EmbeddedProvider {
     const sessionId = generateSessionId();
     const tempSession: Session = {
       sessionId: sessionId,
-      walletId: `temp-${now}`, // Temporary ID, will be updated after redirect
-      organizationId: `temp-${now}`, // Temporary ID, will be updated after redirect
+      walletId: `temp-wallet-${now}`, // Temporary ID, will be updated after redirect
+      organizationId: `temp-org-${now}`, // Temporary ID, will be updated after redirect
       appId: this.config.appId,
       stamperInfo,
       authProvider: "phantom-connect",

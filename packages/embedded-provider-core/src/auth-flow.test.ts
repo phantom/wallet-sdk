@@ -345,8 +345,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       await provider.connect();
 
       expect(mockStorage.clearSession).toHaveBeenCalled();
-      // Should create new organization since session was cleared (only for app wallets)
-      // For user wallets, no organization is created locally
+      // For user wallets, no organization is created locally (only for app wallets it should happen)
       expect(mockClient.createOrganization).not.toHaveBeenCalled();
     });
 

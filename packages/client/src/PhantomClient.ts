@@ -38,9 +38,9 @@ import {
   type DerivationInfoAddressFormatEnum as AddressType,
   type ExternalKmsAuthenticator,
 } from "@phantom/openapi-wallet-service";
-import { 
-  DerivationPath, 
-  getNetworkConfig 
+import {
+  DerivationPath,
+  getNetworkConfig
 } from "./constants";
 import { deriveSubmissionConfig } from "./caip2-mappings";
 import {
@@ -196,7 +196,7 @@ export class PhantomClient {
    * Private method for shared signing logic
    */
   private async performTransactionSigning(
-    params: SignTransactionParams, 
+    params: SignTransactionParams,
     includeSubmissionConfig: boolean,
   ): Promise<{ signedTransaction: string; hash?: string }> {
     const walletId = params.walletId;
@@ -212,7 +212,7 @@ export class PhantomClient {
       const encodedTransaction = transactionParam;
 
       let submissionConfig: SubmissionConfig | null = null;
-      
+
       if (includeSubmissionConfig) {
         submissionConfig = deriveSubmissionConfig(networkIdParam) || null;
 
@@ -239,7 +239,7 @@ export class PhantomClient {
       };
 
       // Sign transaction request - include configs if available
-      const signRequest: SignTransactionRequest & { 
+      const signRequest: SignTransactionRequest & {
         submissionConfig?: SubmissionConfig;
         simulationConfig?: SimulationConfig;
       } = {
@@ -271,7 +271,7 @@ export class PhantomClient {
       const result = (response.data as any).result as SignedTransactionWithPublicKey;
       const rpcSubmissionResult = (response.data as any)["rpc_submission_result"];
       const hash = includeSubmissionConfig && rpcSubmissionResult ? rpcSubmissionResult.result : null;
-      
+
       return {
         signedTransaction: result.transaction as unknown as string, // Base64 encoded signed transaction
         hash,
@@ -287,7 +287,7 @@ export class PhantomClient {
    * Sign a transaction
    */
   async signTransaction(params: SignTransactionParams,): Promise<SignedTransactionResult> {
-   
+
     const result = await this.performTransactionSigning(params, false);
 
     return {
@@ -299,7 +299,7 @@ export class PhantomClient {
    * Sign and send a transaction
    */
   async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<SignedTransaction> {
-   
+
     const result = await this.performTransactionSigning(params, true);
     return {
       rawTransaction: result.signedTransaction,
@@ -518,15 +518,13 @@ export class PhantomClient {
         if (user.username) {
           this.validateNameLength(user.username, "Username");
         }
-        
+
         for (const auth of user.authenticators) {
           if (auth.authenticatorName) {
             this.validateNameLength(auth.authenticatorName, "Authenticator");
           }
         }
       }
-
-     
 
       const params: CreateOrganizationRequest = {
         organizationName: name,
@@ -538,11 +536,11 @@ export class PhantomClient {
         tags,
       };
 
-      const request: CreateOrganization = {
+      const request: CreateOrganization & { timestampMs: number }  = {
         method: CreateOrganizationMethodEnum.createOrganization,
         params: params,
         timestampMs: await getSecureTimestamp(),
-      } as any;
+      };
 
       const response = await this.kmsApi.postKmsRpc(request);
       const result = (response.data as any).result as ExternalKmsOrganization;
@@ -578,11 +576,11 @@ export class PhantomClient {
         replaceExpirable: params.replaceExpirable,
       } as any;
 
-      const request: CreateAuthenticator = {
+      const request: CreateAuthenticator & { timestampMs: number }  = {
         method: CreateAuthenticatorMethodEnum.createAuthenticator,
         params: requestParams,
         timestampMs: await getSecureTimestamp(),
-      } as any;
+      };
 
       const response = await this.kmsApi.postKmsRpc(request);
       const result = (response.data as any).result as ExternalKmsAuthenticator;
@@ -605,11 +603,11 @@ export class PhantomClient {
         authenticatorId: params.authenticatorId,
       };
 
-      const request: DeleteAuthenticator = {
+      const request: DeleteAuthenticator & { timestampMs: number } = {
         method: DeleteAuthenticatorMethodEnum.deleteAuthenticator,
         params: requestParams,
         timestampMs: await getSecureTimestamp(),
-      } as any;
+      };
 
       const response = await this.kmsApi.postKmsRpc(request);
       const result = (response.data as any).result;
@@ -623,11 +621,11 @@ export class PhantomClient {
 
   async grantOrganizationAccess(params: GrantOrganizationAccessRequest): Promise<any> {
     try {
-      const request: GrantOrganizationAccess = {
+      const request: GrantOrganizationAccess & { timestampMs: number } = {
         method: GrantOrganizationAccessMethodEnum.grantOrganizationAccess,
         params: params,
         timestampMs: await getSecureTimestamp(),
-      } as any;
+      };
 
       // Granting organization access with request
 
@@ -648,11 +646,11 @@ export class PhantomClient {
    */
   async addUserToOrganization(params: AddUserToOrganizationRequest): Promise<void> {
     try {
-      const request: AddUserToOrganization = {
+      const request: AddUserToOrganization & { timestampMs: number } = {
         method: AddUserToOrganizationMethodEnum.addUserToOrganization,
         params,
         timestampMs: await getSecureTimestamp(),
-      } as any;
+      };
 
       await this.kmsApi.postKmsRpc(request);
       // Return success - void method

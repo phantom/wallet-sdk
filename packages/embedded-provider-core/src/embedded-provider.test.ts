@@ -184,7 +184,6 @@ describe("EmbeddedProvider Core", () => {
 
     it("should pass platform stamper to PhantomClient during initialization", async () => {
       // For user-wallets, PhantomClient is only created after successful authentication
-      // This test should verify that stamper is available for use, not that PhantomClient is called immediately
       mockPlatform.storage.getSession.mockResolvedValue(null);
       mockPlatform.authProvider.resumeAuthFromRedirect.mockReturnValue(null);
 
@@ -198,7 +197,7 @@ describe("EmbeddedProvider Core", () => {
       expect(mockPlatform.stamper.init).toHaveBeenCalled();
     });
 
-    it("should create authenticator name with platform info and public key", async () => {
+    it("should call auth provider with public key and appId", async () => {
       // For user-wallets, this test should verify that auth provider is called with publicKey
       mockPlatform.storage.getSession.mockResolvedValue(null);
       mockPlatform.authProvider.resumeAuthFromRedirect.mockReturnValue(null);
