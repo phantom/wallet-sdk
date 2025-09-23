@@ -1191,6 +1191,7 @@ export class EmbeddedProvider {
               } as any,
             ],
           },
+          expiresInMs,
           replaceExpirable: true, // Replace oldest expirable user if at limit
         } as any);
       } catch (error) {
