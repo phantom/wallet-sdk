@@ -1223,7 +1223,7 @@ export class EmbeddedProvider {
       this.logger.info("EMBEDDED_PROVIDER", "Authenticator renewal completed successfully", {
         newKeyId: newKeyInfo.keyId,
         newUsername: newUsername,
-        expiresAt: new Date(now + expiresInMs).toISOString(),
+        expiresAt: new Date(session.authenticatorExpiresAt).toISOString(),
       });
     } catch (error) {
       // Rollback rotation on any failure
