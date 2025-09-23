@@ -88,7 +88,7 @@ export class BrowserAuthProvider implements AuthProvider {
       debug.info(DebugCategory.PHANTOM_CONNECT_AUTH, "Redirecting to Phantom Connect", { authUrl });
 
       // Validate auth URL before redirect
-      if (!authUrl.startsWith('https:')) {
+      if (!authUrl.startsWith('https:') && !authUrl.startsWith('http://localhost')) {
         throw new Error('Invalid auth URL - only HTTPS URLs are allowed for authentication');
       }
 
@@ -163,8 +163,28 @@ export class BrowserAuthProvider implements AuthProvider {
       });
 
       const organizationId = this.urlParamsAccessor.getParam("organization_id");
+      const expiresInMs = this.urlParamsAccessor.getParam("expires_in_ms");
+
+      // Log what we're getting for debugging
+      debug.log(DebugCategory.PHANTOM_CONNECT_AUTH, "Auth redirect parameters", {
+        walletId,
+        organizationId,
+        sessionId,
+        accountDerivationIndex,
+        expiresInMs,
+      });
+
       if (!organizationId) {
+        debug.error(DebugCategory.PHANTOM_CONNECT_AUTH, "Missing organization_id in auth response");
         throw new Error("Missing organization_id in auth response");
+      }
+
+      // Check if we got a temporary organization ID (which indicates server-side issue)
+      if (organizationId.startsWith("temp-")) {
+        debug.warn(DebugCategory.PHANTOM_CONNECT_AUTH, "Received temporary organization_id, server may not be configured properly", {
+          organizationId,
+        });
+        // Continue anyway - the temp ID might be valid for this session
       }
 
       return {
@@ -172,6 +192,7 @@ export class BrowserAuthProvider implements AuthProvider {
         organizationId,
         userInfo: context,
         accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : undefined,
+        expiresInMs: expiresInMs ? parseInt(expiresInMs) : undefined,
       };
     } catch (error) {
       // Clean up session storage on any error

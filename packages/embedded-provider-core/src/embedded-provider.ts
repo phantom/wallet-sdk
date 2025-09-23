@@ -456,10 +456,14 @@ export class EmbeddedProvider {
    */
 
   private async initializeStamper(): Promise<StamperResponse> {
-    // Initialize stamper (generates keypair in IndexedDB)
+    // Initialize stamper first
     this.logger.log("EMBEDDED_PROVIDER", "Initializing stamper");
-    const stamperInfo = await this.stamper.init();
-    this.logger.log("EMBEDDED_PROVIDER", "Stamper initialized", {
+    await this.stamper.init();
+
+    // Reset keypair to ensure we get a fresh unique keypair that doesn't conflict with existing ones
+    this.logger.log("EMBEDDED_PROVIDER", "Resetting keypair to avoid conflicts with existing keypairs");
+    const stamperInfo = await this.stamper.resetKeyPair();
+    this.logger.log("EMBEDDED_PROVIDER", "Stamper initialized with fresh keypair", {
       publicKey: stamperInfo.publicKey,
       keyId: stamperInfo.keyId,
       algorithm: this.stamper.algorithm,
@@ -467,7 +471,7 @@ export class EmbeddedProvider {
 
     const expiresInMs = AUTHENTICATOR_EXPIRATION_TIME_MS;
 
-    this.logger.info("EMBEDDED_PROVIDER", "Stamper ready for auth flow", {
+    this.logger.info("EMBEDDED_PROVIDER", "Stamper ready for auth flow with fresh keypair", {
       publicKey: stamperInfo.publicKey,
       keyId: stamperInfo.keyId,
     });
@@ -896,7 +900,7 @@ export class EmbeddedProvider {
     publicKey: string,
     stamperInfo: StamperInfo,
     authOptions: AuthOptions,
-    expiresInMs: number,
+    localExpiresInMs: number,
   ): Promise<Session> {
     this.logger.info("EMBEDDED_PROVIDER", "Using JWT authentication flow");
 
@@ -915,7 +919,16 @@ export class EmbeddedProvider {
     });
     const walletId = authResult.walletId;
     const organizationId = authResult.organizationId;
-    this.logger.info("EMBEDDED_PROVIDER", "JWT authentication completed", { walletId, organizationId });
+
+    // Use expiresInMs from auth response if provided, otherwise use local default
+    const expiresInMs = authResult.expiresInMs ?? localExpiresInMs;
+
+    this.logger.info("EMBEDDED_PROVIDER", "JWT authentication completed", {
+      walletId,
+      organizationId,
+      expiresInMs: expiresInMs,
+      source: authResult.expiresInMs ? "server" : "local"
+    });
 
     // Save session with auth info
     const now = Date.now();
@@ -1018,6 +1031,18 @@ export class EmbeddedProvider {
       tempSession.accountDerivationIndex = authResult.accountDerivationIndex;
       tempSession.status = "completed";
       tempSession.lastUsed = Date.now();
+
+      // Update authenticator expiration if provided by auth response
+      if (authResult.expiresInMs) {
+        const now = Date.now();
+        tempSession.authenticatorCreatedAt = now;
+        tempSession.authenticatorExpiresAt = now + authResult.expiresInMs;
+        this.logger.log("EMBEDDED_PROVIDER", "Updated authenticator expiration from immediate auth response", {
+          expiresInMs: authResult.expiresInMs,
+          expiresAt: new Date(tempSession.authenticatorExpiresAt).toISOString()
+        });
+      }
+
       await this.storage.saveSession(tempSession);
 
       return tempSession; // Return the auth result for further processing
@@ -1039,9 +1064,22 @@ export class EmbeddedProvider {
     // Update session with actual wallet ID and auth info from redirect
     session.walletId = authResult.walletId;
     session.authProvider = authResult.provider || session.authProvider;
+    session.organizationId = authResult.organizationId;
     session.accountDerivationIndex = authResult.accountDerivationIndex;
     session.status = "completed";
     session.lastUsed = Date.now();
+
+    // Update authenticator expiration if provided by auth response
+    if (authResult.expiresInMs) {
+      const now = Date.now();
+      session.authenticatorCreatedAt = now;
+      session.authenticatorExpiresAt = now + authResult.expiresInMs;
+      this.logger.log("EMBEDDED_PROVIDER", "Updated authenticator expiration from auth response", {
+        expiresInMs: authResult.expiresInMs,
+        expiresAt: new Date(session.authenticatorExpiresAt).toISOString()
+      });
+    }
+
     await this.storage.saveSession(session);
 
     await this.initializeClientFromSession(session);

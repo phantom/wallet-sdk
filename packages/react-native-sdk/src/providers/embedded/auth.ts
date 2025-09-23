@@ -86,20 +86,31 @@ export class ExpoAuthProvider implements AuthProvider {
         const organizationId = url.searchParams.get("organization_id");
         const provider = url.searchParams.get("provider");
         const accountDerivationIndex = url.searchParams.get("selected_account_index");
+        const expiresInMs = url.searchParams.get("expires_in_ms");
 
         if (!walletId) {
           throw new Error("Authentication failed: no walletId in redirect URL");
         }
 
         if (!organizationId) {
+          console.error("[ExpoAuthProvider] Missing organizationId in redirect URL", { url: result.url });
           throw new Error("Authentication failed: no organizationId in redirect URL");
         }
+
+        console.log("[ExpoAuthProvider] Auth redirect parameters", {
+          walletId,
+          organizationId,
+          provider,
+          accountDerivationIndex,
+          expiresInMs,
+        });
 
         return {
           walletId,
           organizationId,
           provider: provider || undefined,
           accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : undefined,
+          expiresInMs: expiresInMs ? parseInt(expiresInMs) : undefined,
         };
       } else if (result.type === "cancel") {
         throw new Error("User cancelled authentication");

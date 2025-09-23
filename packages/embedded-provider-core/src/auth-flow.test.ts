@@ -273,6 +273,7 @@ describe("EmbeddedProvider Auth Flows", () => {
     it("should initialize client and fetch addresses after successful redirect resume", async () => {
       const authResult: AuthResult = {
         walletId: "wallet-123",
+        organizationId: "org-123",
         provider: "google",
         userInfo: { email: "test@example.com" },
         accountDerivationIndex: 3,

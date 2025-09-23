@@ -3,7 +3,8 @@ export interface AuthResult {
   organizationId: string; // Organization ID returned from auth flow
   provider?: string;
   userInfo?: Record<string, any>;
-  accountDerivationIndex?: number; // Account derivation index from auth response
+  accountDerivationIndex: number; // Account derivation index from auth response
+  expiresInMs: number; // Authenticator expiration time from auth response (for user-wallets)
 }
 
 export interface PhantomConnectOptions {
