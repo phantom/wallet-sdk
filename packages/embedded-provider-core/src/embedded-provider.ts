@@ -920,8 +920,8 @@ export class EmbeddedProvider {
     const walletId = authResult.walletId;
     const organizationId = authResult.organizationId;
 
-    // Use expiresInMs from auth response if provided, otherwise use local default
-    const expiresInMs = authResult.expiresInMs ?? localExpiresInMs;
+    // Use expiresInMs from auth response if provided (and > 0), otherwise use local default
+    const expiresInMs = authResult.expiresInMs > 0 ? authResult.expiresInMs : localExpiresInMs;
 
     this.logger.info("EMBEDDED_PROVIDER", "JWT authentication completed", {
       walletId,
@@ -1032,8 +1032,8 @@ export class EmbeddedProvider {
       tempSession.status = "completed";
       tempSession.lastUsed = Date.now();
 
-      // Update authenticator expiration if provided by auth response
-      if (authResult.expiresInMs) {
+      // Update authenticator expiration if provided by auth response (and > 0)
+      if (authResult.expiresInMs > 0) {
         const now = Date.now();
         tempSession.authenticatorCreatedAt = now;
         tempSession.authenticatorExpiresAt = now + authResult.expiresInMs;
@@ -1069,8 +1069,8 @@ export class EmbeddedProvider {
     session.status = "completed";
     session.lastUsed = Date.now();
 
-    // Update authenticator expiration if provided by auth response
-    if (authResult.expiresInMs) {
+    // Update authenticator expiration if provided by auth response (and > 0)
+    if (authResult.expiresInMs > 0) {
       const now = Date.now();
       session.authenticatorCreatedAt = now;
       session.authenticatorExpiresAt = now + authResult.expiresInMs;

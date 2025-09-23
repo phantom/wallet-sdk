@@ -191,8 +191,8 @@ export class BrowserAuthProvider implements AuthProvider {
         walletId,
         organizationId,
         userInfo: context,
-        accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : undefined,
-        expiresInMs: expiresInMs ? parseInt(expiresInMs) : undefined,
+        accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : 0,
+        expiresInMs: expiresInMs ? parseInt(expiresInMs) : 0,
       };
     } catch (error) {
       // Clean up session storage on any error
