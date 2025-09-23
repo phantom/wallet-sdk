@@ -13,7 +13,7 @@ export interface StamperInfo {
 export interface Session {
   sessionId: string;
   walletId: string;
-  organizationId: string;
+  organizationId: string; // Organization ID from auth flow response or local organization for app-wallets
   appId: string;
   stamperInfo: StamperInfo;
   keypair?: Keypair; // Keep for backward compatibility during migration
@@ -26,8 +26,6 @@ export interface Session {
   authenticatorCreatedAt: number; // When the current authenticator was created
   authenticatorExpiresAt: number; // When the authenticator expires
   lastRenewalAttempt?: number; // Last time we attempted renewal
-  // Username used for organization creation (needed for authenticator rotation)
-  username: string; // Username that was used when creating the organization
   // Derivation index for account paths (defaults to 0 for backward compatibility)
   accountDerivationIndex?: number; // Account derivation index from auth flow
 }

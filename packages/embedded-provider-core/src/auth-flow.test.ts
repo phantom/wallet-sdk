@@ -344,8 +344,9 @@ describe("EmbeddedProvider Auth Flows", () => {
       await provider.connect();
 
       expect(mockStorage.clearSession).toHaveBeenCalled();
-      // Should create new organization since session was cleared
-      expect(mockClient.createOrganization).toHaveBeenCalled();
+      // Should create new organization since session was cleared (only for app wallets)
+      // For user wallets, no organization is created locally
+      expect(mockClient.createOrganization).not.toHaveBeenCalled();
     });
 
     it("should start fresh authentication flow when session ID mismatch detected", async () => {
@@ -371,7 +372,8 @@ describe("EmbeddedProvider Auth Flows", () => {
       await provider.connect();
 
       // Should start fresh flow
-      expect(mockClient.createOrganization).toHaveBeenCalled();
+      // For user wallets, no organization is created locally
+      expect(mockClient.createOrganization).not.toHaveBeenCalled();
       expect(mockAuthProvider.authenticate).toHaveBeenCalled();
     });
   });
@@ -380,6 +382,7 @@ describe("EmbeddedProvider Auth Flows", () => {
     it("should handle resume connect from redirect but we do not have a local session stored", async () => {
       const authResult: AuthResult = {
         walletId: "wallet-123",
+        organizationId: "server-org-id",
         provider: "google",
         userInfo: { email: "test@example.com" },
         accountDerivationIndex: 4,
@@ -387,21 +390,23 @@ describe("EmbeddedProvider Auth Flows", () => {
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
       mockStorage.getSession.mockResolvedValue(null);
 
-      await expect(provider.connect()).rejects.toThrow();
+      // This should fall back to fresh authentication instead of throwing
+      const result = await provider.connect();
+      expect(result.status).toBe("pending"); // Should successfully start fresh auth flow
     });
 
     it("should fall back to fresh authentication when no session found after redirect during manual connect", async () => {
       const authResult: AuthResult = {
         walletId: "wallet-123",
+        organizationId: "server-org-id",
         provider: "google",
         userInfo: { email: "test@example.com" },
         accountDerivationIndex: 5,
       };
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
       mockStorage.getSession.mockResolvedValue(null);
-      
+
       // Setup fresh auth flow to succeed after fallback
-      mockClient.createOrganization.mockResolvedValue({ organizationId: "new-org-id" });
       mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
 
       // Should NOT throw an error, instead it should fall back to fresh auth
@@ -414,7 +419,8 @@ describe("EmbeddedProvider Auth Flows", () => {
       expect(mockStorage.clearSession).toHaveBeenCalled();
 
       // Should fall back to fresh auth flow when redirect resume fails
-      expect(mockClient.createOrganization).toHaveBeenCalled();
+      // For user wallets, we don't create organization anymore - auth returns organizationId
+      expect(mockClient.createOrganization).not.toHaveBeenCalled();
       expect(mockAuthProvider.authenticate).toHaveBeenCalled();
     });
 
@@ -438,7 +444,6 @@ describe("EmbeddedProvider Auth Flows", () => {
       mockStorage.getSession.mockResolvedValue(null);
 
       // Setup: Fresh auth flow should succeed after fallback
-      mockClient.createOrganization.mockResolvedValue({ organizationId: "new-org-id" });
       mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
 
       // This should NOT throw an error, instead it should fall back to fresh auth
@@ -453,11 +458,12 @@ describe("EmbeddedProvider Auth Flows", () => {
       expect(mockStorage.clearSession).toHaveBeenCalled();
 
       // Should fall back to fresh auth flow when redirect resume fails
-      expect(mockClient.createOrganization).toHaveBeenCalled();
+      // For user wallets, we don't create organization anymore - auth returns organizationId
+      expect(mockClient.createOrganization).not.toHaveBeenCalled();
       expect(mockAuthProvider.authenticate).toHaveBeenCalledWith(
         expect.objectContaining({
           provider: "google",
-          organizationId: "new-org-id",
+          publicKey: "11111111111111111111111111111111",
           appId: "test-app-id",
         }),
       );
@@ -585,7 +591,6 @@ describe("EmbeddedProvider Auth Flows", () => {
   describe("JWT Authentication Flow", () => {
     it("should authenticate with valid JWT token", async () => {
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
-      mockClient.createOrganization.mockResolvedValue({ organizationId: "new-org-id" });
 
       // Set up storage mock to return null initially, then return the saved session
       let savedSession: Session | null = null;
@@ -599,6 +604,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       const mockJWTAuth = {
         authenticate: jest.fn().mockResolvedValue({
           walletId: "jwt-wallet-123",
+          organizationId: "server-org-id", // JWT auth returns organizationId from server
           provider: "jwt",
           userInfo: { sub: "user-123" },
         }),
@@ -615,7 +621,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       });
 
       expect(mockJWTAuth.authenticate).toHaveBeenCalledWith({
-        organizationId: "new-org-id",
+        publicKey: "11111111111111111111111111111111", // JWT auth now gets publicKey
         appId: "test-app-id",
         jwtToken: "valid-jwt-token",
         customAuthData: undefined,
@@ -625,7 +631,6 @@ describe("EmbeddedProvider Auth Flows", () => {
 
     it("should create completed session after successful JWT auth", async () => {
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
-      mockClient.createOrganization.mockResolvedValue({ organizationId: "new-org-id" });
 
       // Set up storage mock to return null initially, then return the saved session
       let savedSession: Session | null = null;
@@ -639,6 +644,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       const mockJWTAuth = {
         authenticate: jest.fn().mockResolvedValue({
           walletId: "jwt-wallet-123",
+          organizationId: "server-org-id",
           provider: "jwt",
           userInfo: { sub: "user-123" },
         }),
@@ -790,17 +796,19 @@ describe("EmbeddedProvider Auth Flows", () => {
     it("should handle phantom connect authentication flow", async () => {
       mockStorage.getSession.mockResolvedValue(null);
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
-      mockClient.createOrganization.mockResolvedValue({ organizationId: "new-org-id" });
 
       await provider.connect();
 
       expect(mockAuthProvider.authenticate).toHaveBeenCalledWith(
         expect.objectContaining({
-          organizationId: "new-org-id",
+          publicKey: "11111111111111111111111111111111",
           appId: "test-app-id",
           sessionId: expect.any(String),
         }),
       );
+
+      // For user wallets, we don't create organization - auth provider should handle that
+      expect(mockClient.createOrganization).not.toHaveBeenCalled();
     });
   });
 
@@ -865,7 +873,7 @@ describe("EmbeddedProvider Auth Flows", () => {
     it("should handle network errors during authentication gracefully", async () => {
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
       mockStorage.getSession.mockResolvedValue(null);
-      mockClient.createOrganization.mockRejectedValue(new Error("network timeout"));
+      mockAuthProvider.authenticate.mockRejectedValue(new Error("network timeout"));
 
       await expect(provider.connect()).rejects.toThrow(/network/i);
     });
@@ -873,11 +881,9 @@ describe("EmbeddedProvider Auth Flows", () => {
     it("should provide specific error messages for different failure types", async () => {
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
       mockStorage.getSession.mockResolvedValue(null);
-      mockClient.createOrganization.mockRejectedValue(new Error("IndexedDB access denied"));
+      mockAuthProvider.authenticate.mockRejectedValue(new Error("IndexedDB access denied"));
 
-      await expect(provider.connect()).rejects.toThrow(
-        "Storage error: Unable to access browser storage. Please ensure storage is available and try again.",
-      );
+      await expect(provider.connect()).rejects.toThrow("Storage error: Unable to access browser storage. Please ensure storage is available and try again.");
     });
 
     it("should clean up state on authentication failures", async () => {

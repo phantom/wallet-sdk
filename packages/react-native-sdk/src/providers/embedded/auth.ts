@@ -15,15 +15,15 @@ export class ExpoAuthProvider implements AuthProvider {
 
     // Handle redirect-based authentication
     const phantomOptions = options as PhantomConnectOptions;
-    const { authUrl, redirectUrl, organizationId, sessionId, provider, customAuthData, appId } =
+    const { authUrl, redirectUrl, publicKey, sessionId, provider, customAuthData, appId } =
       phantomOptions;
 
     if (!redirectUrl) {
       throw new Error("redirectUrl is required for web browser authentication");
     }
 
-    if (!organizationId || !sessionId || !appId) {
-      throw new Error("organizationId, sessionId and appId are required for authentication");
+    if (!publicKey || !sessionId || !appId) {
+      throw new Error("publicKey, sessionId and appId are required for authentication");
     }
 
     try {
@@ -31,7 +31,7 @@ export class ExpoAuthProvider implements AuthProvider {
       const baseUrl = authUrl || DEFAULT_AUTH_URL;
 
       const params = new URLSearchParams({
-        organization_id: organizationId,
+        public_key: publicKey,
         app_id: appId,
         redirect_uri: redirectUrl,
         session_id: sessionId,
@@ -60,7 +60,7 @@ export class ExpoAuthProvider implements AuthProvider {
       console.log("[ExpoAuthProvider] Starting authentication", {
         baseUrl,
         redirectUrl,
-        organizationId,
+        publicKey,
         sessionId,
         provider,
         hasCustomData: !!customAuthData,
@@ -83,6 +83,7 @@ export class ExpoAuthProvider implements AuthProvider {
         // Parse the URL to extract parameters
         const url = new URL(result.url);
         const walletId = url.searchParams.get("wallet_id");
+        const organizationId = url.searchParams.get("organization_id");
         const provider = url.searchParams.get("provider");
         const accountDerivationIndex = url.searchParams.get("selected_account_index");
 
@@ -90,8 +91,13 @@ export class ExpoAuthProvider implements AuthProvider {
           throw new Error("Authentication failed: no walletId in redirect URL");
         }
 
+        if (!organizationId) {
+          throw new Error("Authentication failed: no organizationId in redirect URL");
+        }
+
         return {
           walletId,
+          organizationId,
           provider: provider || undefined,
           accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : undefined,
         };

@@ -35,7 +35,7 @@ export class BrowserAuthProvider implements AuthProvider {
       const phantomOptions = options as PhantomConnectOptions;
 
       debug.info(DebugCategory.PHANTOM_CONNECT_AUTH, "Starting Phantom Connect authentication", {
-        organizationId: phantomOptions.organizationId,
+        publicKey: phantomOptions.publicKey,
         appId: phantomOptions.appId,
         provider: phantomOptions.provider,
         authUrl: phantomOptions.authUrl,
@@ -46,7 +46,7 @@ export class BrowserAuthProvider implements AuthProvider {
       debug.log(DebugCategory.PHANTOM_CONNECT_AUTH, "Using auth URL", { baseUrl });
 
       const params = new URLSearchParams({
-        organization_id: phantomOptions.organizationId,
+        public_key: phantomOptions.publicKey,
         app_id: phantomOptions.appId,
         redirect_uri: phantomOptions.redirectUrl || (typeof window !== "undefined" ? this.getValidatedCurrentUrl() : ""),
         session_id: phantomOptions.sessionId,
@@ -75,7 +75,7 @@ export class BrowserAuthProvider implements AuthProvider {
 
       // Store auth context in session storage for validation after redirect
       const authContext = {
-        organizationId: phantomOptions.organizationId,
+        publicKey: phantomOptions.publicKey,
         appId: phantomOptions.appId,
         provider: phantomOptions.provider,
         sessionId: phantomOptions.sessionId,
@@ -162,8 +162,14 @@ export class BrowserAuthProvider implements AuthProvider {
         accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : undefined,
       });
 
+      const organizationId = this.urlParamsAccessor.getParam("organization_id");
+      if (!organizationId) {
+        throw new Error("Missing organization_id in auth response");
+      }
+
       return {
         walletId,
+        organizationId,
         userInfo: context,
         accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : undefined,
       };

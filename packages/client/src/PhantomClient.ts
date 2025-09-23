@@ -10,6 +10,7 @@ import {
   CreateAuthenticatorMethodEnum,
   DeleteAuthenticatorMethodEnum,
   GrantOrganizationAccessMethodEnum,
+  AddUserToOrganizationMethodEnum,
   type CreateWallet,
   type SignTransaction,
   type SignRawPayload,
@@ -23,6 +24,8 @@ import {
   type DeleteAuthenticatorRequest,
   type GrantOrganizationAccess,
   type GrantOrganizationAccessRequest,
+  type AddUserToOrganization,
+  type AddUserToOrganizationRequest,
   type DerivationInfo,
   type ExternalKmsWallet,
   type SignedTransactionWithPublicKey,
@@ -637,6 +640,25 @@ export class PhantomClient {
     } catch (error: any) {
       console.error("Failed to grant organization access:", error.response?.data || error.message);
       throw new Error(`Failed to grant organization access: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  /**
+   * Add a new user to an organization
+   */
+  async addUserToOrganization(params: AddUserToOrganizationRequest): Promise<void> {
+    try {
+      const request: AddUserToOrganization = {
+        method: AddUserToOrganizationMethodEnum.addUserToOrganization,
+        params,
+        timestampMs: await getSecureTimestamp(),
+      } as any;
+
+      await this.kmsApi.postKmsRpc(request);
+      // Return success - void method
+    } catch (error: any) {
+      console.error("Failed to add user to organization:", error.response?.data || error.message);
+      throw new Error(`Failed to add user to organization: ${error.response?.data?.message || error.message}`);
     }
   }
 
