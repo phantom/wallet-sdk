@@ -17,5 +17,14 @@ export type {
   SignedTransaction,
 } from "./types";
 
+// SecureWebView types and components (re-export for convenience)
+export type {
+  WebViewState,
+  SecureWebViewConfig,
+  NavigationResult,
+  SecurityViolation,
+  SecureWebViewCallbacks
+} from "@phantom/secure-webview";
+
 export { AddressType } from "@phantom/client";
 export { NetworkId } from "@phantom/constants";

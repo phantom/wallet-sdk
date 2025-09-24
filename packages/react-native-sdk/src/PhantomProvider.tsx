@@ -1,12 +1,11 @@
-import type { ReactNode } from "react";
-import { createContext, useContext, useState, useEffect, useMemo } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from "react";
 import { EmbeddedProvider } from "@phantom/embedded-provider-core";
 import type { EmbeddedProviderConfig, PlatformAdapter } from "@phantom/embedded-provider-core";
 import type { PhantomSDKConfig, PhantomDebugConfig, WalletAddress } from "./types";
 import {ANALYTICS_HEADERS, DEFAULT_WALLET_API_URL, DEFAULT_EMBEDDED_WALLET_TYPE, DEFAULT_AUTH_URL } from "@phantom/constants";
 // Platform adapters for React Native/Expo
 import { ExpoSecureStorage } from "./providers/embedded/storage";
-import { ExpoAuthProvider } from "./providers/embedded/auth";
+import { SecureWebViewAuth } from "./providers/embedded/SecureWebViewAuth";
 import { ExpoURLParamsAccessor } from "./providers/embedded/url-params";
 import { ReactNativeStamper } from "./providers/embedded/stamper";
 import { ExpoLogger } from "./providers/embedded/logger";
@@ -20,6 +19,8 @@ interface PhantomContextValue {
   addresses: WalletAddress[];
   walletId: string | null;
   setWalletId: (walletId: string | null) => void;
+  authWebView: React.ReactElement | null;
+  hideAuthWebView: () => void;
 }
 
 const PhantomContext = createContext<PhantomContextValue | undefined>(undefined);
@@ -36,6 +37,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   const [connectError, setConnectError] = useState<Error | null>(null);
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
   const [walletId, setWalletId] = useState<string | null>(null);
+  const [authWebView, setAuthWebView] = useState<React.ReactElement | null>(null);
 
   // Memoized config to avoid unnecessary SDK recreation
   const memoizedConfig: EmbeddedProviderConfig = useMemo(() => {
@@ -56,11 +58,26 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
     };
   }, [config]);
 
+  // Helper functions for webview management
+  const hideAuthWebView = () => {
+    setAuthWebView(null);
+  };
+
+  const renderAuthWebView = (webViewElement: React.ReactElement) => {
+    setAuthWebView(webViewElement);
+  };
+
   // Eager initialization - SDK created immediately and never null
   const sdk = useMemo(() => {
     // Create platform adapters
     const storage = new ExpoSecureStorage();
-    const authProvider = new ExpoAuthProvider();
+    const authProvider = new SecureWebViewAuth({
+      allowedOrigins: ['https://connect.phantom.com', 'https://staging-connect.phantom.app'],
+      enableLogging: debugConfig?.enabled || false
+    });
+
+    // Set up the auth provider with render callbacks
+    authProvider.setRenderCallbacks(renderAuthWebView, hideAuthWebView);
     const urlParamsAccessor = new ExpoURLParamsAccessor();
     const logger = new ExpoLogger(debugConfig?.enabled || false);
     const stamper = new ReactNativeStamper({
@@ -165,11 +182,18 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       addresses,
       walletId,
       setWalletId,
+      authWebView,
+      hideAuthWebView,
     }),
-    [sdk, isConnected, isConnecting, connectError, addresses, walletId, setWalletId],
+    [sdk, isConnected, isConnecting, connectError, addresses, walletId, setWalletId, authWebView],
   );
 
-  return <PhantomContext.Provider value={value}>{children}</PhantomContext.Provider>;
+  return (
+    <PhantomContext.Provider value={value}>
+      {children}
+      {authWebView}
+    </PhantomContext.Provider>
+  );
 }
 
 export function usePhantom(): PhantomContextValue {

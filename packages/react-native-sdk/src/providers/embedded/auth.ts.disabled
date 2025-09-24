@@ -93,7 +93,7 @@ export class ExpoAuthProvider implements AuthProvider {
         return {
           walletId,
           provider: provider || undefined,
-          accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : undefined,
+          accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : 0,
         };
       } else if (result.type === "cancel") {
         throw new Error("User cancelled authentication");
