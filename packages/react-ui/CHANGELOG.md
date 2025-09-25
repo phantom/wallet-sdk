@@ -1,5 +1,15 @@
 # @phantom/react-ui
 
+## 2.0.0-beta.7
+
+### Patch Changes
+
+- 80f44ae: Use expirable users
+- Updated dependencies [80f44ae]
+  - @phantom/browser-sdk@1.0.0-beta.11
+  - @phantom/client@1.0.0-beta.11
+  - @phantom/react-sdk@1.0.0-beta.11
+
 ## 2.0.0-beta.6
 
 ### Patch Changes
