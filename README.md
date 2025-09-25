@@ -72,8 +72,8 @@ import { PhantomProvider, useConnect, useSolana, useEthereum, AddressType } from
 // Component with chain-specific operations
 function WalletComponent() {
   const { connect } = useConnect();
-  const solana = useSolana();
-  const ethereum = useEthereum();
+  const { solana } = useSolana();
+  const { ethereum } = useEthereum();
 
   const handleConnect = async () => {
     const { addresses } = await connect();
@@ -198,8 +198,8 @@ import { PhantomProvider, useConnect, useSolana, useEthereum, AddressType } from
 // Component - UI appears automatically
 function WalletOperations() {
   const { connect } = useConnect();
-  const solana = useSolana();
-  const ethereum = useEthereum();
+  const { solana } = useSolana();
+  const { ethereum } = useEthereum();
 
   const handleOperations = async () => {
     // Connection modals appear automatically

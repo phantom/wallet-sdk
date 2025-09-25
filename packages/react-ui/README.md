@@ -52,8 +52,8 @@ function App() {
 
 function WalletComponent() {
   const { connect, isConnecting } = useConnect(); // UI-enhanced
-  const solana = useSolana(); // Standard from react-sdk
-  const ethereum = useEthereum(); // Standard from react-sdk
+  const { solana } = useSolana(); // Standard from react-sdk
+  const { ethereum } = useEthereum(); // Standard from react-sdk
 
   const handleConnect = () => {
     // Shows connection modal automatically

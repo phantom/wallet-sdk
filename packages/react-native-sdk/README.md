@@ -114,8 +114,8 @@ import { useConnect, useAccounts, useSolana, useEthereum, useDisconnect } from "
 export function WalletScreen() {
   const { connect, isConnecting, error: connectError } = useConnect();
   const { addresses, isConnected } = useAccounts();
-  const solana = useSolana();
-  const ethereum = useEthereum();
+  const { solana } = useSolana();
+  const { ethereum } = useEthereum();
   const { disconnect } = useDisconnect();
 
   const handleConnect = async () => {

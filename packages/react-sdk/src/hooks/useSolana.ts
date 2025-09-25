@@ -1,17 +1,21 @@
 import { usePhantom } from "../PhantomProvider";
+import type { ISolanaChain } from "@phantom/chain-interfaces";
 
 /**
  * Hook for Solana chain operations
  *
  * @returns Solana chain interface with connection enforcement
  */
-export function useSolana() {
+export function useSolana(): {
+  solana: ISolanaChain;
+  isAvailable: boolean;
+} {
   const { sdk, isConnected, isClient } = usePhantom();
 
   if (!isClient || !sdk) {
     // Return a stub object for SSR or while SDK is initializing
     return {
-      solana: {} as any, // This will be replaced when SDK is ready
+      solana: {} as ISolanaChain, // This will be replaced when SDK is ready
       isAvailable: false,
     };
   }
