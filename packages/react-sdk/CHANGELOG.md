@@ -1,5 +1,13 @@
 # @phantom/react-sdk
 
+## 1.0.0-beta.11
+
+### Patch Changes
+
+- 80f44ae: Use expirable users
+- Updated dependencies [80f44ae]
+  - @phantom/browser-sdk@1.0.0-beta.11
+
 ## 1.0.0-beta.10
 
 ### Patch Changes

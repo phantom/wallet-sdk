@@ -1,5 +1,11 @@
 # @phantom/client
 
+## 1.0.0-beta.11
+
+### Patch Changes
+
+- 80f44ae: Use expirable users
+
 ## 1.0.0-beta.10
 
 ### Patch Changes
