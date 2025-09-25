@@ -1,17 +1,21 @@
 import { usePhantom } from "../PhantomProvider";
+import type { IEthereumChain } from "@phantom/chain-interfaces";
 
 /**
  * Hook for Ethereum chain operations
  *
  * @returns Ethereum chain interface with connection enforcement
  */
-export function useEthereum() {
+export function useEthereum(): {
+  ethereum: IEthereumChain;
+  isAvailable: boolean;
+} {
   const { sdk, isConnected, isClient } = usePhantom();
 
   if (!isClient || !sdk) {
     // Return a stub object for SSR or while SDK is initializing
     return {
-      ethereum: {} as any, // This will be replaced when SDK is ready
+      ethereum: {} as IEthereumChain, // This will be replaced when SDK is ready
       isAvailable: false,
     };
   }

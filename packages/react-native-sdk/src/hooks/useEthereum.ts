@@ -1,11 +1,15 @@
 import { usePhantom } from "../PhantomProvider";
+import type { IEthereumChain } from "@phantom/chain-interfaces";
 
 /**
  * Hook for Ethereum chain operations in React Native
  *
  * @returns Ethereum chain interface with connection enforcement
  */
-export function useEthereum() {
+export function useEthereum(): {
+  ethereum: IEthereumChain;
+  isAvailable: boolean;
+} {
   const { sdk, isConnected } = usePhantom();
 
   return {

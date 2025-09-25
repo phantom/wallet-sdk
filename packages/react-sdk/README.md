@@ -52,8 +52,8 @@ function App() {
 
 function WalletComponent() {
   const { connect, isConnecting } = useConnect();
-  const solana = useSolana();
-  const ethereum = useEthereum();
+  const { solana } = useSolana();
+  const { ethereum } = useEthereum();
 
   const handleConnect = async () => {
     const { addresses } = await connect();
@@ -115,8 +115,8 @@ The React SDK follows a clear connection pattern:
 ```tsx
 function WalletExample() {
   const { connect } = useConnect();
-  const solana = useSolana();
-  const ethereum = useEthereum();
+  const { solana } = useSolana();
+  const { ethereum } = useEthereum();
 
   // 1. Connect first
   const handleConnect = async () => {
@@ -316,7 +316,7 @@ import { useSolana } from "@phantom/react-sdk";
 import { VersionedTransaction, TransactionMessage, SystemProgram, PublicKey, Connection } from "@solana/web3.js";
 
 function SolanaOperations() {
-  const solana = useSolana();
+  const { solana } = useSolana();
 
   const signMessage = async () => {
     const signature = await solana.signMessage("Hello Solana!");
@@ -381,7 +381,7 @@ Hook for Ethereum chain operations:
 import { useEthereum } from "@phantom/react-sdk";
 
 function EthereumOperations() {
-  const ethereum = useEthereum();
+  const { ethereum } = useEthereum();
 
   const signPersonalMessage = async () => {
     const accounts = await ethereum.getAccounts();
@@ -614,7 +614,7 @@ import { VersionedTransaction, TransactionMessage, SystemProgram, PublicKey, Con
 import { useSolana } from "@phantom/react-sdk";
 
 function SolanaExample() {
-  const solana = useSolana();
+  const { solana } = useSolana();
 
   const sendTransaction = async () => {
     // Get recent blockhash
@@ -662,7 +662,7 @@ import {
 import { useSolana } from "@phantom/react-sdk";
 
 function SolanaKitExample() {
-  const solana = useSolana();
+  const { solana } = useSolana();
 
   const sendTransaction = async () => {
     const rpc = createSolanaRpc("https://api.mainnet-beta.solana.com");
@@ -693,7 +693,7 @@ import { parseEther, parseGwei, encodeFunctionData } from "viem";
 import { useEthereum } from "@phantom/react-sdk";
 
 function EthereumExample() {
-  const ethereum = useEthereum();
+  const { ethereum } = useEthereum();
 
   const sendEth = async () => {
     const result = await ethereum.sendTransaction({
