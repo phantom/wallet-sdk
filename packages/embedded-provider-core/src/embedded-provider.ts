@@ -130,7 +130,7 @@ export class EmbeddedProvider {
   private getAddressForNetwork(networkId: NetworkId): string | undefined {
     // Extract the chain name from network ID format (e.g., "solana:mainnet" -> "solana")
     const network = networkId.split(":")[0].toLowerCase();
-    
+
     // Map network to address type
     let targetAddressType: string;
     switch (network) {
@@ -152,12 +152,12 @@ export class EmbeddedProvider {
         targetAddressType = AddressType.ethereum;
         break;
     }
-    
+
     // Find the matching address from available addresses
-    const matchingAddress = this.addresses.find(addr => 
-      addr.addressType.toLowerCase() === targetAddressType.toLowerCase()
+    const matchingAddress = this.addresses.find(
+      addr => addr.addressType.toLowerCase() === targetAddressType.toLowerCase(),
     );
-    
+
     return matchingAddress?.address;
   }
 
@@ -485,8 +485,8 @@ export class EmbeddedProvider {
     const tempClient = new PhantomClient({
       apiBaseUrl: this.config.apiBaseUrl,
       headers: {
-        ...(this.platform.analyticsHeaders || {})
-      }
+        ...(this.platform.analyticsHeaders || {}),
+      },
     });
 
     // Create an organization for app-wallet
@@ -857,8 +857,8 @@ export class EmbeddedProvider {
           apiBaseUrl: this.config.apiBaseUrl,
           organizationId: organizationId,
           headers: {
-            ...(this.platform.analyticsHeaders || {})
-          }
+            ...(this.platform.analyticsHeaders || {}),
+          },
         },
         this.stamper,
       );
@@ -927,7 +927,7 @@ export class EmbeddedProvider {
       walletId,
       organizationId,
       expiresInMs: expiresInMs,
-      source: authResult.expiresInMs ? "server" : "local"
+      source: authResult.expiresInMs ? "server" : "local",
     });
 
     // Save session with auth info
@@ -1039,7 +1039,7 @@ export class EmbeddedProvider {
         tempSession.authenticatorExpiresAt = now + authResult.expiresInMs;
         this.logger.log("EMBEDDED_PROVIDER", "Updated authenticator expiration from immediate auth response", {
           expiresInMs: authResult.expiresInMs,
-          expiresAt: new Date(tempSession.authenticatorExpiresAt).toISOString()
+          expiresAt: new Date(tempSession.authenticatorExpiresAt).toISOString(),
         });
       }
 
@@ -1076,7 +1076,7 @@ export class EmbeddedProvider {
       session.authenticatorExpiresAt = now + authResult.expiresInMs;
       this.logger.log("EMBEDDED_PROVIDER", "Updated authenticator expiration from auth response", {
         expiresInMs: authResult.expiresInMs,
-        expiresAt: new Date(session.authenticatorExpiresAt).toISOString()
+        expiresAt: new Date(session.authenticatorExpiresAt).toISOString(),
       });
     }
 
@@ -1190,6 +1190,9 @@ export class EmbeddedProvider {
                 algorithm: "Ed25519",
               } as any,
             ],
+            traits: {
+              appId: this.config.appId,
+            },
           },
           expiresInMs,
           replaceExpirable: true, // Replace oldest expirable user if at limit
@@ -1255,8 +1258,8 @@ export class EmbeddedProvider {
         apiBaseUrl: this.config.apiBaseUrl,
         organizationId: session.organizationId,
         headers: {
-          ...(this.platform.analyticsHeaders || {})
-        }
+          ...(this.platform.analyticsHeaders || {}),
+        },
       },
       this.stamper,
     );
