@@ -43,10 +43,8 @@ export type EmbeddedProviderEvent = "connect" | "connect_start" | "connect_error
 export type EventCallback = (data?: any) => void;
 
 interface StamperResponse {
-  organizationId: string;
   stamperInfo: StamperInfo;
   expiresInMs: number;
-  username: string;
 }
 
 export class EmbeddedProvider {
@@ -457,36 +455,47 @@ export class EmbeddedProvider {
    * This is the first step when no existing session is found and we need to set up a new wallet.
    */
 
-  private async createOrganizationAndStamper(): Promise<StamperResponse> {
-    // Initialize stamper (generates keypair in IndexedDB)
+  private async initializeStamper(): Promise<StamperResponse> {
+    // Initialize stamper first
     this.logger.log("EMBEDDED_PROVIDER", "Initializing stamper");
-    const stamperInfo = await this.stamper.init();
-    this.logger.log("EMBEDDED_PROVIDER", "Stamper initialized", {
+    await this.stamper.init();
+
+    // Reset keypair to ensure we get a fresh unique keypair that doesn't conflict with existing ones
+    this.logger.log("EMBEDDED_PROVIDER", "Resetting keypair to avoid conflicts with existing keypairs");
+    const stamperInfo = await this.stamper.resetKeyPair();
+    this.logger.log("EMBEDDED_PROVIDER", "Stamper initialized with fresh keypair", {
       publicKey: stamperInfo.publicKey,
       keyId: stamperInfo.keyId,
       algorithm: this.stamper.algorithm,
     });
 
-    // Create a temporary client with the stamper
-    this.logger.log("EMBEDDED_PROVIDER", "Creating temporary PhantomClient");
-    const tempClient = new PhantomClient(
-      {
-        apiBaseUrl: this.config.apiBaseUrl,
-        headers: {
-          ...(this.platform.analyticsHeaders || {})
-        }
-      },
-      this.stamper,
-    );
+    const expiresInMs = AUTHENTICATOR_EXPIRATION_TIME_MS;
 
-    // Create an organization
-    // organization name is a combination of this organizationId and this userId, which will be a unique identifier
+    this.logger.info("EMBEDDED_PROVIDER", "Stamper ready for auth flow with fresh keypair", {
+      publicKey: stamperInfo.publicKey,
+      keyId: stamperInfo.keyId,
+    });
+
+    return { stamperInfo, expiresInMs };
+  }
+
+  private async createOrganizationForAppWallet(stamperInfo: StamperInfo, expiresInMs: number): Promise<string> {
+    // Create temporary client to make API call
+    // This client is used only for organization creation (doesn't need stamper since it's creating the org)
+    const tempClient = new PhantomClient({
+      apiBaseUrl: this.config.apiBaseUrl,
+      headers: {
+        ...(this.platform.analyticsHeaders || {})
+      }
+    });
+
+    // Create an organization for app-wallet
     const platformName = this.platform.name || "unknown";
     const shortPubKey = stamperInfo.publicKey.slice(0, 8);
-    
+
     const organizationName = `${this.config.appId.substring(0, 8)}-${platformName}-${shortPubKey}`;
 
-    this.logger.log("EMBEDDED_PROVIDER", "Creating organization", {
+    this.logger.log("EMBEDDED_PROVIDER", "Creating organization for app-wallet", {
       organizationName,
       publicKey: stamperInfo.publicKey,
       platform: platformName,
@@ -494,7 +503,6 @@ export class EmbeddedProvider {
 
     // Convert base58 public key to base64url format as required by the API
     const base64urlPublicKey = base64urlEncode(bs58.decode(stamperInfo.publicKey));
-    const expiresInMs = AUTHENTICATOR_EXPIRATION_TIME_MS;
 
     const username = `user-${randomUUID()}`;
     const { organizationId } = await tempClient.createOrganization(organizationName, [
@@ -507,15 +515,15 @@ export class EmbeddedProvider {
             authenticatorKind: "keypair",
             publicKey: base64urlPublicKey,
             algorithm: "Ed25519",
-            // Commented for now until KMS supports fully expirable organizations
-            // expiresInMs: expiresInMs,
+            expiresInMs: expiresInMs,
           } as any,
         ],
       },
     ]);
-    this.logger.info("EMBEDDED_PROVIDER", "Organization created", { organizationId });
 
-    return { organizationId, stamperInfo, expiresInMs, username };
+    this.logger.info("EMBEDDED_PROVIDER", "Organization created for app-wallet", { organizationId });
+
+    return organizationId;
   }
 
   async connect(authOptions?: AuthOptions): Promise<ConnectResult> {
@@ -559,8 +567,8 @@ export class EmbeddedProvider {
 
       // No existing connection available, create new one
       this.logger.info("EMBEDDED_PROVIDER", "No existing connection, creating new auth flow");
-      const { organizationId, stamperInfo, expiresInMs, username } = await this.createOrganizationAndStamper();
-      const session = await this.handleAuthFlow(organizationId, stamperInfo, authOptions, expiresInMs, username);
+      const { stamperInfo, expiresInMs } = await this.initializeStamper();
+      const session = await this.handleAuthFlow(stamperInfo.publicKey, stamperInfo, authOptions, expiresInMs);
 
       // If session is null here, it means we're doing a redirect
       if (!session) {
@@ -813,11 +821,10 @@ export class EmbeddedProvider {
    * Returns null for redirect flows since they don't complete synchronously.
    */
   private async handleAuthFlow(
-    organizationId: string,
+    publicKey: string,
     stamperInfo: StamperInfo,
     authOptions: AuthOptions | undefined,
     expiresInMs: number,
-    username: string,
   ): Promise<Session | null> {
     if (this.config.embeddedWalletType === "user-wallet") {
       this.logger.info("EMBEDDED_PROVIDER", "Creating user-wallet, routing authentication", {
@@ -826,28 +833,32 @@ export class EmbeddedProvider {
 
       // Route to appropriate authentication flow based on authOptions
       if (authOptions?.provider === "jwt") {
-        return await this.handleJWTAuth(organizationId, stamperInfo, authOptions, expiresInMs, username);
+        return await this.handleJWTAuth(publicKey, stamperInfo, authOptions, expiresInMs);
       } else {
         // This will redirect in browser, so we don't return a session
         // In react-native this will return an auth result
         this.logger.info("EMBEDDED_PROVIDER", "Starting redirect-based authentication flow", {
-          organizationId,
+          publicKey,
           provider: authOptions?.provider,
         });
-        return await this.handleRedirectAuth(organizationId, stamperInfo, authOptions, username);
+        return await this.handleRedirectAuth(publicKey, stamperInfo, authOptions);
       }
     } else {
       this.logger.info("EMBEDDED_PROVIDER", "Creating app-wallet", {
-        organizationId,
+        publicKey,
       });
+
+      // App-wallet creates organization locally on device
+      const organizationId = await this.createOrganizationForAppWallet(stamperInfo, expiresInMs);
+
       // Create app-wallet directly
       const tempClient = new PhantomClient(
         {
           apiBaseUrl: this.config.apiBaseUrl,
           organizationId: organizationId,
           headers: {
-          ...(this.platform.analyticsHeaders || {})
-        }
+            ...(this.platform.analyticsHeaders || {})
+          }
         },
         this.stamper,
       );
@@ -872,7 +883,6 @@ export class EmbeddedProvider {
         authenticatorCreatedAt: now,
         authenticatorExpiresAt: Date.now() + expiresInMs,
         lastRenewalAttempt: undefined,
-        username,
       };
 
       await this.storage.saveSession(session);
@@ -887,11 +897,10 @@ export class EmbeddedProvider {
    * It authenticates using the provided JWT token and creates a completed session.
    */
   private async handleJWTAuth(
-    organizationId: string,
+    publicKey: string,
     stamperInfo: StamperInfo,
     authOptions: AuthOptions,
-    expiresInMs: number,
-    username: string,
+    localExpiresInMs: number,
   ): Promise<Session> {
     this.logger.info("EMBEDDED_PROVIDER", "Using JWT authentication flow");
 
@@ -903,13 +912,23 @@ export class EmbeddedProvider {
 
     this.logger.log("EMBEDDED_PROVIDER", "Starting JWT authentication");
     const authResult = await this.jwtAuth.authenticate({
-      organizationId,
+      publicKey,
       appId: this.config.appId,
       jwtToken: authOptions.jwtToken,
       customAuthData: authOptions.customAuthData,
     });
     const walletId = authResult.walletId;
-    this.logger.info("EMBEDDED_PROVIDER", "JWT authentication completed", { walletId });
+    const organizationId = authResult.organizationId;
+
+    // Use expiresInMs from auth response if provided (and > 0), otherwise use local default
+    const expiresInMs = authResult.expiresInMs > 0 ? authResult.expiresInMs : localExpiresInMs;
+
+    this.logger.info("EMBEDDED_PROVIDER", "JWT authentication completed", {
+      walletId,
+      organizationId,
+      expiresInMs: expiresInMs,
+      source: authResult.expiresInMs ? "server" : "local"
+    });
 
     // Save session with auth info
     const now = Date.now();
@@ -928,7 +947,6 @@ export class EmbeddedProvider {
       authenticatorCreatedAt: now,
       authenticatorExpiresAt: Date.now() + expiresInMs,
       lastRenewalAttempt: undefined,
-      username,
     };
     this.logger.log("EMBEDDED_PROVIDER", "Saving JWT session");
     await this.storage.saveSession(session);
@@ -941,10 +959,9 @@ export class EmbeddedProvider {
    * Session timestamp is updated before redirect to prevent race conditions.
    */
   private async handleRedirectAuth(
-    organizationId: string,
+    publicKey: string,
     stamperInfo: StamperInfo,
     authOptions?: AuthOptions,
-    username?: string,
   ): Promise<Session | null> {
     this.logger.info("EMBEDDED_PROVIDER", "Using Phantom Connect authentication flow (redirect-based)", {
       provider: authOptions?.provider,
@@ -958,8 +975,8 @@ export class EmbeddedProvider {
     const sessionId = generateSessionId();
     const tempSession: Session = {
       sessionId: sessionId,
-      walletId: `temp-${now}`, // Temporary ID, will be updated after redirect
-      organizationId: organizationId,
+      walletId: `temp-wallet-${now}`, // Temporary ID, will be updated after redirect
+      organizationId: `temp-org-${now}`, // Temporary ID, will be updated after redirect
       appId: this.config.appId,
       stamperInfo,
       authProvider: "phantom-connect",
@@ -971,7 +988,6 @@ export class EmbeddedProvider {
       authenticatorCreatedAt: now,
       authenticatorExpiresAt: now + AUTHENTICATOR_EXPIRATION_TIME_MS,
       lastRenewalAttempt: undefined,
-      username: username || `user-${randomUUID()}`,
     };
     this.logger.log("EMBEDDED_PROVIDER", "Saving temporary session before redirect", {
       sessionId: tempSession.sessionId,
@@ -983,7 +999,7 @@ export class EmbeddedProvider {
     await this.storage.saveSession(tempSession);
 
     this.logger.info("EMBEDDED_PROVIDER", "Starting Phantom Connect redirect", {
-      organizationId,
+      publicKey,
       appId: this.config.appId,
       provider: authOptions?.provider,
       authUrl: this.config.authOptions.authUrl,
@@ -991,7 +1007,7 @@ export class EmbeddedProvider {
 
     // Start the authentication flow (this will redirect the user in the browser, or handle it in React Native)
     const authResult = await this.authProvider.authenticate({
-      organizationId: organizationId,
+      publicKey: publicKey,
       appId: this.config.appId,
       provider: authOptions?.provider as "google" | "apple" | undefined,
       redirectUrl: this.config.authOptions.redirectUrl,
@@ -1001,18 +1017,32 @@ export class EmbeddedProvider {
     });
 
     if (authResult && "walletId" in authResult) {
-      // If we got an auth result, we need to update the session with actual wallet ID
+      // If we got an auth result, we need to update the session with actual wallet ID and organizationId
       this.logger.info("EMBEDDED_PROVIDER", "Authentication completed after redirect", {
         walletId: authResult.walletId,
+        organizationId: authResult.organizationId,
         provider: authResult.provider,
       });
 
-      // Update the temporary session with actual wallet ID and auth info
+      // Update the temporary session with actual wallet ID, organizationId, and auth info
       tempSession.walletId = authResult.walletId;
+      tempSession.organizationId = authResult.organizationId;
       tempSession.authProvider = authResult.provider || tempSession.authProvider;
       tempSession.accountDerivationIndex = authResult.accountDerivationIndex;
       tempSession.status = "completed";
       tempSession.lastUsed = Date.now();
+
+      // Update authenticator expiration if provided by auth response (and > 0)
+      if (authResult.expiresInMs > 0) {
+        const now = Date.now();
+        tempSession.authenticatorCreatedAt = now;
+        tempSession.authenticatorExpiresAt = now + authResult.expiresInMs;
+        this.logger.log("EMBEDDED_PROVIDER", "Updated authenticator expiration from immediate auth response", {
+          expiresInMs: authResult.expiresInMs,
+          expiresAt: new Date(tempSession.authenticatorExpiresAt).toISOString()
+        });
+      }
+
       await this.storage.saveSession(tempSession);
 
       return tempSession; // Return the auth result for further processing
@@ -1034,9 +1064,22 @@ export class EmbeddedProvider {
     // Update session with actual wallet ID and auth info from redirect
     session.walletId = authResult.walletId;
     session.authProvider = authResult.provider || session.authProvider;
+    session.organizationId = authResult.organizationId;
     session.accountDerivationIndex = authResult.accountDerivationIndex;
     session.status = "completed";
     session.lastUsed = Date.now();
+
+    // Update authenticator expiration if provided by auth response (and > 0)
+    if (authResult.expiresInMs > 0) {
+      const now = Date.now();
+      session.authenticatorCreatedAt = now;
+      session.authenticatorExpiresAt = now + authResult.expiresInMs;
+      this.logger.log("EMBEDDED_PROVIDER", "Updated authenticator expiration from auth response", {
+        expiresInMs: authResult.expiresInMs,
+        expiresAt: new Date(session.authenticatorExpiresAt).toISOString()
+      });
+    }
+
     await this.storage.saveSession(session);
 
     await this.initializeClientFromSession(session);
@@ -1108,73 +1151,79 @@ export class EmbeddedProvider {
 
   /*
    * We use this method to perform silent authenticator renewal.
-   * It generates a new keypair, creates a new authenticator, and switches to it.
+   * It generates a new keypair, adds a new user to the organization with the new keypair, and switches to it.
    */
   private async renewAuthenticator(session: Session): Promise<void> {
     if (!this.client) {
       throw new Error("Client not initialized");
     }
 
-    this.logger.info("EMBEDDED_PROVIDER", "Starting authenticator renewal");
+    this.logger.info("EMBEDDED_PROVIDER", "Starting authenticator renewal using addUserToOrganization");
 
     try {
-      // Step 1: Generate new keypair (but don't make it active yet)
+      // Step 1: Generate new keypair for rotation
       const newKeyInfo = await this.stamper.rotateKeyPair();
       this.logger.log("EMBEDDED_PROVIDER", "Generated new keypair for renewal", {
         newKeyId: newKeyInfo.keyId,
         newPublicKey: newKeyInfo.publicKey,
       });
 
-      // Step 2: Convert public key and set expiration
+      // Step 2: Convert public key to base64url format
       const base64urlPublicKey = base64urlEncode(bs58.decode(newKeyInfo.publicKey));
       const expiresInMs = AUTHENTICATOR_EXPIRATION_TIME_MS;
 
-      // Step 3: Create new authenticator with replaceExpirable=true
-      let authenticatorResult;
+      // Step 3: Add new user to organization instead of creating new authenticator
+      const shortKeyId = newKeyInfo.keyId.substring(0, 8);
+      const newUsername = `user-${shortKeyId}`;
+
       try {
-        authenticatorResult = await this.client.createAuthenticator({
+        await this.client.addUserToOrganization({
           organizationId: session.organizationId,
-          username: session.username,
-          authenticatorName: `auth-${newKeyInfo.keyId.substring(0, 8)}`,
-          authenticator: {
-            authenticatorName: `auth-${newKeyInfo.keyId.substring(0, 8)}`,
-            authenticatorKind: "keypair",
-            publicKey: base64urlPublicKey,
-            algorithm: "Ed25519",
-            // Commented for now until KMS supports fully expiring organizations
-            // expiresInMs: expiresInMs,
-          } as any,
-          replaceExpirable: true,
+          user: {
+            username: newUsername,
+            role: "ADMIN", // Use ADMIN role like original users
+            authenticators: [
+              {
+                authenticatorName: `auth-${shortKeyId}`,
+                authenticatorKind: "keypair",
+                publicKey: base64urlPublicKey,
+                algorithm: "Ed25519",
+              } as any,
+            ],
+          },
+          expiresInMs,
+          replaceExpirable: true, // Replace oldest expirable user if at limit
         } as any);
       } catch (error) {
-        this.logger.error("EMBEDDED_PROVIDER", "Failed to create new authenticator", {
+        this.logger.error("EMBEDDED_PROVIDER", "Failed to add new user to organization", {
           error: error instanceof Error ? error.message : String(error),
         });
         // Rollback the rotation on server error
         await this.stamper.rollbackRotation();
         throw new Error(
-          `Failed to create new authenticator: ${error instanceof Error ? error.message : String(error)}`,
+          `Failed to add new user to organization: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
 
-      this.logger.info("EMBEDDED_PROVIDER", "Created new authenticator", {
-        authenticatorId: (authenticatorResult as any).id,
+      this.logger.info("EMBEDDED_PROVIDER", "Added new user to organization successfully", {
+        username: newUsername,
       });
 
       // Step 4: Commit the rotation (switch stamper to use new keypair)
-      await this.stamper.commitRotation((authenticatorResult as any).id || "unknown");
+      await this.stamper.commitRotation(newKeyInfo.keyId);
 
       // Step 5: Update session with new authenticator timing
       const now = Date.now();
       session.stamperInfo = newKeyInfo;
       session.authenticatorCreatedAt = now;
-      session.authenticatorExpiresAt = Date.now() + expiresInMs;
+      session.authenticatorExpiresAt = now + expiresInMs;
       session.lastRenewalAttempt = now;
       await this.storage.saveSession(session);
 
       this.logger.info("EMBEDDED_PROVIDER", "Authenticator renewal completed successfully", {
         newKeyId: newKeyInfo.keyId,
-        expiresAt: new Date(Date.now() + expiresInMs).toISOString(),
+        newUsername: newUsername,
+        expiresAt: new Date(session.authenticatorExpiresAt).toISOString(),
       });
     } catch (error) {
       // Rollback rotation on any failure
@@ -1200,6 +1249,7 @@ export class EmbeddedProvider {
       await this.stamper.init();
     }
 
+    // Create PhantomClient with organizationId from auth flow
     this.client = new PhantomClient(
       {
         apiBaseUrl: this.config.apiBaseUrl,

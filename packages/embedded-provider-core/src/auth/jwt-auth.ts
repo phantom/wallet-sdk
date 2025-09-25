@@ -26,6 +26,7 @@ export class JWTAuth {
         },
         body: JSON.stringify({
           appId: options.appId,
+          publicKey: options.publicKey,
           customAuthData: options.customAuthData,
         }),
       });
@@ -71,10 +72,21 @@ export class JWTAuth {
         throw new Error("Invalid JWT authentication response: missing walletId");
       }
 
+      if (!result.organizationId) {
+        throw new Error("Invalid JWT authentication response: missing organizationId");
+      }
+
+      if (!result.expiresInMs) {
+        throw new Error("Invalid JWT authentication response: missing expiresInMs");
+      }
+
       return {
         walletId: result.walletId,
+        organizationId: result.organizationId,
         provider: "jwt",
         userInfo: result.userInfo || {},
+        expiresInMs: result.expiresInMs,
+        accountDerivationIndex: result.accountDerivationIndex || 0,
       };
     } catch (error) {
       if (error instanceof TypeError && error.message.includes("fetch")) {

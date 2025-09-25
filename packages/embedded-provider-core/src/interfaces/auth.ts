@@ -1,12 +1,14 @@
 export interface AuthResult {
   walletId: string;
+  organizationId: string; // Organization ID returned from auth flow
   provider?: string;
   userInfo?: Record<string, any>;
-  accountDerivationIndex?: number; // Account derivation index from auth response
+  accountDerivationIndex: number; // Account derivation index from auth response
+  expiresInMs: number; // Authenticator expiration time from auth response (for user-wallets)
 }
 
 export interface PhantomConnectOptions {
-  organizationId: string;
+  publicKey: string;
   appId: string;
   provider?: "google" | "apple";
   redirectUrl?: string;
@@ -17,7 +19,7 @@ export interface PhantomConnectOptions {
 
 export interface JWTAuthOptions {
   appId: string;
-  organizationId: string;
+  publicKey: string;
   jwtToken: string;
   customAuthData?: Record<string, any>;
 }

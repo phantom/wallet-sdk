@@ -50,7 +50,6 @@ describe("EmbeddedProvider Core", () => {
     // Setup config
     config = {
       apiBaseUrl: "https://api.example.com",
-      organizationId: "test-org-id",
       appId: "test-app-id",
       embeddedWalletType: "user-wallet",
       addressTypes: ["solana"],
@@ -184,53 +183,38 @@ describe("EmbeddedProvider Core", () => {
     });
 
     it("should pass platform stamper to PhantomClient during initialization", async () => {
-      // Import the mocked PhantomClient to verify it was called with stamper
-      const { PhantomClient } = await import("@phantom/client");
-      const MockedPhantomClient = jest.mocked(PhantomClient);
-
-      mockPlatform.storage.getSession.mockResolvedValue(null); // No existing session
+      // For user-wallets, PhantomClient is only created after successful authentication
+      mockPlatform.storage.getSession.mockResolvedValue(null);
       mockPlatform.authProvider.resumeAuthFromRedirect.mockReturnValue(null);
 
       try {
         await provider.connect();
       } catch (error) {
-        // Connection will fail, but PhantomClient should be called with stamper
+        // Connection will fail for user-wallet without proper auth setup
       }
 
-      // Verify PhantomClient was called with the stamper as second argument
-      expect(MockedPhantomClient).toHaveBeenCalledWith(
-        expect.any(Object), // config object
-        mockPlatform.stamper, // stamper should be passed as second argument
-      );
+      // For user-wallets, stamper init should be called during initialization
+      expect(mockPlatform.stamper.init).toHaveBeenCalled();
     });
 
-    it("should create authenticator name with platform info and public key", async () => {
-      mockPlatform.storage.getSession.mockResolvedValue(null); // No existing session
+    it("should call auth provider with public key and appId", async () => {
+      // For user-wallets, this test should verify that auth provider is called with publicKey
+      mockPlatform.storage.getSession.mockResolvedValue(null);
       mockPlatform.authProvider.resumeAuthFromRedirect.mockReturnValue(null);
 
       try {
         await provider.connect();
       } catch (error) {
-        // Connection will fail, but createOrganization should be called with authenticatorName
+        // Connection will fail for user-wallet without proper auth setup
       }
 
-      // Verify createOrganization was called with organization name and users array
-      expect(mockCreateOrganization).toHaveBeenCalledWith(
-        expect.stringMatching(/^test-app-test-platform-11111111$/), // organization name with platform info (first 8 chars)
-        expect.arrayContaining([
-          expect.objectContaining({
-            username: expect.stringContaining("user-"),
-            role: "ADMIN",
-            authenticators: expect.arrayContaining([
-              expect.objectContaining({
-                authenticatorName: expect.stringContaining("auth-"),
-                authenticatorKind: "keypair",
-                publicKey: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-                algorithm: "Ed25519",
-              }),
-            ]),
-          }),
-        ]),
+      // For user-wallets, we should verify that auth provider is called with correct publicKey
+      // The publicKey should be generated from the stamper
+      expect(mockPlatform.authProvider.authenticate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          publicKey: "11111111111111111111111111111111", // The mocked public key
+          appId: "test-app-id",
+        }),
       );
     });
 
