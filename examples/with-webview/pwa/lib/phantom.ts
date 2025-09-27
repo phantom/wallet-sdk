@@ -169,6 +169,12 @@ export class DualModePhantom {
             throw new Error('WebView bridge not available');
           }
           return this.webViewBridge.requestSignMessage(message);
+        },
+        signAndSendTransaction: async (transaction: any) => {
+          if (!this.webViewBridge) {
+            throw new Error('WebView bridge not available');
+          }
+          return this.webViewBridge.requestSignAndSendTransaction(transaction);
         }
       };
     } else {

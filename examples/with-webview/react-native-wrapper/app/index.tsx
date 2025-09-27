@@ -26,6 +26,14 @@ function PhantomWebView() {
           await handleAuthRequest(message);
           break;
 
+        case 'PHANTOM_SIGN_MESSAGE':
+          await handleSignMessageRequest(message);
+          break;
+
+        case 'PHANTOM_SIGN_AND_SEND_TRANSACTION':
+          await handleSignAndSendTransactionRequest(message);
+          break;
+
         default:
           console.log('[React Native] Unknown message type:', message.type);
       }
@@ -82,6 +90,110 @@ function PhantomWebView() {
 
       Alert.alert(
         'Authentication Failed',
+        (error as Error).message
+      );
+    }
+  };
+
+  // Handle sign message request from PWA
+  const handleSignMessageRequest = async (request: any) => {
+    try {
+      console.log('[React Native] Signing message:', request.data.message);
+
+      if (!solana.isAvailable) {
+        throw new Error('Solana SDK not available');
+      }
+
+      // Use React Native SDK to sign message
+      const result = await solana.solana.signMessage(request.data.message);
+
+      console.log('[React Native] Sign successful:', result);
+
+      // Send success response back to PWA
+      const response = {
+        id: request.id,
+        type: 'PHANTOM_SIGN_SUCCESS',
+        data: {
+          signature: result.signature,
+          publicKey: result.publicKey,
+        }
+      };
+
+      webViewRef.current?.postMessage(JSON.stringify(response));
+
+      Alert.alert(
+        'Message Signed',
+        `Successfully signed message`
+      );
+
+    } catch (error) {
+      console.error('[React Native] Sign failed:', error);
+
+      // Send error response back to PWA
+      const response = {
+        id: request.id,
+        type: 'PHANTOM_SIGN_ERROR',
+        data: {
+          error: (error as Error).message
+        }
+      };
+
+      webViewRef.current?.postMessage(JSON.stringify(response));
+
+      Alert.alert(
+        'Sign Failed',
+        (error as Error).message
+      );
+    }
+  };
+
+  // Handle sign and send transaction request from PWA
+  const handleSignAndSendTransactionRequest = async (request: any) => {
+    try {
+      console.log('[React Native] Signing and sending transaction:', request.data);
+
+      if (!solana.isAvailable) {
+        throw new Error('Solana SDK not available');
+      }
+
+      // Use React Native SDK to sign and send transaction
+      const result = await solana.solana.signAndSendTransaction(request.data.transaction);
+
+      console.log('[React Native] Transaction successful:', result);
+
+      // Send success response back to PWA
+      const response = {
+        id: request.id,
+        type: 'PHANTOM_TRANSACTION_SUCCESS',
+        data: {
+          signature: result.signature,
+          publicKey: result.publicKey,
+        }
+      };
+
+      webViewRef.current?.postMessage(JSON.stringify(response));
+
+      Alert.alert(
+        'Transaction Sent',
+        `Transaction signature: ${result.signature.slice(0, 8)}...`
+      );
+
+    } catch (error) {
+      console.error('[React Native] Transaction failed:', error);
+
+      // Send error response back to PWA
+      const response = {
+        id: request.id,
+        type: 'PHANTOM_TRANSACTION_ERROR',
+        data: {
+          error: (error as Error).message
+        }
+      };
+
+      webViewRef.current?.postMessage(JSON.stringify(response));
+
+      Alert.alert(
+        'Transaction Failed',
         (error as Error).message
       );
     }

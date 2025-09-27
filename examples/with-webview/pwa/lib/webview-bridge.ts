@@ -37,6 +37,22 @@ export interface SignMessageResponse extends WebViewMessage {
   };
 }
 
+export interface SignAndSendTransactionRequest extends WebViewMessage {
+  type: 'PHANTOM_SIGN_AND_SEND_TRANSACTION';
+  data: {
+    transaction: any; // Transaction object
+  };
+}
+
+export interface TransactionResponse extends WebViewMessage {
+  type: 'PHANTOM_TRANSACTION_SUCCESS' | 'PHANTOM_TRANSACTION_ERROR';
+  data: {
+    signature?: string;
+    publicKey?: string;
+    error?: string;
+  };
+}
+
 declare global {
   interface Window {
     ReactNativeWebView?: {
@@ -129,6 +145,37 @@ export class WebViewBridge {
   }
 
   /**
+   * Request transaction signing and sending through React Native
+   */
+  public async requestSignAndSendTransaction(transaction: any): Promise<TransactionResponse['data']> {
+    if (!this.isInWebView()) {
+      throw new Error('Not running in React Native WebView');
+    }
+
+    const id = (++this.messageId).toString();
+    const transactionRequest: SignAndSendTransactionRequest = {
+      id,
+      type: 'PHANTOM_SIGN_AND_SEND_TRANSACTION',
+      data: { transaction }
+    };
+
+    return new Promise<TransactionResponse['data']>((resolve, reject) => {
+      this.pendingRequests.set(id, { resolve, reject });
+
+      // Send to React Native
+      window.ReactNativeWebView!.postMessage(JSON.stringify(transactionRequest));
+
+      // Set timeout for request
+      setTimeout(() => {
+        if (this.pendingRequests.has(id)) {
+          this.pendingRequests.delete(id);
+          reject(new Error('Transaction timeout - no response from React Native app'));
+        }
+      }, 60000); // 60 second timeout for transactions
+    });
+  }
+
+  /**
    * Handle messages from React Native
    */
   private handleMessage(event: MessageEvent) {
@@ -139,9 +186,9 @@ export class WebViewBridge {
         const { resolve, reject } = this.pendingRequests.get(message.id)!;
         this.pendingRequests.delete(message.id);
 
-        if (message.type === 'PHANTOM_AUTH_SUCCESS' || message.type === 'PHANTOM_SIGN_SUCCESS') {
+        if (message.type === 'PHANTOM_AUTH_SUCCESS' || message.type === 'PHANTOM_SIGN_SUCCESS' || message.type === 'PHANTOM_TRANSACTION_SUCCESS') {
           resolve(message.data);
-        } else if (message.type === 'PHANTOM_AUTH_ERROR' || message.type === 'PHANTOM_SIGN_ERROR') {
+        } else if (message.type === 'PHANTOM_AUTH_ERROR' || message.type === 'PHANTOM_SIGN_ERROR' || message.type === 'PHANTOM_TRANSACTION_ERROR') {
           reject(new Error(message.data?.error || 'Operation failed'));
         }
       }

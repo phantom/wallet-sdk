@@ -11,6 +11,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [environmentInfo, setEnvironmentInfo] = useState<any>(null);
   const [signatureResult, setSignatureResult] = useState<string | null>(null);
+  const [transactionResult, setTransactionResult] = useState<string | null>(null);
 
   // Initialize dual-mode Phantom
   useEffect(() => {
@@ -74,6 +75,7 @@ export default function Home() {
       setAddresses([]);
       setWalletId(null);
       setSignatureResult(null);
+      setTransactionResult(null);
     } catch (err) {
       console.error('[App] Disconnect failed:', err);
       setError((err as Error).message);
@@ -84,18 +86,45 @@ export default function Home() {
     if (!phantom || !isConnected) return;
 
     try {
-      if (environmentInfo?.isWebView) {
-        setError('Signing operations require React Native SDK integration. This demo only shows authentication.');
-        return;
-      }
-
+      setError(null);
       const message = `Hello from Phantom! Timestamp: ${Date.now()}`;
+
+      console.log(`[App] Signing message via ${environmentInfo?.mode}:`, message);
+
       const result = await phantom.solana.signMessage(message);
 
       console.log('[App] Sign result:', result);
       setSignatureResult(JSON.stringify(result, null, 2));
     } catch (err) {
       console.error('[App] Sign failed:', err);
+      setError((err as Error).message);
+    }
+  };
+
+  const handleSignAndSendTransaction = async () => {
+    if (!phantom || !isConnected) return;
+
+    try {
+      setError(null);
+
+      // Create a simple transfer transaction example
+      // Note: In a real app, you would build a proper Solana transaction
+      const mockTransaction = {
+        // This would be a real Solana transaction object
+        type: 'transfer',
+        recipient: '11111111111111111111111111111112',
+        amount: 0.001 * 1e9, // 0.001 SOL in lamports
+        timestamp: Date.now()
+      };
+
+      console.log(`[App] Signing and sending transaction via ${environmentInfo?.mode}:`, mockTransaction);
+
+      const result = await phantom.solana.signAndSendTransaction(mockTransaction);
+
+      console.log('[App] Transaction result:', result);
+      setTransactionResult(JSON.stringify(result, null, 2));
+    } catch (err) {
+      console.error('[App] Transaction failed:', err);
       setError((err as Error).message);
     }
   };
@@ -308,21 +337,33 @@ export default function Home() {
 
             {/* Actions */}
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              {!environmentInfo?.isWebView && (
-                <button
-                  onClick={handleSignMessage}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    backgroundColor: '#10b981',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '0.5rem',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Sign Message
-                </button>
-              )}
+              <button
+                onClick={handleSignMessage}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  cursor: 'pointer'
+                }}
+              >
+                Sign Message
+              </button>
+
+              <button
+                onClick={handleSignAndSendTransaction}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#8b5cf6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  cursor: 'pointer'
+                }}
+              >
+                Sign & Send Transaction
+              </button>
 
               <button
                 onClick={handleDisconnect}
@@ -339,20 +380,23 @@ export default function Home() {
               </button>
             </div>
 
-            {/* WebView Mode Note */}
-            {environmentInfo?.isWebView && (
-              <div style={{
-                marginTop: '1rem',
-                padding: '1rem',
-                backgroundColor: '#fef3c7',
-                color: '#92400e',
-                borderRadius: '0.5rem',
-                fontSize: '0.9rem'
-              }}>
-                <strong>Note:</strong> In WebView mode, signing operations would be handled by the React Native SDK.
-                This demo focuses on the authentication bridge.
-              </div>
-            )}
+            {/* Mode-specific Info */}
+            <div style={{
+              marginTop: '1rem',
+              padding: '1rem',
+              backgroundColor: environmentInfo?.isWebView ? '#f0fdf4' : '#eff6ff',
+              color: environmentInfo?.isWebView ? '#15803d' : '#1d4ed8',
+              borderRadius: '0.5rem',
+              fontSize: '0.9rem'
+            }}>
+              <strong>
+                {environmentInfo?.isWebView ? '📱 WebView Mode:' : '🌐 Browser Mode:'}
+              </strong>{' '}
+              {environmentInfo?.isWebView
+                ? 'Signing requests are sent to React Native SDK via bridge'
+                : 'Signing handled directly by browser-sdk'
+              }
+            </div>
           </div>
 
           {/* Signature Result */}
