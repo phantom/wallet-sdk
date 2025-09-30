@@ -37,7 +37,7 @@ import {
   type ExternalKmsOrganization,
   type DerivationInfoAddressFormatEnum as AddressType,
   type ExternalKmsAuthenticator,
-  PartialKmsUser,
+  type PartialKmsUser,
 } from "@phantom/openapi-wallet-service";
 import {
   DerivationPath,
