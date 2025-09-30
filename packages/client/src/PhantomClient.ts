@@ -37,6 +37,7 @@ import {
   type ExternalKmsOrganization,
   type DerivationInfoAddressFormatEnum as AddressType,
   type ExternalKmsAuthenticator,
+  PartialKmsUser,
 } from "@phantom/openapi-wallet-service";
 import {
   DerivationPath,
@@ -61,6 +62,8 @@ import {
 
 import type { Stamper } from "@phantom/sdk-types";
 import { randomUUID, getSecureTimestamp } from "@phantom/utils";
+type AddUserToOrganizationParams = Omit<AddUserToOrganizationRequest, "user"> & { replaceExpirable?: boolean, user: PartialKmsUser & { traits: { appId: string } }};
+
 
 // TODO(napas): Auto generate this from the OpenAPI spec
 export interface SubmissionConfig {
@@ -644,7 +647,8 @@ export class PhantomClient {
   /**
    * Add a new user to an organization
    */
-  async addUserToOrganization(params: AddUserToOrganizationRequest): Promise<void> {
+  
+  async addUserToOrganization(params: AddUserToOrganizationParams): Promise<void> {
     try {
       const request: AddUserToOrganization & { timestampMs: number } = {
         method: AddUserToOrganizationMethodEnum.addUserToOrganization,
