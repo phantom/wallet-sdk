@@ -62,7 +62,7 @@ import {
 
 import type { Stamper } from "@phantom/sdk-types";
 import { randomUUID, getSecureTimestamp } from "@phantom/utils";
-type AddUserToOrganizationParams = Omit<AddUserToOrganizationRequest, "user"> & { replaceExpirable?: boolean, user: PartialKmsUser & { traits: { appId: string } }};
+type AddUserToOrganizationParams = Omit<AddUserToOrganizationRequest, "user"> & { replaceExpirable?: boolean, user: PartialKmsUser & { traits: { appId: string }, expiresInMs?: number }};
 
 
 // TODO(napas): Auto generate this from the OpenAPI spec
