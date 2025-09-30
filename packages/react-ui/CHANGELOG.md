@@ -1,5 +1,15 @@
 # @phantom/react-ui
 
+## 2.0.0-beta.8
+
+### Patch Changes
+
+- e335e72: Fix: expires in ms parameter
+- Updated dependencies [e335e72]
+  - @phantom/client@1.0.0-beta.12
+  - @phantom/browser-sdk@1.0.0-beta.12
+  - @phantom/react-sdk@1.0.0-beta.12
+
 ## 2.0.0-beta.7
 
 ### Patch Changes

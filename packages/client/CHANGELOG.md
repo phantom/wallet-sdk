@@ -1,5 +1,11 @@
 # @phantom/client
 
+## 1.0.0-beta.12
+
+### Patch Changes
+
+- e335e72: Fix: expires in ms parameter
+
 ## 1.0.0-beta.11
 
 ### Patch Changes
