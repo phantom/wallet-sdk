@@ -230,11 +230,13 @@ export class EmbeddedProvider {
 
     // For completed sessions, check if session is valid (only checks authenticator expiration)
     if (session.status === "completed" && !this.isSessionValid(session)) {
-      this.logger.warn("EMBEDDED_PROVIDER", "Session invalid due to authenticator expiration", {
+      this.logger.warn("EMBEDDED_PROVIDER", "Session invalid due to authenticator expiration, will regenerate keypair", {
         sessionId: session.sessionId,
         authenticatorExpiresAt: session.authenticatorExpiresAt,
+        currentTime: Date.now(),
+        expired: session.authenticatorExpiresAt < Date.now(),
       });
-      // Clear the invalid session
+      // Clear the invalid session - this will trigger keypair regeneration in connect flow
       await this.storage.clearSession();
       return null;
     }
@@ -566,7 +568,8 @@ export class EmbeddedProvider {
       this.validateAuthOptions(authOptions);
 
       // No existing connection available, create new one
-      this.logger.info("EMBEDDED_PROVIDER", "No existing connection, creating new auth flow");
+      // This could be due to: 1) First time connection, 2) Expired authenticator, 3) Invalid session
+      this.logger.info("EMBEDDED_PROVIDER", "No existing connection available, creating new auth flow with fresh keypair");
       const { stamperInfo, expiresInMs } = await this.initializeStamper();
       const session = await this.handleAuthFlow(stamperInfo.publicKey, stamperInfo, authOptions, expiresInMs);
 
@@ -1181,7 +1184,7 @@ export class EmbeddedProvider {
           organizationId: session.organizationId,
           user: {
             username: newUsername,
-            role: "ADMIN", // Use ADMIN role like original users
+            role: "ADMIN" as any, // Use ADMIN role like original users
             authenticators: [
               {
                 authenticatorName: `auth-${shortKeyId}`,
@@ -1193,10 +1196,10 @@ export class EmbeddedProvider {
             traits: {
               appId: this.config.appId,
             },
+            expiresInMs,
           },
-          expiresInMs,
           replaceExpirable: true, // Replace oldest expirable user if at limit
-        } as any);
+        });
       } catch (error) {
         this.logger.error("EMBEDDED_PROVIDER", "Failed to add new user to organization", {
           error: error instanceof Error ? error.message : String(error),
