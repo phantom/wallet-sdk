@@ -125,9 +125,4 @@ export class ExpoAuthProvider implements AuthProvider {
       await WebBrowser.coolDownAsync();
     }
   }
-
-  isAvailable(): Promise<boolean> {
-    // WebBrowser is always available in Expo
-    return Promise.resolve(true);
-  }
 }
