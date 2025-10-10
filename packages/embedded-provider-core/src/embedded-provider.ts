@@ -1,43 +1,44 @@
+import { base64urlEncode } from "@phantom/base64url";
 import { AddressType, PhantomClient } from "@phantom/client";
 import type { NetworkId } from "@phantom/constants";
-import { randomUUID } from "@phantom/utils";
-import { base64urlEncode } from "@phantom/base64url";
-import bs58 from "bs58";
 import {
   parseMessage,
-  parseTransactionToBase64Url,
   parseSignMessageResponse,
   parseTransactionResponse,
-  type ParsedTransactionResult,
+  parseTransactionToBase64Url,
   type ParsedSignatureResult,
+  type ParsedTransactionResult,
 } from "@phantom/parsers";
+import { randomUUID } from "@phantom/utils";
+import bs58 from "bs58";
 import { AUTHENTICATOR_EXPIRATION_TIME_MS, AUTHENTICATOR_RENEWAL_WINDOW_MS } from "./constants";
 
+import type { IEthereumChain, ISolanaChain } from "@phantom/chain-interfaces";
+import type { StamperWithKeyManagement } from "@phantom/sdk-types";
+import { JWTAuth } from "./auth/jwt-auth";
+import { EmbeddedEthereumChain, EmbeddedSolanaChain } from "./chains";
 import type {
-  PlatformAdapter,
-  Session,
+  AuthProvider,
   AuthResult,
   DebugLogger,
   EmbeddedStorage,
-  AuthProvider,
-  URLParamsAccessor,
+  PlatformAdapter,
+  Session,
   StamperInfo,
+  URLParamsAccessor,
 } from "./interfaces";
 import type {
-  EmbeddedProviderConfig,
+  AuthOptions,
   ConnectResult,
+  EmbeddedProviderConfig,
+  SignAndSendTransactionParams,
   SignMessageParams,
   SignTransactionParams,
-  SignAndSendTransactionParams,
+  SignTypedDataV4Params,
   WalletAddress,
-  AuthOptions,
 } from "./types";
-import { JWTAuth } from "./auth/jwt-auth";
-import { generateSessionId } from "./utils/session";
 import { retryWithBackoff } from "./utils/retry";
-import type { StamperWithKeyManagement } from "@phantom/sdk-types";
-import { EmbeddedSolanaChain, EmbeddedEthereumChain } from "./chains";
-import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
+import { generateSessionId } from "./utils/session";
 
 export type EmbeddedProviderEvent = "connect" | "connect_start" | "connect_error" | "disconnect" | "error";
 export type EventCallback = (data?: any) => void;
@@ -230,12 +231,16 @@ export class EmbeddedProvider {
 
     // For completed sessions, check if session is valid (only checks authenticator expiration)
     if (session.status === "completed" && !this.isSessionValid(session)) {
-      this.logger.warn("EMBEDDED_PROVIDER", "Session invalid due to authenticator expiration, will regenerate keypair", {
-        sessionId: session.sessionId,
-        authenticatorExpiresAt: session.authenticatorExpiresAt,
-        currentTime: Date.now(),
-        expired: session.authenticatorExpiresAt < Date.now(),
-      });
+      this.logger.warn(
+        "EMBEDDED_PROVIDER",
+        "Session invalid due to authenticator expiration, will regenerate keypair",
+        {
+          sessionId: session.sessionId,
+          authenticatorExpiresAt: session.authenticatorExpiresAt,
+          currentTime: Date.now(),
+          expired: session.authenticatorExpiresAt < Date.now(),
+        },
+      );
       // Clear the invalid session - this will trigger keypair regeneration in connect flow
       await this.storage.clearSession();
       return null;
@@ -569,7 +574,10 @@ export class EmbeddedProvider {
 
       // No existing connection available, create new one
       // This could be due to: 1) First time connection, 2) Expired authenticator, 3) Invalid session
-      this.logger.info("EMBEDDED_PROVIDER", "No existing connection available, creating new auth flow with fresh keypair");
+      this.logger.info(
+        "EMBEDDED_PROVIDER",
+        "No existing connection available, creating new auth flow with fresh keypair",
+      );
       const { stamperInfo, expiresInMs } = await this.initializeStamper();
       const session = await this.handleAuthFlow(stamperInfo.publicKey, stamperInfo, authOptions, expiresInMs);
 
@@ -716,6 +724,39 @@ export class EmbeddedProvider {
     });
 
     // Parse the response to get human-readable signature and explorer URL
+    return parseSignMessageResponse(rawResponse, params.networkId);
+  }
+
+  async signTypedDataV4(params: SignTypedDataV4Params): Promise<ParsedSignatureResult> {
+    if (!this.client || !this.walletId) {
+      throw new Error("Not connected");
+    }
+
+    // Check if authenticator needs renewal before performing the operation
+    await this.ensureValidAuthenticator();
+
+    this.logger.info("EMBEDDED_PROVIDER", "Signing typed data", {
+      walletId: this.walletId,
+      typedData: params.typedData,
+    });
+
+    // Get session to access derivation index
+    const session = await this.storage.getSession();
+    const derivationIndex = session?.accountDerivationIndex ?? 0;
+
+    // Call the client's signTypedData method
+    const rawResponse = await this.client.signTypedData({
+      walletId: this.walletId,
+      typedData: params.typedData,
+      networkId: params.networkId,
+      derivationIndex: derivationIndex,
+    });
+
+    this.logger.info("EMBEDDED_PROVIDER", "Typed data signed successfully", {
+      walletId: this.walletId,
+    });
+
+    // Parse the response
     return parseSignMessageResponse(rawResponse, params.networkId);
   }
 

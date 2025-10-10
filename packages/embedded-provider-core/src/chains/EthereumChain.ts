@@ -1,9 +1,9 @@
-import { EventEmitter } from "eventemitter3";
-import type { IEthereumChain, EthTransactionRequest } from "@phantom/chain-interfaces";
-import type { EmbeddedProvider } from "../embedded-provider";
-import { NetworkId, chainIdToNetworkId, networkIdToChainId } from "@phantom/constants";
 import { base64urlDecode } from "@phantom/base64url";
+import type { EthTransactionRequest, IEthereumChain } from "@phantom/chain-interfaces";
+import { NetworkId, chainIdToNetworkId, networkIdToChainId } from "@phantom/constants";
 import { Buffer } from "buffer";
+import { EventEmitter } from "eventemitter3";
+import type { EmbeddedProvider } from "../embedded-provider";
 
 /**
  * Embedded Ethereum chain implementation that is EIP-1193 compliant
@@ -175,9 +175,13 @@ export class EmbeddedEthereumChain implements IEthereumChain {
 
       case "eth_signTypedData_v4": {
         const [_typedDataAddress, typedDataStr] = args.params as [string, string];
-        const _typedData = JSON.parse(typedDataStr);
-        const typedDataResult = await this.provider.signMessage({
-          message: typedDataStr, // Pass the stringified typed data as message
+        const typedData = JSON.parse(typedDataStr);
+
+        // Compute EIP-712 hash using ethers or viem
+        // We'll use a simple approach: call the backend with proper typed data signing
+        // For now, pass the typed data object through signMessage with a special marker
+        const typedDataResult = await this.provider.signTypedDataV4({
+          typedData,
           networkId: this.currentNetworkId,
         });
         return typedDataResult.signature as T;
