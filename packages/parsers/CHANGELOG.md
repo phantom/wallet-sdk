@@ -1,5 +1,14 @@
 # @phantom/parsers
 
+## 1.0.0-beta.7
+
+### Patch Changes
+
+- f246861: Fix eth_signTypeData
+  - @phantom/base64url@1.0.0-beta.7
+  - @phantom/constants@1.0.0-beta.7
+  - @phantom/sdk-types@1.0.0-beta.7
+
 ## 1.0.0-beta.6
 
 ### Patch Changes
