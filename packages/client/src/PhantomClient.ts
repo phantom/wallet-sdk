@@ -431,21 +431,16 @@ export class PhantomClient {
       const request = {
         method: "ethereumSignTypedData",
         params: {
-          typedData: typedData,
+          typedData,
           organizationId: this.config.organizationId,
-          walletId: walletId,
-          derivationInfo: derivationInfo,
+          walletId,
+          derivationInfo,
         },
         timestampMs: await getSecureTimestamp(),
       };
 
-      console.log("[PhantomClient.signTypedData] Request:", JSON.stringify(request, null, 2));
-
       const response = await this.kmsApi.postKmsRpc(request as any);
       const result = (response.data as any).result as SignatureWithPublicKey;
-
-      console.log("[PhantomClient.signTypedData] Response signature:", result.signature);
-      console.log("[PhantomClient.signTypedData] Response address:", (result as any).address);
 
       // Return the base64 encoded signature
       return result.signature;

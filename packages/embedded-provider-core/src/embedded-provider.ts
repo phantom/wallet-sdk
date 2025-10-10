@@ -744,7 +744,7 @@ export class EmbeddedProvider {
     const session = await this.storage.getSession();
     const derivationIndex = session?.accountDerivationIndex ?? 0;
 
-    // Call the client's signTypedData method (to be implemented)
+    // Call the client's signTypedData method
     const rawResponse = await this.client.signTypedData({
       walletId: this.walletId,
       typedData: params.typedData,
