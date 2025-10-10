@@ -1,5 +1,13 @@
 # @phantom/react-sdk
 
+## 1.0.0-beta.13
+
+### Patch Changes
+
+- @phantom/constants@1.0.0-beta.7
+- @phantom/chain-interfaces@1.0.0-beta.7
+- @phantom/browser-sdk@1.0.0-beta.13
+
 ## 1.0.0-beta.12
 
 ### Patch Changes

@@ -1,5 +1,16 @@
 # @phantom/client
 
+## 1.0.0-beta.13
+
+### Patch Changes
+
+- f246861: Fix eth_signTypeData
+  - @phantom/base64url@1.0.0-beta.7
+  - @phantom/constants@1.0.0-beta.7
+  - @phantom/sdk-types@1.0.0-beta.7
+  - @phantom/crypto@1.0.0-beta.7
+  - @phantom/api-key-stamper@1.0.0-beta.7
+
 ## 1.0.0-beta.12
 
 ### Patch Changes
