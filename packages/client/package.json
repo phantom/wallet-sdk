@@ -45,7 +45,8 @@
     "@phantom/utils": "workspace:^",
     "axios": "^1.10.0",
     "bs58": "^6.0.0",
-    "buffer": "^6.0.3"
+    "buffer": "^6.0.3",
+    "ethers": "^6.9.0"
   },
   "files": [
     "dist"

@@ -18,6 +18,11 @@ export interface SignMessageParams {
   networkId: NetworkId;
 }
 
+export interface SignTypedDataV4Params {
+  typedData: any; // EIP-712 typed data object
+  networkId: NetworkId;
+}
+
 // Use the parsed signature result
 export interface SignMessageResult extends ParsedSignatureResult {}
 

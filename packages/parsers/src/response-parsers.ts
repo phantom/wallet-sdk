@@ -3,12 +3,12 @@
  * This module contains the specific parsing logic for each blockchain network
  */
 
+import { base64urlDecode } from "@phantom/base64url";
 import type { NetworkId } from "@phantom/constants";
 import { getExplorerUrl } from "@phantom/constants";
-import { base64urlDecode } from "@phantom/base64url";
-import { Buffer } from "buffer";
-import bs58 from "bs58";
 import { Transaction, VersionedTransaction } from "@solana/web3.js";
+import bs58 from "bs58";
+import { Buffer } from "buffer";
 
 export interface ParsedSignatureResult {
   signature: string; // Human-readable signature (hex/base58)
@@ -99,6 +99,18 @@ function parseEVMSignatureResponse(base64Response: string): ParsedSignatureResul
   try {
     // EVM signatures are typically 65 bytes (r + s + v)
     const signatureBytes = base64urlDecode(base64Response);
+
+    // KMS backend returns recovery_id (0 or 1) as the last byte
+    // Ethereum expects v = 27 or 28, so we need to convert it
+    if (signatureBytes.length === 65) {
+      const recoveryId = signatureBytes[64];
+      // Only convert if it's 0 or 1 (recovery_id format)
+      if (recoveryId === 0 || recoveryId === 1) {
+        // Convert recovery_id to Ethereum v value
+        signatureBytes[64] = recoveryId + 27;
+      }
+    }
+
     const signature = "0x" + Buffer.from(signatureBytes).toString("hex");
 
     return {
@@ -166,7 +178,7 @@ export function parseSolanaSignedTransaction(base64RawTransaction: string): Tran
   try {
     // Use @phantom/base64url utility for proper browser compatibility
     const transactionBytes = base64urlDecode(base64RawTransaction);
-    
+
     // First try to parse as a legacy Transaction
     try {
       const transaction = Transaction.from(transactionBytes);
@@ -184,7 +196,5 @@ export function parseSolanaSignedTransaction(base64RawTransaction: string): Tran
   } catch (error) {
     // Fallback: return null if both parsing methods fail
     return null;
-  };
+  }
 }
-
-

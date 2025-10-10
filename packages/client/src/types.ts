@@ -49,6 +49,13 @@ export interface SignMessageParams {
   derivationIndex?: number; // Optional account derivation index (defaults to 0)
 }
 
+export interface SignTypedDataParams {
+  walletId: string;
+  typedData: any; // EIP-712 typed data object
+  networkId: NetworkId;
+  derivationIndex?: number; // Optional account derivation index (defaults to 0)
+}
+
 export interface SignTransactionParams {
   walletId: string;
   transaction: Transaction; // base64url encoded transaction
@@ -64,7 +71,6 @@ export interface SignAndSendTransactionParams {
   derivationIndex?: number; // Optional account derivation index (defaults to 0)
   account?: string; // Optional specific account address to use
 }
-
 
 export interface GetWalletWithTagParams {
   organizationId: string;

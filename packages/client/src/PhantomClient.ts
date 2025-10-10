@@ -1,69 +1,69 @@
-import axios, { type AxiosInstance } from "axios";
-import { Buffer } from "buffer";
 import {
-  Configuration,
-  KMSRPCApi,
-  CreateWalletMethodEnum,
-  SignTransactionMethodEnum,
-  SignRawPayloadMethodEnum,
-  CreateOrganizationMethodEnum,
-  CreateAuthenticatorMethodEnum,
-  DeleteAuthenticatorMethodEnum,
-  GrantOrganizationAccessMethodEnum,
   AddUserToOrganizationMethodEnum,
-  type CreateWallet,
-  type SignTransaction,
-  type SignRawPayload,
-  type SignTransactionRequest,
-  type SignRawPayloadRequest,
-  type CreateOrganization,
-  type CreateOrganizationRequest,
-  type CreateAuthenticator,
-  type CreateAuthenticatorRequest,
-  type DeleteAuthenticator,
-  type DeleteAuthenticatorRequest,
-  type GrantOrganizationAccess,
-  type GrantOrganizationAccessRequest,
+  Configuration,
+  CreateAuthenticatorMethodEnum,
+  CreateOrganizationMethodEnum,
+  CreateWalletMethodEnum,
+  DeleteAuthenticatorMethodEnum,
+  GetAccountsMethodEnum,
+  GrantOrganizationAccessMethodEnum,
+  KMSRPCApi,
+  KmsUserRole,
+  SignRawPayloadMethodEnum,
+  SignTransactionMethodEnum,
+  type DerivationInfoAddressFormatEnum as AddressType,
   type AddUserToOrganization,
   type AddUserToOrganizationRequest,
+  type CreateAuthenticator,
+  type CreateAuthenticatorRequest,
+  type CreateOrganization,
+  type CreateOrganizationRequest,
+  type CreateWallet,
+  type DeleteAuthenticator,
+  type DeleteAuthenticatorRequest,
   type DerivationInfo,
-  type ExternalKmsWallet,
-  type SignedTransactionWithPublicKey,
-  type SignatureWithPublicKey,
-  type GetAccounts,
-  GetAccountsMethodEnum,
   type ExternalDerivedAccount,
-  KmsUserRole,
-  type ExternalKmsOrganization,
-  type DerivationInfoAddressFormatEnum as AddressType,
   type ExternalKmsAuthenticator,
+  type ExternalKmsOrganization,
+  type ExternalKmsWallet,
+  type GetAccounts,
+  type GrantOrganizationAccess,
+  type GrantOrganizationAccessRequest,
   type PartialKmsUser,
+  type SignatureWithPublicKey,
+  type SignedTransactionWithPublicKey,
+  type SignRawPayload,
+  type SignRawPayloadRequest,
+  type SignTransaction,
+  type SignTransactionRequest,
 } from "@phantom/openapi-wallet-service";
-import {
-  DerivationPath,
-  getNetworkConfig
-} from "./constants";
+import axios, { type AxiosInstance } from "axios";
+import { Buffer } from "buffer";
 import { deriveSubmissionConfig } from "./caip2-mappings";
+import { DerivationPath, getNetworkConfig } from "./constants";
 import {
-  type PhantomClientConfig,
+  type AuthenticatorConfig,
+  type CreateAuthenticatorParams,
   type CreateWalletResult,
+  type DeleteAuthenticatorParams,
+  type GetWalletsResult,
+  type GetWalletWithTagParams,
+  type PhantomClientConfig,
+  type SignAndSendTransactionParams,
   type SignedTransaction,
   type SignedTransactionResult,
-  type GetWalletsResult,
   type SignMessageParams,
   type SignTransactionParams,
-  type SignAndSendTransactionParams,
-  type GetWalletWithTagParams,
-  type CreateAuthenticatorParams,
-  type DeleteAuthenticatorParams,
+  type SignTypedDataParams,
   type UserConfig,
-  type AuthenticatorConfig,
 } from "./types";
 
 import type { Stamper } from "@phantom/sdk-types";
-import { randomUUID, getSecureTimestamp } from "@phantom/utils";
-type AddUserToOrganizationParams = Omit<AddUserToOrganizationRequest, "user"> & { replaceExpirable?: boolean, user: PartialKmsUser & { traits: { appId: string }, expiresInMs?: number }};
-
+import { getSecureTimestamp, randomUUID } from "@phantom/utils";
+type AddUserToOrganizationParams = Omit<AddUserToOrganizationRequest, "user"> & {
+  replaceExpirable?: boolean;
+  user: PartialKmsUser & { traits: { appId: string }; expiresInMs?: number };
+};
 
 // TODO(napas): Auto generate this from the OpenAPI spec
 export interface SubmissionConfig {
@@ -227,7 +227,6 @@ export class PhantomClient {
         }
       }
 
-
       // Get network configuration with custom derivation index
       const networkConfig = getNetworkConfig(networkIdParam, derivationIndex);
 
@@ -289,8 +288,7 @@ export class PhantomClient {
   /**
    * Sign a transaction
    */
-  async signTransaction(params: SignTransactionParams,): Promise<SignedTransactionResult> {
-
+  async signTransaction(params: SignTransactionParams): Promise<SignedTransactionResult> {
     const result = await this.performTransactionSigning(params, false);
 
     return {
@@ -302,7 +300,6 @@ export class PhantomClient {
    * Sign and send a transaction
    */
   async signAndSendTransaction(params: SignAndSendTransactionParams): Promise<SignedTransaction> {
-
     const result = await this.performTransactionSigning(params, true);
     return {
       rawTransaction: result.signedTransaction,
@@ -400,6 +397,61 @@ export class PhantomClient {
     } catch (error: any) {
       console.error("Failed to sign message:", error.response?.data || error.message);
       throw new Error(`Failed to sign message: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  /**
+   * Sign EIP-712 typed data
+   */
+  async signTypedData(params: SignTypedDataParams): Promise<string> {
+    const walletId = params.walletId;
+    const typedData = params.typedData;
+    const networkIdParam = params.networkId;
+    const derivationIndex = params.derivationIndex ?? 0;
+
+    try {
+      if (!this.config.organizationId) {
+        throw new Error("organizationId is required to sign typed data");
+      }
+
+      // Get network configuration
+      const networkConfig = getNetworkConfig(networkIdParam, derivationIndex);
+
+      if (!networkConfig) {
+        throw new Error(`Unsupported network ID: ${networkIdParam}`);
+      }
+
+      const derivationInfo: DerivationInfo = {
+        derivationPath: networkConfig.derivationPath,
+        curve: networkConfig.curve,
+        addressFormat: networkConfig.addressFormat,
+      };
+
+      // Use the native EthereumSignTypedData endpoint
+      const request = {
+        method: "ethereumSignTypedData",
+        params: {
+          typedData: typedData,
+          organizationId: this.config.organizationId,
+          walletId: walletId,
+          derivationInfo: derivationInfo,
+        },
+        timestampMs: await getSecureTimestamp(),
+      };
+
+      console.log("[PhantomClient.signTypedData] Request:", JSON.stringify(request, null, 2));
+
+      const response = await this.kmsApi.postKmsRpc(request as any);
+      const result = (response.data as any).result as SignatureWithPublicKey;
+
+      console.log("[PhantomClient.signTypedData] Response signature:", result.signature);
+      console.log("[PhantomClient.signTypedData] Response address:", (result as any).address);
+
+      // Return the base64 encoded signature
+      return result.signature;
+    } catch (error: any) {
+      console.error("Failed to sign typed data:", error.response?.data || error.message);
+      throw new Error(`Failed to sign typed data: ${error.response?.data?.message || error.message}`);
     }
   }
 
@@ -539,7 +591,7 @@ export class PhantomClient {
         tags,
       };
 
-      const request: CreateOrganization & { timestampMs: number }  = {
+      const request: CreateOrganization & { timestampMs: number } = {
         method: CreateOrganizationMethodEnum.createOrganization,
         params: params,
         timestampMs: await getSecureTimestamp(),
@@ -579,7 +631,7 @@ export class PhantomClient {
         replaceExpirable: params.replaceExpirable,
       } as any;
 
-      const request: CreateAuthenticator & { timestampMs: number }  = {
+      const request: CreateAuthenticator & { timestampMs: number } = {
         method: CreateAuthenticatorMethodEnum.createAuthenticator,
         params: requestParams,
         timestampMs: await getSecureTimestamp(),
@@ -647,7 +699,7 @@ export class PhantomClient {
   /**
    * Add a new user to an organization
    */
-  
+
   async addUserToOrganization(params: AddUserToOrganizationParams): Promise<void> {
     try {
       const request: AddUserToOrganization & { timestampMs: number } = {
