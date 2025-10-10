@@ -47,10 +47,6 @@ export class ExpoSecureStorage implements EmbeddedStorage {
     }
   }
 
-  async isAvailable(): Promise<boolean> {
-    return await SecureStore.isAvailableAsync();
-  }
-
   // Method to update authentication requirement
   setRequireAuth(_requireAuth: boolean): void {
     // Note: this.requireAuth is readonly, so we can't actually change it
