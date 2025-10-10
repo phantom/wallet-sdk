@@ -5469,7 +5469,6 @@ __metadata:
     bs58: "npm:^6.0.0"
     buffer: "npm:^6.0.3"
     eslint: "npm:8.53.0"
-    ethers: "npm:^6.9.0"
     jest: "npm:^29.7.0"
     prettier: "npm:^3.5.2"
     rimraf: "npm:^6.0.1"
@@ -14403,7 +14402,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ethers@npm:^6.0.0, ethers@npm:^6.9.0":
+"ethers@npm:^6.0.0":
   version: 6.15.0
   resolution: "ethers@npm:6.15.0"
   dependencies:
