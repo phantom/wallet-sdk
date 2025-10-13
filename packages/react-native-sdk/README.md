@@ -480,4 +480,4 @@ interface PhantomDebugConfig {
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](https://github.com/phantom/wallet-sdk/blob/main/LICENSE) file for details.
