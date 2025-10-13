@@ -9,6 +9,7 @@ export default defineConfig({
     resolve: true,
   },
   clean: true,
+  noExternal: ["buffer"],
   external: ["@phantom/api-key-stamper", "@phantom/client"],
   platform: "browser",
   shims: true,
