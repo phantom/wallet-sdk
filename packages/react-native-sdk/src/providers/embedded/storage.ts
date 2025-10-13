@@ -3,11 +3,9 @@ import type { EmbeddedStorage, Session } from "@phantom/embedded-provider-core";
 
 export class ExpoSecureStorage implements EmbeddedStorage {
   private readonly sessionKey = "phantom_session";
-  private readonly requireAuth: boolean;
+  private readonly requireAuth = false; // Set to false to NOT require biometric/authentication for access
 
-  constructor(requireAuth: boolean = false) {
-    this.requireAuth = requireAuth;
-  }
+  constructor() {}
 
   async saveSession(session: Session): Promise<void> {
     try {
@@ -45,16 +43,5 @@ export class ExpoSecureStorage implements EmbeddedStorage {
       console.error("[ExpoSecureStorage] Failed to clear session", { error: (error as Error).message });
       // Don't throw here, clearing should be resilient
     }
-  }
-
-  async isAvailable(): Promise<boolean> {
-    return await SecureStore.isAvailableAsync();
-  }
-
-  // Method to update authentication requirement
-  setRequireAuth(_requireAuth: boolean): void {
-    // Note: this.requireAuth is readonly, so we can't actually change it
-    // This would require recreating the storage instance
-    console.warn("[ExpoSecureStorage] Cannot change requireAuth after initialization");
   }
 }
