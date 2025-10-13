@@ -9,17 +9,6 @@ A comprehensive suite of SDKs for integrating Phantom Wallet across different pl
 - **[Browser SDK](./packages/browser-sdk/README.md)** - Vanilla JavaScript/TypeScript
 - **[React Native SDK](./packages/react-native-sdk/README.md)** - Mobile app integration
 
-## Packages
-
-All packages with links to documentation:
-
-- **[@phantom/react-sdk](./packages/react-sdk/README.md)** - React hooks and components ([NPM](https://www.npmjs.com/package/@phantom/react-sdk))
-- **[@phantom/browser-sdk](./packages/browser-sdk/README.md)** - Core browser SDK ([NPM](https://www.npmjs.com/package/@phantom/browser-sdk))
-- **[@phantom/server-sdk](./packages/server-sdk/README.md)** - Server-side SDK ([NPM](https://www.npmjs.com/package/@phantom/server-sdk))
-- **[@phantom/react-ui](./packages/react-ui/README.md)** - React UI components
-- **[@phantom/client](./packages/client/README.md)** - HTTP client library
-- **[@phantom/api-key-stamper](./packages/api-key-stamper/README.md)** - API authentication
-- **[@phantom/browser-injected-sdk](./packages/browser-injected-sdk/README.md)** - Browser extension integration
 
 ### ⚠️ Deprecated Packages
 
@@ -212,27 +201,16 @@ function WalletOperations() {
 }
 ```
 
-## Core Infrastructure
-
-### 🔧 Client
-
-**[@phantom/client](./packages/client/README.md)** - Low-level HTTP client for Phantom's API with authentication support.
-
-### 🔐 API Key Stamper
-
-**[@phantom/api-key-stamper](./packages/api-key-stamper/README.md)** - Ed25519 authentication for API requests.
-
-### 🔌 Browser Injected SDK
-
-**[@phantom/browser-injected-sdk](./packages/browser-injected-sdk/README.md)** - Direct integration with Phantom browser extension.
-
 ## Examples
 
 You can find example applications in the [`examples/`](./examples) folder:
 
 - [`examples/react-sdk-demo-app`](./examples/react-sdk-demo-app)
 - [`examples/browser-sdk-demo-app`](./examples/browser-sdk-demo-app)
-- [`examples/browser-embedded-sdk-demo-app`](./examples/browser-embedded-sdk-demo-app)
+- [`examples/react-native-sdk-demo-app](./examples/react-native-sdk-demo-app)
+- [`examples/with-nextjs`](./examples/with-nextjs)
+- [`examples/with-wagmi`](./examples/with-wagmi/)
+
 
 ## Give Feedback
 
@@ -243,3 +221,12 @@ Phantom SDKs are in active development and will be prioritizing features request
 The embedded wallet is a beta version, and Phantom will not be liable for any losses or damages suffered by you or your end users.
 
 Any suggestions, enhancement requests, recommendations, or other feedback provided by you regarding the embedded wallet will be the exclusive property of Phantom. By using this beta version and providing feedback, you agree to assign any rights in that feedback to Phantom.
+
+
+## Releasing a new version
+
+This project uses the command `yarn changeset` to generate new versions for the different packages.
+
+In your pull request, run the command `yarn changeset`, select which packages are affected and commit the generated files. 
+
+After this pull request is merged a new one will be generated automatically with the release. The CI system will release the new versions upon merge.
