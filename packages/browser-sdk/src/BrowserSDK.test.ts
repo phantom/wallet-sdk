@@ -70,7 +70,11 @@ describe("BrowserSDK", () => {
         embeddedWalletType: "user-wallet",
         addressTypes: [AddressType.solana],
       });
-      expect(MockInjectedProvider).not.toHaveBeenCalled();
+
+      // It also creates a default injected provider for autoconnect
+      expect(MockInjectedProvider).toHaveBeenCalledWith({
+        addressTypes: [AddressType.solana],
+      });
     });
 
     it("should use custom embeddedWalletType", () => {
@@ -160,7 +164,6 @@ describe("BrowserSDK", () => {
 
         expect(mockProvider.connect).toHaveBeenCalled();
         expect(result).toEqual(mockResult);
-        expect(sdk.getWalletId()).toBeNull();
       });
     });
 
@@ -171,7 +174,6 @@ describe("BrowserSDK", () => {
         await sdk.disconnect();
 
         expect(mockProvider.disconnect).toHaveBeenCalled();
-        expect(sdk.getWalletId()).toBeNull();
       });
     });
 
@@ -274,7 +276,7 @@ describe("BrowserSDK", () => {
     });
 
     describe("connect", () => {
-      it("should call provider connect and store walletId", async () => {
+      it("should call provider connect", async () => {
         const mockResult = {
           walletId: "wallet-123",
           addresses: [
@@ -290,12 +292,11 @@ describe("BrowserSDK", () => {
 
         expect(mockProvider.connect).toHaveBeenCalled();
         expect(result).toEqual(mockResult);
-        expect(sdk.getWalletId()).toBe("wallet-123");
       });
     });
 
     describe("disconnect", () => {
-      it("should call provider disconnect and clear walletId", async () => {
+      it("should call provider disconnect", async () => {
         // First connect to set walletId
         mockProvider.connect.mockResolvedValue({
           walletId: "wallet-123",
@@ -308,7 +309,6 @@ describe("BrowserSDK", () => {
         await sdk.disconnect();
 
         expect(mockProvider.disconnect).toHaveBeenCalled();
-        expect(sdk.getWalletId()).toBeNull();
       });
     });
 
