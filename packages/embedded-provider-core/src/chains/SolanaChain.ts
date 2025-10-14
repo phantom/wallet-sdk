@@ -4,7 +4,7 @@ import type { EmbeddedProvider } from "../embedded-provider";
 import { NetworkId } from "@phantom/constants";
 import bs58 from "bs58";
 import type { Transaction, VersionedTransaction } from "@phantom/sdk-types";
-import { parseSolanaSignedTransaction, type ParsedTransactionResult } from "@phantom/parsers";
+import { parseSolanaSignedTransaction } from "@phantom/parsers";
 
 /**
  * Embedded Solana chain implementation that is wallet adapter compliant
