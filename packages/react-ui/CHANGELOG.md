@@ -1,5 +1,15 @@
 # @phantom/react-ui
 
+## 2.0.0-beta.9
+
+### Patch Changes
+
+- aa40fa6: Fixed autoconnect
+- Updated dependencies [aa40fa6]
+  - @phantom/browser-sdk@1.0.0-beta.14
+  - @phantom/react-sdk@1.0.0-beta.14
+  - @phantom/client@1.0.0-beta.14
+
 ## 2.0.0-beta.8
 
 ### Patch Changes

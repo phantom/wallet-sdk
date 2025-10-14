@@ -1,5 +1,11 @@
 # @phantom/server-sdk
 
+## 1.0.0-beta.14
+
+### Patch Changes
+
+- @phantom/client@1.0.0-beta.14
+
 ## 1.0.0-beta.13
 
 ### Patch Changes
