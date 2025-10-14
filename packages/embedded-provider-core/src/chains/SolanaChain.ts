@@ -4,6 +4,7 @@ import type { EmbeddedProvider } from "../embedded-provider";
 import { NetworkId } from "@phantom/constants";
 import bs58 from "bs58";
 import type { Transaction, VersionedTransaction } from "@phantom/sdk-types";
+import { parseSolanaSignedTransaction, type ParsedTransactionResult } from "@phantom/parsers";
 
 /**
  * Embedded Solana chain implementation that is wallet adapter compliant
@@ -53,8 +54,19 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     };
   }
 
-  signTransaction(_transaction: Transaction | VersionedTransaction): Promise<Transaction | VersionedTransaction> {
-    return Promise.reject(new Error("signTransaction is not supported in embedded provider. Use signAndSendTransaction instead."));
+  async signTransaction(transaction: Transaction | VersionedTransaction): Promise<Transaction | VersionedTransaction> {
+    this.ensureConnected();
+    const result = await this.provider.signTransaction({
+      transaction,
+      networkId: this.currentNetworkId,
+    });
+
+    // Parse the signed transaction from base64url back to Transaction/VersionedTransaction
+    const signedTransaction = parseSolanaSignedTransaction(result.rawTransaction);
+    if (!signedTransaction) {
+      throw new Error("Failed to parse signed transaction");
+    }
+    return signedTransaction;
   }
 
   async signAndSendTransaction(transaction: Transaction | VersionedTransaction): Promise<{ signature: string }> {
@@ -69,8 +81,23 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     return { signature: result.hash };
   }
 
-  signAllTransactions(_transactions: (Transaction | VersionedTransaction)[]): Promise<(Transaction | VersionedTransaction)[]> {
-    return Promise.reject(new Error("signAllTransactions is not supported in embedded provider. Use signAndSendAllTransactions instead."));
+  async signAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<(Transaction | VersionedTransaction)[]> {
+    this.ensureConnected();
+    const results = await Promise.all(
+      transactions.map(tx => this.provider.signTransaction({
+        transaction: tx,
+        networkId: this.currentNetworkId,
+      }))
+    );
+
+    // Parse all signed transactions from base64url back to Transaction/VersionedTransaction
+    return results.map((result: ParsedTransactionResult) => {
+      const signedTransaction = parseSolanaSignedTransaction(result.rawTransaction);
+      if (!signedTransaction) {
+        throw new Error("Failed to parse signed transaction");
+      }
+      return signedTransaction;
+    });
   }
 
   async signAndSendAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<{ signatures: string[] }> {
