@@ -22,7 +22,6 @@ export class ProviderManager implements EventEmitter {
   private providers = new Map<string, Provider>();
   private currentProvider: Provider | null = null;
   private currentProviderKey: string | null = null;
-  private walletId: string | null = null;
   private config: BrowserSDKConfig;
 
   // Event management for forwarding provider events
@@ -73,9 +72,6 @@ export class ProviderManager implements EventEmitter {
     this.currentProvider = this.providers.get(key)!;
     this.currentProviderKey = key;
 
-    // Reset wallet state when switching providers
-    this.walletId = null;
-
     // Set up event forwarding from the new provider
     this.ensureProviderEventForwarding();
 
@@ -119,10 +115,8 @@ export class ProviderManager implements EventEmitter {
 
     debug.log(DebugCategory.PROVIDER_MANAGER, "Delegating to provider connect method");
     const result = await this.currentProvider.connect(authOptions);
-    this.walletId = result.walletId || null;
 
     debug.log(DebugCategory.PROVIDER_MANAGER, "Connection successful, saving preferences", {
-      walletId: this.walletId,
       addressCount: result.addresses?.length || 0,
     });
 
@@ -130,7 +124,6 @@ export class ProviderManager implements EventEmitter {
     this.saveProviderPreference();
 
     debug.info(DebugCategory.PROVIDER_MANAGER, "Connect completed", {
-      walletId: this.walletId,
       addresses: result.addresses,
     });
     return result;
@@ -143,7 +136,6 @@ export class ProviderManager implements EventEmitter {
     if (!this.currentProvider) return;
 
     await this.currentProvider.disconnect();
-    this.walletId = null;
   }
 
   /**
@@ -164,11 +156,81 @@ export class ProviderManager implements EventEmitter {
     return this.currentProvider?.isConnected() ?? false;
   }
 
+
   /**
-   * Get current wallet ID
+   * Attempt auto-connect with fallback strategy
+   * Tries embedded provider first if it exists, then injected provider
+   * Returns true if any provider successfully connected
    */
-  getWalletId(): string | null {
-    return this.walletId;
+  async autoConnect(): Promise<boolean> {
+    debug.log(DebugCategory.PROVIDER_MANAGER, "Starting auto-connect with fallback strategy");
+
+    // Try embedded provider first if it exists
+    const embeddedWalletType = (this.config.embeddedWalletType || "user-wallet") as "app-wallet" | "user-wallet";
+    const embeddedKey = this.getProviderKey("embedded", embeddedWalletType);
+
+    if (this.providers.has(embeddedKey)) {
+      debug.log(DebugCategory.PROVIDER_MANAGER, "Trying auto-connect with existing embedded provider");
+      const embeddedProvider = this.providers.get(embeddedKey)!;
+
+      try {
+        // Temporarily switch to embedded provider
+        const previousProvider = this.currentProvider;
+        const previousKey = this.currentProviderKey;
+        this.currentProvider = embeddedProvider;
+        this.currentProviderKey = embeddedKey;
+        this.ensureProviderEventForwarding();
+
+        await embeddedProvider.autoConnect();
+
+        // Check if connection succeeded
+        if (embeddedProvider.isConnected()) {
+          debug.info(DebugCategory.PROVIDER_MANAGER, "Embedded auto-connect successful");
+          this.saveProviderPreference();
+          return true;
+        } else {
+          // Restore previous provider if not connected
+          debug.log(DebugCategory.PROVIDER_MANAGER, "Embedded provider did not connect, restoring previous provider");
+          this.currentProvider = previousProvider;
+          this.currentProviderKey = previousKey;
+        }
+      } catch (error) {
+        debug.log(DebugCategory.PROVIDER_MANAGER, "Embedded auto-connect failed", {
+          error: (error as Error).message,
+        });
+      }
+    }
+
+    // Try injected provider if embedded failed or doesn't exist
+    const injectedKey = this.getProviderKey("injected");
+
+    if (this.providers.has(injectedKey)) {
+      debug.log(DebugCategory.PROVIDER_MANAGER, "Trying auto-connect with existing injected provider");
+      const injectedProvider = this.providers.get(injectedKey)!;
+
+      try {
+        // Switch to injected provider
+        this.currentProvider = injectedProvider;
+        this.currentProviderKey = injectedKey;
+        this.ensureProviderEventForwarding();
+
+        await injectedProvider.autoConnect();
+
+        // Check if connection succeeded
+        if (injectedProvider.isConnected()) {
+          debug.info(DebugCategory.PROVIDER_MANAGER, "Injected auto-connect successful");
+          this.saveProviderPreference();
+          return true;
+        }
+      } catch (error) {
+        debug.log(DebugCategory.PROVIDER_MANAGER, "Injected auto-connect failed", {
+          error: (error as Error).message,
+        });
+      }
+    }
+
+    debug.log(DebugCategory.PROVIDER_MANAGER, "Auto-connect failed for all existing providers");
+    return false;
   }
 
   /**
@@ -271,12 +333,23 @@ export class ProviderManager implements EventEmitter {
 
   /**
    * Set default provider based on initial config
+   * Creates both embedded and injected providers for autoConnect fallback
    */
   private setDefaultProvider(): void {
     const defaultType = (this.config.providerType || "embedded") as "injected" | "embedded";
     const defaultEmbeddedType = (this.config.embeddedWalletType || "user-wallet") as "app-wallet" | "user-wallet";
 
-    this.createProvider(defaultType, defaultEmbeddedType);
+    // Create embedded provider if appId is available
+    if (this.config.appId) {
+      debug.log(DebugCategory.PROVIDER_MANAGER, "Creating embedded provider");
+      this.createProvider("embedded", defaultEmbeddedType);
+    }
+
+    // Always create injected provider
+    debug.log(DebugCategory.PROVIDER_MANAGER, "Creating injected provider");
+    this.createProvider("injected");
+
+    // Set the default provider based on config
     this.switchProvider(defaultType, { embeddedWalletType: defaultEmbeddedType });
   }
 
