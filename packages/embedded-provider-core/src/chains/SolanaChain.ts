@@ -83,21 +83,8 @@ export class EmbeddedSolanaChain implements ISolanaChain {
 
   async signAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<(Transaction | VersionedTransaction)[]> {
     this.ensureConnected();
-    const results = await Promise.all(
-      transactions.map(tx => this.provider.signTransaction({
-        transaction: tx,
-        networkId: this.currentNetworkId,
-      }))
-    );
-
-    // Parse all signed transactions from base64url back to Transaction/VersionedTransaction
-    return results.map((result: ParsedTransactionResult) => {
-      const signedTransaction = parseSolanaSignedTransaction(result.rawTransaction);
-      if (!signedTransaction) {
-        throw new Error("Failed to parse signed transaction");
-      }
-      return signedTransaction;
-    });
+    const results = await Promise.all(transactions.map(tx => this.signTransaction(tx)));
+    return results;
   }
 
   async signAndSendAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<{ signatures: string[] }> {
