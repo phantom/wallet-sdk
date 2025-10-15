@@ -8,7 +8,6 @@ import {
   usePhantom,
   useAutoConfirm,
   NetworkId,
-  type ProviderType,
 } from "@phantom/react-sdk";
 import {
   SystemProgram,
@@ -29,17 +28,12 @@ import { Buffer } from "buffer";
 import bs58 from "bs58";
 import { useBalance } from "./hooks/useBalance";
 
-interface SDKActionsProps {
-  providerType: ProviderType;
-  onDestroySDK?: () => void;
-}
-
-export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
+export function SDKActions() {
   const { connect, isConnecting, error: connectError } = useConnect();
   const { disconnect, isDisconnecting } = useDisconnect();
   const { solana } = useSolana();
   const { ethereum } = useEthereum();
-  const { isConnected, currentProviderType } = usePhantom();
+  const { isConnected, currentProviderType, sdk } = usePhantom();
   const autoConfirm = useAutoConfirm();
   const addresses = useAccounts();
   const [isSigningMessageType, setIsSigningMessageType] = useState<"solana" | "evm" | null>(null);
@@ -74,12 +68,31 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
   } = useBalance(ethereumAddress);
   const hasEthereumBalance = ethereumBalance !== null && ethereumBalance > 0;
 
-  const onConnect = async () => {
+  const onConnectInjected = async () => {
     try {
+      // Switch to injected provider before connecting
+      if (sdk) {
+        await sdk.switchProvider("injected");
+      }
       await connect();
-      // Connection state will be updated in the provider
     } catch (error) {
-      console.error("Error connecting to Phantom:", error);
+      console.error("Error connecting to injected provider:", error);
+      alert(`Error connecting: ${(error as Error).message || error}`);
+    }
+  };
+
+  const onConnectWithGoogle = async () => {
+    try {
+      // Switch to embedded provider if needed
+      if (sdk) {
+        await sdk.switchProvider("embedded");
+      }
+      // Connect with Google auth provider
+      await connect({
+        provider: "google",
+      });
+    } catch (error) {
+      console.error("Error connecting with Google:", error);
       alert(`Error connecting: ${(error as Error).message || error}`);
     }
   };
@@ -725,21 +738,6 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
 
   return (
     <>
-      {onDestroySDK && (
-        <div className="section">
-          <h3>SDK Instance</h3>
-          <div className="status-card">
-            <div className="status-row">
-              <span className="status-label">Status:</span>
-              <span className="status-value connected">Instantiated</span>
-            </div>
-          </div>
-          <div className="button-group">
-            <button onClick={onDestroySDK}>Destroy SDK Instance</button>
-          </div>
-        </div>
-      )}
-
       <div className="section">
         <h3>Connection Status</h3>
         <div className="status-card">
@@ -756,8 +754,8 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
             </div>
           )}
           {addresses &&
-            addresses.map(address => (
-              <div className="status-row">
+            addresses.map((address, index) => (
+              <div key={index} className="status-row">
                 <span className="status-label">{address.addressType}:</span>
                 <span className="status-value address">{address.address}</span>
               </div>
@@ -770,6 +768,21 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
           )}
         </div>
       </div>
+
+      {!isConnected && (
+        <div className="section">
+          <h3>Connection Options</h3>
+          <div className="button-group">
+            <button className="primary" onClick={onConnectInjected} disabled={isConnecting}>
+              {isConnecting ? "Connecting..." : "Connect Injected"}
+            </button>
+            <button className="primary" onClick={onConnectWithGoogle} disabled={isConnecting}>
+              {isConnecting ? "Connecting..." : "Connect with Google"}
+            </button>
+          </div>
+          {connectError && <p className="error-text">Error: {connectError.message}</p>}
+        </div>
+      )}
 
       {isConnected && solanaAddress && (
         <div className="section">
@@ -819,7 +832,7 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
         </div>
       )}
 
-      {providerType === "injected" && (
+      {isConnected && currentProviderType === "injected" && (
         <div className="section">
           <h3>Auto-Confirm Settings</h3>
           <div className="status-card">
@@ -867,117 +880,114 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
         </div>
       )}
 
-      <div className="section">
-        <h3>Wallet Operations</h3>
-        <div className="button-group">
-          <button
-            className={`${!isConnected ? "primary" : ""}`}
-            onClick={onConnect}
-            disabled={isConnected || isConnecting}
-          >
-            {isConnecting ? "Connecting..." : "Connect"}
-          </button>
-          <button onClick={() => onSignMessage("solana")} disabled={!isConnected || isSigningMessageType === "solana"}>
-            {isSigningMessageType === "solana" ? "Signing..." : "Sign Message (Solana)"}
-          </button>
-          <button onClick={() => onSignMessage("evm")} disabled={!isConnected || isSigningMessageType === "evm"}>
-            {isSigningMessageType === "evm" ? "Signing..." : "Sign Message (EVM)"}
-          </button>
-          <button onClick={onSignTypedData} disabled={!isConnected || isSigningTypedData}>
-            {isSigningTypedData ? "Signing..." : "Sign Typed Data (EVM)"}
-          </button>
-          <button
-            onClick={() => onSignTransaction("solana")}
-            disabled={!isConnected || isSigningOnlyTransaction === "solana" || !hasSolanaBalance}
-          >
-            {isSigningOnlyTransaction === "solana"
-              ? "Signing..."
-              : !hasSolanaBalance
-                ? "Insufficient Balance"
-                : "Sign Transaction (Solana)"}
-          </button>
-          <button
-            onClick={onSignDeniedProgramTransaction}
-            disabled={!isConnected || isSigningDeniedProgramTx || !solanaAddress}
-          >
-            {isSigningDeniedProgramTx ? "Signing & Sending..." : "Try Sign & Send Tx (Disallowed Program)"}
-          </button>
-          <button
-            onClick={() => onSignTransaction("ethereum")}
-            disabled={!isConnected || isSigningOnlyTransaction === "ethereum" || !hasEthereumBalance}
-          >
-            {isSigningOnlyTransaction === "ethereum"
-              ? "Signing..."
-              : !hasEthereumBalance
-                ? "Insufficient Balance"
-                : "Sign Transaction (Ethereum)"}
-          </button>
-          <button
-            onClick={onSignAndSendTransaction}
-            disabled={!isConnected || isSigningAndSendingTransaction || !hasSolanaBalance}
-          >
-            {isSigningAndSendingTransaction
-              ? "Signing & Sending..."
-              : !hasSolanaBalance
-                ? "Insufficient Balance"
-                : "Sign & Send Transaction (Solana)"}
-          </button>
-          <button
-            onClick={onSendEthTransaction}
-            disabled={!isConnected || isSendingEthTransaction || !hasEthereumBalance}
-          >
-            {isSendingEthTransaction
-              ? "Sending..."
-              : !hasEthereumBalance
-                ? "Insufficient Balance"
-                : "Sign & Send Transaction (Ethereum)"}
-          </button>
-          <button
-            onClick={onSignAllTransactions}
-            disabled={!isConnected || isSigningAllTransactions || !hasSolanaBalance}
-          >
-            {isSigningAllTransactions
-              ? "Signing All..."
-              : !hasSolanaBalance
-                ? "Insufficient Balance"
-                : "Sign All Transactions (Solana)"}
-          </button>
-          <button onClick={onSendTokens} disabled={!isConnected || isSendingTokens || !hasSolanaBalance}>
-            {isSendingTokens
-              ? "Sending Tokens..."
-              : !hasSolanaBalance
-                ? "Insufficient Balance"
-                : "Send 0.0001 SOL + 0.0001 USDC"}
-          </button>
-          <button onClick={onStakeSol} disabled={!isConnected || isStakingSol || !hasSolanaBalance}>
-            {isStakingSol ? "Staking SOL..." : !hasSolanaBalance ? "Insufficient Balance" : "Stake 0.0025 SOL"}
-          </button>
+      {isConnected && (
+        <div className="section">
+          <h3>Wallet Operations</h3>
+          <div className="button-group">
+            <button
+              onClick={() => onSignMessage("solana")}
+              disabled={!isConnected || isSigningMessageType === "solana"}
+            >
+              {isSigningMessageType === "solana" ? "Signing..." : "Sign Message (Solana)"}
+            </button>
+            <button onClick={() => onSignMessage("evm")} disabled={!isConnected || isSigningMessageType === "evm"}>
+              {isSigningMessageType === "evm" ? "Signing..." : "Sign Message (EVM)"}
+            </button>
+            <button onClick={onSignTypedData} disabled={!isConnected || isSigningTypedData}>
+              {isSigningTypedData ? "Signing..." : "Sign Typed Data (EVM)"}
+            </button>
+            <button
+              onClick={() => onSignTransaction("solana")}
+              disabled={!isConnected || isSigningOnlyTransaction === "solana" || !hasSolanaBalance}
+            >
+              {isSigningOnlyTransaction === "solana"
+                ? "Signing..."
+                : !hasSolanaBalance
+                  ? "Insufficient Balance"
+                  : "Sign Transaction (Solana)"}
+            </button>
+            <button
+              onClick={onSignDeniedProgramTransaction}
+              disabled={!isConnected || isSigningDeniedProgramTx || !solanaAddress}
+            >
+              {isSigningDeniedProgramTx ? "Signing & Sending..." : "Try Sign & Send Tx (Disallowed Program)"}
+            </button>
+            <button
+              onClick={() => onSignTransaction("ethereum")}
+              disabled={!isConnected || isSigningOnlyTransaction === "ethereum" || !hasEthereumBalance}
+            >
+              {isSigningOnlyTransaction === "ethereum"
+                ? "Signing..."
+                : !hasEthereumBalance
+                  ? "Insufficient Balance"
+                  : "Sign Transaction (Ethereum)"}
+            </button>
+            <button
+              onClick={onSignAndSendTransaction}
+              disabled={!isConnected || isSigningAndSendingTransaction || !hasSolanaBalance}
+            >
+              {isSigningAndSendingTransaction
+                ? "Signing & Sending..."
+                : !hasSolanaBalance
+                  ? "Insufficient Balance"
+                  : "Sign & Send Transaction (Solana)"}
+            </button>
+            <button
+              onClick={onSendEthTransaction}
+              disabled={!isConnected || isSendingEthTransaction || !hasEthereumBalance}
+            >
+              {isSendingEthTransaction
+                ? "Sending..."
+                : !hasEthereumBalance
+                  ? "Insufficient Balance"
+                  : "Sign & Send Transaction (Ethereum)"}
+            </button>
+            <button
+              onClick={onSignAllTransactions}
+              disabled={!isConnected || isSigningAllTransactions || !hasSolanaBalance}
+            >
+              {isSigningAllTransactions
+                ? "Signing All..."
+                : !hasSolanaBalance
+                  ? "Insufficient Balance"
+                  : "Sign All Transactions (Solana)"}
+            </button>
+            <button onClick={onSendTokens} disabled={!isConnected || isSendingTokens || !hasSolanaBalance}>
+              {isSendingTokens
+                ? "Sending Tokens..."
+                : !hasSolanaBalance
+                  ? "Insufficient Balance"
+                  : "Send 0.0001 SOL + 0.0001 USDC"}
+            </button>
+            <button onClick={onStakeSol} disabled={!isConnected || isStakingSol || !hasSolanaBalance}>
+              {isStakingSol ? "Staking SOL..." : !hasSolanaBalance ? "Insufficient Balance" : "Stake 0.0025 SOL"}
+            </button>
 
-          <div className="custom-sol-section">
-            <div className="input-group">
-              <input
-                type="text"
-                placeholder="Enter SOL amount"
-                value={customSolAmount}
-                onChange={e => setCustomSolAmount(e.target.value)}
-                className="sol-input"
-              />
-              <button
-                onClick={onSendCustomSol}
-                disabled={!isConnected || isSendingCustomSol || !hasSolanaBalance || !customSolAmount}
-                className="send-custom-sol-btn"
-              >
-                {isSendingCustomSol ? "Sending..." : !hasSolanaBalance ? "Insufficient Balance" : "Send Custom SOL"}
-              </button>
+            <div className="custom-sol-section">
+              <div className="input-group">
+                <input
+                  type="text"
+                  placeholder="Enter SOL amount"
+                  value={customSolAmount}
+                  onChange={e => setCustomSolAmount(e.target.value)}
+                  className="sol-input"
+                />
+                <button
+                  onClick={onSendCustomSol}
+                  disabled={!isConnected || isSendingCustomSol || !hasSolanaBalance || !customSolAmount}
+                  className="send-custom-sol-btn"
+                >
+                  {isSendingCustomSol ? "Sending..." : !hasSolanaBalance ? "Insufficient Balance" : "Send Custom SOL"}
+                </button>
+              </div>
             </div>
-          </div>
 
-          <button onClick={onDisconnect} disabled={!isConnected || isDisconnecting}>
-            {isDisconnecting ? "Disconnecting..." : "Disconnect"}
-          </button>
+            <button onClick={onDisconnect} disabled={!isConnected || isDisconnecting}>
+              {isDisconnecting ? "Disconnecting..." : "Disconnect"}
+            </button>
+          </div>
         </div>
-        {connectError && <p className="error-text">Error: {connectError.message}</p>}
-      </div>
+      )}
     </>
   );
 }

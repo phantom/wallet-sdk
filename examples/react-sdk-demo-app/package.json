@@ -4,9 +4,7 @@
   "version": "0.0.2",
   "type": "module",
   "scripts": {
-    "predev": "yarn workspace @phantom/react-sdk build",
     "dev": "vite --port 5174",
-    "prebuild": "yarn workspace @phantom/react-sdk build",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "check-types": "tsc --noEmit",

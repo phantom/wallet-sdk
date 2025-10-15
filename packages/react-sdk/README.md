@@ -215,7 +215,7 @@ function ConnectButton() {
 
   const handleConnect = async () => {
     try {
-      const { walletId, addresses } = await connect();
+      const { addresses } = await connect();
       console.log("Connected addresses:", addresses);
     } catch (err) {
       console.error("Failed to connect:", err);

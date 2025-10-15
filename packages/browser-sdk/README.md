@@ -315,7 +315,7 @@ Connect to wallet and get addresses for configured AddressTypes.
 
 ```typescript
 const result = await sdk.connect();
-// Returns: { walletId?: string, addresses: WalletAddress[] }
+// Returns: { addresses: WalletAddress[] }
 // addresses only includes types from addressTypes config
 ```
 
@@ -342,15 +342,6 @@ Check if SDK is connected to a wallet.
 
 ```typescript
 const connected = sdk.isConnected();
-```
-
-#### getWalletId()
-
-Get the wallet ID (embedded wallets only).
-
-```typescript
-const walletId = sdk.getWalletId();
-// Returns string for embedded wallets, null for injected
 ```
 
 ### Solana Chain Methods
