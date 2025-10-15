@@ -51,6 +51,8 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
   const [isSigningAllTransactions, setIsSigningAllTransactions] = useState(false);
   const [isSendingTokens, setIsSendingTokens] = useState(false);
   const [isStakingSol, setIsStakingSol] = useState(false);
+  const [isSendingCustomSol, setIsSendingCustomSol] = useState(false);
+  const [customSolAmount, setCustomSolAmount] = useState("");
 
   const solanaAddress = addresses?.find(addr => addr.addressType === "Solana")?.address || null;
   const ethereumAddress = addresses?.find(addr => addr.addressType === "Ethereum")?.address || null;
@@ -634,6 +636,70 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
     }
   };
 
+  const onSendCustomSol = async () => {
+    if (!isConnected || !solanaAddress) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+
+    // Validate input
+    const amount = parseFloat(customSolAmount);
+    if (isNaN(amount) || amount <= 0) {
+      alert("Please enter a valid SOL amount greater than 0.");
+      return;
+    }
+
+    try {
+      setIsSendingCustomSol(true);
+
+      // Create connection to get recent blockhash
+      const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL_MAINNET || "https://api.mainnet-beta.solana.com";
+      const connection = new Connection(rpcUrl);
+
+      // Get recent blockhash
+      const { blockhash } = await connection.getLatestBlockhash();
+
+      // Convert SOL to lamports
+      const lamports = Math.floor(amount * LAMPORTS_PER_SOL);
+
+      // Target address
+      const targetAddress = new PublicKey("8dvUxPRHyHGw9W68yP73GkXCjBCjRJuLrANj9n1SXRGb");
+
+      // Create transfer instruction
+      const transferInstruction = SystemProgram.transfer({
+        fromPubkey: new PublicKey(solanaAddress),
+        toPubkey: targetAddress,
+        lamports: lamports,
+      });
+
+      // Create transaction message
+      const messageV0 = new TransactionMessage({
+        payerKey: new PublicKey(solanaAddress),
+        recentBlockhash: blockhash,
+        instructions: [transferInstruction],
+      }).compileToV0Message();
+
+      const transaction = new VersionedTransaction(messageV0);
+
+      // Sign and send transaction
+      const result = await solana.signAndSendTransaction(transaction);
+      if (!result) {
+        alert("Solana chain not available");
+        return;
+      }
+
+      alert(`Sent ${amount} SOL! Transaction signature: ${result.signature}`);
+
+      // Refresh balance after successful transaction
+      refetchSolanaBalance();
+    } catch (error) {
+      console.error("Error sending custom SOL:", error);
+      alert(`Error sending SOL: ${(error as Error).message || error}`);
+    } finally {
+      setIsSendingCustomSol(false);
+    }
+  };
+
   // Auto-confirm handlers
   const onEnableAutoConfirm = async () => {
     try {
@@ -886,6 +952,25 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
           <button onClick={onStakeSol} disabled={!isConnected || isStakingSol || !hasSolanaBalance}>
             {isStakingSol ? "Staking SOL..." : !hasSolanaBalance ? "Insufficient Balance" : "Stake 0.0025 SOL"}
           </button>
+
+          <div className="custom-sol-section">
+            <div className="input-group">
+              <input
+                type="text"
+                placeholder="Enter SOL amount"
+                value={customSolAmount}
+                onChange={e => setCustomSolAmount(e.target.value)}
+                className="sol-input"
+              />
+              <button
+                onClick={onSendCustomSol}
+                disabled={!isConnected || isSendingCustomSol || !hasSolanaBalance || !customSolAmount}
+                className="send-custom-sol-btn"
+              >
+                {isSendingCustomSol ? "Sending..." : !hasSolanaBalance ? "Insufficient Balance" : "Send Custom SOL"}
+              </button>
+            </div>
+          </div>
 
           <button onClick={onDisconnect} disabled={!isConnected || isDisconnecting}>
             {isDisconnecting ? "Disconnecting..." : "Disconnect"}
