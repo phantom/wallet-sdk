@@ -20,6 +20,7 @@ import { EmbeddedEthereumChain, EmbeddedSolanaChain } from "./chains";
 import type {
   AuthProvider,
   AuthResult,
+  SpendingLimitsProvider,
   DebugLogger,
   EmbeddedStorage,
   PlatformAdapter,
@@ -86,6 +87,7 @@ export class EmbeddedProvider {
   private authProvider: AuthProvider;
   // Phantom App (mobile and extension provider) deeplinks to our wallet for phantom connect
   private phantomAppProvider: PhantomAppProvider;
+  private spendingLimitsProvider: SpendingLimitsProvider;
   private urlParamsAccessor: URLParamsAccessor;
   private stamper: StamperWithKeyManagement;
   private logger: DebugLogger;
@@ -113,6 +115,7 @@ export class EmbeddedProvider {
     this.storage = platform.storage;
     this.authProvider = platform.authProvider;
     this.phantomAppProvider = platform.phantomAppProvider;
+    this.spendingLimitsProvider = platform.spendingLimitsProvider;
     this.urlParamsAccessor = platform.urlParamsAccessor;
     this.stamper = platform.stamper;
     this.jwtAuth = new JWTAuth();
@@ -891,13 +894,12 @@ export class EmbeddedProvider {
     return await parseTransactionResponse(rawResponse.rawTransaction, params.networkId, rawResponse.hash);
   }
 
-  // TODO(Aaron): Add strictly typed implementation with logging, error handling and documentation
-  async upsertSpendingLimit(_params: unknown): Promise<unknown> {
+  async upsertSpendingLimit(_args: unknown): Promise<unknown> {
     if (!this.client || !this.walletId) {
       throw new Error("Not connected");
     }
 
-    return await this.client.upsertSpendingLimit(_params);
+    return await this.spendingLimitsProvider.upsertSpendingLimit(_args);
   }
 
   getAddresses(): WalletAddress[] {
@@ -1057,11 +1059,7 @@ export class EmbeddedProvider {
    * 4. Start a polling mechanism to check for auth completion
    * 5. Update the session when the mobile app completes the auth
    */
-  private async handlePhantomAuth(
-    publicKey: string,
-    stamperInfo: StamperInfo,
-    expiresInMs: number,
-  ): Promise<Session> {
+  private async handlePhantomAuth(publicKey: string, stamperInfo: StamperInfo, expiresInMs: number): Promise<Session> {
     this.logger.info("EMBEDDED_PROVIDER", "Starting Phantom authentication flow");
 
     // Check if Phantom app is available (extension or mobile)

@@ -1,5 +1,5 @@
 import { EmbeddedProvider } from "./embedded-provider";
-import type { EmbeddedProviderConfig, PlatformAdapter, Session } from "./interfaces";
+import type { EmbeddedProviderConfig, PlatformAdapter, Session, SpendingLimitsProvider } from "./interfaces";
 import type { StamperWithKeyManagement } from "@phantom/sdk-types";
 import type { PhantomClient } from "@phantom/client";
 
@@ -26,6 +26,7 @@ describe.skip("EmbeddedProvider Renewal Tests", () => {
   let provider: EmbeddedProvider;
   let mockStamper: jest.Mocked<StamperWithKeyManagement>;
   let mockClient: jest.Mocked<PhantomClient>;
+  let mockSpendingLimitsProvider: jest.Mocked<SpendingLimitsProvider>;
   let mockStorage: { [key: string]: any };
   let originalDate: typeof Date;
 
@@ -85,10 +86,15 @@ describe.skip("EmbeddedProvider Renewal Tests", () => {
       }),
     } as any;
 
+    mockSpendingLimitsProvider = {
+      upsertSpendingLimit: jest.fn(),
+    };
+
     // Mock platform adapter
     const mockPlatform: PlatformAdapter = {
       storage: mockEmbeddedStorage,
       authProvider: {} as any,
+      spendingLimitsProvider: mockSpendingLimitsProvider,
       urlParamsAccessor: {} as any,
       stamper: mockStamper,
       name: "test-platform",

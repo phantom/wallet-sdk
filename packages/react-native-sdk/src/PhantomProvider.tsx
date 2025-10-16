@@ -3,10 +3,16 @@ import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import { EmbeddedProvider } from "@phantom/embedded-provider-core";
 import type { EmbeddedProviderConfig, PlatformAdapter, ConnectEventData, ConnectResult } from "@phantom/embedded-provider-core";
 import type { PhantomSDKConfig, PhantomDebugConfig, WalletAddress } from "./types";
-import {ANALYTICS_HEADERS, DEFAULT_WALLET_API_URL, DEFAULT_EMBEDDED_WALLET_TYPE, DEFAULT_AUTH_URL } from "@phantom/constants";
+import {
+  ANALYTICS_HEADERS,
+  DEFAULT_WALLET_API_URL,
+  DEFAULT_EMBEDDED_WALLET_TYPE,
+  DEFAULT_AUTH_URL,
+} from "@phantom/constants";
 // Platform adapters for React Native/Expo
 import { ExpoSecureStorage } from "./providers/embedded/storage";
 import { ExpoAuthProvider } from "./providers/embedded/auth";
+import { ExpoSpendingLimitsProvider } from "./providers/embedded/spending-limits";
 import { ExpoURLParamsAccessor } from "./providers/embedded/url-params";
 import { ReactNativeStamper } from "./providers/embedded/stamper";
 import { ExpoLogger } from "./providers/embedded/logger";
@@ -51,8 +57,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       apiBaseUrl: config.apiBaseUrl || DEFAULT_WALLET_API_URL,
       embeddedWalletType: config.embeddedWalletType || DEFAULT_EMBEDDED_WALLET_TYPE,
       authOptions: {
-        ...(config.authOptions || {
-        }),
+        ...(config.authOptions || {}),
         redirectUrl,
         authUrl: config.authOptions?.authUrl || DEFAULT_AUTH_URL,
       },
@@ -64,6 +69,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
     // Create platform adapters
     const storage = new ExpoSecureStorage();
     const authProvider = new ExpoAuthProvider();
+    const spendingLimitsProvider = new ExpoSpendingLimitsProvider();
     const urlParamsAccessor = new ExpoURLParamsAccessor();
     const logger = new ExpoLogger(debugConfig?.enabled || false);
     const stamper = new ReactNativeStamper({
@@ -76,6 +82,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
     const platform: PlatformAdapter = {
       storage,
       authProvider,
+      spendingLimitsProvider,
       urlParamsAccessor,
       stamper,
       phantomAppProvider: new ReactNativePhantomAppProvider(),
@@ -95,7 +102,6 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
 
   // Event listener management - SDK already exists
   useEffect(() => {
-
     // Event handlers that need to be referenced for cleanup
     const handleConnectStart = () => {
       setIsConnecting(true);
@@ -156,7 +162,6 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
 
   // Initialize auto-connect
   useEffect(() => {
-
     // Attempt auto-connect if enabled
     if (config.autoConnect !== false) {
       sdk.autoConnect().catch(() => {
