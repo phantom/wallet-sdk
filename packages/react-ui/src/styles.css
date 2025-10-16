@@ -576,14 +576,52 @@
   border-color: var(--border-accent-hover, #9a8cf0);
 }
 
+.phantom-ui-provider-button-primary {
+  background: var(--bg-accent, #ab9ff2);
+  color: var(--text-inverse, #ffffff);
+  border-color: var(--border-accent, #ab9ff2);
+  font-weight: 600;
+}
+
+.phantom-ui-provider-button-primary:hover:not(:disabled) {
+  background: var(--bg-accent-hover, #9a8cf0);
+  border-color: var(--border-accent-hover, #9a8cf0);
+}
+
 .phantom-ui-provider-button-secondary {
   background: transparent;
   border-color: var(--border-secondary, #d1d5db);
+  font-size: 14px;
 }
 
 .phantom-ui-provider-button-secondary:hover:not(:disabled) {
   background: var(--bg-hover, #f9fafb);
   border-color: var(--border-accent, #ab9ff2);
+}
+
+.phantom-ui-extension-section {
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.phantom-ui-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 16px 0;
+  color: var(--text-secondary, #6b7280);
+  font-size: 13px;
+}
+
+.phantom-ui-divider::before,
+.phantom-ui-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--border-light, #e5e5e5);
+}
+
+.phantom-ui-divider span {
+  padding: 0 12px;
 }
 
 /* Dark theme support */
@@ -615,6 +653,17 @@
   background: var(--bg-hover, #4b5563);
 }
 
+.dark .phantom-ui-provider-button-primary {
+  background: var(--bg-accent, #ab9ff2);
+  color: var(--text-inverse, #ffffff);
+  border-color: var(--border-accent, #ab9ff2);
+}
+
+.dark .phantom-ui-provider-button-primary:hover:not(:disabled) {
+  background: var(--bg-accent-hover, #9a8cf0);
+  border-color: var(--border-accent-hover, #9a8cf0);
+}
+
 .dark .phantom-ui-provider-button-secondary {
   background: transparent;
   border-color: var(--border-secondary, #6b7280);
@@ -623,4 +672,13 @@
 .dark .phantom-ui-provider-button-secondary:hover:not(:disabled) {
   background: var(--bg-secondary, #374151);
   border-color: var(--border-accent, #ab9ff2);
+}
+
+.dark .phantom-ui-divider {
+  color: var(--text-secondary, #9ca3af);
+}
+
+.dark .phantom-ui-divider::before,
+.dark .phantom-ui-divider::after {
+  border-bottom-color: var(--border-primary, #4b5563);
 }

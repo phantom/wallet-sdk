@@ -23,6 +23,7 @@ import type {
   DebugLogger,
   EmbeddedStorage,
   PlatformAdapter,
+  PhantomAppProvider,
   Session,
   StamperInfo,
   URLParamsAccessor,
@@ -52,7 +53,10 @@ export class EmbeddedProvider {
   private config: EmbeddedProviderConfig;
   private platform: PlatformAdapter;
   private storage: EmbeddedStorage;
+  // Phantom Connect Provider (handles redirects, auth flows, etc.)
   private authProvider: AuthProvider;
+  // Phantom App (mobile and extension provider) deeplinks to our wallet for phantom connect
+  private phantomAppProvider: PhantomAppProvider;
   private urlParamsAccessor: URLParamsAccessor;
   private stamper: StamperWithKeyManagement;
   private logger: DebugLogger;
@@ -79,6 +83,7 @@ export class EmbeddedProvider {
     this.platform = platform;
     this.storage = platform.storage;
     this.authProvider = platform.authProvider;
+    this.phantomAppProvider = platform.phantomAppProvider;
     this.urlParamsAccessor = platform.urlParamsAccessor;
     this.stamper = platform.stamper;
     this.jwtAuth = new JWTAuth();
@@ -346,8 +351,8 @@ export class EmbeddedProvider {
   private validateAuthOptions(authOptions?: AuthOptions): void {
     if (!authOptions) return;
 
-    if (authOptions.provider && !["google", "apple", "jwt"].includes(authOptions.provider)) {
-      throw new Error(`Invalid auth provider: ${authOptions.provider}. Must be "google", "apple", or "jwt"`);
+    if (authOptions.provider && !["google", "apple", "jwt", "phantom"].includes(authOptions.provider)) {
+      throw new Error(`Invalid auth provider: ${authOptions.provider}. Must be "google", "apple", "jwt", or "phantom"`);
     }
 
     if (authOptions.provider === "jwt" && !authOptions.jwtToken) {
@@ -878,6 +883,8 @@ export class EmbeddedProvider {
       // Route to appropriate authentication flow based on authOptions
       if (authOptions?.provider === "jwt") {
         return await this.handleJWTAuth(publicKey, stamperInfo, authOptions, expiresInMs);
+      } else if (authOptions?.provider === "phantom") {
+        return await this.handlePhantomAuth(publicKey, stamperInfo, expiresInMs);
       } else {
         // This will redirect in browser, so we don't return a session
         // In react-native this will return an auth result
@@ -919,7 +926,6 @@ export class EmbeddedProvider {
         appId: this.config.appId,
         stamperInfo,
         authProvider: "app-wallet",
-        userInfo: { embeddedWalletType: this.config.embeddedWalletType },
         accountDerivationIndex: 0, // App wallets default to index 0
         status: "completed" as const,
         createdAt: now,
@@ -959,7 +965,6 @@ export class EmbeddedProvider {
       publicKey,
       appId: this.config.appId,
       jwtToken: authOptions.jwtToken,
-      customAuthData: authOptions.customAuthData,
     });
     const walletId = authResult.walletId;
     const organizationId = authResult.organizationId;
@@ -983,7 +988,6 @@ export class EmbeddedProvider {
       appId: this.config.appId,
       stamperInfo,
       authProvider: authResult.provider,
-      userInfo: authResult.userInfo,
       accountDerivationIndex: authResult.accountDerivationIndex,
       status: "completed" as const,
       createdAt: now,
@@ -994,6 +998,81 @@ export class EmbeddedProvider {
     };
     this.logger.log("EMBEDDED_PROVIDER", "Saving JWT session");
     await this.storage.saveSession(session);
+    return session;
+  }
+
+  /*
+   * We use this method to handle Phantom app-based authentication for user-wallets.
+   * This method uses the PhantomAppProvider to authenticate via the browser extension or mobile app.
+   *
+   * NOTE: Mobile deeplink support is not yet implemented. If we wanted to support mobile deeplinks,
+   * we would:
+   * 1. Check if the app provider is available using phantomAppProvider.isAvailable()
+   * 2. If not available, generate a deeplink (phantom://auth?...)
+   * 3. Save a pending session before opening the deeplink
+   * 4. Start a polling mechanism to check for auth completion
+   * 5. Update the session when the mobile app completes the auth
+   */
+  private async handlePhantomAuth(
+    publicKey: string,
+    stamperInfo: StamperInfo,
+    expiresInMs: number,
+  ): Promise<Session> {
+    this.logger.info("EMBEDDED_PROVIDER", "Starting Phantom authentication flow");
+
+    // Check if Phantom app is available (extension or mobile)
+    const isAvailable = this.phantomAppProvider.isAvailable();
+
+    if (!isAvailable) {
+      this.logger.error("EMBEDDED_PROVIDER", "Phantom app not available");
+      // NOTE: If we wanted to support mobile deeplinks, we would generate a deeplink here
+      // and start a polling mechanism. For now, we just throw an error.
+      throw new Error(
+        "Phantom app is not available. Please install the Phantom browser extension or mobile app to use this authentication method.",
+      );
+    }
+
+    this.logger.info("EMBEDDED_PROVIDER", "Phantom app detected, proceeding with authentication");
+
+    // Generate session ID for this authentication attempt
+    const sessionId = generateSessionId();
+
+    // Call the phantom app provider to authenticate
+    const authResult = await this.phantomAppProvider.authenticate({
+      publicKey,
+      appId: this.config.appId,
+      sessionId,
+    });
+
+    this.logger.info("EMBEDDED_PROVIDER", "Phantom authentication completed", {
+      walletId: authResult.walletId,
+      organizationId: authResult.organizationId,
+    });
+
+    // Use expiresInMs from auth response if provided (and > 0), otherwise use local default
+    const effectiveExpiresInMs = authResult.expiresInMs > 0 ? authResult.expiresInMs : expiresInMs;
+
+    // Save session with auth info
+    const now = Date.now();
+    const session: Session = {
+      sessionId,
+      walletId: authResult.walletId,
+      organizationId: authResult.organizationId,
+      appId: this.config.appId,
+      stamperInfo,
+      authProvider: "phantom",
+      accountDerivationIndex: authResult.accountDerivationIndex,
+      status: "completed" as const,
+      createdAt: now,
+      lastUsed: now,
+      authenticatorCreatedAt: now,
+      authenticatorExpiresAt: now + effectiveExpiresInMs,
+      lastRenewalAttempt: undefined,
+    };
+
+    this.logger.log("EMBEDDED_PROVIDER", "Saving Phantom session");
+    await this.storage.saveSession(session);
+
     return session;
   }
 
@@ -1024,7 +1103,6 @@ export class EmbeddedProvider {
       appId: this.config.appId,
       stamperInfo,
       authProvider: "phantom-connect",
-      userInfo: { provider: authOptions?.provider },
       accountDerivationIndex: undefined, // Will be set when redirect completes
       status: "pending" as const,
       createdAt: now,
@@ -1055,7 +1133,6 @@ export class EmbeddedProvider {
       appId: this.config.appId,
       provider: authOptions?.provider as "google" | "apple" | undefined,
       redirectUrl: this.config.authOptions.redirectUrl,
-      customAuthData: authOptions?.customAuthData,
       authUrl: this.config.authOptions.authUrl,
       sessionId: sessionId,
     });
