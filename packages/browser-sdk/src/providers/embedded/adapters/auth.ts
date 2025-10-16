@@ -50,7 +50,9 @@ export class BrowserAuthProvider implements AuthProvider {
         app_id: phantomOptions.appId,
         redirect_uri: phantomOptions.redirectUrl || (typeof window !== "undefined" ? this.getValidatedCurrentUrl() : ""),
         session_id: phantomOptions.sessionId,
-        clear_previous_session: true.toString(),
+        // OAuth session management - defaults to allow refresh unless explicitly clearing after logout
+        clear_previous_session: (phantomOptions.clearPreviousSession ?? false).toString(),
+        allow_refresh: (phantomOptions.allowRefresh ?? true).toString(),
         sdk_version: __SDK_VERSION__,
       });
 

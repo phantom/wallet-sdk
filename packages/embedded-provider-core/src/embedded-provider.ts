@@ -675,6 +675,11 @@ export class EmbeddedProvider {
   async disconnect(): Promise<void> {
     const wasConnected = this.client !== null;
 
+    // Set flag to clear previous OAuth session on next login attempt
+    // This ensures user will be prompted for fresh authentication
+    await this.storage.setShouldClearPreviousSession(true);
+    this.logger.log("EMBEDDED_PROVIDER", "Set flag to clear previous session on next login");
+
     await this.storage.clearSession();
 
     this.client = null;
@@ -1042,11 +1047,16 @@ export class EmbeddedProvider {
     tempSession.lastUsed = Date.now();
     await this.storage.saveSession(tempSession);
 
+    // Check if user explicitly logged out (requires clearing previous OAuth session)
+    const shouldClearPreviousSession = await this.storage.getShouldClearPreviousSession();
+
     this.logger.info("EMBEDDED_PROVIDER", "Starting Phantom Connect redirect", {
       publicKey,
       appId: this.config.appId,
       provider: authOptions?.provider,
       authUrl: this.config.authOptions.authUrl,
+      clearPreviousSession: shouldClearPreviousSession,
+      allowRefresh: !shouldClearPreviousSession,
     });
 
     // Start the authentication flow (this will redirect the user in the browser, or handle it in React Native)
@@ -1058,6 +1068,9 @@ export class EmbeddedProvider {
       customAuthData: authOptions?.customAuthData,
       authUrl: this.config.authOptions.authUrl,
       sessionId: sessionId,
+      // OAuth session management - defaults to allowing refresh unless user explicitly logged out
+      clearPreviousSession: shouldClearPreviousSession, // true only after logout
+      allowRefresh: !shouldClearPreviousSession, // false only after logout
     });
 
     if (authResult && "walletId" in authResult) {
@@ -1088,6 +1101,10 @@ export class EmbeddedProvider {
       }
 
       await this.storage.saveSession(tempSession);
+
+      // Clear the logout flag after successful authentication (React Native case)
+      await this.storage.setShouldClearPreviousSession(false);
+      this.logger.log("EMBEDDED_PROVIDER", "Cleared logout flag after successful authentication");
 
       return tempSession; // Return the auth result for further processing
     }
@@ -1125,6 +1142,11 @@ export class EmbeddedProvider {
     }
 
     await this.storage.saveSession(session);
+
+    // Clear the logout flag after successful authentication
+    // This allows future logins to use OAuth session refresh
+    await this.storage.setShouldClearPreviousSession(false);
+    this.logger.log("EMBEDDED_PROVIDER", "Cleared logout flag after successful authentication");
 
     await this.initializeClientFromSession(session);
 

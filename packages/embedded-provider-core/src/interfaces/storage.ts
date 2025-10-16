@@ -36,4 +36,8 @@ export interface EmbeddedStorage {
   getSession(): Promise<Session | null>;
   saveSession(session: Session): Promise<void>;
   clearSession(): Promise<void>;
+
+  // Logout flag management for OAuth session refresh control
+  getShouldClearPreviousSession(): Promise<boolean>;
+  setShouldClearPreviousSession(should: boolean): Promise<void>;
 }

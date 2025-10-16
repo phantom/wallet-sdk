@@ -105,4 +105,51 @@ export class BrowserStorage implements EmbeddedStorage {
       };
     });
   }
+
+  async getShouldClearPreviousSession(): Promise<boolean> {
+    debug.log(DebugCategory.STORAGE, "Getting shouldClearPreviousSession flag from IndexedDB");
+    const db = await this.getDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], "readonly");
+      const store = transaction.objectStore(this.storeName);
+      const request = store.get("shouldClearPreviousSession");
+
+      request.onsuccess = () => {
+        const shouldClear = request.result ?? false;
+        debug.log(DebugCategory.STORAGE, "Retrieved shouldClearPreviousSession flag from IndexedDB", {
+          shouldClear,
+        });
+        resolve(shouldClear);
+      };
+
+      request.onerror = () => {
+        debug.error(DebugCategory.STORAGE, "Failed to get shouldClearPreviousSession flag from IndexedDB", {
+          error: request.error,
+        });
+        reject(request.error);
+      };
+    });
+  }
+
+  async setShouldClearPreviousSession(should: boolean): Promise<void> {
+    debug.log(DebugCategory.STORAGE, "Setting shouldClearPreviousSession flag in IndexedDB", { should });
+    const db = await this.getDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], "readwrite");
+      const store = transaction.objectStore(this.storeName);
+      const request = store.put(should, "shouldClearPreviousSession");
+
+      request.onsuccess = () => {
+        debug.log(DebugCategory.STORAGE, "Successfully set shouldClearPreviousSession flag in IndexedDB");
+        resolve();
+      };
+
+      request.onerror = () => {
+        debug.error(DebugCategory.STORAGE, "Failed to set shouldClearPreviousSession flag in IndexedDB", {
+          error: request.error,
+        });
+        reject(request.error);
+      };
+    });
+  }
 }
