@@ -33,14 +33,6 @@ export interface PhantomAppAuthOptions {
 }
 
 export interface PhantomAppProvider {
-  /**
-   * Authenticate using the Phantom app (browser extension or mobile app)
-   * Returns auth result with wallet and organization info after user approves
-   */
   authenticate(options: PhantomAppAuthOptions): Promise<AuthResult>;
-
-  /**
-   * Check if the Phantom app is available (extension installed or mobile app accessible)
-   */
   isAvailable(): boolean;
 }

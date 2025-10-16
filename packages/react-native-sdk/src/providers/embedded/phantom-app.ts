@@ -12,9 +12,6 @@ import type { PhantomAppProvider, PhantomAppAuthOptions, AuthResult } from "@pha
  */
 export class ReactNativePhantomAppProvider implements PhantomAppProvider {
   isAvailable(): boolean {
-    // React Native doesn't have browser extensions
-    // In the future, we could check if the Phantom app is installed
-    // via deep link availability checks
     return false;
   }
 

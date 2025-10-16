@@ -1034,10 +1034,8 @@ export class EmbeddedProvider {
 
     this.logger.info("EMBEDDED_PROVIDER", "Phantom app detected, proceeding with authentication");
 
-    // Generate session ID for this authentication attempt
     const sessionId = generateSessionId();
 
-    // Call the phantom app provider to authenticate
     const authResult = await this.phantomAppProvider.authenticate({
       publicKey,
       appId: this.config.appId,

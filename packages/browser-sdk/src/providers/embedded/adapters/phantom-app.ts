@@ -2,6 +2,34 @@ import type { PhantomAppProvider, PhantomAppAuthOptions, AuthResult } from "@pha
 import { isPhantomExtensionInstalled } from "@phantom/browser-injected-sdk";
 
 /**
+ * Phantom extension app.login API types
+ */
+interface PhantomAppLoginOptions {
+  publicKey: string;
+  appId: string;
+  sessionId: string;
+}
+
+interface PhantomAppLoginResult {
+  walletId: string;
+  organizationId: string;
+  accountDerivationIndex?: number;
+  expiresInMs?: number;
+}
+
+interface PhantomApp {
+  login(options: PhantomAppLoginOptions): Promise<PhantomAppLoginResult>;
+}
+
+interface WindowWithPhantomApp extends Window {
+  phantom?: {
+    solana?: unknown;
+    ethereum?: unknown;
+    app?: PhantomApp;
+  };
+}
+
+/**
  * Browser implementation of PhantomAppProvider that uses the Phantom browser extension
  */
 export class BrowserPhantomAppProvider implements PhantomAppProvider {
@@ -14,7 +42,6 @@ export class BrowserPhantomAppProvider implements PhantomAppProvider {
 
   /**
    * Authenticate using the Phantom browser extension
-   * Calls window.phantom.connect with the authentication parameters
    */
   async authenticate(options: PhantomAppAuthOptions): Promise<AuthResult> {
     if (!this.isAvailable()) {
@@ -23,19 +50,15 @@ export class BrowserPhantomAppProvider implements PhantomAppProvider {
       );
     }
 
-    const phantom = (window as any).phantom;
+    const phantom = (window as WindowWithPhantomApp).phantom;
 
-    // Call the extension's app.login method
-    // This is a placeholder for the actual extension API that needs to be implemented
-    // TODO: Update this when the Phantom extension exposes the app.login method
-    if (!phantom.app || !phantom.app.login || typeof phantom.app.login !== "function") {
+    if (!phantom?.app?.login || typeof phantom.app.login !== "function") {
       throw new Error(
         "Phantom extension authentication is not yet implemented. The extension needs to expose an app.login API (window.phantom.app.login).",
       );
     }
 
     try {
-      // Call the extension app.login method
       const result = await phantom.app.login({
         publicKey: options.publicKey,
         appId: options.appId,
