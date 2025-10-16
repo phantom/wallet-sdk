@@ -20,6 +20,7 @@ import { EmbeddedEthereumChain, EmbeddedSolanaChain } from "./chains";
 import type {
   AuthProvider,
   AuthResult,
+  SpendingLimitsProvider,
   DebugLogger,
   EmbeddedStorage,
   PlatformAdapter,
@@ -53,6 +54,7 @@ export class EmbeddedProvider {
   private platform: PlatformAdapter;
   private storage: EmbeddedStorage;
   private authProvider: AuthProvider;
+  private spendingLimitsProvider: SpendingLimitsProvider;
   private urlParamsAccessor: URLParamsAccessor;
   private stamper: StamperWithKeyManagement;
   private logger: DebugLogger;
@@ -79,6 +81,7 @@ export class EmbeddedProvider {
     this.platform = platform;
     this.storage = platform.storage;
     this.authProvider = platform.authProvider;
+    this.spendingLimitsProvider = platform.spendingLimitsProvider;
     this.urlParamsAccessor = platform.urlParamsAccessor;
     this.stamper = platform.stamper;
     this.jwtAuth = new JWTAuth();
@@ -851,13 +854,12 @@ export class EmbeddedProvider {
     return await parseTransactionResponse(rawResponse.rawTransaction, params.networkId, rawResponse.hash);
   }
 
-  // TODO(Aaron): Add strictly typed implementation with logging, error handling and documentation
-  async upsertSpendingLimit(_params: unknown): Promise<unknown> {
+  async upsertSpendingLimit(_args: unknown): Promise<unknown> {
     if (!this.client || !this.walletId) {
       throw new Error("Not connected");
     }
 
-    return await this.client.upsertSpendingLimit(_params);
+    return await this.spendingLimitsProvider.upsertSpendingLimit(_args);
   }
 
   getAddresses(): WalletAddress[] {
