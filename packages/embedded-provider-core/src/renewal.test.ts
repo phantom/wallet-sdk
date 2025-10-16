@@ -49,6 +49,8 @@ describe.skip("EmbeddedProvider Renewal Tests", () => {
         delete mockStorage.session;
         return Promise.resolve();
       }),
+      getShouldClearPreviousSession: jest.fn().mockResolvedValue(false),
+      setShouldClearPreviousSession: jest.fn().mockResolvedValue(undefined),
     };
 
     // Mock stamper with rotation support
