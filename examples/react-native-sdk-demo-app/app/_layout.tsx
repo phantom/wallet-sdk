@@ -11,10 +11,11 @@ import { StatusBar } from "expo-status-bar";
 
 // SDK configuration - static, won't cause SDK reinstantiation when debug changes
 const config: PhantomSDKConfig = {
-  organizationId: process.env.EXPO_PUBLIC_ORGANIZATION_ID || "57b8172b-8583-4c13-a800-49f8553eb259",
   appId: process.env.EXPO_PUBLIC_APP_ID || "57b8172b-8583-4c13-a800-49f8553eb259",
   scheme: process.env.EXPO_PUBLIC_APP_SCHEME || "phantom-rn-demo", // Must match app.json scheme
-  embeddedWalletType: process.env.EXPO_PUBLIC_EMBEDDED_WALLET_TYPE || "user-wallet",
+  embeddedWalletType: isEmbeddedWalletType(process.env.EXPO_PUBLIC_EMBEDDED_WALLET_TYPE)
+    ? process.env.EXPO_PUBLIC_EMBEDDED_WALLET_TYPE
+    : "user-wallet",
   addressTypes: [AddressType.solana],
   authOptions: {
     authUrl: process.env.EXPO_PUBLIC_AUTH_URL,
@@ -22,6 +23,12 @@ const config: PhantomSDKConfig = {
   },
   apiBaseUrl: process.env.EXPO_PUBLIC_WALLET_API || "https://api.phantom.app/v1/wallets",
 };
+
+function isEmbeddedWalletType(
+  embeddedWalletType: typeof process.env.EXPO_PUBLIC_EMBEDDED_WALLET_TYPE,
+): embeddedWalletType is PhantomSDKConfig["embeddedWalletType"] {
+  return embeddedWalletType === "user-wallet" || embeddedWalletType === "app-wallet";
+}
 
 // Debug configuration - separate to avoid SDK reinstantiation
 const debugConfig: PhantomDebugConfig = {
