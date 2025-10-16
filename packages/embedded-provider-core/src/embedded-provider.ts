@@ -891,6 +891,15 @@ export class EmbeddedProvider {
     return await parseTransactionResponse(rawResponse.rawTransaction, params.networkId, rawResponse.hash);
   }
 
+  // TODO(Aaron): Add strictly typed implementation with logging, error handling and documentation
+  async upsertSpendingLimit(_params: unknown): Promise<unknown> {
+    if (!this.client || !this.walletId) {
+      throw new Error("Not connected");
+    }
+
+    return await this.client.upsertSpendingLimit(_params);
+  }
+
   getAddresses(): WalletAddress[] {
     return this.addresses;
   }

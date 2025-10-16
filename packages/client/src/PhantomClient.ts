@@ -734,6 +734,11 @@ export class PhantomClient {
     }
   }
 
+  // TODO(Aaron): Add strictly typed implementation with error handling and documentation
+  async upsertSpendingLimit(_params: unknown): Promise<unknown> {
+    return Promise.resolve();
+  }
+
   /**
    * Stamp an axios request with the provided stamper
    */
