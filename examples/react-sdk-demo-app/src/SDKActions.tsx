@@ -637,7 +637,6 @@ export function SDKActions() {
       }
 
       alert(`SOL staked successfully! Transaction signature: ${result.signature}`);
-      console.log("SOL staked successfully! Transaction signature: ", result.signature);
 
       // Refresh balance after successful transaction
       refetchSolanaBalance();
