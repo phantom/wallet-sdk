@@ -21,7 +21,7 @@ export function SDKActions() {
   const { disconnect, isDisconnecting } = useDisconnect();
   const { solana } = useSolana();
   const { ethereum } = useEthereum();
-  const { isConnected, currentProviderType, sdk } = usePhantom();
+  const { isConnected, currentProviderType } = usePhantom();
   const autoConfirm = useAutoConfirm();
   const addresses = useAccounts();
   const [isSigningMessageType, setIsSigningMessageType] = useState<"solana" | "evm" | null>(null);
@@ -53,11 +53,9 @@ export function SDKActions() {
 
   const onConnectInjected = async () => {
     try {
-      // Switch to injected provider before connecting
-      if (sdk) {
-        await sdk.switchProvider("injected");
-      }
-      await connect();
+      await connect({
+        provider: "injected",
+      });
     } catch (error) {
       console.error("Error connecting to injected provider:", error);
       alert(`Error connecting: ${(error as Error).message || error}`);
@@ -66,10 +64,6 @@ export function SDKActions() {
 
   const onConnectWithGoogle = async () => {
     try {
-      // Switch to embedded provider if needed
-      if (sdk) {
-        await sdk.switchProvider("embedded");
-      }
       // Connect with Google auth provider
       await connect({
         provider: "google",
@@ -82,10 +76,6 @@ export function SDKActions() {
 
   const onConnectWithPhantom = async () => {
     try {
-      // Switch to embedded provider if needed
-      if (sdk) {
-        await sdk.switchProvider("embedded");
-      }
       // Connect with Phantom auth provider (uses extension)
       await connect({
         provider: "phantom",
