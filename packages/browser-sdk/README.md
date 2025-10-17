@@ -126,16 +126,6 @@ const result = await sdk.connect({
 });
 ```
 
-#### Automatic Provider Switching
-
-The SDK automatically switches providers based on the `provider` parameter:
-
-- **`provider: "injected"`** → Switches to injected provider (Phantom extension)
-- **`provider: "google" | "apple" | "phantom"`** → Switches to embedded provider
-- **No `provider` specified** → Uses current provider (no switching)
-
-This means you don't need to manually call `sdk.switchProvider()` before connecting - the SDK handles it automatically!
-
 ## Chain-Specific APIs
 
 The SDK provides separate interfaces for each blockchain with optimized methods:

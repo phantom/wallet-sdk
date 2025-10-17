@@ -172,16 +172,6 @@ await connect({
 });
 ```
 
-#### Automatic Provider Switching
-
-The SDK automatically switches providers based on the `provider` parameter:
-
-- **`provider: "injected"`** → Switches to injected provider (Phantom extension)
-- **`provider: "google" | "apple" | "phantom"`** → Switches to embedded provider
-- **No `provider` specified** → Uses current provider (no switching)
-
-This means you don't need to manually manage provider types - the SDK handles it automatically based on your authentication choice!
-
 ## Provider Types
 
 ### Injected Provider
