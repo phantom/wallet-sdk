@@ -6,7 +6,7 @@ import { useConnect, useAccounts, useDisconnect } from "@phantom/react-native-sd
 export default function HomeScreen() {
   const router = useRouter();
   const { connect, isConnecting, error: connectError } = useConnect();
-  const { isConnected, addresses, walletId, error } = useAccounts();
+  const { isConnected, addresses, walletId } = useAccounts();
   const { disconnect, isDisconnecting } = useDisconnect();
 
   const handleConnect = async (provider: "google") => {
@@ -64,12 +64,14 @@ export default function HomeScreen() {
               <Text style={styles.infoLabel}>Addresses:</Text>
               {addresses && addresses.length > 0 ? (
                 addresses.map((addr, index) => (
-                  <View key={index} style={styles.addressItem}>
-                    <Text style={styles.addressType}>{addr.addressType}:</Text>
-                    <Text style={styles.addressValue} numberOfLines={1}>
-                      {addr.address}
-                    </Text>
-                  </View>
+                  <React.Fragment key={index}>
+                    <View style={styles.addressItem}>
+                      <Text style={styles.addressType}>{addr.addressType}:</Text>
+                      <Text style={styles.addressValue} numberOfLines={1}>
+                        {addr.address}
+                      </Text>
+                    </View>
+                  </React.Fragment>
                 ))
               ) : (
                 <Text style={styles.infoValue}>No addresses available</Text>
@@ -111,11 +113,11 @@ export default function HomeScreen() {
         )}
 
         {/* Error Display */}
-        {(error || connectError) && (
+        {connectError && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Error</Text>
             <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{error?.message || connectError?.message}</Text>
+              <Text style={styles.errorText}>{connectError?.message}</Text>
             </View>
           </View>
         )}
