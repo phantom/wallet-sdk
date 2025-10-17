@@ -29,8 +29,6 @@ export interface ConnectOptions {
   provider?: "google" | "apple" | "jwt";
   /** JWT token for JWT authentication */
   jwtToken?: string;
-  /** Custom authentication data */
-  customAuthData?: Record<string, any>;
 }
 
 // Re-export core types for convenience

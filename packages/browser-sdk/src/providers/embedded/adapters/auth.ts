@@ -39,7 +39,6 @@ export class BrowserAuthProvider implements AuthProvider {
         appId: phantomOptions.appId,
         provider: phantomOptions.provider,
         authUrl: phantomOptions.authUrl,
-        hasCustomData: !!phantomOptions.customAuthData,
       });
 
       const baseUrl = phantomOptions.authUrl || DEFAULT_AUTH_URL;
@@ -65,12 +64,6 @@ export class BrowserAuthProvider implements AuthProvider {
         debug.log(DebugCategory.PHANTOM_CONNECT_AUTH, "No provider specified, defaulting to Google");
         // Note: Phantom Connect currently defaults to Google if no provider is specified
         params.append("provider", "google");
-      }
-
-      // Add custom auth data if provided
-      if (phantomOptions.customAuthData) {
-        debug.log(DebugCategory.PHANTOM_CONNECT_AUTH, "Adding custom auth data");
-        params.append("authData", JSON.stringify(phantomOptions.customAuthData));
       }
 
       // Store auth context in session storage for validation after redirect
@@ -108,6 +101,7 @@ export class BrowserAuthProvider implements AuthProvider {
       const accountDerivationIndex = this.urlParamsAccessor.getParam("selected_account_index");
       const error = this.urlParamsAccessor.getParam("error");
       const errorDescription = this.urlParamsAccessor.getParam("error_description");
+      
 
       if (error) {
         const errorMsg = errorDescription || error;
@@ -190,7 +184,6 @@ export class BrowserAuthProvider implements AuthProvider {
       return {
         walletId,
         organizationId,
-        userInfo: context,
         accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : 0,
         expiresInMs: expiresInMs ? parseInt(expiresInMs) : 0,
       };
