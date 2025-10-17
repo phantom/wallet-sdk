@@ -101,6 +101,7 @@ export class BrowserAuthProvider implements AuthProvider {
       const accountDerivationIndex = this.urlParamsAccessor.getParam("selected_account_index");
       const error = this.urlParamsAccessor.getParam("error");
       const errorDescription = this.urlParamsAccessor.getParam("error_description");
+      
 
       if (error) {
         const errorMsg = errorDescription || error;

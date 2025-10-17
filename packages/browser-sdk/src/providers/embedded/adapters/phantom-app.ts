@@ -2,34 +2,6 @@ import type { PhantomAppProvider, PhantomAppAuthOptions, AuthResult } from "@pha
 import { isPhantomExtensionInstalled } from "@phantom/browser-injected-sdk";
 
 /**
- * Phantom extension app.login API types
- */
-interface PhantomAppLoginOptions {
-  publicKey: string;
-  appId: string;
-  sessionId: string;
-}
-
-interface PhantomAppLoginResult {
-  walletId: string;
-  organizationId: string;
-  accountDerivationIndex?: number;
-  expiresInMs?: number;
-}
-
-interface PhantomApp {
-  login(options: PhantomAppLoginOptions): Promise<PhantomAppLoginResult>;
-}
-
-interface WindowWithPhantomApp extends Window {
-  phantom?: {
-    solana?: unknown;
-    ethereum?: unknown;
-    app?: PhantomApp;
-  };
-}
-
-/**
  * Browser implementation of PhantomAppProvider that uses the Phantom browser extension
  */
 export class BrowserPhantomAppProvider implements PhantomAppProvider {
