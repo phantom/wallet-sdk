@@ -204,7 +204,6 @@ export class InjectedProvider implements Provider {
       const result = {
         addresses: this.addresses,
         status: "completed" as const,
-        // walletId is not applicable for injected providers
       };
 
       // Emit connect event for successful connection

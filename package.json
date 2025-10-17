@@ -10,7 +10,8 @@
     "check-types": "yarn workspaces foreach -Avpi run check-types",
     "release": "yarn build && yarn pack-release && yarn changeset publish",
     "test": "jest",
-    "watch": "node scripts/develop.mjs"
+    "watch": "node scripts/develop.mjs",
+    "postinstall": "yarn build"
   },
   "workspaces": [
     "packages/*",

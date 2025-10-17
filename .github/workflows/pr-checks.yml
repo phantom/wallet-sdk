@@ -31,6 +31,9 @@ jobs:
       - name: Run Lint
         run: yarn lint
 
+      - name: Check Types
+        run: yarn check-types
+
       - name: Run Tests
         run: yarn test
         env:

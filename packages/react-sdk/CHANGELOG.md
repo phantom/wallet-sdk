@@ -1,5 +1,13 @@
 # @phantom/react-sdk
 
+## 1.0.0-beta.14
+
+### Patch Changes
+
+- aa40fa6: Fixed autoconnect
+- Updated dependencies [aa40fa6]
+  - @phantom/browser-sdk@1.0.0-beta.14
+
 ## 1.0.0-beta.13
 
 ### Patch Changes
