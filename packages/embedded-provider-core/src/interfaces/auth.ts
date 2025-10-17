@@ -13,6 +13,9 @@ export interface PhantomConnectOptions {
   redirectUrl?: string;
   authUrl?: string;
   sessionId: string;
+  // OAuth session management parameters
+  clearPreviousSession?: boolean; // Whether to clear previous OAuth session (default: false)
+  allowRefresh?: boolean; // Whether to allow OAuth session refresh (default: true)
 }
 
 export interface JWTAuthOptions {

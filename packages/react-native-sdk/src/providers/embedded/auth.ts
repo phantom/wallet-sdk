@@ -35,7 +35,9 @@ export class ExpoAuthProvider implements AuthProvider {
         app_id: appId,
         redirect_uri: redirectUrl,
         session_id: sessionId,
-        clear_previous_session: "true",
+        // OAuth session management - defaults to allow refresh unless explicitly clearing after logout
+        clear_previous_session: (phantomOptions.clearPreviousSession ?? false).toString(),
+        allow_refresh: (phantomOptions.allowRefresh ?? true).toString(),
         sdk_version: __SDK_VERSION__,
       });
 
