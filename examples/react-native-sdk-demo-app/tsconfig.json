@@ -11,7 +11,8 @@
     "skipLibCheck": true,
     "target": "ESNext",
     "verbatimModuleSyntax": true,
-    "customConditions": ["react-native"]
+    "customConditions": ["react-native"],
+    "allowSyntheticDefaultImports": true
   },
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules", "lib", "dist"]

@@ -10,6 +10,7 @@ import { ExpoAuthProvider } from "./providers/embedded/auth";
 import { ExpoURLParamsAccessor } from "./providers/embedded/url-params";
 import { ReactNativeStamper } from "./providers/embedded/stamper";
 import { ExpoLogger } from "./providers/embedded/logger";
+import { ReactNativePhantomAppProvider } from "./providers/embedded/phantom-app";
 import { Platform } from "react-native";
 
 interface PhantomContextValue {
@@ -75,6 +76,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       authProvider,
       urlParamsAccessor,
       stamper,
+      phantomAppProvider: new ReactNativePhantomAppProvider(),
       name: platformName,
       analyticsHeaders: {
         [ANALYTICS_HEADERS.SDK_TYPE]: "react-native",

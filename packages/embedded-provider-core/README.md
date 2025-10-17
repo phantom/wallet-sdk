@@ -179,7 +179,6 @@ For server-side authenticated users:
 const authOptions = {
   provider: "jwt",
   jwtToken: "your-jwt-token",
-  customAuthData: { userId: "user123" },
 };
 
 const result = await provider.connect(authOptions);
@@ -193,7 +192,6 @@ For social login flows:
 // Google OAuth
 const authOptions = {
   provider: "google",
-  customAuthData: { referrer: "landing-page" },
 };
 
 await provider.connect(authOptions); // Will redirect/deep link

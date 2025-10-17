@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "@types/bs58": "^5.0.0",
     "@types/react": "~19.0.10",
     "react-native-monorepo-config": "^0.1.9"
   },

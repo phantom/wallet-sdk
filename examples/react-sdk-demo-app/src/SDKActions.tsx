@@ -140,6 +140,22 @@ export function SDKActions() {
     }
   };
 
+  const onConnectWithPhantom = async () => {
+    try {
+      // Switch to embedded provider if needed
+      if (sdk) {
+        await sdk.switchProvider("embedded");
+      }
+      // Connect with Phantom auth provider (uses extension)
+      await connect({
+        provider: "phantom",
+      });
+    } catch (error) {
+      console.error("Error connecting with Phantom:", error);
+      alert(`Error connecting: ${(error as Error).message || error}`);
+    }
+  };
+
   const onDisconnect = async () => {
     try {
       await disconnect();
@@ -772,11 +788,14 @@ export function SDKActions() {
         <div className="section">
           <h3>Connection Options</h3>
           <div className="button-group">
-            <button className="primary" onClick={onConnectInjected} disabled={isConnecting}>
-              {isConnecting ? "Connecting..." : "Connect Injected"}
+            <button className="primary" onClick={onConnectWithPhantom} disabled={isConnecting}>
+              {isConnecting ? "Connecting..." : "Login with Phantom"}
             </button>
             <button className="primary" onClick={onConnectWithGoogle} disabled={isConnecting}>
               {isConnecting ? "Connecting..." : "Connect with Google"}
+            </button>
+            <button className="primary" onClick={onConnectInjected} disabled={isConnecting}>
+              {isConnecting ? "Connecting..." : "Connect Injected"}
             </button>
           </div>
           {connectError && <p className="error-text">Error: {connectError.message}</p>}

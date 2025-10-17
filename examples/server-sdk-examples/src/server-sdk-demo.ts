@@ -179,6 +179,10 @@ async function runDemo() {
     // and extracts the signature for us - no manual parsing needed!
     const signature = signedResult.hash;
 
+    if (!signature) {
+      throw new Error("No signature found in signed result");
+    }
+
     console.log(`   Signature: ${signature}`);
     if (signedResult.blockExplorer) {
       console.log(`   Explorer: ${signedResult.blockExplorer}`);

@@ -144,6 +144,14 @@ const { connect } = useConnect();
 // Default: Show provider selection screen
 await connect();
 
+// Phantom authentication (uses Phantom extension or app)
+// User must have Phantom extension installed or Phantom mobile app
+await connect({
+  authOptions: {
+    provider: "phantom",
+  },
+});
+
 // Google authentication (skips provider selection)
 await connect({
   authOptions: {
@@ -155,6 +163,14 @@ await connect({
 await connect({
   authOptions: {
     provider: "apple",
+  },
+});
+
+// JWT authentication (for custom auth flows)
+await connect({
+  authOptions: {
+    provider: "jwt",
+    jwtToken: "your-jwt-token",
   },
 });
 ```
