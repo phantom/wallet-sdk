@@ -240,6 +240,24 @@ export class PhantomClient {
         addressFormat: networkConfig.addressFormat,
       };
 
+      // POC: Pre-fetch organization data so we can inspect policies in the network tab
+      // This call is signed by the user's keypair via the axios stamper interceptor
+      try {
+        const orgRequest: any = {
+          method: "getOrganization",
+          params: {
+            organizationId: this.config.organizationId,
+          },
+          timestampMs: await getSecureTimestamp(),
+        };
+        // Fire and await to ensure it shows before signing
+        const orgResponse = await this.kmsApi.postKmsRpc(orgRequest);
+        console.log("Organization data (check for policies):", orgResponse.data);
+      } catch (e: any) {
+        // Do not block signing on org fetch errors in this POC
+        console.warn("getOrganization failed", e?.response?.data || e?.message || e);
+      }
+
       // Sign transaction request - include configs if available
       const signRequest: SignTransactionRequest & {
         submissionConfig?: SubmissionConfig;
