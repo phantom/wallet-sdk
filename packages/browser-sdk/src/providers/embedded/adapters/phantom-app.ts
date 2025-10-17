@@ -22,16 +22,14 @@ export class BrowserPhantomAppProvider implements PhantomAppProvider {
       );
     }
 
-    const phantom = (window as WindowWithPhantomApp).phantom;
-
-    if (!phantom?.app?.login || typeof phantom.app.login !== "function") {
+    if (!window.phantom?.app?.login || typeof window.phantom.app.login !== "function") {
       throw new Error(
         "Phantom extension authentication is not yet implemented. The extension needs to expose an app.login API (window.phantom.app.login).",
       );
     }
 
     try {
-      const result = await phantom.app.login({
+      const result = await window.phantom.app.login({
         publicKey: options.publicKey,
         appId: options.appId,
         sessionId: options.sessionId,
