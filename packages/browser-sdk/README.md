@@ -93,42 +93,48 @@ const ethResult = await sdk.ethereum.sendTransaction({
 
 ### Connection Options
 
-For embedded user-wallets, you can specify authentication providers:
+The `connect()` method automatically switches between providers based on the authentication method you specify:
 
 ```typescript
-// Default: Show provider selection screen
+// Connect with current provider (no switching)
 const result = await sdk.connect();
 
-// Phantom authentication (uses Phantom extension or app)
-// User must have Phantom extension installed or Phantom mobile app
+// Connect with injected provider (Phantom extension)
+// Automatically switches to injected provider if not already using it
 const result = await sdk.connect({
-  authOptions: {
-    provider: "phantom",
-  },
+  provider: "injected",
 });
 
-// Google authentication (skips provider selection)
+// Connect with Google authentication (embedded provider)
+// Automatically switches to embedded provider if not already using it
 const result = await sdk.connect({
-  authOptions: {
-    provider: "google",
-  },
+  provider: "google",
 });
 
-// Apple authentication (skips provider selection)
+// Connect with Apple authentication (embedded provider)
+// Automatically switches to embedded provider if not already using it
 const result = await sdk.connect({
-  authOptions: {
-    provider: "apple",
-  },
+  provider: "apple",
 });
 
-// JWT authentication (for custom auth flows)
+
+// Connect with Phantom authentication (embedded provider)
+// Uses Phantom extension or mobile app for authentication
+// Automatically switches to embedded provider if not already using it
 const result = await sdk.connect({
-  authOptions: {
-    provider: "jwt",
-    jwtToken: "your-jwt-token",
-  },
+  provider: "phantom",
 });
 ```
+
+#### Automatic Provider Switching
+
+The SDK automatically switches providers based on the `provider` parameter:
+
+- **`provider: "injected"`** → Switches to injected provider (Phantom extension)
+- **`provider: "google" | "apple" | "phantom"`** → Switches to embedded provider
+- **No `provider` specified** → Uses current provider (no switching)
+
+This means you don't need to manually call `sdk.switchProvider()` before connecting - the SDK handles it automatically!
 
 ## Chain-Specific APIs
 
