@@ -15,10 +15,12 @@ export class ReactNativePhantomAppProvider implements PhantomAppProvider {
     return false;
   }
 
-  async authenticate(_options: PhantomAppAuthOptions): Promise<AuthResult> {
-    throw new Error(
-      "Phantom app authentication is not available in React Native. " +
-      "Please use other authentication methods like Google, Apple, or JWT."
+  authenticate(_options: PhantomAppAuthOptions): Promise<AuthResult> {
+    return Promise.reject(
+      new Error(
+        "Phantom app authentication is not available in React Native. " +
+        "Please use other authentication methods like Google, Apple, or JWT."
+      )
     );
   }
 }
