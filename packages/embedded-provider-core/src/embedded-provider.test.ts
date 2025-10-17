@@ -73,6 +73,10 @@ describe("EmbeddedProvider Core", () => {
         authenticate: jest.fn(),
         resumeAuthFromRedirect: jest.fn(),
       },
+      phantomAppProvider: {
+        isAvailable: jest.fn().mockReturnValue(false),
+        authenticate: jest.fn(),
+      },
       urlParamsAccessor: {
         getParam: jest.fn().mockReturnValue(null),
       },
@@ -371,7 +375,7 @@ describe("EmbeddedProvider Core", () => {
       };
 
       await expect(provider.connect(invalidAuthOptions)).rejects.toThrow(
-        'Invalid auth provider: invalid-provider. Must be "google", "apple", or "jwt"',
+        'Invalid auth provider: invalid-provider. Must be "google", "apple", "jwt", or "phantom"',
       );
     });
   });

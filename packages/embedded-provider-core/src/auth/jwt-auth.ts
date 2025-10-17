@@ -27,7 +27,6 @@ export class JWTAuth {
         body: JSON.stringify({
           appId: options.appId,
           publicKey: options.publicKey,
-          customAuthData: options.customAuthData,
         }),
       });
 
@@ -84,7 +83,6 @@ export class JWTAuth {
         walletId: result.walletId,
         organizationId: result.organizationId,
         provider: "jwt",
-        userInfo: result.userInfo || {},
         expiresInMs: result.expiresInMs,
         accountDerivationIndex: result.accountDerivationIndex || 0,
       };

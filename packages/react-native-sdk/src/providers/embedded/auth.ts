@@ -15,7 +15,7 @@ export class ExpoAuthProvider implements AuthProvider {
 
     // Handle redirect-based authentication
     const phantomOptions = options as PhantomConnectOptions;
-    const { authUrl, redirectUrl, publicKey, sessionId, provider, customAuthData, appId } =
+    const { authUrl, redirectUrl, publicKey, sessionId, provider, appId } =
       phantomOptions;
 
     if (!redirectUrl) {
@@ -51,12 +51,6 @@ export class ExpoAuthProvider implements AuthProvider {
         params.append("provider", "google");
       }
 
-      // Add custom auth data if provided
-      if (customAuthData) {
-        console.log("[ExpoAuthProvider] Adding custom auth data");
-        params.append("authData", JSON.stringify(customAuthData));
-      }
-
       const fullAuthUrl = `${baseUrl}?${params.toString()}`;
 
       console.log("[ExpoAuthProvider] Starting authentication", {
@@ -65,7 +59,6 @@ export class ExpoAuthProvider implements AuthProvider {
         publicKey,
         sessionId,
         provider,
-        hasCustomData: !!customAuthData,
       });
 
       // Configure the web browser for better UX

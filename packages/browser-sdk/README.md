@@ -99,6 +99,14 @@ For embedded user-wallets, you can specify authentication providers:
 // Default: Show provider selection screen
 const result = await sdk.connect();
 
+// Phantom authentication (uses Phantom extension or app)
+// User must have Phantom extension installed or Phantom mobile app
+const result = await sdk.connect({
+  authOptions: {
+    provider: "phantom",
+  },
+});
+
 // Google authentication (skips provider selection)
 const result = await sdk.connect({
   authOptions: {
@@ -110,6 +118,14 @@ const result = await sdk.connect({
 const result = await sdk.connect({
   authOptions: {
     provider: "apple",
+  },
+});
+
+// JWT authentication (for custom auth flows)
+const result = await sdk.connect({
+  authOptions: {
+    provider: "jwt",
+    jwtToken: "your-jwt-token",
   },
 });
 ```

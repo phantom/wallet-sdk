@@ -18,7 +18,6 @@ export interface Session {
   stamperInfo: StamperInfo;
   keypair?: Keypair; // Keep for backward compatibility during migration
   authProvider?: string;
-  userInfo?: Record<string, any>;
   status: "pending" | "completed" | "failed";
   createdAt: number;
   lastUsed: number;
