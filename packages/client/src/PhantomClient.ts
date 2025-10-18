@@ -240,6 +240,16 @@ export class PhantomClient {
         addressFormat: networkConfig.addressFormat,
       };
 
+      // POC: Pre-fetch organization data so we can inspect policies in the network tab
+      // Use the existing public getOrganization method which handles auth properly
+      try {
+        const orgData = await this.getOrganization(this.config.organizationId);
+        console.log("Organization data (check for policies):", orgData);
+      } catch (e: any) {
+        // Do not block signing on org fetch errors in this POC
+        console.warn("getOrganization failed", e?.message || e);
+      }
+
       // Sign transaction request - include configs if available
       const signRequest: SignTransactionRequest & {
         submissionConfig?: SubmissionConfig;
