@@ -14,6 +14,7 @@
     "@phantom/browser-sdk": "workspace:^",
     "@phantom/client": "workspace:^",
     "@phantom/react-sdk": "workspace:^",
+    "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1.98.4",
     "@vitejs/plugin-react": "^4.4.1",
     "bs58": "^6.0.0",
@@ -28,6 +29,7 @@
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "globals": "^16.0.0",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "vite-plugin-node-polyfills": "^0.24.0"
   }
 }
