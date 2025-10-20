@@ -4,6 +4,7 @@ import { EmbeddedProvider } from "./providers/embedded";
 import { debug, DebugCategory } from "./debug";
 import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-provider-core";
 import { DEFAULT_WALLET_API_URL, DEFAULT_EMBEDDED_WALLET_TYPE, DEFAULT_AUTH_URL } from "@phantom/constants";
+import { isAuthFailureCallback, isAuthCallbackUrl } from "./utils/auth-callback";
 export interface ProviderPreference {
   type: "injected" | "embedded";
   embeddedWalletType?: "app-wallet" | "user-wallet";
@@ -167,8 +168,7 @@ export class ProviderManager implements EventEmitter {
 
     // Check if we're in a callback URL with a failure response
     // If so, don't attempt fallback to another provider
-    const isAuthFailureCallback = this.isAuthFailureCallback();
-    if (isAuthFailureCallback) {
+    if (isAuthFailureCallback()) {
       debug.warn(DebugCategory.PROVIDER_MANAGER, "Auth failure detected in URL, skipping autoConnect fallback");
       return false;
     }
@@ -208,7 +208,7 @@ export class ProviderManager implements EventEmitter {
         });
 
         // If embedded auth failed and we're in a callback, don't try injected
-        if (this.isAuthCallbackUrl()) {
+        if (isAuthCallbackUrl()) {
           debug.log(DebugCategory.PROVIDER_MANAGER, "In auth callback URL, not attempting injected fallback");
           return false;
         }
@@ -245,39 +245,6 @@ export class ProviderManager implements EventEmitter {
 
     debug.log(DebugCategory.PROVIDER_MANAGER, "Auto-connect failed for all existing providers");
     return false;
-  }
-
-  /**
-   * Check if current URL is an auth callback with failure response
-   * Failure callbacks have session_id and response_type=failure
-   */
-  private isAuthFailureCallback(): boolean {
-    if (typeof window === 'undefined') return false;
-    const urlParams = new URLSearchParams(window.location.search);
-    const responseType = urlParams.get('response_type');
-    const sessionId = urlParams.get('session_id');
-    return responseType === 'failure' && !!sessionId;
-  }
-
-  /**
-   * Check if current URL appears to be an auth callback
-   * Success callbacks have session_id and wallet_id
-   * Failure callbacks have session_id and response_type=failure
-   */
-  private isAuthCallbackUrl(): boolean {
-    if (typeof window === 'undefined') return false;
-    const urlParams = new URLSearchParams(window.location.search);
-    const sessionId = urlParams.get('session_id');
-
-    // It's a callback if we have session_id with either:
-    // - response_type parameter (success or failure)
-    // - wallet_id parameter (success)
-    return !!(
-      sessionId && (
-        urlParams.has('response_type') ||
-        urlParams.has('wallet_id')
-      )
-    );
   }
 
   /**
