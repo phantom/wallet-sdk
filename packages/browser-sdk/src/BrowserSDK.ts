@@ -93,7 +93,6 @@ export class BrowserSDK {
 
       debug.info(DebugCategory.BROWSER_SDK, "Connection successful", {
         addressCount: result.addresses.length,
-        walletId: result.walletId,
         status: result.status,
       });
 
@@ -160,13 +159,6 @@ export class BrowserSDK {
     return this.providerManager.getCurrentProviderInfo();
   }
 
-  /**
-   * Get the wallet ID (for embedded wallets)
-   */
-  getWalletId(): string | null {
-    return this.providerManager.getWalletId();
-  }
-
   // ===== UTILITY METHODS =====
 
   /**
@@ -197,17 +189,19 @@ export class BrowserSDK {
   /**
    * Attempt auto-connection using existing session
    * Should be called after setting up event listeners
-   * Only works with embedded providers
+   * Tries embedded provider first, then injected provider as fallback
    */
   async autoConnect(): Promise<void> {
-    debug.log(DebugCategory.BROWSER_SDK, "Attempting auto-connect");
-    const currentProvider = this.providerManager.getCurrentProvider();
-    if (currentProvider) {
-      await currentProvider.autoConnect();
-    } else {
-      debug.warn(DebugCategory.BROWSER_SDK, "Current provider does not support auto-connect", {
+    debug.log(DebugCategory.BROWSER_SDK, "Attempting auto-connect with fallback strategy");
+
+    const result = await this.providerManager.autoConnect();
+
+    if (result) {
+      debug.info(DebugCategory.BROWSER_SDK, "Auto-connect successful", {
         providerType: this.getCurrentProviderInfo()?.type,
       });
+    } else {
+      debug.log(DebugCategory.BROWSER_SDK, "Auto-connect failed for all providers");
     }
   }
 

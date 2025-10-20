@@ -19,7 +19,6 @@ interface PhantomContextValue {
   isConnecting: boolean;
   connectError: Error | null;
   addresses: WalletAddress[];
-  walletId: string | null;
   currentProviderType: "injected" | "embedded" | null;
   isPhantomAvailable: boolean;
   isClient: boolean;
@@ -43,7 +42,6 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectError, setConnectError] = useState<Error | null>(null);
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
-  const [walletId, setWalletId] = useState<string | null>(null);
   const [currentProviderType, setCurrentProviderType] = useState<"injected" | "embedded" | null>(
     (memoizedConfig.providerType as any) || null,
   );
@@ -85,7 +83,6 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
 
         const addrs = await sdk.getAddresses();
         setAddresses(addrs);
-        setWalletId(sdk.getWalletId());
       } catch (err) {
         console.error("Error connecting:", err);
 
@@ -109,7 +106,6 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       setIsConnecting(false);
       setConnectError(null);
       setAddresses([]);
-      setWalletId(null);
     };
 
     // Add event listeners to SDK
@@ -168,12 +164,11 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       isConnecting,
       connectError,
       addresses,
-      walletId,
       currentProviderType,
       isPhantomAvailable,
       isClient,
     }),
-    [sdk, isConnected, isConnecting, connectError, addresses, walletId, currentProviderType, isPhantomAvailable, isClient],
+    [sdk, isConnected, isConnecting, connectError, addresses,  currentProviderType, isPhantomAvailable, isClient],
   );
 
   return <PhantomContext.Provider value={value}>{children}</PhantomContext.Provider>;

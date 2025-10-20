@@ -8,4 +8,16 @@ export default defineConfig({
     port: 5176,
     open: true,
   },
+  define: {
+    global: "globalThis",
+    Buffer: "Buffer",
+  },
+  optimizeDeps: {
+    include: ["buffer"],
+  },
+  resolve: {
+    alias: {
+      buffer: "buffer",
+    },
+  },
 });

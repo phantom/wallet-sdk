@@ -19,18 +19,41 @@ interface PhantomExtended {
   ethereum: Ethereum;
   autoConfirm: AutoConfirmPlugin;
 }
-import { debug, DebugCategory } from "../../debug";
-import { InjectedSolanaChain, InjectedEthereumChain, type ChainCallbacks } from "./chains";
-import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
+
+
+/**
+ * Phantom extension app.login API types
+ */
+interface PhantomAppLoginOptions {
+  publicKey: string;
+  appId: string;
+  sessionId: string;
+}
+
+interface PhantomAppLoginResult {
+  walletId: string;
+  organizationId: string;
+  accountDerivationIndex?: number;
+  expiresInMs?: number;
+}
+
+interface PhantomApp {
+  login(options: PhantomAppLoginOptions): Promise<PhantomAppLoginResult>;
+}
 
 declare global {
   interface Window {
     phantom?: {
       solana?: unknown;
       ethereum?: unknown;
-    };
+      app?: PhantomApp;
+    } | undefined;
   }
 }
+
+import { debug, DebugCategory } from "../../debug";
+import { InjectedSolanaChain, InjectedEthereumChain, type ChainCallbacks } from "./chains";
+import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
 
 export interface InjectedProviderConfig {
   addressTypes: AddressType[];
@@ -204,7 +227,6 @@ export class InjectedProvider implements Provider {
       const result = {
         addresses: this.addresses,
         status: "completed" as const,
-        // walletId is not applicable for injected providers
       };
 
       // Emit connect event for successful connection

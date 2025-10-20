@@ -8,34 +8,45 @@ import {
   usePhantom,
   useAutoConfirm,
   NetworkId,
-  type ProviderType,
 } from "@phantom/react-sdk";
-import { SystemProgram, PublicKey, Connection, VersionedTransaction, TransactionMessage } from "@solana/web3.js";
+import {
+  SystemProgram,
+  PublicKey,
+  Connection,
+  VersionedTransaction,
+  TransactionMessage,
+  TransactionInstruction,
+  StakeProgram,
+  Keypair,
+  LAMPORTS_PER_SOL,
+  ComputeBudgetProgram,
+} from "@solana/web3.js";
+import { TOKEN_PROGRAM_ID, createTransferInstruction, getAssociatedTokenAddress, getAccount } from "@solana/spl-token";
 import { parseEther, parseGwei, numberToHex } from "viem";
 import { useState } from "react";
 import { Buffer } from "buffer";
 import bs58 from "bs58";
 import { useBalance } from "./hooks/useBalance";
 
-interface SDKActionsProps {
-  providerType: ProviderType;
-  onDestroySDK?: () => void;
-}
-
-export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
+export function SDKActions() {
   const { connect, isConnecting, error: connectError } = useConnect();
   const { disconnect, isDisconnecting } = useDisconnect();
   const { solana } = useSolana();
   const { ethereum } = useEthereum();
-  const { isConnected, currentProviderType } = usePhantom();
+  const { isConnected, currentProviderType, sdk } = usePhantom();
   const autoConfirm = useAutoConfirm();
   const addresses = useAccounts();
   const [isSigningMessageType, setIsSigningMessageType] = useState<"solana" | "evm" | null>(null);
   const [isSigningTypedData, setIsSigningTypedData] = useState(false);
   const [isSigningOnlyTransaction, setIsSigningOnlyTransaction] = useState<"solana" | "ethereum" | null>(null);
+  const [isSigningDeniedProgramTx, setIsSigningDeniedProgramTx] = useState(false);
   const [isSigningAndSendingTransaction, setIsSigningAndSendingTransaction] = useState(false);
   const [isSendingEthTransaction, setIsSendingEthTransaction] = useState(false);
   const [isSigningAllTransactions, setIsSigningAllTransactions] = useState(false);
+  const [isSendingTokens, setIsSendingTokens] = useState(false);
+  const [isStakingSol, setIsStakingSol] = useState(false);
+  const [isSendingCustomSol, setIsSendingCustomSol] = useState(false);
+  const [customSolAmount, setCustomSolAmount] = useState("");
 
   const solanaAddress = addresses?.find(addr => addr.addressType === "Solana")?.address || null;
   const ethereumAddress = addresses?.find(addr => addr.addressType === "Ethereum")?.address || null;
@@ -57,12 +68,90 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
   } = useBalance(ethereumAddress);
   const hasEthereumBalance = ethereumBalance !== null && ethereumBalance > 0;
 
-  const onConnect = async () => {
+  const onConnectInjected = async () => {
     try {
+      // Switch to injected provider before connecting
+      if (sdk) {
+        await sdk.switchProvider("injected");
+      }
       await connect();
-      // Connection state will be updated in the provider
     } catch (error) {
-      console.error("Error connecting to Phantom:", error);
+      console.error("Error connecting to injected provider:", error);
+      alert(`Error connecting: ${(error as Error).message || error}`);
+    }
+  };
+
+  const onConnectWithGoogle = async () => {
+    try {
+      // Switch to embedded provider if needed
+      if (sdk) {
+        await sdk.switchProvider("embedded");
+      }
+      // Connect with Google auth provider
+      await connect({
+        provider: "google",
+      });
+    } catch (error) {
+      console.error("Error connecting with Google:", error);
+      alert(`Error connecting: ${(error as Error).message || error}`);
+    }
+  };
+
+  // Attempt to sign a Solana transaction with a program ID that is NOT in the allowlist
+  const onSignDeniedProgramTransaction = async () => {
+    if (!isConnected || !solanaAddress) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+    try {
+      setIsSigningDeniedProgramTx(true);
+      const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL_MAINNET || "https://api.mainnet-beta.solana.com";
+      const connection = new Connection(rpcUrl);
+      const { blockhash } = await connection.getLatestBlockhash();
+
+      // Generate a random program id to ensure it's outside the allowlist
+      const disallowedProgramId = Keypair.generate().publicKey;
+
+      const disallowedIx = new TransactionInstruction({
+        programId: disallowedProgramId,
+        keys: [],
+        data: Buffer.alloc(0),
+      });
+
+      const messageV0 = new TransactionMessage({
+        payerKey: new PublicKey(solanaAddress),
+        recentBlockhash: blockhash,
+        instructions: [disallowedIx],
+      }).compileToV0Message();
+
+      const transaction = new VersionedTransaction(messageV0);
+
+      const result = await solana.signAndSendTransaction(transaction);
+      if (!result) {
+        alert("Solana chain not available");
+        return;
+      }
+      alert("Transaction sent (unexpected). If using KMS policy, this should be denied.");
+    } catch (error) {
+      console.error("Expected denial when signing with disallowed program:", error);
+      alert(`Denied as expected: ${(error as Error).message || error}`);
+    } finally {
+      setIsSigningDeniedProgramTx(false);
+    }
+  };
+
+  const onConnectWithPhantom = async () => {
+    try {
+      // Switch to embedded provider if needed
+      if (sdk) {
+        await sdk.switchProvider("embedded");
+      }
+      // Connect with Phantom auth provider (uses extension)
+      await connect({
+        provider: "phantom",
+      });
+    } catch (error) {
+      console.error("Error connecting with Phantom:", error);
       alert(`Error connecting: ${(error as Error).message || error}`);
     }
   };
@@ -381,6 +470,264 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
     }
   };
 
+  const onSendTokens = async () => {
+    if (!isConnected || !solanaAddress) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+    try {
+      setIsSendingTokens(true);
+
+      // Create connection to get recent blockhash
+      const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL_MAINNET || "https://api.mainnet-beta.solana.com";
+      const connection = new Connection(rpcUrl);
+
+      // Get recent blockhash
+      const { blockhash } = await connection.getLatestBlockhash();
+
+      // Target address
+      const targetAddress = new PublicKey("8dvUxPRHyHGw9W68yP73GkXCjBCjRJuLrANj9n1SXRGb");
+
+      // USDC mint address (mainnet)
+      const usdcMint = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+
+      const instructions = [];
+
+      // 1. SOL transfer (0.0001 SOL = 100,000 lamports)
+      const solTransferInstruction = SystemProgram.transfer({
+        fromPubkey: new PublicKey(solanaAddress),
+        toPubkey: targetAddress,
+        lamports: 100000, // 0.0001 SOL
+      });
+      instructions.push(solTransferInstruction);
+
+      // 2. USDC transfer (0.0001 USDC = 100 micro-USDC, since USDC has 6 decimals)
+      try {
+        // Get the sender's USDC token account
+        const senderTokenAccount = await getAssociatedTokenAddress(usdcMint, new PublicKey(solanaAddress));
+
+        // Get the receiver's USDC token account
+        const receiverTokenAccount = await getAssociatedTokenAddress(usdcMint, targetAddress);
+
+        // Check if sender has USDC token account
+        try {
+          await getAccount(connection, senderTokenAccount);
+        } catch (error) {
+          alert("You don't have a USDC token account. Please acquire some USDC first.");
+          return;
+        }
+
+        // Create USDC transfer instruction
+        const usdcTransferInstruction = createTransferInstruction(
+          senderTokenAccount,
+          receiverTokenAccount,
+          new PublicKey(solanaAddress),
+          100, // 0.0001 USDC (6 decimals)
+          [], // multiSigners array
+          TOKEN_PROGRAM_ID,
+        );
+        instructions.push(usdcTransferInstruction);
+      } catch (error) {
+        // USDC transfer setup failed - proceeding with SOL transfer only
+        alert("Failed to setup USDC transfer. Proceeding with SOL transfer only.");
+      }
+
+      // Create transaction message
+      const messageV0 = new TransactionMessage({
+        payerKey: new PublicKey(solanaAddress),
+        recentBlockhash: blockhash,
+        instructions: instructions,
+      }).compileToV0Message();
+
+      const transaction = new VersionedTransaction(messageV0);
+
+      // Sign and send transaction
+      const result = await solana.signAndSendTransaction(transaction);
+      if (!result) {
+        alert("Solana chain not available");
+        return;
+      }
+
+      alert(`Tokens sent! Transaction signature: ${result.signature}`);
+
+      // Refresh balance after successful transaction
+      refetchSolanaBalance();
+    } catch (error) {
+      console.error("Error sending tokens:", error);
+      alert(`Error sending tokens: ${(error as Error).message || error}`);
+    } finally {
+      setIsSendingTokens(false);
+    }
+  };
+
+  const onStakeSol = async () => {
+    if (!isConnected || !solanaAddress) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+    try {
+      setIsStakingSol(true);
+
+      // Create connection to get recent blockhash
+      const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL_MAINNET || "https://api.mainnet-beta.solana.com";
+      const connection = new Connection(rpcUrl);
+
+      // Get recent blockhash
+      const { blockhash } = await connection.getLatestBlockhash();
+
+      // Amount to stake: 0.0025 SOL = 2,500,000 lamports
+      const stakeAmount = 0.0025 * LAMPORTS_PER_SOL;
+
+      // Generate a new stake account keypair
+      const stakeAccountKeypair = Keypair.generate();
+
+      // Use a well-known validator VOTE account (not identity account!)
+      // Using Everstake's vote account which is active and reliable on mainnet
+      const validatorVoteAccount = new PublicKey("26pV97Ce83ZQ6Kz9XT4td8tdoUFPTng8Fb8gPyc53dJx");
+
+      // Get minimum balance for rent exemption
+      const rentExemption = await connection.getMinimumBalanceForRentExemption(200); // Stake account size
+
+      const instructions = [];
+
+      // Add compute budget instructions (optional but helps with priority)
+      instructions.push(
+        ComputeBudgetProgram.setComputeUnitLimit({
+          units: 600000,
+        }),
+      );
+      instructions.push(
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 1,
+        }),
+      );
+
+      // Create stake account instruction
+      const userPublicKey = new PublicKey(solanaAddress);
+
+      const createStakeAccountInstruction = SystemProgram.createAccount({
+        fromPubkey: userPublicKey,
+        newAccountPubkey: stakeAccountKeypair.publicKey,
+        lamports: stakeAmount + rentExemption,
+        space: 200, // Standard stake account size
+        programId: StakeProgram.programId,
+      });
+      instructions.push(createStakeAccountInstruction);
+
+      // Initialize stake account instruction
+      const initializeStakeInstruction = StakeProgram.initialize({
+        stakePubkey: stakeAccountKeypair.publicKey,
+        authorized: {
+          staker: userPublicKey,
+          withdrawer: userPublicKey,
+        },
+      });
+      instructions.push(initializeStakeInstruction);
+
+      // Delegate stake instruction
+      const delegateStakeTransaction = StakeProgram.delegate({
+        stakePubkey: stakeAccountKeypair.publicKey,
+        authorizedPubkey: userPublicKey,
+        votePubkey: validatorVoteAccount,
+      });
+      // Extract the instructions from the delegate transaction
+      instructions.push(...delegateStakeTransaction.instructions);
+
+      // Create transaction message
+      const messageV0 = new TransactionMessage({
+        payerKey: userPublicKey,
+        recentBlockhash: blockhash,
+        instructions: instructions,
+      }).compileToV0Message();
+
+      const transaction = new VersionedTransaction(messageV0);
+
+      // Pre-sign the transaction with the stake account keypair
+      transaction.sign([stakeAccountKeypair]);
+
+      // Sign and send transaction (Phantom will add user's signature)
+      const result = await solana.signAndSendTransaction(transaction);
+      if (!result) {
+        alert("Transaction was rejected or Solana chain not available");
+        return;
+      }
+
+      alert(`SOL staked successfully! Transaction signature: ${result.signature}`);
+
+      // Refresh balance after successful transaction
+      refetchSolanaBalance();
+    } catch (error) {
+      console.error("Error staking SOL:", error);
+      alert(`Error staking SOL: ${(error as Error).message || error}`);
+    } finally {
+      setIsStakingSol(false);
+    }
+  };
+
+  const onSendCustomSol = async () => {
+    if (!isConnected || !solanaAddress) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+
+    // Validate input
+    const amount = parseFloat(customSolAmount);
+    if (isNaN(amount) || amount <= 0) {
+      alert("Please enter a valid SOL amount greater than 0.");
+      return;
+    }
+
+    try {
+      setIsSendingCustomSol(true);
+
+      // Create connection to get recent blockhash
+      const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL_MAINNET || "https://api.mainnet-beta.solana.com";
+      const connection = new Connection(rpcUrl);
+
+      // Get recent blockhash
+      const { blockhash } = await connection.getLatestBlockhash();
+
+      // Convert SOL to lamports
+      const lamports = Math.floor(amount * LAMPORTS_PER_SOL);
+
+      // Target address
+      const targetAddress = new PublicKey("8dvUxPRHyHGw9W68yP73GkXCjBCjRJuLrANj9n1SXRGb");
+
+      // Create transfer instruction
+      const transferInstruction = SystemProgram.transfer({
+        fromPubkey: new PublicKey(solanaAddress),
+        toPubkey: targetAddress,
+        lamports: lamports,
+      });
+
+      // Create transaction message
+      const messageV0 = new TransactionMessage({
+        payerKey: new PublicKey(solanaAddress),
+        recentBlockhash: blockhash,
+        instructions: [transferInstruction],
+      }).compileToV0Message();
+
+      const transaction = new VersionedTransaction(messageV0);
+
+      // Sign and send transaction
+      const result = await solana.signAndSendTransaction(transaction);
+      if (!result) {
+        alert("Solana chain not available");
+        return;
+      }
+
+      alert(`Sent ${amount} SOL! Transaction signature: ${result.signature}`);
+
+      // Refresh balance after successful transaction
+      refetchSolanaBalance();
+    } catch (error) {
+      console.error("Error sending custom SOL:", error);
+      alert(`Error sending SOL: ${(error as Error).message || error}`);
+    } finally {
+      setIsSendingCustomSol(false);
+    }
+  };
+
   // Auto-confirm handlers
   const onEnableAutoConfirm = async () => {
     try {
@@ -406,21 +753,6 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
 
   return (
     <>
-      {onDestroySDK && (
-        <div className="section">
-          <h3>SDK Instance</h3>
-          <div className="status-card">
-            <div className="status-row">
-              <span className="status-label">Status:</span>
-              <span className="status-value connected">Instantiated</span>
-            </div>
-          </div>
-          <div className="button-group">
-            <button onClick={onDestroySDK}>Destroy SDK Instance</button>
-          </div>
-        </div>
-      )}
-
       <div className="section">
         <h3>Connection Status</h3>
         <div className="status-card">
@@ -437,8 +769,8 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
             </div>
           )}
           {addresses &&
-            addresses.map(address => (
-              <div className="status-row">
+            addresses.map((address, index) => (
+              <div key={index} className="status-row">
                 <span className="status-label">{address.addressType}:</span>
                 <span className="status-value address">{address.address}</span>
               </div>
@@ -451,6 +783,24 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
           )}
         </div>
       </div>
+
+      {!isConnected && (
+        <div className="section">
+          <h3>Connection Options</h3>
+          <div className="button-group">
+            <button className="primary" onClick={onConnectWithPhantom} disabled={isConnecting}>
+              {isConnecting ? "Connecting..." : "Login with Phantom"}
+            </button>
+            <button className="primary" onClick={onConnectWithGoogle} disabled={isConnecting}>
+              {isConnecting ? "Connecting..." : "Connect with Google"}
+            </button>
+            <button className="primary" onClick={onConnectInjected} disabled={isConnecting}>
+              {isConnecting ? "Connecting..." : "Connect Injected"}
+            </button>
+          </div>
+          {connectError && <p className="error-text">Error: {connectError.message}</p>}
+        </div>
+      )}
 
       {isConnected && solanaAddress && (
         <div className="section">
@@ -500,7 +850,7 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
         </div>
       )}
 
-      {providerType === "injected" && (
+      {isConnected && currentProviderType === "injected" && (
         <div className="section">
           <h3>Auto-Confirm Settings</h3>
           <div className="status-card">
@@ -548,82 +898,114 @@ export function SDKActions({ providerType, onDestroySDK }: SDKActionsProps) {
         </div>
       )}
 
-      <div className="section">
-        <h3>Wallet Operations</h3>
-        <div className="button-group">
-          <button
-            className={`${!isConnected ? "primary" : ""}`}
-            onClick={onConnect}
-            disabled={isConnected || isConnecting}
-          >
-            {isConnecting ? "Connecting..." : "Connect"}
-          </button>
-          <button onClick={() => onSignMessage("solana")} disabled={!isConnected || isSigningMessageType === "solana"}>
-            {isSigningMessageType === "solana" ? "Signing..." : "Sign Message (Solana)"}
-          </button>
-          <button onClick={() => onSignMessage("evm")} disabled={!isConnected || isSigningMessageType === "evm"}>
-            {isSigningMessageType === "evm" ? "Signing..." : "Sign Message (EVM)"}
-          </button>
-          <button onClick={onSignTypedData} disabled={!isConnected || isSigningTypedData}>
-            {isSigningTypedData ? "Signing..." : "Sign Typed Data (EVM)"}
-          </button>
-          <button
-            onClick={() => onSignTransaction("solana")}
-            disabled={!isConnected || isSigningOnlyTransaction === "solana" || !hasSolanaBalance}
-          >
-            {isSigningOnlyTransaction === "solana"
-              ? "Signing..."
-              : !hasSolanaBalance
-                ? "Insufficient Balance"
-                : "Sign Transaction (Solana)"}
-          </button>
-          <button
-            onClick={() => onSignTransaction("ethereum")}
-            disabled={!isConnected || isSigningOnlyTransaction === "ethereum" || !hasEthereumBalance}
-          >
-            {isSigningOnlyTransaction === "ethereum"
-              ? "Signing..."
-              : !hasEthereumBalance
-                ? "Insufficient Balance"
-                : "Sign Transaction (Ethereum)"}
-          </button>
-          <button
-            onClick={onSignAndSendTransaction}
-            disabled={!isConnected || isSigningAndSendingTransaction || !hasSolanaBalance}
-          >
-            {isSigningAndSendingTransaction
-              ? "Signing & Sending..."
-              : !hasSolanaBalance
-                ? "Insufficient Balance"
-                : "Sign & Send Transaction (Solana)"}
-          </button>
-          <button
-            onClick={onSendEthTransaction}
-            disabled={!isConnected || isSendingEthTransaction || !hasEthereumBalance}
-          >
-            {isSendingEthTransaction
-              ? "Sending..."
-              : !hasEthereumBalance
-                ? "Insufficient Balance"
-                : "Sign & Send Transaction (Ethereum)"}
-          </button>
-          <button
-            onClick={onSignAllTransactions}
-            disabled={!isConnected || isSigningAllTransactions || !hasSolanaBalance}
-          >
-            {isSigningAllTransactions
-              ? "Signing All..."
-              : !hasSolanaBalance
-                ? "Insufficient Balance"
-                : "Sign All Transactions (Solana)"}
-          </button>
+      {isConnected && (
+        <div className="section">
+          <h3>Wallet Operations</h3>
+          <div className="button-group">
+            <button
+              onClick={() => onSignMessage("solana")}
+              disabled={!isConnected || isSigningMessageType === "solana"}
+            >
+              {isSigningMessageType === "solana" ? "Signing..." : "Sign Message (Solana)"}
+            </button>
+            <button onClick={() => onSignMessage("evm")} disabled={!isConnected || isSigningMessageType === "evm"}>
+              {isSigningMessageType === "evm" ? "Signing..." : "Sign Message (EVM)"}
+            </button>
+            <button onClick={onSignTypedData} disabled={!isConnected || isSigningTypedData}>
+              {isSigningTypedData ? "Signing..." : "Sign Typed Data (EVM)"}
+            </button>
+            <button
+              onClick={() => onSignTransaction("solana")}
+              disabled={!isConnected || isSigningOnlyTransaction === "solana" || !hasSolanaBalance}
+            >
+              {isSigningOnlyTransaction === "solana"
+                ? "Signing..."
+                : !hasSolanaBalance
+                  ? "Insufficient Balance"
+                  : "Sign Transaction (Solana)"}
+            </button>
+            <button
+              onClick={onSignDeniedProgramTransaction}
+              disabled={!isConnected || isSigningDeniedProgramTx || !solanaAddress}
+            >
+              {isSigningDeniedProgramTx ? "Signing & Sending..." : "Try Sign & Send Tx (Disallowed Program)"}
+            </button>
+            <button
+              onClick={() => onSignTransaction("ethereum")}
+              disabled={!isConnected || isSigningOnlyTransaction === "ethereum" || !hasEthereumBalance}
+            >
+              {isSigningOnlyTransaction === "ethereum"
+                ? "Signing..."
+                : !hasEthereumBalance
+                  ? "Insufficient Balance"
+                  : "Sign Transaction (Ethereum)"}
+            </button>
+            <button
+              onClick={onSignAndSendTransaction}
+              disabled={!isConnected || isSigningAndSendingTransaction || !hasSolanaBalance}
+            >
+              {isSigningAndSendingTransaction
+                ? "Signing & Sending..."
+                : !hasSolanaBalance
+                  ? "Insufficient Balance"
+                  : "Sign & Send Transaction (Solana)"}
+            </button>
+            <button
+              onClick={onSendEthTransaction}
+              disabled={!isConnected || isSendingEthTransaction || !hasEthereumBalance}
+            >
+              {isSendingEthTransaction
+                ? "Sending..."
+                : !hasEthereumBalance
+                  ? "Insufficient Balance"
+                  : "Sign & Send Transaction (Ethereum)"}
+            </button>
+            <button
+              onClick={onSignAllTransactions}
+              disabled={!isConnected || isSigningAllTransactions || !hasSolanaBalance}
+            >
+              {isSigningAllTransactions
+                ? "Signing All..."
+                : !hasSolanaBalance
+                  ? "Insufficient Balance"
+                  : "Sign All Transactions (Solana)"}
+            </button>
+            <button onClick={onSendTokens} disabled={!isConnected || isSendingTokens || !hasSolanaBalance}>
+              {isSendingTokens
+                ? "Sending Tokens..."
+                : !hasSolanaBalance
+                  ? "Insufficient Balance"
+                  : "Send 0.0001 SOL + 0.0001 USDC"}
+            </button>
+            <button onClick={onStakeSol} disabled={!isConnected || isStakingSol || !hasSolanaBalance}>
+              {isStakingSol ? "Staking SOL..." : !hasSolanaBalance ? "Insufficient Balance" : "Stake 0.0025 SOL"}
+            </button>
 
-          <button onClick={onDisconnect} disabled={!isConnected || isDisconnecting}>
-            {isDisconnecting ? "Disconnecting..." : "Disconnect"}
-          </button>
+            <div className="custom-sol-section">
+              <div className="input-group">
+                <input
+                  type="text"
+                  placeholder="Enter SOL amount"
+                  value={customSolAmount}
+                  onChange={e => setCustomSolAmount(e.target.value)}
+                  className="sol-input"
+                />
+                <button
+                  onClick={onSendCustomSol}
+                  disabled={!isConnected || isSendingCustomSol || !hasSolanaBalance || !customSolAmount}
+                  className="send-custom-sol-btn"
+                >
+                  {isSendingCustomSol ? "Sending..." : !hasSolanaBalance ? "Insufficient Balance" : "Send Custom SOL"}
+                </button>
+              </div>
+            </div>
+
+            <button onClick={onDisconnect} disabled={!isConnected || isDisconnecting}>
+              {isDisconnecting ? "Disconnecting..." : "Disconnect"}
+            </button>
+          </div>
         </div>
-        {connectError && <p className="error-text">Error: {connectError.message}</p>}
-      </div>
+      )}
     </>
   );
 }

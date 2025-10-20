@@ -4,6 +4,7 @@ import type { EmbeddedStorage, Session } from "@phantom/embedded-provider-core";
 export class ExpoSecureStorage implements EmbeddedStorage {
   private readonly sessionKey = "phantom_session";
   private readonly requireAuth = false; // Set to false to NOT require biometric/authentication for access
+  private readonly logoutFlagKey = "phantom_should_clear_previous_session";
 
   constructor() {}
 
@@ -43,5 +44,49 @@ export class ExpoSecureStorage implements EmbeddedStorage {
       console.error("[ExpoSecureStorage] Failed to clear session", { error: (error as Error).message });
       // Don't throw here, clearing should be resilient
     }
+  }
+
+  async getShouldClearPreviousSession(): Promise<boolean> {
+    try {
+      const flagData = await SecureStore.getItemAsync(this.logoutFlagKey, {
+        requireAuthentication: false, // Don't require auth for this flag
+      });
+
+      if (!flagData) {
+        return false;
+      }
+
+      return flagData === "true";
+    } catch (error) {
+      console.error("[ExpoSecureStorage] Failed to get shouldClearPreviousSession flag", {
+        error: (error as Error).message,
+      });
+      return false;
+    }
+  }
+
+  async setShouldClearPreviousSession(should: boolean): Promise<void> {
+    try {
+      await SecureStore.setItemAsync(this.logoutFlagKey, should.toString(), {
+        requireAuthentication: false, // Don't require auth for this flag
+        keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+      });
+    } catch (error) {
+      console.error("[ExpoSecureStorage] Failed to set shouldClearPreviousSession flag", {
+        error: (error as Error).message,
+      });
+      // Don't throw here, setting the flag should be resilient
+    }
+  }
+
+  async isAvailable(): Promise<boolean> {
+    return await SecureStore.isAvailableAsync();
+  }
+
+  // Method to update authentication requirement
+  setRequireAuth(_requireAuth: boolean): void {
+    // Note: this.requireAuth is readonly, so we can't actually change it
+    // This would require recreating the storage instance
+    console.warn("[ExpoSecureStorage] Cannot change requireAuth after initialization");
   }
 }

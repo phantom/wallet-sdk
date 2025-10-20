@@ -473,11 +473,3 @@ interface PhantomDebugConfig {
 }
 ```
 
-## Support
-
-- **Documentation**: [phantom.app/docs](https://phantom.app/docs)
-- **GitHub Issues**: [github.com/phantom/wallet-sdk/issues](https://github.com/phantom/wallet-sdk/issues)
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file for details.

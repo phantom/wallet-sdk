@@ -138,10 +138,10 @@ function App() {
   // Connect handler
   const handleConnect = async () => {
     if (!sdk) return
-    
+
     setIsLoading(true)
     setError(null)
-    
+
     try {
       const result = await sdk.connect()
       setAddresses(result.addresses)
@@ -151,6 +151,48 @@ function App() {
     } catch (error) {
       console.error("Error connecting:", error)
       setError((error as Error).message || 'Connection failed')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Connect with Phantom handler
+  const handleConnectWithPhantom = async () => {
+    if (!sdk) return
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const result = await sdk.connect({ provider: "phantom" })
+      setAddresses(result.addresses)
+      setIsConnected(true)
+      await updateBalance(result.addresses)
+      console.log("Connected successfully with Phantom:", result)
+    } catch (error) {
+      console.error("Error connecting with Phantom:", error)
+      setError((error as Error).message || 'Connection with Phantom failed')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Connect with Google handler
+  const handleConnectWithGoogle = async () => {
+    if (!sdk) return
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const result = await sdk.connect({ provider: "google" })
+      setAddresses(result.addresses)
+      setIsConnected(true)
+      await updateBalance(result.addresses)
+      console.log("Connected successfully with Google:", result)
+    } catch (error) {
+      console.error("Error connecting with Google:", error)
+      setError((error as Error).message || 'Connection with Google failed')
     } finally {
       setIsLoading(false)
     }
@@ -640,21 +682,53 @@ function App() {
           </select>
         </div>
         
-        <div className="provider-controls">
-          <button 
-            onClick={handleConnect} 
-            disabled={isConnected || isLoading}
-            className="primary"
-          >
-            {isLoading ? 'Connecting...' : 'Connect'}
-          </button>
-          <button onClick={handleGetAddresses} disabled={!isConnected}>
-            Get Addresses
-          </button>
-          <button onClick={handleDisconnect} disabled={!isConnected}>
-            Disconnect
-          </button>
-        </div>
+        {!isConnected && providerType === "embedded" && (
+          <div className="provider-controls">
+            <button
+              onClick={handleConnectWithPhantom}
+              disabled={isLoading}
+              className="primary"
+            >
+              {isLoading ? 'Connecting...' : 'Login with Phantom'}
+            </button>
+            <button
+              onClick={handleConnectWithGoogle}
+              disabled={isLoading}
+              className="primary"
+            >
+              {isLoading ? 'Connecting...' : 'Connect with Google'}
+            </button>
+            <button
+              onClick={handleConnect}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Connecting...' : 'Connect (Default)'}
+            </button>
+          </div>
+        )}
+
+        {!isConnected && providerType === "injected" && (
+          <div className="provider-controls">
+            <button
+              onClick={handleConnect}
+              disabled={isLoading}
+              className="primary"
+            >
+              {isLoading ? 'Connecting...' : 'Connect'}
+            </button>
+          </div>
+        )}
+
+        {isConnected && (
+          <div className="provider-controls">
+            <button onClick={handleGetAddresses}>
+              Get Addresses
+            </button>
+            <button onClick={handleDisconnect}>
+              Disconnect
+            </button>
+          </div>
+        )}
 
         {/* Status Display */}
         <div className={`status ${isConnected ? 'connected' : (error ? 'error' : 'disconnected')}`}>
