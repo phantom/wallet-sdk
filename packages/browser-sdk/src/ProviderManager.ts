@@ -102,12 +102,43 @@ export class ProviderManager implements EventEmitter {
 
   /**
    * Connect using the current provider
+   * Automatically switches provider based on authOptions.provider if specified
    */
   async connect(authOptions?: AuthOptions): Promise<ConnectResult> {
     debug.info(DebugCategory.PROVIDER_MANAGER, "Starting connection", {
       currentProviderKey: this.currentProviderKey,
       authOptions: authOptions ? { provider: authOptions.provider, hasJwtToken: !!authOptions.jwtToken } : undefined,
     });
+
+    // Auto-switch provider based on auth options
+    if (authOptions?.provider) {
+      const requestedProvider = authOptions.provider;
+
+      // Determine target provider type
+      let targetProviderType: "injected" | "embedded" | null = null;
+
+      if (requestedProvider === "injected") {
+        targetProviderType = "injected";
+      } else if (["google", "apple", "jwt", "phantom"].includes(requestedProvider)) {
+        targetProviderType = "embedded";
+      }
+
+      // Switch provider if needed
+      if (targetProviderType) {
+        const currentInfo = this.getCurrentProviderInfo();
+        if (currentInfo?.type !== targetProviderType) {
+          debug.log(DebugCategory.PROVIDER_MANAGER, "Auto-switching provider based on auth options", {
+            from: currentInfo?.type,
+            to: targetProviderType,
+            requestedProvider,
+          });
+
+          this.switchProvider(targetProviderType, {
+            embeddedWalletType: currentInfo?.embeddedWalletType || (this.config.embeddedWalletType as "app-wallet" | "user-wallet" | undefined),
+          });
+        }
+      }
+    }
 
     if (!this.currentProvider) {
       debug.error(DebugCategory.PROVIDER_MANAGER, "No provider selected");
@@ -434,23 +465,4 @@ export class ProviderManager implements EventEmitter {
     }
   }
 
-  /**
-   * Restore provider preference from localStorage
-   */
-
-  /*
-  private restoreProviderPreference(): void {
-    try {
-      const saved = localStorage.getItem("phantom-provider-preference");
-      if (saved) {
-        const preference: ProviderPreference = JSON.parse(saved);
-        this.switchProvider(preference.type, {
-          embeddedWalletType: preference.embeddedWalletType,
-        });
-      }
-    } catch (error) {
-      // Ignore localStorage errors - just use default provider
-      console.error("Failed to restore provider preference:", error);
-    }
-  }*/
 }
