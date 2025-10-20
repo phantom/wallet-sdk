@@ -165,6 +165,14 @@ export class ProviderManager implements EventEmitter {
   async autoConnect(): Promise<boolean> {
     debug.log(DebugCategory.PROVIDER_MANAGER, "Starting auto-connect with fallback strategy");
 
+    // Check if we're in a callback URL with a failure response
+    // If so, don't attempt fallback to another provider
+    const isAuthFailureCallback = this.isAuthFailureCallback();
+    if (isAuthFailureCallback) {
+      debug.warn(DebugCategory.PROVIDER_MANAGER, "Auth failure detected in URL, skipping autoConnect fallback");
+      return false;
+    }
+
     // Try embedded provider first if it exists
     const embeddedWalletType = (this.config.embeddedWalletType || "user-wallet") as "app-wallet" | "user-wallet";
     const embeddedKey = this.getProviderKey("embedded", embeddedWalletType);
@@ -198,6 +206,12 @@ export class ProviderManager implements EventEmitter {
         debug.log(DebugCategory.PROVIDER_MANAGER, "Embedded auto-connect failed", {
           error: (error as Error).message,
         });
+
+        // If embedded auth failed and we're in a callback, don't try injected
+        if (this.isAuthCallbackUrl()) {
+          debug.log(DebugCategory.PROVIDER_MANAGER, "In auth callback URL, not attempting injected fallback");
+          return false;
+        }
       }
     }
 
@@ -231,6 +245,39 @@ export class ProviderManager implements EventEmitter {
 
     debug.log(DebugCategory.PROVIDER_MANAGER, "Auto-connect failed for all existing providers");
     return false;
+  }
+
+  /**
+   * Check if current URL is an auth callback with failure response
+   * Failure callbacks have session_id and response_type=failure
+   */
+  private isAuthFailureCallback(): boolean {
+    if (typeof window === 'undefined') return false;
+    const urlParams = new URLSearchParams(window.location.search);
+    const responseType = urlParams.get('response_type');
+    const sessionId = urlParams.get('session_id');
+    return responseType === 'failure' && !!sessionId;
+  }
+
+  /**
+   * Check if current URL appears to be an auth callback
+   * Success callbacks have session_id and wallet_id
+   * Failure callbacks have session_id and response_type=failure
+   */
+  private isAuthCallbackUrl(): boolean {
+    if (typeof window === 'undefined') return false;
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+
+    // It's a callback if we have session_id with either:
+    // - response_type parameter (success or failure)
+    // - wallet_id parameter (success)
+    return !!(
+      sessionId && (
+        urlParams.has('response_type') ||
+        urlParams.has('wallet_id')
+      )
+    );
   }
 
   /**

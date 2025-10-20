@@ -1,5 +1,5 @@
 import { base64urlEncode } from "@phantom/base64url";
-import { AddressType, PhantomClient } from "@phantom/client";
+import { AddressType, PhantomClient, KmsUserRole } from "@phantom/client";
 import type { NetworkId } from "@phantom/constants";
 import {
   parseMessage,
@@ -1322,7 +1322,7 @@ export class EmbeddedProvider {
           organizationId: session.organizationId,
           user: {
             username: newUsername,
-            role: "ADMIN" as any, // Use ADMIN role like original users
+            role: KmsUserRole.user,
             authenticators: [
               {
                 authenticatorName: `auth-${shortKeyId}`,
