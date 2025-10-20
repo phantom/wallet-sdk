@@ -119,6 +119,8 @@ describe("EmbeddedProvider Auth Flows", () => {
       getSession: jest.fn(),
       saveSession: jest.fn(),
       clearSession: jest.fn(),
+      getShouldClearPreviousSession: jest.fn().mockResolvedValue(false),
+      setShouldClearPreviousSession: jest.fn().mockResolvedValue(undefined),
     };
 
     // Mock auth provider
