@@ -14,7 +14,7 @@ jobs:
       - name: Linear Issue Check
         uses: phantom/linear-pr-check@f2a85fcbc7af8c2909f1869ccad4f8d66a5c98fa # 1.0.6 # 1.0.6
         with:
-          prefixes: "BEPLAT,CASH,CHAINS,DATA,DES,DEVRE,FEPLAT,IM,INF,LEG,ON,PD,PHA,QA,SEC,SOC,TRADE,TRA,WEB,DX,WP,COR,TPLAT,ADV,PERP,SDLC,AID,GROW"
+          prefixes: "BEPLAT,CASH,CHAINS,DATA,DES,DEVRE,FEPLAT,IDPLAT,IM,INF,LEG,ON,PD,PHA,QA,SEC,SOC,TRADE,TRA,WEB,DX,WP,COR,TPLAT,ADV,PERP,SDLC,AID,GROW"
           exceptionTitlePrefixes: "chore,docs,style"
 
   title-check:
