@@ -118,9 +118,9 @@ function PhantomUIProvider({ children, theme = "light", customTheme }: Omit<Phan
         providerType: "injected",
       }));
 
-      // Switch to injected provider and connect
-      await sdk.switchProvider("injected");
-      await baseConnect.connect();
+      await baseConnect.connect({
+        provider: "injected",
+      });
 
       // Hide modal on successful connection
       setConnectionState({
