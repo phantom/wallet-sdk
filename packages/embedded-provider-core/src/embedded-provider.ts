@@ -1161,6 +1161,8 @@ export class EmbeddedProvider {
       tempSession.organizationId = authResult.organizationId;
       tempSession.authProvider = authResult.provider || tempSession.authProvider;
       tempSession.accountDerivationIndex = authResult.accountDerivationIndex;
+      tempSession.username = authResult.username;
+      tempSession.authenticatorId = authResult.authenticatorId;
       tempSession.status = "completed";
       tempSession.lastUsed = Date.now();
 
@@ -1202,6 +1204,8 @@ export class EmbeddedProvider {
     session.authProvider = authResult.provider || session.authProvider;
     session.organizationId = authResult.organizationId;
     session.accountDerivationIndex = authResult.accountDerivationIndex;
+    session.username = authResult.username;
+    session.authenticatorId = authResult.authenticatorId;
     session.status = "completed";
     session.lastUsed = Date.now();
 
@@ -1292,14 +1296,29 @@ export class EmbeddedProvider {
 
   /*
    * We use this method to perform silent authenticator renewal.
-   * It generates a new keypair, adds a new user to the organization with the new keypair, and switches to it.
+   * It generates a new keypair and updates the existing authenticator with the new public key.
    */
   private async renewAuthenticator(session: Session): Promise<void> {
     if (!this.client) {
       throw new Error("Client not initialized");
     }
 
-    this.logger.info("EMBEDDED_PROVIDER", "Starting authenticator renewal using addUserToOrganization");
+    // Check if we have username and authenticatorId (required for renewal)
+    if (!session.username || !session.authenticatorId) {
+      this.logger.error("EMBEDDED_PROVIDER", "Cannot renew authenticator: missing username or authenticatorId", {
+        hasUsername: !!session.username,
+        hasAuthenticatorId: !!session.authenticatorId,
+      });
+      throw new Error(
+        "Cannot renew authenticator: session is missing username or authenticatorId. " +
+        "Please disconnect and reconnect to create a new session."
+      );
+    }
+
+    this.logger.info("EMBEDDED_PROVIDER", "Starting authenticator renewal using PhantomClient.renewAuthenticator", {
+      username: session.username,
+      authenticatorId: session.authenticatorId,
+    });
 
     try {
       // Step 1: Generate new keypair for rotation
@@ -1313,50 +1332,40 @@ export class EmbeddedProvider {
       const base64urlPublicKey = base64urlEncode(bs58.decode(newKeyInfo.publicKey));
       const expiresInMs = AUTHENTICATOR_EXPIRATION_TIME_MS;
 
-      // Step 3: Add new user to organization instead of creating new authenticator
+      // Step 3: Renew the authenticator using PhantomClient.renewAuthenticator
       const shortKeyId = newKeyInfo.keyId.substring(0, 8);
-      const newUsername = `user-${shortKeyId}`;
 
       try {
-        await this.client.addUserToOrganization({
-          organizationId: session.organizationId,
-          user: {
-            username: newUsername,
-            role: KmsUserRole.user,
-            authenticators: [
-              {
-                authenticatorName: `auth-${shortKeyId}`,
-                authenticatorKind: "keypair",
-                publicKey: base64urlPublicKey,
-                algorithm: "Ed25519",
-              } as any,
-            ],
-            traits: {
-              appId: this.config.appId,
-            },
+        await this.client.renewAuthenticator(
+          session.organizationId,
+          session.username,
+          session.authenticatorId,
+          {
+            authenticatorName: `auth-${shortKeyId}`,
+            publicKey: base64urlPublicKey,
+            algorithm: "Ed25519",
             expiresInMs,
-          },
-          replaceExpirable: true, // Replace oldest expirable user if at limit
-        });
+          }
+        );
       } catch (error) {
-        this.logger.error("EMBEDDED_PROVIDER", "Failed to add new user to organization", {
+        this.logger.error("EMBEDDED_PROVIDER", "Failed to renew authenticator", {
           error: error instanceof Error ? error.message : String(error),
+          username: session.username,
+          authenticatorId: session.authenticatorId,
         });
         // Rollback the rotation on server error
         await this.stamper.rollbackRotation();
         throw new Error(
-          `Failed to add new user to organization: ${error instanceof Error ? error.message : String(error)}`,
+          `Failed to renew authenticator: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
 
-      this.logger.info("EMBEDDED_PROVIDER", "Added new user to organization successfully", {
-        username: newUsername,
-      });
+      this.logger.info("EMBEDDED_PROVIDER", "Authenticator renewed successfully on server");
 
       // Step 4: Commit the rotation (switch stamper to use new keypair)
       await this.stamper.commitRotation(newKeyInfo.keyId);
 
-      // Step 5: Update session with new authenticator timing
+      // Step 5: Update session with new authenticator timing and key info
       const now = Date.now();
       session.stamperInfo = newKeyInfo;
       session.authenticatorCreatedAt = now;
@@ -1366,7 +1375,8 @@ export class EmbeddedProvider {
 
       this.logger.info("EMBEDDED_PROVIDER", "Authenticator renewal completed successfully", {
         newKeyId: newKeyInfo.keyId,
-        newUsername: newUsername,
+        username: session.username,
+        authenticatorId: session.authenticatorId,
         expiresAt: new Date(session.authenticatorExpiresAt).toISOString(),
       });
     } catch (error) {

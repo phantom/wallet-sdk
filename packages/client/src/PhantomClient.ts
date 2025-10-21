@@ -9,8 +9,11 @@ import {
   GrantOrganizationAccessMethodEnum,
   KMSRPCApi,
   KmsUserRole,
+  PartialKmsAuthenticator,
   SignRawPayloadMethodEnum,
   SignTransactionMethodEnum,
+  UpdateAuthenticator,
+  UpdateAuthenticatorMethodEnum,
   type DerivationInfoAddressFormatEnum as AddressType,
   type AddUserToOrganization,
   type AddUserToOrganizationRequest,
@@ -694,7 +697,6 @@ export class PhantomClient {
   /**
    * Add a new user to an organization
    */
-
   async addUserToOrganization(params: AddUserToOrganizationParams): Promise<void> {
     try {
       const request: AddUserToOrganization & { timestampMs: number } = {
@@ -704,6 +706,37 @@ export class PhantomClient {
       };
 
       await this.kmsApi.postKmsRpc(request);
+      // Return success - void method
+    } catch (error: any) {
+      console.error("Failed to add user to organization:", error.response?.data || error.message);
+      throw new Error(`Failed to add user to organization: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  /* 
+  * Renews an authenticator for the user in the organization
+  */
+  async renewAuthenticator(
+    organizationId: string,
+    username: string,
+    authenticatorId: string,
+    authenticator: PartialKmsAuthenticator
+  ): Promise<any> {
+    try {
+      const request: UpdateAuthenticator & { timestampMs: number } = {
+        method: UpdateAuthenticatorMethodEnum.updateAuthenticator,
+        params: {
+          organizationId,
+          username,
+          authenticatorId,
+          authenticator: authenticator as any,
+        },
+        timestampMs: await getSecureTimestamp(),
+      };
+
+      const response = await this.kmsApi.postKmsRpc(request);
+      console.log(JSON.stringify(response.data));
+      return response;
       // Return success - void method
     } catch (error: any) {
       console.error("Failed to add user to organization:", error.response?.data || error.message);

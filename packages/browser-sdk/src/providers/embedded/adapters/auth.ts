@@ -160,6 +160,8 @@ export class BrowserAuthProvider implements AuthProvider {
 
       const organizationId = this.urlParamsAccessor.getParam("organization_id");
       const expiresInMs = this.urlParamsAccessor.getParam("expires_in_ms");
+      const username = this.urlParamsAccessor.getParam("username");
+      const authenticatorId = this.urlParamsAccessor.getParam("authenticator_id");
 
       // Log what we're getting for debugging
       debug.log(DebugCategory.PHANTOM_CONNECT_AUTH, "Auth redirect parameters", {
@@ -168,11 +170,23 @@ export class BrowserAuthProvider implements AuthProvider {
         sessionId,
         accountDerivationIndex,
         expiresInMs,
+        username,
+        authenticatorId,
       });
 
       if (!organizationId) {
         debug.error(DebugCategory.PHANTOM_CONNECT_AUTH, "Missing organization_id in auth response");
         throw new Error("Missing organization_id in auth response");
+      }
+
+      if (!username) {
+        debug.error(DebugCategory.PHANTOM_CONNECT_AUTH, "Missing username in auth response");
+        throw new Error("Missing username in auth response");
+      }
+
+      if (!authenticatorId) {
+        debug.error(DebugCategory.PHANTOM_CONNECT_AUTH, "Missing authenticator_id in auth response");
+        throw new Error("Missing authenticator_id in auth response");
       }
 
       // Check if we got a temporary organization ID (which indicates server-side issue)
@@ -188,6 +202,8 @@ export class BrowserAuthProvider implements AuthProvider {
         organizationId,
         accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : 0,
         expiresInMs: expiresInMs ? parseInt(expiresInMs) : 0,
+        username,
+        authenticatorId,
       };
     } catch (error) {
       // Clean up session storage on any error
