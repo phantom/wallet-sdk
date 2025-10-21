@@ -677,12 +677,12 @@ export class EmbeddedProvider {
     }
   }
 
-  async disconnect(): Promise<void> {
+  async disconnect(shouldClearPreviousSession = true): Promise<void> {
     const wasConnected = this.client !== null;
 
     // Set flag to clear previous OAuth session on next login attempt
     // This ensures user will be prompted for fresh authentication
-    await this.storage.setShouldClearPreviousSession(true);
+    await this.storage.setShouldClearPreviousSession(shouldClearPreviousSession);
     this.logger.log("EMBEDDED_PROVIDER", "Set flag to clear previous session on next login");
 
     await this.storage.clearSession();
@@ -1161,8 +1161,6 @@ export class EmbeddedProvider {
       tempSession.organizationId = authResult.organizationId;
       tempSession.authProvider = authResult.provider || tempSession.authProvider;
       tempSession.accountDerivationIndex = authResult.accountDerivationIndex;
-      tempSession.username = authResult.username;
-      tempSession.authenticatorId = authResult.authenticatorId;
       tempSession.status = "completed";
       tempSession.lastUsed = Date.now();
 
@@ -1204,8 +1202,6 @@ export class EmbeddedProvider {
     session.authProvider = authResult.provider || session.authProvider;
     session.organizationId = authResult.organizationId;
     session.accountDerivationIndex = authResult.accountDerivationIndex;
-    session.username = authResult.username;
-    session.authenticatorId = authResult.authenticatorId;
     session.status = "completed";
     session.lastUsed = Date.now();
 
@@ -1255,7 +1251,7 @@ export class EmbeddedProvider {
     // Sessions without authenticator timing fields are invalid - clear them
     if (!session.authenticatorExpiresAt) {
       this.logger.warn("EMBEDDED_PROVIDER", "Session missing authenticator timing - treating as invalid session");
-      await this.disconnect();
+      await this.disconnect(false);
       throw new Error("Invalid session - missing authenticator timing");
     }
 
@@ -1269,8 +1265,14 @@ export class EmbeddedProvider {
     // Check if authenticator has expired
     if (timeUntilExpiry <= 0) {
       this.logger.error("EMBEDDED_PROVIDER", "Authenticator has expired, disconnecting");
-      await this.disconnect();
+      await this.disconnect(false);
       throw new Error("Authenticator expired");
+    }
+
+    const IS_RENEWAL_ENABLED = false; // Set to true to enable renewal
+    if (!IS_RENEWAL_ENABLED) {
+      this.logger.log("EMBEDDED_PROVIDER", "Authenticator renewal is disabled");
+      return;
     }
 
     // Check if authenticator needs renewal (within renewal window)
@@ -1303,23 +1305,6 @@ export class EmbeddedProvider {
       throw new Error("Client not initialized");
     }
 
-    // Check if we have username and authenticatorId (required for renewal)
-    if (!session.username || !session.authenticatorId) {
-      this.logger.error("EMBEDDED_PROVIDER", "Cannot renew authenticator: missing username or authenticatorId", {
-        hasUsername: !!session.username,
-        hasAuthenticatorId: !!session.authenticatorId,
-      });
-      throw new Error(
-        "Cannot renew authenticator: session is missing username or authenticatorId. " +
-        "Please disconnect and reconnect to create a new session."
-      );
-    }
-
-    this.logger.info("EMBEDDED_PROVIDER", "Starting authenticator renewal using PhantomClient.renewAuthenticator", {
-      username: session.username,
-      authenticatorId: session.authenticatorId,
-    });
-
     try {
       // Step 1: Generate new keypair for rotation
       const newKeyInfo = await this.stamper.rotateKeyPair();
@@ -1334,24 +1319,32 @@ export class EmbeddedProvider {
 
       // Step 3: Renew the authenticator using PhantomClient.renewAuthenticator
       const shortKeyId = newKeyInfo.keyId.substring(0, 8);
+      const newUsername = `user-${shortKeyId}`;
 
       try {
-        await this.client.renewAuthenticator(
-          session.organizationId,
-          session.username,
-          session.authenticatorId,
-          {
-            authenticatorName: `auth-${shortKeyId}`,
-            publicKey: base64urlPublicKey,
-            algorithm: "Ed25519",
+         await this.client.addUserToOrganization({
+          organizationId: session.organizationId,
+          user: {
+            username: newUsername,
+            role: KmsUserRole.user,
+            authenticators: [
+              {
+                authenticatorName: `auth-${shortKeyId}`,
+                authenticatorKind: "keypair",
+                publicKey: base64urlPublicKey,
+                algorithm: "Ed25519",
+              } as any,
+            ],
+            traits: {
+              appId: this.config.appId,
+            },
             expiresInMs,
-          }
-        );
+          },
+          replaceExpirable: true, // Replace oldest expirable user if at limit
+        })
       } catch (error) {
         this.logger.error("EMBEDDED_PROVIDER", "Failed to renew authenticator", {
           error: error instanceof Error ? error.message : String(error),
-          username: session.username,
-          authenticatorId: session.authenticatorId,
         });
         // Rollback the rotation on server error
         await this.stamper.rollbackRotation();
@@ -1375,8 +1368,6 @@ export class EmbeddedProvider {
 
       this.logger.info("EMBEDDED_PROVIDER", "Authenticator renewal completed successfully", {
         newKeyId: newKeyInfo.keyId,
-        username: session.username,
-        authenticatorId: session.authenticatorId,
         expiresAt: new Date(session.authenticatorExpiresAt).toISOString(),
       });
     } catch (error) {

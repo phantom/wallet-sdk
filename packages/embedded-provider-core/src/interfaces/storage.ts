@@ -25,9 +25,6 @@ export interface Session {
   authenticatorCreatedAt: number; // When the current authenticator was created
   authenticatorExpiresAt: number; // When the authenticator expires
   lastRenewalAttempt?: number; // Last time we attempted renewal
-  // Username and authenticatorId for authenticator renewal
-  username?: string; // Username associated with the authenticator (needed for renewal)
-  authenticatorId?: string; // Authenticator ID for renewal via PhantomClient.renewAuthenticator
   // Derivation index for account paths (defaults to 0 for backward compatibility)
   accountDerivationIndex?: number; // Account derivation index from auth flow
 }

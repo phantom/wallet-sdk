@@ -82,8 +82,6 @@ export class ExpoAuthProvider implements AuthProvider {
         const provider = url.searchParams.get("provider");
         const accountDerivationIndex = url.searchParams.get("selected_account_index");
         const expiresInMs = url.searchParams.get("expires_in_ms");
-        const username = url.searchParams.get("username");
-        const authenticatorId = url.searchParams.get("authenticator_id");
 
         if (!walletId) {
           throw new Error("Authentication failed: no walletId in redirect URL");
@@ -94,15 +92,6 @@ export class ExpoAuthProvider implements AuthProvider {
           throw new Error("Authentication failed: no organizationId in redirect URL");
         }
 
-        if (!username) {
-          console.error("[ExpoAuthProvider] Missing username in redirect URL", { url: result.url });
-          throw new Error("Authentication failed: no username in redirect URL");
-        }
-
-        if (!authenticatorId) {
-          console.error("[ExpoAuthProvider] Missing authenticatorId in redirect URL", { url: result.url });
-          throw new Error("Authentication failed: no authenticatorId in redirect URL");
-        }
 
         console.log("[ExpoAuthProvider] Auth redirect parameters", {
           walletId,
@@ -110,8 +99,6 @@ export class ExpoAuthProvider implements AuthProvider {
           provider,
           accountDerivationIndex,
           expiresInMs,
-          username,
-          authenticatorId,
         });
 
         return {
@@ -120,8 +107,6 @@ export class ExpoAuthProvider implements AuthProvider {
           provider: provider || undefined,
           accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : 0,
           expiresInMs: expiresInMs ? parseInt(expiresInMs) : 0,
-          username,
-          authenticatorId,
         };
       } else if (result.type === "cancel") {
         throw new Error("User cancelled authentication");

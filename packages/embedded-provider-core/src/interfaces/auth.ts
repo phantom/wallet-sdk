@@ -4,8 +4,6 @@ export interface AuthResult {
   provider?: string;
   accountDerivationIndex: number; // Account derivation index from auth response
   expiresInMs: number; // Authenticator expiration time from auth response (for user-wallets)
-  username: string; // Username associated with the authenticator
-  authenticatorId: string; // Authenticator ID for renewal
 }
 
 export interface PhantomConnectOptions {
