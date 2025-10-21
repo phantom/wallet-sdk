@@ -291,6 +291,7 @@ export class EmbeddedProvider {
         walletId: this.walletId!,
         addresses: this.addresses,
         status: "completed",
+        userId: session.phantomUserId,
       };
 
       // Emit connect event for existing session success
@@ -612,6 +613,7 @@ export class EmbeddedProvider {
         walletId: this.walletId!,
         addresses: this.addresses,
         status: "completed",
+        userId: session?.phantomUserId,
       };
 
       // Emit connect event for manual connect success
@@ -1161,6 +1163,7 @@ export class EmbeddedProvider {
       tempSession.organizationId = authResult.organizationId;
       tempSession.authProvider = authResult.provider || tempSession.authProvider;
       tempSession.accountDerivationIndex = authResult.accountDerivationIndex;
+      tempSession.phantomUserId = authResult.userId;
       tempSession.status = "completed";
       tempSession.lastUsed = Date.now();
 
@@ -1202,6 +1205,7 @@ export class EmbeddedProvider {
     session.authProvider = authResult.provider || session.authProvider;
     session.organizationId = authResult.organizationId;
     session.accountDerivationIndex = authResult.accountDerivationIndex;
+    session.phantomUserId = authResult.userId;
     session.status = "completed";
     session.lastUsed = Date.now();
 
@@ -1232,6 +1236,7 @@ export class EmbeddedProvider {
       walletId: this.walletId!,
       addresses: this.addresses,
       status: "completed",
+      userId: session.phantomUserId,
     };
   }
 

@@ -82,6 +82,7 @@ export class ExpoAuthProvider implements AuthProvider {
         const provider = url.searchParams.get("provider");
         const accountDerivationIndex = url.searchParams.get("selected_account_index");
         const expiresInMs = url.searchParams.get("expires_in_ms");
+        const authUserId = url.searchParams.get("auth_user_id");
 
         if (!walletId) {
           throw new Error("Authentication failed: no walletId in redirect URL");
@@ -98,6 +99,7 @@ export class ExpoAuthProvider implements AuthProvider {
           provider,
           accountDerivationIndex,
           expiresInMs,
+          authUserId,
         });
 
         return {
@@ -106,6 +108,7 @@ export class ExpoAuthProvider implements AuthProvider {
           provider: provider || undefined,
           accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : 0,
           expiresInMs: expiresInMs ? parseInt(expiresInMs) : 0,
+          userId: authUserId || undefined,
         };
       } else if (result.type === "cancel") {
         throw new Error("User cancelled authentication");

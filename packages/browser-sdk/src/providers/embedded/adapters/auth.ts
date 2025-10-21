@@ -160,6 +160,7 @@ export class BrowserAuthProvider implements AuthProvider {
 
       const organizationId = this.urlParamsAccessor.getParam("organization_id");
       const expiresInMs = this.urlParamsAccessor.getParam("expires_in_ms");
+      const authUserId = this.urlParamsAccessor.getParam("auth_user_id");
 
       // Log what we're getting for debugging
       debug.log(DebugCategory.PHANTOM_CONNECT_AUTH, "Auth redirect parameters", {
@@ -168,6 +169,7 @@ export class BrowserAuthProvider implements AuthProvider {
         sessionId,
         accountDerivationIndex,
         expiresInMs,
+        authUserId,
       });
 
       if (!organizationId) {
@@ -188,6 +190,7 @@ export class BrowserAuthProvider implements AuthProvider {
         organizationId,
         accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : 0,
         expiresInMs: expiresInMs ? parseInt(expiresInMs) : 0,
+        userId: authUserId || undefined,
       };
     } catch (error) {
       // Clean up session storage on any error
