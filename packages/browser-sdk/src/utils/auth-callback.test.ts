@@ -1,4 +1,3 @@
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { isAuthFailureCallback, isAuthCallbackUrl } from './auth-callback';
 
 describe('auth-callback utilities', () => {
