@@ -1163,7 +1163,7 @@ export class EmbeddedProvider {
       tempSession.organizationId = authResult.organizationId;
       tempSession.authProvider = authResult.provider || tempSession.authProvider;
       tempSession.accountDerivationIndex = authResult.accountDerivationIndex;
-      tempSession.authUserId = authResult.userId;
+      tempSession.authUserId = authResult.authUserId;
       tempSession.status = "completed";
       tempSession.lastUsed = Date.now();
 
@@ -1205,7 +1205,7 @@ export class EmbeddedProvider {
     session.authProvider = authResult.provider || session.authProvider;
     session.organizationId = authResult.organizationId;
     session.accountDerivationIndex = authResult.accountDerivationIndex;
-    session.authUserId = authResult.userId;
+    session.authUserId = authResult.authUserId;
     session.status = "completed";
     session.lastUsed = Date.now();
 
