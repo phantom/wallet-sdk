@@ -12,6 +12,7 @@ export interface ConnectResult {
   addresses: WalletAddress[];
   status?: "pending" | "completed"; // Session status - pending means redirect in progress, completed means wallet is ready
   providerType?: "embedded" | "injected"; // Type of provider used for connection
+  authUserId?: string; // Phantom user ID from auth flow (for embedded user-wallets)
 }
 
 export interface SignMessageParams {
