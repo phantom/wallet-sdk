@@ -291,6 +291,7 @@ export class EmbeddedProvider {
         walletId: this.walletId!,
         addresses: this.addresses,
         status: "completed",
+        providerType: "embedded",
       };
 
       // Emit connect event for existing session success
@@ -592,6 +593,7 @@ export class EmbeddedProvider {
         return {
           addresses: [],
           status: "pending",
+          providerType: "embedded",
         } as ConnectResult;
       }
 
@@ -612,6 +614,7 @@ export class EmbeddedProvider {
         walletId: this.walletId!,
         addresses: this.addresses,
         status: "completed",
+        providerType: "embedded",
       };
 
       // Emit connect event for manual connect success
@@ -1232,6 +1235,7 @@ export class EmbeddedProvider {
       walletId: this.walletId!,
       addresses: this.addresses,
       status: "completed",
+      providerType: "embedded",
     };
   }
 
