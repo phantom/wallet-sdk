@@ -1,5 +1,5 @@
 import { base64urlEncode } from "@phantom/base64url";
-import { AddressType, PhantomClient, KmsUserRole } from "@phantom/client";
+import { AddressType, PhantomClient } from "@phantom/client";
 import type { NetworkId } from "@phantom/constants";
 import {
   parseMessage,
@@ -11,7 +11,7 @@ import {
 } from "@phantom/parsers";
 import { randomUUID } from "@phantom/utils";
 import bs58 from "bs58";
-import { AUTHENTICATOR_EXPIRATION_TIME_MS, AUTHENTICATOR_RENEWAL_WINDOW_MS } from "./constants";
+import { AUTHENTICATOR_EXPIRATION_TIME_MS } from "./constants";
 
 import type { IEthereumChain, ISolanaChain } from "@phantom/chain-interfaces";
 import type { StamperWithKeyManagement } from "@phantom/sdk-types";
@@ -1274,112 +1274,7 @@ export class EmbeddedProvider {
       throw new Error("Authenticator expired");
     }
 
-    const IS_RENEWAL_ENABLED = false; // Set to true to enable renewal
-    if (!IS_RENEWAL_ENABLED) {
-      this.logger.log("EMBEDDED_PROVIDER", "Authenticator renewal is disabled");
-      return;
-    }
-
-    // Check if authenticator needs renewal (within renewal window)
-    const renewalWindow = AUTHENTICATOR_RENEWAL_WINDOW_MS;
-    if (timeUntilExpiry <= renewalWindow) {
-      this.logger.info("EMBEDDED_PROVIDER", "Authenticator needs renewal", {
-        expiresAt: new Date(session.authenticatorExpiresAt).toISOString(),
-        timeUntilExpiry,
-        renewalWindow,
-      });
-
-      try {
-        await this.renewAuthenticator(session);
-        this.logger.info("EMBEDDED_PROVIDER", "Authenticator renewed successfully");
-      } catch (error) {
-        this.logger.error("EMBEDDED_PROVIDER", "Failed to renew authenticator", {
-          error: error instanceof Error ? error.message : String(error),
-        });
-        // Don't throw - renewal failure shouldn't break existing functionality
-      }
-    }
-  }
-
-  /*
-   * We use this method to perform silent authenticator renewal.
-   * It generates a new keypair and updates the existing authenticator with the new public key.
-   */
-  private async renewAuthenticator(session: Session): Promise<void> {
-    if (!this.client) {
-      throw new Error("Client not initialized");
-    }
-
-    try {
-      // Step 1: Generate new keypair for rotation
-      const newKeyInfo = await this.stamper.rotateKeyPair();
-      this.logger.log("EMBEDDED_PROVIDER", "Generated new keypair for renewal", {
-        newKeyId: newKeyInfo.keyId,
-        newPublicKey: newKeyInfo.publicKey,
-      });
-
-      // Step 2: Convert public key to base64url format
-      const base64urlPublicKey = base64urlEncode(bs58.decode(newKeyInfo.publicKey));
-      const expiresInMs = AUTHENTICATOR_EXPIRATION_TIME_MS;
-
-      // Step 3: Renew the authenticator using PhantomClient.renewAuthenticator
-      const shortKeyId = newKeyInfo.keyId.substring(0, 8);
-      const newUsername = `user-${shortKeyId}`;
-
-      try {
-         await this.client.addUserToOrganization({
-          organizationId: session.organizationId,
-          user: {
-            username: newUsername,
-            role: KmsUserRole.user,
-            authenticators: [
-              {
-                authenticatorName: `auth-${shortKeyId}`,
-                authenticatorKind: "keypair",
-                publicKey: base64urlPublicKey,
-                algorithm: "Ed25519",
-              } as any,
-            ],
-            traits: {
-              appId: this.config.appId,
-            },
-            expiresInMs,
-          },
-          replaceExpirable: true, // Replace oldest expirable user if at limit
-        })
-      } catch (error) {
-        this.logger.error("EMBEDDED_PROVIDER", "Failed to renew authenticator", {
-          error: error instanceof Error ? error.message : String(error),
-        });
-        // Rollback the rotation on server error
-        await this.stamper.rollbackRotation();
-        throw new Error(
-          `Failed to renew authenticator: ${error instanceof Error ? error.message : String(error)}`,
-        );
-      }
-
-      this.logger.info("EMBEDDED_PROVIDER", "Authenticator renewed successfully on server");
-
-      // Step 4: Commit the rotation (switch stamper to use new keypair)
-      await this.stamper.commitRotation(newKeyInfo.keyId);
-
-      // Step 5: Update session with new authenticator timing and key info
-      const now = Date.now();
-      session.stamperInfo = newKeyInfo;
-      session.authenticatorCreatedAt = now;
-      session.authenticatorExpiresAt = now + expiresInMs;
-      session.lastRenewalAttempt = now;
-      await this.storage.saveSession(session);
-
-      this.logger.info("EMBEDDED_PROVIDER", "Authenticator renewal completed successfully", {
-        newKeyId: newKeyInfo.keyId,
-        expiresAt: new Date(session.authenticatorExpiresAt).toISOString(),
-      });
-    } catch (error) {
-      // Rollback rotation on any failure
-      await this.stamper.rollbackRotation();
-      throw error;
-    }
+    // TODO: Here we would renew the authenticator if needed. It was disabled at PR https://github.com/phantom/wallet-sdk/pull/283
   }
 
   /*
