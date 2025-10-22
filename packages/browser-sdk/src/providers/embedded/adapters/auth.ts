@@ -7,6 +7,7 @@ import type {
 } from "@phantom/embedded-provider-core";
 import { debug, DebugCategory } from "../../../debug";
 import { DEFAULT_AUTH_URL } from "@phantom/constants";
+import { detectBrowser } from "../../../utils/browser-detection";
 
 declare const __SDK_VERSION__: string;
 
@@ -53,6 +54,8 @@ export class BrowserAuthProvider implements AuthProvider {
         clear_previous_session: (phantomOptions.clearPreviousSession ?? false).toString(),
         allow_refresh: (phantomOptions.allowRefresh ?? true).toString(),
         sdk_version: __SDK_VERSION__,
+        sdk_type: "browser",
+        platform: detectBrowser().name,
       });
 
       // Add provider if specified (will skip provider selection)
@@ -160,7 +163,8 @@ export class BrowserAuthProvider implements AuthProvider {
 
       const organizationId = this.urlParamsAccessor.getParam("organization_id");
       const expiresInMs = this.urlParamsAccessor.getParam("expires_in_ms");
-      
+      const authUserId = this.urlParamsAccessor.getParam("auth_user_id");
+
       // Log what we're getting for debugging
       debug.log(DebugCategory.PHANTOM_CONNECT_AUTH, "Auth redirect parameters", {
         walletId,
@@ -168,6 +172,7 @@ export class BrowserAuthProvider implements AuthProvider {
         sessionId,
         accountDerivationIndex,
         expiresInMs,
+        authUserId,
       });
 
       if (!organizationId) {
@@ -188,6 +193,7 @@ export class BrowserAuthProvider implements AuthProvider {
         organizationId,
         accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : 0,
         expiresInMs: expiresInMs ? parseInt(expiresInMs) : 0,
+        authUserId: authUserId || undefined,
       };
     } catch (error) {
       // Clean up session storage on any error
