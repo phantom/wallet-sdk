@@ -17,5 +17,16 @@ export type {
   SignedTransaction,
 } from "./types";
 
+// Event types for typed event handlers
+export type {
+  EmbeddedProviderEvent,
+  ConnectEventData,
+  ConnectStartEventData,
+  ConnectErrorEventData,
+  DisconnectEventData,
+  EmbeddedProviderEventMap,
+  EventCallback,
+} from "@phantom/embedded-provider-core";
+
 export { AddressType } from "@phantom/client";
 export { NetworkId } from "@phantom/constants";

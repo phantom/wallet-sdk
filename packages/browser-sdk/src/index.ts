@@ -36,3 +36,14 @@ export type {
   AutoConfirmResult,
   AutoConfirmSupportedChainsResult,
 } from "@phantom/browser-injected-sdk/auto-confirm";
+
+// Re-export event types for typed event handlers
+export type {
+  EmbeddedProviderEvent,
+  ConnectEventData,
+  ConnectStartEventData,
+  ConnectErrorEventData,
+  DisconnectEventData,
+  EmbeddedProviderEventMap,
+  EventCallback,
+} from "@phantom/embedded-provider-core";

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import { BrowserSDK } from "@phantom/browser-sdk";
-import type { BrowserSDKConfig, WalletAddress, AuthOptions, DebugConfig } from "@phantom/browser-sdk";
+import type { BrowserSDKConfig, WalletAddress, AuthOptions, DebugConfig, ConnectEventData } from "@phantom/browser-sdk";
 
 export type PhantomSDKConfig = BrowserSDKConfig;
 
@@ -72,14 +72,13 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       setConnectError(null);
     };
 
-    const handleConnect = async () => {
+    const handleConnect = async (data: ConnectEventData) => {
       try {
         setIsConnected(true);
         setIsConnecting(false);
 
-        // Update current provider type
-        const providerInfo = sdk.getCurrentProviderInfo();
-        setCurrentProviderType(providerInfo?.type || null);
+        // Update current provider type from event data
+        setCurrentProviderType(data.providerType || null);
 
         const addrs = await sdk.getAddresses();
         setAddresses(addrs);
@@ -99,6 +98,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       setIsConnecting(false);
       setIsConnected(false);
       setConnectError(new Error(errorData.error || "Connection failed"));
+      setAddresses([]);
     };
 
     const handleDisconnect = () => {

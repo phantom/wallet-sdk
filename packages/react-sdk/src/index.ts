@@ -17,5 +17,16 @@ export type {
   AutoConfirmSupportedChainsResult,
 } from "@phantom/browser-sdk";
 
+// Re-export event types for typed event handlers
+export type {
+  EmbeddedProviderEvent,
+  ConnectEventData,
+  ConnectStartEventData,
+  ConnectErrorEventData,
+  DisconnectEventData,
+  EmbeddedProviderEventMap,
+  EventCallback,
+} from "@phantom/browser-sdk";
+
 // Re-export chain interfaces
 export type { ISolanaChain, IEthereumChain, EthTransactionRequest } from "@phantom/chain-interfaces";

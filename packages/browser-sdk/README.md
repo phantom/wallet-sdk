@@ -552,6 +552,106 @@ Attempt auto-connection using existing session. Should be called after setting u
 await sdk.autoConnect();
 ```
 
+### Event Handlers
+
+The SDK provides typed event handlers that allow you to listen for connection state changes. This is especially useful for `autoConnect()` flows where you need to track the connection result.
+
+#### Available Events
+
+```typescript
+import { BrowserSDK } from '@phantom/browser-sdk';
+import type {
+  ConnectEventData,
+  ConnectStartEventData,
+  ConnectErrorEventData,
+  DisconnectEventData
+} from '@phantom/browser-sdk';
+
+const sdk = new BrowserSDK({
+  providerType: 'embedded',
+  appId: 'your-app-id',
+  addressTypes: [AddressType.solana],
+});
+
+// 1. connect_start - Fired when connection starts
+sdk.on('connect_start', (data: ConnectStartEventData) => {
+  console.log('Connection starting:', data.source); // "auto-connect" | "manual-connect"
+  console.log('Auth options:', data.authOptions?.provider); // "google" | "apple" | etc.
+});
+
+// 2. connect - Fired when connection succeeds (includes full ConnectResult)
+sdk.on('connect', (data: ConnectEventData) => {
+  console.log('Connected successfully!');
+  console.log('Provider type:', data.providerType); // "embedded" | "injected"
+  console.log('Wallet ID:', data.walletId); // only for embedded providers
+  console.log('Addresses:', data.addresses); // WalletAddress[]
+  console.log('Status:', data.status); // "pending" | "completed"
+  console.log('Source:', data.source); // "auto-connect" | "manual-connect" | "manual-existing" | "existing-session" | "manual"
+});
+
+// 3. connect_error - Fired when connection fails
+sdk.on('connect_error', (data: ConnectErrorEventData) => {
+  console.error('Connection failed:', data.error);
+  console.log('Source:', data.source); // "auto-connect" | "manual-connect"
+});
+
+// 4. disconnect - Fired when disconnected
+sdk.on('disconnect', (data: DisconnectEventData) => {
+  console.log('Disconnected from wallet');
+  console.log('Source:', data.source); // "manual"
+});
+
+// 5. error - General error handler
+sdk.on('error', (error: any) => {
+  console.error('SDK error:', error);
+});
+
+// Don't forget to remove listeners when done
+sdk.off('connect', handleConnect);
+```
+
+#### Event Types
+
+| Event | Payload Type | When Fired | Key Data |
+|-------|-------------|------------|----------|
+| `connect_start` | `ConnectStartEventData` | Connection initiated | `source`, `authOptions` |
+| `connect` | `ConnectEventData` | Connection successful | `providerType`, `addresses`, `walletId`, `status` |
+| `connect_error` | `ConnectErrorEventData` | Connection failed | `error`, `source` |
+| `disconnect` | `DisconnectEventData` | Disconnected | `source` |
+| `error` | `any` | General SDK errors | Error details |
+
+#### Using Events with autoConnect()
+
+Event handlers are especially useful with `autoConnect()` since it doesn't return a value:
+
+```typescript
+const sdk = new BrowserSDK({
+  providerType: 'embedded',
+  appId: 'your-app-id',
+  addressTypes: [AddressType.solana],
+  autoConnect: true,
+});
+
+// Set up event listeners BEFORE autoConnect
+sdk.on('connect', (data: ConnectEventData) => {
+  console.log('Auto-connected successfully!');
+  console.log('Provider type:', data.providerType);
+  console.log('Addresses:', data.addresses);
+
+  // Update your UI state here
+  updateUIWithAddresses(data.addresses);
+});
+
+sdk.on('connect_error', (data: ConnectErrorEventData) => {
+  console.log('Auto-connect failed:', data.error);
+  // Show connect button to user
+  showConnectButton();
+});
+
+// Auto-connect will trigger events
+await sdk.autoConnect();
+```
+
 ### Auto-Confirm Methods (Injected Provider Only)
 
 The SDK provides auto-confirm functionality that allows automatic transaction confirmation for specified chains. This feature is only available when using the injected provider (Phantom browser extension).

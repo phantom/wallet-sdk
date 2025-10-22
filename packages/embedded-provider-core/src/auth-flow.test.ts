@@ -1085,6 +1085,8 @@ describe("EmbeddedProvider Auth Flows", () => {
       expect(connectSpy).toHaveBeenCalledWith({
         walletId: "wallet-123",
         addresses: [{ addressType: "solana", address: "test-address" }],
+        status: "completed",
+        providerType: "embedded",
         source: "existing-session",
       });
     });
