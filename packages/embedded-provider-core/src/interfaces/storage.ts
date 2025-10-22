@@ -18,7 +18,6 @@ export interface Session {
   stamperInfo: StamperInfo;
   keypair?: Keypair; // Keep for backward compatibility during migration
   authProvider?: string;
-  userInfo?: Record<string, any>;
   status: "pending" | "completed" | "failed";
   createdAt: number;
   lastUsed: number;
@@ -36,4 +35,8 @@ export interface EmbeddedStorage {
   getSession(): Promise<Session | null>;
   saveSession(session: Session): Promise<void>;
   clearSession(): Promise<void>;
+
+  // Logout flag management for OAuth session refresh control
+  getShouldClearPreviousSession(): Promise<boolean>;
+  setShouldClearPreviousSession(should: boolean): Promise<void>;
 }

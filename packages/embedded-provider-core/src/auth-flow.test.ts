@@ -48,7 +48,6 @@ function createCompletedSession(overrides: Partial<Session> = {}): Session {
     appId: "app-123",
     stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
     authProvider: "jwt",
-    userInfo: {},
     status: "completed",
     createdAt: now,
     lastUsed: now,
@@ -70,7 +69,6 @@ function createPendingSession(overrides: Partial<Session> = {}): Session {
     appId: "app-123",
     stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
     authProvider: "phantom-connect",
-    userInfo: {},
     status: "pending",
     createdAt: now,
     lastUsed: now,
@@ -121,6 +119,8 @@ describe("EmbeddedProvider Auth Flows", () => {
       getSession: jest.fn(),
       saveSession: jest.fn(),
       clearSession: jest.fn(),
+      getShouldClearPreviousSession: jest.fn().mockResolvedValue(false),
+      setShouldClearPreviousSession: jest.fn().mockResolvedValue(undefined),
     };
 
     // Mock auth provider
@@ -203,7 +203,6 @@ describe("EmbeddedProvider Auth Flows", () => {
         expect.objectContaining({
           status: "pending",
           authProvider: "phantom-connect",
-          userInfo: { provider: "google" },
         }),
       );
     });
@@ -231,7 +230,6 @@ describe("EmbeddedProvider Auth Flows", () => {
       const authResult: AuthResult = {
         walletId: "wallet-123",
         provider: "google",
-        userInfo: { email: "test@example.com" },
         accountDerivationIndex: 1,
       };
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
@@ -250,7 +248,6 @@ describe("EmbeddedProvider Auth Flows", () => {
       const authResult: AuthResult = {
         walletId: "wallet-123",
         provider: "google",
-        userInfo: { email: "test@example.com" },
         accountDerivationIndex: 2,
       };
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
@@ -275,7 +272,6 @@ describe("EmbeddedProvider Auth Flows", () => {
         walletId: "wallet-123",
         organizationId: "org-123",
         provider: "google",
-        userInfo: { email: "test@example.com" },
         accountDerivationIndex: 3,
       };
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
@@ -309,7 +305,6 @@ describe("EmbeddedProvider Auth Flows", () => {
         appId: "app-123",
         stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "phantom-connect",
-        userInfo: {},
         status: "pending",
         createdAt: Date.now(),
         lastUsed: Date.now(),
@@ -334,7 +329,6 @@ describe("EmbeddedProvider Auth Flows", () => {
         appId: "app-123",
         stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "phantom-connect",
-        userInfo: {},
         status: "pending",
         createdAt: Date.now(),
         lastUsed: Date.now(),
@@ -361,7 +355,6 @@ describe("EmbeddedProvider Auth Flows", () => {
         appId: "app-123",
         stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "phantom-connect",
-        userInfo: {},
         status: "pending",
         createdAt: Date.now(),
         lastUsed: Date.now(),
@@ -384,7 +377,6 @@ describe("EmbeddedProvider Auth Flows", () => {
         walletId: "wallet-123",
         organizationId: "server-org-id",
         provider: "google",
-        userInfo: { email: "test@example.com" },
         accountDerivationIndex: 4,
       };
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
@@ -400,7 +392,6 @@ describe("EmbeddedProvider Auth Flows", () => {
         walletId: "wallet-123",
         organizationId: "server-org-id",
         provider: "google",
-        userInfo: { email: "test@example.com" },
         accountDerivationIndex: 5,
       };
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
@@ -434,7 +425,6 @@ describe("EmbeddedProvider Auth Flows", () => {
       const authResult: AuthResult = {
         walletId: "wallet-from-url-123",
         provider: "google",
-        userInfo: { email: "test@example.com" },
         accountDerivationIndex: 0,
       };
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
@@ -473,7 +463,6 @@ describe("EmbeddedProvider Auth Flows", () => {
         expect.objectContaining({
           status: "pending",
           authProvider: "phantom-connect",
-          userInfo: { provider: "google" },
         }),
       );
     });
@@ -606,7 +595,6 @@ describe("EmbeddedProvider Auth Flows", () => {
           walletId: "jwt-wallet-123",
           organizationId: "server-org-id", // JWT auth returns organizationId from server
           provider: "jwt",
-          userInfo: { sub: "user-123" },
         }),
       };
 
@@ -624,7 +612,6 @@ describe("EmbeddedProvider Auth Flows", () => {
         publicKey: "11111111111111111111111111111111", // JWT auth now gets publicKey
         appId: "test-app-id",
         jwtToken: "valid-jwt-token",
-        customAuthData: undefined,
       });
       expect(result.walletId).toBe("jwt-wallet-123");
     });
@@ -646,7 +633,6 @@ describe("EmbeddedProvider Auth Flows", () => {
           walletId: "jwt-wallet-123",
           organizationId: "server-org-id",
           provider: "jwt",
-          userInfo: { sub: "user-123" },
         }),
       };
       (provider as any).jwtAuth = mockJWTAuth;
@@ -663,7 +649,6 @@ describe("EmbeddedProvider Auth Flows", () => {
           walletId: "jwt-wallet-123",
           status: "completed",
           authProvider: "jwt",
-          userInfo: { sub: "user-123" },
         }),
       );
     });
@@ -738,7 +723,6 @@ describe("EmbeddedProvider Auth Flows", () => {
         expect.objectContaining({
           status: "pending",
           authProvider: "phantom-connect",
-          userInfo: { provider: "apple" },
         }),
       );
     });
@@ -788,7 +772,6 @@ describe("EmbeddedProvider Auth Flows", () => {
         expect.objectContaining({
           status: "pending",
           authProvider: "phantom-connect",
-          userInfo: { provider: undefined },
         }),
       );
     });
@@ -825,7 +808,6 @@ describe("EmbeddedProvider Auth Flows", () => {
         appId: "app-123",
         stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "phantom-connect",
-        userInfo: {},
         status: "pending", // Started but no URL sessionId
         createdAt: Date.now(),
         lastUsed: Date.now(),
@@ -896,7 +878,6 @@ describe("EmbeddedProvider Auth Flows", () => {
         authenticate: jest.fn().mockResolvedValue({
           walletId: "jwt-wallet-123",
           provider: "jwt",
-          userInfo: { sub: "user-123" },
         }),
       };
       (provider as any).jwtAuth = mockJWTAuth;
@@ -987,7 +968,6 @@ describe("EmbeddedProvider Auth Flows", () => {
       const authResult: AuthResult = {
         walletId: "wallet-from-redirect-123",
         provider: "google",
-        userInfo: { email: "test@example.com" },
         accountDerivationIndex: 7,
       };
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
@@ -1019,7 +999,6 @@ describe("EmbeddedProvider Auth Flows", () => {
         appId: "app-123",
         stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "phantom-connect",
-        userInfo: {},
         status: "pending",
         createdAt: Date.now(),
         lastUsed: Date.now(),
@@ -1043,7 +1022,6 @@ describe("EmbeddedProvider Auth Flows", () => {
         appId: "app-123",
         stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
         authProvider: "phantom-connect",
-        userInfo: {},
         status: "pending",
         createdAt: Date.now(),
         lastUsed: Date.now(),

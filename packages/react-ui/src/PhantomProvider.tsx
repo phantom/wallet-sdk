@@ -22,7 +22,7 @@ interface PhantomUIContextValue {
   connectionState: ConnectionUIState;
   showConnectionModal: () => void;
   hideConnectionModal: () => void;
-  connectWithAuthProvider: (provider?: "google" | "apple") => Promise<void>;
+  connectWithAuthProvider: (provider?: "google" | "apple" | "phantom") => Promise<void>;
   connectWithInjected: () => Promise<void>;
   connectWithDeeplink: () => void;
   isMobile: boolean;
@@ -68,7 +68,7 @@ function PhantomUIProvider({ children, theme = "light", customTheme }: Omit<Phan
 
   // Connect with specific auth provider
   const connectWithAuthProvider = useCallback(
-    async (provider?: "google" | "apple") => {
+    async (provider?: "google" | "apple" | "phantom") => {
       try {
         setConnectionState(prev => ({
           ...prev,
@@ -118,9 +118,9 @@ function PhantomUIProvider({ children, theme = "light", customTheme }: Omit<Phan
         providerType: "injected",
       }));
 
-      // Switch to injected provider and connect
-      await sdk.switchProvider("injected");
-      await baseConnect.connect();
+      await baseConnect.connect({
+        provider: "injected",
+      });
 
       // Hide modal on successful connection
       setConnectionState({
@@ -206,36 +206,57 @@ function PhantomUIProvider({ children, theme = "light", customTheme }: Omit<Phan
                     onClick={connectWithDeeplink}
                     disabled={connectionState.isConnecting}
                   >
-                    {connectionState.isConnecting && connectionState.providerType === "deeplink" 
-                      ? "Opening Phantom..." 
+                    {connectionState.isConnecting && connectionState.providerType === "deeplink"
+                      ? "Opening Phantom..."
                       : "Open in Phantom App"}
                   </button>
                 )}
 
-                {/* Extension installed (mobile or desktop) - connect with injected */}
-                {isExtensionInstalled.isInstalled && (
-                  <button
-                    className="phantom-ui-provider-button phantom-ui-provider-button-mobile"
-                    onClick={connectWithInjected}
-                    disabled={connectionState.isConnecting}
-                  >
-                    {connectionState.isConnecting && connectionState.providerType === "injected" 
-                      ? "Connecting..." 
-                      : "Connect with Phantom"}
-                  </button>
+                {/* Primary auth options - Phantom, Google */}
+                {!isMobile && (
+                  <>
+                    {/* Login with Phantom (embedded provider using Phantom extension) */}
+                    {isExtensionInstalled.isInstalled && (
+                      <button
+                        className="phantom-ui-provider-button phantom-ui-provider-button-primary"
+                        onClick={() => connectWithAuthProvider("phantom")}
+                        disabled={connectionState.isConnecting}
+                      >
+                        {connectionState.isConnecting && connectionState.providerType === "embedded"
+                          ? "Connecting..."
+                          : "Login with Phantom"}
+                      </button>
+                    )}
+
+                    {/* Continue with Google */}
+                    <button
+                      className="phantom-ui-provider-button"
+                      onClick={() => connectWithAuthProvider("google")}
+                      disabled={connectionState.isConnecting}
+                    >
+                      {connectionState.isConnecting && connectionState.providerType === "embedded"
+                        ? "Connecting..."
+                        : "Continue with Google"}
+                    </button>
+                  </>
                 )}
 
-                {/* No extension installed - show embedded options */}
-                {!isExtensionInstalled.isInstalled && (
-                  <button
-                    className="phantom-ui-provider-button"
-                    onClick={() => connectWithAuthProvider("google")}
-                    disabled={connectionState.isConnecting}
-                  >
-                    {connectionState.isConnecting && connectionState.providerType === "embedded" 
-                      ? "Connecting..." 
-                      : "Continue with Google"}
-                  </button>
+                {/* Extension option - smaller UI section */}
+                {!isMobile && isExtensionInstalled.isInstalled && (
+                  <div className="phantom-ui-extension-section">
+                    <div className="phantom-ui-divider">
+                      <span>or</span>
+                    </div>
+                    <button
+                      className="phantom-ui-provider-button phantom-ui-provider-button-secondary"
+                      onClick={connectWithInjected}
+                      disabled={connectionState.isConnecting}
+                    >
+                      {connectionState.isConnecting && connectionState.providerType === "injected"
+                        ? "Connecting..."
+                        : "Continue with extension"}
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
