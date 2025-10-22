@@ -53,6 +53,7 @@ export class BrowserAuthProvider implements AuthProvider {
         clear_previous_session: (phantomOptions.clearPreviousSession ?? false).toString(),
         allow_refresh: (phantomOptions.allowRefresh ?? true).toString(),
         sdk_version: __SDK_VERSION__,
+        sdk_type: "browser",
       });
 
       // Add provider if specified (will skip provider selection)
