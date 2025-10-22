@@ -7,6 +7,7 @@ import type {
 } from "@phantom/embedded-provider-core";
 import { debug, DebugCategory } from "../../../debug";
 import { DEFAULT_AUTH_URL } from "@phantom/constants";
+import { detectBrowser } from "../../../utils/browser-detection";
 
 declare const __SDK_VERSION__: string;
 
@@ -53,6 +54,8 @@ export class BrowserAuthProvider implements AuthProvider {
         clear_previous_session: (phantomOptions.clearPreviousSession ?? false).toString(),
         allow_refresh: (phantomOptions.allowRefresh ?? true).toString(),
         sdk_version: __SDK_VERSION__,
+        sdk_type: "browser",
+        platform: detectBrowser().name,
       });
 
       // Add provider if specified (will skip provider selection)

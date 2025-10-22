@@ -1,4 +1,5 @@
 import * as WebBrowser from "expo-web-browser";
+import { Platform } from "react-native";
 import type { AuthProvider, AuthResult, PhantomConnectOptions, JWTAuthOptions } from "@phantom/embedded-provider-core";
 import { DEFAULT_AUTH_URL } from "@phantom/constants";
 
@@ -39,6 +40,8 @@ export class ExpoAuthProvider implements AuthProvider {
         clear_previous_session: (phantomOptions.clearPreviousSession ?? false).toString(),
         allow_refresh: (phantomOptions.allowRefresh ?? true).toString(),
         sdk_version: __SDK_VERSION__,
+        sdk_type: "react-native",
+        platform: Platform.OS,
       });
 
       // Add provider if specified (will skip provider selection)
