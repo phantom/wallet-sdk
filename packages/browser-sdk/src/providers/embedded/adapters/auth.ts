@@ -190,7 +190,7 @@ export class BrowserAuthProvider implements AuthProvider {
         organizationId,
         accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : 0,
         expiresInMs: expiresInMs ? parseInt(expiresInMs) : 0,
-        userId: authUserId || undefined,
+        authUserId: authUserId || undefined,
       };
     } catch (error) {
       // Clean up session storage on any error

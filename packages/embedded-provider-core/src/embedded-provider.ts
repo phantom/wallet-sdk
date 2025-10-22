@@ -1236,7 +1236,7 @@ export class EmbeddedProvider {
       walletId: this.walletId!,
       addresses: this.addresses,
       status: "completed",
-      userId: session.authUserId,
+      authUserId: session.authUserId,
     };
   }
 
