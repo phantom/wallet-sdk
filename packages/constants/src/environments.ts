@@ -3,7 +3,7 @@
  */
 
 // Default authentication URLs
-export const DEFAULT_AUTH_URL = "https://connect.phantom.app/login";
+export const DEFAULT_AUTH_URL = "https://auth.phantom.app/connect/login";
 
 // Default API URLs
 export const DEFAULT_WALLET_API_URL = "https://api.phantom.app/v1/wallets";

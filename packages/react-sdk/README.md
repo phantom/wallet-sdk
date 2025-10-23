@@ -766,14 +766,9 @@ interface PhantomSDKConfig {
 
   // Required for embedded provider only
   appId: string; // Your app ID from phantom.com/portal (required for embedded provider)
-  
-  // Optional configuration
-  apiBaseUrl?: string; // Phantom API base URL (optional, has default)
   authOptions?: {
-    authUrl?: string; // Custom auth URL (optional, defaults to "https://connect.phantom.app/login")
     redirectUrl?: string; // Custom redirect URL after authentication (optional)
   };
-  embeddedWalletType?: "user-wallet"; // Wallet type (optional, defaults to "user-wallet", currently the only supported type)
   autoConnect?: boolean; // Auto-connect to existing session on SDK instantiation (optional, defaults to true for embedded, false for injected)
 }
 ```
