@@ -1,7 +1,7 @@
 import type { NetworkId } from "@phantom/constants";
 import { base64urlEncode, stringToBase64url } from "@phantom/base64url";
 import { getTransactionEncoder, type Transaction } from "@solana/transactions";
-import type { EthereumTransaction } from "@phantom/sdk-types";
+import type { EthereumTransaction, Eip1559Transaction } from "@phantom/sdk-types";
 import { Buffer } from "buffer";
 import {
   parseSignMessageResponse as _parseSignMessageResponse,
@@ -110,6 +110,30 @@ function parseSolanaTransactionToBase64Url(transaction: any): ParsedTransaction 
 }
 
 /**
+ * Helper to convert hex/decimal string to number
+ */
+function convertToNumber(value: any): number {
+  if (typeof value === "number") return value;
+  if (typeof value === "string") {
+    return value.startsWith("0x") ? parseInt(value, 16) : parseInt(value, 10);
+  }
+  return 0;
+}
+
+/**
+ * Helper to convert hex/decimal string to decimal string
+ */
+function convertToDecimalString(value: any): string {
+  if (typeof value === "string") {
+    return value.startsWith("0x") ? BigInt(value).toString() : value;
+  }
+  if (typeof value === "number" || typeof value === "bigint") {
+    return value.toString();
+  }
+  return "0";
+}
+
+/**
  * Parse EVM transaction to proper format for KMS
  * Returns properly tagged transaction for Rust backend:
  * - { kind: "RLP_ENCODED", bytes: "0x..." } for hex strings, bytes, or serializable transactions
@@ -156,9 +180,17 @@ function parseEVMTransactionToBase64Url(transaction: any): ParsedTransaction {
       JSON.stringify(transaction, (_key, value) => (typeof value === "bigint" ? value.toString() : value)),
     );
 
-    const eip1559Tx = {
-      kind: "EIP_1559" as const,
-      ...normalizedTx,
+    // Build properly typed EIP-1559 transaction
+    const eip1559Tx: Eip1559Transaction = {
+      kind: "EIP_1559",
+      chainId: convertToNumber(normalizedTx.chainId),
+      nonce: convertToNumber(normalizedTx.nonce),
+      maxFeePerGas: convertToDecimalString(normalizedTx.maxFeePerGas),
+      maxPriorityFeePerGas: convertToDecimalString(normalizedTx.maxPriorityFeePerGas),
+      gasLimit: convertToNumber(normalizedTx.gasLimit || normalizedTx.gas),
+      to: normalizedTx.to || "",
+      value: convertToDecimalString(normalizedTx.value || "0"),
+      data: normalizedTx.data || normalizedTx.input || "0x",
     };
 
     return {
