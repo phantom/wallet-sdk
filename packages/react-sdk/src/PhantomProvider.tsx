@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import { BrowserSDK } from "@phantom/browser-sdk";
-import type { BrowserSDKConfig, WalletAddress, AuthOptions, DebugConfig, ConnectEventData } from "@phantom/browser-sdk";
+import type { BrowserSDKConfig, WalletAddress, AuthOptions, DebugConfig, ConnectEventData, ConnectResult } from "@phantom/browser-sdk";
 
 export type PhantomSDKConfig = BrowserSDKConfig;
 
@@ -22,6 +22,7 @@ interface PhantomContextValue {
   currentProviderType: "injected" | "embedded" | null;
   isPhantomAvailable: boolean;
   isClient: boolean;
+  user: ConnectResult | null;
 }
 
 const PhantomContext = createContext<PhantomContextValue | undefined>(undefined);
@@ -46,6 +47,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
     (memoizedConfig.providerType as any) || null,
   );
   const [isPhantomAvailable, setIsPhantomAvailable] = useState(false);
+  const [user, setUser] = useState<ConnectResult | null>(null);
 
   // Initialize client flag
   useEffect(() => {
@@ -77,6 +79,9 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
         setIsConnected(true);
         setIsConnecting(false);
 
+        // Store the full ConnectResult as user
+        setUser(data);
+
         // Update current provider type from event data
         setCurrentProviderType(data.providerType || null);
 
@@ -106,6 +111,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       setIsConnecting(false);
       setConnectError(null);
       setAddresses([]);
+      setUser(null);
     };
 
     // Add event listeners to SDK
@@ -167,8 +173,9 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       currentProviderType,
       isPhantomAvailable,
       isClient,
+      user,
     }),
-    [sdk, isConnected, isConnecting, connectError, addresses,  currentProviderType, isPhantomAvailable, isClient],
+    [sdk, isConnected, isConnecting, connectError, addresses, currentProviderType, isPhantomAvailable, isClient, user],
   );
 
   return <PhantomContext.Provider value={value}>{children}</PhantomContext.Provider>;
