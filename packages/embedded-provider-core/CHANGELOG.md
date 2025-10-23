@@ -1,5 +1,12 @@
 # @phantom/embedded-provider-core
 
+## 1.0.0-beta.15
+
+### Patch Changes
+
+- 53f1db0: Support auth user id
+  - @phantom/client@1.0.0-beta.15
+
 ## 1.0.0-beta.14
 
 ### Patch Changes
