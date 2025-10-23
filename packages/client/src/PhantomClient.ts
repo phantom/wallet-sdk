@@ -694,7 +694,6 @@ export class PhantomClient {
   /**
    * Add a new user to an organization
    */
-
   async addUserToOrganization(params: AddUserToOrganizationParams): Promise<void> {
     try {
       const request: AddUserToOrganization & { timestampMs: number } = {

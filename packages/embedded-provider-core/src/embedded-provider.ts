@@ -11,7 +11,7 @@ import {
 } from "@phantom/parsers";
 import { randomUUID } from "@phantom/utils";
 import bs58 from "bs58";
-import { AUTHENTICATOR_EXPIRATION_TIME_MS, AUTHENTICATOR_RENEWAL_WINDOW_MS } from "./constants";
+import { AUTHENTICATOR_EXPIRATION_TIME_MS } from "./constants";
 
 import type { IEthereumChain, ISolanaChain } from "@phantom/chain-interfaces";
 import type { StamperWithKeyManagement } from "@phantom/sdk-types";
@@ -707,12 +707,12 @@ export class EmbeddedProvider {
     }
   }
 
-  async disconnect(): Promise<void> {
+  async disconnect(shouldClearPreviousSession = true): Promise<void> {
     const wasConnected = this.client !== null;
 
     // Set flag to clear previous OAuth session on next login attempt
     // This ensures user will be prompted for fresh authentication
-    await this.storage.setShouldClearPreviousSession(true);
+    await this.storage.setShouldClearPreviousSession(shouldClearPreviousSession);
     this.logger.log("EMBEDDED_PROVIDER", "Set flag to clear previous session on next login");
 
     await this.storage.clearSession();
@@ -1285,7 +1285,7 @@ export class EmbeddedProvider {
     // Sessions without authenticator timing fields are invalid - clear them
     if (!session.authenticatorExpiresAt) {
       this.logger.warn("EMBEDDED_PROVIDER", "Session missing authenticator timing - treating as invalid session");
-      await this.disconnect();
+      await this.disconnect(false);
       throw new Error("Invalid session - missing authenticator timing");
     }
 
@@ -1299,115 +1299,11 @@ export class EmbeddedProvider {
     // Check if authenticator has expired
     if (timeUntilExpiry <= 0) {
       this.logger.error("EMBEDDED_PROVIDER", "Authenticator has expired, disconnecting");
-      await this.disconnect();
+      await this.disconnect(false);
       throw new Error("Authenticator expired");
     }
 
-    // Check if authenticator needs renewal (within renewal window)
-    const renewalWindow = AUTHENTICATOR_RENEWAL_WINDOW_MS;
-    if (timeUntilExpiry <= renewalWindow) {
-      this.logger.info("EMBEDDED_PROVIDER", "Authenticator needs renewal", {
-        expiresAt: new Date(session.authenticatorExpiresAt).toISOString(),
-        timeUntilExpiry,
-        renewalWindow,
-      });
-
-      try {
-        await this.renewAuthenticator(session);
-        this.logger.info("EMBEDDED_PROVIDER", "Authenticator renewed successfully");
-      } catch (error) {
-        this.logger.error("EMBEDDED_PROVIDER", "Failed to renew authenticator", {
-          error: error instanceof Error ? error.message : String(error),
-        });
-        // Don't throw - renewal failure shouldn't break existing functionality
-      }
-    }
-  }
-
-  /*
-   * We use this method to perform silent authenticator renewal.
-   * It generates a new keypair, adds a new user to the organization with the new keypair, and switches to it.
-   */
-  private async renewAuthenticator(session: Session): Promise<void> {
-    if (!this.client) {
-      throw new Error("Client not initialized");
-    }
-
-    this.logger.info("EMBEDDED_PROVIDER", "Starting authenticator renewal using addUserToOrganization");
-
-    try {
-      // Step 1: Generate new keypair for rotation
-      const newKeyInfo = await this.stamper.rotateKeyPair();
-      this.logger.log("EMBEDDED_PROVIDER", "Generated new keypair for renewal", {
-        newKeyId: newKeyInfo.keyId,
-        newPublicKey: newKeyInfo.publicKey,
-      });
-
-      // Step 2: Convert public key to base64url format
-      const base64urlPublicKey = base64urlEncode(bs58.decode(newKeyInfo.publicKey));
-      const expiresInMs = AUTHENTICATOR_EXPIRATION_TIME_MS;
-
-      // Step 3: Add new user to organization instead of creating new authenticator
-      const shortKeyId = newKeyInfo.keyId.substring(0, 8);
-      const newUsername = `user-${shortKeyId}`;
-
-      try {
-        await this.client.addUserToOrganization({
-          organizationId: session.organizationId,
-          user: {
-            username: newUsername,
-            role: "ADMIN" as any, // Use ADMIN role like original users
-            authenticators: [
-              {
-                authenticatorName: `auth-${shortKeyId}`,
-                authenticatorKind: "keypair",
-                publicKey: base64urlPublicKey,
-                algorithm: "Ed25519",
-              } as any,
-            ],
-            traits: {
-              appId: this.config.appId,
-            },
-            expiresInMs,
-          },
-          replaceExpirable: true, // Replace oldest expirable user if at limit
-        });
-      } catch (error) {
-        this.logger.error("EMBEDDED_PROVIDER", "Failed to add new user to organization", {
-          error: error instanceof Error ? error.message : String(error),
-        });
-        // Rollback the rotation on server error
-        await this.stamper.rollbackRotation();
-        throw new Error(
-          `Failed to add new user to organization: ${error instanceof Error ? error.message : String(error)}`,
-        );
-      }
-
-      this.logger.info("EMBEDDED_PROVIDER", "Added new user to organization successfully", {
-        username: newUsername,
-      });
-
-      // Step 4: Commit the rotation (switch stamper to use new keypair)
-      await this.stamper.commitRotation(newKeyInfo.keyId);
-
-      // Step 5: Update session with new authenticator timing
-      const now = Date.now();
-      session.stamperInfo = newKeyInfo;
-      session.authenticatorCreatedAt = now;
-      session.authenticatorExpiresAt = now + expiresInMs;
-      session.lastRenewalAttempt = now;
-      await this.storage.saveSession(session);
-
-      this.logger.info("EMBEDDED_PROVIDER", "Authenticator renewal completed successfully", {
-        newKeyId: newKeyInfo.keyId,
-        newUsername: newUsername,
-        expiresAt: new Date(session.authenticatorExpiresAt).toISOString(),
-      });
-    } catch (error) {
-      // Rollback rotation on any failure
-      await this.stamper.rollbackRotation();
-      throw error;
-    }
+    // TODO: Here we would renew the authenticator if needed. It was disabled at PR https://github.com/phantom/wallet-sdk/pull/283
   }
 
   /*

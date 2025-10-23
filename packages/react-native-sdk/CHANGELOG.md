@@ -1,5 +1,14 @@
 # @phantom/react-native-sdk
 
+## 1.0.0-beta.15
+
+### Patch Changes
+
+- 53f1db0: Support auth user id
+- Updated dependencies [53f1db0]
+  - @phantom/embedded-provider-core@1.0.0-beta.15
+  - @phantom/client@1.0.0-beta.15
+
 ## 1.0.0-beta.14
 
 ### Patch Changes

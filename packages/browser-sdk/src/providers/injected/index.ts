@@ -185,8 +185,16 @@ export class InjectedProvider implements Provider {
             debug.info(DebugCategory.INJECTED_PROVIDER, "Solana connected successfully", { address: publicKey });
           }
         } catch (err) {
-          // Continue to other address types
-          debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to connect Solana", { error: err });
+          // Stop immediately on any error - don't try other chains
+          debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to connect Solana, stopping", { error: err });
+
+          // Emit connect_error event before throwing
+          this.emit("connect_error", {
+            error: err instanceof Error ? err.message : "Failed to connect",
+            source: "manual-connect",
+          });
+
+          throw err;
         }
       }
 
@@ -204,8 +212,16 @@ export class InjectedProvider implements Provider {
             debug.info(DebugCategory.INJECTED_PROVIDER, "Ethereum connected successfully", { addresses: accounts });
           }
         } catch (err) {
-          // Continue to other address types
-          debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to connect Ethereum", { error: err });
+          // Stop immediately on any error
+          debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to connect Ethereum, stopping", { error: err });
+
+          // Emit connect_error event before throwing
+          this.emit("connect_error", {
+            error: err instanceof Error ? err.message : "Failed to connect",
+            source: "manual-connect",
+          });
+
+          throw err;
         }
       }
 

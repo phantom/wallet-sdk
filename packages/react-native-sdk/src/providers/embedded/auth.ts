@@ -96,6 +96,7 @@ export class ExpoAuthProvider implements AuthProvider {
           throw new Error("Authentication failed: no organizationId in redirect URL");
         }
 
+
         console.log("[ExpoAuthProvider] Auth redirect parameters", {
           walletId,
           organizationId,

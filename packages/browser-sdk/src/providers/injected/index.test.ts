@@ -103,19 +103,17 @@ describe("InjectedProvider", () => {
       expect(provider.isConnected()).toBe(true);
     });
 
-    it("should connect to Ethereum wallet", async () => {
+    it("should connect to Ethereum wallet when only Ethereum is enabled", async () => {
       const mockAddresses = ["0x742d35Cc6634C0532925a3b844Bc9e7595f6cE65"];
 
-      // Update the mock to make Solana fail and Ethereum succeed
-      mockPhantomObject.solana.connect.mockRejectedValue(new Error("Provider not found."));
       mockPhantomObject.ethereum.connect.mockResolvedValue(mockAddresses);
-      
+
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { createPhantom } = require("@phantom/browser-injected-sdk");
       createPhantom.mockReturnValue(mockPhantomObject);
 
       const provider = new InjectedProvider({
-        addressTypes: [AddressType.solana, AddressType.ethereum],
+        addressTypes: [AddressType.ethereum], // Only Ethereum enabled
       });
 
       const result = await provider.connect();
@@ -143,11 +141,10 @@ describe("InjectedProvider", () => {
       await expect(provider.connect()).rejects.toThrow("Phantom wallet not found");
     });
 
-    it("should throw error when no provider connects successfully", async () => {
-      // Mock both Solana and Ethereum to fail
+    it("should throw error when connection fails", async () => {
+      // Mock Solana to fail - should stop immediately without trying Ethereum
       mockPhantomObject.solana.connect.mockRejectedValue(new Error("Provider not found."));
-      mockPhantomObject.ethereum.connect.mockRejectedValue(new Error("Provider not found."));
-      
+
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { createPhantom } = require("@phantom/browser-injected-sdk");
       createPhantom.mockReturnValue(mockPhantomObject);
@@ -156,7 +153,10 @@ describe("InjectedProvider", () => {
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
 
-      await expect(provider.connect()).rejects.toThrow("Failed to connect to any supported wallet provider");
+      await expect(provider.connect()).rejects.toThrow("Provider not found.");
+
+      // Ethereum connect should not have been called since Solana failed first
+      expect(mockPhantomObject.ethereum.connect).not.toHaveBeenCalled();
     });
   });
 
