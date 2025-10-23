@@ -4,6 +4,7 @@ import { EmbeddedProvider } from "./providers/embedded";
 import { debug, DebugCategory } from "./debug";
 import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-provider-core";
 import { DEFAULT_WALLET_API_URL, DEFAULT_EMBEDDED_WALLET_TYPE, DEFAULT_AUTH_URL } from "@phantom/constants";
+import { isAuthFailureCallback, isAuthCallbackUrl } from "./utils/auth-callback";
 export interface ProviderPreference {
   type: "injected" | "embedded";
   embeddedWalletType?: "app-wallet" | "user-wallet";
@@ -196,6 +197,13 @@ export class ProviderManager implements EventEmitter {
   async autoConnect(): Promise<boolean> {
     debug.log(DebugCategory.PROVIDER_MANAGER, "Starting auto-connect with fallback strategy");
 
+    // Check if we're in a callback URL with a failure response
+    // If so, don't attempt fallback to another provider
+    if (isAuthFailureCallback()) {
+      debug.warn(DebugCategory.PROVIDER_MANAGER, "Auth failure detected in URL, skipping autoConnect fallback");
+      return false;
+    }
+
     // Try embedded provider first if it exists
     const embeddedWalletType = (this.config.embeddedWalletType || "user-wallet") as "app-wallet" | "user-wallet";
     const embeddedKey = this.getProviderKey("embedded", embeddedWalletType);
@@ -229,6 +237,12 @@ export class ProviderManager implements EventEmitter {
         debug.log(DebugCategory.PROVIDER_MANAGER, "Embedded auto-connect failed", {
           error: (error as Error).message,
         });
+
+        // If embedded auth failed and we're in a callback, don't try injected
+        if (isAuthCallbackUrl()) {
+          debug.log(DebugCategory.PROVIDER_MANAGER, "In auth callback URL, not attempting injected fallback");
+          return false;
+        }
       }
     }
 
