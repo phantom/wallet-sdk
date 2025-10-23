@@ -602,7 +602,7 @@ sdk.on('disconnect', (data: DisconnectEventData) => {
 });
 
 // 5. error - General error handler
-sdk.on('error', (error: any) => {
+sdk.on('error', (error: unknown) => {
   console.error('SDK error:', error);
 });
 
@@ -615,10 +615,10 @@ sdk.off('connect', handleConnect);
 | Event | Payload Type | When Fired | Key Data |
 |-------|-------------|------------|----------|
 | `connect_start` | `ConnectStartEventData` | Connection initiated | `source`, `authOptions` |
-| `connect` | `ConnectEventData` | Connection successful | `providerType`, `addresses`, `walletId`, `status` |
+| `connect` | `ConnectEventData` | Connection successful | `providerType`, `addresses`, `walletId`, `status`, `source`, `authUserId`|
 | `connect_error` | `ConnectErrorEventData` | Connection failed | `error`, `source` |
 | `disconnect` | `DisconnectEventData` | Disconnected | `source` |
-| `error` | `any` | General SDK errors | Error details |
+| `error` | `unknown` | General SDK errors | Error details |
 
 #### Using Events with autoConnect()
 

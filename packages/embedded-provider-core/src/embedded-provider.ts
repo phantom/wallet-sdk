@@ -140,7 +140,7 @@ export class EmbeddedProvider {
   off<K extends EmbeddedProviderEvent>(event: K, callback: EventCallback<EmbeddedProviderEventMap[K]>): void {
     const listeners = this.eventListeners.get(event);
     if (listeners) {
-      listeners.delete(callback as EventCallback);
+      listeners.delete(callback);
       this.logger.log("EMBEDDED_PROVIDER", "Event listener removed", { event });
     }
   }
