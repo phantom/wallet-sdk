@@ -4,6 +4,27 @@ export { Algorithm } from "@phantom/openapi-wallet-service";
 
 // Re-export Solana transaction types (type-only to avoid runtime dependency)
 export type { Transaction, VersionedTransaction } from "@solana/web3.js";
+
+// Ethereum transaction types for KMS API
+export interface RlpEncodedTransaction {
+  kind: "RLP_ENCODED";
+  bytes: string; // Hex string with 0x prefix
+}
+
+export interface Eip1559Transaction {
+  kind: "EIP_1559";
+  chainId: number;
+  nonce: number;
+  maxFeePerGas: string; // String representation of number
+  maxPriorityFeePerGas: string; // String representation of number
+  gasLimit: number;
+  to: string; // Hex address with 0x prefix
+  value: string; // String representation of number in wei
+  data: string; // Hex string with 0x prefix
+}
+
+export type EthereumTransaction = RlpEncodedTransaction | Eip1559Transaction;
+
 // Stamper interface - takes Buffer data and returns complete X-Phantom-Stamp header value
 export interface Stamper {
   stamp(params: { data: Buffer; type?: "PKI"; idToken?: never; salt?: never }): Promise<string>;

@@ -143,13 +143,15 @@ export class ServerSDK {
    * @returns Promise<ParsedTransactionResult> - Parsed transaction result without hash
    */
   async signTransaction(params: ServerSignTransactionParams): Promise<ParsedTransactionResult> {
-    // Parse the transaction to base64url format
+    // Parse the transaction to appropriate format based on chain
+    // Solana: base64url, Ethereum: EIP-1559 JSON or RLP hex, etc.
     const parsedTransaction = await parseTransactionToBase64Url(params.transaction, params.networkId);
 
     // Use the parent's signTransaction method with parsed transaction
+    // Use structuredTx if available (ETH EIP-1559), otherwise use base64url string
     const signTransactionParams: SignTransactionParams = {
       walletId: params.walletId,
-      transaction: parsedTransaction.base64url,
+      transaction: parsedTransaction.structuredTx ?? parsedTransaction.base64url,
       networkId: params.networkId,
       derivationIndex: params.derivationIndex,
       account: params.account,
@@ -168,13 +170,15 @@ export class ServerSDK {
    * @returns Promise<ParsedTransactionResult> - Parsed transaction result with hash and explorer URL
    */
   async signAndSendTransaction(params: ServerSignAndSendTransactionParams): Promise<ParsedTransactionResult> {
-    // Parse the transaction to base64url format
+    // Parse the transaction to appropriate format based on chain
+    // Solana: base64url, Ethereum: EIP-1559 JSON or RLP hex, etc.
     const parsedTransaction = await parseTransactionToBase64Url(params.transaction, params.networkId);
 
     // Use the parent's signAndSendTransaction method with parsed transaction
+    // Use structuredTx if available (ETH EIP-1559), otherwise use base64url string
     const signAndSendParams: SignAndSendTransactionParams = {
       walletId: params.walletId,
-      transaction: parsedTransaction.base64url,
+      transaction: parsedTransaction.structuredTx ?? parsedTransaction.base64url,
       networkId: params.networkId,
       derivationIndex: params.derivationIndex,
       account: params.account,

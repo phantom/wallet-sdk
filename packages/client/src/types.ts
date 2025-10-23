@@ -1,4 +1,5 @@
 import { type NetworkId, type SdkAnalyticsHeaders } from "@phantom/constants";
+import type { EthereumTransaction } from "@phantom/sdk-types";
 
 export interface PhantomClientConfig {
   apiBaseUrl: string;
@@ -14,7 +15,10 @@ export interface CreateWalletResult {
   }[];
 }
 
-export type Transaction = string; // base64url encoded transaction
+// Transaction can be:
+// - Solana: base64url encoded string
+// - Ethereum: EthereumTransaction (RLP_ENCODED or EIP_1559)
+export type Transaction = string | EthereumTransaction;
 
 export interface SignedTransaction {
   rawTransaction: string; // base64url encoded signed transaction
@@ -58,7 +62,7 @@ export interface SignTypedDataParams {
 
 export interface SignTransactionParams {
   walletId: string;
-  transaction: Transaction; // base64url encoded transaction
+  transaction: Transaction; // Format depends on chain (see Transaction type)
   networkId: NetworkId;
   derivationIndex?: number; // Optional account derivation index (defaults to 0)
   account?: string; // Optional specific account address to use
@@ -66,7 +70,7 @@ export interface SignTransactionParams {
 
 export interface SignAndSendTransactionParams {
   walletId: string;
-  transaction: Transaction; // base64url encoded transaction
+  transaction: Transaction; // Format depends on chain (see Transaction type)
   networkId: NetworkId;
   derivationIndex?: number; // Optional account derivation index (defaults to 0)
   account?: string; // Optional specific account address to use

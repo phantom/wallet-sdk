@@ -211,7 +211,9 @@ export class PhantomClient {
       if (!this.config.organizationId) {
         throw new Error("organizationId is required to sign a transaction");
       }
-      // Transaction is already base64url encoded
+      // Transaction format depends on chain:
+      // - Solana: base64url encoded string
+      // - Ethereum: EIP-1559 JSON object or RLP hex string
       const encodedTransaction = transactionParam;
 
       let submissionConfig: SubmissionConfig | null = null;

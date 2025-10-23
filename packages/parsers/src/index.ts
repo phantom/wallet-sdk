@@ -1,6 +1,7 @@
 import type { NetworkId } from "@phantom/constants";
 import { base64urlEncode, stringToBase64url } from "@phantom/base64url";
 import { getTransactionEncoder, type Transaction } from "@solana/transactions";
+import type { EthereumTransaction } from "@phantom/sdk-types";
 import { Buffer } from "buffer";
 import {
   parseSignMessageResponse as _parseSignMessageResponse,
@@ -12,6 +13,7 @@ export { parseSignMessageResponse, parseTransactionResponse, parseSolanaSignedTr
 
 export interface ParsedTransaction {
   base64url: string;
+  structuredTx?: EthereumTransaction; // For ETH signTransaction with structured format
   originalFormat: string;
 }
 
@@ -32,7 +34,7 @@ export function parseMessage(message: string): ParsedMessage {
 }
 
 /**
- * Parse a transaction to base64url format based on network type
+ * Parse a transaction to base64url format based on network type, including structured transaction object for signAndSendTransaction
  */
 export async function parseTransactionToBase64Url(transaction: any, networkId: NetworkId): Promise<ParsedTransaction> {
   const networkPrefix = networkId.split(":")[0].toLowerCase();
@@ -108,48 +110,61 @@ function parseSolanaTransactionToBase64Url(transaction: any): ParsedTransaction 
 }
 
 /**
- * Parse EVM transaction to base64url
- * Supports Ethereum, Polygon, and other EVM-compatible chains
+ * Parse EVM transaction to proper format for KMS
+ * Returns properly tagged transaction for Rust backend:
+ * - { kind: "RLP_ENCODED", bytes: "0x..." } for hex strings, bytes, or serializable transactions
+ * - { kind: "EIP_1559", ...fields } for plain transaction objects (let backend validate)
  */
 function parseEVMTransactionToBase64Url(transaction: any): ParsedTransaction {
-  // Check if it's a Viem transaction object
-  if (transaction && typeof transaction === "object" && (transaction.to || transaction.data)) {
-    // Serialize with BigInt support
-    const bytes = new TextEncoder().encode(
+  // If it's ethers.js transaction with serialize method
+  if (transaction?.serialize && typeof transaction.serialize === "function") {
+    const rlpHex = transaction.serialize();
+    const rlpEncoded = { kind: "RLP_ENCODED" as const, bytes: rlpHex };
+    return {
+      base64url: base64urlEncode(new TextEncoder().encode(JSON.stringify(rlpEncoded))),
+      structuredTx: rlpEncoded,
+      originalFormat: "ethers-rlp",
+    };
+  }
+
+  // If it's already a hex string (RLP encoded)
+  if (typeof transaction === "string" && transaction.startsWith("0x")) {
+    const rlpEncoded = { kind: "RLP_ENCODED" as const, bytes: transaction };
+    return {
+      base64url: base64urlEncode(new TextEncoder().encode(JSON.stringify(rlpEncoded))),
+      structuredTx: rlpEncoded,
+      originalFormat: "rlp-hex",
+    };
+  }
+
+  // If it's already serialized bytes, convert to hex
+  if (transaction instanceof Uint8Array) {
+    const hexString = "0x" + Buffer.from(transaction).toString("hex");
+    const rlpEncoded = { kind: "RLP_ENCODED" as const, bytes: hexString };
+    return {
+      base64url: base64urlEncode(new TextEncoder().encode(JSON.stringify(rlpEncoded))),
+      structuredTx: rlpEncoded,
+      originalFormat: "bytes-to-rlp-hex",
+    };
+  }
+
+  // If it's a plain transaction object (viem/ethers format)
+  // Pass through as EIP-1559, let backend validate fields
+  if (transaction && typeof transaction === "object" && !transaction.serialize) {
+    // Normalize BigInt values to strings for JSON serialization
+    const normalizedTx = JSON.parse(
       JSON.stringify(transaction, (_key, value) => (typeof value === "bigint" ? value.toString() : value)),
     );
 
-    return {
-      base64url: base64urlEncode(bytes),
-      originalFormat: "viem",
+    const eip1559Tx = {
+      kind: "EIP_1559" as const,
+      ...normalizedTx,
     };
-  }
-
-  // Check if it's ethers.js transaction
-  if (transaction?.serialize && typeof transaction.serialize === "function") {
-    const serialized = transaction.serialize();
-    const bytes = new Uint8Array(Buffer.from(serialized.slice(2), "hex"));
 
     return {
-      base64url: base64urlEncode(bytes),
-      originalFormat: "ethers",
-    };
-  }
-
-  // If it's already serialized bytes
-  if (transaction instanceof Uint8Array) {
-    return {
-      base64url: base64urlEncode(transaction),
-      originalFormat: "bytes",
-    };
-  }
-
-  // If it's a hex string
-  if (typeof transaction === "string" && transaction.startsWith("0x")) {
-    const bytes = new Uint8Array(Buffer.from(transaction.slice(2), "hex"));
-    return {
-      base64url: base64urlEncode(bytes),
-      originalFormat: "hex",
+      base64url: base64urlEncode(new TextEncoder().encode(JSON.stringify(eip1559Tx))),
+      structuredTx: eip1559Tx,
+      originalFormat: "eip-1559-json",
     };
   }
 

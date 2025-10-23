@@ -4,8 +4,8 @@ import type { NetworkId } from "@phantom/constants";
 import {
   parseMessage,
   parseSignMessageResponse,
-  parseTransactionResponse,
   parseTransactionToBase64Url,
+  parseTransactionResponse,
   type ParsedSignatureResult,
   type ParsedTransactionResult,
 } from "@phantom/parsers";
@@ -785,7 +785,8 @@ export class EmbeddedProvider {
       networkId: params.networkId,
     });
 
-    // Parse transaction to base64url format for client based on network
+    // Parse transaction to appropriate format for client based on network
+    // Solana: base64url, Ethereum: EIP-1559 JSON or RLP hex, etc.
     const parsedTransaction = await parseTransactionToBase64Url(params.transaction, params.networkId);
 
     // Get session to access derivation index
@@ -799,9 +800,10 @@ export class EmbeddedProvider {
     });
 
     // Get raw response from client
+    // Use structuredTx if available (ETH EIP-1559), otherwise use base64url string
     const rawResponse = await this.client.signTransaction({
       walletId: this.walletId,
-      transaction: parsedTransaction.base64url,
+      transaction: parsedTransaction.structuredTx ?? parsedTransaction.base64url,
       networkId: params.networkId,
       derivationIndex: derivationIndex,
       account: this.getAddressForNetwork(params.networkId),
@@ -830,7 +832,8 @@ export class EmbeddedProvider {
       networkId: params.networkId,
     });
 
-    // Parse transaction to base64url format for client based on network
+    // Parse transaction to appropriate format for client based on network
+    // Solana: base64url, Ethereum: EIP-1559 JSON or RLP hex, etc.
     const parsedTransaction = await parseTransactionToBase64Url(params.transaction, params.networkId);
 
     // Get session to access derivation index
@@ -844,9 +847,10 @@ export class EmbeddedProvider {
     });
 
     // Get raw response from client
+    // Use structuredTx if available (ETH EIP-1559), otherwise use base64url string
     const rawResponse = await this.client.signAndSendTransaction({
       walletId: this.walletId,
-      transaction: parsedTransaction.base64url,
+      transaction: parsedTransaction.structuredTx ?? parsedTransaction.base64url,
       networkId: params.networkId,
       derivationIndex: derivationIndex,
       account: this.getAddressForNetwork(params.networkId),
