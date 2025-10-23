@@ -615,7 +615,7 @@ sdk.off('connect', handleConnect);
 | Event | Payload Type | When Fired | Key Data |
 |-------|-------------|------------|----------|
 | `connect_start` | `ConnectStartEventData` | Connection initiated | `source`, `authOptions` |
-| `connect` | `ConnectEventData` | Connection successful | `providerType`, `addresses`, `walletId`, `status`, `source`, `authUserId`|
+| `connect` | `ConnectEventData` | Connection successful | `providerType`, `addresses`, `status`, `source`, `user`|
 | `connect_error` | `ConnectErrorEventData` | Connection failed | `error`, `source` |
 | `disconnect` | `DisconnectEventData` | Disconnected | `source` |
 | `error` | `unknown` | General SDK errors | Error details |
