@@ -19,7 +19,7 @@ export function phantomConnector() {
         apiBaseUrl: 'https://staging-api.phantom.app/v1/wallets',
 
         authOptions: {
-          authUrl: 'https://staging-connect.phantom.app/login',
+          authUrl: 'https://staging-auth.phantom.app/connect/login',
           redirectUrl: `${window.location.origin}/auth-callback`,
         },
         embeddedWalletType: 'user-wallet',
