@@ -142,22 +142,24 @@ function convertToDecimalString(value: any): string {
 function parseEVMTransactionToBase64Url(transaction: any): ParsedTransaction {
   // If it's ethers.js transaction with serialize method
   if (transaction?.serialize && typeof transaction.serialize === "function") {
-    const rlpHex = transaction.serialize();
-    const rlpEncoded = { kind: "RLP_ENCODED" as const, bytes: rlpHex };
+    const serialized = transaction.serialize();
+    const bytes = new Uint8Array(Buffer.from(serialized.slice(2), "hex"));
+    const rlpEncoded = { kind: "RLP_ENCODED" as const, bytes: serialized};
     return {
-      base64url: base64urlEncode(new TextEncoder().encode(JSON.stringify(rlpEncoded))),
+      base64url: base64urlEncode(bytes),
       structuredTx: rlpEncoded,
-      originalFormat: "ethers-rlp",
+      originalFormat: "ethers",
     };
   }
 
   // If it's already a hex string (RLP encoded)
   if (typeof transaction === "string" && transaction.startsWith("0x")) {
+    const bytes = new Uint8Array(Buffer.from(transaction.slice(2), "hex"));
     const rlpEncoded = { kind: "RLP_ENCODED" as const, bytes: transaction };
     return {
-      base64url: base64urlEncode(new TextEncoder().encode(JSON.stringify(rlpEncoded))),
+      base64url: base64urlEncode(bytes),
       structuredTx: rlpEncoded,
-      originalFormat: "rlp-hex",
+      originalFormat: "hex",
     };
   }
 
@@ -166,9 +168,9 @@ function parseEVMTransactionToBase64Url(transaction: any): ParsedTransaction {
     const hexString = "0x" + Buffer.from(transaction).toString("hex");
     const rlpEncoded = { kind: "RLP_ENCODED" as const, bytes: hexString };
     return {
-      base64url: base64urlEncode(new TextEncoder().encode(JSON.stringify(rlpEncoded))),
+      base64url: base64urlEncode(transaction),
       structuredTx: rlpEncoded,
-      originalFormat: "bytes-to-rlp-hex",
+      originalFormat: "bytes",
     };
   }
 
@@ -196,7 +198,7 @@ function parseEVMTransactionToBase64Url(transaction: any): ParsedTransaction {
     return {
       base64url: base64urlEncode(new TextEncoder().encode(JSON.stringify(eip1559Tx))),
       structuredTx: eip1559Tx,
-      originalFormat: "eip-1559-json",
+      originalFormat: "viem",
     };
   }
 
