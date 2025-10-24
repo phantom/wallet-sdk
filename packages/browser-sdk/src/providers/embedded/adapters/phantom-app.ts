@@ -28,6 +28,30 @@ export class BrowserPhantomAppProvider implements PhantomAppProvider {
       );
     }
 
+    // Check if phantom_login feature is available
+    try {
+      if (!window.phantom?.app?.features || typeof window.phantom.app.features !== "function") {
+        throw new Error(
+          "Phantom Login is not available. The extension does not support the features API.",
+        );
+      }
+
+      const features = await window.phantom.app.features();
+
+      if (!Array.isArray(features) || !features.includes("phantom_login")) {
+        throw new Error(
+          "Phantom Login is not available. Please update your Phantom extension to use this authentication method.",
+        );
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error(
+        "Failed to check Phantom Login availability. Please ensure you have the latest version of the Phantom extension.",
+      );
+    }
+
     try {
       const result = await window.phantom.app.login({
         publicKey: options.publicKey,
