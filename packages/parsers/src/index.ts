@@ -8,15 +8,22 @@ import {
 } from "./response-parsers";
 
 // Re-export response parsers
-export { parseSignMessageResponse, parseTransactionResponse, parseSolanaSignedTransaction } from "./response-parsers";
+export {
+  parseSignMessageResponse,
+  parseTransactionResponse,
+  parseSolanaSignedTransaction,
+  base64UrlSignatureToHex,
+  extractSignatureFromEip2718,
+} from "./response-parsers";
 
 export interface ParsedTransaction {
-  base64url: string;
+  parsed?: string;
+  /** Original format of the input transaction */
   originalFormat: string;
 }
 
 export interface ParsedMessage {
-  base64url: string;
+  parsed: string;
 }
 
 // Re-export interfaces from response-parsers
@@ -27,14 +34,17 @@ export type { ParsedSignatureResult, ParsedTransactionResult } from "./response-
  */
 export function parseMessage(message: string): ParsedMessage {
   return {
-    base64url: stringToBase64url(message),
+    parsed: stringToBase64url(message),
   };
 }
 
 /**
- * Parse a transaction to base64url format based on network type
+ * Parse a transaction to KMS format based on network type
+ * - Solana: base64url encoding
+ * - EVM chains: hex encoding
+ * - Sui, Bitcoin: base64url encoding
  */
-export async function parseTransactionToBase64Url(transaction: any, networkId: NetworkId): Promise<ParsedTransaction> {
+export async function parseToKmsTransaction(transaction: any, networkId: NetworkId): Promise<ParsedTransaction> {
   const networkPrefix = networkId.split(":")[0].toLowerCase();
 
   switch (networkPrefix) {
@@ -46,7 +56,7 @@ export async function parseTransactionToBase64Url(transaction: any, networkId: N
     case "optimism":
     case "arbitrum":
     case "base":
-      return parseEVMTransactionToBase64Url(transaction);
+      return parseEVMTransactionToHex(transaction);
     case "sui":
       return await parseSuiTransactionToBase64Url(transaction);
     case "bitcoin":
@@ -65,7 +75,7 @@ function parseSolanaTransactionToBase64Url(transaction: any): ParsedTransaction 
   if (transaction?.messageBytes != null) {
     // @solana/kit Transaction
     return {
-      base64url: base64urlEncode(transaction.messageBytes),
+      parsed: base64urlEncode(transaction.messageBytes),
       originalFormat: "@solana/kit",
     };
   }
@@ -78,7 +88,7 @@ function parseSolanaTransactionToBase64Url(transaction: any): ParsedTransaction 
       verifySignatures: false,
     });
     return {
-      base64url: base64urlEncode(serialized),
+      parsed: base64urlEncode(serialized),
       originalFormat: "@solana/web3.js",
     };
   }
@@ -86,7 +96,7 @@ function parseSolanaTransactionToBase64Url(transaction: any): ParsedTransaction 
   // If it's already serialized bytes
   if (transaction instanceof Uint8Array) {
     return {
-      base64url: base64urlEncode(transaction),
+      parsed: base64urlEncode(transaction),
       originalFormat: "bytes",
     };
   }
@@ -96,7 +106,7 @@ function parseSolanaTransactionToBase64Url(transaction: any): ParsedTransaction 
     try {
       const bytes = Buffer.from(transaction, "base64");
       return {
-        base64url: base64urlEncode(new Uint8Array(bytes)),
+        parsed: base64urlEncode(new Uint8Array(bytes)),
         originalFormat: "base64",
       };
     } catch {
@@ -108,48 +118,48 @@ function parseSolanaTransactionToBase64Url(transaction: any): ParsedTransaction 
 }
 
 /**
- * Parse EVM transaction to base64url
+ * Parse EVM transaction - keeps JSON objects as-is, converts RLP hex strings and bytes
  * Supports Ethereum, Polygon, and other EVM-compatible chains
  */
-function parseEVMTransactionToBase64Url(transaction: any): ParsedTransaction {
-  // Check if it's a Viem transaction object
-  if (transaction && typeof transaction === "object" && (transaction.to || transaction.data)) {
-    // Serialize with BigInt support
-    const bytes = new TextEncoder().encode(
-      JSON.stringify(transaction, (_key, value) => (typeof value === "bigint" ? value.toString() : value)),
-    );
-
+function parseEVMTransactionToHex(transaction: any): ParsedTransaction {
+  // Check if it's already a hex string (RLP encoded)
+  if (typeof transaction === "string" && transaction.startsWith("0x")) {
     return {
-      base64url: base64urlEncode(bytes),
-      originalFormat: "viem",
+      parsed: transaction,
+      originalFormat: "hex",
     };
   }
 
-  // Check if it's ethers.js transaction
+  // Check if it's ethers.js transaction with serialize method
   if (transaction?.serialize && typeof transaction.serialize === "function") {
     const serialized = transaction.serialize();
-    const bytes = new Uint8Array(Buffer.from(serialized.slice(2), "hex"));
+    const hex = serialized.startsWith("0x") ? serialized : "0x" + serialized;
 
     return {
-      base64url: base64urlEncode(bytes),
+      parsed: hex,
       originalFormat: "ethers",
     };
   }
 
-  // If it's already serialized bytes
+  // If it's already serialized bytes (RLP encoded)
   if (transaction instanceof Uint8Array) {
+    const hex = "0x" + Buffer.from(transaction).toString("hex");
     return {
-      base64url: base64urlEncode(transaction),
+      parsed: hex,
       originalFormat: "bytes",
     };
   }
 
-  // If it's a hex string
-  if (typeof transaction === "string" && transaction.startsWith("0x")) {
-    const bytes = new Uint8Array(Buffer.from(transaction.slice(2), "hex"));
+  // Check if it's a transaction object (EIP-1559 or legacy format)
+  // Keep as JSON for easier processing on backend
+  if (transaction && typeof transaction === "object" && (transaction.to || transaction.data || transaction.from)) {
+    // Serialize with BigInt support - keep as base64url encoded JSON
+    const jsonString = JSON.stringify(transaction, (_key, value) => (typeof value === "bigint" ? value.toString() : value));
+    const bytes = new TextEncoder().encode(jsonString);
+
     return {
-      base64url: base64urlEncode(bytes),
-      originalFormat: "hex",
+      parsed: base64urlEncode(bytes),
+      originalFormat: "json",
     };
   }
 
@@ -164,7 +174,7 @@ async function parseSuiTransactionToBase64Url(transaction: any): Promise<ParsedT
   if (transaction?.serialize && typeof transaction.serialize === "function") {
     const serialized = transaction.serialize();
     return {
-      base64url: base64urlEncode(serialized),
+      parsed: base64urlEncode(serialized),
       originalFormat: "sui-sdk",
     };
   }
@@ -172,7 +182,7 @@ async function parseSuiTransactionToBase64Url(transaction: any): Promise<ParsedT
   // Check if it's already serialized bytes
   if (transaction instanceof Uint8Array) {
     return {
-      base64url: base64urlEncode(transaction),
+      parsed: base64urlEncode(transaction),
       originalFormat: "bytes",
     };
   }
@@ -183,7 +193,7 @@ async function parseSuiTransactionToBase64Url(transaction: any): Promise<ParsedT
     if (built?.serialize && typeof built.serialize === "function") {
       const serialized = built.serialize();
       return {
-        base64url: base64urlEncode(serialized),
+        parsed: base64urlEncode(serialized),
         originalFormat: "transaction-block",
       };
     }
@@ -200,7 +210,7 @@ function parseBitcoinTransactionToBase64Url(transaction: any): ParsedTransaction
   if (transaction?.toBuffer && typeof transaction.toBuffer === "function") {
     const buffer = transaction.toBuffer();
     return {
-      base64url: base64urlEncode(new Uint8Array(buffer)),
+      parsed: base64urlEncode(new Uint8Array(buffer)),
       originalFormat: "bitcoinjs-lib",
     };
   }
@@ -208,7 +218,7 @@ function parseBitcoinTransactionToBase64Url(transaction: any): ParsedTransaction
   // Check if it's already serialized bytes
   if (transaction instanceof Uint8Array) {
     return {
-      base64url: base64urlEncode(transaction),
+      parsed: base64urlEncode(transaction),
       originalFormat: "bytes",
     };
   }
@@ -217,7 +227,7 @@ function parseBitcoinTransactionToBase64Url(transaction: any): ParsedTransaction
   if (typeof transaction === "string") {
     const bytes = new Uint8Array(Buffer.from(transaction, "hex"));
     return {
-      base64url: base64urlEncode(bytes),
+      parsed: base64urlEncode(bytes),
       originalFormat: "hex",
     };
   }

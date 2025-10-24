@@ -5,7 +5,7 @@ import {
   parseMessage,
   parseSignMessageResponse,
   parseTransactionResponse,
-  parseTransactionToBase64Url,
+  parseToKmsTransaction,
   type ParsedSignatureResult,
   type ParsedTransactionResult,
 } from "@phantom/parsers";
@@ -754,13 +754,13 @@ export class EmbeddedProvider {
     const rawResponse = isEthereumChain(params.networkId)
       ? await this.client.ethereumSignMessage({
           walletId: this.walletId,
-          message: parsedMessage.base64url,
+          message: parsedMessage.parsed,
           networkId: params.networkId,
           derivationIndex: derivationIndex,
         })
       : await this.client.signRawPayload({
           walletId: this.walletId,
-          message: parsedMessage.base64url,
+          message: parsedMessage.parsed,
           networkId: params.networkId,
           derivationIndex: derivationIndex,
         });
@@ -820,8 +820,8 @@ export class EmbeddedProvider {
       networkId: params.networkId,
     });
 
-    // Parse transaction to base64url format for client based on network
-    const parsedTransaction = await parseTransactionToBase64Url(params.transaction, params.networkId);
+    // Parse transaction to KMS format (base64url for Solana, hex for EVM) based on network
+    const parsedTransaction = await parseToKmsTransaction(params.transaction, params.networkId);
 
     // Get session to access derivation index
     const session = await this.storage.getSession();
@@ -833,10 +833,15 @@ export class EmbeddedProvider {
       derivationIndex: derivationIndex,
     });
 
+    const transactionPayload = parsedTransaction.parsed;
+    if (!transactionPayload) {
+      throw new Error("Failed to parse transaction: no valid encoding found");
+    }
+
     // Get raw response from client
     const rawResponse = await this.client.signTransaction({
       walletId: this.walletId,
-      transaction: parsedTransaction.base64url,
+      transaction: transactionPayload,
       networkId: params.networkId,
       derivationIndex: derivationIndex,
       account: this.getAddressForNetwork(params.networkId),
@@ -865,8 +870,8 @@ export class EmbeddedProvider {
       networkId: params.networkId,
     });
 
-    // Parse transaction to base64url format for client based on network
-    const parsedTransaction = await parseTransactionToBase64Url(params.transaction, params.networkId);
+    // Parse transaction to KMS format (base64url for Solana, hex for EVM) based on network
+    const parsedTransaction = await parseToKmsTransaction(params.transaction, params.networkId);
 
     // Get session to access derivation index
     const session = await this.storage.getSession();
@@ -878,10 +883,15 @@ export class EmbeddedProvider {
       derivationIndex: derivationIndex,
     });
 
+    const transactionPayload = parsedTransaction.parsed;
+    if (!transactionPayload) {
+      throw new Error("Failed to parse transaction: no valid encoding found");
+    }
+
     // Get raw response from client
     const rawResponse = await this.client.signAndSendTransaction({
       walletId: this.walletId,
-      transaction: parsedTransaction.base64url,
+      transaction: transactionPayload,
       networkId: params.networkId,
       derivationIndex: derivationIndex,
       account: this.getAddressForNetwork(params.networkId),

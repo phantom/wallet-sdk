@@ -10,6 +10,56 @@ import { Transaction, VersionedTransaction } from "@solana/web3.js";
 import bs58 from "bs58";
 import { Buffer } from "buffer";
 
+/**
+ * Convert base64url signature to hex format
+ */
+export function base64UrlSignatureToHex(base64UrlSignature: string): string {
+  try {
+    const signatureBytes = base64urlDecode(base64UrlSignature);
+    return "0x" + Buffer.from(signatureBytes).toString("hex");
+  } catch (error) {
+    // Fallback: assume it's already hex format
+    return base64UrlSignature.startsWith("0x") ? base64UrlSignature : "0x" + base64UrlSignature;
+  }
+}
+
+/**
+ * Extract signature from EIP-2718 encoded transaction
+ * EIP-2718 defines a typed transaction envelope format
+ */
+export function extractSignatureFromEip2718(bytes: Uint8Array): { r: string; s: string; v: number } {
+  try {
+    // For type 2 (EIP-1559) transactions, the format is:
+    // 0x02 || rlp([chainId, nonce, maxPriorityFeePerGas, maxFeePerGas, gasLimit, to, value, data, accessList, yParity, r, s])
+    // For type 1 (EIP-2930) transactions:
+    // 0x01 || rlp([chainId, nonce, gasPrice, gasLimit, to, value, data, accessList, yParity, r, s])
+    // For legacy transactions (type 0):
+    // rlp([nonce, gasPrice, gasLimit, to, value, data, v, r, s])
+
+    // This is a simplified extraction - for now we'll use viem if available
+    // Otherwise we need to implement full RLP decoding
+
+    // Try to use viem for proper decoding
+    try {
+      // Dynamic import to handle optional dependency
+      const viem = require("viem");
+      const transaction = viem.parseTransaction(bytes);
+
+      return {
+        r: transaction.r || "0x0",
+        s: transaction.s || "0x0",
+        v: transaction.v ? Number(transaction.v) : 0,
+      };
+    } catch (viemError) {
+      // Fallback: return placeholder values
+      // In production, proper RLP decoding should be implemented
+      throw new Error("Failed to extract signature from EIP-2718 transaction. Viem is required for this operation.");
+    }
+  } catch (error) {
+    throw new Error(`Failed to extract signature: ${error instanceof Error ? error.message : "Unknown error"}`);
+  }
+}
+
 export interface ParsedSignatureResult {
   signature: string; // Human-readable signature (hex/base58)
   rawSignature: string; // Original base64url signature from server
@@ -111,7 +161,8 @@ function parseEVMSignatureResponse(base64Response: string): ParsedSignatureResul
       }
     }
 
-    const signature = "0x" + Buffer.from(signatureBytes).toString("hex");
+    // Use helper function to convert to hex
+    const signature = base64UrlSignatureToHex(Buffer.from(signatureBytes).toString("base64url"));
 
     return {
       signature,

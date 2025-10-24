@@ -62,13 +62,6 @@ export function SDKActions() {
   } = useBalance(solanaAddress);
   const hasSolanaBalance = solanaBalance !== null && solanaBalance > 0;
 
-  const {
-    balance: ethereumBalance,
-    loading: ethereumBalanceLoading,
-    error: ethereumBalanceError,
-    refetch: refetchEthereumBalance,
-  } = useBalance(ethereumAddress);
-  const hasEthereumBalance = ethereumBalance !== null && ethereumBalance > 0;
 
   const onConnectInjected = async () => {
     try {
@@ -744,8 +737,7 @@ export function SDKActions() {
       }
       alert(`ETH transaction sent on Ethereum mainnet! Hash: ${result}`);
 
-      // Refresh balance after successful transaction
-      refetchEthereumBalance();
+ 
     } catch (error) {
       console.error("Error sending ETH on mainnet:", error);
       alert(`Error sending ETH: ${(error as Error).message || error}`);
@@ -778,8 +770,7 @@ export function SDKActions() {
       }
       alert(`POL transaction sent on Polygon mainnet! Hash: ${result}`);
 
-      // Refresh balance after successful transaction
-      refetchEthereumBalance();
+ 
     } catch (error) {
       console.error("Error sending POL on Polygon:", error);
       alert(`Error sending POL: ${(error as Error).message || error}`);
@@ -886,29 +877,6 @@ export function SDKActions() {
         </div>
       )}
 
-      {isConnected && ethereumAddress && (
-        <div className="section">
-          <h3>ETH Balance</h3>
-          <div className="balance-card">
-            <div className="balance-row">
-              <span className="balance-label">Balance:</span>
-              <span className="balance-value">
-                {ethereumBalanceLoading
-                  ? "Loading..."
-                  : ethereumBalanceError
-                    ? "Error"
-                    : ethereumBalance !== null
-                      ? `${ethereumBalance.toFixed(4)} ETH`
-                      : "--"}
-              </span>
-            </div>
-            <button className="small" onClick={() => refetchEthereumBalance()} disabled={ethereumBalanceLoading}>
-              {ethereumBalanceLoading ? "Loading..." : "Refresh"}
-            </button>
-          </div>
-          {ethereumBalanceError && <p className="error-text">Balance error: {ethereumBalanceError}</p>}
-        </div>
-      )}
 
       {isConnected && currentProviderType === "injected" && (
         <div className="section">
@@ -992,13 +960,9 @@ export function SDKActions() {
             </button>
             <button
               onClick={() => onSignTransaction("ethereum")}
-              disabled={!isConnected || isSigningOnlyTransaction === "ethereum" || !hasEthereumBalance}
+              disabled={!isConnected || isSigningOnlyTransaction === "ethereum"}
             >
-              {isSigningOnlyTransaction === "ethereum"
-                ? "Signing..."
-                : !hasEthereumBalance
-                  ? "Insufficient ETH Balance (need > 0)"
-                  : "Sign Transaction (Ethereum)"}
+              {isSigningOnlyTransaction === "ethereum" ? "Signing..." : "Sign Transaction (Ethereum)"}
             </button>
             <button
               onClick={onSignAndSendTransaction}
@@ -1012,30 +976,18 @@ export function SDKActions() {
             </button>
             <button
               onClick={onSendEthTransaction}
-              disabled={!isConnected || isSendingEthTransaction || !hasEthereumBalance}
+              disabled={!isConnected || isSendingEthTransaction}
             >
-              {isSendingEthTransaction
-                ? "Sending..."
-                : !hasEthereumBalance
-                  ? "Insufficient ETH Balance (need > 0)"
-                  : "Sign & Send Transaction (Ethereum)"}
+              {isSendingEthTransaction ? "Sending..." : "Sign & Send Transaction (Ethereum)"}
             </button>
             <button
               onClick={onSendEthMainnet}
-              disabled={!isConnected || isSendingEthMainnet || !hasEthereumBalance}
+              disabled={!isConnected || isSendingEthMainnet}
             >
-              {isSendingEthMainnet
-                ? "Sending..."
-                : !hasEthereumBalance
-                  ? "Insufficient ETH Balance (need > 0)"
-                  : "Send 0.00001 ETH (Mainnet)"}
+              {isSendingEthMainnet ? "Sending..." : "Send 0.00001 ETH (Mainnet)"}
             </button>
-            <button onClick={onSendPolygon} disabled={!isConnected || isSendingPolygon || !hasEthereumBalance}>
-              {isSendingPolygon
-                ? "Sending..."
-                : !hasEthereumBalance
-                  ? "Insufficient ETH Balance (need > 0)"
-                  : "Send 0.00001 POL (Polygon)"}
+            <button onClick={onSendPolygon} disabled={!isConnected || isSendingPolygon}>
+              {isSendingPolygon ? "Sending..." : "Send 0.00001 POL (Polygon)"}
             </button>
             <button
               onClick={onSignAllTransactions}

@@ -21,7 +21,7 @@ import bs58 from "bs58";
 import packageJson from "../package.json";
 import {
   parseMessage,
-  parseTransactionToBase64Url,
+  parseToKmsTransaction,
   parseSignMessageResponse,
   parseTransactionResponse,
   type ParsedSignatureResult,
@@ -145,13 +145,19 @@ export class ServerSDK {
    * @returns Promise<ParsedTransactionResult> - Parsed transaction result without hash
    */
   async signTransaction(params: ServerSignTransactionParams): Promise<ParsedTransactionResult> {
-    // Parse the transaction to base64url format
-    const parsedTransaction = await parseTransactionToBase64Url(params.transaction, params.networkId);
+    // Parse the transaction to KMS format (base64url for Solana, hex for EVM)
+    const parsedTransaction = await parseToKmsTransaction(params.transaction, params.networkId);
+
+    // Get the transaction payload for the KMS (use hex for EVM, base64url for others)
+    const transactionPayload = parsedTransaction.parsed;
+    if (!transactionPayload) {
+      throw new Error("Failed to parse transaction: no valid encoding found");
+    }
 
     // Use the parent's signTransaction method with parsed transaction
     const signTransactionParams: SignTransactionParams = {
       walletId: params.walletId,
-      transaction: parsedTransaction.base64url,
+      transaction: transactionPayload,
       networkId: params.networkId,
       derivationIndex: params.derivationIndex,
       account: params.account,
@@ -170,13 +176,19 @@ export class ServerSDK {
    * @returns Promise<ParsedTransactionResult> - Parsed transaction result with hash and explorer URL
    */
   async signAndSendTransaction(params: ServerSignAndSendTransactionParams): Promise<ParsedTransactionResult> {
-    // Parse the transaction to base64url format
-    const parsedTransaction = await parseTransactionToBase64Url(params.transaction, params.networkId);
+    // Parse the transaction to KMS format (base64url for Solana, hex for EVM)
+    const parsedTransaction = await parseToKmsTransaction(params.transaction, params.networkId);
+
+    // Get the transaction payload for the KMS (use hex for EVM, base64url for others)
+    const transactionPayload = parsedTransaction.parsed;
+    if (!transactionPayload) {
+      throw new Error("Failed to parse transaction: no valid encoding found");
+    }
 
     // Use the parent's signAndSendTransaction method with parsed transaction
     const signAndSendParams: SignAndSendTransactionParams = {
       walletId: params.walletId,
-      transaction: parsedTransaction.base64url,
+      transaction: transactionPayload,
       networkId: params.networkId,
       derivationIndex: params.derivationIndex,
       account: params.account,
@@ -267,9 +279,11 @@ export { NetworkId } from "@phantom/constants";
 export { ApiKeyStamper } from "@phantom/api-key-stamper";
 export {
   parseMessage,
-  parseTransactionToBase64Url,
+  parseToKmsTransaction,
   parseSignMessageResponse,
   parseTransactionResponse,
+  base64UrlSignatureToHex,
+  extractSignatureFromEip2718,
   type ParsedMessage,
   type ParsedTransaction,
   type ParsedSignatureResult,
