@@ -1,5 +1,13 @@
 # @phantom/react-sdk
 
+## 1.0.0-beta.16
+
+### Patch Changes
+
+- bb3483b: Fix double connect issues , change provider bug
+- Updated dependencies [bb3483b]
+  - @phantom/browser-sdk@1.0.0-beta.16
+
 ## 1.0.0-beta.15
 
 ### Patch Changes

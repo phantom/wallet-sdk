@@ -1,5 +1,15 @@
 # @phantom/react-ui
 
+## 2.0.0-beta.11
+
+### Patch Changes
+
+- bb3483b: Fix double connect issues , change provider bug
+- Updated dependencies [bb3483b]
+  - @phantom/browser-sdk@1.0.0-beta.16
+  - @phantom/react-sdk@1.0.0-beta.16
+  - @phantom/client@1.0.0-beta.16
+
 ## 2.0.0-beta.10
 
 ### Patch Changes
