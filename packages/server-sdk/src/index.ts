@@ -9,7 +9,7 @@ import {
   type AddressType,
   type Organization,
 } from "@phantom/client";
-import { randomUUID, getSecureTimestampSync } from "@phantom/utils";
+import { randomUUID, getSecureTimestampSync, isEthereumChain } from "@phantom/utils";
 import { 
   ANALYTICS_HEADERS,
   DEFAULT_WALLET_API_URL,
@@ -115,6 +115,7 @@ export class ServerSDK {
 
   /**
    * Sign a message - supports plain text and automatically converts to base64url
+   * Routes to appropriate signing method based on network type
    * @param params - Message parameters with plain text message
    * @returns Promise<ParsedSignatureResult> - Parsed signature with explorer URL
    */
@@ -122,7 +123,6 @@ export class ServerSDK {
     // Parse the message to base64url format
     const parsedMessage = parseMessage(params.message);
 
-    // Use the parent's signMessage method with parsed message
     const signMessageParams: SignMessageParams = {
       walletId: params.walletId,
       message: parsedMessage.base64url,
@@ -130,8 +130,10 @@ export class ServerSDK {
       derivationIndex: params.derivationIndex,
     };
 
-    // Get raw response from client
-    const rawResponse = await this.client.signMessage(signMessageParams);
+    // Get raw response from client - use the appropriate method based on chain
+    const rawResponse = isEthereumChain(params.networkId)
+      ? await this.client.ethereumSignMessage(signMessageParams)
+      : await this.client.signRawPayload(signMessageParams);
 
     // Parse the response to get human-readable signature and explorer URL
     return parseSignMessageResponse(rawResponse, params.networkId);

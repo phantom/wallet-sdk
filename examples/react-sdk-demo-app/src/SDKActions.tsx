@@ -47,6 +47,8 @@ export function SDKActions() {
   const [isStakingSol, setIsStakingSol] = useState(false);
   const [isSendingCustomSol, setIsSendingCustomSol] = useState(false);
   const [customSolAmount, setCustomSolAmount] = useState("");
+  const [isSendingEthMainnet, setIsSendingEthMainnet] = useState(false);
+  const [isSendingPolygon, setIsSendingPolygon] = useState(false);
 
   const solanaAddress = addresses?.find(addr => addr.addressType === "Solana")?.address || null;
   const ethereumAddress = addresses?.find(addr => addr.addressType === "Ethereum")?.address || null;
@@ -718,6 +720,74 @@ export function SDKActions() {
     }
   };
 
+  const onSendEthMainnet = async () => {
+    if (!isConnected || !ethereumAddress) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+
+    try {
+      setIsSendingEthMainnet(true);
+
+      // Create ETH transfer (0.00001 ETH to self)
+      const transactionParams = {
+        from: ethereumAddress,
+        to: ethereumAddress, // Self-transfer
+        value: numberToHex(parseEther("0.00001")), // 0.00001 ETH in hex
+        chainId: numberToHex(1), // Ethereum mainnet
+      };
+
+      const result = await ethereum?.sendTransaction(transactionParams);
+      if (!result) {
+        alert("Ethereum chain not available");
+        return;
+      }
+      alert(`ETH transaction sent on Ethereum mainnet! Hash: ${result}`);
+
+      // Refresh balance after successful transaction
+      refetchEthereumBalance();
+    } catch (error) {
+      console.error("Error sending ETH on mainnet:", error);
+      alert(`Error sending ETH: ${(error as Error).message || error}`);
+    } finally {
+      setIsSendingEthMainnet(false);
+    }
+  };
+
+  const onSendPolygon = async () => {
+    if (!isConnected || !ethereumAddress) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+
+    try {
+      setIsSendingPolygon(true);
+
+      // Create POL transfer (0.00001 POL to self) on Polygon mainnet
+      const transactionParams = {
+        from: ethereumAddress,
+        to: ethereumAddress, // Self-transfer
+        value: numberToHex(parseEther("0.00001")), // 0.00001 POL in hex
+        chainId: numberToHex(137), // Polygon mainnet
+      };
+
+      const result = await ethereum?.sendTransaction(transactionParams);
+      if (!result) {
+        alert("Ethereum chain not available");
+        return;
+      }
+      alert(`POL transaction sent on Polygon mainnet! Hash: ${result}`);
+
+      // Refresh balance after successful transaction
+      refetchEthereumBalance();
+    } catch (error) {
+      console.error("Error sending POL on Polygon:", error);
+      alert(`Error sending POL: ${(error as Error).message || error}`);
+    } finally {
+      setIsSendingPolygon(false);
+    }
+  };
+
   // Auto-confirm handlers
   const onEnableAutoConfirm = async () => {
     try {
@@ -911,7 +981,7 @@ export function SDKActions() {
               {isSigningOnlyTransaction === "solana"
                 ? "Signing..."
                 : !hasSolanaBalance
-                  ? "Insufficient Balance"
+                  ? "Insufficient SOL Balance (need > 0)"
                   : "Sign Transaction (Solana)"}
             </button>
             <button
@@ -927,7 +997,7 @@ export function SDKActions() {
               {isSigningOnlyTransaction === "ethereum"
                 ? "Signing..."
                 : !hasEthereumBalance
-                  ? "Insufficient Balance"
+                  ? "Insufficient ETH Balance (need > 0)"
                   : "Sign Transaction (Ethereum)"}
             </button>
             <button
@@ -937,7 +1007,7 @@ export function SDKActions() {
               {isSigningAndSendingTransaction
                 ? "Signing & Sending..."
                 : !hasSolanaBalance
-                  ? "Insufficient Balance"
+                  ? "Insufficient SOL Balance (need > 0)"
                   : "Sign & Send Transaction (Solana)"}
             </button>
             <button
@@ -947,8 +1017,25 @@ export function SDKActions() {
               {isSendingEthTransaction
                 ? "Sending..."
                 : !hasEthereumBalance
-                  ? "Insufficient Balance"
+                  ? "Insufficient ETH Balance (need > 0)"
                   : "Sign & Send Transaction (Ethereum)"}
+            </button>
+            <button
+              onClick={onSendEthMainnet}
+              disabled={!isConnected || isSendingEthMainnet || !hasEthereumBalance}
+            >
+              {isSendingEthMainnet
+                ? "Sending..."
+                : !hasEthereumBalance
+                  ? "Insufficient ETH Balance (need > 0)"
+                  : "Send 0.00001 ETH (Mainnet)"}
+            </button>
+            <button onClick={onSendPolygon} disabled={!isConnected || isSendingPolygon || !hasEthereumBalance}>
+              {isSendingPolygon
+                ? "Sending..."
+                : !hasEthereumBalance
+                  ? "Insufficient ETH Balance (need > 0)"
+                  : "Send 0.00001 POL (Polygon)"}
             </button>
             <button
               onClick={onSignAllTransactions}
@@ -957,18 +1044,18 @@ export function SDKActions() {
               {isSigningAllTransactions
                 ? "Signing All..."
                 : !hasSolanaBalance
-                  ? "Insufficient Balance"
+                  ? "Insufficient SOL Balance (need > 0)"
                   : "Sign All Transactions (Solana)"}
             </button>
             <button onClick={onSendTokens} disabled={!isConnected || isSendingTokens || !hasSolanaBalance}>
               {isSendingTokens
                 ? "Sending Tokens..."
                 : !hasSolanaBalance
-                  ? "Insufficient Balance"
+                  ? "Insufficient SOL Balance (need > 0)"
                   : "Send 0.0001 SOL + 0.0001 USDC"}
             </button>
             <button onClick={onStakeSol} disabled={!isConnected || isStakingSol || !hasSolanaBalance}>
-              {isStakingSol ? "Staking SOL..." : !hasSolanaBalance ? "Insufficient Balance" : "Stake 0.0025 SOL"}
+              {isStakingSol ? "Staking SOL..." : !hasSolanaBalance ? "Insufficient SOL Balance (need > 0)" : "Stake 0.0025 SOL"}
             </button>
 
             <div className="custom-sol-section">
@@ -985,7 +1072,7 @@ export function SDKActions() {
                   disabled={!isConnected || isSendingCustomSol || !hasSolanaBalance || !customSolAmount}
                   className="send-custom-sol-btn"
                 >
-                  {isSendingCustomSol ? "Sending..." : !hasSolanaBalance ? "Insufficient Balance" : "Send Custom SOL"}
+                  {isSendingCustomSol ? "Sending..." : !hasSolanaBalance ? "Insufficient SOL Balance (need > 0)" : "Send Custom SOL"}
                 </button>
               </div>
             </div>

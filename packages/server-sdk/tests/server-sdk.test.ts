@@ -400,7 +400,7 @@ describe("ServerSDK", () => {
           message,
           networkId,
         }),
-      ).rejects.toThrow("Failed to sign message");
+      ).rejects.toThrow("Failed to sign raw payload");
     });
 
     it("should throw error when getting addresses for invalid wallet ID", async () => {

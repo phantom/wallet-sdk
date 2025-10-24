@@ -347,9 +347,60 @@ export class PhantomClient {
   }
 
   /**
-   * Sign a message
+   * Sign an Ethereum message using EIP-191 personal sign
    */
-  async signMessage(params: SignMessageParams): Promise<string> {
+  async ethereumSignMessage(params: SignMessageParams): Promise<string> {
+    const walletId = params.walletId;
+    const messageParam = params.message;
+    const networkIdParam = params.networkId;
+    const derivationIndex = params.derivationIndex ?? 0;
+
+    try {
+      if (!this.config.organizationId) {
+        throw new Error("organizationId is required to sign a message");
+      }
+      // Get network configuration with custom derivation index
+      const networkConfig = getNetworkConfig(networkIdParam, derivationIndex);
+
+      if (!networkConfig) {
+        throw new Error(`Unsupported network ID: ${networkIdParam}`);
+      }
+
+      const derivationInfo: DerivationInfo = {
+        derivationPath: networkConfig.derivationPath,
+        curve: networkConfig.curve,
+        addressFormat: networkConfig.addressFormat,
+      };
+
+      // Message is already base64url encoded
+      const base64StringMessage = messageParam;
+
+      const request = {
+        method: "ethereumSignMessage",
+        params: {
+          message: base64StringMessage,
+          organizationId: this.config.organizationId,
+          walletId,
+          derivationInfo,
+        },
+        timestampMs: await getSecureTimestamp(),
+      };
+
+      const response = await this.kmsApi.postKmsRpc(request as any);
+      const result = (response.data as any).result as SignatureWithPublicKey;
+
+      // Return the base64 encoded signature
+      return result.signature;
+    } catch (error: any) {
+      console.error("Failed to sign Ethereum message:", error.response?.data || error.message);
+      throw new Error(`Failed to sign Ethereum message: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  /**
+   * Sign a raw payload for now used for Solana Sign Message
+   */
+  async signRawPayload(params: SignMessageParams): Promise<string> {
     const walletId = params.walletId;
     const messageParam = params.message;
     const networkIdParam = params.networkId;
@@ -395,15 +446,15 @@ export class PhantomClient {
       // Return the base64 encoded signature
       return result.signature;
     } catch (error: any) {
-      console.error("Failed to sign message:", error.response?.data || error.message);
-      throw new Error(`Failed to sign message: ${error.response?.data?.message || error.message}`);
+      console.error("Failed to sign raw payload:", error.response?.data || error.message);
+      throw new Error(`Failed to sign raw payload: ${error.response?.data?.message || error.message}`);
     }
   }
 
   /**
-   * Sign EIP-712 typed data
+   * Sign EIP-712 typed data for Ethereum
    */
-  async signTypedData(params: SignTypedDataParams): Promise<string> {
+  async ethereumSignTypedData(params: SignTypedDataParams): Promise<string> {
     const walletId = params.walletId;
     const typedData = params.typedData;
     const networkIdParam = params.networkId;

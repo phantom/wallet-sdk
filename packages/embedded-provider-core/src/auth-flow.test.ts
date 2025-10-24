@@ -168,7 +168,8 @@ describe("EmbeddedProvider Auth Flows", () => {
       createOrganization: jest.fn(),
       createWallet: jest.fn(),
       getWalletAddresses: jest.fn(),
-      signMessage: jest.fn(),
+      ethereumSignMessage: jest.fn(),
+      signRawPayload: jest.fn(),
       signAndSendTransaction: jest.fn(),
     } as any;
     mockedPhantomClient.mockImplementation(() => mockClient);
@@ -1222,14 +1223,14 @@ describe("EmbeddedProvider Auth Flows", () => {
     });
 
     it("should sign messages when connected", async () => {
-      mockClient.signMessage.mockResolvedValue("signed-message-signature");
+      mockClient.signRawPayload.mockResolvedValue("signed-message-signature");
 
       const result = await provider.signMessage({
         message: "test message",
         networkId: NetworkId.SOLANA_MAINNET,
       });
 
-      expect(mockClient.signMessage).toHaveBeenCalledWith({
+      expect(mockClient.signRawPayload).toHaveBeenCalledWith({
         walletId: "wallet-123",
         message: expect.any(String),
         networkId: NetworkId.SOLANA_MAINNET,

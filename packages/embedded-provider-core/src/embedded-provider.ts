@@ -9,7 +9,7 @@ import {
   type ParsedSignatureResult,
   type ParsedTransactionResult,
 } from "@phantom/parsers";
-import { randomUUID } from "@phantom/utils";
+import { randomUUID, isEthereumChain } from "@phantom/utils";
 import bs58 from "bs58";
 import { AUTHENTICATOR_EXPIRATION_TIME_MS } from "./constants";
 
@@ -750,13 +750,20 @@ export class EmbeddedProvider {
     const session = await this.storage.getSession();
     const derivationIndex = session?.accountDerivationIndex ?? 0;
 
-    // Get raw response from client
-    const rawResponse = await this.client.signMessage({
-      walletId: this.walletId,
-      message: parsedMessage.base64url,
-      networkId: params.networkId,
-      derivationIndex: derivationIndex,
-    });
+    // Get raw response from client - use the appropriate method based on chain
+    const rawResponse = isEthereumChain(params.networkId)
+      ? await this.client.ethereumSignMessage({
+          walletId: this.walletId,
+          message: parsedMessage.base64url,
+          networkId: params.networkId,
+          derivationIndex: derivationIndex,
+        })
+      : await this.client.signRawPayload({
+          walletId: this.walletId,
+          message: parsedMessage.base64url,
+          networkId: params.networkId,
+          derivationIndex: derivationIndex,
+        });
 
     this.logger.info("EMBEDDED_PROVIDER", "Message signed successfully", {
       walletId: this.walletId,
@@ -784,8 +791,8 @@ export class EmbeddedProvider {
     const session = await this.storage.getSession();
     const derivationIndex = session?.accountDerivationIndex ?? 0;
 
-    // Call the client's signTypedData method
-    const rawResponse = await this.client.signTypedData({
+    // Call the client's ethereumSignTypedData method
+    const rawResponse = await this.client.ethereumSignTypedData({
       walletId: this.walletId,
       typedData: params.typedData,
       networkId: params.networkId,
