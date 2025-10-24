@@ -7,6 +7,7 @@ export { useAccounts } from "./useAccounts";
 
 // Extension detection
 export { useIsExtensionInstalled } from "./useIsExtensionInstalled";
+export { useIsPhantomLoginAvailable } from "./useIsPhantomLoginAvailable";
 
 // Auto-confirm functionality (injected provider only)
 export { useAutoConfirm } from "./useAutoConfirm";

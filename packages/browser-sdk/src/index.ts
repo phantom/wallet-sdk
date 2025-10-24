@@ -25,6 +25,7 @@ export { getDeeplinkToPhantom } from "./utils/deeplink";
 
 // Extension detection
 export { waitForPhantomExtension } from "./waitForPhantomExtension";
+export { isPhantomLoginAvailable } from "./isPhantomLoginAvailable";
 
 // Re-export useful types from constants and client
 export { NetworkId } from "@phantom/constants";
