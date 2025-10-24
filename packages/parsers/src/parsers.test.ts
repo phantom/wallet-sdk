@@ -146,8 +146,14 @@ describe("EVM Transaction Parser", () => {
 
     const result = await parseToKmsTransaction(mockViemTransaction, "ethereum:mainnet");
 
-    expect(result.originalFormat).toBe("viem");
+    expect(result.originalFormat).toBe("json");
+    expect(result.kind).toBe("EIP_1559");
     expect(result.parsed).toBeDefined();
+
+    // Verify it's base64url encoded JSON
+    const decoded = base64urlDecodeToString(result.parsed);
+    const parsedJson = JSON.parse(decoded);
+    expect(parsedJson.to).toBe("0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E");
   });
 
   it("should parse ethers.js transaction with serialize method", async () => {
@@ -158,7 +164,8 @@ describe("EVM Transaction Parser", () => {
     const result = await parseToKmsTransaction(mockEthersTransaction, "ethereum:mainnet");
 
     expect(result.originalFormat).toBe("ethers");
-    expect(result.parsed).toBeDefined();
+    expect(result.kind).toBe("RLP_ENCODED");
+    expect(result.parsed).toBe("0x0607080910");
     expect(mockEthersTransaction.serialize).toHaveBeenCalled();
   });
 
@@ -168,11 +175,8 @@ describe("EVM Transaction Parser", () => {
     const result = await parseToKmsTransaction(mockBytes, "ethereum:mainnet");
 
     expect(result.originalFormat).toBe("bytes");
-    expect(result.parsed).toBeDefined();
-
-    // Verify the encoded data matches
-    const decoded = base64urlDecode(result.parsed);
-    expect(decoded).toEqual(mockBytes);
+    expect(result.kind).toBe("RLP_ENCODED");
+    expect(result.parsed).toBe("0x0102030405");
   });
 
   it("should parse EVM transaction as hex string", async () => {
@@ -181,11 +185,8 @@ describe("EVM Transaction Parser", () => {
     const result = await parseToKmsTransaction(hexString, "ethereum:mainnet");
 
     expect(result.originalFormat).toBe("hex");
-    expect(result.parsed).toBeDefined();
-
-    // Verify the encoded data matches
-    const decoded = base64urlDecode(result.parsed);
-    expect(decoded).toEqual(new Uint8Array([1, 2, 3, 4, 5]));
+    expect(result.kind).toBe("RLP_ENCODED");
+    expect(result.parsed).toBe("0x0102030405");
   });
 
   it("should work with all EVM networks", async () => {

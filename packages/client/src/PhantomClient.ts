@@ -211,8 +211,15 @@ export class PhantomClient {
       if (!this.config.organizationId) {
         throw new Error("organizationId is required to sign a transaction");
       }
-      // Transaction is already base64url encoded
-      const encodedTransaction = transactionParam;
+      // Handle both string (Solana) and EthereumTransaction (with kind field)
+      const encodedTransaction = typeof transactionParam === 'string'
+        ? transactionParam
+        : transactionParam.transaction;
+
+      // Get kind field if present (for Ethereum transactions)
+      const transactionKind = typeof transactionParam === 'object' && 'kind' in transactionParam
+        ? transactionParam.kind
+        : undefined;
 
       let submissionConfig: SubmissionConfig | null = null;
 
@@ -247,9 +254,11 @@ export class PhantomClient {
       } = {
         organizationId: this.config.organizationId,
         walletId: walletId,
-        transaction: encodedTransaction as any,
+        transaction: transactionKind
+          ? { transaction: encodedTransaction, kind: transactionKind }
+          : encodedTransaction,
         derivationInfo: derivationInfo,
-      };
+      } as any;
 
       // Add submission config if available and requested
       if (includeSubmissionConfig && submissionConfig) {

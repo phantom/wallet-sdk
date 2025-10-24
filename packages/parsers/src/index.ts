@@ -13,7 +13,6 @@ export {
   parseTransactionResponse,
   parseSolanaSignedTransaction,
   base64UrlSignatureToHex,
-  extractSignatureFromEip2718,
 } from "./response-parsers";
 
 export interface ParsedTransaction {

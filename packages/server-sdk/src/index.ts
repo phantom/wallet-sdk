@@ -154,10 +154,15 @@ export class ServerSDK {
       throw new Error("Failed to parse transaction: no valid encoding found");
     }
 
+    // Build the transaction parameter - if kind is present, create EthereumTransaction object
+    const transactionParam = parsedTransaction.kind
+      ? { transaction: transactionPayload, kind: parsedTransaction.kind }
+      : transactionPayload;
+
     // Use the parent's signTransaction method with parsed transaction
     const signTransactionParams: SignTransactionParams = {
       walletId: params.walletId,
-      transaction: transactionPayload,
+      transaction: transactionParam,
       networkId: params.networkId,
       derivationIndex: params.derivationIndex,
       account: params.account,
@@ -185,10 +190,15 @@ export class ServerSDK {
       throw new Error("Failed to parse transaction: no valid encoding found");
     }
 
+    // Build the transaction parameter - if kind is present, create EthereumTransaction object
+    const transactionParam = parsedTransaction.kind
+      ? { transaction: transactionPayload, kind: parsedTransaction.kind }
+      : transactionPayload;
+
     // Use the parent's signAndSendTransaction method with parsed transaction
     const signAndSendParams: SignAndSendTransactionParams = {
       walletId: params.walletId,
-      transaction: transactionPayload,
+      transaction: transactionParam,
       networkId: params.networkId,
       derivationIndex: params.derivationIndex,
       account: params.account,
@@ -283,7 +293,6 @@ export {
   parseSignMessageResponse,
   parseTransactionResponse,
   base64UrlSignatureToHex,
-  extractSignatureFromEip2718,
   type ParsedMessage,
   type ParsedTransaction,
   type ParsedSignatureResult,
