@@ -42,7 +42,36 @@ import { retryWithBackoff } from "./utils/retry";
 import { generateSessionId } from "./utils/session";
 
 export type EmbeddedProviderEvent = "connect" | "connect_start" | "connect_error" | "disconnect" | "error";
-export type EventCallback = (data?: any) => void;
+
+// Event payload types for type-safe event handling
+export interface ConnectEventData extends ConnectResult {
+  source: "auto-connect" | "manual-connect" | "manual-existing" | "existing-session" | "manual";
+}
+
+export interface ConnectStartEventData {
+  source: "auto-connect" | "manual-connect";
+  authOptions?: { provider?: string };
+}
+
+export interface ConnectErrorEventData {
+  error: string;
+  source: "auto-connect" | "manual-connect";
+}
+
+export interface DisconnectEventData {
+  source: "manual";
+}
+
+// Mapped type for event data based on event name
+export interface EmbeddedProviderEventMap {
+  connect: ConnectEventData;
+  connect_start: ConnectStartEventData;
+  connect_error: ConnectErrorEventData;
+  disconnect: DisconnectEventData;
+  error: any;
+}
+
+export type EventCallback<T = any> = (data: T) => void;
 
 interface StamperResponse {
   stamperInfo: StamperInfo;
@@ -100,15 +129,15 @@ export class EmbeddedProvider {
   /*
    * Event system methods for listening to provider state changes
    */
-  on(event: EmbeddedProviderEvent, callback: EventCallback): void {
+  on<K extends EmbeddedProviderEvent>(event: K, callback: EventCallback<EmbeddedProviderEventMap[K]>): void {
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, new Set());
     }
-    this.eventListeners.get(event)!.add(callback);
+    this.eventListeners.get(event)!.add(callback as EventCallback);
     this.logger.log("EMBEDDED_PROVIDER", "Event listener added", { event });
   }
 
-  off(event: EmbeddedProviderEvent, callback: EventCallback): void {
+  off<K extends EmbeddedProviderEvent>(event: K, callback: EventCallback<EmbeddedProviderEventMap[K]>): void {
     const listeners = this.eventListeners.get(event);
     if (listeners) {
       listeners.delete(callback);
@@ -291,13 +320,13 @@ export class EmbeddedProvider {
         walletId: this.walletId!,
         addresses: this.addresses,
         status: "completed",
+        providerType: "embedded",
         authUserId: session.authUserId,
       };
 
       // Emit connect event for existing session success
       this.emit("connect", {
-        walletId: this.walletId,
-        addresses: this.addresses,
+        ...result,
         source: "existing-session",
       });
 
@@ -435,8 +464,7 @@ export class EmbeddedProvider {
         });
 
         this.emit("connect", {
-          walletId: result.walletId,
-          addresses: result.addresses,
+          ...result,
           source: "auto-connect",
         });
         return;
@@ -567,8 +595,7 @@ export class EmbeddedProvider {
 
         // Emit connect event for manual connect success with existing connection
         this.emit("connect", {
-          walletId: existingResult.walletId,
-          addresses: existingResult.addresses,
+          ...existingResult,
           source: "manual-existing",
         });
 
@@ -593,6 +620,7 @@ export class EmbeddedProvider {
         return {
           addresses: [],
           status: "pending",
+          providerType: "embedded",
         } as ConnectResult;
       }
 
@@ -613,13 +641,13 @@ export class EmbeddedProvider {
         walletId: this.walletId!,
         addresses: this.addresses,
         status: "completed",
+        providerType: "embedded",
         authUserId: session?.authUserId,
       };
 
       // Emit connect event for manual connect success
       this.emit("connect", {
-        walletId: this.walletId,
-        addresses: this.addresses,
+        ...result,
         source: "manual",
       });
 
@@ -1236,6 +1264,7 @@ export class EmbeddedProvider {
       walletId: this.walletId!,
       addresses: this.addresses,
       status: "completed",
+      providerType: "embedded",
       authUserId: session.authUserId,
     };
   }

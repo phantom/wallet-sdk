@@ -152,8 +152,13 @@ export class ProviderManager implements EventEmitter {
     debug.log(DebugCategory.PROVIDER_MANAGER, "Delegating to provider connect method");
     const result = await this.currentProvider.connect(authOptions);
 
+    // Add provider type to result
+    const providerInfo = this.getCurrentProviderInfo();
+    result.providerType = providerInfo?.type;
+
     debug.log(DebugCategory.PROVIDER_MANAGER, "Connection successful, saving preferences", {
       addressCount: result.addresses?.length || 0,
+      providerType: result.providerType,
     });
 
     // Save provider preference after successful connection
@@ -161,6 +166,7 @@ export class ProviderManager implements EventEmitter {
 
     debug.info(DebugCategory.PROVIDER_MANAGER, "Connect completed", {
       addresses: result.addresses,
+      providerType: result.providerType,
     });
     return result;
   }
