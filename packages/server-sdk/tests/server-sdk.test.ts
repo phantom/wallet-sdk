@@ -293,7 +293,7 @@ describe("ServerSDK", () => {
       // Test Solana raw bytes
       const mockSolanaBytes = new Uint8Array([1, 2, 3, 4, 5]);
       const solanaResult = await parseToKmsTransaction(mockSolanaBytes, NetworkId.SOLANA_MAINNET);
-      expect(solanaResult.base64url).toBeDefined();
+      expect(solanaResult.parsed).toBeDefined();
       expect(solanaResult.originalFormat).toBe("bytes");
 
       // Test Solana web3.js transaction
@@ -301,18 +301,18 @@ describe("ServerSDK", () => {
         serialize: jest.fn().mockReturnValue(new Uint8Array([6, 7, 8, 9, 10])),
       };
       const web3Result = await parseToKmsTransaction(mockWeb3Transaction, NetworkId.SOLANA_MAINNET);
-      expect(web3Result.base64url).toBeDefined();
+      expect(web3Result.parsed).toBeDefined();
       expect(web3Result.originalFormat).toBe("@solana/web3.js");
       expect(mockWeb3Transaction.serialize).toHaveBeenCalled();
 
-      // Test EVM transaction object (JSON format - base64url encoded)
+      // Test EVM transaction object (JSON format)
       const mockEvmTransaction = {
         to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
         value: 1000000000000000000n,
         data: "0x",
       };
       const evmResult = await parseToKmsTransaction(mockEvmTransaction, NetworkId.ETHEREUM_MAINNET);
-      expect(evmResult.base64url).toBeDefined();
+      expect(evmResult.parsed).toBeDefined();
       expect(evmResult.originalFormat).toBe("json");
 
       // Test hex string transaction (RLP encoded - hex format)

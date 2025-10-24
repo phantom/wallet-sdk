@@ -125,7 +125,7 @@ export class ServerSDK {
 
     const signMessageParams: SignMessageParams = {
       walletId: params.walletId,
-      message: parsedMessage.base64url,
+      message: parsedMessage.parsed,
       networkId: params.networkId,
       derivationIndex: params.derivationIndex,
     };

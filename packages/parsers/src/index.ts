@@ -17,7 +17,10 @@ export {
 } from "./response-parsers";
 
 export interface ParsedTransaction {
+  /** The parsed transaction string (base64url for Solana/Sui/Bitcoin, depends on kind for EVM) */
   parsed?: string;
+  /** Transaction kind for EVM transactions (EIP_1559 for JSON, RLP_ENCODED for hex) */
+  kind?: "EIP_1559" | "RLP_ENCODED";
   /** Original format of the input transaction */
   originalFormat: string;
 }
@@ -118,7 +121,9 @@ function parseSolanaTransactionToBase64Url(transaction: any): ParsedTransaction 
 }
 
 /**
- * Parse EVM transaction - keeps JSON objects as-is, converts RLP hex strings and bytes
+ * Parse EVM transaction - adds kind field for KMS backend
+ * - RLP hex strings/bytes → kind: RLP_ENCODED
+ * - JSON transaction objects → kind: EIP_1559 (base64url encoded)
  * Supports Ethereum, Polygon, and other EVM-compatible chains
  */
 function parseEVMTransactionToHex(transaction: any): ParsedTransaction {
@@ -126,17 +131,19 @@ function parseEVMTransactionToHex(transaction: any): ParsedTransaction {
   if (typeof transaction === "string" && transaction.startsWith("0x")) {
     return {
       parsed: transaction,
+      kind: "RLP_ENCODED",
       originalFormat: "hex",
     };
   }
 
-  // Check if it's ethers.js transaction with serialize method
+  // Check if it's ethers.js transaction with serialize method (returns RLP)
   if (transaction?.serialize && typeof transaction.serialize === "function") {
     const serialized = transaction.serialize();
     const hex = serialized.startsWith("0x") ? serialized : "0x" + serialized;
 
     return {
       parsed: hex,
+      kind: "RLP_ENCODED",
       originalFormat: "ethers",
     };
   }
@@ -146,6 +153,7 @@ function parseEVMTransactionToHex(transaction: any): ParsedTransaction {
     const hex = "0x" + Buffer.from(transaction).toString("hex");
     return {
       parsed: hex,
+      kind: "RLP_ENCODED",
       originalFormat: "bytes",
     };
   }
@@ -159,6 +167,7 @@ function parseEVMTransactionToHex(transaction: any): ParsedTransaction {
 
     return {
       parsed: base64urlEncode(bytes),
+      kind: "EIP_1559",
       originalFormat: "json",
     };
   }

@@ -37,7 +37,7 @@ Converts various message formats to base64url encoding.
 **Returns:**
 
 - `ParsedMessage` object with:
-  - `base64url` (string) - Base64url encoded message
+  - `parsed` (string) - Base64url encoded message
   - `originalFormat` (string) - The detected input format
 
 **Example:**
@@ -47,19 +47,19 @@ import { parseMessage } from "@phantom/parsers";
 
 // Plain text message
 const result1 = parseMessage("Hello, Phantom!");
-console.log(result1.base64url); // "SGVsbG8sIFBoYW50b20h"
+console.log(result1.parsed); // "SGVsbG8sIFBoYW50b20h"
 console.log(result1.originalFormat); // "string"
 
 // Uint8Array
 const bytes = new TextEncoder().encode("Hello, Phantom!");
 const result2 = parseMessage(bytes);
-console.log(result2.base64url); // "SGVsbG8sIFBoYW50b20h"
+console.log(result2.parsed); // "SGVsbG8sIFBoYW50b20h"
 console.log(result2.originalFormat); // "bytes"
 ```
 
 ### parseToKmsTransaction(transaction, networkId)
 
-Converts various transaction formats to base64url encoding based on the target network.
+Converts various transaction formats to different encoding based on the target network.
 
 **Parameters:**
 
