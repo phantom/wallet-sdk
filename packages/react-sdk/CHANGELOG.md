@@ -1,5 +1,13 @@
 # @phantom/react-sdk
 
+## 1.0.0-beta.17
+
+### Patch Changes
+
+- bd2219e: Fixed features access
+- Updated dependencies [bd2219e]
+  - @phantom/browser-sdk@1.0.0-beta.17
+
 ## 1.0.0-beta.16
 
 ### Patch Changes
