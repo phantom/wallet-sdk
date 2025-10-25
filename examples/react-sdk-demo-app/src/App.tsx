@@ -39,7 +39,7 @@ function App() {
     apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "https://api.phantom.app/v1/wallets",
     embeddedWalletType: "user-wallet",
     authOptions: {
-      authUrl: import.meta.env.VITE_AUTH_URL || "https://connect.phantom.app/login",
+      authUrl: import.meta.env.VITE_AUTH_URL || "https://auth.phantom.app/connect/login",
       redirectUrl: import.meta.env.VITE_REDIRECT_URL,
     },
     autoConnect: true,
