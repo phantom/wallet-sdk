@@ -76,9 +76,21 @@ export class EmbeddedEthereumChain implements IEthereumChain {
   }
 
   async signTransaction(transaction: EthTransactionRequest): Promise<string> {
+    // If the transaction has a chainId, use that network for signing
+    let networkId = this.currentNetworkId;
+    if (transaction.chainId) {
+      const numericChainId = typeof transaction.chainId === "number"
+        ? transaction.chainId
+        : parseInt(transaction.chainId, 16);
+      const txNetworkId = chainIdToNetworkId(numericChainId);
+      if (txNetworkId) {
+        networkId = txNetworkId;
+      }
+    }
+
     const result = await this.provider.signTransaction({
       transaction,
-      networkId: this.currentNetworkId,
+      networkId,
     });
     // Convert base64url encoded signature to hex format for Ethereum (same logic as parseEVMSignatureResponse)
     try {
@@ -91,6 +103,14 @@ export class EmbeddedEthereumChain implements IEthereumChain {
   }
 
   async sendTransaction(transaction: EthTransactionRequest): Promise<string> {
+    // If the transaction has a chainId, switch to that chain first
+    if (transaction.chainId) {
+      const numericChainId = typeof transaction.chainId === "number"
+        ? transaction.chainId
+        : parseInt(transaction.chainId, 16);
+      await this.switchChain(numericChainId);
+    }
+
     const result = await this.provider.signAndSendTransaction({
       transaction,
       networkId: this.currentNetworkId,

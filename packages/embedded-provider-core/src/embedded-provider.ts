@@ -5,11 +5,11 @@ import {
   parseMessage,
   parseSignMessageResponse,
   parseTransactionResponse,
-  parseTransactionToBase64Url,
+  parseToKmsTransaction,
   type ParsedSignatureResult,
   type ParsedTransactionResult,
 } from "@phantom/parsers";
-import { randomUUID } from "@phantom/utils";
+import { randomUUID, isEthereumChain } from "@phantom/utils";
 import bs58 from "bs58";
 import { AUTHENTICATOR_EXPIRATION_TIME_MS } from "./constants";
 
@@ -750,13 +750,20 @@ export class EmbeddedProvider {
     const session = await this.storage.getSession();
     const derivationIndex = session?.accountDerivationIndex ?? 0;
 
-    // Get raw response from client
-    const rawResponse = await this.client.signMessage({
-      walletId: this.walletId,
-      message: parsedMessage.base64url,
-      networkId: params.networkId,
-      derivationIndex: derivationIndex,
-    });
+    // Get raw response from client - use the appropriate method based on chain
+    const rawResponse = isEthereumChain(params.networkId)
+      ? await this.client.ethereumSignMessage({
+          walletId: this.walletId,
+          message: parsedMessage.parsed,
+          networkId: params.networkId,
+          derivationIndex: derivationIndex,
+        })
+      : await this.client.signRawPayload({
+          walletId: this.walletId,
+          message: parsedMessage.parsed,
+          networkId: params.networkId,
+          derivationIndex: derivationIndex,
+        });
 
     this.logger.info("EMBEDDED_PROVIDER", "Message signed successfully", {
       walletId: this.walletId,
@@ -784,8 +791,8 @@ export class EmbeddedProvider {
     const session = await this.storage.getSession();
     const derivationIndex = session?.accountDerivationIndex ?? 0;
 
-    // Call the client's signTypedData method
-    const rawResponse = await this.client.signTypedData({
+    // Call the client's ethereumSignTypedData method
+    const rawResponse = await this.client.ethereumSignTypedData({
       walletId: this.walletId,
       typedData: params.typedData,
       networkId: params.networkId,
@@ -813,8 +820,8 @@ export class EmbeddedProvider {
       networkId: params.networkId,
     });
 
-    // Parse transaction to base64url format for client based on network
-    const parsedTransaction = await parseTransactionToBase64Url(params.transaction, params.networkId);
+    // Parse transaction to KMS format (base64url for Solana, hex for EVM) based on network
+    const parsedTransaction = await parseToKmsTransaction(params.transaction, params.networkId);
 
     // Get session to access derivation index
     const session = await this.storage.getSession();
@@ -826,10 +833,20 @@ export class EmbeddedProvider {
       derivationIndex: derivationIndex,
     });
 
+    const transactionPayload = parsedTransaction.parsed;
+    if (!transactionPayload) {
+      throw new Error("Failed to parse transaction: no valid encoding found");
+    }
+
+    // Build the transaction parameter - if kind is present, create EthereumTransaction object
+    const transactionParam = parsedTransaction.kind
+      ? { transaction: transactionPayload, kind: parsedTransaction.kind }
+      : transactionPayload;
+
     // Get raw response from client
     const rawResponse = await this.client.signTransaction({
       walletId: this.walletId,
-      transaction: parsedTransaction.base64url,
+      transaction: transactionParam,
       networkId: params.networkId,
       derivationIndex: derivationIndex,
       account: this.getAddressForNetwork(params.networkId),
@@ -858,8 +875,8 @@ export class EmbeddedProvider {
       networkId: params.networkId,
     });
 
-    // Parse transaction to base64url format for client based on network
-    const parsedTransaction = await parseTransactionToBase64Url(params.transaction, params.networkId);
+    // Parse transaction to KMS format (base64url for Solana, hex for EVM) based on network
+    const parsedTransaction = await parseToKmsTransaction(params.transaction, params.networkId);
 
     // Get session to access derivation index
     const session = await this.storage.getSession();
@@ -871,10 +888,20 @@ export class EmbeddedProvider {
       derivationIndex: derivationIndex,
     });
 
+    const transactionPayload = parsedTransaction.parsed;
+    if (!transactionPayload) {
+      throw new Error("Failed to parse transaction: no valid encoding found");
+    }
+
+    // Build the transaction parameter - if kind is present, create EthereumTransaction object
+    const transactionParam = parsedTransaction.kind
+      ? { transaction: transactionPayload, kind: parsedTransaction.kind }
+      : transactionPayload;
+
     // Get raw response from client
     const rawResponse = await this.client.signAndSendTransaction({
       walletId: this.walletId,
-      transaction: parsedTransaction.base64url,
+      transaction: transactionParam,
       networkId: params.networkId,
       derivationIndex: derivationIndex,
       account: this.getAddressForNetwork(params.networkId),

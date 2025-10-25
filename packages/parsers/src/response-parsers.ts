@@ -10,6 +10,19 @@ import { Transaction, VersionedTransaction } from "@solana/web3.js";
 import bs58 from "bs58";
 import { Buffer } from "buffer";
 
+/**
+ * Convert base64url signature to hex format
+ */
+export function base64UrlSignatureToHex(base64UrlSignature: string): string {
+  try {
+    const signatureBytes = base64urlDecode(base64UrlSignature);
+    return "0x" + Buffer.from(signatureBytes).toString("hex");
+  } catch (error) {
+    // Fallback: assume it's already hex format
+    return base64UrlSignature.startsWith("0x") ? base64UrlSignature : "0x" + base64UrlSignature;
+  }
+}
+
 export interface ParsedSignatureResult {
   signature: string; // Human-readable signature (hex/base58)
   rawSignature: string; // Original base64url signature from server
@@ -111,7 +124,8 @@ function parseEVMSignatureResponse(base64Response: string): ParsedSignatureResul
       }
     }
 
-    const signature = "0x" + Buffer.from(signatureBytes).toString("hex");
+    // Use helper function to convert to hex
+    const signature = base64UrlSignatureToHex(Buffer.from(signatureBytes).toString("base64url"));
 
     return {
       signature,

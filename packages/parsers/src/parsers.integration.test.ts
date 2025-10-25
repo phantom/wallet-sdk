@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-var-requires */
-import { parseTransactionToBase64Url } from "./index";
+import { parseToKmsTransaction } from "./index";
 import { base64urlDecode } from "@phantom/base64url";
 
 // Load environment variables
@@ -78,20 +78,20 @@ describe("Parsers Integration Tests", () => {
         const versionedTransaction = new web3js.VersionedTransaction(messageV0);
 
         // Test parser
-        const result = await parseTransactionToBase64Url(versionedTransaction, "solana:mainnet");
+        const result = await parseToKmsTransaction(versionedTransaction, "solana:mainnet");
 
         expect(result).toBeDefined();
         expect(result.originalFormat).toBe("@solana/web3.js");
-        expect(result.base64url).toBeDefined();
+        expect(result.parsed).toBeDefined();
 
         // Verify the data can be decoded
-        const decoded = base64urlDecode(result.base64url);
+        const decoded = base64urlDecode(result.parsed);
         expect(decoded).toBeInstanceOf(Uint8Array);
         expect(decoded.length).toBeGreaterThan(0);
 
         console.log("✅ VersionedTransaction parsed successfully:", {
           originalFormat: result.originalFormat,
-          base64urlLength: result.base64url.length,
+          base64urlLength: result.parsed?.length,
           decodedBytesLength: decoded.length,
         });
       } catch (error) {
@@ -123,20 +123,20 @@ describe("Parsers Integration Tests", () => {
         );
 
         // Test parser
-        const result = await parseTransactionToBase64Url(legacyTransaction, "solana:mainnet");
+        const result = await parseToKmsTransaction(legacyTransaction, "solana:mainnet");
 
         expect(result).toBeDefined();
         expect(result.originalFormat).toBe("@solana/web3.js");
-        expect(result.base64url).toBeDefined();
+        expect(result.parsed).toBeDefined();
 
         // Verify the data can be decoded
-        const decoded = base64urlDecode(result.base64url);
+        const decoded = base64urlDecode(result.parsed);
         expect(decoded).toBeInstanceOf(Uint8Array);
         expect(decoded.length).toBeGreaterThan(0);
 
         console.log("✅ Legacy Transaction parsed successfully:", {
           originalFormat: result.originalFormat,
-          base64urlLength: result.base64url.length,
+          base64urlLength: result.parsed.length,
           decodedBytesLength: decoded.length,
         });
       } catch (error) {
@@ -167,20 +167,20 @@ describe("Parsers Integration Tests", () => {
         const kitTransaction = solanaKit.compileTransaction(transactionMessage);
 
         // Test parser
-        const result = await parseTransactionToBase64Url(kitTransaction, "solana:mainnet");
+        const result = await parseToKmsTransaction(kitTransaction, "solana:mainnet");
 
         expect(result).toBeDefined();
         expect(result.originalFormat).toBe("@solana/kit");
-        expect(result.base64url).toBeDefined();
+        expect(result.parsed).toBeDefined();
 
         // Verify the data can be decoded
-        const decoded = base64urlDecode(result.base64url);
+        const decoded = base64urlDecode(result.parsed);
         expect(decoded).toBeInstanceOf(Uint8Array);
         expect(decoded.length).toBeGreaterThan(0);
 
         console.log("✅ @solana/kit transaction parsed successfully:", {
           originalFormat: result.originalFormat,
-          base64urlLength: result.base64url.length,
+          base64urlLength: result.parsed.length,
           decodedBytesLength: decoded.length,
         });
       } catch (error) {
@@ -216,7 +216,7 @@ describe("Parsers Integration Tests", () => {
           }).compileToV0Message();
 
           const versionedTransaction = new web3js.VersionedTransaction(messageV0);
-          const versionedResult = await parseTransactionToBase64Url(versionedTransaction, "solana:mainnet");
+          const versionedResult = await parseToKmsTransaction(versionedTransaction, "solana:mainnet");
           results.push({ type: "VersionedTransaction", result: versionedResult });
         }
 
@@ -233,7 +233,7 @@ describe("Parsers Integration Tests", () => {
             }),
           );
 
-          const legacyResult = await parseTransactionToBase64Url(legacyTransaction, "solana:mainnet");
+          const legacyResult = await parseToKmsTransaction(legacyTransaction, "solana:mainnet");
           results.push({ type: "Legacy Transaction", result: legacyResult });
         }
 
@@ -249,7 +249,7 @@ describe("Parsers Integration Tests", () => {
           );
 
           const kitTransaction = solanaKit.compileTransaction(transactionMessage);
-          const kitResult = await parseTransactionToBase64Url(kitTransaction, "solana:mainnet");
+          const kitResult = await parseToKmsTransaction(kitTransaction, "solana:mainnet");
           results.push({ type: "@solana/kit Transaction", result: kitResult });
         }
 
@@ -258,18 +258,18 @@ describe("Parsers Integration Tests", () => {
 
         for (const { type, result } of results) {
           expect(result).toBeDefined();
-          expect(result.base64url).toBeDefined();
+          expect(result.parsed).toBeDefined();
           expect(result.originalFormat).toBeDefined();
-          expect(typeof result.base64url).toBe("string");
-          expect(result.base64url.length).toBeGreaterThan(0);
+          expect(typeof result.parsed).toBe("string");
+          expect(result.parsed.length).toBeGreaterThan(0);
 
           // Verify the data can be decoded
-          const decoded = base64urlDecode(result.base64url);
+          const decoded = base64urlDecode(result.parsed);
           expect(decoded).toBeInstanceOf(Uint8Array);
           expect(decoded.length).toBeGreaterThan(0);
 
           console.log(
-            `✅ ${type} - Format: ${result.originalFormat}, Base64URL Length: ${result.base64url.length}, Decoded Length: ${decoded.length}`,
+            `✅ ${type} - Format: ${result.originalFormat}, Base64URL Length: ${result.parsed.length}, Decoded Length: ${decoded.length}`,
           );
         }
 
@@ -321,7 +321,7 @@ describe("Parsers Integration Tests", () => {
         );
 
         // This should work even if network failed
-        const result = await parseTransactionToBase64Url(mockTransaction, "solana:mainnet");
+        const result = await parseToKmsTransaction(mockTransaction, "solana:mainnet");
         expect(result).toBeDefined();
         expect(result.originalFormat).toBe("@solana/web3.js");
 
