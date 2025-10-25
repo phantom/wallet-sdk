@@ -39,7 +39,7 @@ interface PhantomAppLoginResult {
 
 interface PhantomApp {
   login(options: PhantomAppLoginOptions): Promise<PhantomAppLoginResult>;
-  features(): Promise<string[]>;
+  features(): Promise<{features: string[]}>;
 }
 
 declare global {

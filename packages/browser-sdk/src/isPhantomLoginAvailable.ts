@@ -33,14 +33,15 @@ export async function isPhantomLoginAvailable(timeoutMs: number = 3000): Promise
       return false;
     }
 
-    const features = await window.phantom.app.features();
+    const response = await window.phantom.app.features();
 
-    if (!Array.isArray(features)) {
+    if (!Array.isArray(response.features)) {
       return false;
     }
 
-    return features.includes("phantom_login");
+    return response.features.includes("phantom_login");
   } catch (error) {
+    console.error("Error checking Phantom extension features", error);
     // If the features call fails, phantom_login is not available
     return false;
   }
