@@ -7,6 +7,7 @@ import type {
   AuthResult,
   EmbeddedStorage,
   AuthProvider,
+  SpendingLimitsProvider,
   URLParamsAccessor,
 } from "./interfaces";
 import type { StamperWithKeyManagement } from "@phantom/sdk-types";
@@ -20,10 +21,10 @@ jest.mock("@phantom/parsers", () => ({
   parseMessage: jest.fn().mockReturnValue({ base64url: "mock-base64url" }),
   parseTransactionToBase64Url: jest.fn().mockResolvedValue({ base64url: "mock-base64url", originalFormat: "mock" }),
   parseSignMessageResponse: jest.fn().mockReturnValue({ signature: "mock-signature", rawSignature: "mock-raw" }),
-  parseTransactionResponse: jest.fn().mockReturnValue({ 
-    hash: "mock-transaction-hash", 
+  parseTransactionResponse: jest.fn().mockReturnValue({
+    hash: "mock-transaction-hash",
     rawTransaction: "mock-raw-tx",
-    blockExplorer: "https://explorer.com/tx/mock-transaction-hash"
+    blockExplorer: "https://explorer.com/tx/mock-transaction-hash",
   }),
   parseSolanaTransactionSignature: jest.fn().mockReturnValue({ signature: "mock-signature", fallback: false }),
 }));
@@ -87,6 +88,7 @@ describe("EmbeddedProvider Auth Flows", () => {
   let mockLogger: DebugLogger;
   let mockStorage: jest.Mocked<EmbeddedStorage>;
   let mockAuthProvider: jest.Mocked<AuthProvider>;
+  let mockSpendingLimitsProvider: jest.Mocked<SpendingLimitsProvider>;
   let mockURLParamsAccessor: jest.Mocked<URLParamsAccessor>;
   let mockStamper: jest.Mocked<StamperWithKeyManagement>;
   let mockClient: jest.Mocked<PhantomClient>;
@@ -129,6 +131,11 @@ describe("EmbeddedProvider Auth Flows", () => {
       resumeAuthFromRedirect: jest.fn(),
     };
 
+    // Mock spending limits provider
+    mockSpendingLimitsProvider = {
+      upsertSpendingLimit: jest.fn(),
+    };
+
     // Mock URL params accessor
     mockURLParamsAccessor = {
       getParam: jest.fn().mockReturnValue(null),
@@ -151,6 +158,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       name: "test-platform",
       storage: mockStorage,
       authProvider: mockAuthProvider,
+      spendingLimitsProvider: mockSpendingLimitsProvider,
       urlParamsAccessor: mockURLParamsAccessor,
       stamper: mockStamper,
     };
@@ -414,8 +422,6 @@ describe("EmbeddedProvider Auth Flows", () => {
       expect(mockClient.createOrganization).not.toHaveBeenCalled();
       expect(mockAuthProvider.authenticate).toHaveBeenCalled();
     });
-
-   
 
     it("should fall back to fresh authentication when session is missing from database but URL has session_id", async () => {
       // Setup: URL contains session_id parameter (session was wiped from DB)
@@ -865,7 +871,9 @@ describe("EmbeddedProvider Auth Flows", () => {
       mockStorage.getSession.mockResolvedValue(null);
       mockAuthProvider.authenticate.mockRejectedValue(new Error("IndexedDB access denied"));
 
-      await expect(provider.connect()).rejects.toThrow("Storage error: Unable to access browser storage. Please ensure storage is available and try again.");
+      await expect(provider.connect()).rejects.toThrow(
+        "Storage error: Unable to access browser storage. Please ensure storage is available and try again.",
+      );
     });
 
     it("should clean up state on authentication failures", async () => {
