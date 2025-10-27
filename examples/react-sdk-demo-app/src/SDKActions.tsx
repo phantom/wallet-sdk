@@ -310,6 +310,7 @@ export function SDKActions() {
           value: numberToHex(parseEther("0.001")), // 0.001 ETH in hex
           gas: numberToHex(21000n), // Gas limit in hex
           gasPrice: numberToHex(parseGwei("20")), // 20 gwei in hex
+          chainId: numberToHex(11155111), // Sepolia testnet
         };
 
         const result = await ethereum?.signTransaction(transactionParams);
@@ -393,6 +394,7 @@ export function SDKActions() {
         value: numberToHex(parseEther("0.001")), // 0.001 ETH in hex
         gas: numberToHex(21000n), // Gas limit in hex
         gasPrice: numberToHex(parseGwei("20")), // 20 gwei in hex
+        chainId: numberToHex(11155111), // Sepolia testnet
       };
 
       const result = await ethereum?.sendTransaction(transactionParams);
