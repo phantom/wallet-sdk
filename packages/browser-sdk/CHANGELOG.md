@@ -1,5 +1,15 @@
 # @phantom/browser-sdk
 
+## 1.0.0-beta.18
+
+### Patch Changes
+
+- f1f401d: Support authuser id from wallet
+- 0ee572a: EVM SDKs
+- Updated dependencies [0ee572a]
+  - @phantom/embedded-provider-core@1.0.0-beta.18
+  - @phantom/client@1.0.0-beta.18
+
 ## 1.0.0-beta.17
 
 ### Patch Changes
