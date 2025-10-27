@@ -32,6 +32,7 @@
     "@phantom/base64url": "workspace:^",
     "@phantom/constants": "workspace:^",
     "@phantom/sdk-types": "workspace:^",
+    "@phantom/utils": "workspace:^",
     "@solana/transactions": "^2.0.0",
     "@solana/web3.js": "^1.95.0",
     "bs58": "^6.0.0",

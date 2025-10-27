@@ -1,7 +1,5 @@
-import { base64urlDecode } from "@phantom/base64url";
 import type { EthTransactionRequest, IEthereumChain } from "@phantom/chain-interfaces";
 import { NetworkId, chainIdToNetworkId, networkIdToChainId } from "@phantom/constants";
-import { Buffer } from "buffer";
 import { EventEmitter } from "eventemitter3";
 import type { EmbeddedProvider } from "../embedded-provider";
 
@@ -92,14 +90,8 @@ export class EmbeddedEthereumChain implements IEthereumChain {
       transaction,
       networkId,
     });
-    // Convert base64url encoded signature to hex format for Ethereum (same logic as parseEVMSignatureResponse)
-    try {
-      const signatureBytes = base64urlDecode(result.rawTransaction);
-      return "0x" + Buffer.from(signatureBytes).toString("hex");
-    } catch (error) {
-      // Fallback: assume it's already hex format
-      return result.rawTransaction.startsWith("0x") ? result.rawTransaction : "0x" + result.rawTransaction;
-    }
+    // parseTransactionResponse already converts base64url to hex for Ethereum
+    return result.rawTransaction;
   }
 
   async sendTransaction(transaction: EthTransactionRequest): Promise<string> {

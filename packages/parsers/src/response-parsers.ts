@@ -6,6 +6,7 @@
 import { base64urlDecode } from "@phantom/base64url";
 import type { NetworkId } from "@phantom/constants";
 import { getExplorerUrl } from "@phantom/constants";
+import { isEthereumChain } from "@phantom/utils";
 import { Transaction, VersionedTransaction } from "@solana/web3.js";
 import bs58 from "bs58";
 import { Buffer } from "buffer";
@@ -50,21 +51,34 @@ export function parseSignMessageResponse(base64Response: string, networkId: Netw
 
 /**
  * Parse a transaction response from base64 rawTransaction to extract hash
+ * For Ethereum chains, converts base64url to hex format
  */
 export function parseTransactionResponse(
   base64RawTransaction: string,
   networkId: NetworkId,
   hash?: string,
 ): ParsedTransactionResult {
+  // For Ethereum chains, decode base64url to hex format
+  let rawTransaction = base64RawTransaction;
+  if (isEthereumChain(networkId)) {
+    try {
+      const txBytes = base64urlDecode(base64RawTransaction);
+      rawTransaction = "0x" + Buffer.from(txBytes).toString("hex");
+    } catch (error) {
+      // Fallback: assume it's already hex format
+      rawTransaction = base64RawTransaction.startsWith("0x") ? base64RawTransaction : "0x" + base64RawTransaction;
+    }
+  }
+
   if (hash) {
     return {
       hash,
-      rawTransaction: base64RawTransaction,
+      rawTransaction,
       blockExplorer: getExplorerUrl(networkId, "transaction", hash),
     };
   } else {
     return {
-      rawTransaction: base64RawTransaction,
+      rawTransaction,
     };
   }
 }
