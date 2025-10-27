@@ -1161,6 +1161,7 @@ export class EmbeddedProvider {
       authenticatorCreatedAt: now,
       authenticatorExpiresAt: now + effectiveExpiresInMs,
       lastRenewalAttempt: undefined,
+      authUserId: authResult.authUserId,
     };
 
     this.logger.log("EMBEDDED_PROVIDER", "Saving Phantom session");
