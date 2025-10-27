@@ -59,7 +59,7 @@ import {
 } from "./types";
 
 import type { Stamper } from "@phantom/sdk-types";
-import { getSecureTimestamp, randomUUID } from "@phantom/utils";
+import { getSecureTimestamp, randomUUID, isEthereumChain } from "@phantom/utils";
 type AddUserToOrganizationParams = Omit<AddUserToOrganizationRequest, "user"> & {
   replaceExpirable?: boolean;
   user: PartialKmsUser & { traits: { appId: string }; expiresInMs?: number };
@@ -211,15 +211,11 @@ export class PhantomClient {
       if (!this.config.organizationId) {
         throw new Error("organizationId is required to sign a transaction");
       }
-      // Handle both string (Solana) and EthereumTransaction (with kind field)
-      const encodedTransaction = typeof transactionParam === 'string'
-        ? transactionParam
-        : transactionParam.transaction;
+      // Transaction is always a string (encoded via parsers)
+      const encodedTransaction = transactionParam;
 
-      // Get kind field if present (for Ethereum transactions)
-      const transactionKind = typeof transactionParam === 'object' && 'kind' in transactionParam
-        ? transactionParam.kind
-        : undefined;
+      // Check if this is an EVM transaction using the network ID
+      const isEvmTransaction = isEthereumChain(networkIdParam);
 
       let submissionConfig: SubmissionConfig | null = null;
 
@@ -254,8 +250,10 @@ export class PhantomClient {
       } = {
         organizationId: this.config.organizationId,
         walletId: walletId,
-        transaction: transactionKind
-          ? { transaction: encodedTransaction, kind: transactionKind }
+        // For EVM transactions, use the object format with kind and bytes
+        // For other chains, use the string directly
+        transaction: isEvmTransaction
+          ? { kind: "RLP_ENCODED", bytes: encodedTransaction }
           : encodedTransaction,
         derivationInfo: derivationInfo,
       } as any;
@@ -265,8 +263,8 @@ export class PhantomClient {
         signRequest.submissionConfig = submissionConfig;
       }
 
-      // Add simulation config if provided
-      if (params.account) {
+      // Add simulation config if provided (only for signAndSendTransaction)
+      if (includeSubmissionConfig && params.account) {
         signRequest.simulationConfig = {
           account: params.account,
         };

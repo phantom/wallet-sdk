@@ -1,5 +1,5 @@
 import { parseToKmsTransaction } from "./index";
-import { base64urlDecode, base64urlDecodeToString } from "@phantom/base64url";
+import { base64urlDecode } from "@phantom/base64url";
 
 describe("Solana Transaction Parser", () => {
   it("should parse @solana/kit transaction with messageBytes", async () => {
@@ -112,18 +112,15 @@ describe("EVM Transaction Parser", () => {
       to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
       value: 1000000000000000000n,
       data: "0x",
+      chainId: 1,
     };
 
     const result = await parseToKmsTransaction(mockViemTransaction, "ethereum:mainnet");
 
     expect(result.originalFormat).toBe("json");
-    expect(result.kind).toBe("EIP_1559");
     expect(result.parsed).toBeDefined();
-
-    // Verify it's base64url encoded JSON
-    const decoded = base64urlDecodeToString(result.parsed);
-    const parsedJson = JSON.parse(decoded);
-    expect(parsedJson.to).toBe("0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E");
+    // Should be RLP encoded hex
+    expect(result.parsed.startsWith("0x")).toBe(true);
   });
 
   it("should parse ethers.js transaction with serialize method", async () => {
@@ -134,7 +131,6 @@ describe("EVM Transaction Parser", () => {
     const result = await parseToKmsTransaction(mockEthersTransaction, "ethereum:mainnet");
 
     expect(result.originalFormat).toBe("ethers");
-    expect(result.kind).toBe("RLP_ENCODED");
     expect(result.parsed).toBe("0x0607080910");
     expect(mockEthersTransaction.serialize).toHaveBeenCalled();
   });
@@ -145,7 +141,6 @@ describe("EVM Transaction Parser", () => {
     const result = await parseToKmsTransaction(mockBytes, "ethereum:mainnet");
 
     expect(result.originalFormat).toBe("bytes");
-    expect(result.kind).toBe("RLP_ENCODED");
     expect(result.parsed).toBe("0x0102030405");
   });
 
@@ -155,7 +150,6 @@ describe("EVM Transaction Parser", () => {
     const result = await parseToKmsTransaction(hexString, "ethereum:mainnet");
 
     expect(result.originalFormat).toBe("hex");
-    expect(result.kind).toBe("RLP_ENCODED");
     expect(result.parsed).toBe("0x0102030405");
   });
 

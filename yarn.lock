@@ -5610,8 +5610,6 @@ __metadata:
       optional: true
     bitcoinjs-lib:
       optional: true
-    ethers:
-      optional: true
     viem:
       optional: true
   languageName: unknown

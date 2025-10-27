@@ -879,15 +879,11 @@ export class EmbeddedProvider {
       throw new Error("Failed to parse transaction: no valid encoding found");
     }
 
-    // Build the transaction parameter - if kind is present, create EthereumTransaction object
-    const transactionParam = parsedTransaction.kind
-      ? { transaction: transactionPayload, kind: parsedTransaction.kind }
-      : transactionPayload;
-
     // Get raw response from client
+    // PhantomClient will handle EVM transaction formatting internally
     const rawResponse = await this.client.signTransaction({
       walletId: this.walletId,
-      transaction: transactionParam,
+      transaction: transactionPayload,
       networkId: params.networkId,
       derivationIndex: derivationIndex,
       account: this.getAddressForNetwork(params.networkId),
@@ -934,15 +930,11 @@ export class EmbeddedProvider {
       throw new Error("Failed to parse transaction: no valid encoding found");
     }
 
-    // Build the transaction parameter - if kind is present, create EthereumTransaction object
-    const transactionParam = parsedTransaction.kind
-      ? { transaction: transactionPayload, kind: parsedTransaction.kind }
-      : transactionPayload;
-
     // Get raw response from client
+    // PhantomClient will handle EVM transaction formatting internally
     const rawResponse = await this.client.signAndSendTransaction({
       walletId: this.walletId,
-      transaction: transactionParam,
+      transaction: transactionPayload,
       networkId: params.networkId,
       derivationIndex: derivationIndex,
       account: this.getAddressForNetwork(params.networkId),

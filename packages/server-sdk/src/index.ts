@@ -1,8 +1,6 @@
 import {
   PhantomClient,
   type SignMessageParams,
-  type SignTransactionParams,
-  type SignAndSendTransactionParams,
   type NetworkId,
   type CreateWalletResult,
   type GetWalletsResult,
@@ -153,22 +151,15 @@ export class ServerSDK {
       throw new Error("Failed to parse transaction: no valid encoding found");
     }
 
-    // Build the transaction parameter - if kind is present, create EthereumTransaction object
-    const transactionParam = parsedTransaction.kind
-      ? { transaction: transactionPayload, kind: parsedTransaction.kind }
-      : transactionPayload;
-
-    // Use the parent's signTransaction method with parsed transaction
-    const signTransactionParams: SignTransactionParams = {
+    // Get raw response from client
+    // PhantomClient will handle EVM transaction formatting internally
+    const rawResponse = await this.client.signTransaction({
       walletId: params.walletId,
-      transaction: transactionParam,
+      transaction: transactionPayload,
       networkId: params.networkId,
       derivationIndex: params.derivationIndex,
       account: params.account,
-    };
-
-    // Get raw response from client
-    const rawResponse = await this.client.signTransaction(signTransactionParams);
+    });
 
     // Parse the response to get transaction result (without hash)
     return await parseTransactionResponse(rawResponse.rawTransaction, params.networkId);
@@ -189,21 +180,15 @@ export class ServerSDK {
       throw new Error("Failed to parse transaction: no valid encoding found");
     }
 
-    // Build the transaction parameter - if kind is present, create EthereumTransaction object
-    const transactionParam = parsedTransaction.kind
-      ? { transaction: transactionPayload, kind: parsedTransaction.kind }
-      : transactionPayload;
-
-    // Use the parent's signAndSendTransaction method with parsed transaction
-    const signAndSendParams: SignAndSendTransactionParams = {
+    // Get raw response from client
+    // PhantomClient will handle EVM transaction formatting internally
+    const rawResponse = await this.client.signAndSendTransaction({
       walletId: params.walletId,
-      transaction: transactionParam,
+      transaction: transactionPayload,
       networkId: params.networkId,
       derivationIndex: params.derivationIndex,
       account: params.account,
-    };
-    // Get raw response from client
-    const rawResponse = await this.client.signAndSendTransaction(signAndSendParams);
+    });
 
     // Parse the response to get transaction hash and explorer URL
     return await parseTransactionResponse(rawResponse.rawTransaction, params.networkId, rawResponse.hash);

@@ -2,6 +2,7 @@ import type { NetworkId } from "@phantom/constants";
 import { base64urlEncode } from "@phantom/base64url";
 import { getTransactionEncoder, type Transaction } from "@solana/transactions";
 import { Buffer } from "buffer";
+import { Transaction as EthersTransaction, getAddress } from "ethers";
 
 // Re-export response parsers
 export {
@@ -11,10 +12,8 @@ export {
 } from "./response-parsers";
 
 export interface ParsedTransaction {
-  /** The parsed transaction string (base64url for Solana/Sui/Bitcoin, depends on kind for EVM) */
+  /** The parsed transaction string (base64url for Solana/Sui/Bitcoin, RLP-encoded hex for EVM) */
   parsed?: string;
-  /** Transaction kind for EVM transactions (EIP_1559 for JSON, RLP_ENCODED for hex) */
-  kind?: "EIP_1559" | "RLP_ENCODED";
   /** Original format of the input transaction */
   originalFormat: string;
 }
@@ -103,9 +102,9 @@ function parseSolanaTransactionToBase64Url(transaction: any): ParsedTransaction 
 }
 
 /**
- * Parse EVM transaction - adds kind field for KMS backend
- * - RLP hex strings/bytes → kind: RLP_ENCODED
- * - JSON transaction objects → kind: EIP_1559 (base64url encoded)
+ * Parse EVM transaction to RLP-encoded hex format
+ * - RLP hex strings/bytes → returned as-is
+ * - JSON transaction objects → RLP encoded using ethers
  * Supports Ethereum, Polygon, and other EVM-compatible chains
  */
 function parseEVMTransactionToHex(transaction: any): ParsedTransaction {
@@ -113,7 +112,6 @@ function parseEVMTransactionToHex(transaction: any): ParsedTransaction {
   if (typeof transaction === "string" && transaction.startsWith("0x")) {
     return {
       parsed: transaction,
-      kind: "RLP_ENCODED",
       originalFormat: "hex",
     };
   }
@@ -125,7 +123,6 @@ function parseEVMTransactionToHex(transaction: any): ParsedTransaction {
 
     return {
       parsed: hex,
-      kind: "RLP_ENCODED",
       originalFormat: "ethers",
     };
   }
@@ -135,26 +132,62 @@ function parseEVMTransactionToHex(transaction: any): ParsedTransaction {
     const hex = "0x" + Buffer.from(transaction).toString("hex");
     return {
       parsed: hex,
-      kind: "RLP_ENCODED",
       originalFormat: "bytes",
     };
   }
 
   // Check if it's a transaction object (EIP-1559 or legacy format)
-  // Keep as JSON for easier processing on backend
+  // RLP encode it using ethers
   if (transaction && typeof transaction === "object" && (transaction.to || transaction.data || transaction.from)) {
-    // Serialize with BigInt support - keep as base64url encoded JSON
-    const jsonString = JSON.stringify(transaction, (_key, value) => (typeof value === "bigint" ? value.toString() : value));
-    const bytes = new TextEncoder().encode(jsonString);
+    try {
+      // Prepare transaction for ethers (remove 'from' field as it's not part of RLP)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { from, gas, ...txForSerialization } = transaction;
 
-    return {
-      parsed: base64urlEncode(bytes),
-      kind: "EIP_1559",
-      originalFormat: "json",
-    };
+      // Map 'gas' to 'gasLimit' if present
+      if (gas) {
+        txForSerialization.gasLimit = gas;
+      }
+
+      // Ensure gasLimit is present (default to 21000 for simple transfers if not provided)
+      if (!txForSerialization.gasLimit) {
+        // Only add default if it's a simple transfer (has 'to' and 'value')
+        if (txForSerialization.to && txForSerialization.value && !txForSerialization.data) {
+          txForSerialization.gasLimit = "0x5208"; // 21000 in hex
+        }
+      }
+
+      // Normalize addresses to proper checksum format
+      if (txForSerialization.to && typeof txForSerialization.to === "string") {
+        try {
+          txForSerialization.to = getAddress(txForSerialization.to);
+        } catch {
+          // If checksum validation fails, lowercase the address
+          txForSerialization.to = txForSerialization.to.toLowerCase();
+        }
+      }
+
+      // Serialize the transaction (RLP encode)
+      const serialized = EthersTransaction.from(txForSerialization).unsignedSerialized;
+      const hex = serialized.startsWith("0x") ? serialized : "0x" + serialized;
+
+      return {
+        parsed: hex,
+        originalFormat: "json",
+      };
+    } catch (error) {
+      // Provide detailed error with transaction structure for debugging
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      const txKeys = transaction ? Object.keys(transaction).join(", ") : "N/A";
+      const txValues = transaction ? JSON.stringify(transaction, null, 2) : "N/A";
+      throw new Error(
+        `Failed to RLP encode EVM transaction: ${errorMessage}.\nTransaction keys: [${txKeys}].\nTransaction: ${txValues}\n` +
+        `Please ensure the transaction object includes required fields (to, value, chainId, gasLimit or gasPrice, etc.)`
+      );
+    }
   }
 
-  throw new Error("Unsupported EVM transaction format");
+  throw new Error("Unsupported EVM transaction format. Expected hex string, bytes, or transaction object with 'to', 'data', or 'from' fields.");
 }
 
 /**
