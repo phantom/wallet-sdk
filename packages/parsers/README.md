@@ -1,6 +1,6 @@
 # @phantom/parsers
 
-A utility package for parsing and converting various message and transaction formats into base64url format for use with Phantom's API. This package provides a unified interface for handling different blockchain transaction formats and message types across multiple networks.
+A utility package for parsing and converting transaction formats into base64url format for use with Phantom's API. This package provides a unified interface for handling different blockchain transaction formats across multiple networks.
 
 ## Installation
 
@@ -12,9 +12,6 @@ yarn add @phantom/parsers
 
 ## Overview
 
-The parsers package provides two main functions:
-
-- **`parseMessage`** - Converts various message formats to base64url
 - **`parseToKmsTransaction`** - Converts various transaction formats to base64url for different blockchain networks
 
 ## Supported Networks
@@ -25,37 +22,6 @@ The parsers package provides two main functions:
 - **Sui** (`sui:*`)
 
 ## API Reference
-
-### parseMessage(message)
-
-Converts various message formats to base64url encoding.
-
-**Parameters:**
-
-- `message` (string | Uint8Array | Buffer) - The message to parse
-
-**Returns:**
-
-- `ParsedMessage` object with:
-  - `parsed` (string) - Base64url encoded message
-  - `originalFormat` (string) - The detected input format
-
-**Example:**
-
-```typescript
-import { parseMessage } from "@phantom/parsers";
-
-// Plain text message
-const result1 = parseMessage("Hello, Phantom!");
-console.log(result1.parsed); // "SGVsbG8sIFBoYW50b20h"
-console.log(result1.originalFormat); // "string"
-
-// Uint8Array
-const bytes = new TextEncoder().encode("Hello, Phantom!");
-const result2 = parseMessage(bytes);
-console.log(result2.parsed); // "SGVsbG8sIFBoYW50b20h"
-console.log(result2.originalFormat); // "bytes"
-```
 
 ### parseToKmsTransaction(transaction, networkId)
 

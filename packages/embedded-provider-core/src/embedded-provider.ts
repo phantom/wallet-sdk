@@ -1,15 +1,15 @@
-import { base64urlEncode } from "@phantom/base64url";
+import { base64urlEncode, stringToBase64url } from "@phantom/base64url";
 import { AddressType, PhantomClient } from "@phantom/client";
 import type { NetworkId } from "@phantom/constants";
 import {
-  parseMessage,
   parseSignMessageResponse,
   parseTransactionResponse,
   parseToKmsTransaction,
   type ParsedSignatureResult,
   type ParsedTransactionResult,
 } from "@phantom/parsers";
-import { randomUUID, isEthereumChain } from "@phantom/utils";
+import { randomUUID } from "@phantom/utils";
+import { Buffer } from "buffer";
 import bs58 from "bs58";
 import { AUTHENTICATOR_EXPIRATION_TIME_MS } from "./constants";
 
@@ -572,9 +572,9 @@ export class EmbeddedProvider {
       this.logger.info("EMBEDDED_PROVIDER", "Starting embedded provider connect", {
         authOptions: authOptions
           ? {
-              provider: authOptions.provider,
-              hasJwtToken: !!authOptions.jwtToken,
-            }
+            provider: authOptions.provider,
+            hasJwtToken: !!authOptions.jwtToken,
+          }
           : undefined,
       });
 
@@ -658,10 +658,10 @@ export class EmbeddedProvider {
         error:
           error instanceof Error
             ? {
-                name: error.name,
-                message: error.message,
-                stack: error.stack,
-              }
+              name: error.name,
+              message: error.message,
+              stack: error.stack,
+            }
             : error,
       });
 
@@ -729,7 +729,7 @@ export class EmbeddedProvider {
       });
     }
   }
-
+  
   async signMessage(params: SignMessageParams): Promise<ParsedSignatureResult> {
     if (!this.client || !this.walletId) {
       throw new Error("Not connected");
@@ -744,26 +744,67 @@ export class EmbeddedProvider {
     });
 
     // Parse message to base64url format for client
-    const parsedMessage = parseMessage(params.message);
+    const base64UrlMessage = stringToBase64url(params.message);
 
     // Get session to access derivation index
     const session = await this.storage.getSession();
     const derivationIndex = session?.accountDerivationIndex ?? 0;
 
     // Get raw response from client - use the appropriate method based on chain
-    const rawResponse = isEthereumChain(params.networkId)
-      ? await this.client.ethereumSignMessage({
-          walletId: this.walletId,
-          message: parsedMessage.parsed,
-          networkId: params.networkId,
-          derivationIndex: derivationIndex,
-        })
-      : await this.client.signRawPayload({
-          walletId: this.walletId,
-          message: parsedMessage.parsed,
-          networkId: params.networkId,
-          derivationIndex: derivationIndex,
-        });
+    const rawResponse = await this.client.signRawPayload({
+      walletId: this.walletId,
+      message: base64UrlMessage,
+      networkId: params.networkId,
+      derivationIndex: derivationIndex,
+    });
+
+    this.logger.info("EMBEDDED_PROVIDER", "Message signed successfully", {
+      walletId: this.walletId,
+      message: params.message,
+    });
+
+    // Parse the response to get human-readable signature and explorer URL
+    return parseSignMessageResponse(rawResponse, params.networkId);
+  }
+
+  async signEthereumMessage(params: SignMessageParams): Promise<ParsedSignatureResult> {
+    if (!this.client || !this.walletId) {
+      throw new Error("Not connected");
+    }
+
+    // Check if authenticator needs renewal before performing the operation
+    await this.ensureValidAuthenticator();
+
+    this.logger.info("EMBEDDED_PROVIDER", "Signing message", {
+      walletId: this.walletId,
+      message: params.message,
+    });
+
+    const looksLikeHex = (str: string) => /^0x[0-9a-fA-F]+$/.test(str);
+
+    const normalizedMessage = (() => {
+      if (looksLikeHex(params.message)) {
+        const hexPayload = params.message.slice(2);
+        const normalizedHex = hexPayload.length % 2 === 0 ? hexPayload : `0${hexPayload}`;
+        return Buffer.from(normalizedHex, "hex").toString("utf8");
+      }
+      return params.message;
+    })();
+
+    // Parse message to base64url format for client
+    const base64UrlMessage = stringToBase64url(normalizedMessage);
+
+    // Get session to access derivation index
+    const session = await this.storage.getSession();
+    const derivationIndex = session?.accountDerivationIndex ?? 0;
+
+    // Get raw response from client - use the appropriate method based on chain
+    const rawResponse = await this.client.ethereumSignMessage({
+      walletId: this.walletId,
+      message: base64UrlMessage,
+      networkId: params.networkId,
+      derivationIndex: derivationIndex,
+    });
 
     this.logger.info("EMBEDDED_PROVIDER", "Message signed successfully", {
       walletId: this.walletId,

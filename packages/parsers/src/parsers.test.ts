@@ -1,35 +1,5 @@
-import { parseMessage, parseToKmsTransaction } from "./index";
+import { parseToKmsTransaction } from "./index";
 import { base64urlDecode, base64urlDecodeToString } from "@phantom/base64url";
-
-describe("Message Parser", () => {
-  it("should parse string message to base64url", () => {
-    const message = "Hello World";
-    const result = parseMessage(message);
-
-    // Verify it's valid base64url
-    expect(result.parsed).toBeDefined();
-
-    // Decode and verify content
-    const decodedMessage = base64urlDecodeToString(result.parsed);
-    expect(decodedMessage).toBe(message);
-  });
-
-  it("should handle empty message", () => {
-    const message = "";
-    const result = parseMessage(message);
-
-    const decodedMessage = base64urlDecodeToString(result.parsed);
-    expect(decodedMessage).toBe(message);
-  });
-
-  it("should handle unicode message", () => {
-    const message = "Hello 🌍 World";
-    const result = parseMessage(message);
-
-    const decodedMessage = base64urlDecodeToString(result.parsed);
-    expect(decodedMessage).toBe(message);
-  });
-});
 
 describe("Solana Transaction Parser", () => {
   it("should parse @solana/kit transaction with messageBytes", async () => {

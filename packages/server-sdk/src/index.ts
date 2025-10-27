@@ -16,11 +16,10 @@ import {
   type ServerSdkHeaders 
 } from "@phantom/constants";
 import { ApiKeyStamper } from "@phantom/api-key-stamper";
-import { base64urlEncode } from "@phantom/base64url";
+import { base64urlEncode, stringToBase64url } from "@phantom/base64url";
 import bs58 from "bs58";
 import packageJson from "../package.json";
 import {
-  parseMessage,
   parseToKmsTransaction,
   parseSignMessageResponse,
   parseTransactionResponse,
@@ -121,11 +120,11 @@ export class ServerSDK {
    */
   async signMessage(params: ServerSignMessageParams): Promise<ParsedSignatureResult> {
     // Parse the message to base64url format
-    const parsedMessage = parseMessage(params.message);
+    const base64UrlMessage = stringToBase64url(params.message);
 
     const signMessageParams: SignMessageParams = {
       walletId: params.walletId,
-      message: parsedMessage.parsed,
+      message: base64UrlMessage,
       networkId: params.networkId,
       derivationIndex: params.derivationIndex,
     };
@@ -288,12 +287,9 @@ export { NetworkId } from "@phantom/constants";
 
 export { ApiKeyStamper } from "@phantom/api-key-stamper";
 export {
-  parseMessage,
   parseToKmsTransaction,
   parseSignMessageResponse,
   parseTransactionResponse,
-  base64UrlSignatureToHex,
-  type ParsedMessage,
   type ParsedTransaction,
   type ParsedSignatureResult,
   type ParsedTransactionResult,

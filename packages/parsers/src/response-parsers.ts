@@ -10,19 +10,6 @@ import { Transaction, VersionedTransaction } from "@solana/web3.js";
 import bs58 from "bs58";
 import { Buffer } from "buffer";
 
-/**
- * Convert base64url signature to hex format
- */
-export function base64UrlSignatureToHex(base64UrlSignature: string): string {
-  try {
-    const signatureBytes = base64urlDecode(base64UrlSignature);
-    return "0x" + Buffer.from(signatureBytes).toString("hex");
-  } catch (error) {
-    // Fallback: assume it's already hex format
-    return base64UrlSignature.startsWith("0x") ? base64UrlSignature : "0x" + base64UrlSignature;
-  }
-}
-
 export interface ParsedSignatureResult {
   signature: string; // Human-readable signature (hex/base58)
   rawSignature: string; // Original base64url signature from server
@@ -105,41 +92,18 @@ function parseSolanaSignatureResponse(base64Response: string): ParsedSignatureRe
   }
 }
 
+
 /**
  * Parse EVM signature response
  */
 function parseEVMSignatureResponse(base64Response: string): ParsedSignatureResult {
-  try {
-    // EVM signatures are typically 65 bytes (r + s + v)
-    const signatureBytes = base64urlDecode(base64Response);
+  const signatureBytes = base64urlDecode(base64Response);
+  const signature = "0x" + Buffer.from(signatureBytes).toString("hex");
 
-    // KMS backend returns recovery_id (0 or 1) as the last byte
-    // Ethereum expects v = 27 or 28, so we need to convert it
-    if (signatureBytes.length === 65) {
-      const recoveryId = signatureBytes[64];
-      // Only convert if it's 0 or 1 (recovery_id format)
-      if (recoveryId === 0 || recoveryId === 1) {
-        // Convert recovery_id to Ethereum v value
-        signatureBytes[64] = recoveryId + 27;
-      }
-    }
-
-    // Use helper function to convert to hex
-    const signature = base64UrlSignatureToHex(Buffer.from(signatureBytes).toString("base64url"));
-
-    return {
-      signature,
-      rawSignature: base64Response,
-      // Note: Most block explorers don't have direct signature lookup, only transaction lookup
-    };
-  } catch (error) {
-    // Fallback: assume it's already hex format
-    const signature = base64Response.startsWith("0x") ? base64Response : "0x" + base64Response;
-    return {
-      signature,
-      rawSignature: base64Response,
-    };
-  }
+  return {
+    signature,
+    rawSignature: base64Response,
+  };
 }
 
 /**

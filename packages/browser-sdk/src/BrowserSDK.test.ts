@@ -6,7 +6,6 @@ import { AddressType } from "@phantom/client";
 
 // Mock parsers to prevent ESM module parsing issues
 jest.mock("@phantom/parsers", () => ({
-  parseMessage: jest.fn().mockReturnValue({ base64url: "mock-base64url" }),
   parseToKmsTransaction: jest.fn().mockResolvedValue({ base64url: "mock-base64url", originalFormat: "mock" }),
   parseSignMessageResponse: jest.fn().mockReturnValue({ signature: "mock-signature", rawSignature: "mock-raw" }),
   parseTransactionResponse: jest.fn().mockReturnValue({

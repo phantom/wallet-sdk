@@ -1,18 +1,13 @@
 import type { NetworkId } from "@phantom/constants";
-import { base64urlEncode, stringToBase64url } from "@phantom/base64url";
+import { base64urlEncode } from "@phantom/base64url";
 import { getTransactionEncoder, type Transaction } from "@solana/transactions";
 import { Buffer } from "buffer";
-import {
-  parseSignMessageResponse as _parseSignMessageResponse,
-  parseTransactionResponse as _parseTransactionResponse,
-} from "./response-parsers";
 
 // Re-export response parsers
 export {
   parseSignMessageResponse,
   parseTransactionResponse,
   parseSolanaSignedTransaction,
-  base64UrlSignatureToHex,
 } from "./response-parsers";
 
 export interface ParsedTransaction {
@@ -24,21 +19,9 @@ export interface ParsedTransaction {
   originalFormat: string;
 }
 
-export interface ParsedMessage {
-  parsed: string;
-}
-
 // Re-export interfaces from response-parsers
 export type { ParsedSignatureResult, ParsedTransactionResult } from "./response-parsers";
 
-/**
- * Parse a message to base64url format for the client
- */
-export function parseMessage(message: string): ParsedMessage {
-  return {
-    parsed: stringToBase64url(message),
-  };
-}
 
 /**
  * Parse a transaction to KMS format based on network type

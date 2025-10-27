@@ -6,7 +6,6 @@ import type { PhantomClient } from "@phantom/client";
 // Mock dependencies
 jest.mock("@phantom/client");
 jest.mock("@phantom/parsers", () => ({
-  parseMessage: jest.fn().mockReturnValue({ base64url: "mock-base64url" }),
   parseToKmsTransaction: jest.fn().mockResolvedValue({ base64url: "mock-base64url", originalFormat: "mock" }),
   parseSignMessageResponse: jest.fn().mockReturnValue({ signature: "mock-signature", rawSignature: "mock-raw" }),
   parseTransactionResponse: jest.fn().mockReturnValue({ rawTransaction: "mock-raw-tx" }),

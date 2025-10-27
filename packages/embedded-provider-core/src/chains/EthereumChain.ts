@@ -186,7 +186,7 @@ export class EmbeddedEthereumChain implements IEthereumChain {
     switch (args.method) {
       case "personal_sign": {
         const [message, _address] = args.params as [string, string];
-        const result = await this.provider.signMessage({
+        const result = await this.provider.signEthereumMessage({
           message,
           networkId: this.currentNetworkId,
         });

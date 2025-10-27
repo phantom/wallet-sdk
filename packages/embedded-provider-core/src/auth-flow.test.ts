@@ -17,11 +17,10 @@ import { NetworkId } from "@phantom/constants";
 jest.mock("@phantom/api-key-stamper");
 jest.mock("@phantom/client");
 jest.mock("@phantom/parsers", () => ({
-  parseMessage: jest.fn().mockReturnValue({ base64url: "mock-base64url" }),
-  parseToKmsTransaction: jest.fn().mockResolvedValue({ base64url: "mock-base64url", originalFormat: "mock" }),
+  parseToKmsTransaction: jest.fn().mockResolvedValue({ parsed: "mock-base64url", originalFormat: "mock" }),
   parseSignMessageResponse: jest.fn().mockReturnValue({ signature: "mock-signature", rawSignature: "mock-raw" }),
-  parseTransactionResponse: jest.fn().mockReturnValue({ 
-    hash: "mock-transaction-hash", 
+  parseTransactionResponse: jest.fn().mockReturnValue({
+    hash: "mock-transaction-hash",
     rawTransaction: "mock-raw-tx",
     blockExplorer: "https://explorer.com/tx/mock-transaction-hash"
   }),
