@@ -9,6 +9,8 @@ export type InternalNetworkCaip =
   | "solana:102"
   | "solana:103"
   | "solana:localnet"
+  // SOLAXY with Hyperlane Chain ID
+  | "solaxy:1936682104"
   // EVM
   | "eip155:1"
   | "eip155:11155111"
@@ -85,6 +87,19 @@ export const NETWORK_CONFIGS: Record<NetworkId, NetworkConfig> = {
     },
   },
 
+[NetworkId.SOLAXY_MAINNET]: {
+    name: "Solaxy Mainnet",
+    chain: "solaxy",
+    network: "mainnet",
+    internalCaip: "solaxy:1936682104",
+    slip44: "501", 
+    explorer: {
+      name: "Solaxy Explorer",
+      transactionUrl: "https://explorer.solaxy.io/tx/{hash}",
+      addressUrl: "https://explorer.solaxy.io/account/{address}",
+    },
+  },
+  
   // Ethereum Networks
   [NetworkId.ETHEREUM_MAINNET]: {
     name: "Ethereum Mainnet",
