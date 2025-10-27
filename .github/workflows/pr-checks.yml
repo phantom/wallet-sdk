@@ -10,6 +10,8 @@ jobs:
     name: Linear Issue Check
     runs-on: ubuntu-latest
     permissions: read-all
+    # Skip Linear check for Version Packages PRs created by changesets
+    if: ${{ !startsWith(github.event.pull_request.title, 'Version Packages') }}
     steps:
       - name: Linear Issue Check
         uses: phantom/linear-pr-check@f2a85fcbc7af8c2909f1869ccad4f8d66a5c98fa # 1.0.6 # 1.0.6
@@ -21,6 +23,8 @@ jobs:
     name: Conventional Title Check
     runs-on: ubuntu-latest
     permissions: read-all
+    # Skip conventional title check for Version Packages PRs created by changesets
+    if: ${{ !startsWith(github.event.pull_request.title, 'Version Packages') }}
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:

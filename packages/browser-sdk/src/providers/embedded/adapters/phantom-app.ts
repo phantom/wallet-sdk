@@ -1,5 +1,6 @@
 import type { PhantomAppProvider, PhantomAppAuthOptions, AuthResult } from "@phantom/embedded-provider-core";
 import { isPhantomExtensionInstalled } from "@phantom/browser-injected-sdk";
+import { isPhantomLoginAvailable } from "../../../isPhantomLoginAvailable";
 
 /**
  * Browser implementation of PhantomAppProvider that uses the Phantom browser extension
@@ -22,13 +23,20 @@ export class BrowserPhantomAppProvider implements PhantomAppProvider {
       );
     }
 
-    if (!window.phantom?.app?.login || typeof window.phantom.app.login !== "function") {
+    // Check if phantom_login feature is available
+    const loginAvailable = await isPhantomLoginAvailable();
+    if (!loginAvailable) {
       throw new Error(
-        "Phantom extension authentication is not yet implemented. The extension needs to expose an app.login API (window.phantom.app.login).",
+        "Phantom Login is not available. Please update your Phantom extension to use this authentication method.",
       );
     }
 
     try {
+      // Ensure window.phantom.app exists (should be guaranteed by isPhantomLoginAvailable check above)
+      if (!window.phantom?.app?.login) {
+        throw new Error("Phantom extension login method not found");
+      }
+
       const result = await window.phantom.app.login({
         publicKey: options.publicKey,
         appId: options.appId,
