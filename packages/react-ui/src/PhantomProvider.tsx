@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from "react";
-import { useConnect as useBaseConnect, usePhantom, PhantomProvider as BasePhantomProvider, useIsExtensionInstalled, type PhantomSDKConfig} from "@phantom/react-sdk";
+import { useConnect as useBaseConnect, usePhantom, PhantomProvider as BasePhantomProvider, useIsExtensionInstalled, useIsPhantomLoginAvailable, type PhantomSDKConfig} from "@phantom/react-sdk";
 import { isMobileDevice, getDeeplinkToPhantom } from "@phantom/browser-sdk";
 
 export interface PhantomUIProviderProps {
@@ -35,6 +35,7 @@ function PhantomUIProvider({ children, theme = "light", customTheme }: Omit<Phan
   const baseConnect = useBaseConnect();
   const { sdk, isPhantomAvailable: _isPhantomAvailable } = usePhantom();
   const isExtensionInstalled = useIsExtensionInstalled();
+  const isPhantomLoginAvailable = useIsPhantomLoginAvailable();
 
   // Check if this is a mobile device
   const isMobile = useMemo(() => isMobileDevice(), []);
@@ -216,7 +217,7 @@ function PhantomUIProvider({ children, theme = "light", customTheme }: Omit<Phan
                 {!isMobile && (
                   <>
                     {/* Login with Phantom (embedded provider using Phantom extension) */}
-                    {isExtensionInstalled.isInstalled && (
+                    {isPhantomLoginAvailable.isAvailable && (
                       <button
                         className="phantom-ui-provider-button phantom-ui-provider-button-primary"
                         onClick={() => connectWithAuthProvider("phantom")}

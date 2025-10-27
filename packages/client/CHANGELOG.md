@@ -1,5 +1,9 @@
 # @phantom/client
 
+## 1.0.0-beta.17
+
+## 1.0.0-beta.16
+
 ## 1.0.0-beta.15
 
 ## 1.0.0-beta.14

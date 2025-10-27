@@ -318,6 +318,33 @@ function ExtensionStatus() {
 }
 ```
 
+#### useIsPhantomLoginAvailable
+
+Check if Phantom Login is available (requires extension installed and `phantom_login` feature support):
+
+```tsx
+import { useIsPhantomLoginAvailable } from "@phantom/react-sdk";
+
+function PhantomLoginButton() {
+  const { isLoading, isAvailable } = useIsPhantomLoginAvailable();
+  const { connect } = useConnect();
+
+  if (isLoading) {
+    return <div>Checking Phantom Login availability...</div>;
+  }
+
+  if (!isAvailable) {
+    return null; // Don't show button if Phantom Login is not available
+  }
+
+  return (
+    <button onClick={() => connect({ provider: "phantom" })}>
+      Login with Phantom
+    </button>
+  );
+}
+```
+
 ### Chain-Specific Hooks
 
 #### useSolana
@@ -746,16 +773,17 @@ function EthereumExample() {
 
 Quick reference of all available hooks:
 
-| Hook                      | Purpose                                 | Returns                                             |
-| ------------------------- | --------------------------------------- | --------------------------------------------------- |
-| `useConnect`              | Connect to wallet                       | `{ connect, isConnecting, error }`                  |
-| `useAccounts`             | Get wallet addresses                    | `WalletAddress[]` or `null`                         |
-| `useIsExtensionInstalled` | Check extension status                  | `{ isLoading, isInstalled }`                        |
-| `useDisconnect`           | Disconnect from wallet                  | `{ disconnect, isDisconnecting }`                   |
-| `useAutoConfirm`          | Auto-confirm management (injected only) | `{ enable, disable, status, supportedChains, ... }` |
-| `useSolana`               | Solana chain operations                 | `{ signMessage, signAndSendTransaction, ... }`      |
-| `useEthereum`             | Ethereum chain operations               | `{ signPersonalMessage, sendTransaction, ... }`     |
-| `usePhantom`              | Get provider context                    | `{ isConnected, isReady }`                          |
+| Hook                          | Purpose                                 | Returns                                             |
+| ----------------------------- | --------------------------------------- | --------------------------------------------------- |
+| `useConnect`                  | Connect to wallet                       | `{ connect, isConnecting, error }`                  |
+| `useAccounts`                 | Get wallet addresses                    | `WalletAddress[]` or `null`                         |
+| `useIsExtensionInstalled`     | Check extension status                  | `{ isLoading, isInstalled }`                        |
+| `useIsPhantomLoginAvailable`  | Check Phantom Login availability        | `{ isLoading, isAvailable }`                        |
+| `useDisconnect`               | Disconnect from wallet                  | `{ disconnect, isDisconnecting }`                   |
+| `useAutoConfirm`              | Auto-confirm management (injected only) | `{ enable, disable, status, supportedChains, ... }` |
+| `useSolana`                   | Solana chain operations                 | `{ signMessage, signAndSendTransaction, ... }`      |
+| `useEthereum`                 | Ethereum chain operations               | `{ signPersonalMessage, sendTransaction, ... }`     |
+| `usePhantom`                  | Get provider context                    | `{ isConnected, isReady }`                          |
 
 ## Configuration Reference
 

@@ -1,5 +1,21 @@
 # @phantom/browser-sdk
 
+## 1.0.0-beta.17
+
+### Patch Changes
+
+- bd2219e: Fixed features access
+  - @phantom/client@1.0.0-beta.17
+  - @phantom/embedded-provider-core@1.0.0-beta.17
+
+## 1.0.0-beta.16
+
+### Patch Changes
+
+- bb3483b: Fix double connect issues , change provider bug
+  - @phantom/client@1.0.0-beta.16
+  - @phantom/embedded-provider-core@1.0.0-beta.16
+
 ## 1.0.0-beta.15
 
 ### Patch Changes

@@ -1,5 +1,17 @@
 # @phantom/embedded-provider-core
 
+## 1.0.0-beta.17
+
+### Patch Changes
+
+- @phantom/client@1.0.0-beta.17
+
+## 1.0.0-beta.16
+
+### Patch Changes
+
+- @phantom/client@1.0.0-beta.16
+
 ## 1.0.0-beta.15
 
 ### Patch Changes
