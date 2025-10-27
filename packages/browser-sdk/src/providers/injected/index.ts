@@ -35,6 +35,7 @@ interface PhantomAppLoginResult {
   organizationId: string;
   accountDerivationIndex?: number;
   expiresInMs?: number;
+  authUserId?: string;
 }
 
 interface PhantomApp {

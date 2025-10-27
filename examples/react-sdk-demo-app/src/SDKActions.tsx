@@ -33,7 +33,7 @@ export function SDKActions() {
   const { disconnect, isDisconnecting } = useDisconnect();
   const { solana } = useSolana();
   const { ethereum } = useEthereum();
-  const { isConnected, currentProviderType } = usePhantom();
+  const { isConnected, currentProviderType , user} = usePhantom(); 
   const autoConfirm = useAutoConfirm();
   const addresses = useAccounts();
   const [isSigningMessageType, setIsSigningMessageType] = useState<"solana" | "evm" | null>(null);
@@ -757,6 +757,12 @@ export function SDKActions() {
               <span className="status-label">Provider:</span>
               <span className="status-value">{currentProviderType}</span>
             </div>
+          )}
+          { user && (
+          <div className="status-row">
+            <span className="status-label">User ID:</span>
+            <span className="status-value">{user.authUserId ?? "Undefined"}</span>
+          </div>
           )}
           {addresses &&
             addresses.map((address, index) => (

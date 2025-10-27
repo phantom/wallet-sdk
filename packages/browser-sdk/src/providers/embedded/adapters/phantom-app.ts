@@ -55,6 +55,7 @@ export class BrowserPhantomAppProvider implements PhantomAppProvider {
         provider: "phantom",
         accountDerivationIndex: result.accountDerivationIndex ?? 0,
         expiresInMs: result.expiresInMs ?? 0,
+        authUserId: result.authUserId,
       };
     } catch (error) {
       if (error instanceof Error) {
