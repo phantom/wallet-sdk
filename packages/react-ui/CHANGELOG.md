@@ -1,5 +1,17 @@
 # @phantom/react-ui
 
+## 2.0.0-beta.13
+
+### Patch Changes
+
+- f1f401d: Support authuser id from wallet
+- 0ee572a: EVM SDKs
+- Updated dependencies [f1f401d]
+- Updated dependencies [0ee572a]
+  - @phantom/browser-sdk@1.0.0-beta.18
+  - @phantom/react-sdk@1.0.0-beta.18
+  - @phantom/client@1.0.0-beta.18
+
 ## 2.0.0-beta.12
 
 ### Patch Changes

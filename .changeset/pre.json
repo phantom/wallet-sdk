@@ -31,6 +31,7 @@
     "with-nextjs": "0.1.0"
   },
   "changesets": [
+    "calm-jokes-tie",
     "clear-parts-battle",
     "cuddly-rivers-rule",
     "curvy-jars-yell",
@@ -51,6 +52,7 @@
     "ten-seas-juggle",
     "tired-baboons-trade",
     "tricky-ravens-yell",
-    "warm-sites-unite"
+    "warm-sites-unite",
+    "witty-carpets-unite"
   ]
 }

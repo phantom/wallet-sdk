@@ -1,5 +1,12 @@
 # @phantom/embedded-provider-core
 
+## 1.0.0-beta.18
+
+### Patch Changes
+
+- 0ee572a: EVM SDKs
+  - @phantom/client@1.0.0-beta.18
+
 ## 1.0.0-beta.17
 
 ### Patch Changes
