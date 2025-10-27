@@ -5586,6 +5586,7 @@ __metadata:
     "@phantom/base64url": "workspace:^"
     "@phantom/constants": "workspace:^"
     "@phantom/sdk-types": "workspace:^"
+    "@phantom/utils": "workspace:^"
     "@solana/kit": "npm:^2.1.1"
     "@solana/transactions": "npm:^2.0.0"
     "@solana/web3.js": "npm:^1.95.0"
@@ -5608,8 +5609,6 @@ __metadata:
     "@mysten/sui.js":
       optional: true
     bitcoinjs-lib:
-      optional: true
-    ethers:
       optional: true
     viem:
       optional: true

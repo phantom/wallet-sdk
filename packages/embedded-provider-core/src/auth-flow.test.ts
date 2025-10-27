@@ -17,11 +17,10 @@ import { NetworkId } from "@phantom/constants";
 jest.mock("@phantom/api-key-stamper");
 jest.mock("@phantom/client");
 jest.mock("@phantom/parsers", () => ({
-  parseMessage: jest.fn().mockReturnValue({ base64url: "mock-base64url" }),
-  parseTransactionToBase64Url: jest.fn().mockResolvedValue({ base64url: "mock-base64url", originalFormat: "mock" }),
+  parseToKmsTransaction: jest.fn().mockResolvedValue({ parsed: "mock-base64url", originalFormat: "mock" }),
   parseSignMessageResponse: jest.fn().mockReturnValue({ signature: "mock-signature", rawSignature: "mock-raw" }),
-  parseTransactionResponse: jest.fn().mockReturnValue({ 
-    hash: "mock-transaction-hash", 
+  parseTransactionResponse: jest.fn().mockReturnValue({
+    hash: "mock-transaction-hash",
     rawTransaction: "mock-raw-tx",
     blockExplorer: "https://explorer.com/tx/mock-transaction-hash"
   }),
@@ -168,7 +167,8 @@ describe("EmbeddedProvider Auth Flows", () => {
       createOrganization: jest.fn(),
       createWallet: jest.fn(),
       getWalletAddresses: jest.fn(),
-      signMessage: jest.fn(),
+      ethereumSignMessage: jest.fn(),
+      signRawPayload: jest.fn(),
       signAndSendTransaction: jest.fn(),
     } as any;
     mockedPhantomClient.mockImplementation(() => mockClient);
@@ -1222,14 +1222,14 @@ describe("EmbeddedProvider Auth Flows", () => {
     });
 
     it("should sign messages when connected", async () => {
-      mockClient.signMessage.mockResolvedValue("signed-message-signature");
+      mockClient.signRawPayload.mockResolvedValue("signed-message-signature");
 
       const result = await provider.signMessage({
         message: "test message",
         networkId: NetworkId.SOLANA_MAINNET,
       });
 
-      expect(mockClient.signMessage).toHaveBeenCalledWith({
+      expect(mockClient.signRawPayload).toHaveBeenCalledWith({
         walletId: "wallet-123",
         message: expect.any(String),
         networkId: NetworkId.SOLANA_MAINNET,

@@ -83,7 +83,8 @@ describe("Response Parsing", () => {
       const result = parseTransactionResponse(base64Response, NetworkId.ETHEREUM_MAINNET);
 
       expect(result.hash).toBeUndefined();
-      expect(result.rawTransaction).toBe(base64Response);
+      // For Ethereum, rawTransaction should be converted to hex
+      expect(result.rawTransaction.startsWith("0x")).toBe(true);
       expect(result.blockExplorer).toBeUndefined();
     });
 
@@ -95,7 +96,8 @@ describe("Response Parsing", () => {
       const result = parseTransactionResponse(base64Response, NetworkId.ETHEREUM_MAINNET, providedHash);
 
       expect(result.hash).toBe(providedHash);
-      expect(result.rawTransaction).toBe(base64Response);
+      // For Ethereum, rawTransaction should be converted to hex
+      expect(result.rawTransaction.startsWith("0x")).toBe(true);
       expect(result.blockExplorer).toContain("etherscan.io");
       expect(result.blockExplorer).toContain(providedHash);
     });
@@ -123,10 +125,19 @@ describe("Response Parsing", () => {
         NetworkId.BITCOIN_MAINNET,
       ];
 
+      const evmNetworks = [NetworkId.ETHEREUM_MAINNET, NetworkId.POLYGON_MAINNET, NetworkId.BASE_MAINNET];
+
       for (const network of networks) {
         const result = parseTransactionResponse(base64Response, network);
         expect(result.hash).toBeUndefined();
-        expect(result.rawTransaction).toBe(base64Response);
+
+        // EVM networks should return hex, others return base64url
+        if (evmNetworks.includes(network)) {
+          expect(result.rawTransaction.startsWith("0x")).toBe(true);
+        } else {
+          expect(result.rawTransaction).toBe(base64Response);
+        }
+
         expect(result.blockExplorer).toBeUndefined();
       }
     });
@@ -145,10 +156,19 @@ describe("Response Parsing", () => {
         NetworkId.BITCOIN_MAINNET,
       ];
 
+      const evmNetworks = [NetworkId.ETHEREUM_MAINNET, NetworkId.POLYGON_MAINNET, NetworkId.BASE_MAINNET];
+
       for (const network of networks) {
         const result = parseTransactionResponse(base64Response, network, providedHash);
         expect(result.hash).toBe(providedHash);
-        expect(result.rawTransaction).toBe(base64Response);
+
+        // EVM networks should return hex, others return base64url
+        if (evmNetworks.includes(network)) {
+          expect(result.rawTransaction.startsWith("0x")).toBe(true);
+        } else {
+          expect(result.rawTransaction).toBe(base64Response);
+        }
+
         expect(result.blockExplorer).toContain(providedHash);
       }
     });
@@ -162,7 +182,8 @@ describe("Response Parsing", () => {
 
       expect(result.hash).toBe(providedHash);
       expect(result.blockExplorer).toBeDefined();
-      expect(result.rawTransaction).toBe(base64Response);
+      // For Ethereum, rawTransaction should be converted to hex
+      expect(result.rawTransaction.startsWith("0x")).toBe(true);
       expect(result.blockExplorer).toContain("etherscan.io");
       expect(result.blockExplorer).toContain("/tx/");
       expect(result.blockExplorer).toContain(providedHash);

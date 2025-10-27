@@ -32,15 +32,16 @@
     "@phantom/base64url": "workspace:^",
     "@phantom/constants": "workspace:^",
     "@phantom/sdk-types": "workspace:^",
+    "@phantom/utils": "workspace:^",
     "@solana/transactions": "^2.0.0",
     "@solana/web3.js": "^1.95.0",
     "bs58": "^6.0.0",
-    "buffer": "^6.0.3"
+    "buffer": "^6.0.3",
+    "ethers": "^6.0.0"
   },
   "optionalDependencies": {
     "@mysten/sui.js": "^0.50.0",
     "bitcoinjs-lib": "^6.1.0",
-    "ethers": "^6.0.0",
     "viem": "^2.0.0"
   },
   "devDependencies": {
