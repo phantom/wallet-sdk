@@ -143,7 +143,9 @@ function App() {
     setError(null)
 
     try {
-      const result = await sdk.connect()
+      // Determine provider based on current provider type
+      const provider = providerType === "injected" ? "injected" : "phantom"
+      const result = await sdk.connect({ provider })
       setAddresses(result.addresses)
       setIsConnected(true)
       await updateBalance(result.addresses)

@@ -665,7 +665,7 @@ export class InjectedProvider implements Provider {
   private createCallbacks(): ChainCallbacks {
     return {
       connect: async (): Promise<WalletAddress[]> => {
-        const result = await this.connect();
+        const result = await this.connect({ provider: "injected" });
         return result.addresses;
       },
       disconnect: async (): Promise<void> => {
