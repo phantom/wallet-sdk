@@ -1,5 +1,15 @@
 # @phantom/react-sdk
 
+## 1.0.0-beta.19
+
+### Patch Changes
+
+- d35daaa: Bump all dependencies
+- Updated dependencies [d35daaa]
+  - @phantom/browser-sdk@1.0.0-beta.19
+  - @phantom/constants@1.0.0-beta.8
+  - @phantom/chain-interfaces@1.0.0-beta.8
+
 ## 1.0.0-beta.18
 
 ### Patch Changes
