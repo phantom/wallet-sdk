@@ -22,7 +22,7 @@ interface PhantomUIContextValue {
   connectionState: ConnectionUIState;
   showConnectionModal: () => void;
   hideConnectionModal: () => void;
-  connectWithAuthProvider: (provider?: "google" | "apple" | "phantom") => Promise<void>;
+  connectWithAuthProvider: (provider: "google" | "apple" | "phantom") => Promise<void>;
   connectWithInjected: () => Promise<void>;
   connectWithDeeplink: () => void;
   isMobile: boolean;
