@@ -18,7 +18,8 @@
       "@phantom/browser-sdk",
       "@phantom/react-sdk",
       "@phantom/react-native-sdk",
-      "@phantom/server-sdk"
+      "@phantom/server-sdk",
+      "@phantom/utils"
     ]
   ],
   "linked": [],
