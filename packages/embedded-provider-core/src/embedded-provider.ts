@@ -378,10 +378,8 @@ export class EmbeddedProvider {
    * We use this method to validate authentication options before processing them.
    * This ensures only supported auth providers are used and required tokens are present.
    */
-  private validateAuthOptions(authOptions?: AuthOptions): void {
-    if (!authOptions) return;
-
-    if (authOptions.provider && !["google", "apple", "jwt", "phantom"].includes(authOptions.provider)) {
+  private validateAuthOptions(authOptions: AuthOptions): void {
+    if (!["google", "apple", "jwt", "phantom"].includes(authOptions.provider)) {
       throw new Error(`Invalid auth provider: ${authOptions.provider}. Must be "google", "apple", "jwt", or "phantom"`);
     }
 
@@ -567,21 +565,19 @@ export class EmbeddedProvider {
     return organizationId;
   }
 
-  async connect(authOptions?: AuthOptions): Promise<ConnectResult> {
+  async connect(authOptions: AuthOptions): Promise<ConnectResult> {
     try {
       this.logger.info("EMBEDDED_PROVIDER", "Starting embedded provider connect", {
-        authOptions: authOptions
-          ? {
-            provider: authOptions.provider,
-            hasJwtToken: !!authOptions.jwtToken,
-          }
-          : undefined,
+        authOptions: {
+          provider: authOptions.provider,
+          hasJwtToken: !!authOptions.jwtToken,
+        },
       });
 
       // Emit connect_start event for manual connect
       this.emit("connect_start", {
         source: "manual-connect",
-        authOptions: authOptions ? { provider: authOptions.provider } : undefined,
+        authOptions: { provider: authOptions.provider },
       });
 
       // Try to use existing connection (redirect resume or completed session)
@@ -626,7 +622,7 @@ export class EmbeddedProvider {
 
       // Update session last used timestamp (only for non-redirect flows)
       // For redirect flows, timestamp is updated before redirect to prevent race condition
-      if (!authOptions || authOptions.provider === "jwt" || this.config.embeddedWalletType === "app-wallet") {
+      if (authOptions.provider === "jwt" || this.config.embeddedWalletType === "app-wallet") {
         session.lastUsed = Date.now();
         await this.storage.saveSession(session);
       }

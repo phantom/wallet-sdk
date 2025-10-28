@@ -145,11 +145,16 @@ export class InjectedProvider implements Provider {
     return this._ethereumChain;
   }
 
-  async connect(authOptions?: AuthOptions): Promise<ConnectResult> {
+  async connect(authOptions: AuthOptions): Promise<ConnectResult> {
     debug.info(DebugCategory.INJECTED_PROVIDER, "Starting injected provider connect", {
       addressTypes: this.addressTypes,
-      authOptionsIgnored: !!authOptions, // Note: authOptions are ignored for injected provider
+      provider: authOptions.provider,
     });
+
+    // Validate provider is "injected"
+    if (authOptions.provider !== "injected") {
+      throw new Error(`Invalid provider for injected connection: ${authOptions.provider}. Must be "injected"`);
+    }
 
     // Emit connect_start event for manual connect
     this.emit("connect_start", {
