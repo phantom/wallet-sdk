@@ -963,18 +963,18 @@ export class EmbeddedProvider {
   private async handleAuthFlow(
     publicKey: string,
     stamperInfo: StamperInfo,
-    authOptions: AuthOptions | undefined,
+    authOptions: AuthOptions,
     expiresInMs: number,
   ): Promise<Session | null> {
     if (this.config.embeddedWalletType === "user-wallet") {
       this.logger.info("EMBEDDED_PROVIDER", "Creating user-wallet, routing authentication", {
-        authProvider: authOptions?.provider || "phantom-connect",
+        authProvider: authOptions.provider,
       });
 
       // Route to appropriate authentication flow based on authOptions
-      if (authOptions?.provider === "jwt") {
+      if (authOptions.provider === "jwt") {
         return await this.handleJWTAuth(publicKey, stamperInfo, authOptions, expiresInMs);
-      } else if (authOptions?.provider === "phantom") {
+      } else if (authOptions.provider === "phantom") {
         return await this.handlePhantomAuth(publicKey, stamperInfo, expiresInMs);
       } else {
         // This will redirect in browser, so we don't return a session
@@ -1174,10 +1174,10 @@ export class EmbeddedProvider {
   private async handleRedirectAuth(
     publicKey: string,
     stamperInfo: StamperInfo,
-    authOptions?: AuthOptions,
+    authOptions: AuthOptions,
   ): Promise<Session | null> {
     this.logger.info("EMBEDDED_PROVIDER", "Using Phantom Connect authentication flow (redirect-based)", {
-      provider: authOptions?.provider,
+      provider: authOptions.provider,
       hasRedirectUrl: !!this.config.authOptions.redirectUrl,
       authUrl: this.config.authOptions.authUrl,
     });
@@ -1192,7 +1192,7 @@ export class EmbeddedProvider {
       organizationId: `temp-org-${now}`, // Temporary ID, will be updated after redirect
       appId: this.config.appId,
       stamperInfo,
-      authProvider: "phantom-connect",
+      authProvider: authOptions.provider,
       accountDerivationIndex: undefined, // Will be set when redirect completes
       status: "pending" as const,
       createdAt: now,

@@ -159,7 +159,7 @@ describe("BrowserSDK", () => {
         };
         mockProvider.connect.mockResolvedValue(mockResult);
 
-        const result = await sdk.connect();
+        const result = await sdk.connect({ provider: "injected" });
 
         expect(mockProvider.connect).toHaveBeenCalled();
         expect(result).toEqual(mockResult);
@@ -287,7 +287,7 @@ describe("BrowserSDK", () => {
         };
         mockProvider.connect.mockResolvedValue(mockResult);
 
-        const result = await sdk.connect();
+        const result = await sdk.connect({ provider: "phantom" });
 
         expect(mockProvider.connect).toHaveBeenCalled();
         expect(result).toEqual(mockResult);
@@ -301,7 +301,7 @@ describe("BrowserSDK", () => {
           walletId: "wallet-123",
           addresses: [],
         });
-        await sdk.connect();
+        await sdk.connect({ provider: "phantom" });
 
         mockProvider.disconnect.mockResolvedValue(undefined);
 
@@ -318,7 +318,7 @@ describe("BrowserSDK", () => {
           walletId: "wallet-123",
           addresses: [],
         });
-        await sdk.connect();
+        await sdk.connect({ provider: "phantom" });
 
         const mockSignature = { signature: "mockSignature", rawSignature: "mockRaw" };
         mockProvider.solana.signMessage.mockResolvedValue(mockSignature);
@@ -337,7 +337,7 @@ describe("BrowserSDK", () => {
           walletId: "wallet-123",
           addresses: [],
         });
-        await sdk.connect();
+        await sdk.connect({ provider: "phantom" });
 
         const mockResult = { rawTransaction: "mockTxHash", hash: "0xmockHash" };
         mockProvider.ethereum.sendTransaction.mockResolvedValue(mockResult);
@@ -381,7 +381,7 @@ describe("BrowserSDK", () => {
     it("should propagate connection errors", async () => {
       mockProvider.connect.mockRejectedValue(new Error("Connection failed"));
 
-      await expect(sdk.connect()).rejects.toThrow("Connection failed");
+      await expect(sdk.connect({ provider: "injected" })).rejects.toThrow("Connection failed");
     });
 
     it("should propagate signing errors", async () => {

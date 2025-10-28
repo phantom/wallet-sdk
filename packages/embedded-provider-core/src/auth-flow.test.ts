@@ -202,7 +202,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       expect(mockStorage.saveSession).toHaveBeenCalledWith(
         expect.objectContaining({
           status: "pending",
-          authProvider: "phantom-connect",
+          authProvider: "google",
         }),
       );
     });
@@ -256,7 +256,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       mockStorage.getSession.mockResolvedValue(existingSession);
       mockClient.getWalletAddresses.mockResolvedValue([]);
 
-      await provider.connect({ provider: "phantom" });
+      await provider.connect({ provider: "google" });
 
       expect(mockStorage.saveSession).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -280,7 +280,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       mockStorage.getSession.mockResolvedValue(existingSession);
       mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
 
-      await provider.connect({ provider: "phantom" });
+      await provider.connect({ provider: "google" });
 
       expect(PhantomClient).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -304,7 +304,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         organizationId: "org-123",
         appId: "app-123",
         stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
-        authProvider: "phantom-connect",
+        authProvider: "google",
         status: "pending",
         createdAt: Date.now(),
         lastUsed: Date.now(),
@@ -312,7 +312,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       mockStorage.getSession.mockResolvedValue(existingSession);
       mockClient.createOrganization.mockResolvedValue({ organizationId: "new-org-id" });
 
-      await provider.connect({ provider: "phantom" });
+      await provider.connect({ provider: "google" });
 
       expect(mockStorage.clearSession).toHaveBeenCalled();
     });
@@ -328,7 +328,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         organizationId: "org-123",
         appId: "app-123",
         stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
-        authProvider: "phantom-connect",
+        authProvider: "google",
         status: "pending",
         createdAt: Date.now(),
         lastUsed: Date.now(),
@@ -336,7 +336,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       mockStorage.getSession.mockResolvedValue(existingSession);
       mockClient.createOrganization.mockResolvedValue({ organizationId: "new-org-id" });
 
-      await provider.connect({ provider: "phantom" });
+      await provider.connect({ provider: "google" });
 
       expect(mockStorage.clearSession).toHaveBeenCalled();
       // For user wallets, no organization is created locally (only for app wallets it should happen)
@@ -354,7 +354,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         organizationId: "org-123",
         appId: "app-123",
         stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
-        authProvider: "phantom-connect",
+        authProvider: "google",
         status: "pending",
         createdAt: Date.now(),
         lastUsed: Date.now(),
@@ -362,7 +362,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       mockStorage.getSession.mockResolvedValue(existingSession);
       mockClient.createOrganization.mockResolvedValue({ organizationId: "new-org-id" });
 
-      await provider.connect({ provider: "phantom" });
+      await provider.connect({ provider: "google" });
 
       // Should start fresh flow
       // For user wallets, no organization is created locally
@@ -383,7 +383,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       mockStorage.getSession.mockResolvedValue(null);
 
       // This should fall back to fresh authentication instead of throwing
-      const result = await provider.connect({ provider: "phantom" });
+      const result = await provider.connect({ provider: "google" });
       expect(result.status).toBe("pending"); // Should successfully start fresh auth flow
     });
 
@@ -401,7 +401,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
 
       // Should NOT throw an error, instead it should fall back to fresh auth
-      await provider.connect({ provider: "phantom" });
+      await provider.connect({ provider: "google" });
 
       // Should have attempted to resume auth from redirect (and failed silently due to missing session)
       expect(mockAuthProvider.resumeAuthFromRedirect).toHaveBeenCalled();
@@ -462,7 +462,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       expect(mockStorage.saveSession).toHaveBeenCalledWith(
         expect.objectContaining({
           status: "pending",
-          authProvider: "phantom-connect",
+          authProvider: "google",
         }),
       );
     });
@@ -510,7 +510,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         return Promise.resolve();
       });
 
-      await provider.connect({ provider: "phantom" });
+      await provider.connect({ provider: "google" });
 
       expect(mockClient.createOrganization).toHaveBeenCalledWith(
         expect.stringContaining("test-org-id-"),
@@ -545,7 +545,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         return Promise.resolve();
       });
 
-      await provider.connect({ provider: "phantom" });
+      await provider.connect({ provider: "google" });
 
       expect(mockStorage.saveSession).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -722,7 +722,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       expect(mockStorage.saveSession).toHaveBeenCalledWith(
         expect.objectContaining({
           status: "pending",
-          authProvider: "phantom-connect",
+          authProvider: "apple",
         }),
       );
     });
@@ -751,11 +751,11 @@ describe("EmbeddedProvider Auth Flows", () => {
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
       mockClient.createOrganization.mockResolvedValue({ organizationId: "new-org-id" });
 
-      await provider.connect({ provider: "phantom" });
+      await provider.connect({ provider: "google" });
 
       expect(mockAuthProvider.authenticate).toHaveBeenCalledWith(
         expect.objectContaining({
-          provider: undefined,
+          provider: "google",
           redirectUrl: config.authOptions?.redirectUrl,
         }),
       );
@@ -766,12 +766,12 @@ describe("EmbeddedProvider Auth Flows", () => {
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
       mockClient.createOrganization.mockResolvedValue({ organizationId: "new-org-id" });
 
-      await provider.connect({ provider: "phantom" });
+      await provider.connect({ provider: "google" });
 
       expect(mockStorage.saveSession).toHaveBeenCalledWith(
         expect.objectContaining({
           status: "pending",
-          authProvider: "phantom-connect",
+          authProvider: "google",
         }),
       );
     });
@@ -780,7 +780,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       mockStorage.getSession.mockResolvedValue(null);
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
 
-      await provider.connect({ provider: "phantom" });
+      await provider.connect({ provider: "google" });
 
       expect(mockAuthProvider.authenticate).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -807,7 +807,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         organizationId: "org-123",
         appId: "app-123",
         stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
-        authProvider: "phantom-connect",
+        authProvider: "google",
         status: "pending", // Started but no URL sessionId
         createdAt: Date.now(),
         lastUsed: Date.now(),
@@ -815,7 +815,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       mockStorage.getSession.mockResolvedValue(existingSession);
       mockClient.createOrganization.mockResolvedValue({ organizationId: "new-org-id" });
 
-      await provider.connect({ provider: "phantom" });
+      await provider.connect({ provider: "google" });
 
       expect(mockStorage.clearSession).toHaveBeenCalled();
     });
@@ -857,7 +857,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       mockStorage.getSession.mockResolvedValue(null);
       mockAuthProvider.authenticate.mockRejectedValue(new Error("network timeout"));
 
-      await expect(provider.connect({ provider: "phantom" })).rejects.toThrow(/network/i);
+      await expect(provider.connect({ provider: "google" })).rejects.toThrow(/network/i);
     });
 
     it("should provide specific error messages for different failure types", async () => {
@@ -865,7 +865,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       mockStorage.getSession.mockResolvedValue(null);
       mockAuthProvider.authenticate.mockRejectedValue(new Error("IndexedDB access denied"));
 
-      await expect(provider.connect({ provider: "phantom" })).rejects.toThrow("Storage error: Unable to access browser storage. Please ensure storage is available and try again.");
+      await expect(provider.connect({ provider: "google" })).rejects.toThrow("Storage error: Unable to access browser storage. Please ensure storage is available and try again.");
     });
 
     it("should clean up state on authentication failures", async () => {
@@ -917,7 +917,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       mockStorage.getSession.mockResolvedValue(completedSession);
       mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
 
-      await provider.connect({ provider: "phantom" });
+      await provider.connect({ provider: "google" });
 
       const addresses = provider.getAddresses();
       expect(addresses).toHaveLength(1);
@@ -931,7 +931,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       mockStorage.getSession.mockResolvedValue(completedSession);
       mockClient.getWalletAddresses.mockResolvedValue([]);
 
-      await provider.connect({ provider: "phantom" });
+      await provider.connect({ provider: "google" });
       expect(provider.isConnected()).toBe(true);
 
       // Disconnect
@@ -998,7 +998,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         organizationId: "org-123",
         appId: "app-123",
         stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
-        authProvider: "phantom-connect",
+        authProvider: "google",
         status: "pending",
         createdAt: Date.now(),
         lastUsed: Date.now(),
@@ -1021,7 +1021,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         organizationId: "org-123",
         appId: "app-123",
         stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
-        authProvider: "phantom-connect",
+        authProvider: "google",
         status: "pending",
         createdAt: Date.now(),
         lastUsed: Date.now(),
@@ -1218,7 +1218,7 @@ describe("EmbeddedProvider Auth Flows", () => {
       });
 
       mockClient.getWalletAddresses.mockResolvedValue([]);
-      await provider.connect({ provider: "phantom" });
+      await provider.connect({ provider: "google" });
     });
 
     it("should sign messages when connected", async () => {
