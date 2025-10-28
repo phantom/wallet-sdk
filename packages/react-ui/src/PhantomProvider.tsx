@@ -1,12 +1,16 @@
 import React, { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from "react";
 import { useConnect as useBaseConnect, usePhantom, PhantomProvider as BasePhantomProvider, useIsExtensionInstalled, useIsPhantomLoginAvailable, type PhantomSDKConfig} from "@phantom/react-sdk";
 import { isMobileDevice, getDeeplinkToPhantom } from "@phantom/browser-sdk";
+import { getTheme, mergeTheme, type PhantomTheme } from "./themes";
+import { Modal } from "./components/Modal";
 
 export interface PhantomUIProviderProps {
   children: ReactNode;
-  theme?: "light" | "dark" | "auto";
-  customTheme?: Record<string, string>;
+  theme?: "light" | "dark" | "auto" | PhantomTheme;
+  customTheme?: Partial<PhantomTheme>;
   config: PhantomSDKConfig;
+  appIcon?: string; // URL to app icon
+  appName?: string; // App name to display
 }
 
 // Connection UI state
@@ -31,7 +35,7 @@ interface PhantomUIContextValue {
 const PhantomUIContext = createContext<PhantomUIContextValue | null>(null);
 
 // Internal UI Provider that consumes react-sdk context
-function PhantomUIProvider({ children, theme = "light", customTheme }: Omit<PhantomUIProviderProps, 'config'>) {
+function PhantomUIProvider({ children, theme = "dark", customTheme, appIcon, appName }: Omit<PhantomUIProviderProps, 'config'>) {
   const baseConnect = useBaseConnect();
   const { sdk, isPhantomAvailable: _isPhantomAvailable } = usePhantom();
   const isExtensionInstalled = useIsExtensionInstalled();
@@ -39,6 +43,12 @@ function PhantomUIProvider({ children, theme = "light", customTheme }: Omit<Phan
 
   // Check if this is a mobile device
   const isMobile = useMemo(() => isMobileDevice(), []);
+
+  // Get the resolved theme object
+  const resolvedTheme = useMemo(() => {
+    const baseTheme = typeof theme === 'string' ? getTheme(theme) : theme;
+    return mergeTheme(baseTheme, customTheme);
+  }, [theme, customTheme]);
 
   // Connection state
   const [connectionState, setConnectionState] = useState<ConnectionUIState>({
@@ -185,94 +195,31 @@ function PhantomUIProvider({ children, theme = "light", customTheme }: Omit<Phan
   return (
     <PhantomUIContext.Provider value={contextValue}>
       {children}
-      {/* Connection Modal - rendered conditionally based on state */}
-      {connectionState.isVisible && (
-        <div className={`phantom-ui-modal-overlay ${theme}`} style={customTheme} onClick={hideConnectionModal}>
-          <div className="phantom-ui-modal-content" onClick={e => e.stopPropagation()}>
-            <div className="phantom-ui-modal-header">
-              <h3>Connect to Phantom</h3>
-              <button className="phantom-ui-close-button" onClick={hideConnectionModal}>
-                ×
-              </button>
-            </div>
-
-            <div className="phantom-ui-modal-body">
-              {connectionState.error && <div className="phantom-ui-error">{connectionState.error.message}</div>}
-
-              <div className="phantom-ui-provider-options">
-                {/* Mobile device with no Phantom extension - show deeplink button */}
-                {isMobile && !isExtensionInstalled.isInstalled && (
-                  <button
-                    className="phantom-ui-provider-button phantom-ui-provider-button-mobile"
-                    onClick={connectWithDeeplink}
-                    disabled={connectionState.isConnecting}
-                  >
-                    {connectionState.isConnecting && connectionState.providerType === "deeplink"
-                      ? "Opening Phantom..."
-                      : "Open in Phantom App"}
-                  </button>
-                )}
-
-                {/* Primary auth options - Phantom, Google */}
-                {!isMobile && (
-                  <>
-                    {/* Login with Phantom (embedded provider using Phantom extension) */}
-                    {isPhantomLoginAvailable.isAvailable && (
-                      <button
-                        className="phantom-ui-provider-button phantom-ui-provider-button-primary"
-                        onClick={() => connectWithAuthProvider("phantom")}
-                        disabled={connectionState.isConnecting}
-                      >
-                        {connectionState.isConnecting && connectionState.providerType === "embedded"
-                          ? "Connecting..."
-                          : "Login with Phantom"}
-                      </button>
-                    )}
-
-                    {/* Continue with Google */}
-                    <button
-                      className="phantom-ui-provider-button"
-                      onClick={() => connectWithAuthProvider("google")}
-                      disabled={connectionState.isConnecting}
-                    >
-                      {connectionState.isConnecting && connectionState.providerType === "embedded"
-                        ? "Connecting..."
-                        : "Continue with Google"}
-                    </button>
-                  </>
-                )}
-
-                {/* Extension option - smaller UI section */}
-                {!isMobile && isExtensionInstalled.isInstalled && (
-                  <div className="phantom-ui-extension-section">
-                    <div className="phantom-ui-divider">
-                      <span>or</span>
-                    </div>
-                    <button
-                      className="phantom-ui-provider-button phantom-ui-provider-button-secondary"
-                      onClick={connectWithInjected}
-                      disabled={connectionState.isConnecting}
-                    >
-                      {connectionState.isConnecting && connectionState.providerType === "injected"
-                        ? "Connecting..."
-                        : "Continue with extension"}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        isVisible={connectionState.isVisible}
+        isConnecting={connectionState.isConnecting}
+        error={connectionState.error}
+        providerType={connectionState.providerType}
+        theme={resolvedTheme}
+        appIcon={appIcon}
+        appName={appName}
+        isMobile={isMobile}
+        isExtensionInstalled={isExtensionInstalled.isInstalled}
+        isPhantomLoginAvailable={isPhantomLoginAvailable.isAvailable}
+        onClose={hideConnectionModal}
+        onConnectWithDeeplink={connectWithDeeplink}
+        onConnectWithAuthProvider={connectWithAuthProvider}
+        onConnectWithInjected={connectWithInjected}
+      />
     </PhantomUIContext.Provider>
   );
 }
 
 // Main exported Provider that wraps both react-sdk and react-ui providers
-export function PhantomProvider({ children, theme = "light", customTheme, config }: PhantomUIProviderProps) {
+export function PhantomProvider({ children, theme = "dark", customTheme, config, appIcon, appName }: PhantomUIProviderProps) {
   return (
     <BasePhantomProvider config={config}>
-      <PhantomUIProvider theme={theme} customTheme={customTheme}>
+      <PhantomUIProvider theme={theme} customTheme={customTheme} appIcon={appIcon} appName={appName}>
         {children}
       </PhantomUIProvider>
     </BasePhantomProvider>

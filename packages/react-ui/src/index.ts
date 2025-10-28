@@ -7,6 +7,9 @@ export {PhantomProvider, type PhantomUIProviderProps} from "./PhantomProvider";
 // Enhanced Hooks with UI integration
 export * from "./hooks";
 
+// Theme system
+export { darkTheme, lightTheme, getTheme, mergeTheme, type PhantomTheme } from "./themes";
+
 // Re-export hooks and types from react-sdk (useConnect is overridden by UI hooks)
 export {
   useAccounts,
@@ -26,6 +29,3 @@ export {
 export type { NetworkId } from "@phantom/client";
 
 export { isMobileDevice, getDeeplinkToPhantom } from "@phantom/browser-sdk";
-
-// Import and auto-inject CSS styles
-import "./styles.css";

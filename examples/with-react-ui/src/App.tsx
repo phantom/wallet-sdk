@@ -9,7 +9,7 @@ const config: PhantomSDKConfig = {
 
 function App() {
   return (
-      <PhantomProvider theme="light" config={config}>
+      <PhantomProvider theme="dark" config={config}>
         <div style={{ 
           minHeight: '100vh',
           display: 'flex',
