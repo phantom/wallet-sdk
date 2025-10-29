@@ -93,7 +93,7 @@ describe("InjectedProvider", () => {
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
 
-      const result = await provider.connect();
+      const result = await provider.connect({ provider: "injected" });
 
       expect(result.addresses).toHaveLength(1);
       expect(result.addresses[0]).toEqual({
@@ -116,7 +116,7 @@ describe("InjectedProvider", () => {
         addressTypes: [AddressType.ethereum], // Only Ethereum enabled
       });
 
-      const result = await provider.connect();
+      const result = await provider.connect({ provider: "injected" });
 
       expect(result.addresses).toHaveLength(1);
       expect(result.addresses[0]).toEqual({
@@ -138,7 +138,7 @@ describe("InjectedProvider", () => {
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
 
-      await expect(provider.connect()).rejects.toThrow("Phantom wallet not found");
+      await expect(provider.connect({ provider: "injected" })).rejects.toThrow("Phantom wallet not found");
     });
 
     it("should throw error when connection fails", async () => {
@@ -153,7 +153,7 @@ describe("InjectedProvider", () => {
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
 
-      await expect(provider.connect()).rejects.toThrow("Provider not found.");
+      await expect(provider.connect({ provider: "injected" })).rejects.toThrow("Provider not found.");
 
       // Ethereum connect should not have been called since Solana failed first
       expect(mockPhantomObject.ethereum.connect).not.toHaveBeenCalled();
@@ -167,7 +167,7 @@ describe("InjectedProvider", () => {
       });
 
       // First connect - already mocked in beforeEach
-      await provider.connect();
+      await provider.connect({ provider: "injected" });
 
       // Then disconnect
       await provider.disconnect();
@@ -185,7 +185,7 @@ describe("InjectedProvider", () => {
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
 
-      await provider.connect();
+      await provider.connect({ provider: "injected" });
     });
 
     it("should sign message with Solana", async () => {
@@ -232,7 +232,7 @@ describe("InjectedProvider", () => {
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
 
-      await provider.connect();
+      await provider.connect({ provider: "injected" });
     });
 
     it("should sign and send Solana transaction", async () => {
@@ -288,7 +288,7 @@ describe("InjectedProvider", () => {
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
 
-      await provider.connect();
+      await provider.connect({ provider: "injected" });
       const addresses = provider.getAddresses();
 
       expect(addresses).toHaveLength(1);
@@ -309,7 +309,7 @@ describe("InjectedProvider", () => {
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
 
-      await provider.connect();
+      await provider.connect({ provider: "injected" });
       expect(provider.isConnected()).toBe(true);
     });
 
@@ -318,7 +318,7 @@ describe("InjectedProvider", () => {
         addressTypes: [AddressType.solana, AddressType.ethereum],
       });
 
-      await provider.connect();
+      await provider.connect({ provider: "injected" });
       await provider.disconnect();
       expect(provider.isConnected()).toBe(false);
     });
@@ -341,7 +341,7 @@ describe("InjectedProvider", () => {
       provider.on("disconnect", disconnectCallback);
 
       // Connect initially
-      await provider.connect();
+      await provider.connect({ provider: "injected" });
     });
 
     describe("Ethereum account changes", () => {
