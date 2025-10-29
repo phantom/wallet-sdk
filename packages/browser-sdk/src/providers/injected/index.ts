@@ -41,6 +41,7 @@ interface PhantomAppLoginResult {
 interface PhantomApp {
   login(options: PhantomAppLoginOptions): Promise<PhantomAppLoginResult>;
   features(): Promise<{features: string[]}>;
+  getUser(): Promise<{ authUserId?: string } | undefined>;
 }
 
 declare global {
@@ -242,15 +243,34 @@ export class InjectedProvider implements Provider {
       this.addresses = connectedAddresses;
       this.connected = true;
 
+      // Try to get authUserId from window.phantom.app.getUser() if available
+      let authUserId: string | undefined;
+      try {
+        if (window.phantom?.app?.getUser) {
+          const userInfo = await window.phantom.app.getUser();
+          authUserId = userInfo?.authUserId;
+          if (authUserId) {
+            debug.log(DebugCategory.INJECTED_PROVIDER, "Retrieved authUserId from window.phantom.app.getUser()", {
+              authUserId,
+            });
+          }
+        }
+      } catch (error) {
+        // Silently ignore errors - getUser() might not be supported in all extension versions
+        debug.log(DebugCategory.INJECTED_PROVIDER, "Failed to get user info (method may not be supported)", { error });
+      }
+
       const result = {
         addresses: this.addresses,
         status: "completed" as const,
+        authUserId,
       };
 
       // Emit connect event for successful connection
       this.emit("connect", {
         addresses: this.addresses,
         source: "manual-connect",
+        authUserId,
       });
 
       return result;
@@ -394,17 +414,36 @@ export class InjectedProvider implements Provider {
       this.addresses = connectedAddresses;
       this.connected = true;
 
+      // Try to get authUserId from window.phantom.app.getUser() if available
+      let authUserId: string | undefined;
+      try {
+        if (window.phantom?.app?.getUser) {
+          const userInfo = await window.phantom.app.getUser();
+          authUserId = userInfo?.authUserId;
+          if (authUserId) {
+            debug.log(DebugCategory.INJECTED_PROVIDER, "Retrieved authUserId from window.phantom.app.getUser() during auto-connect", {
+              authUserId,
+            });
+          }
+        }
+      } catch (error) {
+        // Silently ignore errors - getUser() might not be supported in all extension versions
+        debug.log(DebugCategory.INJECTED_PROVIDER, "Failed to get user info during auto-connect (method may not be supported)", { error });
+      }
+
       // Event handling is initialized in constructor
 
       // Emit connect event for successful auto-connection
       this.emit("connect", {
         addresses: this.addresses,
         source: "auto-connect",
+        authUserId,
       });
 
       debug.info(DebugCategory.INJECTED_PROVIDER, "Auto-connect successful", {
         addressCount: connectedAddresses.length,
-        addresses: connectedAddresses.map(addr => ({ type: addr.addressType, address: addr.address.substring(0, 8) + "..." }))
+        addresses: connectedAddresses.map(addr => ({ type: addr.addressType, address: addr.address.substring(0, 8) + "..." })),
+        authUserId,
       });
 
     } catch (error) {
@@ -515,7 +554,7 @@ export class InjectedProvider implements Provider {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Setting up Solana event listeners");
 
     // Map Solana connect event to unified connect event
-    const handleSolanaConnect = (publicKey: string) => {
+    const handleSolanaConnect = async (publicKey: string) => {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Solana connect event received", { publicKey });
 
       // Update our internal state
@@ -525,10 +564,23 @@ export class InjectedProvider implements Provider {
       }
       this.connected = true;
 
+      // Try to get authUserId from window.phantom.app.getUser() if available
+      let authUserId: string | undefined;
+      try {
+        if (window.phantom?.app?.getUser) {
+          const userInfo = await window.phantom.app.getUser();
+          authUserId = userInfo?.authUserId;
+        }
+      } catch (error) {
+        // Silently ignore errors
+        debug.log(DebugCategory.INJECTED_PROVIDER, "Failed to get user info in Solana connect event", { error });
+      }
+
       // Emit unified connect event
       this.emit("connect", {
         addresses: this.addresses,
         source: "injected-extension",
+        authUserId,
       });
     };
 
@@ -547,7 +599,7 @@ export class InjectedProvider implements Provider {
     };
 
     // Map Solana account changed to reconnect event
-    const handleSolanaAccountChanged = (publicKey: string) => {
+    const handleSolanaAccountChanged = async (publicKey: string) => {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Solana account changed event received", { publicKey });
 
       // Update the Solana address
@@ -558,10 +610,23 @@ export class InjectedProvider implements Provider {
         this.addresses.push({ addressType: AddressType.solana, address: publicKey });
       }
 
+      // Try to get authUserId from window.phantom.app.getUser() if available
+      let authUserId: string | undefined;
+      try {
+        if (window.phantom?.app?.getUser) {
+          const userInfo = await window.phantom.app.getUser();
+          authUserId = userInfo?.authUserId;
+        }
+      } catch (error) {
+        // Silently ignore errors
+        debug.log(DebugCategory.INJECTED_PROVIDER, "Failed to get user info in Solana account changed event", { error });
+      }
+
       // Emit as a new connect event (account change = reconnection)
       this.emit("connect", {
         addresses: this.addresses,
         source: "injected-extension-account-change",
+        authUserId,
       });
     };
 
@@ -578,7 +643,7 @@ export class InjectedProvider implements Provider {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Setting up Ethereum event listeners");
 
     // Map Ethereum connect event to unified connect event
-    const handleEthereumConnect = (accounts: string[]) => {
+    const handleEthereumConnect = async (accounts: string[]) => {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum connect event received", { accounts });
 
       // Update our internal state - remove old Ethereum addresses and add new ones
@@ -593,10 +658,23 @@ export class InjectedProvider implements Provider {
       }
       this.connected = this.addresses.length > 0;
 
+      // Try to get authUserId from window.phantom.app.getUser() if available
+      let authUserId: string | undefined;
+      try {
+        if (window.phantom?.app?.getUser) {
+          const userInfo = await window.phantom.app.getUser();
+          authUserId = userInfo?.authUserId;
+        }
+      } catch (error) {
+        // Silently ignore errors
+        debug.log(DebugCategory.INJECTED_PROVIDER, "Failed to get user info in Ethereum connect event", { error });
+      }
+
       // Emit unified connect event
       this.emit("connect", {
         addresses: this.addresses,
         source: "injected-extension",
+        authUserId,
       });
     };
 
@@ -615,7 +693,7 @@ export class InjectedProvider implements Provider {
     };
 
     // Map Ethereum account changed to reconnect event or disconnect
-    const handleEthereumAccountsChanged = (accounts: string[]) => {
+    const handleEthereumAccountsChanged = async (accounts: string[]) => {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum accounts changed event received", { accounts });
 
       // Update Ethereum addresses
@@ -630,10 +708,23 @@ export class InjectedProvider implements Provider {
           })),
         );
 
+        // Try to get authUserId from window.phantom.app.getUser() if available
+        let authUserId: string | undefined;
+        try {
+          if (window.phantom?.app?.getUser) {
+            const userInfo = await window.phantom.app.getUser();
+            authUserId = userInfo?.authUserId;
+          }
+        } catch (error) {
+          // Silently ignore errors
+          debug.log(DebugCategory.INJECTED_PROVIDER, "Failed to get user info in Ethereum accounts changed event", { error });
+        }
+
         // Emit as a new connect event (account change = reconnection)
         this.emit("connect", {
           addresses: this.addresses,
           source: "injected-extension-account-change",
+          authUserId,
         });
       } else {
         // User switched to unconnected account - treat as disconnect
