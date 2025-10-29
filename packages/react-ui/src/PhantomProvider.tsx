@@ -22,7 +22,7 @@ interface PhantomUIContextValue {
   connectionState: ConnectionUIState;
   showConnectionModal: () => void;
   hideConnectionModal: () => void;
-  connectWithAuthProvider: (provider?: "google" | "apple" | "phantom") => Promise<void>;
+  connectWithAuthProvider: (provider: "google" | "apple" | "phantom") => Promise<void>;
   connectWithInjected: () => Promise<void>;
   connectWithDeeplink: () => void;
   isMobile: boolean;
@@ -69,7 +69,7 @@ function PhantomUIProvider({ children, theme = "light", customTheme }: Omit<Phan
 
   // Connect with specific auth provider
   const connectWithAuthProvider = useCallback(
-    async (provider?: "google" | "apple" | "phantom") => {
+    async (provider: "google" | "apple" | "phantom") => {
       try {
         setConnectionState(prev => ({
           ...prev,
@@ -78,8 +78,7 @@ function PhantomUIProvider({ children, theme = "light", customTheme }: Omit<Phan
           providerType: "embedded", // Always embedded when using modal
         }));
 
-        const authOptions = provider ? { provider } : undefined;
-        await baseConnect.connect(authOptions);
+        await baseConnect.connect({ provider });
 
         // Hide modal on successful connection
         setConnectionState({
