@@ -123,7 +123,7 @@ describe("EmbeddedProvider Core", () => {
 
       // Test that storage.getSession is called during connect
       try {
-        await provider.connect();
+        await provider.connect({ provider: "phantom" });
       } catch (error) {
         // Connection will fail, but storage should be called
       }
@@ -166,7 +166,7 @@ describe("EmbeddedProvider Core", () => {
       });
 
       try {
-        await provider.connect();
+        await provider.connect({ provider: "phantom" });
       } catch (error) {
         // Connection may fail, but URL params should be checked during session validation
       }
@@ -179,7 +179,7 @@ describe("EmbeddedProvider Core", () => {
       mockPlatform.authProvider.resumeAuthFromRedirect.mockReturnValue(null);
 
       try {
-        await provider.connect();
+        await provider.connect({ provider: "phantom" });
       } catch (error) {
         // Connection will fail, but stamper.init should be called during createOrganizationAndStamper
       }
@@ -193,7 +193,7 @@ describe("EmbeddedProvider Core", () => {
       mockPlatform.authProvider.resumeAuthFromRedirect.mockReturnValue(null);
 
       try {
-        await provider.connect();
+        await provider.connect({ provider: "phantom" });
       } catch (error) {
         // Connection will fail for user-wallet without proper auth setup
       }
@@ -208,7 +208,7 @@ describe("EmbeddedProvider Core", () => {
       mockPlatform.authProvider.resumeAuthFromRedirect.mockReturnValue(null);
 
       try {
-        await provider.connect();
+        await provider.connect({ provider: "google" });
       } catch (error) {
         // Connection will fail for user-wallet without proper auth setup
       }
@@ -293,7 +293,7 @@ describe("EmbeddedProvider Core", () => {
       mockPlatform.stamper.getKeyInfo.mockReturnValue(null);
 
       try {
-        await provider.connect();
+        await provider.connect({ provider: "phantom" });
       } catch (error) {
         // May fail on getWalletAddresses, but stamper should be called
       }

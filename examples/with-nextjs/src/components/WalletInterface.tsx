@@ -28,7 +28,7 @@ export function WalletInterface() {
     <div className="space-y-4">
       {!isConnected ? (
         <button
-          onClick={() => connect()}
+          onClick={() => connect({ provider: "injected" })}
           className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
         >
           Connect Phantom Wallet
