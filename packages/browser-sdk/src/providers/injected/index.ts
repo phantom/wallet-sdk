@@ -57,8 +57,9 @@ import { debug, DebugCategory } from "../../debug";
 import { InjectedSolanaChain, InjectedEthereumChain, type ChainCallbacks } from "./chains";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
 
-// LocalStorage key for tracking manual disconnect to prevent auto-reconnect
+// LocalStorage key and value for tracking manual disconnect to prevent auto-reconnect
 const MANUAL_DISCONNECT_KEY = "phantom-injected-manual-disconnect";
+const MANUAL_DISCONNECT_VALUE = "true";
 
 export interface InjectedProviderConfig {
   addressTypes: AddressType[];
@@ -321,7 +322,7 @@ export class InjectedProvider implements Provider {
     // Set flag to prevent auto-reconnect on page reload
     // This improves UX by respecting the user's explicit disconnect action
     try {
-      localStorage.setItem(MANUAL_DISCONNECT_KEY, "true");
+      localStorage.setItem(MANUAL_DISCONNECT_KEY, MANUAL_DISCONNECT_VALUE);
       debug.log(DebugCategory.INJECTED_PROVIDER, "Set manual disconnect flag to prevent auto-reconnect");
     } catch (error) {
       // Ignore localStorage errors (e.g., in private browsing mode)
@@ -348,7 +349,7 @@ export class InjectedProvider implements Provider {
     // Check if user manually disconnected - if so, respect their choice and don't auto-reconnect
     try {
       const manualDisconnect = localStorage.getItem(MANUAL_DISCONNECT_KEY);
-      if (manualDisconnect === "true") {
+      if (manualDisconnect === MANUAL_DISCONNECT_VALUE) {
         debug.log(DebugCategory.INJECTED_PROVIDER, "Skipping auto-connect: user previously disconnected manually");
         return; // Don't auto-connect if user explicitly disconnected
       }
