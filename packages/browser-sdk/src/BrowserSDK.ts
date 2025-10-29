@@ -85,7 +85,7 @@ export class BrowserSDK {
   /**
    * Connect to the wallet
    */
-  async connect(options?: AuthOptions): Promise<ConnectResult> {
+  async connect(options: AuthOptions): Promise<ConnectResult> {
     debug.info(DebugCategory.BROWSER_SDK, "Starting connection", options);
 
     try {

@@ -25,10 +25,12 @@ export interface PhantomSDKConfig extends Omit<EmbeddedProviderConfig, "apiBaseU
 
 
 export interface ConnectOptions {
-  /** OAuth provider to use */
-  provider?: "google" | "apple" | "jwt";
+  /** OAuth provider to use (required) */
+  provider: "google" | "apple" | "jwt" | "phantom";
   /** JWT token for JWT authentication */
   jwtToken?: string;
+  /** Custom authentication data */
+  customAuthData?: Record<string, any>;
 }
 
 // Re-export core types for convenience

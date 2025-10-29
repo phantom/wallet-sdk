@@ -1,5 +1,16 @@
 # @phantom/react-ui
 
+## 2.0.0-beta.14
+
+### Patch Changes
+
+- d35daaa: Bump all dependencies
+- Updated dependencies [d35daaa]
+  - @phantom/browser-sdk@1.0.0-beta.19
+  - @phantom/react-sdk@1.0.0-beta.19
+  - @phantom/client@1.0.0-beta.19
+  - @phantom/parsers@1.0.0-beta.8
+
 ## 2.0.0-beta.13
 
 ### Patch Changes

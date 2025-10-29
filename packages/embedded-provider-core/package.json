@@ -1,6 +1,6 @@
 {
   "name": "@phantom/embedded-provider-core",
-  "version": "1.0.0-beta.18",
+  "version": "1.0.0-beta.19",
   "description": "Platform-agnostic embedded provider core logic for Phantom Wallet SDK",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

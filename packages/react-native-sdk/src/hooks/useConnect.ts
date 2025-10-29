@@ -6,7 +6,7 @@ export function useConnect() {
   const { sdk, isConnecting, connectError, setWalletId } = usePhantom();
 
   const connect = useCallback(
-    async (_options?: ConnectOptions): Promise<ConnectResult> => {
+    async (options: ConnectOptions): Promise<ConnectResult> => {
       if (!sdk) {
         throw new Error("SDK not initialized");
       }
@@ -14,7 +14,7 @@ export function useConnect() {
       // Note: isConnecting state is now managed by connect_start/connect_error events in Provider
       // This ensures consistency between manual connect and autoConnect with zero race conditions
       try {
-        const result = await sdk.connect();
+        const result = await sdk.connect(options);
 
         // Set the walletId from the connect result for immediate access
         if (result.status === "completed" && result.walletId) {
