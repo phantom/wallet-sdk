@@ -27,10 +27,15 @@ describe("InjectedProvider", () => {
     mockSolanaProvider = createMockSolanaProvider();
     mockEthereumProvider = createMockEthereumProvider();
 
-    // Set up window.phantom mock
+    // Set up window.phantom mock with app.getUser support
     setupWindowMock({
       solana: mockSolanaProvider,
       ethereum: mockEthereumProvider,
+      app: {
+        getUser: jest.fn().mockResolvedValue({ authUserId: "test-auth-user-id" }),
+        login: jest.fn(),
+        features: jest.fn(),
+      },
     });
 
     // Create the default mock phantom object
@@ -100,6 +105,7 @@ describe("InjectedProvider", () => {
         addressType: AddressType.solana,
         address: mockPublicKey,
       });
+      expect(result.authUserId).toBe("test-auth-user-id");
       expect(provider.isConnected()).toBe(true);
     });
 
@@ -345,7 +351,7 @@ describe("InjectedProvider", () => {
     });
 
     describe("Ethereum account changes", () => {
-      it("should emit connect event when switching to a connected account", () => {
+      it("should emit connect event when switching to a connected account", async () => {
         // Simulate Ethereum accountsChanged event with new addresses
         const newAccounts = ["0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E"];
 
@@ -355,7 +361,7 @@ describe("InjectedProvider", () => {
         expect(accountsChangedCall).toBeDefined();
 
         const accountsChangedHandler = accountsChangedCall[1];
-        accountsChangedHandler(newAccounts);
+        await accountsChangedHandler(newAccounts);
 
         // Should emit connect event with new addresses
         expect(connectCallback).toHaveBeenCalledWith({
@@ -364,6 +370,7 @@ describe("InjectedProvider", () => {
             { addressType: AddressType.ethereum, address: newAccounts[0] }
           ],
           source: "injected-extension-account-change",
+          authUserId: "test-auth-user-id",
         });
         expect(disconnectCallback).not.toHaveBeenCalled();
       });
@@ -414,7 +421,7 @@ describe("InjectedProvider", () => {
     });
 
     describe("Solana account changes", () => {
-      it("should emit connect event when switching to different Solana account", () => {
+      it("should emit connect event when switching to different Solana account", async () => {
         // Reset mock calls from initial connection
         connectCallback.mockClear();
         disconnectCallback.mockClear();
@@ -431,7 +438,7 @@ describe("InjectedProvider", () => {
 
         const accountChangedCall = accountChangedCalls[accountChangedCalls.length - 1]; // Use the last one
         const accountChangedHandler = accountChangedCall[1];
-        accountChangedHandler(newPublicKey);
+        await accountChangedHandler(newPublicKey);
 
         // Should emit connect event with updated Solana address (but no Ethereum addresses since not added during initial connect)
         expect(connectCallback).toHaveBeenCalledWith({
@@ -439,6 +446,7 @@ describe("InjectedProvider", () => {
             { addressType: AddressType.solana, address: newPublicKey }
           ],
           source: "injected-extension-account-change",
+          authUserId: "test-auth-user-id",
         });
         expect(disconnectCallback).not.toHaveBeenCalled();
 

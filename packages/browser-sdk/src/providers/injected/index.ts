@@ -41,6 +41,7 @@ interface PhantomAppLoginResult {
 interface PhantomApp {
   login(options: PhantomAppLoginOptions): Promise<PhantomAppLoginResult>;
   features(): Promise<{features: string[]}>;
+  getUser(): Promise<{ authUserId?: string } | undefined>;
 }
 
 declare global {
@@ -251,6 +252,8 @@ export class InjectedProvider implements Provider {
       this.addresses = connectedAddresses;
       this.connected = true;
 
+      // Get authUserId if available
+      const authUserId = await this.getAuthUserId("manual-connect");
       // Clear manual disconnect flag since user is now explicitly connecting
       // This allows auto-reconnect on future page reloads
       try {
@@ -264,12 +267,14 @@ export class InjectedProvider implements Provider {
       const result = {
         addresses: this.addresses,
         status: "completed" as const,
+        authUserId,
       };
 
       // Emit connect event for successful connection
       this.emit("connect", {
         addresses: this.addresses,
         source: "manual-connect",
+        authUserId,
       });
 
       return result;
@@ -435,17 +440,22 @@ export class InjectedProvider implements Provider {
       this.addresses = connectedAddresses;
       this.connected = true;
 
+      // Get authUserId if available
+      const authUserId = await this.getAuthUserId("auto-connect");
+
       // Event handling is initialized in constructor
 
       // Emit connect event for successful auto-connection
       this.emit("connect", {
         addresses: this.addresses,
         source: "auto-connect",
+        authUserId,
       });
 
       debug.info(DebugCategory.INJECTED_PROVIDER, "Auto-connect successful", {
         addressCount: connectedAddresses.length,
-        addresses: connectedAddresses.map(addr => ({ type: addr.addressType, address: addr.address.substring(0, 8) + "..." }))
+        addresses: connectedAddresses.map(addr => ({ type: addr.addressType, address: addr.address.substring(0, 8) + "..." })),
+        authUserId,
       });
 
     } catch (error) {
@@ -490,6 +500,29 @@ export class InjectedProvider implements Provider {
   async getSupportedAutoConfirmChains(): Promise<AutoConfirmSupportedChainsResult> {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Getting supported autoConfirm chains");
     return await this.phantom.autoConfirm.autoConfirmSupportedChains();
+  }
+
+  /**
+   * Helper method to get authUserId from window.phantom.app.getUser()
+   * Returns undefined if the method is not available or fails
+   */
+  private async getAuthUserId(context: string): Promise<string | undefined> {
+    try {
+      if (window.phantom?.app?.getUser) {
+        const userInfo = await window.phantom.app.getUser();
+        const authUserId = userInfo?.authUserId;
+        if (authUserId) {
+          debug.log(DebugCategory.INJECTED_PROVIDER, `Retrieved authUserId from window.phantom.app.getUser() during ${context}`, {
+            authUserId,
+          });
+        }
+        return authUserId;
+      }
+    } catch (error) {
+      // Silently ignore errors - getUser() might not be supported in all extension versions
+      debug.log(DebugCategory.INJECTED_PROVIDER, `Failed to get user info during ${context} (method may not be supported)`, { error });
+    }
+    return undefined;
   }
 
   // Event management methods - implementing unified event interface
@@ -556,7 +589,7 @@ export class InjectedProvider implements Provider {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Setting up Solana event listeners");
 
     // Map Solana connect event to unified connect event
-    const handleSolanaConnect = (publicKey: string) => {
+    const handleSolanaConnect = async (publicKey: string) => {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Solana connect event received", { publicKey });
 
       // Update our internal state
@@ -566,10 +599,14 @@ export class InjectedProvider implements Provider {
       }
       this.connected = true;
 
+      // Get authUserId if available
+      const authUserId = await this.getAuthUserId("Solana connect event");
+
       // Emit unified connect event
       this.emit("connect", {
         addresses: this.addresses,
         source: "injected-extension",
+        authUserId,
       });
     };
 
@@ -588,7 +625,7 @@ export class InjectedProvider implements Provider {
     };
 
     // Map Solana account changed to reconnect event
-    const handleSolanaAccountChanged = (publicKey: string) => {
+    const handleSolanaAccountChanged = async (publicKey: string) => {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Solana account changed event received", { publicKey });
 
       // Update the Solana address
@@ -599,10 +636,14 @@ export class InjectedProvider implements Provider {
         this.addresses.push({ addressType: AddressType.solana, address: publicKey });
       }
 
+      // Get authUserId if available
+      const authUserId = await this.getAuthUserId("Solana account changed event");
+
       // Emit as a new connect event (account change = reconnection)
       this.emit("connect", {
         addresses: this.addresses,
         source: "injected-extension-account-change",
+        authUserId,
       });
     };
 
@@ -619,7 +660,7 @@ export class InjectedProvider implements Provider {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Setting up Ethereum event listeners");
 
     // Map Ethereum connect event to unified connect event
-    const handleEthereumConnect = (accounts: string[]) => {
+    const handleEthereumConnect = async (accounts: string[]) => {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum connect event received", { accounts });
 
       // Update our internal state - remove old Ethereum addresses and add new ones
@@ -634,10 +675,14 @@ export class InjectedProvider implements Provider {
       }
       this.connected = this.addresses.length > 0;
 
+      // Get authUserId if available
+      const authUserId = await this.getAuthUserId("Ethereum connect event");
+
       // Emit unified connect event
       this.emit("connect", {
         addresses: this.addresses,
         source: "injected-extension",
+        authUserId,
       });
     };
 
@@ -656,7 +701,7 @@ export class InjectedProvider implements Provider {
     };
 
     // Map Ethereum account changed to reconnect event or disconnect
-    const handleEthereumAccountsChanged = (accounts: string[]) => {
+    const handleEthereumAccountsChanged = async (accounts: string[]) => {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum accounts changed event received", { accounts });
 
       // Update Ethereum addresses
@@ -671,10 +716,14 @@ export class InjectedProvider implements Provider {
           })),
         );
 
+        // Get authUserId if available
+        const authUserId = await this.getAuthUserId("Ethereum accounts changed event");
+
         // Emit as a new connect event (account change = reconnection)
         this.emit("connect", {
           addresses: this.addresses,
           source: "injected-extension-account-change",
+          authUserId,
         });
       } else {
         // User switched to unconnected account - treat as disconnect
