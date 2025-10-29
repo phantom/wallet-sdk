@@ -243,22 +243,8 @@ export class InjectedProvider implements Provider {
       this.addresses = connectedAddresses;
       this.connected = true;
 
-      // Try to get authUserId from window.phantom.app.getUser() if available
-      let authUserId: string | undefined;
-      try {
-        if (window.phantom?.app?.getUser) {
-          const userInfo = await window.phantom.app.getUser();
-          authUserId = userInfo?.authUserId;
-          if (authUserId) {
-            debug.log(DebugCategory.INJECTED_PROVIDER, "Retrieved authUserId from window.phantom.app.getUser()", {
-              authUserId,
-            });
-          }
-        }
-      } catch (error) {
-        // Silently ignore errors - getUser() might not be supported in all extension versions
-        debug.log(DebugCategory.INJECTED_PROVIDER, "Failed to get user info (method may not be supported)", { error });
-      }
+      // Get authUserId if available
+      const authUserId = await this.getAuthUserId("manual-connect");
 
       const result = {
         addresses: this.addresses,
@@ -414,22 +400,8 @@ export class InjectedProvider implements Provider {
       this.addresses = connectedAddresses;
       this.connected = true;
 
-      // Try to get authUserId from window.phantom.app.getUser() if available
-      let authUserId: string | undefined;
-      try {
-        if (window.phantom?.app?.getUser) {
-          const userInfo = await window.phantom.app.getUser();
-          authUserId = userInfo?.authUserId;
-          if (authUserId) {
-            debug.log(DebugCategory.INJECTED_PROVIDER, "Retrieved authUserId from window.phantom.app.getUser() during auto-connect", {
-              authUserId,
-            });
-          }
-        }
-      } catch (error) {
-        // Silently ignore errors - getUser() might not be supported in all extension versions
-        debug.log(DebugCategory.INJECTED_PROVIDER, "Failed to get user info during auto-connect (method may not be supported)", { error });
-      }
+      // Get authUserId if available
+      const authUserId = await this.getAuthUserId("auto-connect");
 
       // Event handling is initialized in constructor
 
@@ -488,6 +460,29 @@ export class InjectedProvider implements Provider {
   async getSupportedAutoConfirmChains(): Promise<AutoConfirmSupportedChainsResult> {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Getting supported autoConfirm chains");
     return await this.phantom.autoConfirm.autoConfirmSupportedChains();
+  }
+
+  /**
+   * Helper method to get authUserId from window.phantom.app.getUser()
+   * Returns undefined if the method is not available or fails
+   */
+  private async getAuthUserId(context: string): Promise<string | undefined> {
+    try {
+      if (window.phantom?.app?.getUser) {
+        const userInfo = await window.phantom.app.getUser();
+        const authUserId = userInfo?.authUserId;
+        if (authUserId) {
+          debug.log(DebugCategory.INJECTED_PROVIDER, `Retrieved authUserId from window.phantom.app.getUser() during ${context}`, {
+            authUserId,
+          });
+        }
+        return authUserId;
+      }
+    } catch (error) {
+      // Silently ignore errors - getUser() might not be supported in all extension versions
+      debug.log(DebugCategory.INJECTED_PROVIDER, `Failed to get user info during ${context} (method may not be supported)`, { error });
+    }
+    return undefined;
   }
 
   // Event management methods - implementing unified event interface
@@ -564,17 +559,8 @@ export class InjectedProvider implements Provider {
       }
       this.connected = true;
 
-      // Try to get authUserId from window.phantom.app.getUser() if available
-      let authUserId: string | undefined;
-      try {
-        if (window.phantom?.app?.getUser) {
-          const userInfo = await window.phantom.app.getUser();
-          authUserId = userInfo?.authUserId;
-        }
-      } catch (error) {
-        // Silently ignore errors
-        debug.log(DebugCategory.INJECTED_PROVIDER, "Failed to get user info in Solana connect event", { error });
-      }
+      // Get authUserId if available
+      const authUserId = await this.getAuthUserId("Solana connect event");
 
       // Emit unified connect event
       this.emit("connect", {
@@ -610,17 +596,8 @@ export class InjectedProvider implements Provider {
         this.addresses.push({ addressType: AddressType.solana, address: publicKey });
       }
 
-      // Try to get authUserId from window.phantom.app.getUser() if available
-      let authUserId: string | undefined;
-      try {
-        if (window.phantom?.app?.getUser) {
-          const userInfo = await window.phantom.app.getUser();
-          authUserId = userInfo?.authUserId;
-        }
-      } catch (error) {
-        // Silently ignore errors
-        debug.log(DebugCategory.INJECTED_PROVIDER, "Failed to get user info in Solana account changed event", { error });
-      }
+      // Get authUserId if available
+      const authUserId = await this.getAuthUserId("Solana account changed event");
 
       // Emit as a new connect event (account change = reconnection)
       this.emit("connect", {
@@ -658,17 +635,8 @@ export class InjectedProvider implements Provider {
       }
       this.connected = this.addresses.length > 0;
 
-      // Try to get authUserId from window.phantom.app.getUser() if available
-      let authUserId: string | undefined;
-      try {
-        if (window.phantom?.app?.getUser) {
-          const userInfo = await window.phantom.app.getUser();
-          authUserId = userInfo?.authUserId;
-        }
-      } catch (error) {
-        // Silently ignore errors
-        debug.log(DebugCategory.INJECTED_PROVIDER, "Failed to get user info in Ethereum connect event", { error });
-      }
+      // Get authUserId if available
+      const authUserId = await this.getAuthUserId("Ethereum connect event");
 
       // Emit unified connect event
       this.emit("connect", {
@@ -708,17 +676,8 @@ export class InjectedProvider implements Provider {
           })),
         );
 
-        // Try to get authUserId from window.phantom.app.getUser() if available
-        let authUserId: string | undefined;
-        try {
-          if (window.phantom?.app?.getUser) {
-            const userInfo = await window.phantom.app.getUser();
-            authUserId = userInfo?.authUserId;
-          }
-        } catch (error) {
-          // Silently ignore errors
-          debug.log(DebugCategory.INJECTED_PROVIDER, "Failed to get user info in Ethereum accounts changed event", { error });
-        }
+        // Get authUserId if available
+        const authUserId = await this.getAuthUserId("Ethereum accounts changed event");
 
         // Emit as a new connect event (account change = reconnection)
         this.emit("connect", {
