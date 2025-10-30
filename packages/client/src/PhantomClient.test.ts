@@ -427,19 +427,21 @@ describe("PhantomClient Spending Limits Integration", () => {
     });
   });
 
-  describe("findUserWithSpendingLimits", () => {
-    const findUserMethod = (orgData: any, walletId: string) => {
-      return client["findUserWithSpendingLimits"](orgData, walletId);
+  describe("checkUserSpendingLimit", () => {
+    const checkSpendingLimit = (orgData: any, walletId: string) => {
+      return client["checkUserSpendingLimit"](orgData, walletId);
     };
 
-    it("should correctly identify user with CEL policy and usdLimit", () => {
+    it("should return spending limit config when user has limits", () => {
       const orgData = createOrgDataWithSpendingLimits("wallet-123");
-      const user = findUserMethod(orgData, "wallet-123");
+      const result = checkSpendingLimit(orgData, "wallet-123");
 
-      expect(user).toBeDefined();
-      expect(user?.username).toBe("spending-limit-user");
-      expect(user?.policy?.cel?.usdLimit).toBeDefined();
-      expect(user?.policy?.cel?.usdLimit?.memoryAccount).toBe("MemAcc123");
+      expect(result.hasSpendingLimit).toBe(true);
+      if (result.hasSpendingLimit) {
+        expect(result.config.memoryAccount).toBe("MemAcc123");
+        expect(result.config.memoryId).toBe(0);
+        expect(result.config.memoryBump).toBe(255);
+      }
     });
 
     describe.each([
@@ -546,10 +548,10 @@ describe("PhantomClient Spending Limits Integration", () => {
         },
         walletId: "wallet-123",
       },
-    ])("should return undefined when $testName", ({ orgData, walletId }) => {
+    ])("should return hasSpendingLimit false when $testName", ({ orgData, walletId }) => {
       it(`${walletId}`, () => {
-        const user = findUserMethod(orgData, walletId);
-        expect(user).toBeUndefined();
+        const result = checkSpendingLimit(orgData, walletId);
+        expect(result.hasSpendingLimit).toBe(false);
       });
     });
   });
@@ -629,7 +631,20 @@ describe("PhantomClient Spending Limits Integration", () => {
       ).rejects.toThrow("Failed to apply spending limits for this transaction");
     });
 
-    it("should continue signing when getOrganization fails", async () => {
+    it("should fail when getOrganization fails for Solana transaction", async () => {
+      mockGetOrganization.mockRejectedValue(new Error("API connection timeout"));
+
+      const performSigning = client["performTransactionSigning"].bind(client);
+
+      await expect(
+        performSigning(
+          { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET, account: "UserAccount123" },
+          true,
+        ),
+      ).rejects.toThrow("Failed to fetch organization data for spending limit validation");
+    });
+
+    it("should continue signing when getOrganization fails for EVM transaction", async () => {
       mockGetOrganization.mockRejectedValue(new Error("Failed to fetch organization"));
 
       mockKmsPost.mockResolvedValueOnce({
@@ -638,12 +653,27 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       const performSigning = client["performTransactionSigning"].bind(client);
       const result = await performSigning(
-        { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET, account: "UserAccount123" },
+        { walletId: "wallet-123", transaction: "0x1234", networkId: NetworkId.ETHEREUM_MAINNET, account: "0xUser" },
         true,
       );
 
       expect(result.signedTransaction).toBe("signed-tx");
-      expect(mockAxiosPost).not.toHaveBeenCalled();
+      expect(mockGetOrganization).not.toHaveBeenCalled();
+    });
+
+    it("should continue signing when includeSubmissionConfig is false (no org fetch needed)", async () => {
+      mockKmsPost.mockResolvedValueOnce({
+        data: { result: { transaction: "signed-tx" } },
+      });
+
+      const performSigning = client["performTransactionSigning"].bind(client);
+      const result = await performSigning(
+        { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET },
+        false,
+      );
+
+      expect(result.signedTransaction).toBe("signed-tx");
+      expect(mockGetOrganization).not.toHaveBeenCalled();
     });
   });
 
@@ -757,27 +787,14 @@ describe("PhantomClient Spending Limits Integration", () => {
       );
     });
 
-    it("should send EVM transactions in ChainTransaction format", async () => {
-      mockAxiosPost.mockResolvedValueOnce({
-        data: { transaction: "augmented-tx", simulationResult: {}, memoryConfigUsed: {} },
-      });
-
+    it("should reject EVM transactions with clear error", async () => {
       const augmentMethod = client["augmentWithSpendingLimit"].bind(client);
-      const result = await augmentMethod(
-        "evm-tx",
-        spendingConfig,
-        { chain: "ethereum", network: "mainnet" },
-        "0xUserAccount",
-      );
 
-      expect(result.transaction).toBe("augmented-tx");
-      expect(mockAxiosPost).toHaveBeenCalledWith(
-        "https://api.phantom.app/augment/spending-limit",
-        expect.objectContaining({
-          transaction: { Evm: null },
-        }),
-        expect.any(Object),
-      );
+      await expect(
+        augmentMethod("evm-tx", spendingConfig, { chain: "ethereum", network: "mainnet" }, "0xUserAccount"),
+      ).rejects.toThrow("Spending limits are only supported for Solana transactions");
+
+      expect(mockAxiosPost).not.toHaveBeenCalled();
     });
 
     it("should include all required fields in augment request", async () => {
