@@ -42,6 +42,7 @@ import { Buffer } from "buffer";
 import { deriveSubmissionConfig } from "./caip2-mappings";
 import { DerivationPath, getNetworkConfig } from "./constants";
 import {
+  type AugmentWithSpendingLimitResponse,
   type AuthenticatorConfig,
   type CreateAuthenticatorParams,
   type CreateWalletResult,
@@ -55,6 +56,7 @@ import {
   type SignMessageParams,
   type SignTransactionParams,
   type SignTypedDataParams,
+  type SpendingLimitConfig,
   type UserConfig,
 } from "./types";
 
@@ -196,6 +198,57 @@ export class PhantomClient {
   }
 
   /**
+   * Augments a transaction with spending limit enforcement instructions
+   * This is phase 1 of the two-phase spending limit flow
+   * @private
+   */
+  private async augmentWithSpendingLimit(
+    transaction: string,
+    spendingLimitConfig: SpendingLimitConfig,
+    submissionConfig: SubmissionConfig,
+    account: string,
+  ): Promise<AugmentWithSpendingLimitResponse> {
+    try {
+      // Backend expects ChainTransaction enum: { Solana: "tx_string" } or { Evm: null }
+      const chainTransaction = submissionConfig.chain === "solana" ? { Solana: transaction } : { Evm: null };
+
+      const request = {
+        transaction: chainTransaction,
+        spendingLimitConfig,
+        submissionConfig,
+        simulationConfig: { account },
+      };
+
+      const response = await this.axiosInstance.post(`${this.config.apiBaseUrl}/augment/spending-limit`, request, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      return response.data;
+    } catch (error: any) {
+      console.error("Failed to augment transaction:", error.response?.data || error.message);
+      throw new Error(`Failed to augment transaction: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  /**
+   * Helper method to find user with spending limits in organization data
+   * @private
+   */
+  private findUserWithSpendingLimits(orgData: ExternalKmsOrganization, walletId: string) {
+    return orgData.users?.find(user => {
+      const policy = (user as any).policy;
+      return (
+        policy?.type === "CEL" &&
+        policy?.cel?.preset === "DAPP_CONNECTION_USER" &&
+        policy?.cel?.walletId === walletId &&
+        policy?.cel?.usdLimit
+      );
+    });
+  }
+
+  /**
    * Private method for shared signing logic
    */
   private async performTransactionSigning(
@@ -240,24 +293,54 @@ export class PhantomClient {
         addressFormat: networkConfig.addressFormat,
       };
 
-      // POC: Pre-fetch organization data so we can inspect policies in the network tab
-      // Use the existing public getOrganization method which handles auth properly
+      // TWO-PHASE SPENDING LIMITS FLOW
+      // Phase 1: Check if user has spending limits and augment transaction if needed
+      let spendingLimitConfig: SpendingLimitConfig | undefined;
+      let augmentedTransaction = encodedTransaction;
+
       try {
         const orgData = await this.getOrganization(this.config.organizationId);
-        console.log("Organization data (check for policies):", orgData);
+        const currentUser = this.findUserWithSpendingLimits(orgData, walletId);
+        const policy = (currentUser as any)?.policy;
+
+        if (policy?.cel?.usdLimit) {
+          spendingLimitConfig = {
+            memoryAccount: policy.cel.usdLimit.memoryAccount,
+            memoryId: policy.cel.usdLimit.memoryId,
+            memoryBump: policy.cel.usdLimit.memoryBump,
+          };
+          console.log("Found spending limit config for user:", spendingLimitConfig);
+
+          // Phase 1: Call augmentation service if spending limits exist and we're submitting
+          if (spendingLimitConfig && includeSubmissionConfig && submissionConfig && params.account) {
+            console.log("Augmenting transaction with spending limits...");
+
+            const augmentResponse = await this.augmentWithSpendingLimit(
+              encodedTransaction,
+              spendingLimitConfig,
+              submissionConfig,
+              params.account,
+            );
+
+            augmentedTransaction = augmentResponse.transaction;
+            console.log("Transaction augmented with Lighthouse instructions");
+          }
+        }
       } catch (e: any) {
-        // Do not block signing on org fetch errors in this POC
-        console.warn("getOrganization failed", e?.message || e);
+        console.warn("Failed to check/apply spending limits", e?.message || e);
+        // Continue without spending limits - don't block transaction
       }
 
-      // Sign transaction request - include configs if available
+      // Phase 2: Sign the (possibly augmented) transaction
+      // Use augmentedTransaction which will have Lighthouse instructions if spending limits exist
       const signRequest: SignTransactionRequest & {
         submissionConfig?: SubmissionConfig;
         simulationConfig?: SimulationConfig;
+        spendingLimitConfig?: SpendingLimitConfig;
       } = {
         organizationId: this.config.organizationId,
         walletId: walletId,
-        transaction: encodedTransaction as any,
+        transaction: augmentedTransaction, // Use augmented transaction
         derivationInfo: derivationInfo,
       };
 
@@ -271,6 +354,11 @@ export class PhantomClient {
         signRequest.simulationConfig = {
           account: params.account,
         };
+      }
+
+      // Add spending limit config if available
+      if (spendingLimitConfig) {
+        signRequest.spendingLimitConfig = spendingLimitConfig;
       }
 
       const request: SignTransaction = {
