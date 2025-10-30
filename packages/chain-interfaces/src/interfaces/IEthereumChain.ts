@@ -31,7 +31,7 @@ export interface IEthereumChain {
   signTypedData(typedData: any, address: string): Promise<string>;
   signTransaction(transaction: EthTransactionRequest): Promise<string>;
   sendTransaction(transaction: EthTransactionRequest): Promise<string>;
-  switchChain(chainId: number): Promise<void>;
+  switchChain(chainId: number | string): Promise<void>;
   getChainId(): Promise<number>;
   getAccounts(): Promise<string[]>;
   isConnected(): boolean;

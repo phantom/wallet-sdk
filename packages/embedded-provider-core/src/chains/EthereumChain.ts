@@ -114,13 +114,16 @@ export class EmbeddedEthereumChain implements IEthereumChain {
     return result.hash;
   }
 
-  switchChain(chainId: number): Promise<void> {
-    const networkId = chainIdToNetworkId(chainId);
+  switchChain(chainId: number | string): Promise<void> {
+    // Convert hex string to number if needed
+    const numericChainId = typeof chainId === "string" ? parseInt(chainId, 16) : chainId;
+
+    const networkId = chainIdToNetworkId(numericChainId);
     if (!networkId) {
       throw new Error(`Unsupported chainId: ${chainId}`);
     }
     this.currentNetworkId = networkId;
-    this.eventEmitter.emit("chainChanged", `0x${chainId.toString(16)}`);
+    this.eventEmitter.emit("chainChanged", `0x${numericChainId.toString(16)}`);
     return Promise.resolve();
   }
 

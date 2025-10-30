@@ -544,13 +544,28 @@ const result = await sdk.ethereum.sendTransaction({
 
 #### switchChain(chainId)
 
-Switch to a different Ethereum chain.
+Switch to a different Ethereum chain. Accepts a chain ID as a number or a hex string value.
 
 ```typescript
 await sdk.ethereum.switchChain(1); // Ethereum mainnet
 await sdk.ethereum.switchChain(137); // Polygon
 await sdk.ethereum.switchChain(42161); // Arbitrum One
 ```
+
+**Supported EVM Networks:**
+
+| Network | Chain ID | Usage |
+|---------|----------|-------|
+| Ethereum Mainnet | `1` | `switchChain(1)` |
+| Ethereum Sepolia | `11155111` | `switchChain(11155111)` |
+| Polygon Mainnet | `137` | `switchChain(137)` |
+| Polygon Amoy | `80002` | `switchChain(80002)` |
+| Base Mainnet | `8453` | `switchChain(8453)` |
+| Base Sepolia | `84532` | `switchChain(84532)` |
+| Arbitrum One | `42161` | `switchChain(42161)` |
+| Arbitrum Sepolia | `421614` | `switchChain(421614)` |
+| Monad Mainnet | `143` | `switchChain(143)` |
+| Monad Testnet | `10143` | `switchChain(10143)` |
 
 #### getChainId()
 
@@ -744,33 +759,15 @@ console.log("Supported chains:", supportedChains.chains);
 
 #### Available NetworkId Values
 
+For a complete list of supported networks including Solana, Ethereum, Polygon, Base, Arbitrum, Monad, and more, see the [Network Support section in the main README](../../README.md#network-support).
+
 ```typescript
 import { NetworkId } from "@phantom/browser-sdk";
 
-// Solana networks
-NetworkId.SOLANA_MAINNET; // "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
-NetworkId.SOLANA_DEVNET; // "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1"
-NetworkId.SOLANA_TESTNET; // "solana:4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z"
-
-// Ethereum networks
-NetworkId.ETHEREUM_MAINNET; // "eip155:1"
-NetworkId.ETHEREUM_SEPOLIA; // "eip155:11155111"
-
-// Polygon networks
-NetworkId.POLYGON_MAINNET; // "eip155:137"
-NetworkId.POLYGON_AMOY; // "eip155:80002"
-
-// Arbitrum networks
-NetworkId.ARBITRUM_ONE; // "eip155:42161"
-NetworkId.ARBITRUM_SEPOLIA; // "eip155:421614"
-
-// Optimism networks
-NetworkId.OPTIMISM_MAINNET; // "eip155:10"
-NetworkId.OPTIMISM_GOERLI; // "eip155:420"
-
-// Base networks
-NetworkId.BASE_MAINNET; // "eip155:8453"
-NetworkId.BASE_SEPOLIA; // "eip155:84532"
+// Example: Use NetworkId for auto-confirm
+await sdk.enableAutoConfirm({
+  chains: [NetworkId.SOLANA_MAINNET, NetworkId.ETHEREUM_MAINNET],
+});
 ```
 
 **Important Notes:**
