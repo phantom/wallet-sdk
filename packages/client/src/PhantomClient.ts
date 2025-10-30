@@ -62,9 +62,26 @@ import {
 
 import type { Stamper } from "@phantom/sdk-types";
 import { getSecureTimestamp, randomUUID, isEthereumChain } from "@phantom/utils";
+
 type AddUserToOrganizationParams = Omit<AddUserToOrganizationRequest, "user"> & {
   replaceExpirable?: boolean;
   user: PartialKmsUser & { traits: { appId: string }; expiresInMs?: number };
+};
+
+// Type for a user with spending limits enforced via CEL policy
+type UserWithSpendingLimits = PartialKmsUser & {
+  policy: {
+    type: "CEL";
+    cel: {
+      preset: "DAPP_CONNECTION_USER";
+      walletId: string;
+      usdLimit: {
+        memoryAccount: string;
+        memoryId: number;
+        memoryBump: number;
+      };
+    };
+  };
 };
 
 // TODO(napas): Auto generate this from the OpenAPI spec
@@ -236,16 +253,33 @@ export class PhantomClient {
    * Helper method to find user with spending limits in organization data
    * @private
    */
-  private findUserWithSpendingLimits(orgData: ExternalKmsOrganization, walletId: string) {
-    return orgData.users?.find(user => {
+  private findUserWithSpendingLimits(
+    orgData: ExternalKmsOrganization,
+    walletId: string,
+  ): UserWithSpendingLimits | undefined {
+    if (!orgData.users) return undefined;
+
+    for (const user of orgData.users) {
+      // Check if user has policy (PartialKmsUser may not have policy in type definition)
+      if (!("policy" in user)) continue;
+
       const policy = (user as any).policy;
-      return (
+
+      // Type guard: check all required properties
+      if (
         policy?.type === "CEL" &&
         policy?.cel?.preset === "DAPP_CONNECTION_USER" &&
         policy?.cel?.walletId === walletId &&
-        policy?.cel?.usdLimit
-      );
-    });
+        policy?.cel?.usdLimit &&
+        typeof policy.cel.usdLimit.memoryAccount === "string" &&
+        typeof policy.cel.usdLimit.memoryId === "number" &&
+        typeof policy.cel.usdLimit.memoryBump === "number"
+      ) {
+        return user as UserWithSpendingLimits;
+      }
+    }
+
+    return undefined;
   }
 
   /**
@@ -301,21 +335,20 @@ export class PhantomClient {
       let spendingLimitConfig: SpendingLimitConfig | undefined;
       let augmentedTransaction = encodedTransaction;
 
-      try {
-        const orgData = await this.getOrganization(this.config.organizationId);
-        const currentUser = this.findUserWithSpendingLimits(orgData, walletId);
-        const policy = (currentUser as any)?.policy;
+      // Only check spending limits for Solana transactions
+      if (!isEvmTransaction && includeSubmissionConfig && submissionConfig && params.account) {
+        try {
+          const orgData = await this.getOrganization(this.config.organizationId);
+          const currentUser = this.findUserWithSpendingLimits(orgData, walletId);
 
-        if (policy?.cel?.usdLimit) {
-          spendingLimitConfig = {
-            memoryAccount: policy.cel.usdLimit.memoryAccount,
-            memoryId: policy.cel.usdLimit.memoryId,
-            memoryBump: policy.cel.usdLimit.memoryBump,
-          };
-          console.log("Found spending limit config for user:", spendingLimitConfig);
+          if (currentUser) {
+            spendingLimitConfig = {
+              memoryAccount: currentUser.policy.cel.usdLimit.memoryAccount,
+              memoryId: currentUser.policy.cel.usdLimit.memoryId,
+              memoryBump: currentUser.policy.cel.usdLimit.memoryBump,
+            };
+            console.log("Found spending limit config for user:", spendingLimitConfig);
 
-          // Phase 1: Call augmentation service if spending limits exist and we're submitting
-          if (spendingLimitConfig && includeSubmissionConfig && submissionConfig && params.account) {
             console.log("Augmenting transaction with spending limits...");
 
             const augmentResponse = await this.augmentWithSpendingLimit(
@@ -328,10 +361,18 @@ export class PhantomClient {
             augmentedTransaction = augmentResponse.transaction;
             console.log("Transaction augmented with Lighthouse instructions");
           }
+        } catch (e: any) {
+          // If user has no spending limits, continue normally
+          // But if augmentation failed for a user WITH limits, throw error
+          if (spendingLimitConfig) {
+            throw new Error(
+              `Failed to apply spending limits for this transaction: ${e?.message || e}. ` +
+                `Transaction cannot proceed without spending limit enforcement.`,
+            );
+          }
+          // Otherwise just log and continue (user doesn't have spending limits)
+          console.warn("Failed to check spending limits", e?.message || e);
         }
-      } catch (e: any) {
-        console.warn("Failed to check/apply spending limits", e?.message || e);
-        // Continue without spending limits - don't block transaction
       }
 
       // Phase 2: Sign the (possibly augmented) transaction
