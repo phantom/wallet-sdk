@@ -115,8 +115,12 @@ export class EmbeddedEthereumChain implements IEthereumChain {
   }
 
   switchChain(chainId: number | string): Promise<void> {
-    // Convert hex string to number if needed
-    const numericChainId = typeof chainId === "string" ? parseInt(chainId, 16) : chainId;
+    // Convert string to number if needed, detecting hex vs decimal
+    const numericChainId = typeof chainId === "string"
+      ? chainId.toLowerCase().startsWith("0x")
+        ? parseInt(chainId, 16)
+        : parseInt(chainId, 10)
+      : chainId;
 
     const networkId = chainIdToNetworkId(numericChainId);
     if (!networkId) {

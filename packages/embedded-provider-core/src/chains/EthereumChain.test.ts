@@ -373,6 +373,36 @@ describe("EmbeddedEthereumChain", () => {
         expect(chainId).toBe(42161);
         expect(emitSpy).toHaveBeenCalledWith("chainChanged", "0xa4b1");
       });
+
+      it("should handle decimal strings by converting to number", async () => {
+        const emitSpy = jest.spyOn((ethereumChain as any).eventEmitter, "emit");
+        await ethereumChain.switchChain("137"); // Polygon as decimal string
+
+        const chainId = await ethereumChain.getChainId();
+        expect(chainId).toBe(137); // Should parse as decimal, not hex
+        expect(emitSpy).toHaveBeenCalledWith("chainChanged", "0x89");
+      });
+
+      it("should handle various decimal string formats", async () => {
+        const testCases = [
+          { decimal: "1", expectedDecimal: 1, expectedHex: "0x1" },
+          { decimal: "137", expectedDecimal: 137, expectedHex: "0x89" },
+          { decimal: "8453", expectedDecimal: 8453, expectedHex: "0x2105" },
+          { decimal: "42161", expectedDecimal: 42161, expectedHex: "0xa4b1" },
+        ];
+
+        for (const { decimal, expectedDecimal, expectedHex } of testCases) {
+          const emitSpy = jest.spyOn((ethereumChain as any).eventEmitter, "emit");
+
+          await ethereumChain.switchChain(decimal);
+
+          const chainId = await ethereumChain.getChainId();
+          expect(chainId).toBe(expectedDecimal);
+          expect(emitSpy).toHaveBeenCalledWith("chainChanged", expectedHex);
+
+          emitSpy.mockRestore();
+        }
+      });
     });
   });
 

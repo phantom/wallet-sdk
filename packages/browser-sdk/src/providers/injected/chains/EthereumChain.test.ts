@@ -174,6 +174,7 @@ describe("InjectedEthereumChain", () => {
 
         expect(mockPhantom.ethereum.switchChain).toHaveBeenCalledWith("0xA4B1");
         expect((ethereumChain as any)._chainId).toBe("0xA4B1");
+        expect(emitSpy).toHaveBeenCalledWith("chainChanged", "0xA4B1");
       });
 
       it("should handle decimal strings by converting to hex", async () => {
