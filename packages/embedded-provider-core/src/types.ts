@@ -11,6 +11,8 @@ export interface ConnectResult {
   walletId?: string; // Only for embedded
   addresses: WalletAddress[];
   status?: "pending" | "completed"; // Session status - pending means redirect in progress, completed means wallet is ready
+  providerType?: "embedded" | "injected"; // Type of provider used for connection
+  authUserId?: string; // Phantom user ID from auth flow (for embedded user-wallets)
 }
 
 export interface SignMessageParams {
@@ -40,7 +42,7 @@ export interface SignAndSendTransactionParams {
 export interface SignedTransaction extends ParsedTransactionResult {}
 
 export interface AuthOptions {
-  provider?: "google" | "apple" | "jwt" | "phantom" | "injected";
+  provider: "google" | "apple" | "jwt" | "phantom" | "injected";
   jwtToken?: string;
   customAuthData?: Record<string, any>;
 }

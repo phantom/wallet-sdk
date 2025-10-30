@@ -25,10 +25,10 @@ export interface Session {
   authenticatorCreatedAt: number; // When the current authenticator was created
   authenticatorExpiresAt: number; // When the authenticator expires
   lastRenewalAttempt?: number; // Last time we attempted renewal
-  // Username used for organization creation (needed for authenticator rotation)
-  username?: string; // Username that was used when creating the organization (for app-wallets only)
   // Derivation index for account paths (defaults to 0 for backward compatibility)
   accountDerivationIndex?: number; // Account derivation index from auth flow
+  // Phantom user ID from auth flow (for user-wallets)
+  authUserId?: string; // User ID returned from Phantom auth service
 }
 
 export interface EmbeddedStorage {

@@ -80,7 +80,7 @@ export function phantomConnector() {
       }
 
       try {
-        const result = await sdk!.connect()
+        const result = await sdk!.connect({ provider: 'phantom' })
         const ethereumAddresses = result.addresses.filter(addr => addr.addressType === AddressType.ethereum)
 
         if (ethereumAddresses.length === 0) {

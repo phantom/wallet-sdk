@@ -143,7 +143,9 @@ function App() {
     setError(null)
 
     try {
-      const result = await sdk.connect()
+      // Determine provider based on current provider type
+      const provider = providerType === "injected" ? "injected" : "phantom"
+      const result = await sdk.connect({ provider })
       setAddresses(result.addresses)
       setIsConnected(true)
       await updateBalance(result.addresses)
@@ -567,6 +569,78 @@ function App() {
     }
   }
 
+  // Send 0.00001 ETH on Ethereum mainnet
+  const handleSendEthMainnet = async () => {
+    if (!sdk || !sdk.isConnected()) {
+      setError("Please connect first")
+      return
+    }
+
+    const ethAddress = addresses.find(a => a.addressType === AddressType.ethereum)
+    if (!ethAddress) {
+      setError("No Ethereum address found")
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      // Create ETH transfer (0.00001 ETH to self)
+      const transactionParams = {
+        from: ethAddress.address,
+        to: ethAddress.address, // Self-transfer
+        value: numberToHex(parseEther("0.00001")), // 0.00001 ETH in hex
+        chainId: numberToHex(1), // Ethereum mainnet
+      }
+
+      console.log("Sending 0.00001 ETH on Ethereum mainnet:", transactionParams)
+      const result = await sdk.ethereum.sendTransaction(transactionParams)
+
+      console.log("ETH transaction sent on mainnet:", result)
+      alert(`ETH transaction sent on Ethereum mainnet! Hash: ${result}`)
+    } catch (error) {
+      console.error("Error sending ETH on mainnet:", error)
+      setError((error as Error).message || 'Failed to send ETH on mainnet')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Send 0.00001 POL on Polygon mainnet
+  const handleSendPolygon = async () => {
+    if (!sdk || !sdk.isConnected()) {
+      setError("Please connect first")
+      return
+    }
+
+    const ethAddress = addresses.find(a => a.addressType === AddressType.ethereum)
+    if (!ethAddress) {
+      setError("No Ethereum address found")
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      // Create POL transfer (0.00001 POL to self) on Polygon mainnet
+      const transactionParams = {
+        from: ethAddress.address,
+        to: ethAddress.address, // Self-transfer
+        value: numberToHex(parseEther("0.00001")), // 0.00001 POL in hex
+        chainId: numberToHex(137), // Polygon mainnet
+      }
+
+      console.log("Sending 0.00001 POL on Polygon mainnet:", transactionParams)
+      const result = await sdk.ethereum.sendTransaction(transactionParams)
+
+      console.log("POL transaction sent on Polygon:", result)
+      alert(`POL transaction sent on Polygon mainnet! Hash: ${result}`)
+    } catch (error) {
+      console.error("Error sending POL on Polygon:", error)
+      setError((error as Error).message || 'Failed to send POL on Polygon')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   // Auto-confirm handlers (only for injected provider)
   const handleEnableAutoConfirm = async () => {
     if (!sdk || !sdk.isConnected() || providerType !== "injected") {
@@ -828,11 +902,23 @@ function App() {
             >
               Sign & Send Transaction (Solana)
             </button>
-            <button 
+            <button
               onClick={handleSignAndSendEthTransaction}
               disabled={!addresses.find(a => a.addressType === AddressType.ethereum) || isLoading}
             >
               Sign & Send Transaction (Ethereum)
+            </button>
+            <button
+              onClick={handleSendEthMainnet}
+              disabled={!addresses.find(a => a.addressType === AddressType.ethereum) || isLoading}
+            >
+              Send 0.00001 ETH (Mainnet)
+            </button>
+            <button
+              onClick={handleSendPolygon}
+              disabled={!addresses.find(a => a.addressType === AddressType.ethereum) || isLoading}
+            >
+              Send 0.00001 POL (Polygon)
             </button>
           </div>
         </section>

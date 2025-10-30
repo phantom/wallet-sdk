@@ -1,5 +1,14 @@
 # @phantom/browser-sdk
 
+## 1.0.0-beta.6
+
+### Patch Changes
+
+- d35daaa: Bump all dependencies
+- Updated dependencies [d35daaa]
+  - @phantom/constants@1.0.0-beta.8
+  - @phantom/sdk-types@1.0.0-beta.8
+
 ## 1.0.0-beta.5
 
 ### Patch Changes

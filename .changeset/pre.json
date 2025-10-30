@@ -31,9 +31,12 @@
     "with-nextjs": "0.1.0"
   },
   "changesets": [
+    "calm-jokes-tie",
     "clear-parts-battle",
     "cuddly-rivers-rule",
+    "curvy-jars-yell",
     "cute-days-yell",
+    "eager-chefs-sneeze",
     "fancy-lands-spend",
     "fancy-symbols-enter",
     "fast-camels-smoke",
@@ -46,8 +49,11 @@
     "proud-adults-greet",
     "rotten-jobs-win",
     "slow-pillows-reply",
+    "spicy-bats-bathe",
     "ten-seas-juggle",
     "tired-baboons-trade",
-    "warm-sites-unite"
+    "tricky-ravens-yell",
+    "warm-sites-unite",
+    "witty-carpets-unite"
   ]
 }

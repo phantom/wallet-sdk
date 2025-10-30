@@ -1,4 +1,5 @@
 import * as WebBrowser from "expo-web-browser";
+import { Platform } from "react-native";
 import type { AuthProvider, AuthResult, PhantomConnectOptions, JWTAuthOptions } from "@phantom/embedded-provider-core";
 import { DEFAULT_AUTH_URL } from "@phantom/constants";
 
@@ -39,6 +40,8 @@ export class ExpoAuthProvider implements AuthProvider {
         clear_previous_session: (phantomOptions.clearPreviousSession ?? false).toString(),
         allow_refresh: (phantomOptions.allowRefresh ?? true).toString(),
         sdk_version: __SDK_VERSION__,
+        sdk_type: "react-native",
+        platform: Platform.OS,
       });
 
       // Add provider if specified (will skip provider selection)
@@ -82,6 +85,7 @@ export class ExpoAuthProvider implements AuthProvider {
         const provider = url.searchParams.get("provider");
         const accountDerivationIndex = url.searchParams.get("selected_account_index");
         const expiresInMs = url.searchParams.get("expires_in_ms");
+        const authUserId = url.searchParams.get("auth_user_id");
 
         if (!walletId) {
           throw new Error("Authentication failed: no walletId in redirect URL");
@@ -92,12 +96,14 @@ export class ExpoAuthProvider implements AuthProvider {
           throw new Error("Authentication failed: no organizationId in redirect URL");
         }
 
+
         console.log("[ExpoAuthProvider] Auth redirect parameters", {
           walletId,
           organizationId,
           provider,
           accountDerivationIndex,
           expiresInMs,
+          authUserId,
         });
 
         return {
@@ -106,6 +112,7 @@ export class ExpoAuthProvider implements AuthProvider {
           provider: provider || undefined,
           accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : 0,
           expiresInMs: expiresInMs ? parseInt(expiresInMs) : 0,
+          authUserId: authUserId || undefined,
         };
       } else if (result.type === "cancel") {
         throw new Error("User cancelled authentication");

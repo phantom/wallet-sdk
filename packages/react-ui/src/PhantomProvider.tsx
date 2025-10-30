@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from "react";
-import { useConnect as useBaseConnect, usePhantom, PhantomProvider as BasePhantomProvider, useIsExtensionInstalled, type PhantomSDKConfig} from "@phantom/react-sdk";
+import { useConnect as useBaseConnect, usePhantom, PhantomProvider as BasePhantomProvider, useIsExtensionInstalled, useIsPhantomLoginAvailable, type PhantomSDKConfig} from "@phantom/react-sdk";
 import { isMobileDevice, getDeeplinkToPhantom } from "@phantom/browser-sdk";
 
 export interface PhantomUIProviderProps {
@@ -22,7 +22,7 @@ interface PhantomUIContextValue {
   connectionState: ConnectionUIState;
   showConnectionModal: () => void;
   hideConnectionModal: () => void;
-  connectWithAuthProvider: (provider?: "google" | "apple" | "phantom") => Promise<void>;
+  connectWithAuthProvider: (provider: "google" | "apple" | "phantom") => Promise<void>;
   connectWithInjected: () => Promise<void>;
   connectWithDeeplink: () => void;
   isMobile: boolean;
@@ -35,6 +35,7 @@ function PhantomUIProvider({ children, theme = "light", customTheme }: Omit<Phan
   const baseConnect = useBaseConnect();
   const { sdk, isPhantomAvailable: _isPhantomAvailable } = usePhantom();
   const isExtensionInstalled = useIsExtensionInstalled();
+  const isPhantomLoginAvailable = useIsPhantomLoginAvailable();
 
   // Check if this is a mobile device
   const isMobile = useMemo(() => isMobileDevice(), []);
@@ -68,7 +69,7 @@ function PhantomUIProvider({ children, theme = "light", customTheme }: Omit<Phan
 
   // Connect with specific auth provider
   const connectWithAuthProvider = useCallback(
-    async (provider?: "google" | "apple" | "phantom") => {
+    async (provider: "google" | "apple" | "phantom") => {
       try {
         setConnectionState(prev => ({
           ...prev,
@@ -77,8 +78,7 @@ function PhantomUIProvider({ children, theme = "light", customTheme }: Omit<Phan
           providerType: "embedded", // Always embedded when using modal
         }));
 
-        const authOptions = provider ? { provider } : undefined;
-        await baseConnect.connect(authOptions);
+        await baseConnect.connect({ provider });
 
         // Hide modal on successful connection
         setConnectionState({
@@ -216,7 +216,7 @@ function PhantomUIProvider({ children, theme = "light", customTheme }: Omit<Phan
                 {!isMobile && (
                   <>
                     {/* Login with Phantom (embedded provider using Phantom extension) */}
-                    {isExtensionInstalled.isInstalled && (
+                    {isPhantomLoginAvailable.isAvailable && (
                       <button
                         className="phantom-ui-provider-button phantom-ui-provider-button-primary"
                         onClick={() => connectWithAuthProvider("phantom")}
