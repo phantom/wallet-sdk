@@ -1,5 +1,43 @@
 # @phantom/react-sdk
 
+## 1.0.0-beta.20
+
+### Patch Changes
+
+- c3f5969: Do not reconnect automatically on injected provider if user disconnected
+- 462c2b5: Get authUserId from injected provider
+- Updated dependencies [c3f5969]
+- Updated dependencies [462c2b5]
+  - @phantom/browser-sdk@1.0.0-beta.20
+
+## 1.0.0-beta.19
+
+### Patch Changes
+
+- d35daaa: Bump all dependencies
+- Updated dependencies [d35daaa]
+  - @phantom/browser-sdk@1.0.0-beta.19
+  - @phantom/constants@1.0.0-beta.8
+  - @phantom/chain-interfaces@1.0.0-beta.8
+
+## 1.0.0-beta.18
+
+### Patch Changes
+
+- f1f401d: Support authuser id from wallet
+- 0ee572a: EVM SDKs
+- Updated dependencies [f1f401d]
+- Updated dependencies [0ee572a]
+  - @phantom/browser-sdk@1.0.0-beta.18
+
+## 1.0.0-beta.17
+
+### Patch Changes
+
+- bd2219e: Fixed features access
+- Updated dependencies [bd2219e]
+  - @phantom/browser-sdk@1.0.0-beta.17
+
 ## 1.0.0-beta.16
 
 ### Patch Changes

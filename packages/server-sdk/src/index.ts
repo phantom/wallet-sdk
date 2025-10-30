@@ -1,27 +1,24 @@
 import {
   PhantomClient,
   type SignMessageParams,
-  type SignTransactionParams,
-  type SignAndSendTransactionParams,
   type NetworkId,
   type CreateWalletResult,
   type GetWalletsResult,
   type AddressType,
   type Organization,
 } from "@phantom/client";
-import { randomUUID, getSecureTimestampSync } from "@phantom/utils";
+import { randomUUID, getSecureTimestampSync, isEthereumChain } from "@phantom/utils";
 import { 
   ANALYTICS_HEADERS,
   DEFAULT_WALLET_API_URL,
   type ServerSdkHeaders 
 } from "@phantom/constants";
 import { ApiKeyStamper } from "@phantom/api-key-stamper";
-import { base64urlEncode } from "@phantom/base64url";
+import { base64urlEncode, stringToBase64url } from "@phantom/base64url";
 import bs58 from "bs58";
 import packageJson from "../package.json";
 import {
-  parseMessage,
-  parseTransactionToBase64Url,
+  parseToKmsTransaction,
   parseSignMessageResponse,
   parseTransactionResponse,
   type ParsedSignatureResult,
@@ -115,23 +112,25 @@ export class ServerSDK {
 
   /**
    * Sign a message - supports plain text and automatically converts to base64url
+   * Routes to appropriate signing method based on network type
    * @param params - Message parameters with plain text message
    * @returns Promise<ParsedSignatureResult> - Parsed signature with explorer URL
    */
   async signMessage(params: ServerSignMessageParams): Promise<ParsedSignatureResult> {
     // Parse the message to base64url format
-    const parsedMessage = parseMessage(params.message);
+    const base64UrlMessage = stringToBase64url(params.message);
 
-    // Use the parent's signMessage method with parsed message
     const signMessageParams: SignMessageParams = {
       walletId: params.walletId,
-      message: parsedMessage.base64url,
+      message: base64UrlMessage,
       networkId: params.networkId,
       derivationIndex: params.derivationIndex,
     };
 
-    // Get raw response from client
-    const rawResponse = await this.client.signMessage(signMessageParams);
+    // Get raw response from client - use the appropriate method based on chain
+    const rawResponse = isEthereumChain(params.networkId)
+      ? await this.client.ethereumSignMessage(signMessageParams)
+      : await this.client.signRawPayload(signMessageParams);
 
     // Parse the response to get human-readable signature and explorer URL
     return parseSignMessageResponse(rawResponse, params.networkId);
@@ -143,20 +142,24 @@ export class ServerSDK {
    * @returns Promise<ParsedTransactionResult> - Parsed transaction result without hash
    */
   async signTransaction(params: ServerSignTransactionParams): Promise<ParsedTransactionResult> {
-    // Parse the transaction to base64url format
-    const parsedTransaction = await parseTransactionToBase64Url(params.transaction, params.networkId);
+    // Parse the transaction to KMS format (base64url for Solana, hex for EVM)
+    const parsedTransaction = await parseToKmsTransaction(params.transaction, params.networkId);
 
-    // Use the parent's signTransaction method with parsed transaction
-    const signTransactionParams: SignTransactionParams = {
+    // Get the transaction payload for the KMS (use hex for EVM, base64url for others)
+    const transactionPayload = parsedTransaction.parsed;
+    if (!transactionPayload) {
+      throw new Error("Failed to parse transaction: no valid encoding found");
+    }
+
+    // Get raw response from client
+    // PhantomClient will handle EVM transaction formatting internally
+    const rawResponse = await this.client.signTransaction({
       walletId: params.walletId,
-      transaction: parsedTransaction.base64url,
+      transaction: transactionPayload,
       networkId: params.networkId,
       derivationIndex: params.derivationIndex,
       account: params.account,
-    };
-
-    // Get raw response from client
-    const rawResponse = await this.client.signTransaction(signTransactionParams);
+    });
 
     // Parse the response to get transaction result (without hash)
     return await parseTransactionResponse(rawResponse.rawTransaction, params.networkId);
@@ -168,19 +171,24 @@ export class ServerSDK {
    * @returns Promise<ParsedTransactionResult> - Parsed transaction result with hash and explorer URL
    */
   async signAndSendTransaction(params: ServerSignAndSendTransactionParams): Promise<ParsedTransactionResult> {
-    // Parse the transaction to base64url format
-    const parsedTransaction = await parseTransactionToBase64Url(params.transaction, params.networkId);
+    // Parse the transaction to KMS format (base64url for Solana, hex for EVM)
+    const parsedTransaction = await parseToKmsTransaction(params.transaction, params.networkId);
 
-    // Use the parent's signAndSendTransaction method with parsed transaction
-    const signAndSendParams: SignAndSendTransactionParams = {
+    // Get the transaction payload for the KMS (use hex for EVM, base64url for others)
+    const transactionPayload = parsedTransaction.parsed;
+    if (!transactionPayload) {
+      throw new Error("Failed to parse transaction: no valid encoding found");
+    }
+
+    // Get raw response from client
+    // PhantomClient will handle EVM transaction formatting internally
+    const rawResponse = await this.client.signAndSendTransaction({
       walletId: params.walletId,
-      transaction: parsedTransaction.base64url,
+      transaction: transactionPayload,
       networkId: params.networkId,
       derivationIndex: params.derivationIndex,
       account: params.account,
-    };
-    // Get raw response from client
-    const rawResponse = await this.client.signAndSendTransaction(signAndSendParams);
+    });
 
     // Parse the response to get transaction hash and explorer URL
     return await parseTransactionResponse(rawResponse.rawTransaction, params.networkId, rawResponse.hash);
@@ -264,11 +272,9 @@ export { NetworkId } from "@phantom/constants";
 
 export { ApiKeyStamper } from "@phantom/api-key-stamper";
 export {
-  parseMessage,
-  parseTransactionToBase64Url,
+  parseToKmsTransaction,
   parseSignMessageResponse,
   parseTransactionResponse,
-  type ParsedMessage,
   type ParsedTransaction,
   type ParsedSignatureResult,
   type ParsedTransactionResult,

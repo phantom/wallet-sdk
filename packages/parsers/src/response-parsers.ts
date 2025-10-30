@@ -6,6 +6,7 @@
 import { base64urlDecode } from "@phantom/base64url";
 import type { NetworkId } from "@phantom/constants";
 import { getExplorerUrl } from "@phantom/constants";
+import { isEthereumChain } from "@phantom/utils";
 import { Transaction, VersionedTransaction } from "@solana/web3.js";
 import bs58 from "bs58";
 import { Buffer } from "buffer";
@@ -50,21 +51,34 @@ export function parseSignMessageResponse(base64Response: string, networkId: Netw
 
 /**
  * Parse a transaction response from base64 rawTransaction to extract hash
+ * For Ethereum chains, converts base64url to hex format
  */
 export function parseTransactionResponse(
   base64RawTransaction: string,
   networkId: NetworkId,
   hash?: string,
 ): ParsedTransactionResult {
+  // For Ethereum chains, decode base64url to hex format
+  let rawTransaction = base64RawTransaction;
+  if (isEthereumChain(networkId)) {
+    try {
+      const txBytes = base64urlDecode(base64RawTransaction);
+      rawTransaction = "0x" + Buffer.from(txBytes).toString("hex");
+    } catch (error) {
+      // Fallback: assume it's already hex format
+      rawTransaction = base64RawTransaction.startsWith("0x") ? base64RawTransaction : "0x" + base64RawTransaction;
+    }
+  }
+
   if (hash) {
     return {
       hash,
-      rawTransaction: base64RawTransaction,
+      rawTransaction,
       blockExplorer: getExplorerUrl(networkId, "transaction", hash),
     };
   } else {
     return {
-      rawTransaction: base64RawTransaction,
+      rawTransaction,
     };
   }
 }
@@ -92,40 +106,18 @@ function parseSolanaSignatureResponse(base64Response: string): ParsedSignatureRe
   }
 }
 
+
 /**
  * Parse EVM signature response
  */
 function parseEVMSignatureResponse(base64Response: string): ParsedSignatureResult {
-  try {
-    // EVM signatures are typically 65 bytes (r + s + v)
-    const signatureBytes = base64urlDecode(base64Response);
+  const signatureBytes = base64urlDecode(base64Response);
+  const signature = "0x" + Buffer.from(signatureBytes).toString("hex");
 
-    // KMS backend returns recovery_id (0 or 1) as the last byte
-    // Ethereum expects v = 27 or 28, so we need to convert it
-    if (signatureBytes.length === 65) {
-      const recoveryId = signatureBytes[64];
-      // Only convert if it's 0 or 1 (recovery_id format)
-      if (recoveryId === 0 || recoveryId === 1) {
-        // Convert recovery_id to Ethereum v value
-        signatureBytes[64] = recoveryId + 27;
-      }
-    }
-
-    const signature = "0x" + Buffer.from(signatureBytes).toString("hex");
-
-    return {
-      signature,
-      rawSignature: base64Response,
-      // Note: Most block explorers don't have direct signature lookup, only transaction lookup
-    };
-  } catch (error) {
-    // Fallback: assume it's already hex format
-    const signature = base64Response.startsWith("0x") ? base64Response : "0x" + base64Response;
-    return {
-      signature,
-      rawSignature: base64Response,
-    };
-  }
+  return {
+    signature,
+    rawSignature: base64Response,
+  };
 }
 
 /**

@@ -65,7 +65,7 @@ function WalletComponent() {
   const { ethereum } = useEthereum();
 
   const handleConnect = async () => {
-    const { addresses } = await connect();
+    const { addresses } = await connect({ provider: "injected" });
     console.log("Connected addresses:", addresses);
   };
 
@@ -99,8 +99,8 @@ const sdk = new BrowserSDK({
 //   appId: "your-app-id",
 // });
 
-// Connect through SDK
-const { addresses } = await sdk.connect();
+// Connect through SDK (provider parameter is required)
+const { addresses } = await sdk.connect({ provider: "injected" });
 
 // Chain-specific operations
 const solanaSignature = await sdk.solana.signMessage("Hello Solana!");
@@ -191,8 +191,8 @@ function WalletOperations() {
   const { ethereum } = useEthereum();
 
   const handleOperations = async () => {
-    // Connection modals appear automatically
-    await connect();
+    // Connection modals appear automatically (provider parameter is required)
+    await connect({ provider: "phantom" });
 
     // Chain-specific operations with UI
     await solana.signAndSendTransaction(solanaTransaction);

@@ -56,7 +56,7 @@ function WalletComponent() {
   const { ethereum } = useEthereum();
 
   const handleConnect = async () => {
-    const { addresses } = await connect();
+    const { addresses } = await connect({ provider: "injected" });
     console.log("Connected addresses:", addresses);
   };
 
@@ -118,9 +118,9 @@ function WalletExample() {
   const { solana } = useSolana();
   const { ethereum } = useEthereum();
 
-  // 1. Connect first
+  // 1. Connect first (provider parameter is required)
   const handleConnect = async () => {
-    await connect();
+    await connect({ provider: "injected" });
   };
 
   // 2. Then use chain-specific operations
@@ -136,13 +136,10 @@ function WalletExample() {
 
 ### Connection Options
 
-The `connect()` method automatically switches between providers based on the authentication method you specify:
+The `connect()` method requires a `provider` parameter and automatically switches between providers based on the authentication method you specify:
 
 ```tsx
 const { connect } = useConnect();
-
-// Connect with current provider (no switching)
-await connect();
 
 // Connect with injected provider (Phantom extension)
 // Automatically switches to injected provider if not already using it
@@ -162,13 +159,17 @@ await connect({
   provider: "apple",
 });
 
-
-
 // Connect with Phantom authentication (embedded provider)
 // Uses Phantom extension or mobile app for authentication
 // Automatically switches to embedded provider if not already using it
 await connect({
   provider: "phantom",
+});
+
+// Connect with JWT authentication (embedded provider)
+await connect({
+  provider: "jwt",
+  jwtToken: "your-jwt-token",
 });
 ```
 
@@ -228,7 +229,7 @@ function ConnectButton() {
 
   const handleConnect = async () => {
     try {
-      const { addresses } = await connect();
+      const { addresses } = await connect({ provider: "injected" });
       console.log("Connected addresses:", addresses);
     } catch (err) {
       console.error("Failed to connect:", err);

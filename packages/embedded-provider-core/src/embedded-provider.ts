@@ -1,15 +1,15 @@
-import { base64urlEncode } from "@phantom/base64url";
+import { base64urlEncode, stringToBase64url } from "@phantom/base64url";
 import { AddressType, PhantomClient } from "@phantom/client";
 import type { NetworkId } from "@phantom/constants";
 import {
-  parseMessage,
   parseSignMessageResponse,
   parseTransactionResponse,
-  parseTransactionToBase64Url,
+  parseToKmsTransaction,
   type ParsedSignatureResult,
   type ParsedTransactionResult,
 } from "@phantom/parsers";
 import { randomUUID } from "@phantom/utils";
+import { Buffer } from "buffer";
 import bs58 from "bs58";
 import { AUTHENTICATOR_EXPIRATION_TIME_MS } from "./constants";
 
@@ -378,10 +378,8 @@ export class EmbeddedProvider {
    * We use this method to validate authentication options before processing them.
    * This ensures only supported auth providers are used and required tokens are present.
    */
-  private validateAuthOptions(authOptions?: AuthOptions): void {
-    if (!authOptions) return;
-
-    if (authOptions.provider && !["google", "apple", "jwt", "phantom"].includes(authOptions.provider)) {
+  private validateAuthOptions(authOptions: AuthOptions): void {
+    if (!["google", "apple", "jwt", "phantom"].includes(authOptions.provider)) {
       throw new Error(`Invalid auth provider: ${authOptions.provider}. Must be "google", "apple", "jwt", or "phantom"`);
     }
 
@@ -567,21 +565,19 @@ export class EmbeddedProvider {
     return organizationId;
   }
 
-  async connect(authOptions?: AuthOptions): Promise<ConnectResult> {
+  async connect(authOptions: AuthOptions): Promise<ConnectResult> {
     try {
       this.logger.info("EMBEDDED_PROVIDER", "Starting embedded provider connect", {
-        authOptions: authOptions
-          ? {
-              provider: authOptions.provider,
-              hasJwtToken: !!authOptions.jwtToken,
-            }
-          : undefined,
+        authOptions: {
+          provider: authOptions.provider,
+          hasJwtToken: !!authOptions.jwtToken,
+        },
       });
 
       // Emit connect_start event for manual connect
       this.emit("connect_start", {
         source: "manual-connect",
-        authOptions: authOptions ? { provider: authOptions.provider } : undefined,
+        authOptions: { provider: authOptions.provider },
       });
 
       // Try to use existing connection (redirect resume or completed session)
@@ -626,7 +622,7 @@ export class EmbeddedProvider {
 
       // Update session last used timestamp (only for non-redirect flows)
       // For redirect flows, timestamp is updated before redirect to prevent race condition
-      if (!authOptions || authOptions.provider === "jwt" || this.config.embeddedWalletType === "app-wallet") {
+      if (authOptions.provider === "jwt" || this.config.embeddedWalletType === "app-wallet") {
         session.lastUsed = Date.now();
         await this.storage.saveSession(session);
       }
@@ -658,10 +654,10 @@ export class EmbeddedProvider {
         error:
           error instanceof Error
             ? {
-                name: error.name,
-                message: error.message,
-                stack: error.stack,
-              }
+              name: error.name,
+              message: error.message,
+              stack: error.stack,
+            }
             : error,
       });
 
@@ -729,7 +725,7 @@ export class EmbeddedProvider {
       });
     }
   }
-
+  
   async signMessage(params: SignMessageParams): Promise<ParsedSignatureResult> {
     if (!this.client || !this.walletId) {
       throw new Error("Not connected");
@@ -744,16 +740,64 @@ export class EmbeddedProvider {
     });
 
     // Parse message to base64url format for client
-    const parsedMessage = parseMessage(params.message);
+    const base64UrlMessage = stringToBase64url(params.message);
 
     // Get session to access derivation index
     const session = await this.storage.getSession();
     const derivationIndex = session?.accountDerivationIndex ?? 0;
 
-    // Get raw response from client
-    const rawResponse = await this.client.signMessage({
+    // Get raw response from client - use the appropriate method based on chain
+    const rawResponse = await this.client.signRawPayload({
       walletId: this.walletId,
-      message: parsedMessage.base64url,
+      message: base64UrlMessage,
+      networkId: params.networkId,
+      derivationIndex: derivationIndex,
+    });
+
+    this.logger.info("EMBEDDED_PROVIDER", "Message signed successfully", {
+      walletId: this.walletId,
+      message: params.message,
+    });
+
+    // Parse the response to get human-readable signature and explorer URL
+    return parseSignMessageResponse(rawResponse, params.networkId);
+  }
+
+  async signEthereumMessage(params: SignMessageParams): Promise<ParsedSignatureResult> {
+    if (!this.client || !this.walletId) {
+      throw new Error("Not connected");
+    }
+
+    // Check if authenticator needs renewal before performing the operation
+    await this.ensureValidAuthenticator();
+
+    this.logger.info("EMBEDDED_PROVIDER", "Signing message", {
+      walletId: this.walletId,
+      message: params.message,
+    });
+
+    const looksLikeHex = (str: string) => /^0x[0-9a-fA-F]+$/.test(str);
+
+    const normalizedMessage = (() => {
+      if (looksLikeHex(params.message)) {
+        const hexPayload = params.message.slice(2);
+        const normalizedHex = hexPayload.length % 2 === 0 ? hexPayload : `0${hexPayload}`;
+        return Buffer.from(normalizedHex, "hex").toString("utf8");
+      }
+      return params.message;
+    })();
+
+    // Parse message to base64url format for client
+    const base64UrlMessage = stringToBase64url(normalizedMessage);
+
+    // Get session to access derivation index
+    const session = await this.storage.getSession();
+    const derivationIndex = session?.accountDerivationIndex ?? 0;
+
+    // Get raw response from client - use the appropriate method based on chain
+    const rawResponse = await this.client.ethereumSignMessage({
+      walletId: this.walletId,
+      message: base64UrlMessage,
       networkId: params.networkId,
       derivationIndex: derivationIndex,
     });
@@ -784,8 +828,8 @@ export class EmbeddedProvider {
     const session = await this.storage.getSession();
     const derivationIndex = session?.accountDerivationIndex ?? 0;
 
-    // Call the client's signTypedData method
-    const rawResponse = await this.client.signTypedData({
+    // Call the client's ethereumSignTypedData method
+    const rawResponse = await this.client.ethereumSignTypedData({
       walletId: this.walletId,
       typedData: params.typedData,
       networkId: params.networkId,
@@ -813,8 +857,8 @@ export class EmbeddedProvider {
       networkId: params.networkId,
     });
 
-    // Parse transaction to base64url format for client based on network
-    const parsedTransaction = await parseTransactionToBase64Url(params.transaction, params.networkId);
+    // Parse transaction to KMS format (base64url for Solana, hex for EVM) based on network
+    const parsedTransaction = await parseToKmsTransaction(params.transaction, params.networkId);
 
     // Get session to access derivation index
     const session = await this.storage.getSession();
@@ -826,10 +870,16 @@ export class EmbeddedProvider {
       derivationIndex: derivationIndex,
     });
 
+    const transactionPayload = parsedTransaction.parsed;
+    if (!transactionPayload) {
+      throw new Error("Failed to parse transaction: no valid encoding found");
+    }
+
     // Get raw response from client
+    // PhantomClient will handle EVM transaction formatting internally
     const rawResponse = await this.client.signTransaction({
       walletId: this.walletId,
-      transaction: parsedTransaction.base64url,
+      transaction: transactionPayload,
       networkId: params.networkId,
       derivationIndex: derivationIndex,
       account: this.getAddressForNetwork(params.networkId),
@@ -858,8 +908,8 @@ export class EmbeddedProvider {
       networkId: params.networkId,
     });
 
-    // Parse transaction to base64url format for client based on network
-    const parsedTransaction = await parseTransactionToBase64Url(params.transaction, params.networkId);
+    // Parse transaction to KMS format (base64url for Solana, hex for EVM) based on network
+    const parsedTransaction = await parseToKmsTransaction(params.transaction, params.networkId);
 
     // Get session to access derivation index
     const session = await this.storage.getSession();
@@ -871,10 +921,16 @@ export class EmbeddedProvider {
       derivationIndex: derivationIndex,
     });
 
+    const transactionPayload = parsedTransaction.parsed;
+    if (!transactionPayload) {
+      throw new Error("Failed to parse transaction: no valid encoding found");
+    }
+
     // Get raw response from client
+    // PhantomClient will handle EVM transaction formatting internally
     const rawResponse = await this.client.signAndSendTransaction({
       walletId: this.walletId,
-      transaction: parsedTransaction.base64url,
+      transaction: transactionPayload,
       networkId: params.networkId,
       derivationIndex: derivationIndex,
       account: this.getAddressForNetwork(params.networkId),
@@ -907,18 +963,18 @@ export class EmbeddedProvider {
   private async handleAuthFlow(
     publicKey: string,
     stamperInfo: StamperInfo,
-    authOptions: AuthOptions | undefined,
+    authOptions: AuthOptions,
     expiresInMs: number,
   ): Promise<Session | null> {
     if (this.config.embeddedWalletType === "user-wallet") {
       this.logger.info("EMBEDDED_PROVIDER", "Creating user-wallet, routing authentication", {
-        authProvider: authOptions?.provider || "phantom-connect",
+        authProvider: authOptions.provider,
       });
 
       // Route to appropriate authentication flow based on authOptions
-      if (authOptions?.provider === "jwt") {
+      if (authOptions.provider === "jwt") {
         return await this.handleJWTAuth(publicKey, stamperInfo, authOptions, expiresInMs);
-      } else if (authOptions?.provider === "phantom") {
+      } else if (authOptions.provider === "phantom") {
         return await this.handlePhantomAuth(publicKey, stamperInfo, expiresInMs);
       } else {
         // This will redirect in browser, so we don't return a session
@@ -1101,6 +1157,7 @@ export class EmbeddedProvider {
       authenticatorCreatedAt: now,
       authenticatorExpiresAt: now + effectiveExpiresInMs,
       lastRenewalAttempt: undefined,
+      authUserId: authResult.authUserId,
     };
 
     this.logger.log("EMBEDDED_PROVIDER", "Saving Phantom session");
@@ -1117,10 +1174,10 @@ export class EmbeddedProvider {
   private async handleRedirectAuth(
     publicKey: string,
     stamperInfo: StamperInfo,
-    authOptions?: AuthOptions,
+    authOptions: AuthOptions,
   ): Promise<Session | null> {
     this.logger.info("EMBEDDED_PROVIDER", "Using Phantom Connect authentication flow (redirect-based)", {
-      provider: authOptions?.provider,
+      provider: authOptions.provider,
       hasRedirectUrl: !!this.config.authOptions.redirectUrl,
       authUrl: this.config.authOptions.authUrl,
     });
@@ -1135,7 +1192,7 @@ export class EmbeddedProvider {
       organizationId: `temp-org-${now}`, // Temporary ID, will be updated after redirect
       appId: this.config.appId,
       stamperInfo,
-      authProvider: "phantom-connect",
+      authProvider: authOptions.provider,
       accountDerivationIndex: undefined, // Will be set when redirect completes
       status: "pending" as const,
       createdAt: now,

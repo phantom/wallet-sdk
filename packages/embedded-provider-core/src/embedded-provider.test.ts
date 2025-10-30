@@ -6,8 +6,7 @@ import type { PlatformAdapter, DebugLogger } from "./interfaces";
 // Mock dependencies
 jest.mock("@phantom/api-key-stamper");
 jest.mock("@phantom/parsers", () => ({
-  parseMessage: jest.fn().mockReturnValue({ base64url: "mock-base64url" }),
-  parseTransactionToBase64Url: jest.fn().mockResolvedValue({ base64url: "mock-base64url", originalFormat: "mock" }),
+  parseToKmsTransaction: jest.fn().mockResolvedValue({ base64url: "mock-base64url", originalFormat: "mock" }),
   parseSignMessageResponse: jest.fn().mockReturnValue({ signature: "mock-signature", rawSignature: "mock-raw" }),
   parseTransactionResponse: jest.fn().mockReturnValue({ rawTransaction: "mock-raw-tx" }),
   parseSolanaTransactionSignature: jest.fn().mockReturnValue({ signature: "mock-signature", fallback: false }),
@@ -124,7 +123,7 @@ describe("EmbeddedProvider Core", () => {
 
       // Test that storage.getSession is called during connect
       try {
-        await provider.connect();
+        await provider.connect({ provider: "phantom" });
       } catch (error) {
         // Connection will fail, but storage should be called
       }
@@ -167,7 +166,7 @@ describe("EmbeddedProvider Core", () => {
       });
 
       try {
-        await provider.connect();
+        await provider.connect({ provider: "phantom" });
       } catch (error) {
         // Connection may fail, but URL params should be checked during session validation
       }
@@ -180,7 +179,7 @@ describe("EmbeddedProvider Core", () => {
       mockPlatform.authProvider.resumeAuthFromRedirect.mockReturnValue(null);
 
       try {
-        await provider.connect();
+        await provider.connect({ provider: "phantom" });
       } catch (error) {
         // Connection will fail, but stamper.init should be called during createOrganizationAndStamper
       }
@@ -194,7 +193,7 @@ describe("EmbeddedProvider Core", () => {
       mockPlatform.authProvider.resumeAuthFromRedirect.mockReturnValue(null);
 
       try {
-        await provider.connect();
+        await provider.connect({ provider: "phantom" });
       } catch (error) {
         // Connection will fail for user-wallet without proper auth setup
       }
@@ -209,7 +208,7 @@ describe("EmbeddedProvider Core", () => {
       mockPlatform.authProvider.resumeAuthFromRedirect.mockReturnValue(null);
 
       try {
-        await provider.connect();
+        await provider.connect({ provider: "google" });
       } catch (error) {
         // Connection will fail for user-wallet without proper auth setup
       }
@@ -251,7 +250,8 @@ describe("EmbeddedProvider Core", () => {
       mockPlatform.storage.getSession.mockResolvedValue(mockSession);
 
       provider["client"] = {
-        signMessage: jest.fn().mockResolvedValue("signed-message"),
+        ethereumSignMessage: jest.fn().mockResolvedValue("signed-message"),
+        signRawPayload: jest.fn().mockResolvedValue("signed-message"),
       } as any;
       provider["walletId"] = "test-wallet-id";
 
@@ -262,8 +262,8 @@ describe("EmbeddedProvider Core", () => {
       });
 
       // The stamper won't be called directly for signMessage - the client handles it
-      // But we can verify the client's signMessage was called
-      expect(provider["client"].signMessage).toHaveBeenCalled();
+      // But we can verify the client's signRawPayload was called (for Solana)
+      expect(provider["client"].signRawPayload).toHaveBeenCalled();
     });
 
     it.skip("should call platform stamper getKeyInfo during client initialization", async () => {
@@ -293,7 +293,7 @@ describe("EmbeddedProvider Core", () => {
       mockPlatform.stamper.getKeyInfo.mockReturnValue(null);
 
       try {
-        await provider.connect();
+        await provider.connect({ provider: "phantom" });
       } catch (error) {
         // May fail on getWalletAddresses, but stamper should be called
       }

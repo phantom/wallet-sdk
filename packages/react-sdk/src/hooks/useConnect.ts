@@ -6,7 +6,7 @@ export function useConnect() {
   const { sdk, isConnecting, connectError, currentProviderType, isPhantomAvailable } = usePhantom();
 
   const connect = useCallback(
-    async (options?: AuthOptions) => {
+    async (options: AuthOptions) => {
       if (!sdk) {
         throw new Error("SDK not initialized");
       }

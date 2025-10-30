@@ -288,37 +288,37 @@ describe("ServerSDK", () => {
     });
 
     it("should parse various transaction formats (without actual signing)", async () => {
-      const { parseTransactionToBase64Url } = await import("@phantom/parsers");
+      const { parseToKmsTransaction } = await import("@phantom/parsers");
 
       // Test Solana raw bytes
       const mockSolanaBytes = new Uint8Array([1, 2, 3, 4, 5]);
-      const solanaResult = await parseTransactionToBase64Url(mockSolanaBytes, NetworkId.SOLANA_MAINNET);
-      expect(solanaResult.base64url).toBeDefined();
+      const solanaResult = await parseToKmsTransaction(mockSolanaBytes, NetworkId.SOLANA_MAINNET);
+      expect(solanaResult.parsed).toBeDefined();
       expect(solanaResult.originalFormat).toBe("bytes");
 
       // Test Solana web3.js transaction
       const mockWeb3Transaction = {
         serialize: jest.fn().mockReturnValue(new Uint8Array([6, 7, 8, 9, 10])),
       };
-      const web3Result = await parseTransactionToBase64Url(mockWeb3Transaction, NetworkId.SOLANA_MAINNET);
-      expect(web3Result.base64url).toBeDefined();
+      const web3Result = await parseToKmsTransaction(mockWeb3Transaction, NetworkId.SOLANA_MAINNET);
+      expect(web3Result.parsed).toBeDefined();
       expect(web3Result.originalFormat).toBe("@solana/web3.js");
       expect(mockWeb3Transaction.serialize).toHaveBeenCalled();
 
-      // Test EVM transaction object
+      // Test EVM transaction object (JSON format)
       const mockEvmTransaction = {
         to: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
         value: 1000000000000000000n,
         data: "0x",
       };
-      const evmResult = await parseTransactionToBase64Url(mockEvmTransaction, NetworkId.ETHEREUM_MAINNET);
-      expect(evmResult.base64url).toBeDefined();
-      expect(evmResult.originalFormat).toBe("viem");
+      const evmResult = await parseToKmsTransaction(mockEvmTransaction, NetworkId.ETHEREUM_MAINNET);
+      expect(evmResult.parsed).toBeDefined();
+      expect(evmResult.originalFormat).toBe("json");
 
-      // Test hex string transaction
+      // Test hex string transaction (RLP encoded - hex format)
       const hexTransaction = "0x0102030405";
-      const hexResult = await parseTransactionToBase64Url(hexTransaction, NetworkId.ETHEREUM_MAINNET);
-      expect(hexResult.base64url).toBeDefined();
+      const hexResult = await parseToKmsTransaction(hexTransaction, NetworkId.ETHEREUM_MAINNET);
+      expect(hexResult.parsed).toBeDefined();
       expect(hexResult.originalFormat).toBe("hex");
     });
 
@@ -400,7 +400,7 @@ describe("ServerSDK", () => {
           message,
           networkId,
         }),
-      ).rejects.toThrow("Failed to sign message");
+      ).rejects.toThrow("Failed to sign raw payload");
     });
 
     it("should throw error when getting addresses for invalid wallet ID", async () => {

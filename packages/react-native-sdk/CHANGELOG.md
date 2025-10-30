@@ -1,5 +1,43 @@
 # @phantom/react-native-sdk
 
+## 1.0.0-beta.20
+
+### Patch Changes
+
+- @phantom/client@1.0.0-beta.20
+- @phantom/embedded-provider-core@1.0.0-beta.20
+
+## 1.0.0-beta.19
+
+### Patch Changes
+
+- d35daaa: Bump all dependencies
+- Updated dependencies [d35daaa]
+  - @phantom/embedded-provider-core@1.0.0-beta.19
+  - @phantom/client@1.0.0-beta.19
+  - @phantom/base64url@1.0.0-beta.8
+  - @phantom/constants@1.0.0-beta.8
+  - @phantom/sdk-types@1.0.0-beta.8
+  - @phantom/chain-interfaces@1.0.0-beta.8
+  - @phantom/crypto@1.0.0-beta.8
+  - @phantom/api-key-stamper@1.0.0-beta.8
+
+## 1.0.0-beta.18
+
+### Patch Changes
+
+- 0ee572a: EVM SDKs
+- Updated dependencies [0ee572a]
+  - @phantom/embedded-provider-core@1.0.0-beta.18
+  - @phantom/client@1.0.0-beta.18
+
+## 1.0.0-beta.17
+
+### Patch Changes
+
+- @phantom/client@1.0.0-beta.17
+- @phantom/embedded-provider-core@1.0.0-beta.17
+
 ## 1.0.0-beta.16
 
 ### Patch Changes

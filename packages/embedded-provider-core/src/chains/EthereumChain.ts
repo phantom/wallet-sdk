@@ -1,7 +1,5 @@
-import { base64urlDecode } from "@phantom/base64url";
 import type { EthTransactionRequest, IEthereumChain } from "@phantom/chain-interfaces";
 import { NetworkId, chainIdToNetworkId, networkIdToChainId } from "@phantom/constants";
-import { Buffer } from "buffer";
 import { EventEmitter } from "eventemitter3";
 import type { EmbeddedProvider } from "../embedded-provider";
 
@@ -76,21 +74,35 @@ export class EmbeddedEthereumChain implements IEthereumChain {
   }
 
   async signTransaction(transaction: EthTransactionRequest): Promise<string> {
+    // If the transaction has a chainId, use that network for signing
+    let networkId = this.currentNetworkId;
+    if (transaction.chainId) {
+      const numericChainId = typeof transaction.chainId === "number"
+        ? transaction.chainId
+        : parseInt(transaction.chainId, 16);
+      const txNetworkId = chainIdToNetworkId(numericChainId);
+      if (txNetworkId) {
+        networkId = txNetworkId;
+      }
+    }
+
     const result = await this.provider.signTransaction({
       transaction,
-      networkId: this.currentNetworkId,
+      networkId,
     });
-    // Convert base64url encoded signature to hex format for Ethereum (same logic as parseEVMSignatureResponse)
-    try {
-      const signatureBytes = base64urlDecode(result.rawTransaction);
-      return "0x" + Buffer.from(signatureBytes).toString("hex");
-    } catch (error) {
-      // Fallback: assume it's already hex format
-      return result.rawTransaction.startsWith("0x") ? result.rawTransaction : "0x" + result.rawTransaction;
-    }
+    // parseTransactionResponse already converts base64url to hex for Ethereum
+    return result.rawTransaction;
   }
 
   async sendTransaction(transaction: EthTransactionRequest): Promise<string> {
+    // If the transaction has a chainId, switch to that chain first
+    if (transaction.chainId) {
+      const numericChainId = typeof transaction.chainId === "number"
+        ? transaction.chainId
+        : parseInt(transaction.chainId, 16);
+      await this.switchChain(numericChainId);
+    }
+
     const result = await this.provider.signAndSendTransaction({
       transaction,
       networkId: this.currentNetworkId,
@@ -166,7 +178,7 @@ export class EmbeddedEthereumChain implements IEthereumChain {
     switch (args.method) {
       case "personal_sign": {
         const [message, _address] = args.params as [string, string];
-        const result = await this.provider.signMessage({
+        const result = await this.provider.signEthereumMessage({
           message,
           networkId: this.currentNetworkId,
         });

@@ -19,7 +19,7 @@ const sdk = new BrowserSDK({
   addressTypes: [AddressType.solana, AddressType.ethereum],
 });
 
-const { addresses } = await sdk.connect();
+const { addresses } = await sdk.connect({ provider: "injected" });
 console.log("Connected addresses:", addresses);
 
 // Chain-specific operations
@@ -47,7 +47,7 @@ const sdk = new BrowserSDK({
   appId: "your-app-id", // Get your app ID from phantom.com/portal
 });
 
-const { addresses } = await sdk.connect();
+const { addresses } = await sdk.connect({ provider: "phantom" });
 console.log("Addresses:", addresses);
 
 // Use chain-specific APIs
@@ -78,8 +78,8 @@ const sdk = new BrowserSDK({
   addressTypes: [AddressType.solana, AddressType.ethereum],
 });
 
-// 2. Connect to wallet
-const { addresses } = await sdk.connect();
+// 2. Connect to wallet (provider parameter is required)
+const { addresses } = await sdk.connect({ provider: "injected" });
 console.log("Connected addresses:", addresses);
 
 // 3. Use chain-specific methods
@@ -93,12 +93,9 @@ const ethResult = await sdk.ethereum.sendTransaction({
 
 ### Connection Options
 
-The `connect()` method automatically switches between providers based on the authentication method you specify:
+The `connect()` method requires a `provider` parameter and automatically switches between providers based on the authentication method you specify:
 
 ```typescript
-// Connect with current provider (no switching)
-const result = await sdk.connect();
-
 // Connect with injected provider (Phantom extension)
 // Automatically switches to injected provider if not already using it
 const result = await sdk.connect({
@@ -117,12 +114,17 @@ const result = await sdk.connect({
   provider: "apple",
 });
 
-
 // Connect with Phantom authentication (embedded provider)
 // Uses Phantom extension or mobile app for authentication
 // Automatically switches to embedded provider if not already using it
 const result = await sdk.connect({
   provider: "phantom",
+});
+
+// Connect with JWT authentication (embedded provider)
+const result = await sdk.connect({
+  provider: "jwt",
+  jwtToken: "your-jwt-token",
 });
 ```
 
@@ -340,13 +342,27 @@ if (isAvailable) {
 
 ### Core Methods
 
-#### connect()
+#### connect(options)
 
 Connect to wallet and get addresses for configured AddressTypes.
 
+**Parameters:**
+- `options: AuthOptions` (required) - Authentication options
+  - `provider: "google" | "apple" | "jwt" | "phantom" | "injected"` (required) - Authentication provider to use
+  - `jwtToken?: string` (optional) - JWT token (required when `provider` is "jwt")
+  - `customAuthData?: Record<string, any>` (optional) - Custom authentication data
+
 ```typescript
-const result = await sdk.connect();
-// Returns: { addresses: WalletAddress[] }
+// Connect with injected provider
+const result = await sdk.connect({ provider: "injected" });
+
+// Connect with Phantom authentication
+const result = await sdk.connect({ provider: "phantom" });
+
+// Connect with Google authentication
+const result = await sdk.connect({ provider: "google" });
+
+// Returns: { addresses: WalletAddress[], status: "pending" | "completed", providerType: "embedded" | "injected" }
 // addresses only includes types from addressTypes config
 ```
 
@@ -898,7 +914,7 @@ const sdk = new BrowserSDK({
   addressTypes: [AddressType.solana],
 });
 
-await sdk.connect();
+await sdk.connect({ provider: "injected" });
 
 // Get recent blockhash
 const connection = new Connection("https://api.mainnet-beta.solana.com");
@@ -951,7 +967,7 @@ const sdk = new BrowserSDK({
   addressTypes: [AddressType.solana],
 });
 
-await sdk.connect();
+await sdk.connect({ provider: "injected" });
 
 // Create transaction with @solana/kit
 const rpc = createSolanaRpc("https://api.mainnet-beta.solana.com");
@@ -981,7 +997,7 @@ const sdk = new BrowserSDK({
   addressTypes: [AddressType.ethereum],
 });
 
-await sdk.connect();
+await sdk.connect({ provider: "injected" });
 
 // Simple ETH transfer
 const result = await sdk.ethereum.sendTransaction({
