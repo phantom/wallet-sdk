@@ -57,32 +57,40 @@ const CAIP2_NETWORK_MAPPINGS: Record<string, NetworkMapping> = {
     network: "mainnet",
     description: "Polygon Mainnet",
   },
-
-  [NetworkId.OPTIMISM_MAINNET]: {
-    chain: "optimism",
-    network: "mainnet",
-    description: "Optimism Mainnet",
-  },
-  [NetworkId.OPTIMISM_GOERLI]: {
-    chain: "optimism",
-    network: "goerli",
-    description: "Optimism Goerli Testnet",
-  },
-  [NetworkId.ARBITRUM_ONE]: {
-    chain: "arbitrum",
-    network: "mainnet",
-    description: "Arbitrum One",
+  [NetworkId.POLYGON_AMOY]: {
+    chain: "polygon",
+    network: "amoy",
+    description: "Polygon Amoy Testnet",
   },
   [NetworkId.BASE_MAINNET]: {
     chain: "base",
     network: "mainnet",
     description: "Base Mainnet",
   },
-
   [NetworkId.BASE_SEPOLIA]: {
     chain: "base",
     network: "sepolia",
     description: "Base Sepolia Testnet",
+  },
+  [NetworkId.ARBITRUM_ONE]: {
+    chain: "arbitrum",
+    network: "mainnet",
+    description: "Arbitrum One",
+  },
+  [NetworkId.ARBITRUM_SEPOLIA]: {
+    chain: "arbitrum",
+    network: "sepolia",
+    description: "Arbitrum Sepolia Testnet",
+  },
+  [NetworkId.MONAD_MAINNET]: {
+    chain: "monad",
+    network: "mainnet",
+    description: "Monad Mainnet",
+  },
+  [NetworkId.MONAD_TESTNET]: {
+    chain: "monad",
+    network: "testnet",
+    description: "Monad Testnet",
   },
 
   // Bitcoin networks (for future support)

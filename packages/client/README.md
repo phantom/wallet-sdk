@@ -98,43 +98,24 @@ await client.signAndSendTransaction({
 
 ### Network Support
 
-The client supports multiple blockchain networks through CAIP-2 identifiers:
+The client supports multiple blockchain networks through CAIP-2 identifiers. For a complete list of supported networks including Solana, Ethereum, Polygon, Base, Arbitrum, Monad, and more, see the [Network Support section in the main README](../../README.md#network-support).
 
 ```typescript
 import { NetworkId } from "@phantom/client";
 
-// Solana
+// Example: Solana
 await client.signAndSendTransaction({
   walletId,
   transaction,
   networkId: NetworkId.SOLANA_MAINNET,
 });
 
-await client.signAndSendTransaction({
-  walletId,
-  transaction,
-  networkId: NetworkId.SOLANA_DEVNET,
-});
-
-// Ethereum
+// Example: Ethereum
 await client.signAndSendTransaction({
   walletId,
   transaction,
   networkId: NetworkId.ETHEREUM_MAINNET,
 });
-
-await client.signAndSendTransaction({
-  walletId,
-  transaction,
-  networkId: NetworkId.ETHEREUM_SEPOLIA,
-});
-
-// Other supported networks
-NetworkId.POLYGON_MAINNET;
-NetworkId.OPTIMISM_MAINNET;
-NetworkId.ARBITRUM_ONE;
-NetworkId.BASE_MAINNET;
-// ... and more
 ```
 
 ### Custom Stamper Implementation
