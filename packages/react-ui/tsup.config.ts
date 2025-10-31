@@ -9,8 +9,4 @@ export default defineConfig({
   external: ["react", "react-dom", "@phantom/react-sdk", "@phantom/client"],
   minify: true,
   sourcemap: true,
-  // Include CSS files in the bundle
-  loader: {
-    ".css": "copy",
-  },
 });
