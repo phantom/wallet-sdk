@@ -127,3 +127,20 @@ export interface UserConfig {
   role?: "ADMIN" | "USER"; // Optional, defaults to 'ADMIN'
   authenticators: AuthenticatorConfig[];
 }
+
+// ============================================================================
+// Spending Limits Types
+// ============================================================================
+
+export interface SpendingLimitConfig {
+  usdCentsLimitPerDay: number;
+  memoryAccount: string;
+  memoryId: number;
+  memoryBump: number;
+}
+
+export interface AugmentWithSpendingLimitResponse {
+  transaction: string; // base64url encoded with Lighthouse instructions
+  simulationResult?: any;
+  memoryConfigUsed: SpendingLimitConfig;
+}
