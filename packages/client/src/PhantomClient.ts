@@ -38,7 +38,9 @@ import {
   type SignTransactionRequest,
 } from "@phantom/openapi-wallet-service";
 import axios, { type AxiosInstance } from "axios";
+import bs58 from "bs58";
 import { Buffer } from "buffer";
+import { base64urlEncode } from "@phantom/base64url";
 import { deriveSubmissionConfig } from "./caip2-mappings";
 import { DerivationPath, getNetworkConfig } from "./constants";
 import {
@@ -70,6 +72,41 @@ type AddUserToOrganizationParams = Omit<AddUserToOrganizationRequest, "user"> & 
 
 // Type for spending limit check result
 type SpendingLimitCheckResult = { hasSpendingLimit: true; config: SpendingLimitConfig } | { hasSpendingLimit: false };
+
+// Internal types for organization user data
+interface UserAuthenticator {
+  id?: string;
+  publicKey: string;
+  authenticatorName?: string;
+}
+
+interface UserPolicy {
+  type: string;
+  preset?: string;
+  walletId?: string;
+  usdLimit?: {
+    usdCentsLimitPerDay?: number;
+    memoryAccount?: string;
+    memoryId?: number;
+    memoryBump?: number;
+  };
+  cel?: {
+    preset?: string;
+    walletId?: string;
+    usdLimit?: {
+      usdCentsLimitPerDay?: number;
+      memoryAccount?: string;
+      memoryId?: number;
+      memoryBump?: number;
+    };
+  };
+}
+
+interface OrganizationUser {
+  username: string;
+  authenticators?: UserAuthenticator[];
+  policy?: UserPolicy;
+}
 
 // TODO(napas): Auto generate this from the OpenAPI spec
 export interface SubmissionConfig {
@@ -212,13 +249,21 @@ export class PhantomClient {
     submissionConfig: SubmissionConfig,
     account: string,
   ): Promise<AugmentWithSpendingLimitResponse> {
+    console.log("TEST: augmentWithSpendingLimit called", {
+      transactionLength: transaction.length,
+      spendingLimitConfig,
+      submissionConfig,
+      account,
+    });
+
     // This should never happen since we have this check above
     if (submissionConfig.chain !== "solana") {
+      console.error("TEST: Attempted to augment non-Solana transaction", { chain: submissionConfig.chain });
       throw new Error("Spending limits are only supported for Solana transactions");
     }
 
     try {
-      const chainTransaction = { Solana: transaction };
+      const chainTransaction = { solana: transaction };
 
       const request = {
         transaction: chainTransaction,
@@ -227,54 +272,185 @@ export class PhantomClient {
         simulationConfig: { account },
       };
 
+      console.log("TEST: Sending augment request to backend", {
+        url: `${this.config.apiBaseUrl}/augment/spending-limit`,
+        requestBody: JSON.stringify(request).substring(0, 200),
+      });
+
       const response = await this.axiosInstance.post(`${this.config.apiBaseUrl}/augment/spending-limit`, request, {
         headers: {
           "Content-Type": "application/json",
         },
       });
 
+      console.log("TEST: Augment endpoint response received", {
+        status: response.status,
+        hasTransaction: !!response.data.transaction,
+        hasSimulationResult: !!response.data.simulationResult,
+        transactionLength: response.data.transaction?.length,
+      });
+
       return response.data;
     } catch (error: any) {
-      console.error("Failed to augment transaction:", error.response?.data || error.message);
+      console.error("TEST: Augment endpoint error", {
+        status: error.response?.status,
+        errorData: error.response?.data,
+        errorMessage: error.message,
+      });
       throw new Error(`Failed to augment transaction: ${error.response?.data?.message || error.message}`);
     }
   }
 
   /**
    * Check if user has spending limits configured
+   * First identifies the current user by matching their authenticator public key,
+   * then checks if that user has spending limits enabled for this wallet
    * @private
    */
   private checkUserSpendingLimit(orgData: ExternalKmsOrganization, walletId: string): SpendingLimitCheckResult {
+    console.log("TEST: Checking user spending limits", {
+      walletId,
+      totalUsers: orgData.users?.length || 0,
+      hasStamper: !!this.stamper,
+    });
+
     if (!orgData.users) {
+      console.log("TEST: No users in organization data");
       return { hasSpendingLimit: false };
     }
 
-    for (const user of orgData.users) {
-      if (!("policy" in user)) continue;
+    // Get current user's public key from the stamper (if available)
+    // Stamper returns base58 format, but API uses base64url, so we need to convert
+    let currentUserPublicKeyBase64url: string | null = null;
 
-      const policy = (user as any).policy;
+    console.log("TEST: Stamper details", {
+      hasStamper: !!this.stamper,
+      hasGetKeyInfo: this.stamper && "getKeyInfo" in this.stamper,
+      stamperType: this.stamper ? typeof this.stamper : "undefined",
+      stamperKeys: this.stamper ? Object.keys(this.stamper) : [],
+    });
 
-      // Check if this user matches the wallet and has valid spending limits
-      if (
-        policy?.type === "CEL" &&
-        policy?.cel?.preset === "DAPP_CONNECTION_USER" &&
-        policy?.cel?.walletId === walletId &&
-        policy?.cel?.usdLimit &&
-        typeof policy.cel.usdLimit.memoryAccount === "string" &&
-        typeof policy.cel.usdLimit.memoryId === "number" &&
-        typeof policy.cel.usdLimit.memoryBump === "number"
-      ) {
-        return {
-          hasSpendingLimit: true,
-          config: {
-            memoryAccount: policy.cel.usdLimit.memoryAccount,
-            memoryId: policy.cel.usdLimit.memoryId,
-            memoryBump: policy.cel.usdLimit.memoryBump,
-          },
-        };
+    if (this.stamper && "getKeyInfo" in this.stamper) {
+      const stamperWithKeyInfo = this.stamper as { getKeyInfo: () => { publicKey: string } };
+      const keyInfo = stamperWithKeyInfo.getKeyInfo();
+
+      console.log("TEST: Raw keyInfo from stamper", {
+        keyInfo,
+        hasPublicKey: !!keyInfo?.publicKey,
+        publicKeyValue: keyInfo?.publicKey,
+      });
+
+      const base58PublicKey = keyInfo?.publicKey;
+
+      if (base58PublicKey) {
+        try {
+          // Convert from base58 (stamper format) to base64url (API format)
+          const publicKeyBytes = bs58.decode(base58PublicKey);
+          currentUserPublicKeyBase64url = base64urlEncode(publicKeyBytes);
+          console.log("TEST: Converted stamper public key", {
+            base58: base58PublicKey,
+            base64url: currentUserPublicKeyBase64url,
+          });
+        } catch (e) {
+          console.error("TEST: Failed to convert stamper public key from base58 to base64url", {
+            base58PublicKey,
+            error: e,
+          });
+        }
       }
+    } else {
+      console.log("TEST: No stamper available, will skip user verification");
     }
 
+    // Cast users to our internal type for better type safety
+    // The OpenAPI types are incomplete for the policy field, so we use our own types
+    const users = (orgData.users || []) as unknown as OrganizationUser[];
+
+    // Iterate through users to find the one making this request
+    for (const user of users) {
+      // Skip if user has no authenticators
+      if (!user.authenticators || !Array.isArray(user.authenticators)) {
+        console.log("TEST: User has no authenticators", { username: user.username });
+        continue;
+      }
+
+      // Check if any of this user's authenticators match the current user's public key (base64url format)
+      const isCurrentUser = currentUserPublicKeyBase64url
+        ? user.authenticators.some(auth => auth.publicKey === currentUserPublicKeyBase64url)
+        : false;
+
+      if (currentUserPublicKeyBase64url && !isCurrentUser) {
+        console.log("TEST: User authenticator public key doesn't match current user, skipping", {
+          username: user.username,
+        });
+        continue;
+      }
+
+      console.log("TEST: Found current user or no stamper verification needed", {
+        username: user.username,
+        isCurrentUser,
+        hasStamper: !!currentUserPublicKeyBase64url,
+      });
+
+      // Check if this user has a policy
+      if (!user.policy) {
+        console.log("TEST: Current user has no policy", { username: user.username });
+        return { hasSpendingLimit: false };
+      }
+
+      const policy = user.policy;
+      console.log("TEST: Checking user policy", {
+        username: user.username,
+        policyType: policy.type,
+        preset: policy.preset,
+        policyWalletId: policy.walletId,
+        hasUsdLimit: !!policy.usdLimit,
+        fullPolicy: JSON.stringify(policy, null, 2),
+      });
+
+      // Check if this user has valid spending limits for this wallet
+      // For preset policies, the structure is flat: policy.preset, policy.walletId, policy.usdLimit
+      // For full CEL policies, the structure is nested: policy.cel.rules, policy.cel.constants
+      // We check both formats for backward compatibility
+      const preset = policy.preset || policy.cel?.preset;
+      const policyWalletId = policy.walletId || policy.cel?.walletId;
+      const usdLimit = policy.usdLimit || policy.cel?.usdLimit;
+
+      if (
+        policy.type === "CEL" &&
+        preset === "DAPP_CONNECTION_USER" &&
+        policyWalletId === walletId &&
+        usdLimit &&
+        typeof usdLimit.usdCentsLimitPerDay === "number" &&
+        typeof usdLimit.memoryAccount === "string" &&
+        typeof usdLimit.memoryId === "number" &&
+        typeof usdLimit.memoryBump === "number"
+      ) {
+        const config: SpendingLimitConfig = {
+          usdCentsLimitPerDay: usdLimit.usdCentsLimitPerDay,
+          memoryAccount: usdLimit.memoryAccount,
+          memoryId: usdLimit.memoryId,
+          memoryBump: usdLimit.memoryBump,
+        };
+        console.log("TEST: Found user with valid spending limits", {
+          username: user.username,
+          config,
+        });
+        return {
+          hasSpendingLimit: true,
+          config,
+        };
+      }
+
+      // Current user found but no spending limits for this wallet
+      console.log("TEST: Current user found but no spending limits for this wallet", {
+        username: user.username,
+        walletId,
+      });
+      return { hasSpendingLimit: false };
+    }
+
+    console.log("TEST: No matching user found in organization");
     return { hasSpendingLimit: false };
   }
 
@@ -331,13 +507,31 @@ export class PhantomClient {
       let spendingLimitConfig: SpendingLimitConfig | undefined;
       let augmentedTransaction = encodedTransaction;
 
+      console.log("TEST: Starting spending limits flow", {
+        isEvmTransaction,
+        includeSubmissionConfig,
+        hasSubmissionConfig: !!submissionConfig,
+        hasAccount: !!params.account,
+        walletId,
+        networkId: networkIdParam,
+      });
+
       // Only check spending limits for Solana transactions
       if (!isEvmTransaction && includeSubmissionConfig && submissionConfig && params.account) {
+        console.log("TEST: Conditions met for spending limit check, fetching organization data");
         let orgData: ExternalKmsOrganization;
 
         try {
           orgData = await this.getOrganization(this.config.organizationId);
+          console.log("TEST: Successfully fetched organization data", {
+            organizationId: this.config.organizationId,
+            userCount: orgData.users?.length || 0,
+          });
         } catch (e: any) {
+          console.error("TEST: Failed to fetch organization data", {
+            organizationId: this.config.organizationId,
+            error: e?.message || e,
+          });
           throw new Error(
             `Failed to fetch organization data for spending limit validation: ${e?.message || e}. ` +
               `Cannot proceed with transaction without verifying spending limits.`,
@@ -345,14 +539,23 @@ export class PhantomClient {
         }
 
         const spendingLimitCheck = this.checkUserSpendingLimit(orgData, walletId);
+        console.log("TEST: Spending limit check result", {
+          walletId,
+          hasSpendingLimit: spendingLimitCheck.hasSpendingLimit,
+          config: spendingLimitCheck.hasSpendingLimit ? spendingLimitCheck.config : null,
+        });
 
         if (spendingLimitCheck.hasSpendingLimit) {
           spendingLimitConfig = spendingLimitCheck.config;
-          console.log("Found spending limit config for user:", spendingLimitConfig);
+          console.log("TEST: User has spending limits, calling augment endpoint", {
+            memoryAccount: spendingLimitConfig.memoryAccount,
+            memoryId: spendingLimitConfig.memoryId,
+            memoryBump: spendingLimitConfig.memoryBump,
+            submissionConfig,
+            account: params.account,
+          });
 
           try {
-            console.log("Augmenting transaction with spending limits...");
-
             const augmentResponse = await this.augmentWithSpendingLimit(
               encodedTransaction,
               spendingLimitConfig,
@@ -361,14 +564,32 @@ export class PhantomClient {
             );
 
             augmentedTransaction = augmentResponse.transaction;
-            console.log("Transaction augmented with Lighthouse instructions");
+            console.log("TEST: Transaction successfully augmented", {
+              originalTxLength: encodedTransaction.length,
+              augmentedTxLength: augmentedTransaction.length,
+              hasSimulationResult: !!augmentResponse.simulationResult,
+            });
           } catch (e: any) {
+            console.error("TEST: Augmentation failed for user with spending limits", {
+              error: e?.message || e,
+              spendingLimitConfig,
+            });
             throw new Error(
               `Failed to apply spending limits for this transaction: ${e?.message || e}. ` +
                 `Transaction cannot proceed without spending limit enforcement.`,
             );
           }
+        } else {
+          console.log("TEST: User has no spending limits, proceeding with original transaction");
         }
+      } else {
+        console.log("TEST: Skipping spending limits check", {
+          reason: !isEvmTransaction ? "Solana but missing params" : "EVM transaction",
+          isEvmTransaction,
+          includeSubmissionConfig,
+          hasSubmissionConfig: !!submissionConfig,
+          hasAccount: !!params.account,
+        });
       }
 
       // Phase 2: Sign the (possibly augmented) transaction

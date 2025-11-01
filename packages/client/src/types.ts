@@ -133,6 +133,7 @@ export interface UserConfig {
 // ============================================================================
 
 export interface SpendingLimitConfig {
+  usdCentsLimitPerDay: number;
   memoryAccount: string;
   memoryId: number;
   memoryBump: number;
