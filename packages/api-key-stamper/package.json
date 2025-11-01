@@ -40,7 +40,7 @@
     "@phantom/base64url": "workspace:^",
     "@phantom/crypto": "workspace:^",
     "@phantom/sdk-types": "workspace:^",
-    "axios": "^1.10.0",
+    "axios": "^1.12.0",
     "bs58": "^6.0.0",
     "buffer": "^6.0.3"
   },
