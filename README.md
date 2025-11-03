@@ -303,6 +303,30 @@ Mobile Entry Point:
   react-native-sdk → embedded-provider-core → client → api-key-stamper
 ```
 
+## Network Support
+
+Phantom SDKs support multiple blockchain networks across Solana and EVM chains.
+
+### Supported Blockchains
+
+**Solana**: Mainnet, Devnet, Testnet
+
+**EVM Chains**:
+- Ethereum (Mainnet, Sepolia)
+- Polygon (Mainnet, Amoy)
+- Base (Mainnet, Sepolia)
+- Arbitrum (One, Sepolia)
+- Monad (Mainnet, Testnet)
+
+**Coming Soon**: Bitcoin, Sui
+
+### Network Configuration
+
+Different SDKs use different network identifiers:
+
+- **[@phantom/server-sdk](./packages/server-sdk/README.md#network-support)** - Uses `NetworkId` enum for backend operations
+- **[@phantom/browser-sdk](./packages/browser-sdk/README.md)** and **[@phantom/react-sdk](./packages/react-sdk/README.md)** - Use chain IDs (numbers) for network switching
+
 
 ## Give Feedback
 

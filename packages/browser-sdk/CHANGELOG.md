@@ -1,5 +1,14 @@
 # @phantom/browser-sdk
 
+## 1.0.0-beta.20
+
+### Patch Changes
+
+- c3f5969: Do not reconnect automatically on injected provider if user disconnected
+- 462c2b5: Get authUserId from injected provider
+  - @phantom/client@1.0.0-beta.20
+  - @phantom/embedded-provider-core@1.0.0-beta.20
+
 ## 1.0.0-beta.19
 
 ### Patch Changes
