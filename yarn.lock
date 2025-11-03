@@ -5848,6 +5848,24 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@phantom/swapper-demo@workspace:examples/swapper-demo":
+  version: 0.0.0-use.local
+  resolution: "@phantom/swapper-demo@workspace:examples/swapper-demo"
+  dependencies:
+    "@phantom/react-ui": "workspace:^"
+    "@solana/web3.js": "npm:^1.95.8"
+    "@types/react": "npm:^19.1.2"
+    "@types/react-dom": "npm:^19.1.2"
+    "@vitejs/plugin-react": "npm:^4.4.1"
+    globals: "npm:^16.0.0"
+    react: "npm:^19.1.1"
+    react-dom: "npm:^19.1.1"
+    react-router-dom: "npm:^7.9.5"
+    typescript: "npm:~5.8.3"
+    vite: "npm:^6.3.6"
+  languageName: unknown
+  linkType: soft
+
 "@phantom/utils@workspace:^, @phantom/utils@workspace:packages/utils":
   version: 0.0.0-use.local
   resolution: "@phantom/utils@workspace:packages/utils"
@@ -7494,7 +7512,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@solana/web3.js@npm:^1.32.0, @solana/web3.js@npm:^1.87.6, @solana/web3.js@npm:^1.95.0, @solana/web3.js@npm:^1.95.4, @solana/web3.js@npm:^1.98.2, @solana/web3.js@npm:^1.98.4":
+"@solana/web3.js@npm:^1.32.0, @solana/web3.js@npm:^1.87.6, @solana/web3.js@npm:^1.95.0, @solana/web3.js@npm:^1.95.4, @solana/web3.js@npm:^1.95.8, @solana/web3.js@npm:^1.98.2, @solana/web3.js@npm:^1.98.4":
   version: 1.98.4
   resolution: "@solana/web3.js@npm:1.98.4"
   dependencies:
@@ -23697,6 +23715,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-router-dom@npm:^7.9.5":
+  version: 7.9.5
+  resolution: "react-router-dom@npm:7.9.5"
+  dependencies:
+    react-router: "npm:7.9.5"
+  peerDependencies:
+    react: ">=18"
+    react-dom: ">=18"
+  checksum: 10c0/e54fdfa211e356bd89e3c12b1f89537058357ef21b6a05f55456e0defaab8e77b7495e035ff6999b17a9a2e6f8204d46cf5897fe56e5d3db9458109a014efc4d
+  languageName: node
+  linkType: hard
+
 "react-router@npm:7.7.1":
   version: 7.7.1
   resolution: "react-router@npm:7.7.1"
@@ -23710,6 +23740,22 @@ __metadata:
     react-dom:
       optional: true
   checksum: 10c0/e55fe74a2947939526c79e496ab1fc501fd8e89a191a20157d94cfe712d4d9d84f68627811cf1d477a36b98250fcad958bf1237fc41ff0a8b2de00ddc8c53e3b
+  languageName: node
+  linkType: hard
+
+"react-router@npm:7.9.5":
+  version: 7.9.5
+  resolution: "react-router@npm:7.9.5"
+  dependencies:
+    cookie: "npm:^1.0.1"
+    set-cookie-parser: "npm:^2.6.0"
+  peerDependencies:
+    react: ">=18"
+    react-dom: ">=18"
+  peerDependenciesMeta:
+    react-dom:
+      optional: true
+  checksum: 10c0/e961816b4096a6ca97fc53626fc6532014c0de4c45bf6c234b8205eb4f94be8f357d67819e4f4f58507f79ef9bda4c3f70031a8dd13c7045e3ad0ecb12f819e3
   languageName: node
   linkType: hard
 
