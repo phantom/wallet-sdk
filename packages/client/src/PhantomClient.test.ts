@@ -396,7 +396,8 @@ describe("PhantomClient Spending Limits Integration", () => {
       const augmentMethod = client["augmentWithSpendingLimit"].bind(client);
       const result = await augmentMethod(
         "original-tx-base64",
-        spendingConfig,
+        "org-123",
+        "wallet-123",
         solanaSubmissionConfig,
         "UserAccount123",
       );
@@ -406,7 +407,8 @@ describe("PhantomClient Spending Limits Integration", () => {
         "https://api.phantom.app/augment/spending-limit",
         {
           transaction: { solana: "original-tx-base64" },
-          spendingLimitConfig: spendingConfig,
+          organizationId: "org-123",
+          walletId: "wallet-123",
           submissionConfig: solanaSubmissionConfig,
           simulationConfig: { account: "UserAccount123" },
         },
@@ -425,292 +427,9 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       const augmentMethod = client["augmentWithSpendingLimit"].bind(client);
 
-      await expect(augmentMethod("bad-tx", spendingConfig, solanaSubmissionConfig, "UserAccount123")).rejects.toThrow(
-        "Failed to augment transaction",
-      );
-    });
-  });
-
-  describe("checkUserSpendingLimit", () => {
-    const checkSpendingLimit = (orgData: any, walletId: string) => {
-      return client["checkUserSpendingLimit"](orgData, walletId);
-    };
-
-    it("should return spending limit config when user has limits (nested format)", () => {
-      // Real base58/base64url key pair from actual user data (user_7EYmfEfp...)
-      const mockBase58Key = "7EYmfEfph6Ki3wNWCBs9HyFUh5sdChnvy3xthjeSiGxT"; // Base58 from stamper
-      const mockBase64urlKey = "XJ6YMh3KfgHFk1RS6O4beNSJfrIL7kMsjTSQjH7YtEQ"; // Base64url from API
-
-      const orgData = {
-        users: [
-          {
-            username: "spending-limit-user",
-            authenticators: [{ publicKey: mockBase64urlKey }],
-            policy: {
-              type: "CEL",
-              cel: {
-                preset: "DAPP_CONNECTION_USER",
-                walletId: "wallet-123",
-                usdLimit: {
-                  usdCentsLimitPerDay: 1000,
-                  memoryAccount: "MemAcc123",
-                  memoryId: 0,
-                  memoryBump: 255,
-                },
-              },
-            },
-          },
-        ],
-      };
-
-      // Mock stamper with getKeyInfo to return base58 encoded public key (as real stampers do)
-      // The code will convert this to base64url for comparison
-      (client as any).stamper = {
-        getKeyInfo: () => ({ publicKey: mockBase58Key }),
-      };
-
-      const result = checkSpendingLimit(orgData, "wallet-123");
-
-      expect(result.hasSpendingLimit).toBe(true);
-      if (result.hasSpendingLimit) {
-        expect(result.config.usdCentsLimitPerDay).toBe(1000);
-        expect(result.config.memoryAccount).toBe("MemAcc123");
-        expect(result.config.memoryId).toBe(0);
-        expect(result.config.memoryBump).toBe(255);
-      }
-
-      // Cleanup
-      (client as any).stamper = undefined;
-    });
-
-    it("should return spending limit config when user has limits (flat format - actual API)", () => {
-      // Use same real base58/base64url key pair as first test
-      const mockBase58Key = "7EYmfEfph6Ki3wNWCBs9HyFUh5sdChnvy3xthjeSiGxT";
-      const mockBase64urlKey = "XJ6YMh3KfgHFk1RS6O4beNSJfrIL7kMsjTSQjH7YtEQ";
-
-      const orgData = {
-        users: [
-          {
-            username: "spending-limit-user",
-            authenticators: [{ publicKey: mockBase64urlKey }],
-            policy: {
-              type: "CEL",
-              preset: "DAPP_CONNECTION_USER",
-              walletId: "wallet-123",
-              usdLimit: {
-                usdCentsLimitPerDay: 500, // $5.00 per day
-                memoryAccount: "MemAcc123",
-                memoryId: 0,
-                memoryBump: 255,
-              },
-            },
-          },
-        ],
-      };
-
-      // Mock stamper with getKeyInfo to return base58 encoded public key (as real stampers do)
-      (client as any).stamper = {
-        getKeyInfo: () => ({ publicKey: mockBase58Key }),
-      };
-
-      const result = checkSpendingLimit(orgData, "wallet-123");
-
-      expect(result.hasSpendingLimit).toBe(true);
-      if (result.hasSpendingLimit) {
-        expect(result.config.usdCentsLimitPerDay).toBe(500);
-        expect(result.config.memoryAccount).toBe("MemAcc123");
-        expect(result.config.memoryId).toBe(0);
-        expect(result.config.memoryBump).toBe(255);
-      }
-
-      // Cleanup
-      (client as any).stamper = undefined;
-    });
-
-    describe.each([
-      {
-        testName: "no user has spending limits",
-        orgData: createOrgDataWithoutLimits(),
-        walletId: "wallet-123",
-      },
-      {
-        testName: "wallet ID doesn't match",
-        orgData: createOrgDataWithSpendingLimits("wallet-456"),
-        walletId: "wallet-123",
-      },
-      {
-        testName: "policy is not CEL type",
-        orgData: {
-          users: [
-            {
-              username: "user",
-              policy: {
-                type: "ADMIN",
-                cel: { walletId: "wallet-123", usdLimit: {} },
-              },
-            },
-          ],
-        },
-        walletId: "wallet-123",
-      },
-      {
-        testName: "preset is not DAPP_CONNECTION_USER",
-        orgData: {
-          users: [
-            {
-              username: "user",
-              policy: {
-                type: "CEL",
-                cel: {
-                  preset: "OTHER_PRESET",
-                  walletId: "wallet-123",
-                  usdLimit: {},
-                },
-              },
-            },
-          ],
-        },
-        walletId: "wallet-123",
-      },
-      {
-        testName: "usdLimit is missing",
-        orgData: {
-          users: [
-            {
-              username: "user",
-              policy: {
-                type: "CEL",
-                cel: {
-                  preset: "DAPP_CONNECTION_USER",
-                  walletId: "wallet-123",
-                },
-              },
-            },
-          ],
-        },
-        walletId: "wallet-123",
-      },
-      {
-        testName: "usdLimit is null",
-        orgData: {
-          users: [
-            {
-              username: "user",
-              policy: {
-                type: "CEL",
-                cel: {
-                  preset: "DAPP_CONNECTION_USER",
-                  walletId: "wallet-123",
-                  usdLimit: null,
-                },
-              },
-            },
-          ],
-        },
-        walletId: "wallet-123",
-      },
-      {
-        testName: "usdLimit properties are missing",
-        orgData: {
-          users: [
-            {
-              username: "user",
-              policy: {
-                type: "CEL",
-                cel: {
-                  preset: "DAPP_CONNECTION_USER",
-                  walletId: "wallet-123",
-                  usdLimit: {
-                    memoryAccount: "MemAcc123",
-                    // Missing memoryId and memoryBump
-                  },
-                },
-              },
-            },
-          ],
-        },
-        walletId: "wallet-123",
-      },
-    ])("should return hasSpendingLimit false when $testName", ({ orgData, walletId }) => {
-      it(`${walletId}`, () => {
-        // No stamper needed - these tests should fail due to missing policy data
-        const result = checkSpendingLimit(orgData, walletId);
-        expect(result.hasSpendingLimit).toBe(false);
-      });
-    });
-
-    it("should return false when user authenticator doesn't match stamper public key", () => {
-      // Use a valid Solana public key for stamper (base58) - this is a real address
-      const stamperBase58Key = "11111111111111111111111111111112"; // System program (valid base58)
-
-      // But org data has a different user's key (user_7EYmfEfp... from actual data)
-      const orgDataBase64urlKey = "XJ6YMh3KfgHFk1RS6O4beNSJfrIL7kMsjTSQjH7YtEQ";
-
-      const orgData = {
-        users: [
-          {
-            username: "spending-limit-user",
-            authenticators: [{ publicKey: orgDataBase64urlKey }],
-            policy: {
-              type: "CEL",
-              cel: {
-                preset: "DAPP_CONNECTION_USER",
-                walletId: "wallet-123",
-                usdLimit: {
-                  usdCentsLimitPerDay: 1000,
-                  memoryAccount: "MemAcc123",
-                  memoryId: 0,
-                  memoryBump: 255,
-                },
-              },
-            },
-          },
-        ],
-      };
-
-      // Mock stamper with NON-matching base58 public key
-      (client as any).stamper = {
-        getKeyInfo: () => ({ publicKey: stamperBase58Key }),
-      };
-
-      const result = checkSpendingLimit(orgData, "wallet-123");
-
-      expect(result.hasSpendingLimit).toBe(false);
-
-      // Cleanup
-      (client as any).stamper = undefined;
-    });
-
-    it("should work without stamper (no user verification)", () => {
-      const orgData = {
-        users: [
-          {
-            username: "spending-limit-user",
-            authenticators: [{ publicKey: "any-key" }],
-            policy: {
-              type: "CEL",
-              preset: "DAPP_CONNECTION_USER",
-              walletId: "wallet-123",
-              usdLimit: {
-                usdCentsLimitPerDay: 1000,
-                memoryAccount: "MemAcc123",
-                memoryId: 0,
-                memoryBump: 255,
-              },
-            },
-          },
-        ],
-      };
-
-      // No stamper - should still work but skip user verification
-      (client as any).stamper = undefined;
-
-      const result = checkSpendingLimit(orgData, "wallet-123");
-
-      expect(result.hasSpendingLimit).toBe(true);
-      if (result.hasSpendingLimit) {
-        expect(result.config.usdCentsLimitPerDay).toBe(1000);
-      }
+      await expect(
+        augmentMethod("bad-tx", "org-123", "wallet-123", solanaSubmissionConfig, "UserAccount123"),
+      ).rejects.toThrow("Failed to augment transaction");
     });
   });
 
@@ -719,21 +438,34 @@ describe("PhantomClient Spending Limits Integration", () => {
       return client["performTransactionSigning"](params, includeSubmissionConfig);
     };
 
-    describe.each([
-      {
-        testName: "user has no spending limits",
-        orgData: createOrgDataWithoutLimits(),
-        params: {
+    it("should call augment but proceed without limits when no spending limits found", async () => {
+      // Mock augment endpoint to reject with "No spending limit configuration found"
+      mockAxiosPost.mockRejectedValueOnce({
+        message: "Failed to augment transaction: No spending limit configuration found for wallet wallet-123",
+      });
+
+      mockKmsPost.mockResolvedValue({
+        data: { result: { transaction: "signed-tx" }, rpc_submission_result: { result: "hash" } },
+      });
+
+      await performSigning(
+        {
           walletId: "wallet-123",
           transaction: "tx",
           networkId: NetworkId.SOLANA_MAINNET,
           account: "UserAccount123",
         },
-        includeSubmissionConfig: true,
-      },
+        true,
+      );
+
+      // Augment should be called but error is caught and we proceed
+      expect(mockAxiosPost).toHaveBeenCalled();
+      expect(mockKmsPost).toHaveBeenCalled();
+    });
+
+    describe.each([
       {
         testName: "includeSubmissionConfig is false",
-        orgData: createOrgDataWithSpendingLimits("wallet-123"),
         params: {
           walletId: "wallet-123",
           transaction: "tx",
@@ -744,13 +476,11 @@ describe("PhantomClient Spending Limits Integration", () => {
       },
       {
         testName: "account parameter is missing",
-        orgData: createOrgDataWithSpendingLimits("wallet-123"),
         params: { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET },
         includeSubmissionConfig: true,
       },
       {
         testName: "transaction is EVM (not Solana)",
-        orgData: createOrgDataWithSpendingLimits("wallet-123"),
         params: {
           walletId: "wallet-123",
           transaction: "0x1234",
@@ -759,9 +489,8 @@ describe("PhantomClient Spending Limits Integration", () => {
         },
         includeSubmissionConfig: true,
       },
-    ])("should NOT call augment when $testName", ({ orgData, params, includeSubmissionConfig }) => {
+    ])("should NOT call augment when $testName", ({ params, includeSubmissionConfig }) => {
       it(`${params.networkId}`, async () => {
-        mockGetOrganization.mockResolvedValue(orgData);
         mockKmsPost.mockResolvedValue({
           data: { result: { transaction: "signed-tx" }, rpc_submission_result: { result: "hash" } },
         });
@@ -774,40 +503,8 @@ describe("PhantomClient Spending Limits Integration", () => {
   });
 
   describe("error handling", () => {
-    it("should fail when augmentation fails for user with spending limits", async () => {
-      // Real base58/base64url key pair
-      const mockBase58Key = "7EYmfEfph6Ki3wNWCBs9HyFUh5sdChnvy3xthjeSiGxT";
-      const mockBase64urlKey = "XJ6YMh3KfgHFk1RS6O4beNSJfrIL7kMsjTSQjH7YtEQ";
-
-      const orgDataWithLimits = {
-        users: [
-          {
-            username: "spending-limit-user",
-            authenticators: [{ publicKey: mockBase64urlKey }],
-            policy: {
-              type: "CEL",
-              cel: {
-                preset: "DAPP_CONNECTION_USER",
-                walletId: "wallet-123",
-                usdLimit: {
-                  usdCentsLimitPerDay: 1000,
-                  memoryAccount: "MemAcc123",
-                  memoryId: 0,
-                  memoryBump: 255,
-                },
-              },
-            },
-          },
-        ],
-      };
-
-      mockGetOrganization.mockResolvedValue(orgDataWithLimits);
-
-      // Mock stamper to match the user's authenticator (base58 format)
-      (client as any).stamper = {
-        getKeyInfo: () => ({ publicKey: mockBase58Key }),
-      };
-
+    it("should fail when augmentation service fails with non-spending-limit error", async () => {
+      // Mock augment endpoint to fail with a real error (not "No spending limit configuration found")
       mockAxiosPost.mockRejectedValueOnce(new Error("Augmentation service unavailable"));
 
       const performSigning = client["performTransactionSigning"].bind(client);
@@ -818,27 +515,30 @@ describe("PhantomClient Spending Limits Integration", () => {
           true,
         ),
       ).rejects.toThrow("Failed to apply spending limits for this transaction");
-
-      // Cleanup
-      (client as any).stamper = undefined;
     });
 
-    it("should fail when getOrganization fails for Solana transaction", async () => {
-      mockGetOrganization.mockRejectedValue(new Error("API connection timeout"));
+    it("should continue signing when augment endpoint returns no spending limits", async () => {
+      // Mock augment endpoint to return "No spending limit configuration found"
+      mockAxiosPost.mockRejectedValueOnce({
+        message:
+          "Failed to augment transaction: No spending limit configuration found for wallet wallet-123 in organization org-123",
+      });
+
+      mockKmsPost.mockResolvedValueOnce({
+        data: { result: { transaction: "signed-tx" }, rpc_submission_result: { result: "hash" } },
+      });
 
       const performSigning = client["performTransactionSigning"].bind(client);
+      const result = await performSigning(
+        { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET, account: "UserAccount123" },
+        true,
+      );
 
-      await expect(
-        performSigning(
-          { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET, account: "UserAccount123" },
-          true,
-        ),
-      ).rejects.toThrow("Failed to fetch organization data for spending limit validation");
+      // Should proceed with original transaction when no spending limits found
+      expect(result.signedTransaction).toBe("signed-tx");
     });
 
-    it("should continue signing when getOrganization fails for EVM transaction", async () => {
-      mockGetOrganization.mockRejectedValue(new Error("Failed to fetch organization"));
-
+    it("should not call augment endpoint for EVM transactions", async () => {
       mockKmsPost.mockResolvedValueOnce({
         data: { result: { transaction: "signed-tx" }, rpc_submission_result: { result: "hash" } },
       });
@@ -850,10 +550,10 @@ describe("PhantomClient Spending Limits Integration", () => {
       );
 
       expect(result.signedTransaction).toBe("signed-tx");
-      expect(mockGetOrganization).not.toHaveBeenCalled();
+      expect(mockAxiosPost).not.toHaveBeenCalled();
     });
 
-    it("should continue signing when includeSubmissionConfig is false (no org fetch needed)", async () => {
+    it("should not call augment endpoint when includeSubmissionConfig is false", async () => {
       mockKmsPost.mockResolvedValueOnce({
         data: { result: { transaction: "signed-tx" } },
       });
@@ -865,19 +565,12 @@ describe("PhantomClient Spending Limits Integration", () => {
       );
 
       expect(result.signedTransaction).toBe("signed-tx");
-      expect(mockGetOrganization).not.toHaveBeenCalled();
+      expect(mockAxiosPost).not.toHaveBeenCalled();
     });
   });
 
   describe("uses augmented transaction for signing", () => {
     it("should use augmented transaction returned from augment endpoint", async () => {
-      const spendingConfig = {
-        usdCentsLimitPerDay: 1000, // $10.00 per day
-        memoryAccount: "MemAcc123",
-        memoryId: 0,
-        memoryBump: 255,
-      };
-
       const submissionConfig = {
         chain: "solana" as const,
         network: "mainnet",
@@ -887,52 +580,34 @@ describe("PhantomClient Spending Limits Integration", () => {
         data: {
           transaction: "augmented-tx-with-lighthouse-instructions",
           simulationResult: {},
-          memoryConfigUsed: {},
+          memoryConfigUsed: {
+            usdCentsLimitPerDay: 1000,
+            memoryAccount: "MemAcc123",
+            memoryId: 0,
+            memoryBump: 255,
+          },
         },
       });
 
       const augmentMethod = client["augmentWithSpendingLimit"].bind(client);
-      const result = await augmentMethod("original-tx", spendingConfig, submissionConfig, "UserAccount123");
+      const result = await augmentMethod("original-tx", "org-123", "wallet-123", submissionConfig, "UserAccount123");
 
       expect(result.transaction).toBe("augmented-tx-with-lighthouse-instructions");
     });
 
-    it("should include spending limit config in sign request when present", async () => {
-      // Use the same real base58/base64url key pair
-      const mockBase58Key = "7EYmfEfph6Ki3wNWCBs9HyFUh5sdChnvy3xthjeSiGxT";
-      const mockBase64urlKey = "XJ6YMh3KfgHFk1RS6O4beNSJfrIL7kMsjTSQjH7YtEQ";
-
-      const orgDataWithLimits = {
-        users: [
-          {
-            username: "spending-limit-user",
-            authenticators: [{ publicKey: mockBase64urlKey }],
-            policy: {
-              type: "CEL",
-              cel: {
-                preset: "DAPP_CONNECTION_USER",
-                walletId: "wallet-123",
-                usdLimit: {
-                  usdCentsLimitPerDay: 1000,
-                  memoryAccount: "MemAcc123",
-                  memoryId: 0,
-                  memoryBump: 255,
-                },
-              },
-            },
-          },
-        ],
-      };
-
-      mockGetOrganization.mockResolvedValue(orgDataWithLimits);
-
-      // Mock stamper to match the user's authenticator (base58 format)
-      (client as any).stamper = {
-        getKeyInfo: () => ({ publicKey: mockBase58Key }),
-      };
-
+    it("should include spending limit config in sign request when augment returns config", async () => {
+      // Mock augment endpoint to return spending limit config
       mockAxiosPost.mockResolvedValueOnce({
-        data: { transaction: "augmented-tx", simulationResult: {}, memoryConfigUsed: {} },
+        data: {
+          transaction: "augmented-tx",
+          simulationResult: {},
+          memoryConfigUsed: {
+            usdCentsLimitPerDay: 1000,
+            memoryAccount: "MemAcc123",
+            memoryId: 0,
+            memoryBump: 255,
+          },
+        },
       });
 
       mockKmsPost.mockResolvedValueOnce({
@@ -945,6 +620,7 @@ describe("PhantomClient Spending Limits Integration", () => {
         true,
       );
 
+      // Should include the spending limit config returned from augment endpoint
       expect(mockKmsPost).toHaveBeenCalledWith(
         expect.objectContaining({
           params: expect.objectContaining({
@@ -957,13 +633,13 @@ describe("PhantomClient Spending Limits Integration", () => {
           }),
         }),
       );
-
-      // Cleanup
-      (client as any).stamper = undefined;
     });
 
-    it("should NOT include spending limit config when user has no limits", async () => {
-      mockGetOrganization.mockResolvedValue(createOrgDataWithoutLimits());
+    it("should NOT include spending limit config when augment fails with no limits found", async () => {
+      // Mock augment endpoint to fail with "No spending limit configuration found"
+      mockAxiosPost.mockRejectedValueOnce({
+        message: "Failed to augment transaction: No spending limit configuration found for wallet wallet-123",
+      });
 
       mockKmsPost.mockResolvedValueOnce({
         data: { result: { transaction: "signed-tx" } },
@@ -975,6 +651,7 @@ describe("PhantomClient Spending Limits Integration", () => {
         true,
       );
 
+      // Should not include spending limit config when no limits found
       expect(mockKmsPost).toHaveBeenCalledWith(
         expect.objectContaining({
           params: expect.not.objectContaining({
@@ -1001,7 +678,8 @@ describe("PhantomClient Spending Limits Integration", () => {
       const augmentMethod = client["augmentWithSpendingLimit"].bind(client);
       const result = await augmentMethod(
         "solana-tx-base64",
-        spendingConfig,
+        "org-123",
+        "wallet-123",
         { chain: "solana", network: "mainnet" },
         "UserAccount123",
       );
@@ -1011,6 +689,8 @@ describe("PhantomClient Spending Limits Integration", () => {
         "https://api.phantom.app/augment/spending-limit",
         expect.objectContaining({
           transaction: { solana: "solana-tx-base64" },
+          organizationId: "org-123",
+          walletId: "wallet-123",
         }),
         expect.any(Object),
       );
@@ -1020,7 +700,7 @@ describe("PhantomClient Spending Limits Integration", () => {
       const augmentMethod = client["augmentWithSpendingLimit"].bind(client);
 
       await expect(
-        augmentMethod("evm-tx", spendingConfig, { chain: "ethereum", network: "mainnet" }, "0xUserAccount"),
+        augmentMethod("evm-tx", "org-123", "wallet-123", { chain: "ethereum", network: "mainnet" }, "0xUserAccount"),
       ).rejects.toThrow("Spending limits are only supported for Solana transactions");
 
       expect(mockAxiosPost).not.toHaveBeenCalled();
@@ -1037,13 +717,14 @@ describe("PhantomClient Spending Limits Integration", () => {
       };
 
       const augmentMethod = client["augmentWithSpendingLimit"].bind(client);
-      await augmentMethod("tx-base64", spendingConfig, submissionConfig, "UserAccount123");
+      await augmentMethod("tx-base64", "org-123", "wallet-123", submissionConfig, "UserAccount123");
 
       expect(mockAxiosPost).toHaveBeenCalledWith(
         "https://api.phantom.app/augment/spending-limit",
         {
           transaction: { solana: "tx-base64" },
-          spendingLimitConfig: spendingConfig,
+          organizationId: "org-123",
+          walletId: "wallet-123",
           submissionConfig,
           simulationConfig: { account: "UserAccount123" },
         },

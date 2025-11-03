@@ -38,9 +38,7 @@ import {
   type SignTransactionRequest,
 } from "@phantom/openapi-wallet-service";
 import axios, { type AxiosInstance } from "axios";
-import bs58 from "bs58";
 import { Buffer } from "buffer";
-import { base64urlEncode } from "@phantom/base64url";
 import { deriveSubmissionConfig } from "./caip2-mappings";
 import { DerivationPath, getNetworkConfig } from "./constants";
 import {
@@ -69,44 +67,6 @@ type AddUserToOrganizationParams = Omit<AddUserToOrganizationRequest, "user"> & 
   replaceExpirable?: boolean;
   user: PartialKmsUser & { traits: { appId: string }; expiresInMs?: number };
 };
-
-// Type for spending limit check result
-type SpendingLimitCheckResult = { hasSpendingLimit: true; config: SpendingLimitConfig } | { hasSpendingLimit: false };
-
-// Internal types for organization user data
-interface UserAuthenticator {
-  id?: string;
-  publicKey: string;
-  authenticatorName?: string;
-}
-
-interface UserPolicy {
-  type: string;
-  preset?: string;
-  walletId?: string;
-  usdLimit?: {
-    usdCentsLimitPerDay?: number;
-    memoryAccount?: string;
-    memoryId?: number;
-    memoryBump?: number;
-  };
-  cel?: {
-    preset?: string;
-    walletId?: string;
-    usdLimit?: {
-      usdCentsLimitPerDay?: number;
-      memoryAccount?: string;
-      memoryId?: number;
-      memoryBump?: number;
-    };
-  };
-}
-
-interface OrganizationUser {
-  username: string;
-  authenticators?: UserAuthenticator[];
-  policy?: UserPolicy;
-}
 
 // TODO(napas): Auto generate this from the OpenAPI spec
 export interface SubmissionConfig {
@@ -245,11 +205,11 @@ export class PhantomClient {
    */
   private async augmentWithSpendingLimit(
     transaction: string,
-    spendingLimitConfig: SpendingLimitConfig,
+    organizationId: string,
+    walletId: string,
     submissionConfig: SubmissionConfig,
     account: string,
   ): Promise<AugmentWithSpendingLimitResponse> {
-
     // This should never happen since we have this check above
     if (submissionConfig.chain !== "solana") {
       throw new Error("Spending limits are only supported for Solana transactions");
@@ -260,11 +220,11 @@ export class PhantomClient {
 
       const request = {
         transaction: chainTransaction,
-        spendingLimitConfig,
+        organizationId,
+        walletId,
         submissionConfig,
         simulationConfig: { account },
       };
-
 
       const response = await this.axiosInstance.post(`${this.config.apiBaseUrl}/augment/spending-limit`, request, {
         headers: {
@@ -272,111 +232,10 @@ export class PhantomClient {
         },
       });
 
-
       return response.data;
     } catch (error: any) {
       throw new Error(`Failed to augment transaction: ${error.response?.data?.message || error.message}`);
     }
-  }
-
-  /**
-   * Check if user has spending limits configured
-   * First identifies the current user by matching their authenticator public key,
-   * then checks if that user has spending limits enabled for this wallet
-   * @private
-   */
-  private checkUserSpendingLimit(orgData: ExternalKmsOrganization, walletId: string): SpendingLimitCheckResult {
-
-    if (!orgData.users) {
-      return { hasSpendingLimit: false };
-    }
-
-    // Get current user's public key from the stamper (if available)
-    // Stamper returns base58 format, but API uses base64url, so we need to convert
-    let currentUserPublicKeyBase64url: string | null = null;
-
-
-    if (this.stamper && "getKeyInfo" in this.stamper) {
-      const stamperWithKeyInfo = this.stamper as { getKeyInfo: () => { publicKey: string } };
-      const keyInfo = stamperWithKeyInfo.getKeyInfo();
-
-
-      const base58PublicKey = keyInfo?.publicKey;
-
-      if (base58PublicKey) {
-        try {
-          // Convert from base58 (stamper format) to base64url (API format)
-          const publicKeyBytes = bs58.decode(base58PublicKey);
-          currentUserPublicKeyBase64url = base64urlEncode(publicKeyBytes);
-        } catch (e) {
-        }
-      }
-    } else {
-    }
-
-    // Cast users to our internal type for better type safety
-    // The OpenAPI types are incomplete for the policy field, so we use our own types
-    const users = (orgData.users || []) as unknown as OrganizationUser[];
-
-    // Iterate through users to find the one making this request
-    for (const user of users) {
-      // Skip if user has no authenticators
-      if (!user.authenticators || !Array.isArray(user.authenticators)) {
-        continue;
-      }
-
-      // Check if any of this user's authenticators match the current user's public key (base64url format)
-      const isCurrentUser = currentUserPublicKeyBase64url
-        ? user.authenticators.some(auth => auth.publicKey === currentUserPublicKeyBase64url)
-        : false;
-
-      if (currentUserPublicKeyBase64url && !isCurrentUser) {
-        continue;
-      }
-
-
-      // Check if this user has a policy
-      if (!user.policy) {
-        return { hasSpendingLimit: false };
-      }
-
-      const policy = user.policy;
-
-      // Check if this user has valid spending limits for this wallet
-      // For preset policies, the structure is flat: policy.preset, policy.walletId, policy.usdLimit
-      // For full CEL policies, the structure is nested: policy.cel.rules, policy.cel.constants
-      // We check both formats for backward compatibility
-      const preset = policy.preset || policy.cel?.preset;
-      const policyWalletId = policy.walletId || policy.cel?.walletId;
-      const usdLimit = policy.usdLimit || policy.cel?.usdLimit;
-
-      if (
-        policy.type === "CEL" &&
-        preset === "DAPP_CONNECTION_USER" &&
-        policyWalletId === walletId &&
-        usdLimit &&
-        typeof usdLimit.usdCentsLimitPerDay === "number" &&
-        typeof usdLimit.memoryAccount === "string" &&
-        typeof usdLimit.memoryId === "number" &&
-        typeof usdLimit.memoryBump === "number"
-      ) {
-        const config: SpendingLimitConfig = {
-          usdCentsLimitPerDay: usdLimit.usdCentsLimitPerDay,
-          memoryAccount: usdLimit.memoryAccount,
-          memoryId: usdLimit.memoryId,
-          memoryBump: usdLimit.memoryBump,
-        };
-        return {
-          hasSpendingLimit: true,
-          config,
-        };
-      }
-
-      // Current user found but no spending limits for this wallet
-      return { hasSpendingLimit: false };
-    }
-
-    return { hasSpendingLimit: false };
   }
 
   /**
@@ -428,47 +287,39 @@ export class PhantomClient {
       };
 
       // TWO-PHASE SPENDING LIMITS FLOW
-      // Phase 1: Check if user has spending limits and augment transaction if needed
+      // Phase 1: Call wallet service to check spending limits and augment transaction if needed
       let spendingLimitConfig: SpendingLimitConfig | undefined;
       let augmentedTransaction = encodedTransaction;
 
-
       // Only check spending limits for Solana transactions
       if (!isEvmTransaction && includeSubmissionConfig && submissionConfig && params.account) {
-        let orgData: ExternalKmsOrganization;
-
         try {
-          orgData = await this.getOrganization(this.config.organizationId);
-        } catch (e: any) {
-          throw new Error(
-            `Failed to fetch organization data for spending limit validation: ${e?.message || e}. ` +
-              `Cannot proceed with transaction without verifying spending limits.`,
+          // Call wallet service augment endpoint
+          // It will query KMS, find the first user with spending limits for this wallet, and augment if needed
+          const augmentResponse = await this.augmentWithSpendingLimit(
+            encodedTransaction,
+            this.config.organizationId,
+            walletId,
+            submissionConfig,
+            params.account,
           );
-        }
 
-        const spendingLimitCheck = this.checkUserSpendingLimit(orgData, walletId);
-
-        if (spendingLimitCheck.hasSpendingLimit) {
-          spendingLimitConfig = spendingLimitCheck.config;
-
-          try {
-            const augmentResponse = await this.augmentWithSpendingLimit(
-              encodedTransaction,
-              spendingLimitConfig,
-              submissionConfig,
-              params.account,
-            );
-
-            augmentedTransaction = augmentResponse.transaction;
-          } catch (e: any) {
+          augmentedTransaction = augmentResponse.transaction;
+          spendingLimitConfig = augmentResponse.memoryConfigUsed;
+        } catch (e: any) {
+          // If augmentation fails with "No spending limit configuration found", that means
+          // no user has spending limits for this wallet, so we can proceed without augmentation
+          const errorMessage = e?.message || String(e);
+          if (errorMessage.includes("No spending limit configuration found")) {
+            // No spending limits configured, proceed with original transaction
+          } else {
+            // Real error during augmentation, re-throw
             throw new Error(
-              `Failed to apply spending limits for this transaction: ${e?.message || e}. ` +
+              `Failed to apply spending limits for this transaction: ${errorMessage}. ` +
                 `Transaction cannot proceed without spending limit enforcement.`,
             );
           }
-        } else {
         }
-      } else {
       }
 
       // Phase 2: Sign the (possibly augmented) transaction
