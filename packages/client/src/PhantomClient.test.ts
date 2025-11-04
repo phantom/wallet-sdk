@@ -438,10 +438,10 @@ describe("PhantomClient Spending Limits Integration", () => {
       return client["performTransactionSigning"](params, includeSubmissionConfig);
     };
 
-    it("should call augment but proceed without limits when no spending limits found", async () => {
-      // Mock augment endpoint to reject with "No spending limit configuration found"
-      mockAxiosPost.mockRejectedValueOnce({
-        message: "Failed to augment transaction: No spending limit configuration found for wallet wallet-123",
+    it("should call augment and proceed without limits when service returns pass-through", async () => {
+      // Mock augment endpoint to 200 with same transaction and no memory config
+      mockAxiosPost.mockResolvedValueOnce({
+        data: { transaction: "tx", simulationResult: {} },
       });
 
       mockKmsPost.mockResolvedValue({
@@ -458,7 +458,7 @@ describe("PhantomClient Spending Limits Integration", () => {
         true,
       );
 
-      // Augment should be called but error is caught and we proceed
+      // Augment should be called and we proceed
       expect(mockAxiosPost).toHaveBeenCalled();
       expect(mockKmsPost).toHaveBeenCalled();
     });
@@ -517,11 +517,9 @@ describe("PhantomClient Spending Limits Integration", () => {
       ).rejects.toThrow("Failed to apply spending limits for this transaction");
     });
 
-    it("should continue signing when augment endpoint returns no spending limits", async () => {
-      // Mock augment endpoint to return "No spending limit configuration found"
-      mockAxiosPost.mockRejectedValueOnce({
-        message:
-          "Failed to augment transaction: No spending limit configuration found for wallet wallet-123 in organization org-123",
+    it("should continue signing when augment endpoint returns pass-through with no limits", async () => {
+      mockAxiosPost.mockResolvedValueOnce({
+        data: { transaction: "tx", simulationResult: {} },
       });
 
       mockKmsPost.mockResolvedValueOnce({
@@ -534,7 +532,6 @@ describe("PhantomClient Spending Limits Integration", () => {
         true,
       );
 
-      // Should proceed with original transaction when no spending limits found
       expect(result.signedTransaction).toBe("signed-tx");
     });
 
@@ -635,10 +632,9 @@ describe("PhantomClient Spending Limits Integration", () => {
       );
     });
 
-    it("should NOT include spending limit config when augment fails with no limits found", async () => {
-      // Mock augment endpoint to fail with "No spending limit configuration found"
-      mockAxiosPost.mockRejectedValueOnce({
-        message: "Failed to augment transaction: No spending limit configuration found for wallet wallet-123",
+    it("should NOT include spending limit config when service returns pass-through (no limits)", async () => {
+      mockAxiosPost.mockResolvedValueOnce({
+        data: { transaction: "tx", simulationResult: {} },
       });
 
       mockKmsPost.mockResolvedValueOnce({

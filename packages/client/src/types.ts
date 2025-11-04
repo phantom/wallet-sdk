@@ -142,5 +142,5 @@ export interface SpendingLimitConfig {
 export interface AugmentWithSpendingLimitResponse {
   transaction: string; // base64url encoded with Lighthouse instructions
   simulationResult?: any;
-  memoryConfigUsed: SpendingLimitConfig;
+  memoryConfigUsed?: SpendingLimitConfig;
 }

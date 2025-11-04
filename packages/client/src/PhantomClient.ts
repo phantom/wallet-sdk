@@ -210,7 +210,6 @@ export class PhantomClient {
     submissionConfig: SubmissionConfig,
     account: string,
   ): Promise<AugmentWithSpendingLimitResponse> {
-    // This should never happen since we have this check above
     if (submissionConfig.chain !== "solana") {
       throw new Error("Spending limits are only supported for Solana transactions");
     }
@@ -295,7 +294,6 @@ export class PhantomClient {
       if (!isEvmTransaction && includeSubmissionConfig && submissionConfig && params.account) {
         try {
           // Call wallet service augment endpoint
-          // It will query KMS, find the first user with spending limits for this wallet, and augment if needed
           const augmentResponse = await this.augmentWithSpendingLimit(
             encodedTransaction,
             this.config.organizationId,
@@ -307,18 +305,11 @@ export class PhantomClient {
           augmentedTransaction = augmentResponse.transaction;
           spendingLimitConfig = augmentResponse.memoryConfigUsed;
         } catch (e: any) {
-          // If augmentation fails with "No spending limit configuration found", that means
-          // no user has spending limits for this wallet, so we can proceed without augmentation
           const errorMessage = e?.message || String(e);
-          if (errorMessage.includes("No spending limit configuration found")) {
-            // No spending limits configured, proceed with original transaction
-          } else {
-            // Real error during augmentation, re-throw
-            throw new Error(
-              `Failed to apply spending limits for this transaction: ${errorMessage}. ` +
-                `Transaction cannot proceed without spending limit enforcement.`,
-            );
-          }
+          throw new Error(
+            `Failed to apply spending limits for this transaction: ${errorMessage}. ` +
+              `Transaction cannot proceed without spending limit enforcement.`,
+          );
         }
       }
 
