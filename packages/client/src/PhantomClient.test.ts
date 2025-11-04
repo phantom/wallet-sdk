@@ -624,7 +624,7 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       const performSigning = client["performTransactionSigning"].bind(client);
       await performSigning(
-        { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET, account: "UserAccount123" },
+        { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET, account: "UserAccount123", walletType: "user-wallet" },
         true,
       );
 
@@ -654,7 +654,7 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       const performSigning = client["performTransactionSigning"].bind(client);
       await performSigning(
-        { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET, account: "UserAccount123" },
+        { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET, account: "UserAccount123", walletType: "user-wallet" },
         true,
       );
 
