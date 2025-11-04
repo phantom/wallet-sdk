@@ -250,32 +250,27 @@ export class PhantomClient {
       if (!this.config.organizationId) {
         throw new Error("organizationId is required to sign a transaction");
       }
+
+      // SubmissionConfig is used to: 1) submit the transaction onchain, 2) derive spending limits
+      const submissionConfig: SubmissionConfig | null = deriveSubmissionConfig(networkIdParam) || null;
+
+      if (!submissionConfig) {
+        throw new Error(`SubmissionConfig could not be derived for network ID: ${networkIdParam}`);
+      }
+
+      // Get network configuration with custom derivation index. Required for signing
+      const networkConfig = getNetworkConfig(networkIdParam, derivationIndex);
+
+      if (!networkConfig) {
+        throw new Error(`Unsupported network ID: ${networkIdParam}`);
+      }
+
       // Transaction is always a string (encoded via parsers)
       const encodedTransaction = transactionParam;
 
       // Check if this is an EVM transaction using the network ID
       const isEvmTransaction = isEthereumChain(networkIdParam);
       const isSolanaTransaction = isSolanaChain(networkIdParam);
-
-      let submissionConfig: SubmissionConfig | null = null;
-
-      if (includeSubmissionConfig) {
-        submissionConfig = deriveSubmissionConfig(networkIdParam) || null;
-
-        // If we don't have a submission config, the transaction will only be signed, not submitted
-        if (!submissionConfig) {
-          console.error(
-            `No submission config available for network ${networkIdParam}. Transaction will be signed but not submitted.`,
-          );
-        }
-      }
-
-      // Get network configuration with custom derivation index
-      const networkConfig = getNetworkConfig(networkIdParam, derivationIndex);
-
-      if (!networkConfig) {
-        throw new Error(`Unsupported network ID: ${networkIdParam}`);
-      }
 
       const derivationInfo: DerivationInfo = {
         derivationPath: networkConfig.derivationPath,
@@ -288,19 +283,23 @@ export class PhantomClient {
       let spendingLimitConfig: SpendingLimitConfig | undefined;
       let augmentedTransaction = encodedTransaction;
 
-      // Only check spending limits for Solana transactions when:
-      // 1. includeSubmissionConfig is true (i.e., signAndSendTransaction)
-      // 2. account parameter is provided (needed for simulation)
-      // 3. submissionConfig is available
-      if (isSolanaTransaction && includeSubmissionConfig && params.account && submissionConfig) {
+      // Always check spending limits for Solana transactions
+      // If we don't receive an account
+      // At this point, we've already validated that submissionConfig and account exist for Solana
+      if (isSolanaTransaction && params.walletType === "user-wallet") {
+
+        if (!params.account) {
+          throw new Error("Account is required to simulate Solana transactions with spending limits");
+        }
+
         try {
           // Call wallet service augment endpoint
           const augmentResponse = await this.augmentWithSpendingLimit(
             encodedTransaction,
             this.config.organizationId,
             walletId,
-            submissionConfig,
-            params.account,
+            submissionConfig,  // Non-null assertion safe because we validated above
+            params.account,     // Non-null assertion safe because we validated above
           );
 
           augmentedTransaction = augmentResponse.transaction;

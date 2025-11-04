@@ -159,6 +159,7 @@ export class ServerSDK {
       networkId: params.networkId,
       derivationIndex: params.derivationIndex,
       account: params.account,
+      walletType: "server-wallet",
     });
 
     // Parse the response to get transaction result (without hash)
@@ -188,6 +189,7 @@ export class ServerSDK {
       networkId: params.networkId,
       derivationIndex: params.derivationIndex,
       account: params.account,
+      walletType: "server-wallet",
     });
 
     // Parse the response to get transaction hash and explorer URL

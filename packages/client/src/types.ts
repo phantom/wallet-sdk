@@ -66,6 +66,7 @@ export interface SignTransactionParams {
   networkId: NetworkId;
   derivationIndex?: number; // Optional account derivation index (defaults to 0)
   account?: string; // Optional specific account address to use
+  walletType: "server-wallet" | "user-wallet"; 
 }
 
 export interface SignAndSendTransactionParams {
@@ -74,6 +75,7 @@ export interface SignAndSendTransactionParams {
   networkId: NetworkId;
   derivationIndex?: number; // Optional account derivation index (defaults to 0)
   account?: string; // Optional specific account address to use
+  walletType: "server-wallet" | "user-wallet"; 
 }
 
 export interface GetWalletWithTagParams {

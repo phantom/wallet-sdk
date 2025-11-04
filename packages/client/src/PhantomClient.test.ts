@@ -420,6 +420,7 @@ describe("PhantomClient Spending Limits Integration", () => {
           transaction: "tx",
           networkId: NetworkId.SOLANA_MAINNET,
           account: "UserAccount123",
+          walletType: "user-wallet",
         },
         true,
       );
@@ -429,42 +430,80 @@ describe("PhantomClient Spending Limits Integration", () => {
       expect(mockKmsPost).toHaveBeenCalled();
     });
 
-    describe.each([
-      {
-        testName: "includeSubmissionConfig is false",
-        params: {
+    it("should call augment even when includeSubmissionConfig is false for Solana", async () => {
+      // Mock augment endpoint to return pass-through
+      mockAxiosPost.mockResolvedValueOnce({
+        data: { transaction: "tx", simulationResult: {} },
+      });
+
+      mockKmsPost.mockResolvedValue({
+        data: { result: { transaction: "signed-tx" } },
+      });
+
+      await performSigning(
+        {
           walletId: "wallet-123",
           transaction: "tx",
           networkId: NetworkId.SOLANA_MAINNET,
           account: "UserAccount123",
+          walletType: "user-wallet",
         },
-        includeSubmissionConfig: false,
-      },
-      {
-        testName: "account parameter is missing",
-        params: { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET },
-        includeSubmissionConfig: true,
-      },
-      {
-        testName: "transaction is EVM (not Solana)",
-        params: {
+        false, // includeSubmissionConfig = false, but augment should still be called
+      );
+
+      // Augment should be called even when includeSubmissionConfig is false
+      expect(mockAxiosPost).toHaveBeenCalled();
+      expect(mockKmsPost).toHaveBeenCalled();
+    });
+
+    it("should throw error when account parameter is missing for Solana user-wallet", async () => {
+      await expect(
+        performSigning(
+          { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET, walletType: "user-wallet" },
+          true,
+        ),
+      ).rejects.toThrow("Account is required to simulate Solana transactions with spending limits");
+
+      // Augment should not be called because we fail before reaching it
+      expect(mockAxiosPost).not.toHaveBeenCalled();
+    });
+
+    it("should NOT call augment for EVM transactions", async () => {
+      mockKmsPost.mockResolvedValue({
+        data: { result: { transaction: "signed-tx" }, rpc_submission_result: { result: "hash" } },
+      });
+
+      await performSigning(
+        {
           walletId: "wallet-123",
           transaction: "0x1234",
           networkId: NetworkId.ETHEREUM_MAINNET,
           account: "0xUser",
+          walletType: "user-wallet",
         },
-        includeSubmissionConfig: true,
-      },
-    ])("should NOT call augment when $testName", ({ params, includeSubmissionConfig }) => {
-      it(`${params.networkId}`, async () => {
-        mockKmsPost.mockResolvedValue({
-          data: { result: { transaction: "signed-tx" }, rpc_submission_result: { result: "hash" } },
-        });
+        true,
+      );
 
-        await performSigning(params, includeSubmissionConfig);
+      expect(mockAxiosPost).not.toHaveBeenCalled();
+    });
 
-        expect(mockAxiosPost).not.toHaveBeenCalled();
+    it("should NOT call augment for Solana server-wallet transactions", async () => {
+      mockKmsPost.mockResolvedValue({
+        data: { result: { transaction: "signed-tx" }, rpc_submission_result: { result: "hash" } },
       });
+
+      await performSigning(
+        {
+          walletId: "wallet-123",
+          transaction: "tx",
+          networkId: NetworkId.SOLANA_MAINNET,
+          account: "UserAccount123",
+          walletType: "server-wallet",
+        },
+        true,
+      );
+
+      expect(mockAxiosPost).not.toHaveBeenCalled();
     });
   });
 
@@ -477,7 +516,7 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       await expect(
         performSigning(
-          { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET, account: "UserAccount123" },
+          { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET, account: "UserAccount123", walletType: "user-wallet" },
           true,
         ),
       ).rejects.toThrow("Failed to apply spending limits for this transaction");
@@ -494,7 +533,7 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       const performSigning = client["performTransactionSigning"].bind(client);
       const result = await performSigning(
-        { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET, account: "UserAccount123" },
+        { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET, account: "UserAccount123", walletType: "user-wallet" },
         true,
       );
 
@@ -508,7 +547,7 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       const performSigning = client["performTransactionSigning"].bind(client);
       const result = await performSigning(
-        { walletId: "wallet-123", transaction: "0x1234", networkId: NetworkId.ETHEREUM_MAINNET, account: "0xUser" },
+        { walletId: "wallet-123", transaction: "0x1234", networkId: NetworkId.ETHEREUM_MAINNET, account: "0xUser", walletType: "user-wallet" },
         true,
       );
 
@@ -516,19 +555,25 @@ describe("PhantomClient Spending Limits Integration", () => {
       expect(mockAxiosPost).not.toHaveBeenCalled();
     });
 
-    it("should not call augment endpoint when includeSubmissionConfig is false", async () => {
+    it("should call augment endpoint even when includeSubmissionConfig is false", async () => {
+      // Mock augment endpoint to return pass-through
+      mockAxiosPost.mockResolvedValueOnce({
+        data: { transaction: "tx", simulationResult: {} },
+      });
+
       mockKmsPost.mockResolvedValueOnce({
         data: { result: { transaction: "signed-tx" } },
       });
 
       const performSigning = client["performTransactionSigning"].bind(client);
       const result = await performSigning(
-        { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET },
+        { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET, account: "UserAccount123", walletType: "user-wallet" },
         false,
       );
 
       expect(result.signedTransaction).toBe("signed-tx");
-      expect(mockAxiosPost).not.toHaveBeenCalled();
+      // Augment should be called even when includeSubmissionConfig is false
+      expect(mockAxiosPost).toHaveBeenCalled();
     });
   });
 
