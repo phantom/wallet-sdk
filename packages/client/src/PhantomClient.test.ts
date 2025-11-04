@@ -302,40 +302,6 @@ describe("PhantomClient Spending Limits Integration", () => {
   let mockKmsPost: jest.Mock;
   let mockGetOrganization: jest.Mock;
 
-  // Helper to create org data with spending limits
-  const createOrgDataWithSpendingLimits = (walletId: string) => ({
-    users: [
-      {
-        username: "spending-limit-user",
-        authenticators: [{ publicKey: "default-test-public-key" }],
-        policy: {
-          type: "CEL",
-          cel: {
-            preset: "DAPP_CONNECTION_USER",
-            walletId,
-            usdLimit: {
-              usdCentsLimitPerDay: 1000, // $10.00 per day
-              memoryAccount: "MemAcc123",
-              memoryId: 0,
-              memoryBump: 255,
-            },
-          },
-        },
-      },
-    ],
-  });
-
-  // Helper for org data without spending limits
-  const createOrgDataWithoutLimits = () => ({
-    users: [
-      {
-        username: "admin-user",
-        authenticators: [{ publicKey: "admin-public-key" }],
-        policy: { type: "ADMIN" },
-      },
-    ],
-  });
-
   beforeEach(() => {
     mockAxiosPost = jest.fn();
     const mockAxiosInstance = {
@@ -659,13 +625,6 @@ describe("PhantomClient Spending Limits Integration", () => {
   });
 
   describe("augment endpoint request structure", () => {
-    const spendingConfig = {
-      usdCentsLimitPerDay: 1000, // $10.00 per day
-      memoryAccount: "MemAcc123",
-      memoryId: 0,
-      memoryBump: 255,
-    };
-
     it("should send Solana transactions in ChainTransaction format", async () => {
       mockAxiosPost.mockResolvedValueOnce({
         data: { transaction: "augmented-tx", simulationResult: {}, memoryConfigUsed: {} },
