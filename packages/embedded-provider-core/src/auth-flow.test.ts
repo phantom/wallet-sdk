@@ -1272,6 +1272,8 @@ describe("EmbeddedProvider Auth Flows", () => {
         transaction: expect.any(String),
         networkId: NetworkId.SOLANA_MAINNET,
         derivationIndex: 0,
+        account: "test-solana-address",
+        walletType: "user-wallet",
       });
       expect(result.hash).toBeDefined();
       expect(typeof result.blockExplorer === "string" || result.blockExplorer === undefined).toBe(true);
