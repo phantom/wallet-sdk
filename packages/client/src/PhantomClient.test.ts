@@ -364,6 +364,7 @@ describe("PhantomClient Spending Limits Integration", () => {
         "original-tx-base64",
         "org-123",
         "wallet-123",
+        solanaSubmissionConfig,
         "UserAccount123",
       );
 
@@ -374,6 +375,7 @@ describe("PhantomClient Spending Limits Integration", () => {
           transaction: { solana: "original-tx-base64" },
           organizationId: "org-123",
           walletId: "wallet-123",
+          submissionConfig: solanaSubmissionConfig,
           simulationConfig: { account: "UserAccount123" },
         },
         { headers: { "Content-Type": "application/json" } },
