@@ -61,7 +61,7 @@ import {
 } from "./types";
 
 import type { Stamper } from "@phantom/sdk-types";
-import { getSecureTimestamp, randomUUID, isEthereumChain } from "@phantom/utils";
+import { getSecureTimestamp, randomUUID, isEthereumChain, isSolanaChain } from "@phantom/utils";
 
 type AddUserToOrganizationParams = Omit<AddUserToOrganizationRequest, "user"> & {
   replaceExpirable?: boolean;
@@ -210,9 +210,6 @@ export class PhantomClient {
     submissionConfig: SubmissionConfig,
     account: string,
   ): Promise<AugmentWithSpendingLimitResponse> {
-    if (submissionConfig.chain !== "solana") {
-      throw new Error("Spending limits are only supported for Solana transactions");
-    }
 
     try {
       const chainTransaction = { solana: transaction };
@@ -258,6 +255,7 @@ export class PhantomClient {
 
       // Check if this is an EVM transaction using the network ID
       const isEvmTransaction = isEthereumChain(networkIdParam);
+      const isSolanaTransaction = isSolanaChain(networkIdParam);
 
       let submissionConfig: SubmissionConfig | null = null;
 
@@ -290,8 +288,11 @@ export class PhantomClient {
       let spendingLimitConfig: SpendingLimitConfig | undefined;
       let augmentedTransaction = encodedTransaction;
 
-      // Only check spending limits for Solana transactions
-      if (!isEvmTransaction && includeSubmissionConfig && submissionConfig && params.account) {
+      // Only check spending limits for Solana transactions when:
+      // 1. includeSubmissionConfig is true (i.e., signAndSendTransaction)
+      // 2. account parameter is provided (needed for simulation)
+      // 3. submissionConfig is available
+      if (isSolanaTransaction && includeSubmissionConfig && params.account && submissionConfig) {
         try {
           // Call wallet service augment endpoint
           const augmentResponse = await this.augmentWithSpendingLimit(

@@ -10,3 +10,8 @@ export function isEthereumChain(networkId: string): boolean {
 export function getChainPrefix(networkId: string): string {
   return networkId.split(":")[0].toLowerCase();
 }
+
+export function isSolanaChain(networkId: string): boolean {
+  const network = networkId.split(":")[0].toLowerCase();
+  return network === "solana";
+}

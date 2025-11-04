@@ -394,7 +394,7 @@ describe("PhantomClient Spending Limits Integration", () => {
       const augmentMethod = client["augmentWithSpendingLimit"].bind(client);
 
       await expect(
-        augmentMethod("bad-tx", "org-123", "wallet-123", solanaSubmissionConfig, "UserAccount123"),
+        augmentMethod("bad-tx", "org-123", "wallet-123", "UserAccount123"),
       ).rejects.toThrow("Failed to augment transaction");
     });
   });
@@ -553,7 +553,7 @@ describe("PhantomClient Spending Limits Integration", () => {
       });
 
       const augmentMethod = client["augmentWithSpendingLimit"].bind(client);
-      const result = await augmentMethod("original-tx", "org-123", "wallet-123", submissionConfig, "UserAccount123");
+      const result = await augmentMethod("original-tx", "org-123", "wallet-123", "UserAccount123");
 
       expect(result.transaction).toBe("augmented-tx-with-lighthouse-instructions");
     });
@@ -635,7 +635,6 @@ describe("PhantomClient Spending Limits Integration", () => {
         "solana-tx-base64",
         "org-123",
         "wallet-123",
-        { chain: "solana", network: "mainnet" },
         "UserAccount123",
       );
 
@@ -651,15 +650,9 @@ describe("PhantomClient Spending Limits Integration", () => {
       );
     });
 
-    it("should reject EVM transactions with clear error", async () => {
-      const augmentMethod = client["augmentWithSpendingLimit"].bind(client);
-
-      await expect(
-        augmentMethod("evm-tx", "org-123", "wallet-123", { chain: "ethereum", network: "mainnet" }, "0xUserAccount"),
-      ).rejects.toThrow("Spending limits are only supported for Solana transactions");
-
-      expect(mockAxiosPost).not.toHaveBeenCalled();
-    });
+    // Note: The augmentWithSpendingLimit method no longer receives chain information,
+    // so it cannot reject EVM transactions at the method level. Chain validation
+    // should happen at a higher level before calling this method.
 
     it("should include all required fields in augment request", async () => {
       mockAxiosPost.mockResolvedValueOnce({
@@ -672,7 +665,7 @@ describe("PhantomClient Spending Limits Integration", () => {
       };
 
       const augmentMethod = client["augmentWithSpendingLimit"].bind(client);
-      await augmentMethod("tx-base64", "org-123", "wallet-123", submissionConfig, "UserAccount123");
+      await augmentMethod("tx-base64", "org-123", "wallet-123", "UserAccount123");
 
       expect(mockAxiosPost).toHaveBeenCalledWith(
         "https://api.phantom.app/augment/spending-limit",
@@ -680,7 +673,6 @@ describe("PhantomClient Spending Limits Integration", () => {
           transaction: { solana: "tx-base64" },
           organizationId: "org-123",
           walletId: "wallet-123",
-          submissionConfig,
           simulationConfig: { account: "UserAccount123" },
         },
         { headers: { "Content-Type": "application/json" } },
