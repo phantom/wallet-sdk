@@ -286,15 +286,17 @@ export class PhantomClient {
       let spendingLimitConfig: SpendingLimitConfig | undefined;
       let augmentedTransaction = encodedTransaction;
 
-      // Only check spending limits for Solana transactions
-      if (isSolanaTransaction) {
+      // Only check spending limits for Solana transactions when:
+      // 1. includeSubmissionConfig is true (i.e., signAndSendTransaction)
+      // 2. account parameter is provided (needed for simulation)
+      if (isSolanaTransaction && includeSubmissionConfig && params.account) {
         try {
           // Call wallet service augment endpoint
           const augmentResponse = await this.augmentWithSpendingLimit(
             encodedTransaction,
             this.config.organizationId,
             walletId,
-            params.account || "",
+            params.account,
           );
 
           augmentedTransaction = augmentResponse.transaction;
