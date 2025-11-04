@@ -329,7 +329,7 @@ export class PhantomClient {
       } as any;
 
       // Add submission config if available and requested
-      if (includeSubmissionConfig && submissionConfig) {
+      if (includeSubmissionConfig) {
         signRequest.submissionConfig = submissionConfig;
       }
 

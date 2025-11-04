@@ -1217,7 +1217,13 @@ describe("EmbeddedProvider Auth Flows", () => {
         return Promise.resolve();
       });
 
-      mockClient.getWalletAddresses.mockResolvedValue([]);
+      mockClient.getWalletAddresses.mockResolvedValue([
+        {
+          addressType: "solana",
+          address: "test-solana-address",
+          publicKey: "test-public-key",
+        },
+      ]);
       await provider.connect({ provider: "google" });
     });
 
