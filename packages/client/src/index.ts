@@ -12,5 +12,4 @@ export {
   type CreateAuthenticatorRequest,
   type DeleteAuthenticatorRequest,
   type CreateOrganizationRequest,
-  KmsUserRole
 } from "@phantom/openapi-wallet-service";

@@ -40,7 +40,7 @@
     "@phantom/base64url": "workspace:^",
     "@phantom/constants": "workspace:^",
     "@phantom/crypto": "workspace:^",
-    "@phantom/openapi-wallet-service": "^0.1.9",
+    "@phantom/openapi-wallet-service": "0.1.11",
     "@phantom/sdk-types": "workspace:^",
     "@phantom/utils": "workspace:^",
     "axios": "^1.10.0",

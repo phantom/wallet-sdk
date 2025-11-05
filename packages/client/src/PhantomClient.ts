@@ -8,9 +8,9 @@ import {
   GetAccountsMethodEnum,
   GrantOrganizationAccessMethodEnum,
   KMSRPCApi,
-  KmsUserRole,
   SignRawPayloadMethodEnum,
   SignTransactionMethodEnum,
+  UserPolicyOneOfTypeEnum,
   type DerivationInfoAddressFormatEnum as AddressType,
   type AddUserToOrganization,
   type AddUserToOrganizationRequest,
@@ -579,7 +579,7 @@ export class PhantomClient {
       return await this.createOrganization(tag, [
         {
           username: `user-${timestamp}`,
-          role: KmsUserRole.admin,
+          role: "ADMIN",
           authenticators: [
             {
               authenticatorName: `auth-${timestamp}`,
@@ -637,9 +637,10 @@ export class PhantomClient {
       const params: CreateOrganizationRequest = {
         organizationName: name,
         users: users.map(userConfig => ({
-          role: userConfig.role === "ADMIN" ? KmsUserRole.admin : KmsUserRole.user,
+          role: userConfig.role === "ADMIN" ? "ADMIN" : "USER",
           username: userConfig.username || `user-${randomUUID()}}`,
           authenticators: userConfig.authenticators as any,
+          policy: { type: UserPolicyOneOfTypeEnum.root }
         })),
         tags,
       };
