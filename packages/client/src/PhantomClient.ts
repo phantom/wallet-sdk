@@ -611,7 +611,7 @@ export class PhantomClient {
       const params: CreateOrganizationRequest = {
         organizationName: name,
         users: users.map(userConfig => ({
-          username: userConfig.username || `user-${randomUUID()}}`,
+          username: userConfig.username || `user-${randomUUID()}`,
           authenticators: userConfig.authenticators as any,
           policy: userConfig.role === "ADMIN" ? {
             type: UserPolicyOneOfTypeEnum.root,
