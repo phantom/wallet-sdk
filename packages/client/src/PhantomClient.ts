@@ -569,33 +569,6 @@ export class PhantomClient {
     }
   }
 
-  async getOrCreateOrganization(tag: string, publicKey: string): Promise<ExternalKmsOrganization> {
-    try {
-      const timestamp = await getSecureTimestamp();
-
-      // First, try to get the organization
-      // Since there's no explicit getOrganization method, we'll create it
-      // This assumes the API returns existing org if it already exists
-      return await this.createOrganization(tag, [
-        {
-          username: `user-${timestamp}`,
-          role: "ADMIN",
-          authenticators: [
-            {
-              authenticatorName: `auth-${timestamp}`,
-              authenticatorKind: "keypair",
-              publicKey: publicKey,
-              algorithm: "Ed25519",
-            },
-          ],
-        },
-      ]);
-    } catch (error: any) {
-      console.error("Failed to get or create organization:", error.response?.data || error.message);
-      throw new Error(`Failed to get or create organization: ${error.response?.data?.message || error.message}`);
-    }
-  }
-
   /**
    * Create a new organization with the specified name and users
    * @param name Organization name
