@@ -370,7 +370,7 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       expect(result.transaction).toBe("augmented-tx");
       expect(mockAxiosPost).toHaveBeenCalledWith(
-        "https://api.phantom.app/augment/spending-limit",
+        "https://api.phantom.app/prepare/spending-limit",
         {
           transaction: { solana: "original-tx-base64" },
           organizationId: "org-123",
@@ -691,7 +691,7 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       expect(result.transaction).toBe("augmented-tx");
       expect(mockAxiosPost).toHaveBeenCalledWith(
-        "https://api.phantom.app/augment/spending-limit",
+        "https://api.phantom.app/prepare/spending-limit",
         expect.objectContaining({
           transaction: { solana: "solana-tx-base64" },
           organizationId: "org-123",
@@ -720,7 +720,7 @@ describe("PhantomClient Spending Limits Integration", () => {
       await augmentMethod("tx-base64", "org-123", "wallet-123", submissionConfig, "UserAccount123");
 
       expect(mockAxiosPost).toHaveBeenCalledWith(
-        "https://api.phantom.app/augment/spending-limit",
+        "https://api.phantom.app/prepare/spending-limit",
         {
           transaction: { solana: "tx-base64" },
           organizationId: "org-123",

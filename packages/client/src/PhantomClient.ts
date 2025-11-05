@@ -210,7 +210,6 @@ export class PhantomClient {
     submissionConfig: SubmissionConfig,
     account: string,
   ): Promise<AugmentWithSpendingLimitResponse> {
-
     try {
       const chainTransaction = { solana: transaction };
 
@@ -221,13 +220,11 @@ export class PhantomClient {
         submissionConfig,
         simulationConfig: { account },
       };
-
-      const response = await this.axiosInstance.post(`${this.config.apiBaseUrl}/augment/spending-limit`, request, {
+      const response = await this.axiosInstance.post(`${this.config.apiBaseUrl}/prepare/spending-limit`, request, {
         headers: {
           "Content-Type": "application/json",
         },
       });
-
       return response.data;
     } catch (error: any) {
       throw new Error(`Failed to augment transaction: ${error.response?.data?.message || error.message}`);
@@ -287,7 +284,6 @@ export class PhantomClient {
       // If we don't receive an account
       // At this point, we've already validated that submissionConfig and account exist for Solana
       if (isSolanaTransaction && params.walletType === "user-wallet") {
-
         if (!params.account) {
           throw new Error("Account is required to simulate Solana transactions with spending limits");
         }
@@ -298,8 +294,8 @@ export class PhantomClient {
             encodedTransaction,
             this.config.organizationId,
             walletId,
-            submissionConfig,  // Non-null assertion safe because we validated above
-            params.account,     // Non-null assertion safe because we validated above
+            submissionConfig, // Non-null assertion safe because we validated above
+            params.account, // Non-null assertion safe because we validated above
           );
 
           augmentedTransaction = augmentResponse.transaction;
