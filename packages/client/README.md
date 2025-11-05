@@ -86,7 +86,6 @@ await client.signAndSendTransaction({
 #### Organization Management
 
 - `getOrganization(organizationId)` - Get organization details by ID
-- `getOrCreateOrganization(tag, publicKey)` - Get an existing organization or create a new one if it doesn't exist
 - `createOrganization(name, users)` - Create a new organization with custom users
 - `getWalletWithTag(params)` - Get a wallet by tag from an organization
 - `grantOrganizationAccess(params)` - Grant access permissions to an organization

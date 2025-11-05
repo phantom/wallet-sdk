@@ -8,9 +8,10 @@ import {
   GetAccountsMethodEnum,
   GrantOrganizationAccessMethodEnum,
   KMSRPCApi,
-  KmsUserRole,
   SignRawPayloadMethodEnum,
   SignTransactionMethodEnum,
+  type UserPolicy,
+  UserPolicyOneOfTypeEnum,
   type DerivationInfoAddressFormatEnum as AddressType,
   type AddUserToOrganization,
   type AddUserToOrganizationRequest,
@@ -569,33 +570,6 @@ export class PhantomClient {
     }
   }
 
-  async getOrCreateOrganization(tag: string, publicKey: string): Promise<ExternalKmsOrganization> {
-    try {
-      const timestamp = await getSecureTimestamp();
-
-      // First, try to get the organization
-      // Since there's no explicit getOrganization method, we'll create it
-      // This assumes the API returns existing org if it already exists
-      return await this.createOrganization(tag, [
-        {
-          username: `user-${timestamp}`,
-          role: KmsUserRole.admin,
-          authenticators: [
-            {
-              authenticatorName: `auth-${timestamp}`,
-              authenticatorKind: "keypair",
-              publicKey: publicKey,
-              algorithm: "Ed25519",
-            },
-          ],
-        },
-      ]);
-    } catch (error: any) {
-      console.error("Failed to get or create organization:", error.response?.data || error.message);
-      throw new Error(`Failed to get or create organization: ${error.response?.data?.message || error.message}`);
-    }
-  }
-
   /**
    * Create a new organization with the specified name and users
    * @param name Organization name
@@ -637,9 +611,13 @@ export class PhantomClient {
       const params: CreateOrganizationRequest = {
         organizationName: name,
         users: users.map(userConfig => ({
-          role: userConfig.role === "ADMIN" ? KmsUserRole.admin : KmsUserRole.user,
-          username: userConfig.username || `user-${randomUUID()}}`,
+          username: userConfig.username || `user-${randomUUID()}`,
           authenticators: userConfig.authenticators as any,
+          policy: userConfig.role === "ADMIN" ? {
+            type: UserPolicyOneOfTypeEnum.root,
+          } :
+            { type: "CEL", preset: "LEGACY_USER_ROLE" } as UserPolicy
+
         })),
         tags,
       };
