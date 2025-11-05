@@ -1,5 +1,18 @@
 # @phantom/server-sdk
 
+## 1.0.0-beta.21
+
+### Patch Changes
+
+- 68492cf: Fix dependency to correct number and add policy
+- Updated dependencies [68492cf]
+  - @phantom/client@1.0.0-beta.21
+  - @phantom/base64url@1.0.0-beta.9
+  - @phantom/constants@1.0.0-beta.9
+  - @phantom/parsers@1.0.0-beta.9
+  - @phantom/api-key-stamper@1.0.0-beta.9
+  - @phantom/utils@1.0.0-beta.21
+
 ## 1.0.0-beta.20
 
 ### Patch Changes
