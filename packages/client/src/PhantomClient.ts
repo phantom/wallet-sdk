@@ -10,6 +10,7 @@ import {
   KMSRPCApi,
   SignRawPayloadMethodEnum,
   SignTransactionMethodEnum,
+  type UserPolicy,
   UserPolicyOneOfTypeEnum,
   type DerivationInfoAddressFormatEnum as AddressType,
   type AddUserToOrganization,
@@ -610,10 +611,13 @@ export class PhantomClient {
       const params: CreateOrganizationRequest = {
         organizationName: name,
         users: users.map(userConfig => ({
-          role: userConfig.role === "ADMIN" ? "ADMIN" : "USER",
           username: userConfig.username || `user-${randomUUID()}}`,
           authenticators: userConfig.authenticators as any,
-          policy: { type: UserPolicyOneOfTypeEnum.root }
+          policy: userConfig.role === "ADMIN" ? {
+            type: UserPolicyOneOfTypeEnum.root,
+          } :
+            { type: "CEL", preset: "LEGACY_USER_ROLE" } as UserPolicy
+
         })),
         tags,
       };
