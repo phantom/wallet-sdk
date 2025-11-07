@@ -107,7 +107,7 @@ export class ProviderManager implements EventEmitter {
   async connect(authOptions: AuthOptions): Promise<ConnectResult> {
     debug.info(DebugCategory.PROVIDER_MANAGER, "Starting connection", {
       currentProviderKey: this.currentProviderKey,
-      authOptions: { provider: authOptions.provider, hasJwtToken: !!authOptions.jwtToken },
+      authOptions: { provider: authOptions.provider },
     });
 
     // Auto-switch provider based on auth options
@@ -118,7 +118,7 @@ export class ProviderManager implements EventEmitter {
 
     if (requestedProvider === "injected") {
       targetProviderType = "injected";
-    } else if (["google", "apple", "jwt", "phantom"].includes(requestedProvider)) {
+    } else if (["google", "apple", "phantom", "tiktok", "x"].includes(requestedProvider)) {
       targetProviderType = "embedded";
     }
 

@@ -237,7 +237,7 @@ describe("EmbeddedProvider Core", () => {
         organizationId: "org-123",
         appId: "app-123",
         stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
-        authProvider: "jwt",
+        authProvider: "google",
         userInfo: {},
         status: "completed" as const,
         createdAt: Date.now(),
@@ -322,60 +322,16 @@ describe("EmbeddedProvider Core", () => {
       expect(mockPlatform.stamper.resetKeyPair).toHaveBeenCalled();
     });
 
-    it("should use platform storage for session persistence during JWT auth", async () => {
-      mockPlatform.storage.getSession.mockResolvedValue(null);
-      mockPlatform.authProvider.resumeAuthFromRedirect.mockReturnValue(null);
-
-      const authOptions = {
-        provider: "jwt" as const,
-        jwtToken: "test-jwt-token",
-      };
-
-      // Mock JWT auth and organization creation
-      const mockJwtAuth = {
-        authenticate: jest.fn().mockResolvedValue({
-          walletId: "wallet-123",
-          provider: "jwt",
-          userInfo: { id: "user123" },
-        }),
-      };
-      provider["jwtAuth"] = mockJwtAuth;
-
-      try {
-        await provider.connect(authOptions);
-      } catch (error) {
-        // May fail on client initialization, but session should be saved
-      }
-
-      expect(mockPlatform.storage.saveSession).toHaveBeenCalledWith(
-        expect.objectContaining({
-          walletId: "wallet-123",
-          authProvider: "jwt",
-          status: "completed",
-        }),
-      );
-    });
   });
 
   describe("Auth Flow Validation", () => {
-    it("should validate JWT auth options correctly", async () => {
-      const invalidAuthOptions = {
-        provider: "jwt" as const,
-        // Missing jwtToken
-      };
-
-      await expect(provider.connect(invalidAuthOptions)).rejects.toThrow(
-        "JWT token is required when using JWT authentication",
-      );
-    });
-
     it("should validate invalid auth provider", async () => {
       const invalidAuthOptions = {
         provider: "invalid-provider" as any,
       };
 
       await expect(provider.connect(invalidAuthOptions)).rejects.toThrow(
-        'Invalid auth provider: invalid-provider. Must be "google", "apple", "jwt", or "phantom"',
+        'Invalid auth provider: invalid-provider. Must be "google", "apple", "phantom", "tiktok", or "x"',
       );
     });
   });

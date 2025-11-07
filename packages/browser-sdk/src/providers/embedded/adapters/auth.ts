@@ -1,8 +1,8 @@
 import type {
   AuthProvider,
   AuthResult,
+  EmbeddedProviderAuthType,
   PhantomConnectOptions,
-  JWTAuthOptions,
   URLParamsAccessor,
 } from "@phantom/embedded-provider-core";
 import { debug, DebugCategory } from "../../../debug";
@@ -26,7 +26,7 @@ export class BrowserAuthProvider implements AuthProvider {
     return currentUrl;
   }
 
-  authenticate(options: PhantomConnectOptions | JWTAuthOptions): Promise<void | AuthResult> {
+  authenticate(options: PhantomConnectOptions): Promise<void | AuthResult> {
     return new Promise<void>(resolve => {
       // Check if this is JWT auth
       if ("jwtToken" in options) {
@@ -99,7 +99,7 @@ export class BrowserAuthProvider implements AuthProvider {
     });
   }
 
-  resumeAuthFromRedirect(): AuthResult | null {
+  resumeAuthFromRedirect(provider: EmbeddedProviderAuthType): AuthResult | null {
     try {
       const walletId = this.urlParamsAccessor.getParam("wallet_id");
       const sessionId = this.urlParamsAccessor.getParam("session_id");
@@ -194,6 +194,7 @@ export class BrowserAuthProvider implements AuthProvider {
         accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : 0,
         expiresInMs: expiresInMs ? parseInt(expiresInMs) : 0,
         authUserId: authUserId || undefined,
+        provider: provider,
       };
     } catch (error) {
       // Clean up session storage on any error
