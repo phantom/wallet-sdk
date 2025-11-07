@@ -1,5 +1,19 @@
 # @phantom/browser-sdk
 
+## 1.0.0-beta.21
+
+### Patch Changes
+
+- 68492cf: Fix dependency to correct number and add policy
+- Updated dependencies [68492cf]
+  - @phantom/sdk-types@1.0.0-beta.9
+  - @phantom/client@1.0.0-beta.21
+  - @phantom/embedded-provider-core@1.0.0-beta.21
+  - @phantom/base64url@1.0.0-beta.9
+  - @phantom/constants@1.0.0-beta.9
+  - @phantom/chain-interfaces@1.0.0-beta.9
+  - @phantom/parsers@1.0.0-beta.9
+
 ## 1.0.0-beta.20
 
 ### Patch Changes
