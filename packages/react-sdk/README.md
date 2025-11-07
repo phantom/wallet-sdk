@@ -507,11 +507,26 @@ function EthereumOperations() {
 - `signTypedData(typedData)` - Sign EIP-712 typed data
 - `signTransaction(transaction)` - Sign transaction without sending
 - `sendTransaction(transaction)` - Sign and send transaction
-- `switchChain(chainId)` - Switch chains
+- `switchChain(chainId)` - Switch chains (accepts chain ID as number or a hex string)
 - `getChainId()` - Get current chain ID
 - `getAccounts()` - Get connected accounts
 - `isConnected` - Connection status
 - `isAvailable` - Provider availability
+
+**Supported EVM Networks:**
+
+| Network | Chain ID | Usage |
+|---------|----------|-------|
+| Ethereum Mainnet | `1` | `ethereum.switchChain(1)` |
+| Ethereum Sepolia | `11155111` | `ethereum.switchChain(11155111)` |
+| Polygon Mainnet | `137` | `ethereum.switchChain(137)` |
+| Polygon Amoy | `80002` | `ethereum.switchChain(80002)` |
+| Base Mainnet | `8453` | `ethereum.switchChain(8453)` |
+| Base Sepolia | `84532` | `ethereum.switchChain(84532)` |
+| Arbitrum One | `42161` | `ethereum.switchChain(42161)` |
+| Arbitrum Sepolia | `421614` | `ethereum.switchChain(421614)` |
+| Monad Mainnet | `143` | `ethereum.switchChain(143)` |
+| Monad Testnet | `10143` | `ethereum.switchChain(10143)` |
 
 ### Auto-Confirm Hook (Injected Provider Only)
 
