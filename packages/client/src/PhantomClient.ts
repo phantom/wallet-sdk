@@ -220,7 +220,7 @@ export class PhantomClient {
         submissionConfig,
         simulationConfig: { account },
       };
-      const response = await this.axiosInstance.post(`${this.config.apiBaseUrl}/prepare/spending-limit`, request, {
+      const response = await this.axiosInstance.post(`${this.config.apiBaseUrl}/prepare`, request, {
         headers: {
           "Content-Type": "application/json",
         },

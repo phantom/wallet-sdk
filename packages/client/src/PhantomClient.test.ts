@@ -370,7 +370,7 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       expect(result.transaction).toBe("augmented-tx");
       expect(mockAxiosPost).toHaveBeenCalledWith(
-        "https://api.phantom.app/prepare/spending-limit",
+        "https://api.phantom.app/prepare",
         {
           transaction: { solana: "original-tx-base64" },
           organizationId: "org-123",
@@ -516,7 +516,13 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       await expect(
         performSigning(
-          { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET, account: "UserAccount123", walletType: "user-wallet" },
+          {
+            walletId: "wallet-123",
+            transaction: "tx",
+            networkId: NetworkId.SOLANA_MAINNET,
+            account: "UserAccount123",
+            walletType: "user-wallet",
+          },
           true,
         ),
       ).rejects.toThrow("Failed to apply spending limits for this transaction");
@@ -533,7 +539,13 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       const performSigning = client["performTransactionSigning"].bind(client);
       const result = await performSigning(
-        { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET, account: "UserAccount123", walletType: "user-wallet" },
+        {
+          walletId: "wallet-123",
+          transaction: "tx",
+          networkId: NetworkId.SOLANA_MAINNET,
+          account: "UserAccount123",
+          walletType: "user-wallet",
+        },
         true,
       );
 
@@ -547,7 +559,13 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       const performSigning = client["performTransactionSigning"].bind(client);
       const result = await performSigning(
-        { walletId: "wallet-123", transaction: "0x1234", networkId: NetworkId.ETHEREUM_MAINNET, account: "0xUser", walletType: "user-wallet" },
+        {
+          walletId: "wallet-123",
+          transaction: "0x1234",
+          networkId: NetworkId.ETHEREUM_MAINNET,
+          account: "0xUser",
+          walletType: "user-wallet",
+        },
         true,
       );
 
@@ -567,7 +585,13 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       const performSigning = client["performTransactionSigning"].bind(client);
       const result = await performSigning(
-        { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET, account: "UserAccount123", walletType: "user-wallet" },
+        {
+          walletId: "wallet-123",
+          transaction: "tx",
+          networkId: NetworkId.SOLANA_MAINNET,
+          account: "UserAccount123",
+          walletType: "user-wallet",
+        },
         false,
       );
 
@@ -624,7 +648,13 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       const performSigning = client["performTransactionSigning"].bind(client);
       await performSigning(
-        { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET, account: "UserAccount123", walletType: "user-wallet" },
+        {
+          walletId: "wallet-123",
+          transaction: "tx",
+          networkId: NetworkId.SOLANA_MAINNET,
+          account: "UserAccount123",
+          walletType: "user-wallet",
+        },
         true,
       );
 
@@ -654,7 +684,13 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       const performSigning = client["performTransactionSigning"].bind(client);
       await performSigning(
-        { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET, account: "UserAccount123", walletType: "user-wallet" },
+        {
+          walletId: "wallet-123",
+          transaction: "tx",
+          networkId: NetworkId.SOLANA_MAINNET,
+          account: "UserAccount123",
+          walletType: "user-wallet",
+        },
         true,
       );
 
@@ -691,7 +727,7 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       expect(result.transaction).toBe("augmented-tx");
       expect(mockAxiosPost).toHaveBeenCalledWith(
-        "https://api.phantom.app/prepare/spending-limit",
+        "https://api.phantom.app/prepare",
         expect.objectContaining({
           transaction: { solana: "solana-tx-base64" },
           organizationId: "org-123",
@@ -720,7 +756,7 @@ describe("PhantomClient Spending Limits Integration", () => {
       await augmentMethod("tx-base64", "org-123", "wallet-123", submissionConfig, "UserAccount123");
 
       expect(mockAxiosPost).toHaveBeenCalledWith(
-        "https://api.phantom.app/prepare/spending-limit",
+        "https://api.phantom.app/prepare",
         {
           transaction: { solana: "tx-base64" },
           organizationId: "org-123",
