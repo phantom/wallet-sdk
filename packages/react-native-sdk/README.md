@@ -209,7 +209,6 @@ interface PhantomSDKConfig {
     authUrl?: string; // Custom auth URL (optional)
     redirectUrl?: string; // Custom redirect URL (optional)
   };
-  autoConnect?: boolean; // Auto-connect to existing session on SDK instantiation (optional, defaults to true)
 }
 ```
 
