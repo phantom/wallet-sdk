@@ -8,7 +8,12 @@ export { PhantomProvider, type PhantomUIProviderProps } from "./PhantomProvider"
 export { useTheme } from "./hooks/useTheme";
 
 // UI Components
-export { Button, LoginWithPhantomButton, type ButtonProps, type LoginWithPhantomButtonProps } from "./components/Button";
+export {
+  Button,
+  LoginWithPhantomButton,
+  type ButtonProps,
+  type LoginWithPhantomButtonProps,
+} from "./components/Button";
 
 // Enhanced Hooks with UI integration
 export * from "./hooks";
