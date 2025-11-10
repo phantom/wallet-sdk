@@ -38,8 +38,6 @@ export function Modal({
 }: ModalProps) {
   if (!isVisible) return null;
 
-  
-
   // Styles
   const overlayStyle: CSSProperties = {
     position: "fixed",
@@ -110,7 +108,6 @@ export function Modal({
         objectFit: "cover" as const,
       }
     : {};
-
 
   const buttonContainerStyle: CSSProperties = {
     display: "flex",

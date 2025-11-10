@@ -179,21 +179,21 @@ const customTheme = {
 
 <PhantomProvider config={config} theme={customTheme}>
   <App />
-</PhantomProvider>
+</PhantomProvider>;
 ```
 
 ### Theme Properties
 
-| Property       | Type     | Description                                |
-| -------------- | -------- | ------------------------------------------ |
-| `background`   | `string` | Background color for modal                 |
-| `text`         | `string` | Primary text color                         |
+| Property       | Type     | Description                                               |
+| -------------- | -------- | --------------------------------------------------------- |
+| `background`   | `string` | Background color for modal                                |
+| `text`         | `string` | Primary text color                                        |
 | `secondary`    | `string` | Secondary color for text, borders, dividers (must be hex) |
-| `brand`        | `string` | Brand/primary action color                 |
-| `error`        | `string` | Error state color                          |
-| `success`      | `string` | Success state color                        |
-| `borderRadius` | `string` | Border radius for buttons and modal        |
-| `overlay`      | `string` | Overlay background color (with opacity)    |
+| `brand`        | `string` | Brand/primary action color                                |
+| `error`        | `string` | Error state color                                         |
+| `success`      | `string` | Success state color                                       |
+| `borderRadius` | `string` | Border radius for buttons and modal                       |
+| `overlay`      | `string` | Overlay background color (with opacity)                   |
 
 **Note:** The `secondary` color must be a hex color value (e.g., `#98979C`) as it's used to derive auxiliary colors with opacity.
 

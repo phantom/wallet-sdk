@@ -64,14 +64,13 @@ export const lightTheme: PhantomTheme = {
   brand: loginWithPhantomColor,
 };
 
-
 /**
  * Merge custom theme with base theme
  */
 export function mergeTheme(customTheme?: Partial<PhantomTheme>): PhantomThemeWithAux {
   const secondary = customTheme?.secondary || darkTheme.secondary;
   const isHex = secondary.startsWith("#");
-  
+
   if (!isHex) {
     throw new Error("Secondary color must be a hex color to derive auxiliary color.");
   }

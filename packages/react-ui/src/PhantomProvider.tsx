@@ -41,12 +41,7 @@ interface PhantomUIContextValue {
 const PhantomUIContext = createContext<PhantomUIContextValue | null>(null);
 
 // Internal UI Provider that consumes react-sdk context
-function PhantomUIProvider({
-  children,
-  theme = darkTheme,
-  appIcon,
-  appName,
-}: Omit<PhantomUIProviderProps, "config">) {
+function PhantomUIProvider({ children, theme = darkTheme, appIcon, appName }: Omit<PhantomUIProviderProps, "config">) {
   const baseConnect = useBaseConnect();
   const { sdk, isPhantomAvailable: _isPhantomAvailable } = usePhantom();
   const isExtensionInstalled = useIsExtensionInstalled();
@@ -225,13 +220,7 @@ function PhantomUIProvider({
 }
 
 // Main exported Provider that wraps both react-sdk and react-ui providers
-export function PhantomProvider({
-  children,
-  theme = darkTheme,
-  config,
-  appIcon,
-  appName,
-}: PhantomUIProviderProps) {
+export function PhantomProvider({ children, theme = darkTheme, config, appIcon, appName }: PhantomUIProviderProps) {
   return (
     <BasePhantomProvider config={config}>
       <PhantomUIProvider theme={theme} appIcon={appIcon} appName={appName}>
