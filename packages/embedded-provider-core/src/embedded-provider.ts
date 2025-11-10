@@ -286,12 +286,10 @@ export class EmbeddedProvider {
    * Returns ConnectResult if connection succeeds, null if should continue with new auth flow.
    */
   private async tryExistingConnection(isAutoConnect: boolean): Promise<ConnectResult | null> {
-    // Get and validate existing session
     this.logger.log("EMBEDDED_PROVIDER", "Getting existing session");
     let session = await this.storage.getSession();
     session = await this.validateAndCleanSession(session);
 
-    // If there is no session we return null
     if (!session) {
       this.logger.log("EMBEDDED_PROVIDER", "No existing session found");
       return null;
@@ -307,7 +305,6 @@ export class EmbeddedProvider {
 
       await this.initializeClientFromSession(session);
 
-      // Update session timestamp
       session.lastUsed = Date.now();
       await this.storage.saveSession(session);
 
@@ -328,7 +325,6 @@ export class EmbeddedProvider {
         authProvider: session.authProvider,
       };
 
-      // Emit connect event for existing session success
       this.emit("connect", {
         ...result,
         source: "existing-session",
@@ -366,7 +362,7 @@ export class EmbeddedProvider {
 
             // Clear any potentially stale session data and continue to fresh auth flow
             await this.storage.clearSession();
-            return null; // Let connect() method start a fresh auth flow
+            return null; 
           }
 
           // Re-throw error if no authOptions (should fail) or if different error type
@@ -375,7 +371,6 @@ export class EmbeddedProvider {
       }
     }
 
-    // No existing connection available
     return null;
   }
 
@@ -399,7 +394,6 @@ export class EmbeddedProvider {
       return false;
     }
 
-    // Check required fields
     if (!session.walletId || !session.organizationId || !session.stamperInfo) {
       this.logger.log("EMBEDDED_PROVIDER", "Session missing required fields", {
         hasWalletId: !!session.walletId,
@@ -409,13 +403,11 @@ export class EmbeddedProvider {
       return false;
     }
 
-    // Check session status
     if (session.status !== "completed") {
       this.logger.log("EMBEDDED_PROVIDER", "Session not completed", { status: session.status });
       return false;
     }
 
-    // Sessions without authenticator timing are invalid
     if (!session.authenticatorExpiresAt) {
       this.logger.log("EMBEDDED_PROVIDER", "Session invalid - missing authenticator timing", {
         sessionId: session.sessionId,
@@ -423,7 +415,6 @@ export class EmbeddedProvider {
       return false;
     }
 
-    // Check authenticator expiration - if expired, session is invalid
     if (Date.now() >= session.authenticatorExpiresAt) {
       this.logger.log("EMBEDDED_PROVIDER", "Authenticator expired, session invalid", {
         authenticatorExpiresAt: new Date(session.authenticatorExpiresAt).toISOString(),
@@ -449,14 +440,11 @@ export class EmbeddedProvider {
     try {
       this.logger.log("EMBEDDED_PROVIDER", "Starting auto-connect attempt");
 
-      // Emit connect_start event for auto-connect
       this.emit("connect_start", { source: "auto-connect" });
 
-      // Try to use existing connection (redirect resume or completed session)
       const result = await this.tryExistingConnection(true);
 
       if (result) {
-        // Successfully connected using existing session or redirect
         this.logger.info("EMBEDDED_PROVIDER", "Auto-connect successful", {
           walletId: result.walletId,
           addressCount: result.addresses.length,
@@ -469,10 +457,8 @@ export class EmbeddedProvider {
         return;
       }
 
-      // No existing connection available - auto-connect should fail silently
       this.logger.log("EMBEDDED_PROVIDER", "Auto-connect failed: no valid session found");
 
-      // Emit connect_error to reset isConnecting state
       this.emit("connect_error", {
         error: "No valid session found",
         source: "auto-connect",
@@ -482,7 +468,6 @@ export class EmbeddedProvider {
         error: error instanceof Error ? error.message : String(error),
       });
 
-      // Emit connect_error to reset isConnecting state
       this.emit("connect_error", {
         error: error instanceof Error ? error.message : "Auto-connect failed",
         source: "auto-connect",
@@ -496,7 +481,6 @@ export class EmbeddedProvider {
    */
 
   private async initializeStamper(): Promise<StamperResponse> {
-    // Initialize stamper first
     this.logger.log("EMBEDDED_PROVIDER", "Initializing stamper");
     await this.stamper.init();
 

@@ -412,37 +412,23 @@ describe("EmbeddedProvider Auth Flows", () => {
         accountDerivationIndex: 5,
       };
 
-      // Create a pending session for the redirect resume
       const pendingSession = createPendingSession({ authProvider: "google" });
 
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
-      // Mock URL params to have session_id so validateAndCleanSession doesn't clear the pending session
+
       mockURLParamsAccessor.getParam.mockReturnValue(pendingSession.sessionId);
 
-      // getSession is called multiple times:
-      // 1. In tryExistingConnection (line 291)
-      // 2. In validateAndCleanSession (not a separate call, uses the one from tryExistingConnection)
-      // 3. In completeAuthConnection (line 1222) - returns null here to simulate wiped session
-      // 4. In ensureValidAuthenticator (would be called but completeAuthConnection throws before that)
       mockStorage.getSession
         .mockResolvedValueOnce(pendingSession)  // tryExistingConnection
         .mockResolvedValueOnce(null)  // completeAuthConnection - session was wiped
         .mockResolvedValue(null);  // any subsequent calls
 
-      // Setup fresh auth flow to succeed after fallback
       mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
 
-      // Should NOT throw an error, instead it should fall back to fresh auth
       await provider.connect({ provider: "google" });
 
-      // Should have attempted to resume auth from redirect
       expect(mockAuthProvider.resumeAuthFromRedirect).toHaveBeenCalledWith("google");
-
-      // Should have cleared session after the redirect resume failure
       expect(mockStorage.clearSession).toHaveBeenCalled();
-
-      // Should fall back to fresh auth flow when redirect resume fails
-      // For user wallets, we don't create organization anymore - auth returns organizationId
       expect(mockClient.createOrganization).not.toHaveBeenCalled();
       expect(mockAuthProvider.authenticate).toHaveBeenCalled();
     });
@@ -450,13 +436,11 @@ describe("EmbeddedProvider Auth Flows", () => {
    
 
     it("should fall back to fresh authentication when session is missing from database but URL has session_id", async () => {
-      // Create a pending session for the redirect resume
       const pendingSession = createPendingSession({ authProvider: "google", sessionId: "wiped-session-123" });
 
       // Setup: URL contains session_id parameter (session was wiped from DB)
       mockURLParamsAccessor.getParam.mockReturnValue("wiped-session-123");
 
-      // Setup: resumeAuthFromRedirect returns auth result (detects parameters)
       const authResult: AuthResult = {
         walletId: "wallet-from-url-123",
         provider: "google",
@@ -465,14 +449,11 @@ describe("EmbeddedProvider Auth Flows", () => {
 
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
 
-      // Setup: First call returns pending session, second call returns null (session was wiped from database)
-      // This affects both tryExistingConnection AND completeAuthConnection
       mockStorage.getSession
         .mockResolvedValueOnce(pendingSession)  // tryExistingConnection
         .mockResolvedValueOnce(null)  // completeAuthConnection - session was wiped
         .mockResolvedValue(null);  // any subsequent calls
 
-      // Setup: Fresh auth flow should succeed after fallback
       mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
 
       // This should NOT throw an error, instead it should fall back to fresh auth
@@ -480,14 +461,10 @@ describe("EmbeddedProvider Auth Flows", () => {
       // Then connect() should proceed with fresh auth flow
       await provider.connect({ provider: "google" });
 
-      // Should have attempted to resume auth from redirect
       expect(mockAuthProvider.resumeAuthFromRedirect).toHaveBeenCalledWith("google");
 
-      // Should have cleared session after the redirect resume failure
       expect(mockStorage.clearSession).toHaveBeenCalled();
 
-      // Should fall back to fresh auth flow when redirect resume fails
-      // For user wallets, we don't create organization anymore - auth returns organizationId
       expect(mockClient.createOrganization).not.toHaveBeenCalled();
       expect(mockAuthProvider.authenticate).toHaveBeenCalledWith(
         expect.objectContaining({
