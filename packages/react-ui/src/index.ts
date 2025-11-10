@@ -2,7 +2,7 @@
 // Provides UI components and enhanced hooks for the Phantom Wallet SDK with modal-based interactions
 
 // Main Provider
-export {PhantomProvider, type PhantomUIProviderProps} from "./PhantomProvider";
+export { PhantomProvider, type PhantomUIProviderProps } from "./PhantomProvider";
 
 // Enhanced Hooks with UI integration
 export * from "./hooks";
@@ -22,7 +22,7 @@ export {
   type ConnectOptions,
   type ProviderType,
   AddressType,
-  type PhantomSDKConfig
+  type PhantomSDKConfig,
 } from "@phantom/react-sdk";
 
 // Re-export client types

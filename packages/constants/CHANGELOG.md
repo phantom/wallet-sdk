@@ -1,5 +1,13 @@
 # @phantom/constants
 
+## 1.0.0-beta.9
+
+## 1.0.0-beta.8
+
+### Patch Changes
+
+- d35daaa: Bump all dependencies
+
 ## 1.0.0-beta.7
 
 ## 1.0.0-beta.6

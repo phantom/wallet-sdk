@@ -28,7 +28,7 @@ export function WalletInterface() {
     <div className="space-y-4">
       {!isConnected ? (
         <button
-          onClick={() => connect()}
+          onClick={() => connect({ provider: "injected" })}
           className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
         >
           Connect Phantom Wallet
@@ -38,7 +38,7 @@ export function WalletInterface() {
           <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
             <p className="text-green-800 font-medium mb-2">✅ Wallet Connected</p>
             <div className="text-sm text-green-700">
-              {addresses.map((addr) => (
+              {addresses.map(addr => (
                 <div key={addr.addressType} className="font-mono break-all">
                   {addr.addressType}: {addr.address}
                 </div>
@@ -55,9 +55,7 @@ export function WalletInterface() {
 
           {signatureResult && (
             <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-blue-800 text-sm font-mono break-all">
-                {signatureResult}
-              </p>
+              <p className="text-blue-800 text-sm font-mono break-all">{signatureResult}</p>
             </div>
           )}
 

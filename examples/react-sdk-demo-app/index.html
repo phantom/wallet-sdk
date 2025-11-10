@@ -8,18 +8,18 @@
     <script>
       // Polyfill Buffer globally before any modules load
       window.global = window.global || window;
-      if (typeof window.Buffer === 'undefined') {
+      if (typeof window.Buffer === "undefined") {
         // Create a minimal Buffer polyfill until the real one loads
         window.Buffer = {
-          from: function(data, encoding) {
-            if (typeof data === 'string') {
+          from: function (data, encoding) {
+            if (typeof data === "string") {
               return new TextEncoder().encode(data);
             }
             return new Uint8Array(data);
           },
-          isBuffer: function(obj) {
+          isBuffer: function (obj) {
             return obj instanceof Uint8Array;
-          }
+          },
         };
       }
     </script>

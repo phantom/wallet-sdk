@@ -1,6 +1,6 @@
 import React, { type CSSProperties } from "react";
 import type { PhantomTheme } from "../themes";
-
+import type { AuthOptions } from "@phantom/browser-sdk";
 export interface ModalProps {
   isVisible: boolean;
   isConnecting: boolean;
@@ -14,7 +14,7 @@ export interface ModalProps {
   isPhantomLoginAvailable: boolean;
   onClose: () => void;
   onConnectWithDeeplink: () => void;
-  onConnectWithAuthProvider: (provider?: "google" | "apple" | "phantom") => void;
+  onConnectWithAuthProvider: (provider?: AuthOptions["provider"]) => void;
   onConnectWithInjected: () => void;
 }
 
@@ -251,10 +251,8 @@ export function Modal({
               </button>
             )}
 
-            {/* Primary auth options - Phantom, Google */}
             {!isMobile && (
               <>
-                {/* Login with Phantom (embedded provider using Phantom extension) */}
                 {isPhantomLoginAvailable && (
                   <button
                     style={buttonStyle}
@@ -274,39 +272,36 @@ export function Modal({
                       : "Login with Phantom"}
                   </button>
                 )}
-
-                {/* Continue with Google */}
-                <button
-                  style={buttonStyle}
-                  onClick={() => onConnectWithAuthProvider("google")}
-                  disabled={isConnecting}
-                  onMouseEnter={(e) => {
-                    if (!isConnecting) {
-                      e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.15);
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.10);
-                  }}
-                >
-                  {isConnecting && providerType === "embedded"
-                    ? "Connecting..."
-                    : "Continue with Google"}
-                </button>
               </>
             )}
 
-            {/* Extension option - divider and secondary button */}
+            <button
+              style={buttonStyle}
+              onClick={() => onConnectWithAuthProvider("google")}
+              disabled={isConnecting}
+              onMouseEnter={(e) => {
+                if (!isConnecting) {
+                  e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.15);
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.10);
+              }}
+            >
+              {isConnecting && providerType === "embedded"
+                ? "Connecting..."
+                : "Continue with Google"}
+            </button>
+
+
             {!isMobile && isExtensionInstalled && (
               <>
-                {/* Divider with "OR" text */}
                 <div style={dividerStyle}>
                   <div style={dividerLineStyle} />
                   <span style={dividerTextStyle}>OR</span>
                   <div style={dividerLineStyle} />
                 </div>
 
-                {/* Injected wallet button */}
                 <button
                   style={secondaryButtonStyle}
                   onClick={onConnectWithInjected}

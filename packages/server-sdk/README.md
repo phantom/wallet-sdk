@@ -126,7 +126,7 @@ console.log("Ethereum address:", ethereumAddress);
 The Server SDK provides two methods for handling transactions:
 
 1. **`signTransaction(params)`** - Signs a transaction without submitting it to the network
-   - Returns the signed transaction 
+   - Returns the signed transaction
    - No network interaction
    - Useful for offline signing or when you want to broadcast later
 
@@ -311,7 +311,7 @@ const customAddresses = await sdk.getWalletAddresses(
 
 ## Network Support
 
-The SDK supports multiple blockchain networks through the `NetworkId` enum:
+The Server SDK uses the `NetworkId` enum to identify blockchain networks for signing transactions and messages.
 
 ### Solana Networks
 
@@ -322,21 +322,75 @@ The SDK supports multiple blockchain networks through the `NetworkId` enum:
 ### Ethereum Networks
 
 - `NetworkId.ETHEREUM_MAINNET` - Ethereum Mainnet
-- `NetworkId.ETHEREUM_GOERLI` - Goerli Testnet
 - `NetworkId.ETHEREUM_SEPOLIA` - Sepolia Testnet
 
-### Other EVM Networks
+### Polygon Networks
 
-- `NetworkId.POLYGON_MAINNET` - Polygon Mainnet
-- `NetworkId.POLYGON_MUMBAI` - Mumbai Testnet
-- `NetworkId.OPTIMISM_MAINNET` - Optimism Mainnet
-- `NetworkId.ARBITRUM_ONE` - Arbitrum One
-- `NetworkId.BASE_MAINNET` - Base Mainnet
+- `NetworkId.POLYGON_MAINNET` - Polygon Mainnet (Chain ID: 137)
+- `NetworkId.POLYGON_AMOY` - Polygon Amoy Testnet (Chain ID: 80002)
+
+### Base Networks
+
+- `NetworkId.BASE_MAINNET` - Base Mainnet (Chain ID: 8453)
+- `NetworkId.BASE_SEPOLIA` - Base Sepolia Testnet (Chain ID: 84532)
+
+### Arbitrum Networks
+
+- `NetworkId.ARBITRUM_ONE` - Arbitrum One (Chain ID: 42161)
+- `NetworkId.ARBITRUM_SEPOLIA` - Arbitrum Sepolia Testnet (Chain ID: 421614)
+
+### Monad Networks
+
+- `NetworkId.MONAD_MAINNET` - Monad Mainnet (Chain ID: 143)
+- `NetworkId.MONAD_TESTNET` - Monad Testnet (Chain ID: 10143)
 
 ### Future Support
 
 - `NetworkId.BITCOIN_MAINNET` - Bitcoin Mainnet
+- `NetworkId.BITCOIN_TESTNET` - Bitcoin Testnet
 - `NetworkId.SUI_MAINNET` - Sui Mainnet
+- `NetworkId.SUI_TESTNET` - Sui Testnet
+- `NetworkId.SUI_DEVNET` - Sui Devnet
+
+### Usage Examples
+
+```typescript
+import { ServerSDK, NetworkId } from "@phantom/server-sdk";
+
+const sdk = new ServerSDK({
+  organizationId: process.env.ORGANIZATION_ID!,
+  appId: process.env.APP_ID!,
+  apiPrivateKey: process.env.PRIVATE_KEY!,
+});
+
+// Sign a message on Solana
+await sdk.signMessage({
+  walletId: wallet.walletId,
+  message: "Hello from Phantom!",
+  networkId: NetworkId.SOLANA_MAINNET,
+});
+
+// Sign a transaction on Ethereum
+await sdk.signAndSendTransaction({
+  walletId: wallet.walletId,
+  transaction: ethTransaction,
+  networkId: NetworkId.ETHEREUM_MAINNET,
+});
+
+// Sign on Polygon
+await sdk.signAndSendTransaction({
+  walletId: wallet.walletId,
+  transaction: polygonTransaction,
+  networkId: NetworkId.POLYGON_MAINNET,
+});
+
+// Sign on Base
+await sdk.signAndSendTransaction({
+  walletId: wallet.walletId,
+  transaction: baseTransaction,
+  networkId: NetworkId.BASE_MAINNET,
+});
+```
 
 ## API Reference
 

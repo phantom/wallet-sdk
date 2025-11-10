@@ -1,7 +1,14 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import { BrowserSDK } from "@phantom/browser-sdk";
-import type { BrowserSDKConfig, WalletAddress, AuthOptions, DebugConfig, ConnectEventData, ConnectResult } from "@phantom/browser-sdk";
+import type {
+  BrowserSDKConfig,
+  WalletAddress,
+  AuthOptions,
+  DebugConfig,
+  ConnectEventData,
+  ConnectResult,
+} from "@phantom/browser-sdk";
 
 export type PhantomSDKConfig = BrowserSDKConfig;
 
@@ -151,16 +158,14 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
         setIsPhantomAvailable(false);
       }
 
-      // Attempt auto-connect if enabled
-      if (memoizedConfig.autoConnect !== false) {
-        sdk.autoConnect().catch(() => {
-          // Silent fail - auto-connect is optional and shouldn't break the app
-        });
-      }
+      // Attempt auto-connect
+      sdk.autoConnect().catch(() => {
+        // Silent fail - auto-connect shouldn't break the app
+      });
     };
 
     initialize();
-  }, [sdk, memoizedConfig.autoConnect, isClient]);
+  }, [sdk, isClient]);
 
   // Memoize context value to prevent unnecessary re-renders
   const value: PhantomContextValue = useMemo(

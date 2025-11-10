@@ -21,11 +21,7 @@ export interface DebugConfig {
   callback?: DebugCallback;
 }
 
-export type BrowserSDKConfig = Prettify<
-  (ExtendedEmbeddedProviderConfig | ExtendedInjectedProviderConfig) & {
-    autoConnect?: boolean;
-  }
->;
+export type BrowserSDKConfig = Prettify<ExtendedEmbeddedProviderConfig | ExtendedInjectedProviderConfig>;
 
 // Improves display of a merged type on hover
 type Prettify<T> = {

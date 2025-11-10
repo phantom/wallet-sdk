@@ -49,13 +49,18 @@ export function createMockEthereumProvider(overrides?: Partial<MockEthereumProvi
   };
 }
 
-export function setupWindowMock(providers?: { solana?: MockSolanaProvider; ethereum?: MockEthereumProvider }) {
+export function setupWindowMock(providers?: {
+  solana?: MockSolanaProvider;
+  ethereum?: MockEthereumProvider;
+  app?: any;
+}) {
   // @ts-ignore
   global.window = global.window || {};
   // @ts-ignore
   global.window.phantom = {
     solana: providers?.solana,
     ethereum: providers?.ethereum,
+    app: providers?.app,
   };
 }
 

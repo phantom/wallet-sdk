@@ -201,7 +201,7 @@ interface PhantomSDKConfig {
   scheme: string; // Custom URL scheme for your app
   appId: string; // Your app ID from phantom.com/portal (required)
   addressTypes: [AddressType, ...AddressType[]]; // e.g., [AddressType.solana]
-  
+
   // Optional configuration
   embeddedWalletType?: "user-wallet"; // optional, defaults to "user-wallet", currently the only supported type
   apiBaseUrl?: string; // e.g., "https://api.phantom.app/v1/wallets" (optional, has default)
@@ -209,7 +209,6 @@ interface PhantomSDKConfig {
     authUrl?: string; // Custom auth URL (optional)
     redirectUrl?: string; // Custom redirect URL (optional)
   };
-  autoConnect?: boolean; // Auto-connect to existing session on SDK instantiation (optional, defaults to true)
 }
 ```
 
@@ -276,13 +275,43 @@ if (isAvailable) {
   // Sign a transaction (without sending)
   const signedTx = await ethereum.signTransaction(transactionData);
 
-  // Sign and send a transaction  
+  // Sign and send a transaction
   const result = await ethereum.sendTransaction(transactionData);
+
+  // Switch to a different chain
+  await ethereum.switchChain(137); // Switch to Polygon
+  await ethereum.switchChain("0x89"); // Also accepts hex strings
 
   // Get current chain ID
   const chainId = await ethereum.getChainId();
 }
 ```
+
+**Available Methods:**
+
+- `getAccounts()` - Get connected Ethereum accounts
+- `signPersonalMessage(message, address)` - Sign personal message
+- `signTypedData(typedData, address)` - Sign EIP-712 typed data
+- `signTransaction(transaction)` - Sign transaction without sending
+- `sendTransaction(transaction)` - Sign and send transaction
+- `switchChain(chainId)` - Switch chains (accepts chain ID as number or hex string)
+- `getChainId()` - Get current chain ID
+- `isConnected()` - Check connection status
+
+**Supported EVM Networks:**
+
+| Network          | Chain ID   | Usage                            |
+| ---------------- | ---------- | -------------------------------- |
+| Ethereum Mainnet | `1`        | `ethereum.switchChain(1)`        |
+| Ethereum Sepolia | `11155111` | `ethereum.switchChain(11155111)` |
+| Polygon Mainnet  | `137`      | `ethereum.switchChain(137)`      |
+| Polygon Amoy     | `80002`    | `ethereum.switchChain(80002)`    |
+| Base Mainnet     | `8453`     | `ethereum.switchChain(8453)`     |
+| Base Sepolia     | `84532`    | `ethereum.switchChain(84532)`    |
+| Arbitrum One     | `42161`    | `ethereum.switchChain(42161)`    |
+| Arbitrum Sepolia | `421614`   | `ethereum.switchChain(421614)`   |
+| Monad Mainnet    | `143`      | `ethereum.switchChain(143)`      |
+| Monad Testnet    | `10143`    | `ethereum.switchChain(10143)`    |
 
 #### useDisconnect
 
@@ -472,4 +501,3 @@ interface PhantomDebugConfig {
   enabled?: boolean; // Enable debug logging (default: false)
 }
 ```
-

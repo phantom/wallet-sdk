@@ -1,4 +1,11 @@
-import { type BrowserSDKConfig, type Provider, type ConnectResult, type WalletAddress, type AuthOptions, AddressType } from "./types";
+import {
+  type BrowserSDKConfig,
+  type Provider,
+  type ConnectResult,
+  type WalletAddress,
+  type AuthOptions,
+  AddressType,
+} from "./types";
 import { InjectedProvider } from "./providers/injected";
 import { EmbeddedProvider } from "./providers/embedded";
 import { debug, DebugCategory } from "./debug";
@@ -32,7 +39,7 @@ export class ProviderManager implements EventEmitter {
   constructor(config: BrowserSDKConfig) {
     debug.log(DebugCategory.PROVIDER_MANAGER, "Initializing ProviderManager", { config });
     this.config = config;
-    
+
     // Initialize default provider based on config
     debug.log(DebugCategory.PROVIDER_MANAGER, "Setting default provider");
     this.setDefaultProvider();
@@ -45,10 +52,10 @@ export class ProviderManager implements EventEmitter {
   }
 
   private getValidatedCurrentUrl(): string {
-    if (typeof window === 'undefined') return '';
+    if (typeof window === "undefined") return "";
     const currentUrl = window.location.href;
-    if (!currentUrl.startsWith('http:') && !currentUrl.startsWith('https:')) {
-      throw new Error('Invalid URL protocol - only HTTP/HTTPS URLs are supported');
+    if (!currentUrl.startsWith("http:") && !currentUrl.startsWith("https:")) {
+      throw new Error("Invalid URL protocol - only HTTP/HTTPS URLs are supported");
     }
     return currentUrl;
   }
@@ -102,45 +109,45 @@ export class ProviderManager implements EventEmitter {
 
   /**
    * Connect using the current provider
-   * Automatically switches provider based on authOptions.provider if specified
+   * Automatically switches provider based on authOptions.provider
    */
-  async connect(authOptions?: AuthOptions): Promise<ConnectResult> {
+  async connect(authOptions: AuthOptions): Promise<ConnectResult> {
     debug.info(DebugCategory.PROVIDER_MANAGER, "Starting connection", {
       currentProviderKey: this.currentProviderKey,
-      authOptions: authOptions ? { provider: authOptions.provider, hasJwtToken: !!authOptions.jwtToken } : undefined,
+      authOptions: { provider: authOptions.provider, hasJwtToken: !!authOptions.jwtToken },
     });
 
     // Auto-switch provider based on auth options
-    if (authOptions?.provider) {
-      const requestedProvider = authOptions.provider;
+    const requestedProvider = authOptions.provider;
 
-      // Determine target provider type
-      let targetProviderType: "injected" | "embedded" | null = null;
+    // Determine target provider type
+    let targetProviderType: "injected" | "embedded" | null = null;
 
-      if (requestedProvider === "injected") {
-        targetProviderType = "injected";
-      } else if (["google", "apple", "jwt", "phantom"].includes(requestedProvider)) {
-        targetProviderType = "embedded";
-      }
+    if (requestedProvider === "injected") {
+      targetProviderType = "injected";
+    } else if (["google", "apple", "jwt", "phantom"].includes(requestedProvider)) {
+      targetProviderType = "embedded";
+    }
 
-      // Switch provider if needed
-      if (targetProviderType) {
-        const currentInfo = this.getCurrentProviderInfo();
-        if (currentInfo?.type !== targetProviderType) {
-          debug.log(DebugCategory.PROVIDER_MANAGER, "Auto-switching provider based on auth options", {
-            from: currentInfo?.type,
-            to: targetProviderType,
-            requestedProvider,
-          });
+    // Switch provider if needed
+    if (targetProviderType) {
+      const currentInfo = this.getCurrentProviderInfo();
+      if (currentInfo?.type !== targetProviderType) {
+        debug.log(DebugCategory.PROVIDER_MANAGER, "Auto-switching provider based on auth options", {
+          from: currentInfo?.type,
+          to: targetProviderType,
+          requestedProvider,
+        });
 
-          // Only pass embeddedWalletType when switching to embedded provider
-          const switchOptions: SwitchProviderOptions = {};
-          if (targetProviderType === "embedded") {
-            switchOptions.embeddedWalletType = currentInfo?.embeddedWalletType || (this.config.embeddedWalletType as "app-wallet" | "user-wallet" | undefined);
-          }
-
-          this.switchProvider(targetProviderType, switchOptions);
+        // Only pass embeddedWalletType when switching to embedded provider
+        const switchOptions: SwitchProviderOptions = {};
+        if (targetProviderType === "embedded") {
+          switchOptions.embeddedWalletType =
+            currentInfo?.embeddedWalletType ||
+            (this.config.embeddedWalletType as "app-wallet" | "user-wallet" | undefined);
         }
+
+        this.switchProvider(targetProviderType, switchOptions);
       }
     }
 
@@ -197,7 +204,6 @@ export class ProviderManager implements EventEmitter {
   isConnected(): boolean {
     return this.currentProvider?.isConnected() ?? false;
   }
-
 
   /**
    * Attempt auto-connect with fallback strategy
@@ -479,5 +485,4 @@ export class ProviderManager implements EventEmitter {
       console.error("Failed to save provider preference:", error);
     }
   }
-
 }

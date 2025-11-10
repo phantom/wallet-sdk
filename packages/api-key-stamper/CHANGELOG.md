@@ -1,5 +1,24 @@
 # @phantom/api-key-stamper
 
+## 1.0.0-beta.9
+
+### Patch Changes
+
+- Updated dependencies [68492cf]
+  - @phantom/sdk-types@1.0.0-beta.9
+  - @phantom/base64url@1.0.0-beta.9
+  - @phantom/crypto@1.0.0-beta.9
+
+## 1.0.0-beta.8
+
+### Patch Changes
+
+- d35daaa: Bump all dependencies
+- Updated dependencies [d35daaa]
+  - @phantom/base64url@1.0.0-beta.8
+  - @phantom/sdk-types@1.0.0-beta.8
+  - @phantom/crypto@1.0.0-beta.8
+
 ## 1.0.0-beta.7
 
 ### Patch Changes

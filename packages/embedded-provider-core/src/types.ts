@@ -42,7 +42,7 @@ export interface SignAndSendTransactionParams {
 export interface SignedTransaction extends ParsedTransactionResult {}
 
 export interface AuthOptions {
-  provider?: "google" | "apple" | "jwt" | "phantom" | "injected";
+  provider: "google" | "apple" | "jwt" | "phantom" | "injected";
   jwtToken?: string;
   customAuthData?: Record<string, any>;
 }
