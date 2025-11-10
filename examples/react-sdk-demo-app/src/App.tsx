@@ -32,18 +32,21 @@ function App() {
   }, []);
 
   // SDK configuration - embedded provider with autoConnect
-  const config: PhantomSDKConfig = useMemo(() => ({
-    providerType: "embedded",
-    addressTypes: [AddressType.solana, AddressType.ethereum, AddressType.bitcoinSegwit, AddressType.sui],
-    appId: import.meta.env.VITE_APP_ID || "your-app-id",
-    apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "https://api.phantom.app/v1/wallets",
-    embeddedWalletType: "user-wallet",
-    authOptions: {
-      authUrl: import.meta.env.VITE_AUTH_URL || "https://connect.phantom.app/login",
-      redirectUrl: import.meta.env.VITE_REDIRECT_URL,
-    },
-    autoConnect: true,
-  }), []);
+  const config: PhantomSDKConfig = useMemo(
+    () => ({
+      providerType: "embedded",
+      addressTypes: [AddressType.solana, AddressType.ethereum, AddressType.bitcoinSegwit, AddressType.sui],
+      appId: import.meta.env.VITE_APP_ID || "your-app-id",
+      apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "https://api.phantom.app/v1/wallets",
+      embeddedWalletType: "user-wallet",
+      authOptions: {
+        authUrl: import.meta.env.VITE_AUTH_URL || "https://connect.phantom.app/login",
+        redirectUrl: import.meta.env.VITE_REDIRECT_URL,
+      },
+      autoConnect: true,
+    }),
+    [],
+  );
 
   // Debug configuration - separate to avoid SDK reinstantiation
   const debugConfig: PhantomDebugConfig = useMemo(

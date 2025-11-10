@@ -35,17 +35,19 @@ interface PhantomAppLoginResult {
 
 interface PhantomApp {
   login(options: PhantomAppLoginOptions): Promise<PhantomAppLoginResult>;
-  features(): Promise<{features: string[]}>;
+  features(): Promise<{ features: string[] }>;
   getUser(): Promise<{ authUserId?: string } | undefined>;
 }
 
 declare global {
   interface Window {
-    phantom?: {
-      solana?: unknown;
-      ethereum?: unknown;
-      app?: PhantomApp;
-    } | undefined;
+    phantom?:
+      | {
+          solana?: unknown;
+          ethereum?: unknown;
+          app?: PhantomApp;
+        }
+      | undefined;
   }
 }
 
@@ -304,7 +306,6 @@ export class InjectedProvider implements Provider {
     debug.info(DebugCategory.INJECTED_PROVIDER, "Injected provider disconnected successfully");
   }
 
-  
   /**
    * Attempt auto-connection if user was previously connected
    * Only reconnects if the user connected before and didn't explicitly disconnect
@@ -358,7 +359,9 @@ export class InjectedProvider implements Provider {
             debug.info(DebugCategory.INJECTED_PROVIDER, "Solana auto-connected successfully", { address: publicKey });
           }
         } catch (err) {
-          debug.log(DebugCategory.INJECTED_PROVIDER, "Solana auto-connect failed (expected if not trusted)", { error: err });
+          debug.log(DebugCategory.INJECTED_PROVIDER, "Solana auto-connect failed (expected if not trusted)", {
+            error: err,
+          });
           throw err;
         }
       }
@@ -376,10 +379,14 @@ export class InjectedProvider implements Provider {
                 address,
               })),
             );
-            debug.info(DebugCategory.INJECTED_PROVIDER, "Ethereum auto-connected successfully", { addresses: accounts });
+            debug.info(DebugCategory.INJECTED_PROVIDER, "Ethereum auto-connected successfully", {
+              addresses: accounts,
+            });
           }
         } catch (err) {
-          debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum auto-connect failed (expected if not trusted)", { error: err });
+          debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum auto-connect failed (expected if not trusted)", {
+            error: err,
+          });
         }
       }
 
@@ -407,10 +414,12 @@ export class InjectedProvider implements Provider {
 
       debug.info(DebugCategory.INJECTED_PROVIDER, "Auto-connect successful", {
         addressCount: connectedAddresses.length,
-        addresses: connectedAddresses.map(addr => ({ type: addr.addressType, address: addr.address.substring(0, 8) + "..." })),
+        addresses: connectedAddresses.map(addr => ({
+          type: addr.addressType,
+          address: addr.address.substring(0, 8) + "...",
+        })),
         authUserId,
       });
-
     } catch (error) {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Auto-connect failed with error", {
         error: error instanceof Error ? error.message : String(error),
@@ -420,7 +429,6 @@ export class InjectedProvider implements Provider {
         error: error instanceof Error ? error.message : "Auto-connect failed",
         source: "auto-connect",
       });
-
     }
   }
 
@@ -463,14 +471,22 @@ export class InjectedProvider implements Provider {
         const userInfo = await window.phantom.app.getUser();
         const authUserId = userInfo?.authUserId;
         if (authUserId) {
-          debug.log(DebugCategory.INJECTED_PROVIDER, `Retrieved authUserId from window.phantom.app.getUser() during ${context}`, {
-            authUserId,
-          });
+          debug.log(
+            DebugCategory.INJECTED_PROVIDER,
+            `Retrieved authUserId from window.phantom.app.getUser() during ${context}`,
+            {
+              authUserId,
+            },
+          );
         }
         return authUserId;
       }
     } catch (error) {
-      debug.log(DebugCategory.INJECTED_PROVIDER, `Failed to get user info during ${context} (method may not be supported)`, { error });
+      debug.log(
+        DebugCategory.INJECTED_PROVIDER,
+        `Failed to get user info during ${context} (method may not be supported)`,
+        { error },
+      );
     }
     return undefined;
   }
@@ -646,9 +662,9 @@ export class InjectedProvider implements Provider {
           })),
         );
 
-          const authUserId = await this.getAuthUserId("Ethereum accounts changed event");
+        const authUserId = await this.getAuthUserId("Ethereum accounts changed event");
 
-          this.emit("connect", {
+        this.emit("connect", {
           addresses: this.addresses,
           source: "injected-extension-account-change",
           authUserId,

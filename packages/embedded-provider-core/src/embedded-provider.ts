@@ -654,10 +654,10 @@ export class EmbeddedProvider {
         error:
           error instanceof Error
             ? {
-              name: error.name,
-              message: error.message,
-              stack: error.stack,
-            }
+                name: error.name,
+                message: error.message,
+                stack: error.stack,
+              }
             : error,
       });
 
@@ -725,7 +725,7 @@ export class EmbeddedProvider {
       });
     }
   }
-  
+
   async signMessage(params: SignMessageParams): Promise<ParsedSignatureResult> {
     if (!this.client || !this.walletId) {
       throw new Error("Not connected");
@@ -1104,11 +1104,7 @@ export class EmbeddedProvider {
    * 4. Start a polling mechanism to check for auth completion
    * 5. Update the session when the mobile app completes the auth
    */
-  private async handlePhantomAuth(
-    publicKey: string,
-    stamperInfo: StamperInfo,
-    expiresInMs: number,
-  ): Promise<Session> {
+  private async handlePhantomAuth(publicKey: string, stamperInfo: StamperInfo, expiresInMs: number): Promise<Session> {
     this.logger.info("EMBEDDED_PROVIDER", "Starting Phantom authentication flow");
 
     // Check if Phantom app is available (extension or mobile)

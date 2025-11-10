@@ -22,7 +22,7 @@ jest.mock("@phantom/parsers", () => ({
   parseTransactionResponse: jest.fn().mockReturnValue({
     hash: "mock-transaction-hash",
     rawTransaction: "mock-raw-tx",
-    blockExplorer: "https://explorer.com/tx/mock-transaction-hash"
+    blockExplorer: "https://explorer.com/tx/mock-transaction-hash",
   }),
   parseSolanaTransactionSignature: jest.fn().mockReturnValue({ signature: "mock-signature", fallback: false }),
 }));
@@ -414,8 +414,6 @@ describe("EmbeddedProvider Auth Flows", () => {
       expect(mockClient.createOrganization).not.toHaveBeenCalled();
       expect(mockAuthProvider.authenticate).toHaveBeenCalled();
     });
-
-   
 
     it("should fall back to fresh authentication when session is missing from database but URL has session_id", async () => {
       // Setup: URL contains session_id parameter (session was wiped from DB)
@@ -865,7 +863,9 @@ describe("EmbeddedProvider Auth Flows", () => {
       mockStorage.getSession.mockResolvedValue(null);
       mockAuthProvider.authenticate.mockRejectedValue(new Error("IndexedDB access denied"));
 
-      await expect(provider.connect({ provider: "google" })).rejects.toThrow("Storage error: Unable to access browser storage. Please ensure storage is available and try again.");
+      await expect(provider.connect({ provider: "google" })).rejects.toThrow(
+        "Storage error: Unable to access browser storage. Please ensure storage is available and try again.",
+      );
     });
 
     it("should clean up state on authentication failures", async () => {

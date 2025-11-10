@@ -12,11 +12,13 @@ This is a simple Next.js application that demonstrates how to use the Phantom Re
 ## Getting Started
 
 1. Install dependencies:
+
 ```bash
 yarn install
 ```
 
 2. Run the development server:
+
 ```bash
 yarn dev
 ```
