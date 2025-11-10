@@ -10,9 +10,9 @@ describe("EmbeddedEthereumChain", () => {
     // Create a mock provider with all required methods
     mockProvider = {
       isConnected: jest.fn().mockReturnValue(true),
-      getAddresses: jest.fn().mockReturnValue([
-        { addressType: "Ethereum", address: "0x1234567890abcdef1234567890abcdef12345678" },
-      ]),
+      getAddresses: jest
+        .fn()
+        .mockReturnValue([{ addressType: "Ethereum", address: "0x1234567890abcdef1234567890abcdef12345678" }]),
       signAndSendTransaction: jest.fn().mockResolvedValue({
         hash: "0xabcdef1234567890",
         rawTransaction: "0xsignedtx",

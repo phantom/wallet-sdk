@@ -81,13 +81,17 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     return { signature: result.hash };
   }
 
-  async signAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<(Transaction | VersionedTransaction)[]> {
+  async signAllTransactions(
+    transactions: (Transaction | VersionedTransaction)[],
+  ): Promise<(Transaction | VersionedTransaction)[]> {
     this.ensureConnected();
     const results = await Promise.all(transactions.map(tx => this.signTransaction(tx)));
     return results;
   }
 
-  async signAndSendAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<{ signatures: string[] }> {
+  async signAndSendAllTransactions(
+    transactions: (Transaction | VersionedTransaction)[],
+  ): Promise<{ signatures: string[] }> {
     const results = await Promise.all(transactions.map(tx => this.signAndSendTransaction(tx)));
     return { signatures: results.map(result => result.signature) };
   }

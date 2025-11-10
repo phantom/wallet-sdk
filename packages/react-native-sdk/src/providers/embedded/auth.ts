@@ -16,8 +16,7 @@ export class ExpoAuthProvider implements AuthProvider {
 
     // Handle redirect-based authentication
     const phantomOptions = options as PhantomConnectOptions;
-    const { authUrl, redirectUrl, publicKey, sessionId, provider, appId } =
-      phantomOptions;
+    const { authUrl, redirectUrl, publicKey, sessionId, provider, appId } = phantomOptions;
 
     if (!redirectUrl) {
       throw new Error("redirectUrl is required for web browser authentication");
@@ -94,7 +93,6 @@ export class ExpoAuthProvider implements AuthProvider {
           console.error("[ExpoAuthProvider] Missing organizationId in redirect URL", { url: result.url });
           throw new Error("Authentication failed: no organizationId in redirect URL");
         }
-
 
         console.log("[ExpoAuthProvider] Auth redirect parameters", {
           walletId,

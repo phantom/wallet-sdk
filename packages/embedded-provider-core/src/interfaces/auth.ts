@@ -21,7 +21,6 @@ export interface PhantomConnectOptions {
   allowRefresh?: boolean; // Whether to allow OAuth session refresh (default: true)
 }
 
-
 export interface AuthProvider {
   authenticate(options: PhantomConnectOptions): Promise<void | AuthResult>;
   resumeAuthFromRedirect?(provider: EmbeddedProviderAuthType): AuthResult | null;

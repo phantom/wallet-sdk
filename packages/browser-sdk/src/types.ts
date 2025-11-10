@@ -21,11 +21,7 @@ export interface DebugConfig {
   callback?: DebugCallback;
 }
 
-export type BrowserSDKConfig = Prettify<
-  (ExtendedEmbeddedProviderConfig | ExtendedInjectedProviderConfig) & {
-    autoConnect?: boolean;
-  }
->;
+export type BrowserSDKConfig = Prettify<ExtendedEmbeddedProviderConfig | ExtendedInjectedProviderConfig>;
 
 // Improves display of a merged type on hover
 type Prettify<T> = {
@@ -56,11 +52,11 @@ interface ExtendedInjectedProviderConfig extends InjectedProviderConfig {
 type AuthOptions = {
   provider: EmbeddedProviderAuthType | "injected";
   customAuthData?: Record<string, any>;
-}
+};
 
 type ConnectResult = Omit<EmbeddedConnectResult, "authProvider"> & {
   authProvider?: EmbeddedProviderAuthType | "injected" | undefined;
-}
+};
 
 // Re-export types from core for convenience
 export type {

@@ -5,11 +5,7 @@ import { Buffer } from "buffer";
 import { Transaction as EthersTransaction, getAddress } from "ethers";
 
 // Re-export response parsers
-export {
-  parseSignMessageResponse,
-  parseTransactionResponse,
-  parseSolanaSignedTransaction,
-} from "./response-parsers";
+export { parseSignMessageResponse, parseTransactionResponse, parseSolanaSignedTransaction } from "./response-parsers";
 
 export interface ParsedTransaction {
   /** The parsed transaction string (base64url for Solana/Sui/Bitcoin, RLP-encoded hex for EVM) */
@@ -20,7 +16,6 @@ export interface ParsedTransaction {
 
 // Re-export interfaces from response-parsers
 export type { ParsedSignatureResult, ParsedTransactionResult } from "./response-parsers";
-
 
 /**
  * Parse a transaction to KMS format based on network type
@@ -182,12 +177,14 @@ function parseEVMTransactionToHex(transaction: any): ParsedTransaction {
       const txValues = transaction ? JSON.stringify(transaction, null, 2) : "N/A";
       throw new Error(
         `Failed to RLP encode EVM transaction: ${errorMessage}.\nTransaction keys: [${txKeys}].\nTransaction: ${txValues}\n` +
-        `Please ensure the transaction object includes required fields (to, value, chainId, gasLimit or gasPrice, etc.)`
+          `Please ensure the transaction object includes required fields (to, value, chainId, gasLimit or gasPrice, etc.)`,
       );
     }
   }
 
-  throw new Error("Unsupported EVM transaction format. Expected hex string, bytes, or transaction object with 'to', 'data', or 'from' fields.");
+  throw new Error(
+    "Unsupported EVM transaction format. Expected hex string, bytes, or transaction object with 'to', 'data', or 'from' fields.",
+  );
 }
 
 /**

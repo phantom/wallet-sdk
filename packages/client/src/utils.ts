@@ -1,1 +1,1 @@
-export { randomUUID } from '@phantom/utils';
+export { randomUUID } from "@phantom/utils";

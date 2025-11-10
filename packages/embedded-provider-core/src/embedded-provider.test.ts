@@ -321,7 +321,6 @@ describe("EmbeddedProvider Core", () => {
 
       expect(mockPlatform.stamper.resetKeyPair).toHaveBeenCalled();
     });
-
   });
 
   describe("Auth Flow Validation", () => {

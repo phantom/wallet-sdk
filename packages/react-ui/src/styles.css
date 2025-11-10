@@ -615,7 +615,7 @@
 
 .phantom-ui-divider::before,
 .phantom-ui-divider::after {
-  content: '';
+  content: "";
   flex: 1;
   border-bottom: 1px solid var(--border-light, #e5e5e5);
 }

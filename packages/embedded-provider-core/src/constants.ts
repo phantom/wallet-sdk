@@ -12,11 +12,4 @@ export const AUTHENTICATOR_EXPIRATION_TIME_MS = 7 * 24 * 60 * 60 * 1000; // 7 da
  */
 export const AUTHENTICATOR_RENEWAL_WINDOW_MS = 2 * 24 * 60 * 60 * 1000; // 2 days
 
-
-export const EMBEDDED_PROVIDER_AUTH_TYPES: EmbeddedProviderAuthType[] = [
-  "google",
-  "apple",
-  "x",
-  "phantom",
-  "tiktok",
-];
+export const EMBEDDED_PROVIDER_AUTH_TYPES: EmbeddedProviderAuthType[] = ["google", "apple", "x", "phantom", "tiktok"];

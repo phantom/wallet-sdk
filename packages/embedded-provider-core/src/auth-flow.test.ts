@@ -23,7 +23,7 @@ jest.mock("@phantom/parsers", () => ({
   parseTransactionResponse: jest.fn().mockReturnValue({
     hash: "mock-transaction-hash",
     rawTransaction: "mock-raw-tx",
-    blockExplorer: "https://explorer.com/tx/mock-transaction-hash"
+    blockExplorer: "https://explorer.com/tx/mock-transaction-hash",
   }),
   parseSolanaTransactionSignature: jest.fn().mockReturnValue({ signature: "mock-signature", fallback: false }),
 }));
@@ -419,9 +419,9 @@ describe("EmbeddedProvider Auth Flows", () => {
       mockURLParamsAccessor.getParam.mockReturnValue(pendingSession.sessionId);
 
       mockStorage.getSession
-        .mockResolvedValueOnce(pendingSession)  // tryExistingConnection
-        .mockResolvedValueOnce(null)  // completeAuthConnection - session was wiped
-        .mockResolvedValue(null);  // any subsequent calls
+        .mockResolvedValueOnce(pendingSession) // tryExistingConnection
+        .mockResolvedValueOnce(null) // completeAuthConnection - session was wiped
+        .mockResolvedValue(null); // any subsequent calls
 
       mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
 
@@ -432,8 +432,6 @@ describe("EmbeddedProvider Auth Flows", () => {
       expect(mockClient.createOrganization).not.toHaveBeenCalled();
       expect(mockAuthProvider.authenticate).toHaveBeenCalled();
     });
-
-   
 
     it("should fall back to fresh authentication when session is missing from database but URL has session_id", async () => {
       const pendingSession = createPendingSession({ authProvider: "google", sessionId: "wiped-session-123" });
@@ -450,9 +448,9 @@ describe("EmbeddedProvider Auth Flows", () => {
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(authResult);
 
       mockStorage.getSession
-        .mockResolvedValueOnce(pendingSession)  // tryExistingConnection
-        .mockResolvedValueOnce(null)  // completeAuthConnection - session was wiped
-        .mockResolvedValue(null);  // any subsequent calls
+        .mockResolvedValueOnce(pendingSession) // tryExistingConnection
+        .mockResolvedValueOnce(null) // completeAuthConnection - session was wiped
+        .mockResolvedValue(null); // any subsequent calls
 
       mockClient.getWalletAddresses.mockResolvedValue([{ addressType: "solana", address: "test-address" }]);
 
@@ -762,9 +760,10 @@ describe("EmbeddedProvider Auth Flows", () => {
       mockStorage.getSession.mockResolvedValue(null);
       mockAuthProvider.authenticate.mockRejectedValue(new Error("IndexedDB access denied"));
 
-      await expect(provider.connect({ provider: "google" })).rejects.toThrow("Storage error: Unable to access browser storage. Please ensure storage is available and try again.");
+      await expect(provider.connect({ provider: "google" })).rejects.toThrow(
+        "Storage error: Unable to access browser storage. Please ensure storage is available and try again.",
+      );
     });
-
   });
 
   describe("Provider State Management", () => {

@@ -9,7 +9,6 @@ A comprehensive suite of SDKs for integrating Phantom Wallet across different pl
 - **[Browser SDK](./packages/browser-sdk/README.md)** - Vanilla JavaScript/TypeScript
 - **[React Native SDK](./packages/react-native-sdk/README.md)** - Mobile app integration
 
-
 ### ⚠️ Deprecated Packages
 
 - **[@phantom/wallet-sdk](./packages/browser-embedded-sdk/README.md)** - ⚠️ **DEPRECATED** - Use [@phantom/browser-sdk](./packages/browser-sdk/README.md) or [@phantom/react-sdk](./packages/react-sdk/README.md) instead ([NPM](https://www.npmjs.com/package/@phantom/wallet-sdk))
@@ -220,25 +219,33 @@ Below is an explanation of how the different packages of this repository work to
 These are the main SDKs that developers use to integrate Phantom Wallet:
 
 #### **[@phantom/server-sdk](./packages/server-sdk/README.md)** - Backend SDK
+
 Server-side SDK for backend applications with built-in authentication. Depends on:
+
 - `@phantom/client` for API communication
 - `@phantom/api-key-stamper` for request authentication
 
 #### **[@phantom/react-sdk](./packages/react-sdk/README.md)** - React Hooks
+
 Thin wrapper over `@phantom/browser-sdk` that provides React hooks and context providers for Phantom integration.
 
 #### **[@phantom/react-ui](./packages/react-ui/README.md)** - Complete UI Solution
+
 Thin wrapper over `@phantom/react-sdk` that adds pre-built UI components (modals, buttons, etc.) with automatic injection and theming support.
 
 #### **[@phantom/browser-sdk](./packages/browser-sdk/README.md)** - Vanilla JS/TS SDK
+
 Core browser SDK supporting both injected (extension) and embedded (non-custodial) providers. Depends on:
+
 - `@phantom/embedded-provider-core` for embedded wallet functionality
 - `@phantom/browser-injected-sdk` for extension integration
 - `@phantom/client` for API communication
 - `@phantom/indexed-db-stamper` for secure browser-based authentication
 
 #### **[@phantom/react-native-sdk](./packages/react-native-sdk/README.md)** - Mobile SDK
+
 SDK for React Native and Expo applications. Depends on:
+
 - `@phantom/embedded-provider-core` for embedded wallet functionality
 - `@phantom/client` for API communication
 - Platform-specific secure storage for authentication
@@ -248,45 +255,58 @@ SDK for React Native and Expo applications. Depends on:
 These are the foundational packages that power the entry point SDKs:
 
 #### **[@phantom/embedded-provider-core](./packages/embedded-provider-core/README.md)** - Embedded Wallet Orchestration
+
 Platform-agnostic core that orchestrates authentication flows for embedded wallets and provides signing interfaces. This is the heart of the embedded wallet functionality, handling:
+
 - Wallet creation and authentication
 - Multi-chain signing interfaces (Solana, Ethereum, etc.)
 - Session management
 - Event handling
 
 #### **[@phantom/browser-injected-sdk](./packages/browser-injected-sdk/README.md)** - Extension Integration
+
 Interfaces with the Phantom browser extension, detecting its presence and providing a unified API to communicate with the injected provider.
 
 #### **[@phantom/client](./packages/client/README.md)** - HTTP API Client
+
 HTTP wrapper for interfacing with the Phantom API. All requests must be cryptographically signed (stamped) using one of the stamper packages.
 
 #### **[@phantom/api-key-stamper](./packages/api-key-stamper/README.md)** - Server Authentication
+
 Stamps API requests with cryptographic signatures using private API keys. Used by `@phantom/server-sdk` for backend authentication.
 
 #### **[@phantom/indexed-db-stamper](./packages/indexed-db-stamper/README.md)** - Browser Authentication
+
 Stamps API requests using non-extractable cryptographic keys stored in IndexedDB. Used by `@phantom/browser-sdk` for secure browser-based authentication.
 
 ### Supporting Utility Packages
 
 #### **[@phantom/chain-interfaces](./packages/chain-interfaces/README.md)** - Multi-Chain Type Definitions
+
 TypeScript interfaces and types for different blockchain networks (Solana, Ethereum, etc.).
 
 #### **[@phantom/sdk-types](./packages/sdk-types/README.md)** - Shared Type Definitions
+
 Common TypeScript types used across all SDK packages.
 
 #### **[@phantom/constants](./packages/constants/README.md)** - Shared Constants
+
 Environment URLs, configuration values, and other constants used across packages.
 
 #### **[@phantom/parsers](./packages/parsers/README.md)** - Data Parsers
+
 Utilities for parsing and transforming blockchain data formats.
 
 #### **[@phantom/crypto](./packages/crypto/README.md)** - Cryptographic Utilities
+
 Platform-agnostic cryptographic operations (signing, hashing, key generation).
 
 #### **[@phantom/base64url](./packages/base64url/README.md)** - URL-Safe Base64
+
 Encoding/decoding utilities for URL-safe base64 operations.
 
 #### **[@phantom/utils](./packages/utils/README.md)** - General Utilities
+
 Miscellaneous utility functions used across packages.
 
 ### Package Dependency Flow
@@ -312,6 +332,7 @@ Phantom SDKs support multiple blockchain networks across Solana and EVM chains.
 **Solana**: Mainnet, Devnet, Testnet
 
 **EVM Chains**:
+
 - Ethereum (Mainnet, Sepolia)
 - Polygon (Mainnet, Amoy)
 - Base (Mainnet, Sepolia)
@@ -327,7 +348,6 @@ Different SDKs use different network identifiers:
 - **[@phantom/server-sdk](./packages/server-sdk/README.md#network-support)** - Uses `NetworkId` enum for backend operations
 - **[@phantom/browser-sdk](./packages/browser-sdk/README.md)** and **[@phantom/react-sdk](./packages/react-sdk/README.md)** - Use chain IDs (numbers) for network switching
 
-
 ## Give Feedback
 
 Phantom SDKs are in active development and will be prioritizing features requested by early adopters. If you are interested in working with us, please email us at `developers@phantom.app` or message `@brianfriel` on Telegram.
@@ -338,11 +358,10 @@ The embedded wallet is a beta version, and Phantom will not be liable for any lo
 
 Any suggestions, enhancement requests, recommendations, or other feedback provided by you regarding the embedded wallet will be the exclusive property of Phantom. By using this beta version and providing feedback, you agree to assign any rights in that feedback to Phantom.
 
-
 ## Releasing a new version
 
 This project uses the command `yarn changeset` to generate new versions for the different packages.
 
-In your pull request, run the command `yarn changeset`, select which packages are affected and commit the generated files. 
+In your pull request, run the command `yarn changeset`, select which packages are affected and commit the generated files.
 
 After this pull request is merged a new one will be generated automatically with the release. The CI system will release the new versions upon merge.

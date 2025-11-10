@@ -333,7 +333,6 @@ export class EmbeddedProvider {
       return result;
     }
 
-
     // Second priority: Check if we're resuming from a redirect
     // Only attempt redirect resume if there's no valid completed session
     this.logger.log("EMBEDDED_PROVIDER", "No completed session found, checking for redirect resume");
@@ -362,7 +361,7 @@ export class EmbeddedProvider {
 
             // Clear any potentially stale session data and continue to fresh auth flow
             await this.storage.clearSession();
-            return null; 
+            return null;
           }
 
           // Re-throw error if no authOptions (should fail) or if different error type
@@ -380,7 +379,9 @@ export class EmbeddedProvider {
    */
   private validateAuthOptions(authOptions: AuthOptions): void {
     if (!EMBEDDED_PROVIDER_AUTH_TYPES.includes(authOptions.provider)) {
-      throw new Error(`Invalid auth provider: ${authOptions.provider}. Must be "google", "apple", "phantom", "tiktok", or "x"`);
+      throw new Error(
+        `Invalid auth provider: ${authOptions.provider}. Must be "google", "apple", "phantom", "tiktok", or "x"`,
+      );
     }
   }
 
@@ -624,7 +625,7 @@ export class EmbeddedProvider {
         status: "completed",
         providerType: "embedded",
         authUserId: session?.authUserId,
-        authProvider: session?.authProvider
+        authProvider: session?.authProvider,
       };
 
       // Emit connect event for manual connect success
@@ -640,10 +641,10 @@ export class EmbeddedProvider {
         error:
           error instanceof Error
             ? {
-              name: error.name,
-              message: error.message,
-              stack: error.stack,
-            }
+                name: error.name,
+                message: error.message,
+                stack: error.stack,
+              }
             : error,
       });
 
@@ -711,7 +712,7 @@ export class EmbeddedProvider {
       });
     }
   }
-  
+
   async signMessage(params: SignMessageParams): Promise<ParsedSignatureResult> {
     if (!this.client || !this.walletId) {
       throw new Error("Not connected");
@@ -999,7 +1000,7 @@ export class EmbeddedProvider {
         organizationId: organizationId,
         appId: this.config.appId,
         stamperInfo,
-        authProvider: "device", // For now app wallets have no auth provider. 
+        authProvider: "device", // For now app wallets have no auth provider.
         accountDerivationIndex: 0, // App wallets default to index 0
         status: "completed" as const,
         createdAt: now,
@@ -1028,11 +1029,7 @@ export class EmbeddedProvider {
    * 4. Start a polling mechanism to check for auth completion
    * 5. Update the session when the mobile app completes the auth
    */
-  private async handlePhantomAuth(
-    publicKey: string,
-    stamperInfo: StamperInfo,
-    expiresInMs: number,
-  ): Promise<Session> {
+  private async handlePhantomAuth(publicKey: string, stamperInfo: StamperInfo, expiresInMs: number): Promise<Session> {
     this.logger.info("EMBEDDED_PROVIDER", "Starting Phantom authentication flow");
 
     // Check if Phantom app is available (extension or mobile)

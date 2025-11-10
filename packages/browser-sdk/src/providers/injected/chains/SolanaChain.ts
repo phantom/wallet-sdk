@@ -91,7 +91,9 @@ export class InjectedSolanaChain implements ISolanaChain {
     return { signature: result.signature };
   }
 
-  async signAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<(Transaction | VersionedTransaction)[]> {
+  async signAllTransactions(
+    transactions: (Transaction | VersionedTransaction)[],
+  ): Promise<(Transaction | VersionedTransaction)[]> {
     if (!this.callbacks.isConnected()) {
       return Promise.reject(new Error("Provider not connected. Call provider connect first."));
     }
@@ -104,7 +106,9 @@ export class InjectedSolanaChain implements ISolanaChain {
     }
   }
 
-  async signAndSendAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<{ signatures: string[] }> {
+  async signAndSendAllTransactions(
+    transactions: (Transaction | VersionedTransaction)[],
+  ): Promise<{ signatures: string[] }> {
     if (!this.callbacks.isConnected()) {
       return Promise.reject(new Error("Provider not connected. Call provider connect first."));
     }
@@ -116,7 +120,6 @@ export class InjectedSolanaChain implements ISolanaChain {
       return Promise.reject(error);
     }
   }
-
 
   switchNetwork(_network: "mainnet" | "devnet"): Promise<void> {
     return Promise.resolve();

@@ -1,5 +1,12 @@
 import React, { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from "react";
-import { useConnect as useBaseConnect, usePhantom, PhantomProvider as BasePhantomProvider, useIsExtensionInstalled, useIsPhantomLoginAvailable, type PhantomSDKConfig} from "@phantom/react-sdk";
+import {
+  useConnect as useBaseConnect,
+  usePhantom,
+  PhantomProvider as BasePhantomProvider,
+  useIsExtensionInstalled,
+  useIsPhantomLoginAvailable,
+  type PhantomSDKConfig,
+} from "@phantom/react-sdk";
 import { isMobileDevice, getDeeplinkToPhantom } from "@phantom/browser-sdk";
 
 export interface PhantomUIProviderProps {
@@ -31,7 +38,7 @@ interface PhantomUIContextValue {
 const PhantomUIContext = createContext<PhantomUIContextValue | null>(null);
 
 // Internal UI Provider that consumes react-sdk context
-function PhantomUIProvider({ children, theme = "light", customTheme }: Omit<PhantomUIProviderProps, 'config'>) {
+function PhantomUIProvider({ children, theme = "light", customTheme }: Omit<PhantomUIProviderProps, "config">) {
   const baseConnect = useBaseConnect();
   const { sdk, isPhantomAvailable: _isPhantomAvailable } = usePhantom();
   const isExtensionInstalled = useIsExtensionInstalled();
@@ -151,7 +158,7 @@ function PhantomUIProvider({ children, theme = "light", customTheme }: Omit<Phan
 
       // Generate and redirect to deeplink URL
       const deeplinkUrl = getDeeplinkToPhantom();
-      
+
       window.location.href = deeplinkUrl;
 
       // This code will likely never be reached due to the redirect

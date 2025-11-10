@@ -1,19 +1,19 @@
-import { getSecureTimestamp, getSecureTimestampSync, __clearTimeCache } from './time';
+import { getSecureTimestamp, getSecureTimestampSync, __clearTimeCache } from "./time";
 
 // Mock fetch globally
 global.fetch = jest.fn();
 
 // Set test environment
-process.env.NODE_ENV = 'test';
+process.env.NODE_ENV = "test";
 
-describe('TimeService', () => {
+describe("TimeService", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     __clearTimeCache();
   });
 
-  describe('now()', () => {
-    it('should fetch timestamp from API', async () => {
+  describe("now()", () => {
+    it("should fetch timestamp from API", async () => {
       const mockTimestamp = 1234567890;
       (fetch as jest.Mock).mockResolvedValue({
         ok: true,
@@ -22,11 +22,11 @@ describe('TimeService', () => {
 
       const result = await getSecureTimestamp();
 
-      expect(fetch).toHaveBeenCalledWith('https://time.phantom.app/utc');
+      expect(fetch).toHaveBeenCalledWith("https://time.phantom.app/utc");
       expect(result).toBe(mockTimestamp);
     });
 
-    it('should use cached timestamp when available', async () => {
+    it("should use cached timestamp when available", async () => {
       const mockTimestamp = 1234567890;
       (fetch as jest.Mock).mockResolvedValue({
         ok: true,
@@ -43,12 +43,12 @@ describe('TimeService', () => {
       expect(result).toBeGreaterThanOrEqual(mockTimestamp);
     });
 
-    it('should fall back to Date.now() when API fails', async () => {
+    it("should fall back to Date.now() when API fails", async () => {
       const originalDateNow = Date.now;
       const mockLocalTime = 9876543210;
       Date.now = jest.fn(() => mockLocalTime);
 
-      (fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
+      (fetch as jest.Mock).mockRejectedValue(new Error("Network error"));
 
       const result = await getSecureTimestamp();
 
@@ -57,7 +57,7 @@ describe('TimeService', () => {
       Date.now = originalDateNow;
     });
 
-    it('should fall back to Date.now() when API returns non-ok status', async () => {
+    it("should fall back to Date.now() when API returns non-ok status", async () => {
       const originalDateNow = Date.now;
       const mockLocalTime = 9876543210;
       Date.now = jest.fn(() => mockLocalTime);
@@ -74,14 +74,14 @@ describe('TimeService', () => {
       Date.now = originalDateNow;
     });
 
-    it('should fall back to Date.now() when API returns invalid timestamp', async () => {
+    it("should fall back to Date.now() when API returns invalid timestamp", async () => {
       const originalDateNow = Date.now;
       const mockLocalTime = 9876543210;
       Date.now = jest.fn(() => mockLocalTime);
 
       (fetch as jest.Mock).mockResolvedValue({
         ok: true,
-        text: () => Promise.resolve('invalid-timestamp'),
+        text: () => Promise.resolve("invalid-timestamp"),
       });
 
       const result = await getSecureTimestamp();
@@ -92,8 +92,8 @@ describe('TimeService', () => {
     });
   });
 
-  describe('nowSync()', () => {
-    it('should return cached timestamp when available', async () => {
+  describe("nowSync()", () => {
+    it("should return cached timestamp when available", async () => {
       const mockTimestamp = 1234567890;
       (fetch as jest.Mock).mockResolvedValue({
         ok: true,
@@ -109,7 +109,7 @@ describe('TimeService', () => {
       expect(result).toBeGreaterThanOrEqual(mockTimestamp);
     });
 
-    it('should fall back to Date.now() when no cache', () => {
+    it("should fall back to Date.now() when no cache", () => {
       const originalDateNow = Date.now;
       const mockLocalTime = 9876543210;
       Date.now = jest.fn(() => mockLocalTime);
@@ -122,8 +122,8 @@ describe('TimeService', () => {
     });
   });
 
-  describe('convenience functions', () => {
-    it('should export getSecureTimestamp', async () => {
+  describe("convenience functions", () => {
+    it("should export getSecureTimestamp", async () => {
       const mockTimestamp = 1234567890;
       (fetch as jest.Mock).mockResolvedValue({
         ok: true,
@@ -134,7 +134,7 @@ describe('TimeService', () => {
       expect(result).toBe(mockTimestamp);
     });
 
-    it('should export getSecureTimestampSync', () => {
+    it("should export getSecureTimestampSync", () => {
       const originalDateNow = Date.now;
       const mockLocalTime = 9876543210;
       Date.now = jest.fn(() => mockLocalTime);
