@@ -2,7 +2,7 @@ import { type BrowserSDKConfig, type Provider, type ConnectResult, type WalletAd
 import { InjectedProvider } from "./providers/injected";
 import { EmbeddedProvider } from "./providers/embedded";
 import { debug, DebugCategory } from "./debug";
-import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-provider-core";
+import { type EmbeddedProviderEvent, type EventCallback , EMBEDDED_PROVIDER_AUTH_TYPES} from "@phantom/embedded-provider-core";
 import { DEFAULT_WALLET_API_URL, DEFAULT_EMBEDDED_WALLET_TYPE, DEFAULT_AUTH_URL } from "@phantom/constants";
 import { isAuthFailureCallback, isAuthCallbackUrl } from "./utils/auth-callback";
 export interface ProviderPreference {
@@ -118,7 +118,7 @@ export class ProviderManager implements EventEmitter {
 
     if (requestedProvider === "injected") {
       targetProviderType = "injected";
-    } else if (["google", "apple", "phantom", "tiktok", "x"].includes(requestedProvider)) {
+    } else if (EMBEDDED_PROVIDER_AUTH_TYPES.includes(requestedProvider)) {
       targetProviderType = "embedded";
     }
 

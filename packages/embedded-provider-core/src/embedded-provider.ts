@@ -11,7 +11,7 @@ import {
 import { randomUUID } from "@phantom/utils";
 import { Buffer } from "buffer";
 import bs58 from "bs58";
-import { AUTHENTICATOR_EXPIRATION_TIME_MS } from "./constants";
+import { AUTHENTICATOR_EXPIRATION_TIME_MS, EMBEDDED_PROVIDER_AUTH_TYPES } from "./constants";
 
 import type { IEthereumChain, ISolanaChain } from "@phantom/chain-interfaces";
 import type { StamperWithKeyManagement } from "@phantom/sdk-types";
@@ -379,7 +379,7 @@ export class EmbeddedProvider {
    * This ensures only supported auth providers are used and required tokens are present.
    */
   private validateAuthOptions(authOptions: AuthOptions): void {
-    if (!["google", "apple", "phantom", "tiktok", "x"].includes(authOptions.provider)) {
+    if (!EMBEDDED_PROVIDER_AUTH_TYPES.includes(authOptions.provider)) {
       throw new Error(`Invalid auth provider: ${authOptions.provider}. Must be "google", "apple", "phantom", "tiktok", or "x"`);
     }
   }

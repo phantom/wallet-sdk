@@ -194,7 +194,7 @@ export class BrowserAuthProvider implements AuthProvider {
         accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : 0,
         expiresInMs: expiresInMs ? parseInt(expiresInMs) : 0,
         authUserId: authUserId || undefined,
-        provider: provider,
+        provider,
       };
     } catch (error) {
       // Clean up session storage on any error

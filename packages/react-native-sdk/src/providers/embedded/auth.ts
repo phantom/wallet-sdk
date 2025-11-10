@@ -82,7 +82,6 @@ export class ExpoAuthProvider implements AuthProvider {
         const url = new URL(result.url);
         const walletId = url.searchParams.get("wallet_id");
         const organizationId = url.searchParams.get("organization_id");
-        const provider = url.searchParams.get("provider") as EmbeddedProviderAuthType;
         const accountDerivationIndex = url.searchParams.get("selected_account_index");
         const expiresInMs = url.searchParams.get("expires_in_ms");
         const authUserId = url.searchParams.get("auth_user_id");

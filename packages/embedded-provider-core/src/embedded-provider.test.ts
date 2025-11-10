@@ -336,6 +336,101 @@ describe("EmbeddedProvider Core", () => {
     });
   });
 
+  describe("Auth Flow - Happy Path for Different Providers (user-wallets)", () => {
+    beforeEach(() => {
+      // Ensure we're testing user-wallet type
+      expect(config.embeddedWalletType).toBe("user-wallet");
+
+      // Mock no existing session
+      mockPlatform.storage.getSession.mockResolvedValue(null);
+      mockPlatform.authProvider.resumeAuthFromRedirect.mockReturnValue(null);
+    });
+
+    it("should call platform auth provider for Apple authentication", async () => {
+      const authOptions = { provider: "apple" as const };
+
+      try {
+        await provider.connect(authOptions);
+      } catch (error) {
+        // Connection will fail due to redirect, but authenticate should be called
+      }
+
+      expect(mockPlatform.authProvider.authenticate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          provider: "apple",
+          publicKey: "11111111111111111111111111111111",
+          appId: "test-app-id",
+        }),
+      );
+    });
+
+    it("should call platform auth provider for X (Twitter) authentication", async () => {
+      const authOptions = { provider: "x" as const };
+
+      try {
+        await provider.connect(authOptions);
+      } catch (error) {
+        // Connection will fail due to redirect, but authenticate should be called
+      }
+
+      expect(mockPlatform.authProvider.authenticate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          provider: "x",
+          publicKey: "11111111111111111111111111111111",
+          appId: "test-app-id",
+        }),
+      );
+    });
+
+    it("should call platform auth provider for TikTok authentication", async () => {
+      const authOptions = { provider: "tiktok" as const };
+
+      try {
+        await provider.connect(authOptions);
+      } catch (error) {
+        // Connection will fail due to redirect, but authenticate should be called
+      }
+
+      expect(mockPlatform.authProvider.authenticate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          provider: "tiktok",
+          publicKey: "11111111111111111111111111111111",
+          appId: "test-app-id",
+        }),
+      );
+    });
+
+    it("should call platform phantomAppProvider for Phantom authentication", async () => {
+      // Mock Phantom app as available for this test
+      mockPlatform.phantomAppProvider.isAvailable.mockReturnValue(true);
+      mockPlatform.phantomAppProvider.authenticate.mockResolvedValue({
+        organizationId: "org-phantom-123",
+        walletId: "wallet-phantom-123",
+        publicKey: "11111111111111111111111111111111",
+        authUserId: "phantom-user-123",
+      });
+
+      const authOptions = { provider: "phantom" as const };
+
+      try {
+        await provider.connect(authOptions);
+      } catch (error) {
+        // Connection may fail on subsequent calls (e.g., getWalletAddresses)
+      }
+
+      // Phantom uses phantomAppProvider instead of authProvider
+      expect(mockPlatform.phantomAppProvider.authenticate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          publicKey: "11111111111111111111111111111111",
+          appId: "test-app-id",
+        }),
+      );
+
+      // Verify that authProvider.authenticate was NOT called for Phantom
+      expect(mockPlatform.authProvider.authenticate).not.toHaveBeenCalled();
+    });
+  });
+
   describe("Session Management", () => {
     it("should handle disconnect correctly", async () => {
       await provider.disconnect();
