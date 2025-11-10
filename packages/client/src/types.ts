@@ -66,6 +66,7 @@ export interface SignTransactionParams {
   networkId: NetworkId;
   derivationIndex?: number; // Optional account derivation index (defaults to 0)
   account?: string; // Optional specific account address to use
+  walletType: "server-wallet" | "user-wallet"; 
 }
 
 export interface SignAndSendTransactionParams {
@@ -74,6 +75,7 @@ export interface SignAndSendTransactionParams {
   networkId: NetworkId;
   derivationIndex?: number; // Optional account derivation index (defaults to 0)
   account?: string; // Optional specific account address to use
+  walletType: "server-wallet" | "user-wallet"; 
 }
 
 export interface GetWalletWithTagParams {
@@ -126,4 +128,21 @@ export interface UserConfig {
   username: string;
   role?: "ADMIN" | "USER"; // Optional, defaults to 'ADMIN'
   authenticators: AuthenticatorConfig[];
+}
+
+// ============================================================================
+// Spending Limits Types
+// ============================================================================
+
+export interface SpendingLimitConfig {
+  usdCentsLimitPerDay: number;
+  memoryAccount: string;
+  memoryId: number;
+  memoryBump: number;
+}
+
+export interface AugmentWithSpendingLimitResponse {
+  transaction: string; // base64url encoded with Lighthouse instructions
+  simulationResult?: any;
+  memoryConfigUsed?: SpendingLimitConfig;
 }

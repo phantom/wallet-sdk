@@ -43,6 +43,7 @@ import { Buffer } from "buffer";
 import { deriveSubmissionConfig } from "./caip2-mappings";
 import { DerivationPath, getNetworkConfig } from "./constants";
 import {
+  type AugmentWithSpendingLimitResponse,
   type AuthenticatorConfig,
   type CreateAuthenticatorParams,
   type CreateWalletResult,
@@ -56,11 +57,13 @@ import {
   type SignMessageParams,
   type SignTransactionParams,
   type SignTypedDataParams,
+  type SpendingLimitConfig,
   type UserConfig,
 } from "./types";
 
 import type { Stamper } from "@phantom/sdk-types";
-import { getSecureTimestamp, randomUUID, isEthereumChain } from "@phantom/utils";
+import { getSecureTimestamp, randomUUID, isEthereumChain, isSolanaChain } from "@phantom/utils";
+
 type AddUserToOrganizationParams = Omit<AddUserToOrganizationRequest, "user"> & {
   replaceExpirable?: boolean;
   user: PartialKmsUser & { traits: { appId: string }; expiresInMs?: number };
@@ -197,6 +200,39 @@ export class PhantomClient {
   }
 
   /**
+   * Augments a transaction with spending limit enforcement instructions
+   * This is phase 1 of the two-phase spending limit flow
+   * @private
+   */
+  private async augmentWithSpendingLimit(
+    transaction: string,
+    organizationId: string,
+    walletId: string,
+    submissionConfig: SubmissionConfig,
+    account: string,
+  ): Promise<AugmentWithSpendingLimitResponse> {
+    try {
+      const chainTransaction = { solana: transaction };
+
+      const request = {
+        transaction: chainTransaction,
+        organizationId,
+        walletId,
+        submissionConfig,
+        simulationConfig: { account },
+      };
+      const response = await this.axiosInstance.post(`${this.config.apiBaseUrl}/prepare`, request, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      throw new Error(`Failed to augment transaction: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  /**
    * Private method for shared signing logic
    */
   private async performTransactionSigning(
@@ -212,31 +248,27 @@ export class PhantomClient {
       if (!this.config.organizationId) {
         throw new Error("organizationId is required to sign a transaction");
       }
-      // Transaction is always a string (encoded via parsers)
-      const encodedTransaction = transactionParam;
 
-      // Check if this is an EVM transaction using the network ID
-      const isEvmTransaction = isEthereumChain(networkIdParam);
+      // SubmissionConfig is used to: 1) submit the transaction onchain, 2) derive spending limits
+      const submissionConfig: SubmissionConfig | null = deriveSubmissionConfig(networkIdParam) || null;
 
-      let submissionConfig: SubmissionConfig | null = null;
-
-      if (includeSubmissionConfig) {
-        submissionConfig = deriveSubmissionConfig(networkIdParam) || null;
-
-        // If we don't have a submission config, the transaction will only be signed, not submitted
-        if (!submissionConfig) {
-          console.error(
-            `No submission config available for network ${networkIdParam}. Transaction will be signed but not submitted.`,
-          );
-        }
+      if (!submissionConfig) {
+        throw new Error(`SubmissionConfig could not be derived for network ID: ${networkIdParam}`);
       }
 
-      // Get network configuration with custom derivation index
+      // Get network configuration with custom derivation index. Required for signing
       const networkConfig = getNetworkConfig(networkIdParam, derivationIndex);
 
       if (!networkConfig) {
         throw new Error(`Unsupported network ID: ${networkIdParam}`);
       }
+
+      // Transaction is always a string (encoded via parsers)
+      const encodedTransaction = transactionParam;
+
+      // Check if this is an EVM transaction using the network ID
+      const isEvmTransaction = isEthereumChain(networkIdParam);
+      const isSolanaTransaction = isSolanaChain(networkIdParam);
 
       const derivationInfo: DerivationInfo = {
         derivationPath: networkConfig.derivationPath,
@@ -244,23 +276,57 @@ export class PhantomClient {
         addressFormat: networkConfig.addressFormat,
       };
 
-      // Sign transaction request - include configs if available
+      // TWO-PHASE SPENDING LIMITS FLOW
+      // Phase 1: Call wallet service to check spending limits and augment transaction if needed
+      let spendingLimitConfig: SpendingLimitConfig | undefined;
+      let augmentedTransaction = encodedTransaction;
+
+      // Always check spending limits for Solana transactions
+      // If we don't receive an account
+      // At this point, we've already validated that submissionConfig and account exist for Solana
+      if (isSolanaTransaction && params.walletType === "user-wallet") {
+        if (!params.account) {
+          throw new Error("Account is required to simulate Solana transactions with spending limits");
+        }
+
+        try {
+          // Call wallet service augment endpoint
+          const augmentResponse = await this.augmentWithSpendingLimit(
+            encodedTransaction,
+            this.config.organizationId,
+            walletId,
+            submissionConfig, // Non-null assertion safe because we validated above
+            params.account, // Non-null assertion safe because we validated above
+          );
+
+          augmentedTransaction = augmentResponse.transaction;
+          spendingLimitConfig = augmentResponse.memoryConfigUsed;
+        } catch (e: any) {
+          const errorMessage = e?.message || String(e);
+          throw new Error(
+            `Failed to apply spending limits for this transaction: ${errorMessage}. ` +
+              `Transaction cannot proceed without spending limit enforcement.`,
+          );
+        }
+      }
+
+      // Phase 2: Sign the (possibly augmented) transaction
+      // Use augmentedTransaction which will have Lighthouse instructions if spending limits exist
       const signRequest: SignTransactionRequest & {
         submissionConfig?: SubmissionConfig;
         simulationConfig?: SimulationConfig;
+        spendingLimitConfig?: SpendingLimitConfig;
       } = {
         organizationId: this.config.organizationId,
         walletId: walletId,
         // For EVM transactions, use the object format with kind and bytes
         // For other chains, use the string directly
-        transaction: isEvmTransaction
-          ? { kind: "RLP_ENCODED", bytes: encodedTransaction }
-          : encodedTransaction,
+        transaction: isEvmTransaction ? { kind: "RLP_ENCODED", bytes: augmentedTransaction } : augmentedTransaction,
         derivationInfo: derivationInfo,
       } as any;
 
       // Add submission config if available and requested
-      if (includeSubmissionConfig && submissionConfig) {
+      if (includeSubmissionConfig) {
         signRequest.submissionConfig = submissionConfig;
       }
 
@@ -269,6 +335,11 @@ export class PhantomClient {
         signRequest.simulationConfig = {
           account: params.account,
         };
+      }
+
+      // Add spending limit config if available
+      if (spendingLimitConfig) {
+        signRequest.spendingLimitConfig = spendingLimitConfig;
       }
 
       const request: SignTransaction = {
