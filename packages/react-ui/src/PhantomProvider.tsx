@@ -7,7 +7,7 @@ import {
   useIsPhantomLoginAvailable,
   type PhantomSDKConfig,
 } from "@phantom/react-sdk";
-import { isMobileDevice, getDeeplinkToPhantom,  type AuthOptions } from "@phantom/browser-sdk";
+import { isMobileDevice, getDeeplinkToPhantom, type AuthProviderType } from "@phantom/browser-sdk";
 import { getTheme, mergeTheme, type PhantomTheme } from "./themes";
 import { Modal } from "./components/Modal";
 
@@ -33,7 +33,7 @@ interface PhantomUIContextValue {
   connectionState: ConnectionUIState;
   showConnectionModal: () => void;
   hideConnectionModal: () => void;
-  connectWithAuthProvider: (provider:  AuthOptions["provider"]) => Promise<void>;
+  connectWithAuthProvider: (provider:  AuthProviderType) => Promise<void>;
   connectWithInjected: () => Promise<void>;
   connectWithDeeplink: () => void;
   isMobile: boolean;
@@ -86,7 +86,7 @@ function PhantomUIProvider({ children, theme = "dark", customTheme, appIcon, app
 
   // Connect with specific auth provider
   const connectWithAuthProvider = useCallback(
-    async (provider: AuthOptions["provider"]) => {
+    async (provider: AuthProviderType) => {
       try {
         setConnectionState(prev => ({
           ...prev,

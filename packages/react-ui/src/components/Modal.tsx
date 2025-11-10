@@ -1,6 +1,6 @@
 import React, { type CSSProperties } from "react";
 import type { PhantomTheme } from "../themes";
-import type { AuthOptions } from "@phantom/browser-sdk";
+import type { AuthProviderType } from "@phantom/browser-sdk";
 export interface ModalProps {
   isVisible: boolean;
   isConnecting: boolean;
@@ -14,7 +14,7 @@ export interface ModalProps {
   isPhantomLoginAvailable: boolean;
   onClose: () => void;
   onConnectWithDeeplink: () => void;
-  onConnectWithAuthProvider: (provider?: AuthOptions["provider"]) => void;
+  onConnectWithAuthProvider: (provider?: AuthProviderType) => void;
   onConnectWithInjected: () => void;
 }
 
