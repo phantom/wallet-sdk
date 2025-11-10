@@ -1,5 +1,14 @@
 # @phantom/browser-sdk
 
+## 1.0.0-beta.22
+
+### Patch Changes
+
+- c424eff: Update auth provider definitions and remove jwt
+- Updated dependencies [c424eff]
+  - @phantom/embedded-provider-core@1.0.0-beta.22
+  - @phantom/client@1.0.0-beta.22
+
 ## 1.0.0-beta.21
 
 ### Patch Changes
