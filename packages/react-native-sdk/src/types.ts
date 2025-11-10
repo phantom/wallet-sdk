@@ -1,4 +1,4 @@
-import type { EmbeddedProviderConfig } from "@phantom/embedded-provider-core";
+import type { EmbeddedProviderAuthType, EmbeddedProviderConfig } from "@phantom/embedded-provider-core";
 
 // Debug configuration - separate from SDK config for consistency with browser/react SDKs
 export interface PhantomDebugConfig {
@@ -22,9 +22,7 @@ export interface PhantomSDKConfig
 
 export interface ConnectOptions {
   /** OAuth provider to use (required) */
-  provider: "google" | "apple" | "jwt" | "phantom";
-  /** JWT token for JWT authentication */
-  jwtToken?: string;
+  provider: EmbeddedProviderAuthType;
   /** Custom authentication data */
   customAuthData?: Record<string, any>;
 }

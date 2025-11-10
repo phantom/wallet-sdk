@@ -810,10 +810,13 @@ export function SDKActions() {
               {isConnected ? "Connected" : "Not Connected"}
             </span>
           </div>
-          {isConnected && currentProviderType && (
+
+          {isConnected && user && (
             <div className="status-row">
-              <span className="status-label">Provider:</span>
-              <span className="status-value">{currentProviderType}</span>
+              <span className="status-label">Auth Provider:</span>
+              <span className="status-value">
+                {user.providerType} {user.authProvider}
+              </span>
             </div>
           )}
           {user && (

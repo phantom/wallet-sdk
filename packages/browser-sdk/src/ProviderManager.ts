@@ -9,7 +9,11 @@ import {
 import { InjectedProvider } from "./providers/injected";
 import { EmbeddedProvider } from "./providers/embedded";
 import { debug, DebugCategory } from "./debug";
-import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-provider-core";
+import {
+  type EmbeddedProviderEvent,
+  type EventCallback,
+  EMBEDDED_PROVIDER_AUTH_TYPES,
+} from "@phantom/embedded-provider-core";
 import { DEFAULT_WALLET_API_URL, DEFAULT_EMBEDDED_WALLET_TYPE, DEFAULT_AUTH_URL } from "@phantom/constants";
 import { isAuthFailureCallback, isAuthCallbackUrl } from "./utils/auth-callback";
 export interface ProviderPreference {
@@ -114,7 +118,7 @@ export class ProviderManager implements EventEmitter {
   async connect(authOptions: AuthOptions): Promise<ConnectResult> {
     debug.info(DebugCategory.PROVIDER_MANAGER, "Starting connection", {
       currentProviderKey: this.currentProviderKey,
-      authOptions: { provider: authOptions.provider, hasJwtToken: !!authOptions.jwtToken },
+      authOptions: { provider: authOptions.provider },
     });
 
     // Auto-switch provider based on auth options
@@ -125,7 +129,7 @@ export class ProviderManager implements EventEmitter {
 
     if (requestedProvider === "injected") {
       targetProviderType = "injected";
-    } else if (["google", "apple", "jwt", "phantom"].includes(requestedProvider)) {
+    } else if (EMBEDDED_PROVIDER_AUTH_TYPES.includes(requestedProvider)) {
       targetProviderType = "embedded";
     }
 

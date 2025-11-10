@@ -114,15 +114,15 @@ export class YourStorageAdapter implements EmbeddedStorage {
 Handles authentication flows:
 
 ```typescript
-import { AuthProvider, AuthResult, PhantomConnectOptions, JWTAuthOptions } from "@phantom/embedded-provider-core";
+import { AuthProvider, AuthResult, PhantomConnectOptions } from "@phantom/embedded-provider-core";
 
 export class YourAuthProvider implements AuthProvider {
-  async authenticate(options: PhantomConnectOptions | JWTAuthOptions): Promise<void | AuthResult> {
+  async authenticate(options: PhantomConnectOptions): Promise<void | AuthResult> {
     // Platform-specific authentication
     // Browser: window redirects, React Native: deep links
   }
 
-  resumeAuthFromRedirect?(): AuthResult | null {
+  resumeAuthFromRedirect?(provider: EmbeddedProviderAuthType): AuthResult | null {
     // Resume authentication after redirect/deep link
   }
 }
