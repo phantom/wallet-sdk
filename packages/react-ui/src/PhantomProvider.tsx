@@ -8,13 +8,12 @@ import {
   type PhantomSDKConfig,
 } from "@phantom/react-sdk";
 import { isMobileDevice, getDeeplinkToPhantom, type AuthProviderType } from "@phantom/browser-sdk";
-import { getTheme, mergeTheme, type PhantomTheme } from "./themes";
+import { darkTheme, mergeTheme, type PhantomTheme } from "./themes";
 import { Modal } from "./components/Modal";
 
 export interface PhantomUIProviderProps {
   children: ReactNode;
-  theme?: "light" | "dark" | "auto" | PhantomTheme;
-  customTheme?: Partial<PhantomTheme>;
+  theme?: Partial<PhantomTheme>;
   config: PhantomSDKConfig;
   appIcon?: string; // URL to app icon
   appName?: string; // App name to display
@@ -44,8 +43,7 @@ const PhantomUIContext = createContext<PhantomUIContextValue | null>(null);
 // Internal UI Provider that consumes react-sdk context
 function PhantomUIProvider({
   children,
-  theme = "dark",
-  customTheme,
+  theme = darkTheme,
   appIcon,
   appName,
 }: Omit<PhantomUIProviderProps, "config">) {
@@ -59,9 +57,8 @@ function PhantomUIProvider({
 
   // Get the resolved theme object
   const resolvedTheme = useMemo(() => {
-    const baseTheme = typeof theme === "string" ? getTheme(theme) : theme;
-    return mergeTheme(baseTheme, customTheme);
-  }, [theme, customTheme]);
+    return mergeTheme(theme);
+  }, [theme]);
 
   // Connection state
   const [connectionState, setConnectionState] = useState<ConnectionUIState>({
@@ -230,15 +227,14 @@ function PhantomUIProvider({
 // Main exported Provider that wraps both react-sdk and react-ui providers
 export function PhantomProvider({
   children,
-  theme = "dark",
-  customTheme,
+  theme = darkTheme,
   config,
   appIcon,
   appName,
 }: PhantomUIProviderProps) {
   return (
     <BasePhantomProvider config={config}>
-      <PhantomUIProvider theme={theme} customTheme={customTheme} appIcon={appIcon} appName={appName}>
+      <PhantomUIProvider theme={theme} appIcon={appIcon} appName={appName}>
         {children}
       </PhantomUIProvider>
     </BasePhantomProvider>

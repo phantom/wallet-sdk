@@ -4,11 +4,15 @@
 // Main Provider
 export { PhantomProvider, type PhantomUIProviderProps } from "./PhantomProvider";
 
+// UI Components
+export { Button, type ButtonProps } from "./components/Button";
+export { LoginWithPhantomButton, type LoginWithPhantomButtonProps } from "./components/LoginWithPhantomButton";
+
 // Enhanced Hooks with UI integration
 export * from "./hooks";
 
 // Theme system
-export { darkTheme, lightTheme, getTheme, mergeTheme, type PhantomTheme } from "./themes";
+export { type PhantomTheme, darkTheme, lightTheme } from "./themes";
 
 // Re-export hooks and types from react-sdk (useConnect is overridden by UI hooks)
 export {

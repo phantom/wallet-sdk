@@ -3,15 +3,20 @@
  * Simple theme focused on colors and border radius
  */
 
+import { hexToRgba } from "./utils";
+
 export interface PhantomTheme {
   // Background color for modal
   background: string;
 
-  // Primary color for buttons and accents
-  primary: string;
-
   // Secondary color for text, borders, dividers
   secondary: string;
+
+  // Error color
+  error: string;
+
+  // Success color
+  success: string;
 
   // Primary text color
   text: string;
@@ -21,18 +26,28 @@ export interface PhantomTheme {
 
   // Border radius for buttons and modal
   borderRadius: string;
+
+  // Brand color
+  brand: string;
 }
 
+export type PhantomThemeWithAux = PhantomTheme & {
+  aux: string; // Auxiliary color derived from secondary with opacity
+};
+
+export const loginWithPhantomColor = "#7C63E7";
 /**
  * Dark theme configuration
  */
 export const darkTheme: PhantomTheme = {
   background: "#181818",
-  primary: "#98979C",
-  secondary: "#98979C",
   text: "#FFFFFF",
+  secondary: "#98979C",
   overlay: "rgba(0, 0, 0, 0.7)",
   borderRadius: "12px",
+  error: "#F00000",
+  success: "#1CC700",
+  brand: loginWithPhantomColor,
 };
 
 /**
@@ -40,34 +55,30 @@ export const darkTheme: PhantomTheme = {
  */
 export const lightTheme: PhantomTheme = {
   background: "#FFFFFF",
-  primary: "#ab9ff2",
-  secondary: "#6c757d",
-  text: "#212529",
+  text: "#181818",
+  secondary: "#98979C",
   overlay: "rgba(0, 0, 0, 0.5)",
   borderRadius: "12px",
+  error: "#F00000",
+  success: "#1CC700",
+  brand: loginWithPhantomColor,
 };
 
-/**
- * Get theme by name
- */
-export function getTheme(themeName: "light" | "dark" | "auto"): PhantomTheme {
-  if (themeName === "auto") {
-    // Check system preference
-    const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-    return prefersDark ? darkTheme : lightTheme;
-  }
-
-  return themeName === "dark" ? darkTheme : lightTheme;
-}
 
 /**
  * Merge custom theme with base theme
  */
-export function mergeTheme(baseTheme: PhantomTheme, customTheme?: Partial<PhantomTheme>): PhantomTheme {
-  if (!customTheme) return baseTheme;
+export function mergeTheme(customTheme?: Partial<PhantomTheme>): PhantomThemeWithAux {
+  const secondary = customTheme?.secondary || darkTheme.secondary;
+  const isHex = secondary.startsWith("#");
+  
+  if (!isHex) {
+    throw new Error("Secondary color must be a hex color to derive auxiliary color.");
+  }
 
   return {
-    ...baseTheme,
+    ...darkTheme,
     ...customTheme,
+    aux: hexToRgba(secondary, 0.1),
   };
 }

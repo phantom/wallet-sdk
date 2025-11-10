@@ -1,12 +1,14 @@
 import React, { type CSSProperties } from "react";
-import type { PhantomTheme } from "../themes";
+import { type PhantomThemeWithAux } from "../themes";
 import type { AuthProviderType } from "@phantom/browser-sdk";
+import { Button } from "./Button";
+import { LoginWithPhantomButton } from "./LoginWithPhantomButton";
 export interface ModalProps {
   isVisible: boolean;
   isConnecting: boolean;
   error: Error | null;
   providerType: "injected" | "embedded" | "deeplink" | null;
-  theme: PhantomTheme;
+  theme: PhantomThemeWithAux;
   appIcon?: string;
   appName?: string;
   isMobile: boolean;
@@ -14,7 +16,7 @@ export interface ModalProps {
   isPhantomLoginAvailable: boolean;
   onClose: () => void;
   onConnectWithDeeplink: () => void;
-  onConnectWithAuthProvider: (provider?: AuthProviderType) => void;
+  onConnectWithAuthProvider: (provider: AuthProviderType) => void;
   onConnectWithInjected: () => void;
 }
 
@@ -36,18 +38,7 @@ export function Modal({
 }: ModalProps) {
   if (!isVisible) return null;
 
-  // Helper function to convert hex color to rgba
-  const hexToRgba = (hex: string, opacity: number): string => {
-    // Remove # if present
-    const cleanHex = hex.replace("#", "");
-
-    // Parse hex values
-    const r = parseInt(cleanHex.slice(0, 2), 16);
-    const g = parseInt(cleanHex.slice(2, 4), 16);
-    const b = parseInt(cleanHex.slice(4, 6), 16);
-
-    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-  };
+  
 
   // Styles
   const overlayStyle: CSSProperties = {
@@ -120,39 +111,6 @@ export function Modal({
       }
     : {};
 
-  const buttonStyle: CSSProperties = {
-    width: "100%",
-    padding: "12px 16px",
-    backgroundColor: hexToRgba(theme.secondary, 0.1), // Secondary with 10% opacity
-    color: theme.text,
-    border: "none",
-    borderRadius: theme.borderRadius,
-    fontSize: "16px",
-    fontWeight: "600",
-    cursor: "pointer",
-    transition: "background-color 0.2s",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "8px",
-  };
-
-  const secondaryButtonStyle: CSSProperties = {
-    width: "100%",
-    padding: "12px 16px",
-    backgroundColor: "transparent",
-    color: theme.text,
-    border: `1px solid ${theme.secondary}`,
-    borderRadius: theme.borderRadius,
-    fontSize: "14px",
-    fontWeight: "500",
-    cursor: "pointer",
-    transition: "background-color 0.2s",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "8px",
-  };
 
   const buttonContainerStyle: CSSProperties = {
     display: "flex",
@@ -224,60 +182,46 @@ export function Modal({
           <div style={buttonContainerStyle}>
             {/* Mobile device with no Phantom extension - show deeplink button */}
             {isMobile && !isExtensionInstalled && (
-              <button
-                style={buttonStyle}
+              <Button
+                theme={theme}
                 onClick={onConnectWithDeeplink}
                 disabled={isConnecting}
-                onMouseEnter={e => {
-                  if (!isConnecting) {
-                    e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.15);
-                  }
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.1);
-                }}
+                isLoading={isConnecting && providerType === "deeplink"}
               >
                 {isConnecting && providerType === "deeplink" ? "Opening Phantom..." : "Open in Phantom App"}
-              </button>
+              </Button>
             )}
 
             {!isMobile && (
               <>
                 {isPhantomLoginAvailable && (
-                  <button
-                    style={buttonStyle}
+                  <LoginWithPhantomButton
+                    theme={theme}
                     onClick={() => onConnectWithAuthProvider("phantom")}
                     disabled={isConnecting}
-                    onMouseEnter={e => {
-                      if (!isConnecting) {
-                        e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.15);
-                      }
-                    }}
-                    onMouseLeave={e => {
-                      e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.1);
-                    }}
-                  >
-                    {isConnecting && providerType === "embedded" ? "Connecting..." : "Login with Phantom"}
-                  </button>
+                    isLoading={isConnecting && providerType === "embedded"}
+                  />
                 )}
               </>
             )}
 
-            <button
-              style={buttonStyle}
+            <Button
+              theme={theme}
               onClick={() => onConnectWithAuthProvider("google")}
               disabled={isConnecting}
-              onMouseEnter={e => {
-                if (!isConnecting) {
-                  e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.15);
-                }
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.1);
-              }}
+              isLoading={isConnecting && providerType === "embedded"}
             >
-              {isConnecting && providerType === "embedded" ? "Connecting..." : "Continue with Google"}
-            </button>
+              Continue with Google
+            </Button>
+
+            <Button
+              theme={theme}
+              onClick={() => onConnectWithAuthProvider("apple")}
+              disabled={isConnecting}
+              isLoading={isConnecting && providerType === "embedded"}
+            >
+              Continue with Apple
+            </Button>
 
             {!isMobile && isExtensionInstalled && (
               <>
@@ -287,26 +231,18 @@ export function Modal({
                   <div style={dividerLineStyle} />
                 </div>
 
-                <button
-                  style={secondaryButtonStyle}
+                <Button
+                  theme={theme}
+                  variant="secondary"
                   onClick={onConnectWithInjected}
                   disabled={isConnecting}
-                  onMouseEnter={e => {
-                    if (!isConnecting) {
-                      e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.1);
-                    }
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }}
+                  isLoading={isConnecting && providerType === "injected"}
                 >
                   <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    {/* Phantom logo placeholder - you can replace with actual SVG/image */}
-                    <span style={{ fontSize: "20px" }}>👻</span>
                     <span>Phantom</span>
                   </span>
                   <span style={{ color: theme.secondary }}>Detected</span>
-                </button>
+                </Button>
               </>
             )}
           </div>
