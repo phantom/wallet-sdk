@@ -1,13 +1,37 @@
 import React, { type CSSProperties, type ReactNode } from "react";
 import { hexToRgba } from "../utils";
-import type { PhantomThemeWithAux } from "../themes";
+import { useTheme } from "../hooks/useTheme";
 
+// Shared base button styles
+const getBaseButtonStyle = (
+  fullWidth: boolean,
+  disabled: boolean,
+  borderRadius: string,
+  fontSize: string = "16px",
+  fontWeight: string = "600",
+  justifyContent: "center" | "space-between" = "center",
+): CSSProperties => ({
+  width: fullWidth ? "100%" : "auto",
+  padding: "12px 16px",
+  border: "none",
+  borderRadius,
+  fontSize,
+  fontWeight,
+  cursor: disabled ? "not-allowed" : "pointer",
+  transition: "background-color 0.2s",
+  display: "flex",
+  alignItems: "center",
+  justifyContent,
+  gap: "8px",
+  opacity: disabled ? 0.6 : 1,
+});
+
+// Button component
 export interface ButtonProps {
   children: ReactNode;
   onClick: () => void;
   disabled?: boolean;
   variant?: "primary" | "secondary";
-  theme: PhantomThemeWithAux;
   fullWidth?: boolean;
   isLoading?: boolean;
 }
@@ -17,25 +41,18 @@ export function Button({
   onClick,
   disabled = false,
   variant = "primary",
-  theme,
   fullWidth = true,
   isLoading = false,
 }: ButtonProps) {
-  const baseStyle: CSSProperties = {
-    width: fullWidth ? "100%" : "auto",
-    padding: "12px 16px",
-    border: "none",
-    borderRadius: theme.borderRadius,
-    fontSize: variant === "primary" ? "16px" : "14px",
-    fontWeight: variant === "primary" ? "600" : "500",
-    cursor: disabled ? "not-allowed" : "pointer",
-    transition: "background-color 0.2s",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: variant === "primary" ? "center" : "space-between",
-    gap: "8px",
-    opacity: disabled ? 0.6 : 1,
-  };
+  const theme = useTheme();
+  const baseStyle = getBaseButtonStyle(
+    fullWidth,
+    disabled || isLoading,
+    theme.borderRadius,
+    variant === "primary" ? "16px" : "14px",
+    variant === "primary" ? "600" : "500",
+    variant === "primary" ? "center" : "space-between",
+  );
 
   const primaryStyle: CSSProperties = {
     ...baseStyle,
@@ -68,6 +85,52 @@ export function Button({
     } else {
       e.currentTarget.style.backgroundColor = "transparent";
     }
+  };
+
+  return (
+    <button
+      style={buttonStyle}
+      onClick={onClick}
+      disabled={disabled || isLoading}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {isLoading ? "Connecting..." : children}
+    </button>
+  );
+}
+
+// LoginWithPhantomButton component
+export interface LoginWithPhantomButtonProps {
+  children?: ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+  fullWidth?: boolean;
+  isLoading?: boolean;
+}
+
+export function LoginWithPhantomButton({
+  children = "Login with Phantom",
+  onClick,
+  disabled = false,
+  fullWidth = true,
+  isLoading = false,
+}: LoginWithPhantomButtonProps) {
+  const theme = useTheme();
+  const buttonStyle: CSSProperties = {
+    ...getBaseButtonStyle(fullWidth, disabled || isLoading, theme.borderRadius),
+    backgroundColor: theme.brand,
+    color: "#FFFFFF",
+  };
+
+  const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!disabled && !isLoading) {
+      e.currentTarget.style.backgroundColor = hexToRgba(theme.brand, 0.85);
+    }
+  };
+
+  const handleMouseLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.currentTarget.style.backgroundColor = theme.brand;
   };
 
   return (

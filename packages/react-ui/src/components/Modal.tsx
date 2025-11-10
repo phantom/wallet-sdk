@@ -1,14 +1,13 @@
 import React, { type CSSProperties } from "react";
-import { type PhantomThemeWithAux } from "../themes";
 import type { AuthProviderType } from "@phantom/browser-sdk";
-import { Button } from "./Button";
-import { LoginWithPhantomButton } from "./LoginWithPhantomButton";
+import { Button, LoginWithPhantomButton } from "./Button";
+import { useTheme } from "../hooks/useTheme";
+
 export interface ModalProps {
   isVisible: boolean;
   isConnecting: boolean;
   error: Error | null;
-  providerType: "injected" | "embedded" | "deeplink" | null;
-  theme: PhantomThemeWithAux;
+  providerType: AuthProviderType | "deeplink" | null;
   appIcon?: string;
   appName?: string;
   isMobile: boolean;
@@ -25,7 +24,6 @@ export function Modal({
   isConnecting,
   error,
   providerType,
-  theme,
   appIcon,
   appName,
   isMobile,
@@ -36,6 +34,8 @@ export function Modal({
   onConnectWithAuthProvider,
   onConnectWithInjected,
 }: ModalProps) {
+  const theme = useTheme();
+
   if (!isVisible) return null;
 
   // Styles
@@ -180,7 +180,6 @@ export function Modal({
             {/* Mobile device with no Phantom extension - show deeplink button */}
             {isMobile && !isExtensionInstalled && (
               <Button
-                theme={theme}
                 onClick={onConnectWithDeeplink}
                 disabled={isConnecting}
                 isLoading={isConnecting && providerType === "deeplink"}
@@ -193,29 +192,26 @@ export function Modal({
               <>
                 {isPhantomLoginAvailable && (
                   <LoginWithPhantomButton
-                    theme={theme}
                     onClick={() => onConnectWithAuthProvider("phantom")}
                     disabled={isConnecting}
-                    isLoading={isConnecting && providerType === "embedded"}
+                    isLoading={isConnecting && providerType === "phantom"}
                   />
                 )}
               </>
             )}
 
             <Button
-              theme={theme}
               onClick={() => onConnectWithAuthProvider("google")}
               disabled={isConnecting}
-              isLoading={isConnecting && providerType === "embedded"}
+              isLoading={isConnecting && providerType === "google"}
             >
               Continue with Google
             </Button>
 
             <Button
-              theme={theme}
               onClick={() => onConnectWithAuthProvider("apple")}
               disabled={isConnecting}
-              isLoading={isConnecting && providerType === "embedded"}
+              isLoading={isConnecting && providerType === "apple"}
             >
               Continue with Apple
             </Button>
@@ -229,7 +225,6 @@ export function Modal({
                 </div>
 
                 <Button
-                  theme={theme}
                   variant="secondary"
                   onClick={onConnectWithInjected}
                   disabled={isConnecting}

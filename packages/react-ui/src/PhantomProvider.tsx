@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from "react";
+import React, { useContext, useState, useCallback, useMemo, type ReactNode } from "react";
 import {
   useConnect as useBaseConnect,
   usePhantom,
@@ -10,6 +10,7 @@ import {
 import { isMobileDevice, getDeeplinkToPhantom, type AuthProviderType } from "@phantom/browser-sdk";
 import { darkTheme, mergeTheme, type PhantomTheme } from "./themes";
 import { Modal } from "./components/Modal";
+import { PhantomUIContext, type PhantomUIContextValue, type ConnectionUIState } from "./context";
 
 export interface PhantomUIProviderProps {
   children: ReactNode;
@@ -18,27 +19,6 @@ export interface PhantomUIProviderProps {
   appIcon?: string; // URL to app icon
   appName?: string; // App name to display
 }
-
-// Connection UI state
-interface ConnectionUIState {
-  isVisible: boolean;
-  isConnecting: boolean;
-  error: Error | null;
-  providerType: "injected" | "embedded" | "deeplink" | null;
-}
-
-interface PhantomUIContextValue {
-  // Connection state
-  connectionState: ConnectionUIState;
-  showConnectionModal: () => void;
-  hideConnectionModal: () => void;
-  connectWithAuthProvider: (provider: AuthProviderType) => Promise<void>;
-  connectWithInjected: () => Promise<void>;
-  connectWithDeeplink: () => void;
-  isMobile: boolean;
-}
-
-const PhantomUIContext = createContext<PhantomUIContextValue | null>(null);
 
 // Internal UI Provider that consumes react-sdk context
 function PhantomUIProvider({ children, theme = darkTheme, appIcon, appName }: Omit<PhantomUIProviderProps, "config">) {
@@ -90,7 +70,7 @@ function PhantomUIProvider({ children, theme = darkTheme, appIcon, appName }: Om
           ...prev,
           isConnecting: true,
           error: null,
-          providerType: "embedded", // Always embedded when using modal
+          providerType: provider,
         }));
 
         await baseConnect.connect({ provider });
@@ -194,6 +174,7 @@ function PhantomUIProvider({ children, theme = darkTheme, appIcon, appName }: Om
     connectWithInjected,
     connectWithDeeplink,
     isMobile,
+    theme: resolvedTheme,
   };
 
   return (
@@ -204,7 +185,6 @@ function PhantomUIProvider({ children, theme = darkTheme, appIcon, appName }: Om
         isConnecting={connectionState.isConnecting}
         error={connectionState.error}
         providerType={connectionState.providerType}
-        theme={resolvedTheme}
         appIcon={appIcon}
         appName={appName}
         isMobile={isMobile}

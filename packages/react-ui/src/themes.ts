@@ -5,37 +5,40 @@
 
 import { hexToRgba } from "./utils";
 
+// Type-safe hex color string
+export type HexColor = `#${string}`;
+
 export interface PhantomTheme {
   // Background color for modal
-  background: string;
+  background: HexColor;
 
-  // Secondary color for text, borders, dividers
-  secondary: string;
+  // Secondary color for text, borders, dividers (must be hex for opacity derivation)
+  secondary: HexColor;
 
   // Error color
-  error: string;
+  error: HexColor;
 
   // Success color
-  success: string;
+  success: HexColor;
 
   // Primary text color
-  text: string;
+  text: HexColor;
 
-  // Overlay background (with opacity)
+  // Overlay background (with opacity) - can be rgba or hex
   overlay: string;
 
   // Border radius for buttons and modal
   borderRadius: string;
 
   // Brand color
-  brand: string;
+  brand: HexColor;
 }
 
 export type PhantomThemeWithAux = PhantomTheme & {
-  aux: string; // Auxiliary color derived from secondary with opacity
+  aux: string; // Auxiliary color derived from secondary with opacity (rgba format)
 };
 
-export const loginWithPhantomColor = "#7C63E7";
+export const loginWithPhantomColor: HexColor = "#7C63E7";
 /**
  * Dark theme configuration
  */
