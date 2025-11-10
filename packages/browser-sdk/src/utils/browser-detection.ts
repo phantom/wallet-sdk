@@ -114,7 +114,7 @@ export function parseBrowserFromUserAgent(userAgent: string, hasBraveAPI?: boole
     // Browser parsing failed, continuing with fallback
   }
 
-  return { name, version , userAgent };
+  return { name, version, userAgent };
 }
 
 /**
@@ -162,7 +162,7 @@ export function isMobileDevice(): boolean {
   }
 
   const userAgent = window.navigator.userAgent.toLowerCase();
-  
+
   // Check for mobile user agent patterns
   const mobilePatterns = [
     /android/,
@@ -174,7 +174,7 @@ export function isMobileDevice(): boolean {
     /silk/,
     /kindle/,
     /opera mini/,
-    /opera mobi/
+    /opera mobi/,
   ];
 
   const isMobileUA = mobilePatterns.some(pattern => pattern.test(userAgent));
@@ -192,7 +192,7 @@ export function isMobileDevice(): boolean {
   // Also check for touch capability as additional indicator
   let isTouchDevice = false;
   try {
-    isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
   } catch (error) {
     // If touch API is not available, rely on other indicators
     isTouchDevice = false;

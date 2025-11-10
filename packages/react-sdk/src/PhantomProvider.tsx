@@ -1,7 +1,14 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import { BrowserSDK } from "@phantom/browser-sdk";
-import type { BrowserSDKConfig, WalletAddress, AuthOptions, DebugConfig, ConnectEventData, ConnectResult } from "@phantom/browser-sdk";
+import type {
+  BrowserSDKConfig,
+  WalletAddress,
+  AuthOptions,
+  DebugConfig,
+  ConnectEventData,
+  ConnectResult,
+} from "@phantom/browser-sdk";
 
 export type PhantomSDKConfig = BrowserSDKConfig;
 

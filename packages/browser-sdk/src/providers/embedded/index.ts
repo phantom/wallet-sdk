@@ -1,7 +1,13 @@
 import { EmbeddedProvider as CoreEmbeddedProvider } from "@phantom/embedded-provider-core";
 import type { EmbeddedProviderConfig, PlatformAdapter } from "@phantom/embedded-provider-core";
 import { IndexedDbStamper } from "@phantom/indexed-db-stamper";
-import { BrowserStorage, BrowserURLParamsAccessor, BrowserAuthProvider, BrowserPhantomAppProvider, BrowserLogger } from "./adapters";
+import {
+  BrowserStorage,
+  BrowserURLParamsAccessor,
+  BrowserAuthProvider,
+  BrowserPhantomAppProvider,
+  BrowserLogger,
+} from "./adapters";
 import { debug, DebugCategory } from "../../debug";
 import { detectBrowser, getPlatformName } from "../../utils/browser-detection";
 import type { Provider } from "../../types";
@@ -20,7 +26,7 @@ export class EmbeddedProvider extends CoreEmbeddedProvider implements Provider {
     });
 
     const platformName = getPlatformName();
-    const { name: browserName, version} = detectBrowser();
+    const { name: browserName, version } = detectBrowser();
 
     const platform: PlatformAdapter = {
       storage: new BrowserStorage(),

@@ -201,7 +201,7 @@ interface PhantomSDKConfig {
   scheme: string; // Custom URL scheme for your app
   appId: string; // Your app ID from phantom.com/portal (required)
   addressTypes: [AddressType, ...AddressType[]]; // e.g., [AddressType.solana]
-  
+
   // Optional configuration
   embeddedWalletType?: "user-wallet"; // optional, defaults to "user-wallet", currently the only supported type
   apiBaseUrl?: string; // e.g., "https://api.phantom.app/v1/wallets" (optional, has default)
@@ -300,18 +300,18 @@ if (isAvailable) {
 
 **Supported EVM Networks:**
 
-| Network | Chain ID | Usage |
-|---------|----------|-------|
-| Ethereum Mainnet | `1` | `ethereum.switchChain(1)` |
+| Network          | Chain ID   | Usage                            |
+| ---------------- | ---------- | -------------------------------- |
+| Ethereum Mainnet | `1`        | `ethereum.switchChain(1)`        |
 | Ethereum Sepolia | `11155111` | `ethereum.switchChain(11155111)` |
-| Polygon Mainnet | `137` | `ethereum.switchChain(137)` |
-| Polygon Amoy | `80002` | `ethereum.switchChain(80002)` |
-| Base Mainnet | `8453` | `ethereum.switchChain(8453)` |
-| Base Sepolia | `84532` | `ethereum.switchChain(84532)` |
-| Arbitrum One | `42161` | `ethereum.switchChain(42161)` |
-| Arbitrum Sepolia | `421614` | `ethereum.switchChain(421614)` |
-| Monad Mainnet | `143` | `ethereum.switchChain(143)` |
-| Monad Testnet | `10143` | `ethereum.switchChain(10143)` |
+| Polygon Mainnet  | `137`      | `ethereum.switchChain(137)`      |
+| Polygon Amoy     | `80002`    | `ethereum.switchChain(80002)`    |
+| Base Mainnet     | `8453`     | `ethereum.switchChain(8453)`     |
+| Base Sepolia     | `84532`    | `ethereum.switchChain(84532)`    |
+| Arbitrum One     | `42161`    | `ethereum.switchChain(42161)`    |
+| Arbitrum Sepolia | `421614`   | `ethereum.switchChain(421614)`   |
+| Monad Mainnet    | `143`      | `ethereum.switchChain(143)`      |
+| Monad Testnet    | `10143`    | `ethereum.switchChain(10143)`    |
 
 #### useDisconnect
 
@@ -501,4 +501,3 @@ interface PhantomDebugConfig {
   enabled?: boolean; // Enable debug logging (default: false)
 }
 ```
-

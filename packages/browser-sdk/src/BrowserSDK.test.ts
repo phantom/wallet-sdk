@@ -11,7 +11,7 @@ jest.mock("@phantom/parsers", () => ({
   parseTransactionResponse: jest.fn().mockReturnValue({
     hash: "mock-transaction-hash",
     rawTransaction: "mock-raw-tx",
-    blockExplorer: "https://explorer.com/tx/mock-transaction-hash"
+    blockExplorer: "https://explorer.com/tx/mock-transaction-hash",
   }),
   parseSolanaTransactionSignature: jest.fn().mockReturnValue({ signature: "mock-signature", fallback: false }),
 }));
@@ -107,8 +107,6 @@ describe("BrowserSDK", () => {
         });
       }).toThrow("appId is required for embedded provider");
     });
-
-
 
     it("should throw error for invalid provider type", () => {
       expect(() => {

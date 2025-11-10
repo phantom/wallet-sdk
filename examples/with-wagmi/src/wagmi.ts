@@ -1,7 +1,7 @@
-import { createConfig } from 'wagmi'
-import { http } from 'wagmi'  
-import { mainnet, sepolia } from 'wagmi/chains'
-import { phantomConnector } from './phantom-connector'
+import { createConfig } from "wagmi";
+import { http } from "wagmi";
+import { mainnet, sepolia } from "wagmi/chains";
+import { phantomConnector } from "./phantom-connector";
 
 // Create wagmi configuration with Phantom connector
 export const config = createConfig({
@@ -10,7 +10,5 @@ export const config = createConfig({
     [mainnet.id]: http(),
     [sepolia.id]: http(),
   },
-  connectors: [
-    phantomConnector()
-  ]
-})
+  connectors: [phantomConnector()],
+});

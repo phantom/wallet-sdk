@@ -367,7 +367,7 @@ describe("InjectedProvider", () => {
         expect(connectCallback).toHaveBeenCalledWith({
           addresses: [
             { addressType: AddressType.solana, address: "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH" },
-            { addressType: AddressType.ethereum, address: newAccounts[0] }
+            { addressType: AddressType.ethereum, address: newAccounts[0] },
           ],
           source: "injected-extension-account-change",
           authUserId: "test-auth-user-id",
@@ -413,10 +413,12 @@ describe("InjectedProvider", () => {
 
         // Provider should still be connected (because Solana is still connected)
         expect(provider.isConnected()).toBe(false);
-        expect(provider.getAddresses()).toEqual([{
-          addressType: AddressType.solana,
-          address: "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH"
-        }]);
+        expect(provider.getAddresses()).toEqual([
+          {
+            addressType: AddressType.solana,
+            address: "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH",
+          },
+        ]);
       });
     });
 
@@ -442,18 +444,14 @@ describe("InjectedProvider", () => {
 
         // Should emit connect event with updated Solana address (but no Ethereum addresses since not added during initial connect)
         expect(connectCallback).toHaveBeenCalledWith({
-          addresses: [
-            { addressType: AddressType.solana, address: newPublicKey }
-          ],
+          addresses: [{ addressType: AddressType.solana, address: newPublicKey }],
           source: "injected-extension-account-change",
           authUserId: "test-auth-user-id",
         });
         expect(disconnectCallback).not.toHaveBeenCalled();
 
         // Verify the provider state was updated
-        expect(provider.getAddresses()).toEqual([
-          { addressType: AddressType.solana, address: newPublicKey }
-        ]);
+        expect(provider.getAddresses()).toEqual([{ addressType: AddressType.solana, address: newPublicKey }]);
       });
     });
   });

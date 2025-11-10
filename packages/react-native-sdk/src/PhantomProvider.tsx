@@ -1,9 +1,19 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import { EmbeddedProvider } from "@phantom/embedded-provider-core";
-import type { EmbeddedProviderConfig, PlatformAdapter, ConnectEventData, ConnectResult } from "@phantom/embedded-provider-core";
+import type {
+  EmbeddedProviderConfig,
+  PlatformAdapter,
+  ConnectEventData,
+  ConnectResult,
+} from "@phantom/embedded-provider-core";
 import type { PhantomSDKConfig, PhantomDebugConfig, WalletAddress } from "./types";
-import {ANALYTICS_HEADERS, DEFAULT_WALLET_API_URL, DEFAULT_EMBEDDED_WALLET_TYPE, DEFAULT_AUTH_URL } from "@phantom/constants";
+import {
+  ANALYTICS_HEADERS,
+  DEFAULT_WALLET_API_URL,
+  DEFAULT_EMBEDDED_WALLET_TYPE,
+  DEFAULT_AUTH_URL,
+} from "@phantom/constants";
 // Platform adapters for React Native/Expo
 import { ExpoSecureStorage } from "./providers/embedded/storage";
 import { ExpoAuthProvider } from "./providers/embedded/auth";
@@ -51,8 +61,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       apiBaseUrl: config.apiBaseUrl || DEFAULT_WALLET_API_URL,
       embeddedWalletType: config.embeddedWalletType || DEFAULT_EMBEDDED_WALLET_TYPE,
       authOptions: {
-        ...(config.authOptions || {
-        }),
+        ...(config.authOptions || {}),
         redirectUrl,
         authUrl: config.authOptions?.authUrl || DEFAULT_AUTH_URL,
       },
@@ -95,7 +104,6 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
 
   // Event listener management - SDK already exists
   useEffect(() => {
-
     // Event handlers that need to be referenced for cleanup
     const handleConnectStart = () => {
       setIsConnecting(true);

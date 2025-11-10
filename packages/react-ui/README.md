@@ -32,7 +32,7 @@ The `@phantom/react-ui` package is a lightweight wrapper around `@phantom/react-
 - **Customizable theming**: CSS variables for styling
 
 ```tsx
-import { PhantomProvider, useConnect , useSolana, useEthereum } from "@phantom/react-ui";
+import { PhantomProvider, useConnect, useSolana, useEthereum } from "@phantom/react-ui";
 import { AddressType } from "@phantom/browser-sdk";
 
 function App() {
@@ -45,7 +45,7 @@ function App() {
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
       }}
     >
-        <WalletComponent />
+      <WalletComponent />
     </PhantomProvider>
   );
 }

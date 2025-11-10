@@ -41,7 +41,6 @@ describe("signAndSendAllTransactions", () => {
     expect(result).toEqual(expectedResult);
   });
 
-
   it("should throw error if provider not found", async () => {
     (getProvider as jest.Mock).mockReturnValue(null);
     await expect(signAndSendAllTransactions(mockTransactions)).rejects.toThrow("Provider not found.");
@@ -64,7 +63,7 @@ describe("signAndSendAllTransactions", () => {
 
   it("should handle empty transactions array", async () => {
     const expectedResult = { signatures: [], address: "mockKey" };
-    const emptyTransactions: (VersionedTransaction)[] = [];
+    const emptyTransactions: VersionedTransaction[] = [];
 
     (mockProvider.signAndSendAllTransactions as jest.Mock).mockResolvedValue({
       signatures: [],
