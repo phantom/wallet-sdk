@@ -154,16 +154,12 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
     };
   }, [sdk]);
 
-  // Initialize auto-connect
+  // Initialize auto-connect (always enabled by default)
   useEffect(() => {
-
-    // Attempt auto-connect if enabled
-    if (config.autoConnect !== false) {
-      sdk.autoConnect().catch(() => {
-        // Silent fail - auto-connect is optional and shouldn't break the app
-      });
-    }
-  }, [sdk, config.autoConnect]);
+    sdk.autoConnect().catch(() => {
+      // Silent fail - auto-connect is optional and shouldn't break the app
+    });
+  }, [sdk]);
 
   // Memoize context value to prevent unnecessary re-renders
   const value: PhantomContextValue = useMemo(

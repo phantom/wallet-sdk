@@ -301,7 +301,6 @@ interface BrowserSDKConfig {
     redirectUrl?: string; // Custom redirect URL after authentication (optional)
   };
   embeddedWalletType?: "user-wallet"; // Wallet type (optional, defaults to "user-wallet", currently the only supported type)
-  autoConnect?: boolean; // Enable auto-connect to existing sessions (optional, defaults to true for embedded)
 }
 ```
 

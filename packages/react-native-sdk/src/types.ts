@@ -9,8 +9,6 @@ export interface PhantomDebugConfig {
 export interface PhantomSDKConfig extends Omit<EmbeddedProviderConfig, "apiBaseUrl" | "embeddedWalletType"| "authOptions"> {
   /** Custom URL scheme for your app (e.g., "myapp") */
   scheme: string;
-  /** Enable auto-connect to existing sessions (default: true) */
-  autoConnect?: boolean;
   /** Base URL for Phantom API (default: "https://api.phantom.app/v1/wallets") */
   apiBaseUrl?: string;
   /** Authentication options */

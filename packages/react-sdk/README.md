@@ -818,7 +818,6 @@ interface PhantomSDKConfig {
     redirectUrl?: string; // Custom redirect URL after authentication (optional)
   };
   embeddedWalletType?: "user-wallet"; // Wallet type (optional, defaults to "user-wallet", currently the only supported type)
-  autoConnect?: boolean; // Auto-connect to existing session on SDK instantiation (optional, defaults to true for embedded, false for injected)
 }
 ```
 

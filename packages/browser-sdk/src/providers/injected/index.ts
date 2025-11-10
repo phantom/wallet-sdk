@@ -58,9 +58,10 @@ import { debug, DebugCategory } from "../../debug";
 import { InjectedSolanaChain, InjectedEthereumChain, type ChainCallbacks } from "./chains";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
 
-// LocalStorage key and value for tracking manual disconnect to prevent auto-reconnect
-const MANUAL_DISCONNECT_KEY = "phantom-injected-manual-disconnect";
-const MANUAL_DISCONNECT_VALUE = "true";
+// LocalStorage key and value for tracking previous connection state
+// Only autoconnect if user was previously connected
+const WAS_CONNECTED_KEY = "phantom-injected-was-connected";
+const WAS_CONNECTED_VALUE = "true";
 
 export interface InjectedProviderConfig {
   addressTypes: AddressType[];
@@ -254,14 +255,13 @@ export class InjectedProvider implements Provider {
 
       // Get authUserId if available
       const authUserId = await this.getAuthUserId("manual-connect");
-      // Clear manual disconnect flag since user is now explicitly connecting
-      // This allows auto-reconnect on future page reloads
+      // Set flag to indicate user has connected - enables auto-reconnect on future page reloads
       try {
-        localStorage.removeItem(MANUAL_DISCONNECT_KEY);
-        debug.log(DebugCategory.INJECTED_PROVIDER, "Cleared manual disconnect flag - auto-reconnect enabled");
+        localStorage.setItem(WAS_CONNECTED_KEY, WAS_CONNECTED_VALUE);
+        debug.log(DebugCategory.INJECTED_PROVIDER, "Set was-connected flag - auto-reconnect enabled");
       } catch (error) {
         // Ignore localStorage errors (e.g., in private browsing mode)
-        debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to clear manual disconnect flag", { error });
+        debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to set was-connected flag", { error });
       }
 
       const result = {
@@ -324,14 +324,14 @@ export class InjectedProvider implements Provider {
     this.connected = false;
     this.addresses = [];
 
-    // Set flag to prevent auto-reconnect on page reload
-    // This improves UX by respecting the user's explicit disconnect action
+    // Clear was-connected flag to prevent auto-reconnect on page reload
+    // This respects the user's explicit disconnect action
     try {
-      localStorage.setItem(MANUAL_DISCONNECT_KEY, MANUAL_DISCONNECT_VALUE);
-      debug.log(DebugCategory.INJECTED_PROVIDER, "Set manual disconnect flag to prevent auto-reconnect");
+      localStorage.removeItem(WAS_CONNECTED_KEY);
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Cleared was-connected flag to prevent auto-reconnect");
     } catch (error) {
       // Ignore localStorage errors (e.g., in private browsing mode)
-      debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to set manual disconnect flag", { error });
+      debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to clear was-connected flag", { error });
     }
 
     // Emit disconnect event
@@ -344,23 +344,25 @@ export class InjectedProvider implements Provider {
 
   
   /**
-   * Attempt auto-connection using onlyIfTrusted parameter
-   * This will only connect if the dApp is already trusted by the user
+   * Attempt auto-connection if user was previously connected
+   * Only reconnects if the user connected before and didn't explicitly disconnect
    * Should be called after setting up event listeners
    */
   async autoConnect(): Promise<void> {
-    debug.log(DebugCategory.INJECTED_PROVIDER, "Attempting auto-connect with onlyIfTrusted=true");
+    debug.log(DebugCategory.INJECTED_PROVIDER, "Attempting auto-connect");
 
-    // Check if user manually disconnected - if so, respect their choice and don't auto-reconnect
+    // Check if user was previously connected - only autoconnect if they were
     try {
-      const manualDisconnect = localStorage.getItem(MANUAL_DISCONNECT_KEY);
-      if (manualDisconnect === MANUAL_DISCONNECT_VALUE) {
-        debug.log(DebugCategory.INJECTED_PROVIDER, "Skipping auto-connect: user previously disconnected manually");
-        return; // Don't auto-connect if user explicitly disconnected
+      const wasConnected = localStorage.getItem(WAS_CONNECTED_KEY);
+      if (wasConnected !== WAS_CONNECTED_VALUE) {
+        debug.log(DebugCategory.INJECTED_PROVIDER, "Skipping auto-connect: user was not previously connected");
+        return; // Don't auto-connect if user never connected before
       }
+      debug.log(DebugCategory.INJECTED_PROVIDER, "User was previously connected, attempting auto-connect");
     } catch (error) {
       // Ignore localStorage errors (e.g., in private browsing mode)
-      debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to check manual disconnect flag", { error });
+      debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to check was-connected flag", { error });
+      return; // Don't attempt autoconnect if we can't check the flag
     }
 
     // Emit connect_start event for auto-connect
@@ -400,6 +402,7 @@ export class InjectedProvider implements Provider {
         } catch (err) {
           // Silently fail for auto-connect
           debug.log(DebugCategory.INJECTED_PROVIDER, "Solana auto-connect failed (expected if not trusted)", { error: err });
+          throw err;
         }
       }
 
@@ -407,7 +410,7 @@ export class InjectedProvider implements Provider {
       if (this.addressTypes.includes(AddressType.ethereum)) {
         debug.log(DebugCategory.INJECTED_PROVIDER, "Attempting Ethereum auto-connect");
         try {
-          // Use onlyIfTrusted=true for silent connection
+          // Use onlyIfTrusted=true for silent connection (uses eth_accounts instead of eth_requestAccounts)
           const accounts = await this.phantom.ethereum.connect({ onlyIfTrusted: true });
           if (accounts && accounts.length > 0) {
             connectedAddresses.push(

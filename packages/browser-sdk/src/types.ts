@@ -22,9 +22,7 @@ export interface DebugConfig {
 }
 
 export type BrowserSDKConfig = Prettify<
-  (ExtendedEmbeddedProviderConfig | ExtendedInjectedProviderConfig) & {
-    autoConnect?: boolean;
-  }
+  ExtendedEmbeddedProviderConfig | ExtendedInjectedProviderConfig
 >;
 
 // Improves display of a merged type on hover
