@@ -151,9 +151,9 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
         setIsPhantomAvailable(false);
       }
 
-      // Attempt auto-connect (always enabled by default)
+      // Attempt auto-connect
       sdk.autoConnect().catch(() => {
-        // Silent fail - auto-connect is optional and shouldn't break the app
+        // Silent fail - auto-connect shouldn't break the app
       });
     };
 

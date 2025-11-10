@@ -154,10 +154,10 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
     };
   }, [sdk]);
 
-  // Initialize auto-connect (always enabled by default)
+  // Initialize auto-connect
   useEffect(() => {
     sdk.autoConnect().catch(() => {
-      // Silent fail - auto-connect is optional and shouldn't break the app
+      // Silent fail - auto-connect shouldn't break the app
     });
   }, [sdk]);
 
