@@ -12,7 +12,6 @@ import {
   type AutoConfirmSupportedChainsResult,
 } from "@phantom/browser-injected-sdk/auto-confirm";
 
-// Define proper interface with imported types from browser-injected-sdk
 interface PhantomExtended {
   extension: Extension;
   solana: Solana;
@@ -20,10 +19,6 @@ interface PhantomExtended {
   autoConfirm: AutoConfirmPlugin;
 }
 
-
-/**
- * Phantom extension app.login API types
- */
 interface PhantomAppLoginOptions {
   publicKey: string;
   appId: string;
@@ -58,8 +53,6 @@ import { debug, DebugCategory } from "../../debug";
 import { InjectedSolanaChain, InjectedEthereumChain, type ChainCallbacks } from "./chains";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
 
-// LocalStorage key and value for tracking previous connection state
-// Only autoconnect if user was previously connected
 const WAS_CONNECTED_KEY = "phantom-injected-was-connected";
 const WAS_CONNECTED_VALUE = "true";
 
@@ -111,10 +104,8 @@ export class InjectedProvider implements Provider {
     });
     this.phantom = createPhantom({ plugins }) as unknown as PhantomExtended;
 
-    // Create callback objects to avoid circular dependencies
     const callbacks = this.createCallbacks();
 
-    // Create chains with callbacks instead of SDK reference
     if (this.addressTypes.includes(AddressType.solana)) {
       this._solanaChain = new InjectedSolanaChain(this.phantom, callbacks);
     }
@@ -125,9 +116,6 @@ export class InjectedProvider implements Provider {
     debug.info(DebugCategory.INJECTED_PROVIDER, "InjectedProvider initialized");
   }
 
-  /**
-   * Access to Solana chain operations
-   */
   get solana(): ISolanaChain {
     if (!this.addressTypes.includes(AddressType.solana)) {
       throw new Error("Solana not enabled for this provider");
@@ -157,12 +145,10 @@ export class InjectedProvider implements Provider {
       provider: authOptions.provider,
     });
 
-    // Validate provider is "injected"
     if (authOptions.provider !== "injected") {
       throw new Error(`Invalid provider for injected connection: ${authOptions.provider}. Must be "injected"`);
     }
 
-    // Emit connect_start event for manual connect
     this.emit("connect_start", {
       source: "manual-connect",
       providerType: "injected",
@@ -173,7 +159,6 @@ export class InjectedProvider implements Provider {
         debug.error(DebugCategory.INJECTED_PROVIDER, "Phantom wallet extension not found");
         const error = new Error("Phantom wallet not found");
 
-        // Emit connect_error event before throwing
         this.emit("connect_error", {
           error: error.message,
           source: "manual-connect",
@@ -185,7 +170,6 @@ export class InjectedProvider implements Provider {
 
       const connectedAddresses: WalletAddress[] = [];
 
-      // Try Solana if enabled
       if (this.addressTypes.includes(AddressType.solana)) {
         debug.log(DebugCategory.INJECTED_PROVIDER, "Attempting Solana connection");
         try {
@@ -198,10 +182,8 @@ export class InjectedProvider implements Provider {
             debug.info(DebugCategory.INJECTED_PROVIDER, "Solana connected successfully", { address: publicKey });
           }
         } catch (err) {
-          // Stop immediately on any error - don't try other chains
           debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to connect Solana, stopping", { error: err });
 
-          // Emit connect_error event before throwing
           this.emit("connect_error", {
             error: err instanceof Error ? err.message : "Failed to connect",
             source: "manual-connect",
@@ -211,7 +193,6 @@ export class InjectedProvider implements Provider {
         }
       }
 
-      // Try Ethereum if enabled
       if (this.addressTypes.includes(AddressType.ethereum)) {
         try {
           const accounts = await this.phantom.ethereum.connect();
@@ -225,10 +206,8 @@ export class InjectedProvider implements Provider {
             debug.info(DebugCategory.INJECTED_PROVIDER, "Ethereum connected successfully", { addresses: accounts });
           }
         } catch (err) {
-          // Stop immediately on any error
           debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to connect Ethereum, stopping", { error: err });
 
-          // Emit connect_error event before throwing
           this.emit("connect_error", {
             error: err instanceof Error ? err.message : "Failed to connect",
             source: "manual-connect",
@@ -241,7 +220,6 @@ export class InjectedProvider implements Provider {
       if (connectedAddresses.length === 0) {
         const error = new Error("Failed to connect to any supported wallet provider");
 
-        // Emit connect_error event before throwing
         this.emit("connect_error", {
           error: error.message,
           source: "manual-connect",
@@ -253,9 +231,7 @@ export class InjectedProvider implements Provider {
       this.addresses = connectedAddresses;
       this.connected = true;
 
-      // Get authUserId if available
       const authUserId = await this.getAuthUserId("manual-connect");
-      // Set flag to indicate user has connected - enables auto-reconnect on future page reloads
       try {
         localStorage.setItem(WAS_CONNECTED_KEY, WAS_CONNECTED_VALUE);
         debug.log(DebugCategory.INJECTED_PROVIDER, "Set was-connected flag - auto-reconnect enabled");
@@ -270,7 +246,6 @@ export class InjectedProvider implements Provider {
         authUserId,
       };
 
-      // Emit connect event for successful connection
       this.emit("connect", {
         addresses: this.addresses,
         source: "manual-connect",
@@ -279,7 +254,6 @@ export class InjectedProvider implements Provider {
 
       return result;
     } catch (error) {
-      // If we haven't already emitted connect_error, emit it now
       if (
         error instanceof Error &&
         !error.message.includes("Phantom wallet not found") &&
@@ -298,7 +272,6 @@ export class InjectedProvider implements Provider {
   async disconnect(): Promise<void> {
     debug.info(DebugCategory.INJECTED_PROVIDER, "Starting injected provider disconnect");
 
-    // Disconnect from Solana if enabled
     if (this.addressTypes.includes(AddressType.solana)) {
       try {
         await this.phantom.solana.disconnect();
@@ -309,13 +282,6 @@ export class InjectedProvider implements Provider {
       }
     }
 
-    // Disconnect from Ethereum if enabled (no-op for Ethereum - it doesn't have a disconnect method)
-    if (this.addressTypes.includes(AddressType.ethereum)) {
-      debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum disconnected (no-op)");
-    }
-
-    // Don't reset chain instances - they should remain available after disconnect
-
     // Clean up browser-injected-sdk event listeners only
     // Do NOT clear this.eventListeners as it contains ProviderManager forwarding callbacks
     this.browserInjectedCleanupFunctions.forEach(cleanup => cleanup());
@@ -324,17 +290,13 @@ export class InjectedProvider implements Provider {
     this.connected = false;
     this.addresses = [];
 
-    // Clear was-connected flag to prevent auto-reconnect on page reload
-    // This respects the user's explicit disconnect action
     try {
       localStorage.removeItem(WAS_CONNECTED_KEY);
-      debug.log(DebugCategory.INJECTED_PROVIDER, "Cleared was-connected flag to prevent auto-reconnect");
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Cleared was connected flag to prevent auto-reconnect");
     } catch (error) {
-      // Ignore localStorage errors (e.g., in private browsing mode)
       debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to clear was-connected flag", { error });
     }
 
-    // Emit disconnect event
     this.emit("disconnect", {
       source: "manual-disconnect",
     });
@@ -351,7 +313,6 @@ export class InjectedProvider implements Provider {
   async autoConnect(): Promise<void> {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Attempting auto-connect");
 
-    // Check if user was previously connected - only autoconnect if they were
     try {
       const wasConnected = localStorage.getItem(WAS_CONNECTED_KEY);
       if (wasConnected !== WAS_CONNECTED_VALUE) {
@@ -360,12 +321,10 @@ export class InjectedProvider implements Provider {
       }
       debug.log(DebugCategory.INJECTED_PROVIDER, "User was previously connected, attempting auto-connect");
     } catch (error) {
-      // Ignore localStorage errors (e.g., in private browsing mode)
       debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to check was-connected flag", { error });
       return; // Don't attempt autoconnect if we can't check the flag
     }
 
-    // Emit connect_start event for auto-connect
     this.emit("connect_start", {
       source: "auto-connect",
       providerType: "injected",
@@ -375,13 +334,12 @@ export class InjectedProvider implements Provider {
       if (!this.phantom.extension?.isInstalled?.()) {
         debug.warn(DebugCategory.INJECTED_PROVIDER, "Phantom wallet extension not found for auto-connect");
 
-        // Emit connect_error event for auto-connect failure
         this.emit("connect_error", {
           error: "Phantom wallet not found",
           source: "auto-connect",
         });
 
-        return; // Silently fail for auto-connect
+        return;
       }
 
       const connectedAddresses: WalletAddress[] = [];
@@ -400,7 +358,6 @@ export class InjectedProvider implements Provider {
             debug.info(DebugCategory.INJECTED_PROVIDER, "Solana auto-connected successfully", { address: publicKey });
           }
         } catch (err) {
-          // Silently fail for auto-connect
           debug.log(DebugCategory.INJECTED_PROVIDER, "Solana auto-connect failed (expected if not trusted)", { error: err });
           throw err;
         }
@@ -422,7 +379,6 @@ export class InjectedProvider implements Provider {
             debug.info(DebugCategory.INJECTED_PROVIDER, "Ethereum auto-connected successfully", { addresses: accounts });
           }
         } catch (err) {
-          // Silently fail for auto-connect
           debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum auto-connect failed (expected if not trusted)", { error: err });
         }
       }
@@ -430,25 +386,19 @@ export class InjectedProvider implements Provider {
       if (connectedAddresses.length === 0) {
         debug.log(DebugCategory.INJECTED_PROVIDER, "Auto-connect failed: no trusted connections available");
 
-        // Emit connect_error for auto-connect failure
         this.emit("connect_error", {
           error: "No trusted connections available",
           source: "auto-connect",
         });
 
-        return; // Silently fail for auto-connect
+        return;
       }
 
-      // Success! Update state
       this.addresses = connectedAddresses;
       this.connected = true;
 
-      // Get authUserId if available
       const authUserId = await this.getAuthUserId("auto-connect");
 
-      // Event handling is initialized in constructor
-
-      // Emit connect event for successful auto-connection
       this.emit("connect", {
         addresses: this.addresses,
         source: "auto-connect",
@@ -466,13 +416,11 @@ export class InjectedProvider implements Provider {
         error: error instanceof Error ? error.message : String(error),
       });
 
-      // Emit connect_error for auto-connect failure
       this.emit("connect_error", {
         error: error instanceof Error ? error.message : "Auto-connect failed",
         source: "auto-connect",
       });
 
-      // Silently fail for auto-connect (don't throw)
     }
   }
 
@@ -522,7 +470,6 @@ export class InjectedProvider implements Provider {
         return authUserId;
       }
     } catch (error) {
-      // Silently ignore errors - getUser() might not be supported in all extension versions
       debug.log(DebugCategory.INJECTED_PROVIDER, `Failed to get user info during ${context} (method may not be supported)`, { error });
     }
     return undefined;
@@ -577,12 +524,10 @@ export class InjectedProvider implements Provider {
   private setupBrowserInjectedEvents(): void {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Setting up browser-injected-sdk event listeners");
 
-    // Set up Solana events if enabled
     if (this.addressTypes.includes(AddressType.solana)) {
       this.setupSolanaEvents();
     }
 
-    // Set up Ethereum events if enabled
     if (this.addressTypes.includes(AddressType.ethereum)) {
       this.setupEthereumEvents();
     }
@@ -595,17 +540,14 @@ export class InjectedProvider implements Provider {
     const handleSolanaConnect = async (publicKey: string) => {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Solana connect event received", { publicKey });
 
-      // Update our internal state
       const solanaAddress = { addressType: AddressType.solana, address: publicKey };
       if (!this.addresses.find(addr => addr.addressType === AddressType.solana)) {
         this.addresses.push(solanaAddress);
       }
       this.connected = true;
 
-      // Get authUserId if available
       const authUserId = await this.getAuthUserId("Solana connect event");
 
-      // Emit unified connect event
       this.emit("connect", {
         addresses: this.addresses,
         source: "injected-extension",
@@ -617,11 +559,9 @@ export class InjectedProvider implements Provider {
     const handleSolanaDisconnect = () => {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Solana disconnect event received");
 
-      // Update our internal state
       this.addresses = this.addresses.filter(addr => addr.addressType !== AddressType.solana);
       this.connected = false; // Disconnect event means the user disconnected the dApp
 
-      // Emit unified disconnect event
       this.emit("disconnect", {
         source: "injected-extension",
       });
@@ -639,10 +579,8 @@ export class InjectedProvider implements Provider {
         this.addresses.push({ addressType: AddressType.solana, address: publicKey });
       }
 
-      // Get authUserId if available
       const authUserId = await this.getAuthUserId("Solana account changed event");
 
-      // Emit as a new connect event (account change = reconnection)
       this.emit("connect", {
         addresses: this.addresses,
         source: "injected-extension-account-change",
@@ -650,23 +588,19 @@ export class InjectedProvider implements Provider {
       });
     };
 
-    // Add event listeners using browser-injected-sdk
     const cleanupConnect = this.phantom.solana.addEventListener("connect", handleSolanaConnect);
     const cleanupDisconnect = this.phantom.solana.addEventListener("disconnect", handleSolanaDisconnect);
     const cleanupAccountChanged = this.phantom.solana.addEventListener("accountChanged", handleSolanaAccountChanged);
 
-    // Store cleanup functions
     this.browserInjectedCleanupFunctions.push(cleanupConnect, cleanupDisconnect, cleanupAccountChanged);
   }
 
   private setupEthereumEvents(): void {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Setting up Ethereum event listeners");
 
-    // Map Ethereum connect event to unified connect event
     const handleEthereumConnect = async (accounts: string[]) => {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum connect event received", { accounts });
 
-      // Update our internal state - remove old Ethereum addresses and add new ones
       this.addresses = this.addresses.filter(addr => addr.addressType !== AddressType.ethereum);
       if (accounts && accounts.length > 0) {
         this.addresses.push(
@@ -678,10 +612,8 @@ export class InjectedProvider implements Provider {
       }
       this.connected = this.addresses.length > 0;
 
-      // Get authUserId if available
       const authUserId = await this.getAuthUserId("Ethereum connect event");
 
-      // Emit unified connect event
       this.emit("connect", {
         addresses: this.addresses,
         source: "injected-extension",
@@ -689,25 +621,20 @@ export class InjectedProvider implements Provider {
       });
     };
 
-    // Map Ethereum disconnect event to unified disconnect event
     const handleEthereumDisconnect = () => {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum disconnect event received");
 
-      // Update our internal state
       this.addresses = this.addresses.filter(addr => addr.addressType !== AddressType.ethereum);
       this.connected = false; // Disconnect event means the user disconnected the dApp
 
-      // Emit unified disconnect event
       this.emit("disconnect", {
         source: "injected-extension",
       });
     };
 
-    // Map Ethereum account changed to reconnect event or disconnect
     const handleEthereumAccountsChanged = async (accounts: string[]) => {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum accounts changed event received", { accounts });
 
-      // Update Ethereum addresses
       this.addresses = this.addresses.filter(addr => addr.addressType !== AddressType.ethereum);
 
       if (accounts && accounts.length > 0) {
@@ -719,11 +646,9 @@ export class InjectedProvider implements Provider {
           })),
         );
 
-        // Get authUserId if available
-        const authUserId = await this.getAuthUserId("Ethereum accounts changed event");
+          const authUserId = await this.getAuthUserId("Ethereum accounts changed event");
 
-        // Emit as a new connect event (account change = reconnection)
-        this.emit("connect", {
+          this.emit("connect", {
           addresses: this.addresses,
           source: "injected-extension-account-change",
           authUserId,
@@ -738,7 +663,6 @@ export class InjectedProvider implements Provider {
       }
     };
 
-    // Add event listeners using browser-injected-sdk
     const cleanupConnect = this.phantom.ethereum.addEventListener("connect", handleEthereumConnect);
     const cleanupDisconnect = this.phantom.ethereum.addEventListener("disconnect", handleEthereumDisconnect);
     const cleanupAccountsChanged = this.phantom.ethereum.addEventListener(
@@ -746,7 +670,6 @@ export class InjectedProvider implements Provider {
       handleEthereumAccountsChanged,
     );
 
-    // Store cleanup functions
     this.browserInjectedCleanupFunctions.push(cleanupConnect, cleanupDisconnect, cleanupAccountsChanged);
   }
 
