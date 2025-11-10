@@ -1,6 +1,6 @@
 import * as WebBrowser from "expo-web-browser";
 import { Platform } from "react-native";
-import type { AuthProvider, AuthResult, EmbeddedProviderAuthType, PhantomConnectOptions } from "@phantom/embedded-provider-core";
+import type { AuthProvider, AuthResult, PhantomConnectOptions } from "@phantom/embedded-provider-core";
 import { DEFAULT_AUTH_URL } from "@phantom/constants";
 
 declare const __SDK_VERSION__: string;
