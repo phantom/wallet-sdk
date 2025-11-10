@@ -4,3 +4,6 @@ dist/
 node_modules/
 .changeset/
 .github/
+
+# Next.js
+**/.next/

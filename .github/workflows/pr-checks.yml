@@ -55,6 +55,9 @@ jobs:
       - name: Run Lint
         run: yarn lint
 
+      - name: Run Prettier
+        run: yarn exec prettier . --check
+
       - name: Check Types
         run: yarn check-types
 
