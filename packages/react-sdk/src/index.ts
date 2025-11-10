@@ -23,7 +23,7 @@ export type {
   AutoConfirmEnableParams,
   AutoConfirmResult,
   AutoConfirmSupportedChainsResult,
-  AuthOptions
+  AuthOptions,
 } from "@phantom/browser-sdk";
 
 // Re-export chain interfaces

@@ -39,7 +39,7 @@ export function Modal({
   // Helper function to convert hex color to rgba
   const hexToRgba = (hex: string, opacity: number): string => {
     // Remove # if present
-    const cleanHex = hex.replace('#', '');
+    const cleanHex = hex.replace("#", "");
 
     // Parse hex values
     const r = parseInt(cleanHex.slice(0, 2), 16);
@@ -51,147 +51,149 @@ export function Modal({
 
   // Styles
   const overlayStyle: CSSProperties = {
-    position: 'fixed',
+    position: "fixed",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
     backgroundColor: theme.overlay,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     zIndex: 9999,
   };
 
   const modalStyle: CSSProperties = {
     backgroundColor: theme.background,
-    borderRadius: '16px',
-    padding: '24px',
-    maxWidth: '400px',
-    width: '100%',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-    position: 'relative' as const,
+    borderRadius: "16px",
+    padding: "24px",
+    maxWidth: "400px",
+    width: "100%",
+    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+    position: "relative" as const,
   };
 
   const headerStyle: CSSProperties = {
-    position: 'relative',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: '24px',
+    position: "relative",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: "24px",
   };
 
   const titleStyle: CSSProperties = {
     margin: 0,
     fontFamily: '"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    fontSize: '14px',
-    fontStyle: 'normal',
-    fontWeight: '400',
-    lineHeight: '17px',
-    letterSpacing: '-0.14px',
+    fontSize: "14px",
+    fontStyle: "normal",
+    fontWeight: "400",
+    lineHeight: "17px",
+    letterSpacing: "-0.14px",
     color: theme.secondary,
     fontFeatureSettings: '"liga" off, "clig" off',
-    textAlign: 'center' as const,
+    textAlign: "center" as const,
   };
 
   const closeButtonStyle: CSSProperties = {
-    position: 'absolute' as const,
+    position: "absolute" as const,
     right: 0,
-    top: '50%',
-    transform: 'translateY(-50%)',
-    background: 'none',
-    border: 'none',
+    top: "50%",
+    transform: "translateY(-50%)",
+    background: "none",
+    border: "none",
     color: theme.text,
-    fontSize: '24px',
-    cursor: 'pointer',
-    padding: '4px 8px',
+    fontSize: "24px",
+    cursor: "pointer",
+    padding: "4px 8px",
     lineHeight: 1,
-    transition: 'color 0.2s',
+    transition: "color 0.2s",
   };
 
-  const appIconStyle: CSSProperties = appIcon ? {
-    width: '56px',
-    height: '56px',
-    borderRadius: '50%',
-    display: 'block',
-    margin: '0 auto 24px',
-    objectFit: 'cover' as const,
-  } : {};
+  const appIconStyle: CSSProperties = appIcon
+    ? {
+        width: "56px",
+        height: "56px",
+        borderRadius: "50%",
+        display: "block",
+        margin: "0 auto 24px",
+        objectFit: "cover" as const,
+      }
+    : {};
 
   const buttonStyle: CSSProperties = {
-    width: '100%',
-    padding: '12px 16px',
-    backgroundColor: hexToRgba(theme.secondary, 0.10), // Secondary with 10% opacity
+    width: "100%",
+    padding: "12px 16px",
+    backgroundColor: hexToRgba(theme.secondary, 0.1), // Secondary with 10% opacity
     color: theme.text,
-    border: 'none',
+    border: "none",
     borderRadius: theme.borderRadius,
-    fontSize: '16px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px',
+    fontSize: "16px",
+    fontWeight: "600",
+    cursor: "pointer",
+    transition: "background-color 0.2s",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "8px",
   };
 
   const secondaryButtonStyle: CSSProperties = {
-    width: '100%',
-    padding: '12px 16px',
-    backgroundColor: 'transparent',
+    width: "100%",
+    padding: "12px 16px",
+    backgroundColor: "transparent",
     color: theme.text,
     border: `1px solid ${theme.secondary}`,
     borderRadius: theme.borderRadius,
-    fontSize: '14px',
-    fontWeight: '500',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: '8px',
+    fontSize: "14px",
+    fontWeight: "500",
+    cursor: "pointer",
+    transition: "background-color 0.2s",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "8px",
   };
 
   const buttonContainerStyle: CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '12px',
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "12px",
   };
 
   const dividerStyle: CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    margin: '24px 0',
+    display: "flex",
+    alignItems: "center",
+    margin: "24px 0",
     color: theme.secondary,
-    fontSize: '14px',
-    textTransform: 'uppercase' as const,
+    fontSize: "14px",
+    textTransform: "uppercase" as const,
   };
 
   const dividerLineStyle: CSSProperties = {
     flex: 1,
-    height: '1px',
+    height: "1px",
     backgroundColor: theme.secondary,
   };
 
   const dividerTextStyle: CSSProperties = {
-    padding: '0 12px',
+    padding: "0 12px",
   };
 
   const footerStyle: CSSProperties = {
-    marginTop: '24px',
-    textAlign: 'center' as const,
+    marginTop: "24px",
+    textAlign: "center" as const,
     color: theme.secondary,
-    fontSize: '12px',
+    fontSize: "12px",
   };
 
   const errorStyle: CSSProperties = {
-    backgroundColor: 'rgba(220, 53, 69, 0.1)',
-    color: '#ff6b6b',
-    border: '1px solid rgba(220, 53, 69, 0.3)',
-    borderRadius: '8px',
-    padding: '12px',
-    marginBottom: '12px',
-    fontSize: '14px',
+    backgroundColor: "rgba(220, 53, 69, 0.1)",
+    color: "#ff6b6b",
+    border: "1px solid rgba(220, 53, 69, 0.3)",
+    borderRadius: "8px",
+    padding: "12px",
+    marginBottom: "12px",
+    fontSize: "14px",
   };
 
   return (
@@ -203,30 +205,20 @@ export function Modal({
           <button
             style={closeButtonStyle}
             onClick={onClose}
-            onMouseEnter={(e) => e.currentTarget.style.color = theme.secondary}
-            onMouseLeave={(e) => e.currentTarget.style.color = theme.text}
+            onMouseEnter={e => (e.currentTarget.style.color = theme.secondary)}
+            onMouseLeave={e => (e.currentTarget.style.color = theme.text)}
           >
             ×
           </button>
         </div>
 
         {/* App Icon */}
-        {appIcon && (
-          <img
-            src={appIcon}
-            alt={appName || 'App'}
-            style={appIconStyle}
-          />
-        )}
+        {appIcon && <img src={appIcon} alt={appName || "App"} style={appIconStyle} />}
 
         {/* Body */}
         <div>
           {/* Error Message */}
-          {error && (
-            <div style={errorStyle}>
-              {error.message}
-            </div>
-          )}
+          {error && <div style={errorStyle}>{error.message}</div>}
 
           {/* Provider Options */}
           <div style={buttonContainerStyle}>
@@ -236,18 +228,16 @@ export function Modal({
                 style={buttonStyle}
                 onClick={onConnectWithDeeplink}
                 disabled={isConnecting}
-                onMouseEnter={(e) => {
+                onMouseEnter={e => {
                   if (!isConnecting) {
                     e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.15);
                   }
                 }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.10);
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.1);
                 }}
               >
-                {isConnecting && providerType === "deeplink"
-                  ? "Opening Phantom..."
-                  : "Open in Phantom App"}
+                {isConnecting && providerType === "deeplink" ? "Opening Phantom..." : "Open in Phantom App"}
               </button>
             )}
 
@@ -258,18 +248,16 @@ export function Modal({
                     style={buttonStyle}
                     onClick={() => onConnectWithAuthProvider("phantom")}
                     disabled={isConnecting}
-                    onMouseEnter={(e) => {
+                    onMouseEnter={e => {
                       if (!isConnecting) {
                         e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.15);
                       }
                     }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.10);
+                    onMouseLeave={e => {
+                      e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.1);
                     }}
                   >
-                    {isConnecting && providerType === "embedded"
-                      ? "Connecting..."
-                      : "Login with Phantom"}
+                    {isConnecting && providerType === "embedded" ? "Connecting..." : "Login with Phantom"}
                   </button>
                 )}
               </>
@@ -279,20 +267,17 @@ export function Modal({
               style={buttonStyle}
               onClick={() => onConnectWithAuthProvider("google")}
               disabled={isConnecting}
-              onMouseEnter={(e) => {
+              onMouseEnter={e => {
                 if (!isConnecting) {
                   e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.15);
                 }
               }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.10);
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.1);
               }}
             >
-              {isConnecting && providerType === "embedded"
-                ? "Connecting..."
-                : "Continue with Google"}
+              {isConnecting && providerType === "embedded" ? "Connecting..." : "Continue with Google"}
             </button>
-
 
             {!isMobile && isExtensionInstalled && (
               <>
@@ -306,18 +291,18 @@ export function Modal({
                   style={secondaryButtonStyle}
                   onClick={onConnectWithInjected}
                   disabled={isConnecting}
-                  onMouseEnter={(e) => {
+                  onMouseEnter={e => {
                     if (!isConnecting) {
-                      e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.10);
+                      e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.1);
                     }
                   }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
+                  onMouseLeave={e => {
+                    e.currentTarget.style.backgroundColor = "transparent";
                   }}
                 >
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     {/* Phantom logo placeholder - you can replace with actual SVG/image */}
-                    <span style={{ fontSize: '20px' }}>👻</span>
+                    <span style={{ fontSize: "20px" }}>👻</span>
                     <span>Phantom</span>
                   </span>
                   <span style={{ color: theme.secondary }}>Detected</span>
@@ -328,9 +313,7 @@ export function Modal({
         </div>
 
         {/* Footer */}
-        <div style={footerStyle}>
-          Protected by Phantom
-        </div>
+        <div style={footerStyle}>Protected by Phantom</div>
       </div>
     </div>
   );

@@ -33,7 +33,7 @@ interface PhantomUIContextValue {
   connectionState: ConnectionUIState;
   showConnectionModal: () => void;
   hideConnectionModal: () => void;
-  connectWithAuthProvider: (provider:  AuthProviderType) => Promise<void>;
+  connectWithAuthProvider: (provider: AuthProviderType) => Promise<void>;
   connectWithInjected: () => Promise<void>;
   connectWithDeeplink: () => void;
   isMobile: boolean;
@@ -42,7 +42,13 @@ interface PhantomUIContextValue {
 const PhantomUIContext = createContext<PhantomUIContextValue | null>(null);
 
 // Internal UI Provider that consumes react-sdk context
-function PhantomUIProvider({ children, theme = "dark", customTheme, appIcon, appName }: Omit<PhantomUIProviderProps, 'config'>) {
+function PhantomUIProvider({
+  children,
+  theme = "dark",
+  customTheme,
+  appIcon,
+  appName,
+}: Omit<PhantomUIProviderProps, "config">) {
   const baseConnect = useBaseConnect();
   const { sdk, isPhantomAvailable: _isPhantomAvailable } = usePhantom();
   const isExtensionInstalled = useIsExtensionInstalled();
@@ -53,7 +59,7 @@ function PhantomUIProvider({ children, theme = "dark", customTheme, appIcon, app
 
   // Get the resolved theme object
   const resolvedTheme = useMemo(() => {
-    const baseTheme = typeof theme === 'string' ? getTheme(theme) : theme;
+    const baseTheme = typeof theme === "string" ? getTheme(theme) : theme;
     return mergeTheme(baseTheme, customTheme);
   }, [theme, customTheme]);
 
@@ -222,7 +228,14 @@ function PhantomUIProvider({ children, theme = "dark", customTheme, appIcon, app
 }
 
 // Main exported Provider that wraps both react-sdk and react-ui providers
-export function PhantomProvider({ children, theme = "dark", customTheme, config, appIcon, appName }: PhantomUIProviderProps) {
+export function PhantomProvider({
+  children,
+  theme = "dark",
+  customTheme,
+  config,
+  appIcon,
+  appName,
+}: PhantomUIProviderProps) {
   return (
     <BasePhantomProvider config={config}>
       <PhantomUIProvider theme={theme} customTheme={customTheme} appIcon={appIcon} appName={appName}>
