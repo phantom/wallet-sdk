@@ -1,12 +1,12 @@
 import * as WebBrowser from "expo-web-browser";
 import { Platform } from "react-native";
-import type { AuthProvider, AuthResult, PhantomConnectOptions, JWTAuthOptions } from "@phantom/embedded-provider-core";
+import type { AuthProvider, AuthResult, PhantomConnectOptions } from "@phantom/embedded-provider-core";
 import { DEFAULT_AUTH_URL } from "@phantom/constants";
 
 declare const __SDK_VERSION__: string;
 
 export class ExpoAuthProvider implements AuthProvider {
-  async authenticate(options: PhantomConnectOptions | JWTAuthOptions): Promise<void | AuthResult> {
+  async authenticate(options: PhantomConnectOptions): Promise<void | AuthResult> {
     // Handle JWT authentication
     if ("jwtToken" in options) {
       // JWT authentication doesn't require web browser flow
@@ -81,7 +81,6 @@ export class ExpoAuthProvider implements AuthProvider {
         const url = new URL(result.url);
         const walletId = url.searchParams.get("wallet_id");
         const organizationId = url.searchParams.get("organization_id");
-        const provider = url.searchParams.get("provider");
         const accountDerivationIndex = url.searchParams.get("selected_account_index");
         const expiresInMs = url.searchParams.get("expires_in_ms");
         const authUserId = url.searchParams.get("auth_user_id");
