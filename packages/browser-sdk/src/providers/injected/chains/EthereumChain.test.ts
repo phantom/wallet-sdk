@@ -33,9 +33,11 @@ describe("InjectedEthereumChain", () => {
     const eventEmitter = new EventEmitter();
     mockCallbacks = {
       isConnected: jest.fn().mockReturnValue(true),
-      getAddresses: jest.fn().mockReturnValue([
-        { addressType: AddressType.ethereum, address: "0x1234567890abcdef1234567890abcdef12345678" },
-      ]),
+      getAddresses: jest
+        .fn()
+        .mockReturnValue([
+          { addressType: AddressType.ethereum, address: "0x1234567890abcdef1234567890abcdef12345678" },
+        ]),
       disconnect: jest.fn().mockResolvedValue(undefined),
       on: (event: string, listener: any) => eventEmitter.on(event, listener),
       off: (event: string, listener: any) => eventEmitter.off(event, listener),
@@ -267,7 +269,7 @@ describe("InjectedEthereumChain", () => {
   describe("chainChanged event listener", () => {
     it("should update internal state when chainChanged event is received", () => {
       const chainChangedListener = mockPhantom.ethereum.addEventListener.mock.calls.find(
-        (call: any) => call[0] === "chainChanged"
+        (call: any) => call[0] === "chainChanged",
       )?.[1];
 
       expect(chainChangedListener).toBeDefined();
@@ -283,7 +285,7 @@ describe("InjectedEthereumChain", () => {
       const emitSpy = jest.spyOn((ethereumChain as any).eventEmitter, "emit");
 
       const chainChangedListener = mockPhantom.ethereum.addEventListener.mock.calls.find(
-        (call: any) => call[0] === "chainChanged"
+        (call: any) => call[0] === "chainChanged",
       )?.[1];
 
       // Simulate chainChanged event from provider

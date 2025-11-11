@@ -32,7 +32,7 @@ The `@phantom/react-ui` package is a lightweight wrapper around `@phantom/react-
 - **Customizable theming**: CSS variables for styling
 
 ```tsx
-import { PhantomProvider, useConnect , useSolana, useEthereum } from "@phantom/react-ui";
+import { PhantomProvider, useConnect, useSolana, useEthereum } from "@phantom/react-ui";
 import { AddressType } from "@phantom/browser-sdk";
 
 function App() {
@@ -45,7 +45,7 @@ function App() {
         apiBaseUrl: "https://api.phantom.app/v1/wallets",
       }}
     >
-        <WalletComponent />
+      <WalletComponent />
     </PhantomProvider>
   );
 }
@@ -109,6 +109,25 @@ All other hooks work exactly the same as `@phantom/react-sdk`:
 
 ## API Reference
 
+### SDK Initialization
+
+Wait for SDK initialization before showing connect buttons:
+
+```tsx
+import { usePhantom, useConnect } from "@phantom/react-ui";
+
+function App() {
+  const { isLoading } = usePhantom();
+  const { connect } = useConnect();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  return <button onClick={connect}>Connect Wallet</button>;
+}
+```
+
 ### useConnect (Enhanced)
 
 The only UI-enhanced hook. Shows a modal for provider selection.
@@ -117,14 +136,14 @@ The only UI-enhanced hook. Shows a modal for provider selection.
 import { useConnect } from "@phantom/react-ui";
 
 function ConnectButton() {
-  const { connect, isConnecting, error } = useConnect();
+  const { connect, isConnecting, isLoading, error } = useConnect();
 
   const handleConnect = () => {
     connect(); // Shows modal automatically
   };
 
   return (
-    <button onClick={handleConnect} disabled={isConnecting}>
+    <button onClick={handleConnect} disabled={isConnecting || isLoading}>
       {isConnecting ? "Connecting..." : "Connect Wallet"}
     </button>
   );
@@ -141,56 +160,61 @@ function ConnectButton() {
 
 ## Theming
 
-Customize the modal appearance using CSS variables:
+Customize the modal appearance by passing a theme object to the `PhantomProvider`. The package includes two built-in themes: `darkTheme` (default) and `lightTheme`.
 
-```css
-:root {
-  /* Modal */
-  --phantom-ui-modal-bg: #ffffff;
-  --phantom-ui-modal-overlay: rgba(0, 0, 0, 0.5);
-  --phantom-ui-modal-border-radius: 12px;
-
-  /* Buttons */
-  --phantom-ui-button-bg: #ab9ff2;
-  --phantom-ui-button-hover-bg: #9c8dff;
-  --phantom-ui-button-text: #ffffff;
-  --phantom-ui-button-border-radius: 8px;
-
-  /* Text */
-  --phantom-ui-text-primary: #212529;
-  --phantom-ui-text-secondary: #6c757d;
-
-  /* Spacing */
-  --phantom-ui-spacing-sm: 8px;
-  --phantom-ui-spacing-md: 16px;
-  --phantom-ui-spacing-lg: 24px;
-}
-```
-
-### Dark Theme
-
-```css
-[data-theme="dark"] {
-  --phantom-ui-modal-bg: #2d2d2d;
-  --phantom-ui-text-primary: #ffffff;
-  --phantom-ui-text-secondary: #b3b3b3;
-}
-```
-
-Apply themes via the `theme` prop or CSS:
+### Using Built-in Themes
 
 ```tsx
-<PhantomProvider theme="dark">
+import { PhantomProvider, darkTheme, lightTheme } from "@phantom/react-ui";
+
+// Use dark theme (default)
+<PhantomProvider config={config} theme={darkTheme}>
   <App />
 </PhantomProvider>
 
-// Or via CSS
-<div data-theme="dark">
-  <PhantomProvider>
-    <App />
-  </PhantomProvider>
-</div>
+// Use light theme
+<PhantomProvider config={config} theme={lightTheme}>
+  <App />
+</PhantomProvider>
 ```
+
+### Custom Theme
+
+You can pass a partial theme object to customize specific properties:
+
+```tsx
+import { PhantomProvider } from "@phantom/react-ui";
+
+const customTheme = {
+  background: "#1a1a1a",
+  text: "#ffffff",
+  secondary: "#98979C",
+  brand: "#ab9ff2",
+  error: "#ff4444",
+  success: "#00ff00",
+  borderRadius: "16px",
+  overlay: "rgba(0, 0, 0, 0.8)",
+};
+
+<PhantomProvider config={config} theme={customTheme}>
+  <App />
+</PhantomProvider>;
+```
+
+### Theme Properties
+
+| Property       | Type     | Description                                               |
+| -------------- | -------- | --------------------------------------------------------- |
+| `background`   | `string` | Background color for modal                                |
+| `text`         | `string` | Primary text color                                        |
+| `secondary`    | `string` | Secondary color for text, borders, dividers (must be hex) |
+| `brand`        | `string` | Brand/primary action color                                |
+| `error`        | `string` | Error state color                                         |
+| `success`      | `string` | Success state color                                       |
+| `borderRadius` | `string` | Border radius for buttons and modal                       |
+| `overlay`      | `string` | Overlay background color (with opacity)                   |
+
+**Note:** The `secondary` color must be a hex color value (e.g., `#98979C`) as it's used to derive auxiliary colors with opacity.
 
 ## Migration from @phantom/react-sdk
 

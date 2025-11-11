@@ -1,7 +1,7 @@
 import { getProvider } from "./getProvider";
 import { triggerEvent } from "./eventListeners";
 
-export async function connect({onlyIfTrusted = false} = {}): Promise<string|undefined > {
+export async function connect({ onlyIfTrusted = false } = {}): Promise<string | undefined> {
   const provider = await getProvider();
 
   if (!provider) {

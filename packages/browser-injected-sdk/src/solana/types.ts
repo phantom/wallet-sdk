@@ -51,7 +51,10 @@ export interface PhantomSolanaProvider {
     transaction: any,
     options?: SendOptions,
   ) => Promise<{ signature: string; publicKey?: string }>;
-  signAndSendAllTransactions: (transactions: any[], options?: SendOptions) => Promise<{ signatures: string[]; publicKey?: string }>;
+  signAndSendAllTransactions: (
+    transactions: any[],
+    options?: SendOptions,
+  ) => Promise<{ signatures: string[]; publicKey?: string }>;
   signAllTransactions: (transactions: any[]) => Promise<any[]>;
   signTransaction: (transaction: any) => Promise<any>;
   on: (event: "connect" | "disconnect" | "accountChanged", handler: (publicKey?: PublicKey) => void) => void;

@@ -253,9 +253,7 @@ export class PhantomClient {
         walletId: walletId,
         // For EVM transactions, use the object format with kind and bytes
         // For other chains, use the string directly
-        transaction: isEvmTransaction
-          ? { kind: "RLP_ENCODED", bytes: encodedTransaction }
-          : encodedTransaction,
+        transaction: isEvmTransaction ? { kind: "RLP_ENCODED", bytes: encodedTransaction } : encodedTransaction,
         derivationInfo: derivationInfo,
       } as any;
 
@@ -613,11 +611,12 @@ export class PhantomClient {
         users: users.map(userConfig => ({
           username: userConfig.username || `user-${randomUUID()}`,
           authenticators: userConfig.authenticators as any,
-          policy: userConfig.role === "ADMIN" ? {
-            type: UserPolicyOneOfTypeEnum.root,
-          } :
-            { type: "CEL", preset: "LEGACY_USER_ROLE" } as UserPolicy
-
+          policy:
+            userConfig.role === "ADMIN"
+              ? {
+                  type: UserPolicyOneOfTypeEnum.root,
+                }
+              : ({ type: "CEL", preset: "LEGACY_USER_ROLE" } as UserPolicy),
         })),
         tags,
       };

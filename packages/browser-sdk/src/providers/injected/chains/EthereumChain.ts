@@ -91,9 +91,12 @@ export class InjectedEthereumChain implements IEthereumChain {
 
   async switchChain(chainId: number | string): Promise<void> {
     // Convert to hex string format if needed
-    const hexChainId = typeof chainId === "string"
-      ? chainId.toLowerCase().startsWith("0x") ? chainId : `0x${parseInt(chainId, 10).toString(16)}`
-      : `0x${chainId.toString(16)}`;
+    const hexChainId =
+      typeof chainId === "string"
+        ? chainId.toLowerCase().startsWith("0x")
+          ? chainId
+          : `0x${parseInt(chainId, 10).toString(16)}`
+        : `0x${chainId.toString(16)}`;
 
     await this.phantom.ethereum.switchChain(hexChainId);
     this._chainId = hexChainId;

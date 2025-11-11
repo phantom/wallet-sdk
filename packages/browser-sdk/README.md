@@ -236,7 +236,6 @@ const sdk = new BrowserSDK({
 | `AddressType.solana`   | Solana Mainnet, Devnet, Testnet       |
 | `AddressType.ethereum` | Ethereum, Polygon, Arbitrum, and more |
 
-
 ### Auto-Connect Feature
 
 The SDK can automatically reconnect to existing sessions when instantiated, providing a seamless user experience.
@@ -293,7 +292,7 @@ interface BrowserSDKConfig {
 
   // Required for embedded provider only
   appId?: string; // Your app ID from phantom.com/portal (required for embedded provider)
-  
+
   // Optional configuration
   apiBaseUrl?: string; // Phantom API base URL (optional, has default)
   authOptions?: {
@@ -301,7 +300,6 @@ interface BrowserSDKConfig {
     redirectUrl?: string; // Custom redirect URL after authentication (optional)
   };
   embeddedWalletType?: "user-wallet"; // Wallet type (optional, defaults to "user-wallet", currently the only supported type)
-  autoConnect?: boolean; // Enable auto-connect to existing sessions (optional, defaults to true for embedded)
 }
 ```
 
@@ -347,6 +345,7 @@ if (isAvailable) {
 Connect to wallet and get addresses for configured AddressTypes.
 
 **Parameters:**
+
 - `options: AuthOptions` (required) - Authentication options
   - `provider: "google" | "apple" | "jwt" | "phantom" | "injected"` (required) - Authentication provider to use
   - `jwtToken?: string` (optional) - JWT token (required when `provider` is "jwt")
@@ -554,18 +553,18 @@ await sdk.ethereum.switchChain(42161); // Arbitrum One
 
 **Supported EVM Networks:**
 
-| Network | Chain ID | Usage |
-|---------|----------|-------|
-| Ethereum Mainnet | `1` | `switchChain(1)` |
+| Network          | Chain ID   | Usage                   |
+| ---------------- | ---------- | ----------------------- |
+| Ethereum Mainnet | `1`        | `switchChain(1)`        |
 | Ethereum Sepolia | `11155111` | `switchChain(11155111)` |
-| Polygon Mainnet | `137` | `switchChain(137)` |
-| Polygon Amoy | `80002` | `switchChain(80002)` |
-| Base Mainnet | `8453` | `switchChain(8453)` |
-| Base Sepolia | `84532` | `switchChain(84532)` |
-| Arbitrum One | `42161` | `switchChain(42161)` |
-| Arbitrum Sepolia | `421614` | `switchChain(421614)` |
-| Monad Mainnet | `143` | `switchChain(143)` |
-| Monad Testnet | `10143` | `switchChain(10143)` |
+| Polygon Mainnet  | `137`      | `switchChain(137)`      |
+| Polygon Amoy     | `80002`    | `switchChain(80002)`    |
+| Base Mainnet     | `8453`     | `switchChain(8453)`     |
+| Base Sepolia     | `84532`    | `switchChain(84532)`    |
+| Arbitrum One     | `42161`    | `switchChain(42161)`    |
+| Arbitrum Sepolia | `421614`   | `switchChain(421614)`   |
+| Monad Mainnet    | `143`      | `switchChain(143)`      |
+| Monad Testnet    | `10143`    | `switchChain(10143)`    |
 
 #### getChainId()
 
@@ -609,66 +608,66 @@ The SDK provides typed event handlers that allow you to listen for connection st
 #### Available Events
 
 ```typescript
-import { BrowserSDK } from '@phantom/browser-sdk';
+import { BrowserSDK } from "@phantom/browser-sdk";
 import type {
   ConnectEventData,
   ConnectStartEventData,
   ConnectErrorEventData,
-  DisconnectEventData
-} from '@phantom/browser-sdk';
+  DisconnectEventData,
+} from "@phantom/browser-sdk";
 
 const sdk = new BrowserSDK({
-  providerType: 'embedded',
-  appId: 'your-app-id',
+  providerType: "embedded",
+  appId: "your-app-id",
   addressTypes: [AddressType.solana],
 });
 
 // 1. connect_start - Fired when connection starts
-sdk.on('connect_start', (data: ConnectStartEventData) => {
-  console.log('Connection starting:', data.source); // "auto-connect" | "manual-connect"
-  console.log('Auth options:', data.authOptions?.provider); // "google" | "apple" | etc.
+sdk.on("connect_start", (data: ConnectStartEventData) => {
+  console.log("Connection starting:", data.source); // "auto-connect" | "manual-connect"
+  console.log("Auth options:", data.authOptions?.provider); // "google" | "apple" | etc.
 });
 
 // 2. connect - Fired when connection succeeds (includes full ConnectResult)
-sdk.on('connect', (data: ConnectEventData) => {
-  console.log('Connected successfully!');
-  console.log('Provider type:', data.providerType); // "embedded" | "injected"
-  console.log('Wallet ID:', data.walletId); // only for embedded providers
-  console.log('Addresses:', data.addresses); // WalletAddress[]
-  console.log('Status:', data.status); // "pending" | "completed"
-  console.log('Source:', data.source); // "auto-connect" | "manual-connect" | "manual-existing" | "existing-session" | "manual"
+sdk.on("connect", (data: ConnectEventData) => {
+  console.log("Connected successfully!");
+  console.log("Provider type:", data.providerType); // "embedded" | "injected"
+  console.log("Wallet ID:", data.walletId); // only for embedded providers
+  console.log("Addresses:", data.addresses); // WalletAddress[]
+  console.log("Status:", data.status); // "pending" | "completed"
+  console.log("Source:", data.source); // "auto-connect" | "manual-connect" | "manual-existing" | "existing-session" | "manual"
 });
 
 // 3. connect_error - Fired when connection fails
-sdk.on('connect_error', (data: ConnectErrorEventData) => {
-  console.error('Connection failed:', data.error);
-  console.log('Source:', data.source); // "auto-connect" | "manual-connect"
+sdk.on("connect_error", (data: ConnectErrorEventData) => {
+  console.error("Connection failed:", data.error);
+  console.log("Source:", data.source); // "auto-connect" | "manual-connect"
 });
 
 // 4. disconnect - Fired when disconnected
-sdk.on('disconnect', (data: DisconnectEventData) => {
-  console.log('Disconnected from wallet');
-  console.log('Source:', data.source); // "manual"
+sdk.on("disconnect", (data: DisconnectEventData) => {
+  console.log("Disconnected from wallet");
+  console.log("Source:", data.source); // "manual"
 });
 
 // 5. error - General error handler
-sdk.on('error', (error: unknown) => {
-  console.error('SDK error:', error);
+sdk.on("error", (error: unknown) => {
+  console.error("SDK error:", error);
 });
 
 // Don't forget to remove listeners when done
-sdk.off('connect', handleConnect);
+sdk.off("connect", handleConnect);
 ```
 
 #### Event Types
 
-| Event | Payload Type | When Fired | Key Data |
-|-------|-------------|------------|----------|
-| `connect_start` | `ConnectStartEventData` | Connection initiated | `source`, `authOptions` |
-| `connect` | `ConnectEventData` | Connection successful | `providerType`, `addresses`, `status`, `source`, `user`|
-| `connect_error` | `ConnectErrorEventData` | Connection failed | `error`, `source` |
-| `disconnect` | `DisconnectEventData` | Disconnected | `source` |
-| `error` | `unknown` | General SDK errors | Error details |
+| Event           | Payload Type            | When Fired            | Key Data                                                |
+| --------------- | ----------------------- | --------------------- | ------------------------------------------------------- |
+| `connect_start` | `ConnectStartEventData` | Connection initiated  | `source`, `authOptions`                                 |
+| `connect`       | `ConnectEventData`      | Connection successful | `providerType`, `addresses`, `status`, `source`, `user` |
+| `connect_error` | `ConnectErrorEventData` | Connection failed     | `error`, `source`                                       |
+| `disconnect`    | `DisconnectEventData`   | Disconnected          | `source`                                                |
+| `error`         | `unknown`               | General SDK errors    | Error details                                           |
 
 #### Using Events with autoConnect()
 
@@ -676,24 +675,24 @@ Event handlers are especially useful with `autoConnect()` since it doesn't retur
 
 ```typescript
 const sdk = new BrowserSDK({
-  providerType: 'embedded',
-  appId: 'your-app-id',
+  providerType: "embedded",
+  appId: "your-app-id",
   addressTypes: [AddressType.solana],
   autoConnect: true,
 });
 
 // Set up event listeners BEFORE autoConnect
-sdk.on('connect', (data: ConnectEventData) => {
-  console.log('Auto-connected successfully!');
-  console.log('Provider type:', data.providerType);
-  console.log('Addresses:', data.addresses);
+sdk.on("connect", (data: ConnectEventData) => {
+  console.log("Auto-connected successfully!");
+  console.log("Provider type:", data.providerType);
+  console.log("Addresses:", data.addresses);
 
   // Update your UI state here
   updateUIWithAddresses(data.addresses);
 });
 
-sdk.on('connect_error', (data: ConnectErrorEventData) => {
-  console.log('Auto-connect failed:', data.error);
+sdk.on("connect_error", (data: ConnectErrorEventData) => {
+  console.log("Auto-connect failed:", data.error);
   // Show connect button to user
   showConnectButton();
 });

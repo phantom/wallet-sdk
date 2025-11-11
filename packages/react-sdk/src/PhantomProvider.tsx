@@ -1,7 +1,14 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import { BrowserSDK } from "@phantom/browser-sdk";
-import type { BrowserSDKConfig, WalletAddress, AuthOptions, DebugConfig, ConnectEventData, ConnectResult } from "@phantom/browser-sdk";
+import type {
+  BrowserSDKConfig,
+  WalletAddress,
+  AuthOptions,
+  DebugConfig,
+  ConnectEventData,
+  ConnectResult,
+} from "@phantom/browser-sdk";
 
 export type PhantomSDKConfig = BrowserSDKConfig;
 
@@ -17,10 +24,10 @@ interface PhantomContextValue {
   sdk: BrowserSDK | null;
   isConnected: boolean;
   isConnecting: boolean;
+  isLoading: boolean;
   connectError: Error | null;
   addresses: WalletAddress[];
   currentProviderType: "injected" | "embedded" | null;
-  isPhantomAvailable: boolean;
   isClient: boolean;
   user: ConnectResult | null;
 }
@@ -41,12 +48,12 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   const [isClient, setIsClient] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [connectError, setConnectError] = useState<Error | null>(null);
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
   const [currentProviderType, setCurrentProviderType] = useState<"injected" | "embedded" | null>(
     (memoizedConfig.providerType as any) || null,
   );
-  const [isPhantomAvailable, setIsPhantomAvailable] = useState(false);
   const [user, setUser] = useState<ConnectResult | null>(null);
 
   // Initialize client flag
@@ -142,25 +149,20 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
     if (!isClient || !sdk) return;
 
     const initialize = async () => {
-      // Check if Phantom extension is available (only for injected provider)
+      // Attempt auto-connect (it handles extension detection internally)
       try {
-        const available = await BrowserSDK.isPhantomInstalled();
-        setIsPhantomAvailable(available);
-      } catch (err) {
-        console.error("Error checking Phantom extension:", err);
-        setIsPhantomAvailable(false);
+        await sdk.autoConnect();
+      } catch (error) {
+        // Silent fail - auto-connect shouldn't break the app
+        console.error("Auto-connect error:", error);
       }
 
-      // Attempt auto-connect if enabled
-      if (memoizedConfig.autoConnect !== false) {
-        sdk.autoConnect().catch(() => {
-          // Silent fail - auto-connect is optional and shouldn't break the app
-        });
-      }
+      // Mark SDK as done loading after initialization complete
+      setIsLoading(false);
     };
 
     initialize();
-  }, [sdk, memoizedConfig.autoConnect, isClient]);
+  }, [sdk, isClient]);
 
   // Memoize context value to prevent unnecessary re-renders
   const value: PhantomContextValue = useMemo(
@@ -168,14 +170,14 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       sdk,
       isConnected,
       isConnecting,
+      isLoading,
       connectError,
       addresses,
       currentProviderType,
-      isPhantomAvailable,
       isClient,
       user,
     }),
-    [sdk, isConnected, isConnecting, connectError, addresses, currentProviderType, isPhantomAvailable, isClient, user],
+    [sdk, isConnected, isConnecting, isLoading, connectError, addresses, currentProviderType, isClient, user],
   );
 
   return <PhantomContext.Provider value={value}>{children}</PhantomContext.Provider>;

@@ -106,7 +106,6 @@ function parseSolanaSignatureResponse(base64Response: string): ParsedSignatureRe
   }
 }
 
-
 /**
  * Parse EVM signature response
  */

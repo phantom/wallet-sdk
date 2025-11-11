@@ -173,6 +173,37 @@ await connect({
 });
 ```
 
+## SDK Initialization
+
+The SDK provides an `isLoading` state to track when initialization and autoconnect are in progress. This is useful for showing loading states before your app is ready.
+
+```tsx
+import { useConnect, usePhantom } from "@phantom/react-sdk";
+
+function App() {
+  const { isLoading } = usePhantom();
+  const { connect } = useConnect();
+
+  // Show loading state while SDK initializes
+  if (isLoading) {
+    return (
+      <div>
+        <h1>Initializing Phantom SDK...</h1>
+        <p>Please wait...</p>
+      </div>
+    );
+  }
+
+  // SDK is ready
+  return (
+    <div>
+      <h1>Welcome!</h1>
+      <button onClick={() => connect({ provider: "injected" })}>Connect Wallet</button>
+    </div>
+  );
+}
+```
+
 ## Provider Types
 
 ### Injected Provider
@@ -212,7 +243,6 @@ Creates non-custodial wallets embedded in your application.
 </PhantomProvider>
 ```
 
-
 ## Available Hooks
 
 ### Core Connection Hooks
@@ -225,7 +255,7 @@ Connect to wallet:
 import { useConnect } from "@phantom/react-sdk";
 
 function ConnectButton() {
-  const { connect, isConnecting, error } = useConnect();
+  const { connect, isConnecting, isLoading, error } = useConnect();
 
   const handleConnect = async () => {
     try {
@@ -235,6 +265,11 @@ function ConnectButton() {
       console.error("Failed to connect:", err);
     }
   };
+
+  // Wait for SDK to finish initializing before showing connect button
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <button onClick={handleConnect} disabled={isConnecting}>
@@ -338,11 +373,7 @@ function PhantomLoginButton() {
     return null; // Don't show button if Phantom Login is not available
   }
 
-  return (
-    <button onClick={() => connect({ provider: "phantom" })}>
-      Login with Phantom
-    </button>
-  );
+  return <button onClick={() => connect({ provider: "phantom" })}>Login with Phantom</button>;
 }
 ```
 
@@ -515,18 +546,18 @@ function EthereumOperations() {
 
 **Supported EVM Networks:**
 
-| Network | Chain ID | Usage |
-|---------|----------|-------|
-| Ethereum Mainnet | `1` | `ethereum.switchChain(1)` |
+| Network          | Chain ID   | Usage                            |
+| ---------------- | ---------- | -------------------------------- |
+| Ethereum Mainnet | `1`        | `ethereum.switchChain(1)`        |
 | Ethereum Sepolia | `11155111` | `ethereum.switchChain(11155111)` |
-| Polygon Mainnet | `137` | `ethereum.switchChain(137)` |
-| Polygon Amoy | `80002` | `ethereum.switchChain(80002)` |
-| Base Mainnet | `8453` | `ethereum.switchChain(8453)` |
-| Base Sepolia | `84532` | `ethereum.switchChain(84532)` |
-| Arbitrum One | `42161` | `ethereum.switchChain(42161)` |
-| Arbitrum Sepolia | `421614` | `ethereum.switchChain(421614)` |
-| Monad Mainnet | `143` | `ethereum.switchChain(143)` |
-| Monad Testnet | `10143` | `ethereum.switchChain(10143)` |
+| Polygon Mainnet  | `137`      | `ethereum.switchChain(137)`      |
+| Polygon Amoy     | `80002`    | `ethereum.switchChain(80002)`    |
+| Base Mainnet     | `8453`     | `ethereum.switchChain(8453)`     |
+| Base Sepolia     | `84532`    | `ethereum.switchChain(84532)`    |
+| Arbitrum One     | `42161`    | `ethereum.switchChain(42161)`    |
+| Arbitrum Sepolia | `421614`   | `ethereum.switchChain(421614)`   |
+| Monad Mainnet    | `143`      | `ethereum.switchChain(143)`      |
+| Monad Testnet    | `10143`    | `ethereum.switchChain(10143)`    |
 
 ### Auto-Confirm Hook (Injected Provider Only)
 
@@ -789,17 +820,17 @@ function EthereumExample() {
 
 Quick reference of all available hooks:
 
-| Hook                          | Purpose                                 | Returns                                             |
-| ----------------------------- | --------------------------------------- | --------------------------------------------------- |
-| `useConnect`                  | Connect to wallet                       | `{ connect, isConnecting, error }`                  |
-| `useAccounts`                 | Get wallet addresses                    | `WalletAddress[]` or `null`                         |
-| `useIsExtensionInstalled`     | Check extension status                  | `{ isLoading, isInstalled }`                        |
-| `useIsPhantomLoginAvailable`  | Check Phantom Login availability        | `{ isLoading, isAvailable }`                        |
-| `useDisconnect`               | Disconnect from wallet                  | `{ disconnect, isDisconnecting }`                   |
-| `useAutoConfirm`              | Auto-confirm management (injected only) | `{ enable, disable, status, supportedChains, ... }` |
-| `useSolana`                   | Solana chain operations                 | `{ signMessage, signAndSendTransaction, ... }`      |
-| `useEthereum`                 | Ethereum chain operations               | `{ signPersonalMessage, sendTransaction, ... }`     |
-| `usePhantom`                  | Get provider context                    | `{ isConnected, isReady }`                          |
+| Hook                         | Purpose                                 | Returns                                             |
+| ---------------------------- | --------------------------------------- | --------------------------------------------------- |
+| `useConnect`                 | Connect to wallet                       | `{ connect, isConnecting, error }`                  |
+| `useAccounts`                | Get wallet addresses                    | `WalletAddress[]` or `null`                         |
+| `useIsExtensionInstalled`    | Check extension status                  | `{ isLoading, isInstalled }`                        |
+| `useIsPhantomLoginAvailable` | Check Phantom Login availability        | `{ isLoading, isAvailable }`                        |
+| `useDisconnect`              | Disconnect from wallet                  | `{ disconnect, isDisconnecting }`                   |
+| `useAutoConfirm`             | Auto-confirm management (injected only) | `{ enable, disable, status, supportedChains, ... }` |
+| `useSolana`                  | Solana chain operations                 | `{ signMessage, signAndSendTransaction, ... }`      |
+| `useEthereum`                | Ethereum chain operations               | `{ signPersonalMessage, sendTransaction, ... }`     |
+| `usePhantom`                 | Get provider context                    | `{ isConnected, isReady }`                          |
 
 ## Configuration Reference
 
@@ -810,7 +841,7 @@ interface PhantomSDKConfig {
 
   // Required for embedded provider only
   appId: string; // Your app ID from phantom.com/portal (required for embedded provider)
-  
+
   // Optional configuration
   apiBaseUrl?: string; // Phantom API base URL (optional, has default)
   authOptions?: {
@@ -818,7 +849,6 @@ interface PhantomSDKConfig {
     redirectUrl?: string; // Custom redirect URL after authentication (optional)
   };
   embeddedWalletType?: "user-wallet"; // Wallet type (optional, defaults to "user-wallet", currently the only supported type)
-  autoConnect?: boolean; // Auto-connect to existing session on SDK instantiation (optional, defaults to true for embedded, false for injected)
 }
 ```
 

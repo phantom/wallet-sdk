@@ -44,7 +44,7 @@ async function bindProviderEvents(): Promise<void> {
   try {
     const strategy = await getProvider();
     const provider = strategy.getProvider();
-    
+
     if (provider) {
       provider.on("connect", (publicKey?: { toString: () => string }) => {
         if (publicKey) triggerEvent("connect", publicKey.toString());

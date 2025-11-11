@@ -1,8 +1,19 @@
-import { type BrowserSDKConfig, type Provider, type ConnectResult, type WalletAddress, type AuthOptions, AddressType } from "./types";
+import {
+  type BrowserSDKConfig,
+  type Provider,
+  type ConnectResult,
+  type WalletAddress,
+  type AuthOptions,
+  AddressType,
+} from "./types";
 import { InjectedProvider } from "./providers/injected";
 import { EmbeddedProvider } from "./providers/embedded";
 import { debug, DebugCategory } from "./debug";
-import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-provider-core";
+import {
+  type EmbeddedProviderEvent,
+  type EventCallback,
+  EMBEDDED_PROVIDER_AUTH_TYPES,
+} from "@phantom/embedded-provider-core";
 import { DEFAULT_WALLET_API_URL, DEFAULT_EMBEDDED_WALLET_TYPE, DEFAULT_AUTH_URL } from "@phantom/constants";
 import { isAuthFailureCallback, isAuthCallbackUrl } from "./utils/auth-callback";
 export interface ProviderPreference {
@@ -32,7 +43,7 @@ export class ProviderManager implements EventEmitter {
   constructor(config: BrowserSDKConfig) {
     debug.log(DebugCategory.PROVIDER_MANAGER, "Initializing ProviderManager", { config });
     this.config = config;
-    
+
     // Initialize default provider based on config
     debug.log(DebugCategory.PROVIDER_MANAGER, "Setting default provider");
     this.setDefaultProvider();
@@ -45,10 +56,10 @@ export class ProviderManager implements EventEmitter {
   }
 
   private getValidatedCurrentUrl(): string {
-    if (typeof window === 'undefined') return '';
+    if (typeof window === "undefined") return "";
     const currentUrl = window.location.href;
-    if (!currentUrl.startsWith('http:') && !currentUrl.startsWith('https:')) {
-      throw new Error('Invalid URL protocol - only HTTP/HTTPS URLs are supported');
+    if (!currentUrl.startsWith("http:") && !currentUrl.startsWith("https:")) {
+      throw new Error("Invalid URL protocol - only HTTP/HTTPS URLs are supported");
     }
     return currentUrl;
   }
@@ -107,7 +118,7 @@ export class ProviderManager implements EventEmitter {
   async connect(authOptions: AuthOptions): Promise<ConnectResult> {
     debug.info(DebugCategory.PROVIDER_MANAGER, "Starting connection", {
       currentProviderKey: this.currentProviderKey,
-      authOptions: { provider: authOptions.provider, hasJwtToken: !!authOptions.jwtToken },
+      authOptions: { provider: authOptions.provider },
     });
 
     // Auto-switch provider based on auth options
@@ -118,7 +129,7 @@ export class ProviderManager implements EventEmitter {
 
     if (requestedProvider === "injected") {
       targetProviderType = "injected";
-    } else if (["google", "apple", "jwt", "phantom"].includes(requestedProvider)) {
+    } else if (EMBEDDED_PROVIDER_AUTH_TYPES.includes(requestedProvider)) {
       targetProviderType = "embedded";
     }
 
@@ -135,7 +146,9 @@ export class ProviderManager implements EventEmitter {
         // Only pass embeddedWalletType when switching to embedded provider
         const switchOptions: SwitchProviderOptions = {};
         if (targetProviderType === "embedded") {
-          switchOptions.embeddedWalletType = currentInfo?.embeddedWalletType || (this.config.embeddedWalletType as "app-wallet" | "user-wallet" | undefined);
+          switchOptions.embeddedWalletType =
+            currentInfo?.embeddedWalletType ||
+            (this.config.embeddedWalletType as "app-wallet" | "user-wallet" | undefined);
         }
 
         this.switchProvider(targetProviderType, switchOptions);
@@ -195,7 +208,6 @@ export class ProviderManager implements EventEmitter {
   isConnected(): boolean {
     return this.currentProvider?.isConnected() ?? false;
   }
-
 
   /**
    * Attempt auto-connect with fallback strategy
@@ -477,5 +489,4 @@ export class ProviderManager implements EventEmitter {
       console.error("Failed to save provider preference:", error);
     }
   }
-
 }
