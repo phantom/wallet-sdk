@@ -173,7 +173,7 @@ await connect({
 });
 ```
 
-## SDK Initialization Tracking
+## SDK Initialization
 
 The SDK provides an `isLoaded` state to track when initialization and autoconnect are complete. This is useful for showing loading states before your app is ready.
 
@@ -206,18 +206,6 @@ function App() {
 }
 ```
 
-### What happens during initialization?
-
-1. **SDK Setup**: Browser SDK instance is created
-2. **AutoConnect**: Attempts to restore previous session (if user was connected before)
-3. **Ready**: `isLoaded` becomes `true` and your app can safely show connect buttons
-
-### Performance Note
-
-The initialization is optimized to be fast:
-- No blocking extension detection (happens asynchronously)
-- AutoConnect fails silently if no previous session exists
-- Total initialization time is typically < 100ms
 
 ## Provider Types
 
@@ -293,13 +281,6 @@ function ConnectButton() {
   );
 }
 ```
-
-**Returns:**
-- `connect(options)`: Function to initiate wallet connection
-- `isConnecting`: Boolean indicating if a connection attempt is in progress
-- `isLoaded`: Boolean indicating if SDK initialization and autoconnect have completed
-- `error`: Error object if connection failed
-- `currentProviderType`: Current provider type ("injected" or "embedded")
 
 #### useAccounts
 
