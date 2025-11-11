@@ -1,6 +1,6 @@
 import { createContext } from "react";
 import type { AuthProviderType } from "@phantom/browser-sdk";
-import type { PhantomThemeWithAux } from "./themes";
+import type { CompletePhantomTheme } from "./themes";
 
 // Connection UI state
 export interface ConnectionUIState {
@@ -20,7 +20,7 @@ export interface PhantomUIContextValue {
   connectWithDeeplink: () => void;
   isMobile: boolean;
   // Theme
-  theme: PhantomThemeWithAux;
+  theme: CompletePhantomTheme;
 }
 
 export const PhantomUIContext = createContext<PhantomUIContextValue | null>(null);

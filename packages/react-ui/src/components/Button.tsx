@@ -151,7 +151,7 @@ export function LoginWithPhantomButton({
   const buttonStyle: CSSProperties = {
     ...baseStyle,
     backgroundColor,
-    color: "#FFFFFF",
+    color: theme.text,
   };
 
   const handleMouseEnter = () => {

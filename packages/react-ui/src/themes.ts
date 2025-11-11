@@ -32,7 +32,10 @@ export interface PhantomTheme {
 
   // Brand color
   brand: HexColor;
+}
 
+export type CompletePhantomTheme = PhantomTheme & {
+  aux: string; // Auxiliary color derived from secondary with opacity (rgba format)
   // Typography
   typography: {
     caption: {
@@ -60,10 +63,6 @@ export interface PhantomTheme {
       letterSpacing: string;
     };
   };
-}
-
-export type PhantomThemeWithAux = PhantomTheme & {
-  aux: string; // Auxiliary color derived from secondary with opacity (rgba format)
 };
 
 export const loginWithPhantomColor: HexColor = "#7C63E7";
@@ -79,32 +78,6 @@ export const darkTheme: PhantomTheme = {
   error: "#F00000",
   success: "#1CC700",
   brand: loginWithPhantomColor,
-  typography: {
-    caption: {
-      fontFamily: '"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      fontSize: "14px",
-      fontStyle: "normal",
-      fontWeight: "400",
-      lineHeight: "17px",
-      letterSpacing: "-0.14px",
-    },
-    captionBold: {
-      fontFamily: '"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      fontSize: "14px",
-      fontStyle: "normal",
-      fontWeight: "600",
-      lineHeight: "17px",
-      letterSpacing: "-0.14px",
-    },
-    label: {
-      fontFamily: '"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      fontSize: "12px",
-      fontStyle: "normal",
-      fontWeight: "400",
-      lineHeight: "15px",
-      letterSpacing: "-0.12px",
-    },
-  },
 };
 
 /**
@@ -119,38 +92,12 @@ export const lightTheme: PhantomTheme = {
   error: "#F00000",
   success: "#1CC700",
   brand: loginWithPhantomColor,
-  typography: {
-    caption: {
-      fontFamily: '"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      fontSize: "14px",
-      fontStyle: "normal",
-      fontWeight: "400",
-      lineHeight: "17px",
-      letterSpacing: "-0.14px",
-    },
-    captionBold: {
-      fontFamily: '"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      fontSize: "14px",
-      fontStyle: "normal",
-      fontWeight: "600",
-      lineHeight: "17px",
-      letterSpacing: "-0.14px",
-    },
-    label: {
-      fontFamily: '"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      fontSize: "12px",
-      fontStyle: "normal",
-      fontWeight: "400",
-      lineHeight: "15px",
-      letterSpacing: "-0.12px",
-    },
-  },
 };
 
 /**
  * Merge custom theme with base theme
  */
-export function mergeTheme(customTheme?: Partial<PhantomTheme>): PhantomThemeWithAux {
+export function mergeTheme(customTheme?: Partial<PhantomTheme>): CompletePhantomTheme {
   const secondary = customTheme?.secondary || darkTheme.secondary;
   const isHex = secondary.startsWith("#");
 
@@ -162,5 +109,31 @@ export function mergeTheme(customTheme?: Partial<PhantomTheme>): PhantomThemeWit
     ...darkTheme,
     ...customTheme,
     aux: hexToRgba(secondary, 0.1),
+    typography: {
+      caption: {
+        fontFamily: '"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        fontSize: "14px",
+        fontStyle: "normal",
+        fontWeight: "400",
+        lineHeight: "17px",
+        letterSpacing: "-0.14px",
+      },
+      captionBold: {
+        fontFamily: '"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        fontSize: "14px",
+        fontStyle: "normal",
+        fontWeight: "600",
+        lineHeight: "17px",
+        letterSpacing: "-0.14px",
+      },
+      label: {
+        fontFamily: '"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        fontSize: "12px",
+        fontStyle: "normal",
+        fontWeight: "400",
+        lineHeight: "15px",
+        letterSpacing: "-0.12px",
+      },
+    },
   };
 }
