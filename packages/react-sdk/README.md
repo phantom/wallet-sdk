@@ -175,17 +175,17 @@ await connect({
 
 ## SDK Initialization
 
-The SDK provides an `isLoaded` state to track when initialization and autoconnect are complete. This is useful for showing loading states before your app is ready.
+The SDK provides an `isLoading` state to track when initialization and autoconnect are in progress. This is useful for showing loading states before your app is ready.
 
 ```tsx
 import { useConnect, usePhantom } from "@phantom/react-sdk";
 
 function App() {
-  const { isLoaded } = usePhantom();
+  const { isLoading } = usePhantom();
   const { connect } = useConnect();
 
-  // Show loading state until SDK is ready
-  if (!isLoaded) {
+  // Show loading state while SDK initializes
+  if (isLoading) {
     return (
       <div>
         <h1>Initializing Phantom SDK...</h1>
@@ -194,7 +194,7 @@ function App() {
     );
   }
 
-  // SDK is loaded and ready
+  // SDK is ready
   return (
     <div>
       <h1>Welcome!</h1>
@@ -258,7 +258,7 @@ Connect to wallet:
 import { useConnect } from "@phantom/react-sdk";
 
 function ConnectButton() {
-  const { connect, isConnecting, isLoaded, error } = useConnect();
+  const { connect, isConnecting, isLoading, error } = useConnect();
 
   const handleConnect = async () => {
     try {
@@ -270,7 +270,7 @@ function ConnectButton() {
   };
 
   // Wait for SDK to finish initializing before showing connect button
-  if (!isLoaded) {
+  if (isLoading) {
     return <div>Loading...</div>;
   }
 

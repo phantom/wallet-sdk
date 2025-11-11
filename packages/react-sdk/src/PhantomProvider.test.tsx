@@ -29,34 +29,30 @@ describe("PhantomProvider", () => {
     apiBaseUrl: "https://api.test.com",
   };
 
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <PhantomProvider config={mockConfig}>{children}</PhantomProvider>
+  );
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe("isLoaded state", () => {
-    it("should start with isLoaded as false", () => {
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <PhantomProvider config={mockConfig}>{children}</PhantomProvider>
-      );
-
+  describe("isLoading state", () => {
+    it("should start with isLoading as true", () => {
       const { result } = renderHook(() => usePhantom(), { wrapper });
 
-      expect(result.current.isLoaded).toBe(false);
+      expect(result.current.isLoading).toBe(true);
     });
 
-    it("should set isLoaded to true after initialization completes", async () => {
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <PhantomProvider config={mockConfig}>{children}</PhantomProvider>
-      );
-
+    it("should set isLoading to false after initialization completes", async () => {
       const { result } = renderHook(() => usePhantom(), { wrapper });
 
       await waitFor(() => {
-        expect(result.current.isLoaded).toBe(true);
+        expect(result.current.isLoading).toBe(false);
       });
     });
 
-    it("should set isLoaded to true even if autoConnect fails", async () => {
+    it("should set isLoading to false even if autoConnect fails", async () => {
       // Mock autoConnect to reject
       const mockAutoConnect = jest.fn().mockRejectedValue(new Error("AutoConnect failed"));
       (BrowserSDK as unknown as jest.Mock).mockImplementation(() => ({
@@ -66,28 +62,20 @@ describe("PhantomProvider", () => {
         configureDebug: jest.fn(),
       }));
 
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <PhantomProvider config={mockConfig}>{children}</PhantomProvider>
-      );
-
       const { result } = renderHook(() => usePhantom(), { wrapper });
 
       await waitFor(() => {
-        expect(result.current.isLoaded).toBe(true);
+        expect(result.current.isLoading).toBe(false);
       });
 
       expect(mockAutoConnect).toHaveBeenCalled();
     });
 
-    it("should have SDK ready when isLoaded is true", async () => {
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <PhantomProvider config={mockConfig}>{children}</PhantomProvider>
-      );
-
+    it("should have SDK ready when isLoading is false", async () => {
       const { result } = renderHook(() => usePhantom(), { wrapper });
 
       await waitFor(() => {
-        expect(result.current.isLoaded).toBe(true);
+        expect(result.current.isLoading).toBe(false);
       });
 
       expect(result.current.sdk).not.toBeNull();
@@ -97,10 +85,6 @@ describe("PhantomProvider", () => {
 
   describe("SDK initialization", () => {
     it("should create SDK instance on client", async () => {
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <PhantomProvider config={mockConfig}>{children}</PhantomProvider>
-      );
-
       const { result } = renderHook(() => usePhantom(), { wrapper });
 
       await waitFor(() => {
@@ -118,10 +102,6 @@ describe("PhantomProvider", () => {
         off: jest.fn(),
         configureDebug: jest.fn(),
       }));
-
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <PhantomProvider config={mockConfig}>{children}</PhantomProvider>
-      );
 
       renderHook(() => usePhantom(), { wrapper });
 

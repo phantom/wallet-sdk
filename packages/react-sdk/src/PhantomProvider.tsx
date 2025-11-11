@@ -24,7 +24,7 @@ interface PhantomContextValue {
   sdk: BrowserSDK | null;
   isConnected: boolean;
   isConnecting: boolean;
-  isLoaded: boolean;
+  isLoading: boolean;
   connectError: Error | null;
   addresses: WalletAddress[];
   currentProviderType: "injected" | "embedded" | null;
@@ -48,7 +48,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   const [isClient, setIsClient] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [connectError, setConnectError] = useState<Error | null>(null);
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
   const [currentProviderType, setCurrentProviderType] = useState<"injected" | "embedded" | null>(
@@ -157,8 +157,8 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
         console.error("Auto-connect error:", error);
       }
 
-      // Mark SDK as loaded after initialization complete
-      setIsLoaded(true);
+      // Mark SDK as done loading after initialization complete
+      setIsLoading(false);
     };
 
     initialize();
@@ -170,14 +170,14 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       sdk,
       isConnected,
       isConnecting,
-      isLoaded,
+      isLoading,
       connectError,
       addresses,
       currentProviderType,
       isClient,
       user,
     }),
-    [sdk, isConnected, isConnecting, isLoaded, connectError, addresses, currentProviderType, isClient, user],
+    [sdk, isConnected, isConnecting, isLoading, connectError, addresses, currentProviderType, isClient, user],
   );
 
   return <PhantomContext.Provider value={value}>{children}</PhantomContext.Provider>;

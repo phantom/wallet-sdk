@@ -117,10 +117,10 @@ Wait for SDK initialization before showing connect buttons:
 import { usePhantom, useConnect } from "@phantom/react-ui";
 
 function App() {
-  const { isLoaded } = usePhantom();
+  const { isLoading } = usePhantom();
   const { connect } = useConnect();
 
-  if (!isLoaded) {
+  if (isLoading) {
     return <div>Loading...</div>;
   }
 
@@ -136,14 +136,14 @@ The only UI-enhanced hook. Shows a modal for provider selection.
 import { useConnect } from "@phantom/react-ui";
 
 function ConnectButton() {
-  const { connect, isConnecting, isLoaded, error } = useConnect();
+  const { connect, isConnecting, isLoading, error } = useConnect();
 
   const handleConnect = () => {
     connect(); // Shows modal automatically
   };
 
   return (
-    <button onClick={handleConnect} disabled={isConnecting || !isLoaded}>
+    <button onClick={handleConnect} disabled={isConnecting || isLoading}>
       {isConnecting ? "Connecting..." : "Connect Wallet"}
     </button>
   );
