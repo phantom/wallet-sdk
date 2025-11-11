@@ -4,20 +4,20 @@ import { PhantomProvider, usePhantom } from "./PhantomProvider";
 import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 import type { BrowserSDKConfig } from "@phantom/browser-sdk";
 
+
+
 // Mock BrowserSDK
 jest.mock("@phantom/browser-sdk", () => ({
+  AddressType: {
+    solana: "solana",
+    ethereum: "ethereum",
+  },
   BrowserSDK: jest.fn().mockImplementation(() => ({
     autoConnect: jest.fn().mockResolvedValue(undefined),
     on: jest.fn(),
     off: jest.fn(),
     configureDebug: jest.fn(),
-  })),
-  AddressType: {
-    solana: AddressType.solana,
-    ethereum: AddressType.ethereum,
-    bitcoin: AddressType.bitcoinSegwit,
-    base: AddressType.sui,
-  },
+  }))
 }));
 
 describe("PhantomProvider", () => {
