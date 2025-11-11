@@ -4,8 +4,6 @@ import { PhantomProvider, usePhantom } from "./PhantomProvider";
 import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 import type { BrowserSDKConfig } from "@phantom/browser-sdk";
 
-
-
 // Mock BrowserSDK
 jest.mock("@phantom/browser-sdk", () => ({
   AddressType: {
@@ -17,7 +15,7 @@ jest.mock("@phantom/browser-sdk", () => ({
     on: jest.fn(),
     off: jest.fn(),
     configureDebug: jest.fn(),
-  }))
+  })),
 }));
 
 describe("PhantomProvider", () => {

@@ -198,14 +198,11 @@ function App() {
   return (
     <div>
       <h1>Welcome!</h1>
-      <button onClick={() => connect({ provider: "injected" })}>
-        Connect Wallet
-      </button>
+      <button onClick={() => connect({ provider: "injected" })}>Connect Wallet</button>
     </div>
   );
 }
 ```
-
 
 ## Provider Types
 
