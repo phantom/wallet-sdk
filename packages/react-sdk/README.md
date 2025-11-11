@@ -173,6 +173,52 @@ await connect({
 });
 ```
 
+## SDK Initialization Tracking
+
+The SDK provides an `isLoaded` state to track when initialization and autoconnect are complete. This is useful for showing loading states before your app is ready.
+
+```tsx
+import { useConnect, usePhantom } from "@phantom/react-sdk";
+
+function App() {
+  const { isLoaded } = usePhantom();
+  const { connect } = useConnect();
+
+  // Show loading state until SDK is ready
+  if (!isLoaded) {
+    return (
+      <div>
+        <h1>Initializing Phantom SDK...</h1>
+        <p>Please wait...</p>
+      </div>
+    );
+  }
+
+  // SDK is loaded and ready
+  return (
+    <div>
+      <h1>Welcome!</h1>
+      <button onClick={() => connect({ provider: "injected" })}>
+        Connect Wallet
+      </button>
+    </div>
+  );
+}
+```
+
+### What happens during initialization?
+
+1. **SDK Setup**: Browser SDK instance is created
+2. **AutoConnect**: Attempts to restore previous session (if user was connected before)
+3. **Ready**: `isLoaded` becomes `true` and your app can safely show connect buttons
+
+### Performance Note
+
+The initialization is optimized to be fast:
+- No blocking extension detection (happens asynchronously)
+- AutoConnect fails silently if no previous session exists
+- Total initialization time is typically < 100ms
+
 ## Provider Types
 
 ### Injected Provider
@@ -224,7 +270,7 @@ Connect to wallet:
 import { useConnect } from "@phantom/react-sdk";
 
 function ConnectButton() {
-  const { connect, isConnecting, error } = useConnect();
+  const { connect, isConnecting, isLoaded, error } = useConnect();
 
   const handleConnect = async () => {
     try {
@@ -235,6 +281,11 @@ function ConnectButton() {
     }
   };
 
+  // Wait for SDK to finish initializing before showing connect button
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <button onClick={handleConnect} disabled={isConnecting}>
       {isConnecting ? "Connecting..." : "Connect Wallet"}
@@ -242,6 +293,13 @@ function ConnectButton() {
   );
 }
 ```
+
+**Returns:**
+- `connect(options)`: Function to initiate wallet connection
+- `isConnecting`: Boolean indicating if a connection attempt is in progress
+- `isLoaded`: Boolean indicating if SDK initialization and autoconnect have completed
+- `error`: Error object if connection failed
+- `currentProviderType`: Current provider type ("injected" or "embedded")
 
 #### useAccounts
 

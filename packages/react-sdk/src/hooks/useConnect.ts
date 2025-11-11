@@ -3,7 +3,7 @@ import { usePhantom } from "../PhantomProvider";
 import type { AuthOptions } from "@phantom/browser-sdk";
 
 export function useConnect() {
-  const { sdk, isConnecting, connectError, currentProviderType, isPhantomAvailable } = usePhantom();
+  const { sdk, isConnecting, isLoaded, connectError, currentProviderType } = usePhantom();
 
   const connect = useCallback(
     async (options: AuthOptions) => {
@@ -28,8 +28,8 @@ export function useConnect() {
   return {
     connect,
     isConnecting,
+    isLoaded,
     error: connectError,
     currentProviderType,
-    isPhantomAvailable,
   };
 }
