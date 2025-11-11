@@ -9,7 +9,7 @@ const config: PhantomSDKConfig = {
 
 function App() {
   return (
-    <PhantomProvider theme="light" config={config}>
+    <PhantomProvider config={config}>
       <div
         style={{
           minHeight: "100vh",
@@ -48,6 +48,31 @@ function App() {
             }}
           >
             Test the connect modal with mobile deeplink support
+          </p>
+        </div>
+
+        <ConnectExample />
+
+        <div
+          style={{
+            marginTop: "3rem",
+            padding: "1.5rem",
+            background: "white",
+            borderRadius: "12px",
+            border: "1px solid #e5e7eb",
+            textAlign: "center",
+          }}
+        >
+          <h3 style={{ margin: "0 0 1rem 0", color: "#1f2937" }}>📱 Mobile Testing</h3>
+          <p
+            style={{
+              color: "#6b7280",
+              margin: "0",
+              lineHeight: "1.5",
+            }}
+          >
+            On mobile devices, you'll see an additional "Open in Phantom App" button that will redirect to the Phantom
+            mobile app via phantom.app/ul
           </p>
         </div>
 

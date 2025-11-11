@@ -49,13 +49,15 @@ interface ExtendedInjectedProviderConfig extends InjectedProviderConfig {
   embeddedWalletType?: never;
 }
 
+type AuthProviderType = EmbeddedProviderAuthType | "injected";
+
 type AuthOptions = {
-  provider: EmbeddedProviderAuthType | "injected";
+  provider: AuthProviderType;
   customAuthData?: Record<string, any>;
 };
 
 type ConnectResult = Omit<EmbeddedConnectResult, "authProvider"> & {
-  authProvider?: EmbeddedProviderAuthType | "injected" | undefined;
+  authProvider?: AuthProviderType | undefined;
 };
 
 // Re-export types from core for convenience
@@ -67,6 +69,7 @@ export type {
   SignMessageResult,
   SignedTransaction,
   AuthOptions,
+  AuthProviderType,
   DebugCallback,
   DebugLevel,
 };
