@@ -41,94 +41,94 @@ function App() {
             padding: "2rem",
           }}
         >
-        {/* Theme Toggle */}
-        <div
-          style={{
-            position: "fixed",
-            top: "2rem",
-            right: "2rem",
-            zIndex: 1000,
-          }}
-        >
-          <button
-            onClick={toggleTheme}
+          {/* Theme Toggle */}
+          <div
             style={{
-              padding: "12px 20px",
+              position: "fixed",
+              top: "2rem",
+              right: "2rem",
+              zIndex: 1000,
+            }}
+          >
+            <button
+              onClick={toggleTheme}
+              style={{
+                padding: "12px 20px",
+                background: currentTheme.background,
+                color: currentTheme.text,
+                border: `1px solid ${currentTheme.secondary}`,
+                borderRadius: currentTheme.borderRadius,
+                cursor: "pointer",
+                fontSize: "14px",
+                fontWeight: "500",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                transition: "all 0.3s ease",
+              }}
+            >
+              {isDark ? "☀️" : "🌙"}
+              <span>{isDark ? "Light" : "Dark"} Mode</span>
+            </button>
+          </div>
+
+          <div
+            style={{
+              textAlign: "center",
+              marginBottom: "2rem",
+            }}
+          >
+            <h1
+              style={{
+                fontSize: "2.5rem",
+                background: "linear-gradient(135deg, #ab9ff2 0%, #7c3aed 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                marginBottom: "0.5rem",
+              }}
+            >
+              Phantom React SDK Demo
+            </h1>
+            <p
+              style={{
+                color: currentTheme.secondary,
+                fontSize: "1.1rem",
+                lineHeight: "1.6",
+                transition: "color 0.3s ease",
+              }}
+            >
+              Using ConnectButton component with built-in modal
+            </p>
+          </div>
+
+          <ConnectExample />
+
+          <div
+            style={{
+              marginTop: "3rem",
+              padding: "1.5rem",
               background: currentTheme.background,
-              color: currentTheme.text,
-              border: `1px solid ${currentTheme.secondary}`,
               borderRadius: currentTheme.borderRadius,
-              cursor: "pointer",
-              fontSize: "14px",
-              fontWeight: "500",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
+              border: `1px solid ${currentTheme.secondary}`,
+              textAlign: "center",
               transition: "all 0.3s ease",
             }}
           >
-            {isDark ? "☀️" : "🌙"}
-            <span>{isDark ? "Light" : "Dark"} Mode</span>
-          </button>
-        </div>
-
-        <div
-          style={{
-            textAlign: "center",
-            marginBottom: "2rem",
-          }}
-        >
-          <h1
-            style={{
-              fontSize: "2.5rem",
-              background: "linear-gradient(135deg, #ab9ff2 0%, #7c3aed 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              marginBottom: "0.5rem",
-            }}
-          >
-            Phantom React SDK Demo
-          </h1>
-          <p
-            style={{
-              color: currentTheme.secondary,
-              fontSize: "1.1rem",
-              lineHeight: "1.6",
-              transition: "color 0.3s ease",
-            }}
-          >
-            Using ConnectButton component with built-in modal
-          </p>
-        </div>
-
-        <ConnectExample />
-
-        <div
-          style={{
-            marginTop: "3rem",
-            padding: "1.5rem",
-            background: currentTheme.background,
-            borderRadius: currentTheme.borderRadius,
-            border: `1px solid ${currentTheme.secondary}`,
-            textAlign: "center",
-            transition: "all 0.3s ease",
-          }}
-        >
-          <h3 style={{ margin: "0 0 1rem 0", color: currentTheme.text, transition: "color 0.3s ease" }}>
-            📱 Mobile Testing
-          </h3>
-          <p
-            style={{
-              color: currentTheme.secondary,
-              margin: "0",
-              lineHeight: "1.5",
-              transition: "color 0.3s ease",
-            }}
-          >
-            On mobile devices, you'll see an additional "Open in Phantom App" button that will redirect to the Phantom
-            mobile app via phantom.app/ul
-          </p>
-        </div>
+            <h3 style={{ margin: "0 0 1rem 0", color: currentTheme.text, transition: "color 0.3s ease" }}>
+              📱 Mobile Testing
+            </h3>
+            <p
+              style={{
+                color: currentTheme.secondary,
+                margin: "0",
+                lineHeight: "1.5",
+                transition: "color 0.3s ease",
+              }}
+            >
+              On mobile devices, you'll see an additional "Open in Phantom App" button that will redirect to the Phantom
+              mobile app via phantom.app/ul
+            </p>
+          </div>
         </div>
       </div>
     </PhantomProvider>

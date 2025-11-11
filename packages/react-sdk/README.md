@@ -145,11 +145,7 @@ function WalletComponent() {
     );
   }
 
-  return (
-    <button onClick={open}>
-      Connect Wallet
-    </button>
-  );
+  return <button onClick={open}>Connect Wallet</button>;
 }
 ```
 
@@ -293,11 +289,7 @@ import { useTheme } from "@phantom/react-sdk";
 function CustomComponent() {
   const theme = useTheme();
 
-  return (
-    <div style={{ backgroundColor: theme.background, color: theme.text }}>
-      Themed content
-    </div>
-  );
+  return <div style={{ backgroundColor: theme.background, color: theme.text }}>Themed content</div>;
 }
 ```
 

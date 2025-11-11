@@ -8,6 +8,7 @@ import {
   usePhantom,
   useAutoConfirm,
   NetworkId,
+  ConnectButton,
 } from "@phantom/react-sdk";
 import {
   SystemProgram,
@@ -839,6 +840,15 @@ export function SDKActions() {
             </div>
           )}
         </div>
+
+        {isConnected && (
+          <div style={{ marginTop: "1rem" }}>
+            <h4 style={{ marginBottom: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
+              ConnectButton (click to open wallet modal):
+            </h4>
+            <ConnectButton fullWidth={true} />
+          </div>
+        )}
       </div>
 
       {!isConnected && isLoading && (
@@ -865,6 +875,13 @@ export function SDKActions() {
             </button>
           </div>
           {connectError && <p className="error-text">Error: {connectError.message}</p>}
+
+          <div style={{ marginTop: "1.5rem" }}>
+            <h4 style={{ marginBottom: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
+              Or use the ConnectButton component:
+            </h4>
+            <ConnectButton fullWidth={true} />
+          </div>
         </div>
       )}
 
