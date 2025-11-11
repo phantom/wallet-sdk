@@ -29,7 +29,7 @@ import bs58 from "bs58";
 import { useBalance } from "./hooks/useBalance";
 
 export function SDKActions() {
-  const { connect, isConnecting, error: connectError } = useConnect();
+  const { connect, isConnecting, isLoading, error: connectError } = useConnect();
   const { disconnect, isDisconnecting } = useDisconnect();
   const { solana } = useSolana();
   const { ethereum } = useEthereum();
@@ -841,7 +841,16 @@ export function SDKActions() {
         </div>
       </div>
 
-      {!isConnected && (
+      {!isConnected && isLoading && (
+        <div className="section">
+          <h3>Initializing SDK...</h3>
+          <div className="status-card">
+            <p>Loading Phantom SDK...</p>
+          </div>
+        </div>
+      )}
+
+      {!isConnected && !isLoading && (
         <div className="section">
           <h3>Connection Options</h3>
           <div className="button-group">

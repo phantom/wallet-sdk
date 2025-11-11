@@ -28,7 +28,6 @@ interface PhantomContextValue {
   connectError: Error | null;
   addresses: WalletAddress[];
   currentProviderType: "injected" | "embedded" | null;
-  isPhantomAvailable: boolean;
   isClient: boolean;
   user: ConnectResult | null;
 }
@@ -55,7 +54,6 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   const [currentProviderType, setCurrentProviderType] = useState<"injected" | "embedded" | null>(
     (memoizedConfig.providerType as any) || null,
   );
-  const [isPhantomAvailable, setIsPhantomAvailable] = useState(false);
   const [user, setUser] = useState<ConnectResult | null>(null);
 
   // Initialize client flag
@@ -151,16 +149,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
     if (!isClient || !sdk) return;
 
     const initialize = async () => {
-      // Check if Phantom extension is available (only for injected provider)
-      try {
-        const available = await BrowserSDK.isPhantomInstalled();
-        setIsPhantomAvailable(available);
-      } catch (err) {
-        console.error("Error checking Phantom extension:", err);
-        setIsPhantomAvailable(false);
-      }
-
-      // Attempt auto-connect
+      // Attempt auto-connect (it handles extension detection internally)
       try {
         await sdk.autoConnect();
       } catch (error) {
@@ -185,11 +174,10 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       connectError,
       addresses,
       currentProviderType,
-      isPhantomAvailable,
       isClient,
       user,
     }),
-    [sdk, isConnected, isConnecting, isLoading, connectError, addresses, currentProviderType, isPhantomAvailable, isClient, user],
+    [sdk, isConnected, isConnecting, isLoading, connectError, addresses, currentProviderType, isClient, user],
   );
 
   return <PhantomContext.Provider value={value}>{children}</PhantomContext.Provider>;
