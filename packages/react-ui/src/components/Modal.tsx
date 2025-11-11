@@ -2,7 +2,7 @@ import React, { useState, type CSSProperties } from "react";
 import { useIsExtensionInstalled, useIsPhantomLoginAvailable } from "@phantom/react-sdk";
 import { Button, LoginWithPhantomButton } from "./Button";
 import { useTheme } from "../hooks/useTheme";
-import { usePhantomUI } from "../PhantomProvider";
+import { usePhantomUI } from "../hooks/usePhantomUI";
 
 export interface ModalProps {
   appIcon?: string;

@@ -24,6 +24,7 @@ interface PhantomContextValue {
   sdk: BrowserSDK | null;
   isConnected: boolean;
   isConnecting: boolean;
+  isLoading: boolean;
   connectError: Error | null;
   addresses: WalletAddress[];
   currentProviderType: "injected" | "embedded" | null;
@@ -48,6 +49,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   const [isClient, setIsClient] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [connectError, setConnectError] = useState<Error | null>(null);
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
   const [currentProviderType, setCurrentProviderType] = useState<"injected" | "embedded" | null>(
@@ -159,9 +161,15 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       }
 
       // Attempt auto-connect
-      sdk.autoConnect().catch(() => {
+      try {
+        await sdk.autoConnect();
+      } catch (error) {
         // Silent fail - auto-connect shouldn't break the app
-      });
+        console.error("Auto-connect error:", error);
+      }
+
+      // Mark SDK as done loading after initialization complete
+      setIsLoading(false);
     };
 
     initialize();
@@ -173,6 +181,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       sdk,
       isConnected,
       isConnecting,
+      isLoading,
       connectError,
       addresses,
       currentProviderType,
@@ -180,7 +189,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       isClient,
       user,
     }),
-    [sdk, isConnected, isConnecting, connectError, addresses, currentProviderType, isPhantomAvailable, isClient, user],
+    [sdk, isConnected, isConnecting, isLoading, connectError, addresses, currentProviderType, isPhantomAvailable, isClient, user],
   );
 
   return <PhantomContext.Provider value={value}>{children}</PhantomContext.Provider>;

@@ -1,4 +1,4 @@
-import React, { useContext, useState, useCallback, useMemo, type ReactNode } from "react";
+import React, { useState, useCallback, useMemo, type ReactNode } from "react";
 import {
   useConnect as useBaseConnect,
   usePhantom,
@@ -190,12 +190,4 @@ export function PhantomProvider({ children, theme = darkTheme, config, appIcon, 
       </PhantomUIProvider>
     </BasePhantomProvider>
   );
-}
-
-export function usePhantomUI(): PhantomUIContextValue {
-  const context = useContext(PhantomUIContext);
-  if (!context) {
-    throw new Error("usePhantomUI must be used within a PhantomProvider");
-  }
-  return context;
 }
