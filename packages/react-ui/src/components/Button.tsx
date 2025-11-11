@@ -1,30 +1,45 @@
-import React, { type CSSProperties, type ReactNode } from "react";
+import React, { useState, useMemo, type CSSProperties, type ReactNode } from "react";
 import { hexToRgba } from "../utils";
 import { useTheme } from "../hooks/useTheme";
 
-// Shared base button styles
-const getBaseButtonStyle = (
-  fullWidth: boolean,
-  disabled: boolean,
-  borderRadius: string,
-  fontSize: string = "16px",
-  fontWeight: string = "600",
-  justifyContent: "center" | "space-between" = "center",
-): CSSProperties => ({
-  width: fullWidth ? "100%" : "auto",
-  padding: "12px 16px",
-  border: "none",
-  borderRadius,
+interface BaseButtonStyleOptions {
+  fullWidth: boolean;
+  disabled: boolean;
+  fontSize?: CSSProperties["fontSize"];
+  fontWeight?: CSSProperties["fontWeight"];
+  justifyContent?: CSSProperties["justifyContent"];
+}
+
+// Custom hook for base button styles
+const useBaseButtonStyle = ({
+  fullWidth,
+  disabled,
   fontSize,
   fontWeight,
-  cursor: disabled ? "not-allowed" : "pointer",
-  transition: "background-color 0.2s",
-  display: "flex",
-  alignItems: "center",
-  justifyContent,
-  gap: "8px",
-  opacity: disabled ? 0.6 : 1,
-});
+  justifyContent = "center",
+}: BaseButtonStyleOptions): CSSProperties => {
+  const theme = useTheme();
+
+  return {
+    width: fullWidth ? "100%" : "auto",
+    padding: "12px 16px",
+    border: "none",
+    borderRadius: theme.borderRadius,
+    fontFamily: theme.typography.captionBold.fontFamily,
+    fontSize: fontSize ?? theme.typography.captionBold.fontSize,
+    fontStyle: theme.typography.captionBold.fontStyle,
+    fontWeight: fontWeight ?? theme.typography.captionBold.fontWeight,
+    lineHeight: theme.typography.captionBold.lineHeight,
+    letterSpacing: theme.typography.captionBold.letterSpacing,
+    cursor: disabled ? "not-allowed" : "pointer",
+    transition: "background-color 0.2s",
+    display: "flex",
+    alignItems: "center",
+    justifyContent,
+    gap: "8px",
+    opacity: disabled ? 0.6 : 1,
+  };
+};
 
 // Button component
 export interface ButtonProps {
@@ -45,46 +60,42 @@ export function Button({
   isLoading = false,
 }: ButtonProps) {
   const theme = useTheme();
-  const baseStyle = getBaseButtonStyle(
+  const [isHovering, setIsHovering] = useState(false);
+  const isInteractive = !disabled && !isLoading;
+
+  const baseStyle = useBaseButtonStyle({
     fullWidth,
-    disabled || isLoading,
-    theme.borderRadius,
-    variant === "primary" ? "16px" : "14px",
-    variant === "primary" ? "600" : "500",
-    variant === "primary" ? "center" : "space-between",
-  );
+    disabled: disabled || isLoading,
+    justifyContent: variant === "primary" ? "center" : "space-between",
+  });
 
-  const primaryStyle: CSSProperties = {
+  const backgroundColor = useMemo(() => {
+    if (!isInteractive) {
+      return variant === "primary" ? theme.aux : "transparent";
+    }
+
+    if (isHovering) {
+      return variant === "primary" ? hexToRgba(theme.secondary, 0.15) : hexToRgba(theme.secondary, 0.1);
+    }
+
+    return variant === "primary" ? theme.aux : "transparent";
+  }, [isInteractive, isHovering, variant, theme.aux, theme.secondary]);
+
+  const buttonStyle: CSSProperties = {
     ...baseStyle,
-    backgroundColor: theme.aux,
+    backgroundColor,
     color: theme.text,
+    border: variant === "secondary" ? `1px solid ${theme.secondary}` : "none",
   };
 
-  const secondaryStyle: CSSProperties = {
-    ...baseStyle,
-    backgroundColor: "transparent",
-    color: theme.text,
-    border: `1px solid ${theme.secondary}`,
-  };
-
-  const buttonStyle = variant === "primary" ? primaryStyle : secondaryStyle;
-
-  const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (!disabled && !isLoading) {
-      if (variant === "primary") {
-        e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.15);
-      } else {
-        e.currentTarget.style.backgroundColor = hexToRgba(theme.secondary, 0.1);
-      }
+  const handleMouseEnter = () => {
+    if (isInteractive) {
+      setIsHovering(true);
     }
   };
 
-  const handleMouseLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (variant === "primary") {
-      e.currentTarget.style.backgroundColor = theme.aux;
-    } else {
-      e.currentTarget.style.backgroundColor = "transparent";
-    }
+  const handleMouseLeave = () => {
+    setIsHovering(false);
   };
 
   return (
@@ -117,20 +128,40 @@ export function LoginWithPhantomButton({
   isLoading = false,
 }: LoginWithPhantomButtonProps) {
   const theme = useTheme();
+  const [isHovering, setIsHovering] = useState(false);
+  const isInteractive = !disabled && !isLoading;
+
+  const baseStyle = useBaseButtonStyle({
+    fullWidth,
+    disabled: disabled || isLoading,
+  });
+
+  const backgroundColor = useMemo(() => {
+    if (!isInteractive) {
+      return theme.brand;
+    }
+
+    if (isHovering) {
+      return hexToRgba(theme.brand, 0.85);
+    }
+
+    return theme.brand;
+  }, [isInteractive, isHovering, theme.brand]);
+
   const buttonStyle: CSSProperties = {
-    ...getBaseButtonStyle(fullWidth, disabled || isLoading, theme.borderRadius),
-    backgroundColor: theme.brand,
+    ...baseStyle,
+    backgroundColor,
     color: "#FFFFFF",
   };
 
-  const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (!disabled && !isLoading) {
-      e.currentTarget.style.backgroundColor = hexToRgba(theme.brand, 0.85);
+  const handleMouseEnter = () => {
+    if (isInteractive) {
+      setIsHovering(true);
     }
   };
 
-  const handleMouseLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.backgroundColor = theme.brand;
+  const handleMouseLeave = () => {
+    setIsHovering(false);
   };
 
   return (

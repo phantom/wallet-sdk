@@ -3,8 +3,6 @@ import {
   useConnect as useBaseConnect,
   usePhantom,
   PhantomProvider as BasePhantomProvider,
-  useIsExtensionInstalled,
-  useIsPhantomLoginAvailable,
   type PhantomSDKConfig,
 } from "@phantom/react-sdk";
 import { isMobileDevice, getDeeplinkToPhantom, type AuthProviderType } from "@phantom/browser-sdk";
@@ -23,9 +21,7 @@ export interface PhantomUIProviderProps {
 // Internal UI Provider that consumes react-sdk context
 function PhantomUIProvider({ children, theme = darkTheme, appIcon, appName }: Omit<PhantomUIProviderProps, "config">) {
   const baseConnect = useBaseConnect();
-  const { sdk, isPhantomAvailable: _isPhantomAvailable } = usePhantom();
-  const isExtensionInstalled = useIsExtensionInstalled();
-  const isPhantomLoginAvailable = useIsPhantomLoginAvailable();
+  const { sdk } = usePhantom();
 
   // Check if this is a mobile device
   const isMobile = useMemo(() => isMobileDevice(), []);
@@ -180,21 +176,7 @@ function PhantomUIProvider({ children, theme = darkTheme, appIcon, appName }: Om
   return (
     <PhantomUIContext.Provider value={contextValue}>
       {children}
-      <Modal
-        isVisible={connectionState.isVisible}
-        isConnecting={connectionState.isConnecting}
-        error={connectionState.error}
-        providerType={connectionState.providerType}
-        appIcon={appIcon}
-        appName={appName}
-        isMobile={isMobile}
-        isExtensionInstalled={isExtensionInstalled.isInstalled}
-        isPhantomLoginAvailable={isPhantomLoginAvailable.isAvailable}
-        onClose={hideConnectionModal}
-        onConnectWithDeeplink={connectWithDeeplink}
-        onConnectWithAuthProvider={connectWithAuthProvider}
-        onConnectWithInjected={connectWithInjected}
-      />
+      <Modal appIcon={appIcon} appName={appName} />
     </PhantomUIContext.Provider>
   );
 }

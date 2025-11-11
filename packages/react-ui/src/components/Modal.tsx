@@ -1,40 +1,27 @@
-import React, { type CSSProperties } from "react";
-import type { AuthProviderType } from "@phantom/browser-sdk";
+import React, { useState, type CSSProperties } from "react";
+import { useIsExtensionInstalled, useIsPhantomLoginAvailable } from "@phantom/react-sdk";
 import { Button, LoginWithPhantomButton } from "./Button";
 import { useTheme } from "../hooks/useTheme";
+import { usePhantomUI } from "../PhantomProvider";
 
 export interface ModalProps {
-  isVisible: boolean;
-  isConnecting: boolean;
-  error: Error | null;
-  providerType: AuthProviderType | "deeplink" | null;
   appIcon?: string;
   appName?: string;
-  isMobile: boolean;
-  isExtensionInstalled: boolean;
-  isPhantomLoginAvailable: boolean;
-  onClose: () => void;
-  onConnectWithDeeplink: () => void;
-  onConnectWithAuthProvider: (provider: AuthProviderType) => void;
-  onConnectWithInjected: () => void;
 }
 
-export function Modal({
-  isVisible,
-  isConnecting,
-  error,
-  providerType,
-  appIcon,
-  appName,
-  isMobile,
-  isExtensionInstalled,
-  isPhantomLoginAvailable,
-  onClose,
-  onConnectWithDeeplink,
-  onConnectWithAuthProvider,
-  onConnectWithInjected,
-}: ModalProps) {
+export function Modal({ appIcon, appName }: ModalProps) {
   const theme = useTheme();
+  const {
+    connectionState: { isVisible, isConnecting, error, providerType },
+    hideConnectionModal,
+    connectWithAuthProvider,
+    connectWithInjected,
+    connectWithDeeplink,
+    isMobile,
+  } = usePhantomUI();
+  const isExtensionInstalled = useIsExtensionInstalled();
+  const isPhantomLoginAvailable = useIsPhantomLoginAvailable();
+  const [isCloseButtonHovering, setIsCloseButtonHovering] = useState(false);
 
   if (!isVisible) return null;
 
@@ -72,12 +59,7 @@ export function Modal({
 
   const titleStyle: CSSProperties = {
     margin: 0,
-    fontFamily: '"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    fontSize: "14px",
-    fontStyle: "normal",
-    fontWeight: "400",
-    lineHeight: "17px",
-    letterSpacing: "-0.14px",
+    ...theme.typography.caption,
     color: theme.secondary,
     fontFeatureSettings: '"liga" off, "clig" off',
     textAlign: "center" as const,
@@ -90,7 +72,7 @@ export function Modal({
     transform: "translateY(-50%)",
     background: "none",
     border: "none",
-    color: theme.text,
+    color: isCloseButtonHovering ? theme.secondary : theme.text,
     fontSize: "24px",
     cursor: "pointer",
     padding: "4px 8px",
@@ -119,8 +101,8 @@ export function Modal({
     display: "flex",
     alignItems: "center",
     margin: "24px 0",
+    ...theme.typography.caption,
     color: theme.secondary,
-    fontSize: "14px",
     textTransform: "uppercase" as const,
   };
 
@@ -137,8 +119,8 @@ export function Modal({
   const footerStyle: CSSProperties = {
     marginTop: "24px",
     textAlign: "center" as const,
+    ...theme.typography.label,
     color: theme.secondary,
-    fontSize: "12px",
   };
 
   const errorStyle: CSSProperties = {
@@ -152,16 +134,16 @@ export function Modal({
   };
 
   return (
-    <div style={overlayStyle} onClick={onClose}>
+    <div style={overlayStyle} onClick={hideConnectionModal}>
       <div style={modalStyle} onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div style={headerStyle}>
           <h3 style={titleStyle}>Login or Sign Up</h3>
           <button
             style={closeButtonStyle}
-            onClick={onClose}
-            onMouseEnter={e => (e.currentTarget.style.color = theme.secondary)}
-            onMouseLeave={e => (e.currentTarget.style.color = theme.text)}
+            onClick={hideConnectionModal}
+            onMouseEnter={() => setIsCloseButtonHovering(true)}
+            onMouseLeave={() => setIsCloseButtonHovering(false)}
           >
             ×
           </button>
@@ -178,9 +160,9 @@ export function Modal({
           {/* Provider Options */}
           <div style={buttonContainerStyle}>
             {/* Mobile device with no Phantom extension - show deeplink button */}
-            {isMobile && !isExtensionInstalled && (
+            {isMobile && !isExtensionInstalled.isInstalled && (
               <Button
-                onClick={onConnectWithDeeplink}
+                onClick={connectWithDeeplink}
                 disabled={isConnecting}
                 isLoading={isConnecting && providerType === "deeplink"}
               >
@@ -190,9 +172,9 @@ export function Modal({
 
             {!isMobile && (
               <>
-                {isPhantomLoginAvailable && (
+                {isPhantomLoginAvailable.isAvailable && (
                   <LoginWithPhantomButton
-                    onClick={() => onConnectWithAuthProvider("phantom")}
+                    onClick={() => connectWithAuthProvider("phantom")}
                     disabled={isConnecting}
                     isLoading={isConnecting && providerType === "phantom"}
                   />
@@ -201,7 +183,7 @@ export function Modal({
             )}
 
             <Button
-              onClick={() => onConnectWithAuthProvider("google")}
+              onClick={() => connectWithAuthProvider("google")}
               disabled={isConnecting}
               isLoading={isConnecting && providerType === "google"}
             >
@@ -209,14 +191,14 @@ export function Modal({
             </Button>
 
             <Button
-              onClick={() => onConnectWithAuthProvider("apple")}
+              onClick={() => connectWithAuthProvider("apple")}
               disabled={isConnecting}
               isLoading={isConnecting && providerType === "apple"}
             >
               Continue with Apple
             </Button>
 
-            {!isMobile && isExtensionInstalled && (
+            {!isMobile && isExtensionInstalled.isInstalled && (
               <>
                 <div style={dividerStyle}>
                   <div style={dividerLineStyle} />
@@ -226,7 +208,7 @@ export function Modal({
 
                 <Button
                   variant="secondary"
-                  onClick={onConnectWithInjected}
+                  onClick={connectWithInjected}
                   disabled={isConnecting}
                   isLoading={isConnecting && providerType === "injected"}
                 >

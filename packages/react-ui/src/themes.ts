@@ -32,6 +32,34 @@ export interface PhantomTheme {
 
   // Brand color
   brand: HexColor;
+
+  // Typography
+  typography: {
+    caption: {
+      fontFamily: string;
+      fontSize: string;
+      fontStyle: string;
+      fontWeight: string;
+      lineHeight: string;
+      letterSpacing: string;
+    };
+    captionBold: {
+      fontFamily: string;
+      fontSize: string;
+      fontStyle: string;
+      fontWeight: string;
+      lineHeight: string;
+      letterSpacing: string;
+    };
+    label: {
+      fontFamily: string;
+      fontSize: string;
+      fontStyle: string;
+      fontWeight: string;
+      lineHeight: string;
+      letterSpacing: string;
+    };
+  };
 }
 
 export type PhantomThemeWithAux = PhantomTheme & {
@@ -51,6 +79,32 @@ export const darkTheme: PhantomTheme = {
   error: "#F00000",
   success: "#1CC700",
   brand: loginWithPhantomColor,
+  typography: {
+    caption: {
+      fontFamily: '"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontSize: "14px",
+      fontStyle: "normal",
+      fontWeight: "400",
+      lineHeight: "17px",
+      letterSpacing: "-0.14px",
+    },
+    captionBold: {
+      fontFamily: '"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontSize: "14px",
+      fontStyle: "normal",
+      fontWeight: "600",
+      lineHeight: "17px",
+      letterSpacing: "-0.14px",
+    },
+    label: {
+      fontFamily: '"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontSize: "12px",
+      fontStyle: "normal",
+      fontWeight: "400",
+      lineHeight: "15px",
+      letterSpacing: "-0.12px",
+    },
+  },
 };
 
 /**
@@ -65,6 +119,32 @@ export const lightTheme: PhantomTheme = {
   error: "#F00000",
   success: "#1CC700",
   brand: loginWithPhantomColor,
+  typography: {
+    caption: {
+      fontFamily: '"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontSize: "14px",
+      fontStyle: "normal",
+      fontWeight: "400",
+      lineHeight: "17px",
+      letterSpacing: "-0.14px",
+    },
+    captionBold: {
+      fontFamily: '"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontSize: "14px",
+      fontStyle: "normal",
+      fontWeight: "600",
+      lineHeight: "17px",
+      letterSpacing: "-0.14px",
+    },
+    label: {
+      fontFamily: '"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontSize: "12px",
+      fontStyle: "normal",
+      fontWeight: "400",
+      lineHeight: "15px",
+      letterSpacing: "-0.12px",
+    },
+  },
 };
 
 /**
