@@ -1,15 +1,18 @@
+import type { EmbeddedProviderAuthType } from "../types";
+
 export interface AuthResult {
   walletId: string;
   organizationId: string; // Organization ID returned from auth flow
-  provider?: string;
+  provider: EmbeddedProviderAuthType;
   accountDerivationIndex: number; // Account derivation index from auth response
   expiresInMs: number; // Authenticator expiration time from auth response (for user-wallets)
+  authUserId?: string; // User ID returned from auth flow (optional, for user-wallets)
 }
 
 export interface PhantomConnectOptions {
   publicKey: string;
   appId: string;
-  provider?: "google" | "apple";
+  provider: EmbeddedProviderAuthType;
   redirectUrl?: string;
   authUrl?: string;
   sessionId: string;
@@ -18,15 +21,9 @@ export interface PhantomConnectOptions {
   allowRefresh?: boolean; // Whether to allow OAuth session refresh (default: true)
 }
 
-export interface JWTAuthOptions {
-  appId: string;
-  publicKey: string;
-  jwtToken: string;
-}
-
 export interface AuthProvider {
-  authenticate(options: PhantomConnectOptions | JWTAuthOptions): Promise<void | AuthResult>;
-  resumeAuthFromRedirect?(): AuthResult | null;
+  authenticate(options: PhantomConnectOptions): Promise<void | AuthResult>;
+  resumeAuthFromRedirect?(provider: EmbeddedProviderAuthType): AuthResult | null;
 }
 
 export interface PhantomAppAuthOptions {

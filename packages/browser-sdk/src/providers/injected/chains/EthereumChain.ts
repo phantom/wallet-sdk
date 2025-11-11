@@ -89,9 +89,17 @@ export class InjectedEthereumChain implements IEthereumChain {
     return await this.phantom.ethereum.sendTransaction(transaction);
   }
 
-  async switchChain(chainId: number): Promise<void> {
-    await this.phantom.ethereum.switchChain(`0x${chainId.toString(16)}`);
-    this._chainId = `0x${chainId.toString(16)}`;
+  async switchChain(chainId: number | string): Promise<void> {
+    // Convert to hex string format if needed
+    const hexChainId =
+      typeof chainId === "string"
+        ? chainId.toLowerCase().startsWith("0x")
+          ? chainId
+          : `0x${parseInt(chainId, 10).toString(16)}`
+        : `0x${chainId.toString(16)}`;
+
+    await this.phantom.ethereum.switchChain(hexChainId);
+    this._chainId = hexChainId;
     this.eventEmitter.emit("chainChanged", this._chainId);
   }
 

@@ -1,7 +1,5 @@
-import { base64urlDecode } from "@phantom/base64url";
 import type { EthTransactionRequest, IEthereumChain } from "@phantom/chain-interfaces";
 import { NetworkId, chainIdToNetworkId, networkIdToChainId } from "@phantom/constants";
-import { Buffer } from "buffer";
 import { EventEmitter } from "eventemitter3";
 import type { EmbeddedProvider } from "../embedded-provider";
 
@@ -76,21 +74,33 @@ export class EmbeddedEthereumChain implements IEthereumChain {
   }
 
   async signTransaction(transaction: EthTransactionRequest): Promise<string> {
+    // If the transaction has a chainId, use that network for signing
+    let networkId = this.currentNetworkId;
+    if (transaction.chainId) {
+      const numericChainId =
+        typeof transaction.chainId === "number" ? transaction.chainId : parseInt(transaction.chainId, 16);
+      const txNetworkId = chainIdToNetworkId(numericChainId);
+      if (txNetworkId) {
+        networkId = txNetworkId;
+      }
+    }
+
     const result = await this.provider.signTransaction({
       transaction,
-      networkId: this.currentNetworkId,
+      networkId,
     });
-    // Convert base64url encoded signature to hex format for Ethereum (same logic as parseEVMSignatureResponse)
-    try {
-      const signatureBytes = base64urlDecode(result.rawTransaction);
-      return "0x" + Buffer.from(signatureBytes).toString("hex");
-    } catch (error) {
-      // Fallback: assume it's already hex format
-      return result.rawTransaction.startsWith("0x") ? result.rawTransaction : "0x" + result.rawTransaction;
-    }
+    // parseTransactionResponse already converts base64url to hex for Ethereum
+    return result.rawTransaction;
   }
 
   async sendTransaction(transaction: EthTransactionRequest): Promise<string> {
+    // If the transaction has a chainId, switch to that chain first
+    if (transaction.chainId) {
+      const numericChainId =
+        typeof transaction.chainId === "number" ? transaction.chainId : parseInt(transaction.chainId, 16);
+      await this.switchChain(numericChainId);
+    }
+
     const result = await this.provider.signAndSendTransaction({
       transaction,
       networkId: this.currentNetworkId,
@@ -102,13 +112,21 @@ export class EmbeddedEthereumChain implements IEthereumChain {
     return result.hash;
   }
 
-  switchChain(chainId: number): Promise<void> {
-    const networkId = chainIdToNetworkId(chainId);
+  switchChain(chainId: number | string): Promise<void> {
+    // Convert string to number if needed, detecting hex vs decimal
+    const numericChainId =
+      typeof chainId === "string"
+        ? chainId.toLowerCase().startsWith("0x")
+          ? parseInt(chainId, 16)
+          : parseInt(chainId, 10)
+        : chainId;
+
+    const networkId = chainIdToNetworkId(numericChainId);
     if (!networkId) {
       throw new Error(`Unsupported chainId: ${chainId}`);
     }
     this.currentNetworkId = networkId;
-    this.eventEmitter.emit("chainChanged", `0x${chainId.toString(16)}`);
+    this.eventEmitter.emit("chainChanged", `0x${numericChainId.toString(16)}`);
     return Promise.resolve();
   }
 
@@ -166,7 +184,7 @@ export class EmbeddedEthereumChain implements IEthereumChain {
     switch (args.method) {
       case "personal_sign": {
         const [message, _address] = args.params as [string, string];
-        const result = await this.provider.signMessage({
+        const result = await this.provider.signEthereumMessage({
           message,
           networkId: this.currentNetworkId,
         });

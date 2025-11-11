@@ -4,3 +4,7 @@ dist/
 node_modules/
 .changeset/
 .github/
+
+# Builds
+**/.next/
+**/build/

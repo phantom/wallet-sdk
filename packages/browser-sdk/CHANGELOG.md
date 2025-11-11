@@ -1,5 +1,79 @@
 # @phantom/browser-sdk
 
+## 1.0.0-beta.21
+
+### Patch Changes
+
+- 68492cf: Fix dependency to correct number and add policy
+- Updated dependencies [68492cf]
+  - @phantom/sdk-types@1.0.0-beta.9
+  - @phantom/client@1.0.0-beta.21
+  - @phantom/embedded-provider-core@1.0.0-beta.21
+  - @phantom/base64url@1.0.0-beta.9
+  - @phantom/constants@1.0.0-beta.9
+  - @phantom/chain-interfaces@1.0.0-beta.9
+  - @phantom/parsers@1.0.0-beta.9
+
+## 1.0.0-beta.20
+
+### Patch Changes
+
+- c3f5969: Do not reconnect automatically on injected provider if user disconnected
+- 462c2b5: Get authUserId from injected provider
+  - @phantom/client@1.0.0-beta.20
+  - @phantom/embedded-provider-core@1.0.0-beta.20
+
+## 1.0.0-beta.19
+
+### Patch Changes
+
+- d35daaa: Bump all dependencies
+- Updated dependencies [d35daaa]
+  - @phantom/embedded-provider-core@1.0.0-beta.19
+  - @phantom/client@1.0.0-beta.19
+  - @phantom/base64url@1.0.0-beta.8
+  - @phantom/constants@1.0.0-beta.8
+  - @phantom/sdk-types@1.0.0-beta.8
+  - @phantom/chain-interfaces@1.0.0-beta.8
+  - @phantom/parsers@1.0.0-beta.8
+  - @phantom/browser-injected-sdk@1.0.0-beta.6
+  - @phantom/indexed-db-stamper@1.0.0-beta.2
+
+## 1.0.0-beta.18
+
+### Patch Changes
+
+- f1f401d: Support authuser id from wallet
+- 0ee572a: EVM SDKs
+- Updated dependencies [0ee572a]
+  - @phantom/embedded-provider-core@1.0.0-beta.18
+  - @phantom/client@1.0.0-beta.18
+
+## 1.0.0-beta.17
+
+### Patch Changes
+
+- bd2219e: Fixed features access
+  - @phantom/client@1.0.0-beta.17
+  - @phantom/embedded-provider-core@1.0.0-beta.17
+
+## 1.0.0-beta.16
+
+### Patch Changes
+
+- bb3483b: Fix double connect issues , change provider bug
+  - @phantom/client@1.0.0-beta.16
+  - @phantom/embedded-provider-core@1.0.0-beta.16
+
+## 1.0.0-beta.15
+
+### Patch Changes
+
+- 53f1db0: Support auth user id
+- Updated dependencies [53f1db0]
+  - @phantom/embedded-provider-core@1.0.0-beta.15
+  - @phantom/client@1.0.0-beta.15
+
 ## 1.0.0-beta.14
 
 ### Patch Changes

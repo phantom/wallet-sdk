@@ -29,11 +29,11 @@ import bs58 from "bs58";
 import { useBalance } from "./hooks/useBalance";
 
 export function SDKActions() {
-  const { connect, isConnecting, error: connectError } = useConnect();
+  const { connect, isConnecting, isLoading, error: connectError } = useConnect();
   const { disconnect, isDisconnecting } = useDisconnect();
   const { solana } = useSolana();
   const { ethereum } = useEthereum();
-  const { isConnected, currentProviderType, sdk } = usePhantom();
+  const { isConnected, currentProviderType, user } = usePhantom();
   const autoConfirm = useAutoConfirm();
   const addresses = useAccounts();
   const [isSigningMessageType, setIsSigningMessageType] = useState<"solana" | "evm" | null>(null);
@@ -47,6 +47,8 @@ export function SDKActions() {
   const [isStakingSol, setIsStakingSol] = useState(false);
   const [isSendingCustomSol, setIsSendingCustomSol] = useState(false);
   const [customSolAmount, setCustomSolAmount] = useState("");
+  const [isSendingEthMainnet, setIsSendingEthMainnet] = useState(false);
+  const [isSendingPolygon, setIsSendingPolygon] = useState(false);
 
   const solanaAddress = addresses?.find(addr => addr.addressType === "Solana")?.address || null;
   const ethereumAddress = addresses?.find(addr => addr.addressType === "Ethereum")?.address || null;
@@ -60,21 +62,11 @@ export function SDKActions() {
   } = useBalance(solanaAddress);
   const hasSolanaBalance = solanaBalance !== null && solanaBalance > 0;
 
-  const {
-    balance: ethereumBalance,
-    loading: ethereumBalanceLoading,
-    error: ethereumBalanceError,
-    refetch: refetchEthereumBalance,
-  } = useBalance(ethereumAddress);
-  const hasEthereumBalance = ethereumBalance !== null && ethereumBalance > 0;
-
   const onConnectInjected = async () => {
     try {
-      // Switch to injected provider before connecting
-      if (sdk) {
-        await sdk.switchProvider("injected");
-      }
-      await connect();
+      await connect({
+        provider: "injected",
+      });
     } catch (error) {
       console.error("Error connecting to injected provider:", error);
       alert(`Error connecting: ${(error as Error).message || error}`);
@@ -83,10 +75,6 @@ export function SDKActions() {
 
   const onConnectWithGoogle = async () => {
     try {
-      // Switch to embedded provider if needed
-      if (sdk) {
-        await sdk.switchProvider("embedded");
-      }
       // Connect with Google auth provider
       await connect({
         provider: "google",
@@ -142,10 +130,6 @@ export function SDKActions() {
 
   const onConnectWithPhantom = async () => {
     try {
-      // Switch to embedded provider if needed
-      if (sdk) {
-        await sdk.switchProvider("embedded");
-      }
       // Connect with Phantom auth provider (uses extension)
       await connect({
         provider: "phantom",
@@ -325,6 +309,7 @@ export function SDKActions() {
           value: numberToHex(parseEther("0.001")), // 0.001 ETH in hex
           gas: numberToHex(21000n), // Gas limit in hex
           gasPrice: numberToHex(parseGwei("20")), // 20 gwei in hex
+          chainId: numberToHex(11155111), // Sepolia testnet
         };
 
         const result = await ethereum?.signTransaction(transactionParams);
@@ -408,6 +393,7 @@ export function SDKActions() {
         value: numberToHex(parseEther("0.001")), // 0.001 ETH in hex
         gas: numberToHex(21000n), // Gas limit in hex
         gasPrice: numberToHex(parseGwei("20")), // 20 gwei in hex
+        chainId: numberToHex(11155111), // Sepolia testnet
       };
 
       const result = await ethereum?.sendTransaction(transactionParams);
@@ -728,6 +714,68 @@ export function SDKActions() {
     }
   };
 
+  const onSendEthMainnet = async () => {
+    if (!isConnected || !ethereumAddress) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+
+    try {
+      setIsSendingEthMainnet(true);
+
+      // Create ETH transfer (0.00001 ETH to self)
+      const transactionParams = {
+        from: ethereumAddress,
+        to: ethereumAddress, // Self-transfer
+        value: numberToHex(parseEther("0.00001")), // 0.00001 ETH in hex
+        chainId: numberToHex(1), // Ethereum mainnet
+      };
+
+      const result = await ethereum?.sendTransaction(transactionParams);
+      if (!result) {
+        alert("Ethereum chain not available");
+        return;
+      }
+      alert(`ETH transaction sent on Ethereum mainnet! Hash: ${result}`);
+    } catch (error) {
+      console.error("Error sending ETH on mainnet:", error);
+      alert(`Error sending ETH: ${(error as Error).message || error}`);
+    } finally {
+      setIsSendingEthMainnet(false);
+    }
+  };
+
+  const onSendPolygon = async () => {
+    if (!isConnected || !ethereumAddress) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+
+    try {
+      setIsSendingPolygon(true);
+
+      // Create POL transfer (0.00001 POL to self) on Polygon mainnet
+      const transactionParams = {
+        from: ethereumAddress,
+        to: ethereumAddress, // Self-transfer
+        value: numberToHex(parseEther("0.00001")), // 0.00001 POL in hex
+        chainId: numberToHex(137), // Polygon mainnet
+      };
+
+      const result = await ethereum?.sendTransaction(transactionParams);
+      if (!result) {
+        alert("Ethereum chain not available");
+        return;
+      }
+      alert(`POL transaction sent on Polygon mainnet! Hash: ${result}`);
+    } catch (error) {
+      console.error("Error sending POL on Polygon:", error);
+      alert(`Error sending POL: ${(error as Error).message || error}`);
+    } finally {
+      setIsSendingPolygon(false);
+    }
+  };
+
   // Auto-confirm handlers
   const onEnableAutoConfirm = async () => {
     try {
@@ -762,10 +810,19 @@ export function SDKActions() {
               {isConnected ? "Connected" : "Not Connected"}
             </span>
           </div>
-          {isConnected && currentProviderType && (
+
+          {isConnected && user && (
             <div className="status-row">
-              <span className="status-label">Provider:</span>
-              <span className="status-value">{currentProviderType}</span>
+              <span className="status-label">Auth Provider:</span>
+              <span className="status-value">
+                {user.providerType} {user.authProvider}
+              </span>
+            </div>
+          )}
+          {user && (
+            <div className="status-row">
+              <span className="status-label">User ID:</span>
+              <span className="status-value">{user.authUserId ?? "Undefined"}</span>
             </div>
           )}
           {addresses &&
@@ -784,7 +841,16 @@ export function SDKActions() {
         </div>
       </div>
 
-      {!isConnected && (
+      {!isConnected && isLoading && (
+        <div className="section">
+          <h3>Initializing SDK...</h3>
+          <div className="status-card">
+            <p>Loading Phantom SDK...</p>
+          </div>
+        </div>
+      )}
+
+      {!isConnected && !isLoading && (
         <div className="section">
           <h3>Connection Options</h3>
           <div className="button-group">
@@ -823,30 +889,6 @@ export function SDKActions() {
             </button>
           </div>
           {solanaBalanceError && <p className="error-text">Balance error: {solanaBalanceError}</p>}
-        </div>
-      )}
-
-      {isConnected && ethereumAddress && (
-        <div className="section">
-          <h3>ETH Balance</h3>
-          <div className="balance-card">
-            <div className="balance-row">
-              <span className="balance-label">Balance:</span>
-              <span className="balance-value">
-                {ethereumBalanceLoading
-                  ? "Loading..."
-                  : ethereumBalanceError
-                    ? "Error"
-                    : ethereumBalance !== null
-                      ? `${ethereumBalance.toFixed(4)} ETH`
-                      : "--"}
-              </span>
-            </div>
-            <button className="small" onClick={() => refetchEthereumBalance()} disabled={ethereumBalanceLoading}>
-              {ethereumBalanceLoading ? "Loading..." : "Refresh"}
-            </button>
-          </div>
-          {ethereumBalanceError && <p className="error-text">Balance error: {ethereumBalanceError}</p>}
         </div>
       )}
 
@@ -921,7 +963,7 @@ export function SDKActions() {
               {isSigningOnlyTransaction === "solana"
                 ? "Signing..."
                 : !hasSolanaBalance
-                  ? "Insufficient Balance"
+                  ? "Insufficient SOL Balance (need > 0)"
                   : "Sign Transaction (Solana)"}
             </button>
             <button
@@ -932,13 +974,9 @@ export function SDKActions() {
             </button>
             <button
               onClick={() => onSignTransaction("ethereum")}
-              disabled={!isConnected || isSigningOnlyTransaction === "ethereum" || !hasEthereumBalance}
+              disabled={!isConnected || isSigningOnlyTransaction === "ethereum"}
             >
-              {isSigningOnlyTransaction === "ethereum"
-                ? "Signing..."
-                : !hasEthereumBalance
-                  ? "Insufficient Balance"
-                  : "Sign Transaction (Ethereum)"}
+              {isSigningOnlyTransaction === "ethereum" ? "Signing..." : "Sign Transaction (Ethereum)"}
             </button>
             <button
               onClick={onSignAndSendTransaction}
@@ -947,18 +985,17 @@ export function SDKActions() {
               {isSigningAndSendingTransaction
                 ? "Signing & Sending..."
                 : !hasSolanaBalance
-                  ? "Insufficient Balance"
+                  ? "Insufficient SOL Balance (need > 0)"
                   : "Sign & Send Transaction (Solana)"}
             </button>
-            <button
-              onClick={onSendEthTransaction}
-              disabled={!isConnected || isSendingEthTransaction || !hasEthereumBalance}
-            >
-              {isSendingEthTransaction
-                ? "Sending..."
-                : !hasEthereumBalance
-                  ? "Insufficient Balance"
-                  : "Sign & Send Transaction (Ethereum)"}
+            <button onClick={onSendEthTransaction} disabled={!isConnected || isSendingEthTransaction}>
+              {isSendingEthTransaction ? "Sending..." : "Sign & Send Transaction (Ethereum)"}
+            </button>
+            <button onClick={onSendEthMainnet} disabled={!isConnected || isSendingEthMainnet}>
+              {isSendingEthMainnet ? "Sending..." : "Send 0.00001 ETH (Mainnet)"}
+            </button>
+            <button onClick={onSendPolygon} disabled={!isConnected || isSendingPolygon}>
+              {isSendingPolygon ? "Sending..." : "Send 0.00001 POL (Polygon)"}
             </button>
             <button
               onClick={onSignAllTransactions}
@@ -967,18 +1004,22 @@ export function SDKActions() {
               {isSigningAllTransactions
                 ? "Signing All..."
                 : !hasSolanaBalance
-                  ? "Insufficient Balance"
+                  ? "Insufficient SOL Balance (need > 0)"
                   : "Sign All Transactions (Solana)"}
             </button>
             <button onClick={onSendTokens} disabled={!isConnected || isSendingTokens || !hasSolanaBalance}>
               {isSendingTokens
                 ? "Sending Tokens..."
                 : !hasSolanaBalance
-                  ? "Insufficient Balance"
+                  ? "Insufficient SOL Balance (need > 0)"
                   : "Send 0.0001 SOL + 0.0001 USDC"}
             </button>
             <button onClick={onStakeSol} disabled={!isConnected || isStakingSol || !hasSolanaBalance}>
-              {isStakingSol ? "Staking SOL..." : !hasSolanaBalance ? "Insufficient Balance" : "Stake 0.0025 SOL"}
+              {isStakingSol
+                ? "Staking SOL..."
+                : !hasSolanaBalance
+                  ? "Insufficient SOL Balance (need > 0)"
+                  : "Stake 0.0025 SOL"}
             </button>
 
             <div className="custom-sol-section">
@@ -995,7 +1036,11 @@ export function SDKActions() {
                   disabled={!isConnected || isSendingCustomSol || !hasSolanaBalance || !customSolAmount}
                   className="send-custom-sol-btn"
                 >
-                  {isSendingCustomSol ? "Sending..." : !hasSolanaBalance ? "Insufficient Balance" : "Send Custom SOL"}
+                  {isSendingCustomSol
+                    ? "Sending..."
+                    : !hasSolanaBalance
+                      ? "Insufficient SOL Balance (need > 0)"
+                      : "Send Custom SOL"}
                 </button>
               </div>
             </div>

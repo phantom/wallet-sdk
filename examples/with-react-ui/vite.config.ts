@@ -7,10 +7,10 @@ export default defineConfig({
   server: {
     port: 5178,
     open: true,
-    host: '0.0.0.0', // Allow external connections
+    host: "0.0.0.0", // Allow external connections
     allowedHosts: true, // Allow specific ngrok domain
     headers: {
-      'ngrok-skip-browser-warning': 'true', // Skip ngrok browser warning
+      "ngrok-skip-browser-warning": "true", // Skip ngrok browser warning
     },
   },
 });

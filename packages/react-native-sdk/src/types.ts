@@ -1,4 +1,4 @@
-import type { EmbeddedProviderConfig } from "@phantom/embedded-provider-core";
+import type { EmbeddedProviderAuthType, EmbeddedProviderConfig } from "@phantom/embedded-provider-core";
 
 // Debug configuration - separate from SDK config for consistency with browser/react SDKs
 export interface PhantomDebugConfig {
@@ -6,11 +6,10 @@ export interface PhantomDebugConfig {
   enabled?: boolean;
 }
 
-export interface PhantomSDKConfig extends Omit<EmbeddedProviderConfig, "apiBaseUrl" | "embeddedWalletType"| "authOptions"> {
+export interface PhantomSDKConfig
+  extends Omit<EmbeddedProviderConfig, "apiBaseUrl" | "embeddedWalletType" | "authOptions"> {
   /** Custom URL scheme for your app (e.g., "myapp") */
   scheme: string;
-  /** Enable auto-connect to existing sessions (default: true) */
-  autoConnect?: boolean;
   /** Base URL for Phantom API (default: "https://api.phantom.app/v1/wallets") */
   apiBaseUrl?: string;
   /** Authentication options */
@@ -19,16 +18,13 @@ export interface PhantomSDKConfig extends Omit<EmbeddedProviderConfig, "apiBaseU
     authUrl?: string;
     redirectUrl?: string;
   };
-
 }
 
-
-
 export interface ConnectOptions {
-  /** OAuth provider to use */
-  provider?: "google" | "apple" | "jwt";
-  /** JWT token for JWT authentication */
-  jwtToken?: string;
+  /** OAuth provider to use (required) */
+  provider: EmbeddedProviderAuthType;
+  /** Custom authentication data */
+  customAuthData?: Record<string, any>;
 }
 
 // Re-export core types for convenience

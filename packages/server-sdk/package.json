@@ -1,6 +1,6 @@
 {
   "name": "@phantom/server-sdk",
-  "version": "1.0.0-beta.14",
+  "version": "1.0.0-beta.21",
   "description": "Server SDK for Phantom Wallet",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

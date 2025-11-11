@@ -19,7 +19,7 @@ const sdk = new BrowserSDK({
   addressTypes: [AddressType.solana, AddressType.ethereum],
 });
 
-const { addresses } = await sdk.connect();
+const { addresses } = await sdk.connect({ provider: "injected" });
 console.log("Connected addresses:", addresses);
 
 // Chain-specific operations
@@ -47,7 +47,7 @@ const sdk = new BrowserSDK({
   appId: "your-app-id", // Get your app ID from phantom.com/portal
 });
 
-const { addresses } = await sdk.connect();
+const { addresses } = await sdk.connect({ provider: "phantom" });
 console.log("Addresses:", addresses);
 
 // Use chain-specific APIs
@@ -78,8 +78,8 @@ const sdk = new BrowserSDK({
   addressTypes: [AddressType.solana, AddressType.ethereum],
 });
 
-// 2. Connect to wallet
-const { addresses } = await sdk.connect();
+// 2. Connect to wallet (provider parameter is required)
+const { addresses } = await sdk.connect({ provider: "injected" });
 console.log("Connected addresses:", addresses);
 
 // 3. Use chain-specific methods
@@ -93,40 +93,38 @@ const ethResult = await sdk.ethereum.sendTransaction({
 
 ### Connection Options
 
-For embedded user-wallets, you can specify authentication providers:
+The `connect()` method requires a `provider` parameter and automatically switches between providers based on the authentication method you specify:
 
 ```typescript
-// Default: Show provider selection screen
-const result = await sdk.connect();
-
-// Phantom authentication (uses Phantom extension or app)
-// User must have Phantom extension installed or Phantom mobile app
+// Connect with injected provider (Phantom extension)
+// Automatically switches to injected provider if not already using it
 const result = await sdk.connect({
-  authOptions: {
-    provider: "phantom",
-  },
+  provider: "injected",
 });
 
-// Google authentication (skips provider selection)
+// Connect with Google authentication (embedded provider)
+// Automatically switches to embedded provider if not already using it
 const result = await sdk.connect({
-  authOptions: {
-    provider: "google",
-  },
+  provider: "google",
 });
 
-// Apple authentication (skips provider selection)
+// Connect with Apple authentication (embedded provider)
+// Automatically switches to embedded provider if not already using it
 const result = await sdk.connect({
-  authOptions: {
-    provider: "apple",
-  },
+  provider: "apple",
 });
 
-// JWT authentication (for custom auth flows)
+// Connect with Phantom authentication (embedded provider)
+// Uses Phantom extension or mobile app for authentication
+// Automatically switches to embedded provider if not already using it
 const result = await sdk.connect({
-  authOptions: {
-    provider: "jwt",
-    jwtToken: "your-jwt-token",
-  },
+  provider: "phantom",
+});
+
+// Connect with JWT authentication (embedded provider)
+const result = await sdk.connect({
+  provider: "jwt",
+  jwtToken: "your-jwt-token",
 });
 ```
 
@@ -238,7 +236,6 @@ const sdk = new BrowserSDK({
 | `AddressType.solana`   | Solana Mainnet, Devnet, Testnet       |
 | `AddressType.ethereum` | Ethereum, Polygon, Arbitrum, and more |
 
-
 ### Auto-Connect Feature
 
 The SDK can automatically reconnect to existing sessions when instantiated, providing a seamless user experience.
@@ -295,7 +292,7 @@ interface BrowserSDKConfig {
 
   // Required for embedded provider only
   appId?: string; // Your app ID from phantom.com/portal (required for embedded provider)
-  
+
   // Optional configuration
   apiBaseUrl?: string; // Phantom API base URL (optional, has default)
   authOptions?: {
@@ -303,13 +300,14 @@ interface BrowserSDKConfig {
     redirectUrl?: string; // Custom redirect URL after authentication (optional)
   };
   embeddedWalletType?: "user-wallet"; // Wallet type (optional, defaults to "user-wallet", currently the only supported type)
-  autoConnect?: boolean; // Enable auto-connect to existing sessions (optional, defaults to true for embedded)
 }
 ```
 
 ### Extension Detection
 
-For injected provider usage, you can check if the Phantom extension is installed:
+#### waitForPhantomExtension
+
+Check if the Phantom extension is installed:
 
 ```typescript
 import { waitForPhantomExtension } from "@phantom/browser-sdk";
@@ -323,15 +321,47 @@ if (isAvailable) {
 }
 ```
 
+#### isPhantomLoginAvailable
+
+Check if Phantom Login is available (requires extension to be installed and support the `phantom_login` feature):
+
+```typescript
+import { isPhantomLoginAvailable } from "@phantom/browser-sdk";
+
+const isAvailable = await isPhantomLoginAvailable();
+
+if (isAvailable) {
+  console.log("Phantom Login is available!");
+  // Can use provider: "phantom" in connect()
+} else {
+  console.log("Phantom Login is not available");
+}
+```
+
 ### Core Methods
 
-#### connect()
+#### connect(options)
 
 Connect to wallet and get addresses for configured AddressTypes.
 
+**Parameters:**
+
+- `options: AuthOptions` (required) - Authentication options
+  - `provider: "google" | "apple" | "jwt" | "phantom" | "injected"` (required) - Authentication provider to use
+  - `jwtToken?: string` (optional) - JWT token (required when `provider` is "jwt")
+  - `customAuthData?: Record<string, any>` (optional) - Custom authentication data
+
 ```typescript
-const result = await sdk.connect();
-// Returns: { addresses: WalletAddress[] }
+// Connect with injected provider
+const result = await sdk.connect({ provider: "injected" });
+
+// Connect with Phantom authentication
+const result = await sdk.connect({ provider: "phantom" });
+
+// Connect with Google authentication
+const result = await sdk.connect({ provider: "google" });
+
+// Returns: { addresses: WalletAddress[], status: "pending" | "completed", providerType: "embedded" | "injected" }
 // addresses only includes types from addressTypes config
 ```
 
@@ -513,13 +543,28 @@ const result = await sdk.ethereum.sendTransaction({
 
 #### switchChain(chainId)
 
-Switch to a different Ethereum chain.
+Switch to a different Ethereum chain. Accepts a chain ID as a number or a hex string value.
 
 ```typescript
 await sdk.ethereum.switchChain(1); // Ethereum mainnet
 await sdk.ethereum.switchChain(137); // Polygon
 await sdk.ethereum.switchChain(42161); // Arbitrum One
 ```
+
+**Supported EVM Networks:**
+
+| Network          | Chain ID   | Usage                   |
+| ---------------- | ---------- | ----------------------- |
+| Ethereum Mainnet | `1`        | `switchChain(1)`        |
+| Ethereum Sepolia | `11155111` | `switchChain(11155111)` |
+| Polygon Mainnet  | `137`      | `switchChain(137)`      |
+| Polygon Amoy     | `80002`    | `switchChain(80002)`    |
+| Base Mainnet     | `8453`     | `switchChain(8453)`     |
+| Base Sepolia     | `84532`    | `switchChain(84532)`    |
+| Arbitrum One     | `42161`    | `switchChain(42161)`    |
+| Arbitrum Sepolia | `421614`   | `switchChain(421614)`   |
+| Monad Mainnet    | `143`      | `switchChain(143)`      |
+| Monad Testnet    | `10143`    | `switchChain(10143)`    |
 
 #### getChainId()
 
@@ -553,6 +598,106 @@ const connected = sdk.ethereum.isConnected();
 Attempt auto-connection using existing session. Should be called after setting up event listeners to avoid race conditions. Only works with embedded providers.
 
 ```typescript
+await sdk.autoConnect();
+```
+
+### Event Handlers
+
+The SDK provides typed event handlers that allow you to listen for connection state changes. This is especially useful for `autoConnect()` flows where you need to track the connection result.
+
+#### Available Events
+
+```typescript
+import { BrowserSDK } from "@phantom/browser-sdk";
+import type {
+  ConnectEventData,
+  ConnectStartEventData,
+  ConnectErrorEventData,
+  DisconnectEventData,
+} from "@phantom/browser-sdk";
+
+const sdk = new BrowserSDK({
+  providerType: "embedded",
+  appId: "your-app-id",
+  addressTypes: [AddressType.solana],
+});
+
+// 1. connect_start - Fired when connection starts
+sdk.on("connect_start", (data: ConnectStartEventData) => {
+  console.log("Connection starting:", data.source); // "auto-connect" | "manual-connect"
+  console.log("Auth options:", data.authOptions?.provider); // "google" | "apple" | etc.
+});
+
+// 2. connect - Fired when connection succeeds (includes full ConnectResult)
+sdk.on("connect", (data: ConnectEventData) => {
+  console.log("Connected successfully!");
+  console.log("Provider type:", data.providerType); // "embedded" | "injected"
+  console.log("Wallet ID:", data.walletId); // only for embedded providers
+  console.log("Addresses:", data.addresses); // WalletAddress[]
+  console.log("Status:", data.status); // "pending" | "completed"
+  console.log("Source:", data.source); // "auto-connect" | "manual-connect" | "manual-existing" | "existing-session" | "manual"
+});
+
+// 3. connect_error - Fired when connection fails
+sdk.on("connect_error", (data: ConnectErrorEventData) => {
+  console.error("Connection failed:", data.error);
+  console.log("Source:", data.source); // "auto-connect" | "manual-connect"
+});
+
+// 4. disconnect - Fired when disconnected
+sdk.on("disconnect", (data: DisconnectEventData) => {
+  console.log("Disconnected from wallet");
+  console.log("Source:", data.source); // "manual"
+});
+
+// 5. error - General error handler
+sdk.on("error", (error: unknown) => {
+  console.error("SDK error:", error);
+});
+
+// Don't forget to remove listeners when done
+sdk.off("connect", handleConnect);
+```
+
+#### Event Types
+
+| Event           | Payload Type            | When Fired            | Key Data                                                |
+| --------------- | ----------------------- | --------------------- | ------------------------------------------------------- |
+| `connect_start` | `ConnectStartEventData` | Connection initiated  | `source`, `authOptions`                                 |
+| `connect`       | `ConnectEventData`      | Connection successful | `providerType`, `addresses`, `status`, `source`, `user` |
+| `connect_error` | `ConnectErrorEventData` | Connection failed     | `error`, `source`                                       |
+| `disconnect`    | `DisconnectEventData`   | Disconnected          | `source`                                                |
+| `error`         | `unknown`               | General SDK errors    | Error details                                           |
+
+#### Using Events with autoConnect()
+
+Event handlers are especially useful with `autoConnect()` since it doesn't return a value:
+
+```typescript
+const sdk = new BrowserSDK({
+  providerType: "embedded",
+  appId: "your-app-id",
+  addressTypes: [AddressType.solana],
+  autoConnect: true,
+});
+
+// Set up event listeners BEFORE autoConnect
+sdk.on("connect", (data: ConnectEventData) => {
+  console.log("Auto-connected successfully!");
+  console.log("Provider type:", data.providerType);
+  console.log("Addresses:", data.addresses);
+
+  // Update your UI state here
+  updateUIWithAddresses(data.addresses);
+});
+
+sdk.on("connect_error", (data: ConnectErrorEventData) => {
+  console.log("Auto-connect failed:", data.error);
+  // Show connect button to user
+  showConnectButton();
+});
+
+// Auto-connect will trigger events
 await sdk.autoConnect();
 ```
 
@@ -613,33 +758,15 @@ console.log("Supported chains:", supportedChains.chains);
 
 #### Available NetworkId Values
 
+For a complete list of supported networks including Solana, Ethereum, Polygon, Base, Arbitrum, Monad, and more, see the [Network Support section in the main README](../../README.md#network-support).
+
 ```typescript
 import { NetworkId } from "@phantom/browser-sdk";
 
-// Solana networks
-NetworkId.SOLANA_MAINNET; // "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
-NetworkId.SOLANA_DEVNET; // "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1"
-NetworkId.SOLANA_TESTNET; // "solana:4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z"
-
-// Ethereum networks
-NetworkId.ETHEREUM_MAINNET; // "eip155:1"
-NetworkId.ETHEREUM_SEPOLIA; // "eip155:11155111"
-
-// Polygon networks
-NetworkId.POLYGON_MAINNET; // "eip155:137"
-NetworkId.POLYGON_AMOY; // "eip155:80002"
-
-// Arbitrum networks
-NetworkId.ARBITRUM_ONE; // "eip155:42161"
-NetworkId.ARBITRUM_SEPOLIA; // "eip155:421614"
-
-// Optimism networks
-NetworkId.OPTIMISM_MAINNET; // "eip155:10"
-NetworkId.OPTIMISM_GOERLI; // "eip155:420"
-
-// Base networks
-NetworkId.BASE_MAINNET; // "eip155:8453"
-NetworkId.BASE_SEPOLIA; // "eip155:84532"
+// Example: Use NetworkId for auto-confirm
+await sdk.enableAutoConfirm({
+  chains: [NetworkId.SOLANA_MAINNET, NetworkId.ETHEREUM_MAINNET],
+});
 ```
 
 **Important Notes:**
@@ -783,7 +910,7 @@ const sdk = new BrowserSDK({
   addressTypes: [AddressType.solana],
 });
 
-await sdk.connect();
+await sdk.connect({ provider: "injected" });
 
 // Get recent blockhash
 const connection = new Connection("https://api.mainnet-beta.solana.com");
@@ -836,7 +963,7 @@ const sdk = new BrowserSDK({
   addressTypes: [AddressType.solana],
 });
 
-await sdk.connect();
+await sdk.connect({ provider: "injected" });
 
 // Create transaction with @solana/kit
 const rpc = createSolanaRpc("https://api.mainnet-beta.solana.com");
@@ -866,7 +993,7 @@ const sdk = new BrowserSDK({
   addressTypes: [AddressType.ethereum],
 });
 
-await sdk.connect();
+await sdk.connect({ provider: "injected" });
 
 // Simple ETH transfer
 const result = await sdk.ethereum.sendTransaction({

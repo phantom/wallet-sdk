@@ -83,7 +83,8 @@ describe("Response Parsing", () => {
       const result = parseTransactionResponse(base64Response, NetworkId.ETHEREUM_MAINNET);
 
       expect(result.hash).toBeUndefined();
-      expect(result.rawTransaction).toBe(base64Response);
+      // For Ethereum, rawTransaction should be converted to hex
+      expect(result.rawTransaction.startsWith("0x")).toBe(true);
       expect(result.blockExplorer).toBeUndefined();
     });
 
@@ -95,7 +96,8 @@ describe("Response Parsing", () => {
       const result = parseTransactionResponse(base64Response, NetworkId.ETHEREUM_MAINNET, providedHash);
 
       expect(result.hash).toBe(providedHash);
-      expect(result.rawTransaction).toBe(base64Response);
+      // For Ethereum, rawTransaction should be converted to hex
+      expect(result.rawTransaction.startsWith("0x")).toBe(true);
       expect(result.blockExplorer).toContain("etherscan.io");
       expect(result.blockExplorer).toContain(providedHash);
     });
@@ -123,10 +125,19 @@ describe("Response Parsing", () => {
         NetworkId.BITCOIN_MAINNET,
       ];
 
+      const evmNetworks = [NetworkId.ETHEREUM_MAINNET, NetworkId.POLYGON_MAINNET, NetworkId.BASE_MAINNET];
+
       for (const network of networks) {
         const result = parseTransactionResponse(base64Response, network);
         expect(result.hash).toBeUndefined();
-        expect(result.rawTransaction).toBe(base64Response);
+
+        // EVM networks should return hex, others return base64url
+        if (evmNetworks.includes(network)) {
+          expect(result.rawTransaction.startsWith("0x")).toBe(true);
+        } else {
+          expect(result.rawTransaction).toBe(base64Response);
+        }
+
         expect(result.blockExplorer).toBeUndefined();
       }
     });
@@ -145,10 +156,19 @@ describe("Response Parsing", () => {
         NetworkId.BITCOIN_MAINNET,
       ];
 
+      const evmNetworks = [NetworkId.ETHEREUM_MAINNET, NetworkId.POLYGON_MAINNET, NetworkId.BASE_MAINNET];
+
       for (const network of networks) {
         const result = parseTransactionResponse(base64Response, network, providedHash);
         expect(result.hash).toBe(providedHash);
-        expect(result.rawTransaction).toBe(base64Response);
+
+        // EVM networks should return hex, others return base64url
+        if (evmNetworks.includes(network)) {
+          expect(result.rawTransaction.startsWith("0x")).toBe(true);
+        } else {
+          expect(result.rawTransaction).toBe(base64Response);
+        }
+
         expect(result.blockExplorer).toContain(providedHash);
       }
     });
@@ -162,7 +182,8 @@ describe("Response Parsing", () => {
 
       expect(result.hash).toBe(providedHash);
       expect(result.blockExplorer).toBeDefined();
-      expect(result.rawTransaction).toBe(base64Response);
+      // For Ethereum, rawTransaction should be converted to hex
+      expect(result.rawTransaction.startsWith("0x")).toBe(true);
       expect(result.blockExplorer).toContain("etherscan.io");
       expect(result.blockExplorer).toContain("/tx/");
       expect(result.blockExplorer).toContain(providedHash);
@@ -214,7 +235,8 @@ describe("Response Parsing", () => {
 
     it("should handle real transaction from API and return actual object", () => {
       // Real transaction from the API that was failing
-      const realTransaction = "AbRdyl4GljepGZRbuACGx7TlNyDaulRonkhfTuuMvs3MblTXd1N6PjEwFLD9AwiZvVTMqrEFbIwaQRHOFquFygCAAQABAnwN13utnim-rGHMhoveMUcnt5an_UXb_rTO9JKXN38_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACxZajcGon7qaDgjOX_3mV4C7LdWpydUOj3GK0KM2q-CgEBAgAADAIAAADoAwAAAAAAAAA";
+      const realTransaction =
+        "AbRdyl4GljepGZRbuACGx7TlNyDaulRonkhfTuuMvs3MblTXd1N6PjEwFLD9AwiZvVTMqrEFbIwaQRHOFquFygCAAQABAnwN13utnim-rGHMhoveMUcnt5an_UXb_rTO9JKXN38_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACxZajcGon7qaDgjOX_3mV4C7LdWpydUOj3GK0KM2q-CgEBAgAADAIAAADoAwAAAAAAAAA";
 
       const result = parseSolanaSignedTransaction(realTransaction);
 
@@ -230,28 +252,28 @@ describe("Response Parsing", () => {
         expect(result.constructor.name).toBe("VersionedTransaction");
 
         // Test that it has the expected properties of a VersionedTransaction
-        expect(result).toHaveProperty('version');
-        expect(result).toHaveProperty('message');
-        expect(result).toHaveProperty('signatures');
+        expect(result).toHaveProperty("version");
+        expect(result).toHaveProperty("message");
+        expect(result).toHaveProperty("signatures");
 
         // Assert specific values we expect
         expect(result.version).toBe(0); // Should be version 0
         expect(result.signatures).toHaveLength(1); // Should have 1 signature
         expect(result.message).toBeDefined();
-        expect(typeof result.message).toBe('object');
+        expect(typeof result.message).toBe("object");
 
         // Final verification: try to serialize it back (proves it's a real object)
-       
+
         const serialized = result.serialize();
         expect(serialized).toBeInstanceOf(Uint8Array);
         expect(serialized.length).toBeGreaterThan(0);
-      
       }
     });
 
     it("should handle both legacy and versioned transactions", () => {
       // Test the real versioned transaction
-      const versionedTransaction = "AbRdyl4GljepGZRbuACGx7TlNyDaulRonkhfTuuMvs3MblTXd1N6PjEwFLD9AwiZvVTMqrEFbIwaQRHOFquFygCAAQABAnwN13utnim-rGHMhoveMUcnt5an_UXb_rTO9JKXN38_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACxZajcGon7qaDgjOX_3mV4C7LdWpydUOj3GK0KM2q-CgEBAgAADAIAAADoAwAAAAAAAAA";
+      const versionedTransaction =
+        "AbRdyl4GljepGZRbuACGx7TlNyDaulRonkhfTuuMvs3MblTXd1N6PjEwFLD9AwiZvVTMqrEFbIwaQRHOFquFygCAAQABAnwN13utnim-rGHMhoveMUcnt5an_UXb_rTO9JKXN38_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACxZajcGon7qaDgjOX_3mV4C7LdWpydUOj3GK0KM2q-CgEBAgAADAIAAADoAwAAAAAAAAA";
 
       const versionedResult = parseSolanaSignedTransaction(versionedTransaction);
       expect(versionedResult).not.toBeNull();
@@ -264,5 +286,4 @@ describe("Response Parsing", () => {
       expect(invalidResult).toBeNull();
     });
   });
-
 });

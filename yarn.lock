@@ -5460,7 +5460,7 @@ __metadata:
     "@phantom/base64url": "workspace:^"
     "@phantom/constants": "workspace:^"
     "@phantom/crypto": "workspace:^"
-    "@phantom/openapi-wallet-service": "npm:^0.1.9"
+    "@phantom/openapi-wallet-service": "npm:0.1.11"
     "@phantom/sdk-types": "workspace:^"
     "@phantom/utils": "workspace:^"
     "@types/jest": "npm:^29.5.12"
@@ -5569,12 +5569,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/openapi-wallet-service@npm:^0.1.9":
-  version: 0.1.9
-  resolution: "@phantom/openapi-wallet-service@npm:0.1.9"
+"@phantom/openapi-wallet-service@npm:0.1.11":
+  version: 0.1.11
+  resolution: "@phantom/openapi-wallet-service@npm:0.1.11"
   dependencies:
-    axios: "npm:^1.6.1"
-  checksum: 10c0/cd4fd5f107e5e58e4b351db8abc62f8f0f1b9106055e45e29dad11fd853b5f542607232cde3621e02aca301e71843e26f8961a37f3e40e9d598f987c4842173c
+    axios: "npm:^1.12.2"
+  checksum: 10c0/b9af2580907c055967b2d0fa7003ad9ee94953c37c62093e49d15e466599d7e242049c7d0eaeefc0b7ea466daeddf28d75aa01d5b68d9d651921f598ed7b6c5f
   languageName: node
   linkType: hard
 
@@ -5586,6 +5586,7 @@ __metadata:
     "@phantom/base64url": "workspace:^"
     "@phantom/constants": "workspace:^"
     "@phantom/sdk-types": "workspace:^"
+    "@phantom/utils": "workspace:^"
     "@solana/kit": "npm:^2.1.1"
     "@solana/transactions": "npm:^2.0.0"
     "@solana/web3.js": "npm:^1.95.0"
@@ -5608,8 +5609,6 @@ __metadata:
     "@mysten/sui.js":
       optional: true
     bitcoinjs-lib:
-      optional: true
-    ethers:
       optional: true
     viem:
       optional: true
@@ -5796,7 +5795,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/sdk-types@workspace:packages/sdk-types"
   dependencies:
-    "@phantom/openapi-wallet-service": "npm:^0.1.9"
+    "@phantom/openapi-wallet-service": "npm:0.1.11"
     "@solana/web3.js": "npm:^1.95.4"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.0"
@@ -10564,7 +10563,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.10.0, axios@npm:^1.6.1":
+"axios@npm:^1.10.0":
   version: 1.11.0
   resolution: "axios@npm:1.11.0"
   dependencies:
@@ -10572,6 +10571,17 @@ __metadata:
     form-data: "npm:^4.0.4"
     proxy-from-env: "npm:^1.1.0"
   checksum: 10c0/5de273d33d43058610e4d252f0963cc4f10714da0bfe872e8ef2cbc23c2c999acc300fd357b6bce0fc84a2ca9bd45740fa6bb28199ce2c1266c8b1a393f2b36e
+  languageName: node
+  linkType: hard
+
+"axios@npm:^1.12.2":
+  version: 1.13.2
+  resolution: "axios@npm:1.13.2"
+  dependencies:
+    follow-redirects: "npm:^1.15.6"
+    form-data: "npm:^4.0.4"
+    proxy-from-env: "npm:^1.1.0"
+  checksum: 10c0/e8a42e37e5568ae9c7a28c348db0e8cf3e43d06fcbef73f0048669edfe4f71219664da7b6cc991b0c0f01c28a48f037c515263cb79be1f1ae8ff034cd813867b
   languageName: node
   linkType: hard
 

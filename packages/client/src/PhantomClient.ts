@@ -8,9 +8,10 @@ import {
   GetAccountsMethodEnum,
   GrantOrganizationAccessMethodEnum,
   KMSRPCApi,
-  KmsUserRole,
   SignRawPayloadMethodEnum,
   SignTransactionMethodEnum,
+  type UserPolicy,
+  UserPolicyOneOfTypeEnum,
   type DerivationInfoAddressFormatEnum as AddressType,
   type AddUserToOrganization,
   type AddUserToOrganizationRequest,
@@ -59,7 +60,7 @@ import {
 } from "./types";
 
 import type { Stamper } from "@phantom/sdk-types";
-import { getSecureTimestamp, randomUUID } from "@phantom/utils";
+import { getSecureTimestamp, randomUUID, isEthereumChain } from "@phantom/utils";
 type AddUserToOrganizationParams = Omit<AddUserToOrganizationRequest, "user"> & {
   replaceExpirable?: boolean;
   user: PartialKmsUser & { traits: { appId: string }; expiresInMs?: number };
@@ -211,8 +212,11 @@ export class PhantomClient {
       if (!this.config.organizationId) {
         throw new Error("organizationId is required to sign a transaction");
       }
-      // Transaction is already base64url encoded
+      // Transaction is always a string (encoded via parsers)
       const encodedTransaction = transactionParam;
+
+      // Check if this is an EVM transaction using the network ID
+      const isEvmTransaction = isEthereumChain(networkIdParam);
 
       let submissionConfig: SubmissionConfig | null = null;
 
@@ -247,17 +251,19 @@ export class PhantomClient {
       } = {
         organizationId: this.config.organizationId,
         walletId: walletId,
-        transaction: encodedTransaction as any,
+        // For EVM transactions, use the object format with kind and bytes
+        // For other chains, use the string directly
+        transaction: isEvmTransaction ? { kind: "RLP_ENCODED", bytes: encodedTransaction } : encodedTransaction,
         derivationInfo: derivationInfo,
-      };
+      } as any;
 
       // Add submission config if available and requested
       if (includeSubmissionConfig && submissionConfig) {
         signRequest.submissionConfig = submissionConfig;
       }
 
-      // Add simulation config if provided
-      if (params.account) {
+      // Add simulation config if provided (only for signAndSendTransaction)
+      if (includeSubmissionConfig && params.account) {
         signRequest.simulationConfig = {
           account: params.account,
         };
@@ -347,9 +353,60 @@ export class PhantomClient {
   }
 
   /**
-   * Sign a message
+   * Sign an Ethereum message using EIP-191 personal sign
    */
-  async signMessage(params: SignMessageParams): Promise<string> {
+  async ethereumSignMessage(params: SignMessageParams): Promise<string> {
+    const walletId = params.walletId;
+    const messageParam = params.message;
+    const networkIdParam = params.networkId;
+    const derivationIndex = params.derivationIndex ?? 0;
+
+    try {
+      if (!this.config.organizationId) {
+        throw new Error("organizationId is required to sign a message");
+      }
+      // Get network configuration with custom derivation index
+      const networkConfig = getNetworkConfig(networkIdParam, derivationIndex);
+
+      if (!networkConfig) {
+        throw new Error(`Unsupported network ID: ${networkIdParam}`);
+      }
+
+      const derivationInfo: DerivationInfo = {
+        derivationPath: networkConfig.derivationPath,
+        curve: networkConfig.curve,
+        addressFormat: networkConfig.addressFormat,
+      };
+
+      // Message is already base64url encoded
+      const base64StringMessage = messageParam;
+
+      const request = {
+        method: "ethereumSignMessage",
+        params: {
+          message: base64StringMessage,
+          organizationId: this.config.organizationId,
+          walletId,
+          derivationInfo,
+        },
+        timestampMs: await getSecureTimestamp(),
+      };
+
+      const response = await this.kmsApi.postKmsRpc(request as any);
+      const result = (response.data as any).result as SignatureWithPublicKey;
+
+      // Return the base64 encoded signature
+      return result.signature;
+    } catch (error: any) {
+      console.error("Failed to sign Ethereum message:", error.response?.data || error.message);
+      throw new Error(`Failed to sign Ethereum message: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  /**
+   * Sign a raw payload for now used for Solana Sign Message
+   */
+  async signRawPayload(params: SignMessageParams): Promise<string> {
     const walletId = params.walletId;
     const messageParam = params.message;
     const networkIdParam = params.networkId;
@@ -395,15 +452,15 @@ export class PhantomClient {
       // Return the base64 encoded signature
       return result.signature;
     } catch (error: any) {
-      console.error("Failed to sign message:", error.response?.data || error.message);
-      throw new Error(`Failed to sign message: ${error.response?.data?.message || error.message}`);
+      console.error("Failed to sign raw payload:", error.response?.data || error.message);
+      throw new Error(`Failed to sign raw payload: ${error.response?.data?.message || error.message}`);
     }
   }
 
   /**
-   * Sign EIP-712 typed data
+   * Sign EIP-712 typed data for Ethereum
    */
-  async signTypedData(params: SignTypedDataParams): Promise<string> {
+  async ethereumSignTypedData(params: SignTypedDataParams): Promise<string> {
     const walletId = params.walletId;
     const typedData = params.typedData;
     const networkIdParam = params.networkId;
@@ -511,33 +568,6 @@ export class PhantomClient {
     }
   }
 
-  async getOrCreateOrganization(tag: string, publicKey: string): Promise<ExternalKmsOrganization> {
-    try {
-      const timestamp = await getSecureTimestamp();
-
-      // First, try to get the organization
-      // Since there's no explicit getOrganization method, we'll create it
-      // This assumes the API returns existing org if it already exists
-      return await this.createOrganization(tag, [
-        {
-          username: `user-${timestamp}`,
-          role: KmsUserRole.admin,
-          authenticators: [
-            {
-              authenticatorName: `auth-${timestamp}`,
-              authenticatorKind: "keypair",
-              publicKey: publicKey,
-              algorithm: "Ed25519",
-            },
-          ],
-        },
-      ]);
-    } catch (error: any) {
-      console.error("Failed to get or create organization:", error.response?.data || error.message);
-      throw new Error(`Failed to get or create organization: ${error.response?.data?.message || error.message}`);
-    }
-  }
-
   /**
    * Create a new organization with the specified name and users
    * @param name Organization name
@@ -579,9 +609,14 @@ export class PhantomClient {
       const params: CreateOrganizationRequest = {
         organizationName: name,
         users: users.map(userConfig => ({
-          role: userConfig.role === "ADMIN" ? KmsUserRole.admin : KmsUserRole.user,
-          username: userConfig.username || `user-${randomUUID()}}`,
+          username: userConfig.username || `user-${randomUUID()}`,
           authenticators: userConfig.authenticators as any,
+          policy:
+            userConfig.role === "ADMIN"
+              ? {
+                  type: UserPolicyOneOfTypeEnum.root,
+                }
+              : ({ type: "CEL", preset: "LEGACY_USER_ROLE" } as UserPolicy),
         })),
         tags,
       };
@@ -694,7 +729,6 @@ export class PhantomClient {
   /**
    * Add a new user to an organization
    */
-
   async addUserToOrganization(params: AddUserToOrganizationParams): Promise<void> {
     try {
       const request: AddUserToOrganization & { timestampMs: number } = {

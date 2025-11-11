@@ -1,5 +1,5 @@
 import type { BrowserSDKConfig, ConnectResult, WalletAddress, AuthOptions } from "./types";
-import { ProviderManager, type SwitchProviderOptions, type ProviderPreference } from "./ProviderManager";
+import { ProviderManager, type ProviderPreference } from "./ProviderManager";
 import { debug, DebugCategory, type DebugLevel, type DebugCallback } from "./debug";
 import { waitForPhantomExtension } from "./waitForPhantomExtension";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
@@ -85,7 +85,7 @@ export class BrowserSDK {
   /**
    * Connect to the wallet
    */
-  async connect(options?: AuthOptions): Promise<ConnectResult> {
+  async connect(options: AuthOptions): Promise<ConnectResult> {
     debug.info(DebugCategory.BROWSER_SDK, "Starting connection", options);
 
     try {
@@ -114,24 +114,6 @@ export class BrowserSDK {
       debug.info(DebugCategory.BROWSER_SDK, "Disconnection successful");
     } catch (error) {
       debug.error(DebugCategory.BROWSER_SDK, "Disconnection failed", { error: (error as Error).message });
-      throw error;
-    }
-  }
-
-  /**
-   * Switch between provider types (injected vs embedded)
-   */
-  async switchProvider(type: "injected" | "embedded", options?: SwitchProviderOptions): Promise<void> {
-    debug.info(DebugCategory.BROWSER_SDK, "Switching provider", { type, options });
-
-    try {
-      await this.providerManager.switchProvider(type, options);
-      debug.info(DebugCategory.BROWSER_SDK, "Provider switch successful", { type });
-    } catch (error) {
-      debug.error(DebugCategory.BROWSER_SDK, "Provider switch failed", {
-        type,
-        error: (error as Error).message,
-      });
       throw error;
     }
   }

@@ -16,13 +16,10 @@ export type InternalNetworkCaip =
   | "eip155:80002"
   | "eip155:8453"
   | "eip155:84532"
-  | "eip155:143"
-  | "eip155:10143"
-  | "eip155:41454"
   | "eip155:42161"
   | "eip155:421614"
-  | "eip155:10"
-  | "eip155:420"
+  | "eip155:143"
+  | "eip155:10143"
   // HYPERCORE
   | "hypercore:mainnet"
   | "hypercore:testnet"
@@ -183,7 +180,6 @@ export const NETWORK_CONFIGS: Record<NetworkId, NetworkConfig> = {
       addressUrl: "https://arbiscan.io/address/{address}",
     },
   },
-
   [NetworkId.ARBITRUM_SEPOLIA]: {
     name: "Arbitrum Sepolia",
     chain: "arbitrum",
@@ -198,31 +194,31 @@ export const NETWORK_CONFIGS: Record<NetworkId, NetworkConfig> = {
     },
   },
 
-  // Optimism Networks
-  [NetworkId.OPTIMISM_MAINNET]: {
-    name: "Optimism Mainnet",
-    chain: "optimism",
+  // Monad Networks
+  [NetworkId.MONAD_MAINNET]: {
+    name: "Monad Mainnet",
+    chain: "monad",
     network: "mainnet",
-    internalCaip: "eip155:10",
-    chainId: 10,
+    internalCaip: "eip155:143",
+    chainId: 143,
     slip44: "60", // Uses Ethereum SLIP-44
     explorer: {
-      name: "Optimistic Etherscan",
-      transactionUrl: "https://optimistic.etherscan.io/tx/{hash}",
-      addressUrl: "https://optimistic.etherscan.io/address/{address}",
+      name: "Monad Explorer",
+      transactionUrl: "https://monadexplorer.com/tx/{hash}",
+      addressUrl: "https://monadexplorer.com/address/{address}",
     },
   },
-  [NetworkId.OPTIMISM_GOERLI]: {
-    name: "Optimism Goerli",
-    chain: "optimism",
-    network: "goerli",
-    internalCaip: "eip155:420",
+  [NetworkId.MONAD_TESTNET]: {
+    name: "Monad Testnet",
+    chain: "monad",
+    network: "testnet",
+    internalCaip: "eip155:10143",
+    chainId: 10143,
     slip44: "60", // Uses Ethereum SLIP-44
-    chainId: 420,
     explorer: {
-      name: "Optimistic Etherscan",
-      transactionUrl: "https://goerli-optimism.etherscan.io/tx/{hash}",
-      addressUrl: "https://goerli-optimism.etherscan.io/address/{address}",
+      name: "Monad Testnet Explorer",
+      transactionUrl: "https://testnet.monadexplorer.com/tx/{hash}",
+      addressUrl: "https://testnet.monadexplorer.com/address/{address}",
     },
   },
 

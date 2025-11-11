@@ -25,6 +25,7 @@ export { getDeeplinkToPhantom } from "./utils/deeplink";
 
 // Extension detection
 export { waitForPhantomExtension } from "./waitForPhantomExtension";
+export { isPhantomLoginAvailable } from "./isPhantomLoginAvailable";
 
 // Re-export useful types from constants and client
 export { NetworkId } from "@phantom/constants";
@@ -36,3 +37,14 @@ export type {
   AutoConfirmResult,
   AutoConfirmSupportedChainsResult,
 } from "@phantom/browser-injected-sdk/auto-confirm";
+
+// Re-export event types for typed event handlers
+export type {
+  EmbeddedProviderEvent,
+  ConnectEventData,
+  ConnectStartEventData,
+  ConnectErrorEventData,
+  DisconnectEventData,
+  EmbeddedProviderEventMap,
+  EventCallback,
+} from "@phantom/embedded-provider-core";

@@ -1,9 +1,19 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import { EmbeddedProvider } from "@phantom/embedded-provider-core";
-import type { EmbeddedProviderConfig, PlatformAdapter } from "@phantom/embedded-provider-core";
+import type {
+  EmbeddedProviderConfig,
+  PlatformAdapter,
+  ConnectEventData,
+  ConnectResult,
+} from "@phantom/embedded-provider-core";
 import type { PhantomSDKConfig, PhantomDebugConfig, WalletAddress } from "./types";
-import {ANALYTICS_HEADERS, DEFAULT_WALLET_API_URL, DEFAULT_EMBEDDED_WALLET_TYPE, DEFAULT_AUTH_URL } from "@phantom/constants";
+import {
+  ANALYTICS_HEADERS,
+  DEFAULT_WALLET_API_URL,
+  DEFAULT_EMBEDDED_WALLET_TYPE,
+  DEFAULT_AUTH_URL,
+} from "@phantom/constants";
 // Platform adapters for React Native/Expo
 import { ExpoSecureStorage } from "./providers/embedded/storage";
 import { ExpoAuthProvider } from "./providers/embedded/auth";
@@ -21,6 +31,7 @@ interface PhantomContextValue {
   addresses: WalletAddress[];
   walletId: string | null;
   setWalletId: (walletId: string | null) => void;
+  user: ConnectResult | null;
 }
 
 const PhantomContext = createContext<PhantomContextValue | undefined>(undefined);
@@ -37,6 +48,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
   const [connectError, setConnectError] = useState<Error | null>(null);
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
   const [walletId, setWalletId] = useState<string | null>(null);
+  const [user, setUser] = useState<ConnectResult | null>(null);
 
   // Memoized config to avoid unnecessary SDK recreation
   const memoizedConfig: EmbeddedProviderConfig = useMemo(() => {
@@ -49,8 +61,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       apiBaseUrl: config.apiBaseUrl || DEFAULT_WALLET_API_URL,
       embeddedWalletType: config.embeddedWalletType || DEFAULT_EMBEDDED_WALLET_TYPE,
       authOptions: {
-        ...(config.authOptions || {
-        }),
+        ...(config.authOptions || {}),
         redirectUrl,
         authUrl: config.authOptions?.authUrl || DEFAULT_AUTH_URL,
       },
@@ -93,17 +104,20 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
 
   // Event listener management - SDK already exists
   useEffect(() => {
-
     // Event handlers that need to be referenced for cleanup
     const handleConnectStart = () => {
       setIsConnecting(true);
       setConnectError(null);
     };
 
-    const handleConnect = async () => {
+    const handleConnect = async (data: ConnectEventData) => {
       try {
         setIsConnected(true);
         setIsConnecting(false);
+
+        // Store the full ConnectResult as user
+        setUser(data);
+
         const addrs = await sdk.getAddresses();
         setAddresses(addrs);
       } catch (err) {
@@ -121,6 +135,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
     const handleConnectError = (errorData: any) => {
       setIsConnecting(false);
       setConnectError(new Error(errorData.error || "Connection failed"));
+      setAddresses([]);
     };
 
     const handleDisconnect = () => {
@@ -129,6 +144,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       setConnectError(null);
       setAddresses([]);
       setWalletId(null);
+      setUser(null);
     };
 
     // Add event listeners to SDK
@@ -148,14 +164,10 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
 
   // Initialize auto-connect
   useEffect(() => {
-
-    // Attempt auto-connect if enabled
-    if (config.autoConnect !== false) {
-      sdk.autoConnect().catch(() => {
-        // Silent fail - auto-connect is optional and shouldn't break the app
-      });
-    }
-  }, [sdk, config.autoConnect]);
+    sdk.autoConnect().catch(() => {
+      // Silent fail - auto-connect shouldn't break the app
+    });
+  }, [sdk]);
 
   // Memoize context value to prevent unnecessary re-renders
   const value: PhantomContextValue = useMemo(
@@ -167,8 +179,9 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       addresses,
       walletId,
       setWalletId,
+      user,
     }),
-    [sdk, isConnected, isConnecting, connectError, addresses, walletId, setWalletId],
+    [sdk, isConnected, isConnecting, connectError, addresses, walletId, setWalletId, user],
   );
 
   return <PhantomContext.Provider value={value}>{children}</PhantomContext.Provider>;

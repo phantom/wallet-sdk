@@ -1,40 +1,29 @@
 import type { NetworkId } from "@phantom/constants";
-import { base64urlEncode, stringToBase64url } from "@phantom/base64url";
+import { base64urlEncode } from "@phantom/base64url";
 import { getTransactionEncoder, type Transaction } from "@solana/transactions";
 import { Buffer } from "buffer";
-import {
-  parseSignMessageResponse as _parseSignMessageResponse,
-  parseTransactionResponse as _parseTransactionResponse,
-} from "./response-parsers";
+import { Transaction as EthersTransaction, getAddress } from "ethers";
 
 // Re-export response parsers
 export { parseSignMessageResponse, parseTransactionResponse, parseSolanaSignedTransaction } from "./response-parsers";
 
 export interface ParsedTransaction {
-  base64url: string;
+  /** The parsed transaction string (base64url for Solana/Sui/Bitcoin, RLP-encoded hex for EVM) */
+  parsed?: string;
+  /** Original format of the input transaction */
   originalFormat: string;
-}
-
-export interface ParsedMessage {
-  base64url: string;
 }
 
 // Re-export interfaces from response-parsers
 export type { ParsedSignatureResult, ParsedTransactionResult } from "./response-parsers";
 
 /**
- * Parse a message to base64url format for the client
+ * Parse a transaction to KMS format based on network type
+ * - Solana: base64url encoding
+ * - EVM chains: hex encoding
+ * - Sui, Bitcoin: base64url encoding
  */
-export function parseMessage(message: string): ParsedMessage {
-  return {
-    base64url: stringToBase64url(message),
-  };
-}
-
-/**
- * Parse a transaction to base64url format based on network type
- */
-export async function parseTransactionToBase64Url(transaction: any, networkId: NetworkId): Promise<ParsedTransaction> {
+export async function parseToKmsTransaction(transaction: any, networkId: NetworkId): Promise<ParsedTransaction> {
   const networkPrefix = networkId.split(":")[0].toLowerCase();
 
   switch (networkPrefix) {
@@ -46,7 +35,7 @@ export async function parseTransactionToBase64Url(transaction: any, networkId: N
     case "optimism":
     case "arbitrum":
     case "base":
-      return parseEVMTransactionToBase64Url(transaction);
+      return parseEVMTransactionToHex(transaction);
     case "sui":
       return await parseSuiTransactionToBase64Url(transaction);
     case "bitcoin":
@@ -65,7 +54,7 @@ function parseSolanaTransactionToBase64Url(transaction: any): ParsedTransaction 
   if (transaction?.messageBytes != null) {
     // @solana/kit Transaction
     return {
-      base64url: base64urlEncode(transaction.messageBytes),
+      parsed: base64urlEncode(transaction.messageBytes),
       originalFormat: "@solana/kit",
     };
   }
@@ -78,7 +67,7 @@ function parseSolanaTransactionToBase64Url(transaction: any): ParsedTransaction 
       verifySignatures: false,
     });
     return {
-      base64url: base64urlEncode(serialized),
+      parsed: base64urlEncode(serialized),
       originalFormat: "@solana/web3.js",
     };
   }
@@ -86,7 +75,7 @@ function parseSolanaTransactionToBase64Url(transaction: any): ParsedTransaction 
   // If it's already serialized bytes
   if (transaction instanceof Uint8Array) {
     return {
-      base64url: base64urlEncode(transaction),
+      parsed: base64urlEncode(transaction),
       originalFormat: "bytes",
     };
   }
@@ -96,7 +85,7 @@ function parseSolanaTransactionToBase64Url(transaction: any): ParsedTransaction 
     try {
       const bytes = Buffer.from(transaction, "base64");
       return {
-        base64url: base64urlEncode(new Uint8Array(bytes)),
+        parsed: base64urlEncode(new Uint8Array(bytes)),
         originalFormat: "base64",
       };
     } catch {
@@ -108,52 +97,94 @@ function parseSolanaTransactionToBase64Url(transaction: any): ParsedTransaction 
 }
 
 /**
- * Parse EVM transaction to base64url
+ * Parse EVM transaction to RLP-encoded hex format
+ * - RLP hex strings/bytes → returned as-is
+ * - JSON transaction objects → RLP encoded using ethers
  * Supports Ethereum, Polygon, and other EVM-compatible chains
  */
-function parseEVMTransactionToBase64Url(transaction: any): ParsedTransaction {
-  // Check if it's a Viem transaction object
-  if (transaction && typeof transaction === "object" && (transaction.to || transaction.data)) {
-    // Serialize with BigInt support
-    const bytes = new TextEncoder().encode(
-      JSON.stringify(transaction, (_key, value) => (typeof value === "bigint" ? value.toString() : value)),
-    );
-
-    return {
-      base64url: base64urlEncode(bytes),
-      originalFormat: "viem",
-    };
-  }
-
-  // Check if it's ethers.js transaction
-  if (transaction?.serialize && typeof transaction.serialize === "function") {
-    const serialized = transaction.serialize();
-    const bytes = new Uint8Array(Buffer.from(serialized.slice(2), "hex"));
-
-    return {
-      base64url: base64urlEncode(bytes),
-      originalFormat: "ethers",
-    };
-  }
-
-  // If it's already serialized bytes
-  if (transaction instanceof Uint8Array) {
-    return {
-      base64url: base64urlEncode(transaction),
-      originalFormat: "bytes",
-    };
-  }
-
-  // If it's a hex string
+function parseEVMTransactionToHex(transaction: any): ParsedTransaction {
+  // Check if it's already a hex string (RLP encoded)
   if (typeof transaction === "string" && transaction.startsWith("0x")) {
-    const bytes = new Uint8Array(Buffer.from(transaction.slice(2), "hex"));
     return {
-      base64url: base64urlEncode(bytes),
+      parsed: transaction,
       originalFormat: "hex",
     };
   }
 
-  throw new Error("Unsupported EVM transaction format");
+  // Check if it's ethers.js transaction with serialize method (returns RLP)
+  if (transaction?.serialize && typeof transaction.serialize === "function") {
+    const serialized = transaction.serialize();
+    const hex = serialized.startsWith("0x") ? serialized : "0x" + serialized;
+
+    return {
+      parsed: hex,
+      originalFormat: "ethers",
+    };
+  }
+
+  // If it's already serialized bytes (RLP encoded)
+  if (transaction instanceof Uint8Array) {
+    const hex = "0x" + Buffer.from(transaction).toString("hex");
+    return {
+      parsed: hex,
+      originalFormat: "bytes",
+    };
+  }
+
+  // Check if it's a transaction object (EIP-1559 or legacy format)
+  // RLP encode it using ethers
+  if (transaction && typeof transaction === "object" && (transaction.to || transaction.data || transaction.from)) {
+    try {
+      // Prepare transaction for ethers (remove 'from' field as it's not part of RLP)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { from, gas, ...txForSerialization } = transaction;
+
+      // Map 'gas' to 'gasLimit' if present
+      if (gas) {
+        txForSerialization.gasLimit = gas;
+      }
+
+      // Ensure gasLimit is present (default to 21000 for simple transfers if not provided)
+      if (!txForSerialization.gasLimit) {
+        // Only add default if it's a simple transfer (has 'to' and 'value')
+        if (txForSerialization.to && txForSerialization.value && !txForSerialization.data) {
+          txForSerialization.gasLimit = "0x5208"; // 21000 in hex
+        }
+      }
+
+      // Normalize addresses to proper checksum format
+      if (txForSerialization.to && typeof txForSerialization.to === "string") {
+        try {
+          txForSerialization.to = getAddress(txForSerialization.to);
+        } catch {
+          // If checksum validation fails, lowercase the address
+          txForSerialization.to = txForSerialization.to.toLowerCase();
+        }
+      }
+
+      // Serialize the transaction (RLP encode)
+      const serialized = EthersTransaction.from(txForSerialization).unsignedSerialized;
+      const hex = serialized.startsWith("0x") ? serialized : "0x" + serialized;
+
+      return {
+        parsed: hex,
+        originalFormat: "json",
+      };
+    } catch (error) {
+      // Provide detailed error with transaction structure for debugging
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      const txKeys = transaction ? Object.keys(transaction).join(", ") : "N/A";
+      const txValues = transaction ? JSON.stringify(transaction, null, 2) : "N/A";
+      throw new Error(
+        `Failed to RLP encode EVM transaction: ${errorMessage}.\nTransaction keys: [${txKeys}].\nTransaction: ${txValues}\n` +
+          `Please ensure the transaction object includes required fields (to, value, chainId, gasLimit or gasPrice, etc.)`,
+      );
+    }
+  }
+
+  throw new Error(
+    "Unsupported EVM transaction format. Expected hex string, bytes, or transaction object with 'to', 'data', or 'from' fields.",
+  );
 }
 
 /**
@@ -164,7 +195,7 @@ async function parseSuiTransactionToBase64Url(transaction: any): Promise<ParsedT
   if (transaction?.serialize && typeof transaction.serialize === "function") {
     const serialized = transaction.serialize();
     return {
-      base64url: base64urlEncode(serialized),
+      parsed: base64urlEncode(serialized),
       originalFormat: "sui-sdk",
     };
   }
@@ -172,7 +203,7 @@ async function parseSuiTransactionToBase64Url(transaction: any): Promise<ParsedT
   // Check if it's already serialized bytes
   if (transaction instanceof Uint8Array) {
     return {
-      base64url: base64urlEncode(transaction),
+      parsed: base64urlEncode(transaction),
       originalFormat: "bytes",
     };
   }
@@ -183,7 +214,7 @@ async function parseSuiTransactionToBase64Url(transaction: any): Promise<ParsedT
     if (built?.serialize && typeof built.serialize === "function") {
       const serialized = built.serialize();
       return {
-        base64url: base64urlEncode(serialized),
+        parsed: base64urlEncode(serialized),
         originalFormat: "transaction-block",
       };
     }
@@ -200,7 +231,7 @@ function parseBitcoinTransactionToBase64Url(transaction: any): ParsedTransaction
   if (transaction?.toBuffer && typeof transaction.toBuffer === "function") {
     const buffer = transaction.toBuffer();
     return {
-      base64url: base64urlEncode(new Uint8Array(buffer)),
+      parsed: base64urlEncode(new Uint8Array(buffer)),
       originalFormat: "bitcoinjs-lib",
     };
   }
@@ -208,7 +239,7 @@ function parseBitcoinTransactionToBase64Url(transaction: any): ParsedTransaction
   // Check if it's already serialized bytes
   if (transaction instanceof Uint8Array) {
     return {
-      base64url: base64urlEncode(transaction),
+      parsed: base64urlEncode(transaction),
       originalFormat: "bytes",
     };
   }
@@ -217,7 +248,7 @@ function parseBitcoinTransactionToBase64Url(transaction: any): ParsedTransaction
   if (typeof transaction === "string") {
     const bytes = new Uint8Array(Buffer.from(transaction, "hex"));
     return {
-      base64url: base64urlEncode(bytes),
+      parsed: base64urlEncode(bytes),
       originalFormat: "hex",
     };
   }

@@ -1,9 +1,21 @@
-import { type BrowserSDKConfig, type Provider, type ConnectResult, type WalletAddress, type AuthOptions, AddressType } from "./types";
+import {
+  type BrowserSDKConfig,
+  type Provider,
+  type ConnectResult,
+  type WalletAddress,
+  type AuthOptions,
+  AddressType,
+} from "./types";
 import { InjectedProvider } from "./providers/injected";
 import { EmbeddedProvider } from "./providers/embedded";
 import { debug, DebugCategory } from "./debug";
-import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-provider-core";
+import {
+  type EmbeddedProviderEvent,
+  type EventCallback,
+  EMBEDDED_PROVIDER_AUTH_TYPES,
+} from "@phantom/embedded-provider-core";
 import { DEFAULT_WALLET_API_URL, DEFAULT_EMBEDDED_WALLET_TYPE, DEFAULT_AUTH_URL } from "@phantom/constants";
+import { isAuthFailureCallback, isAuthCallbackUrl } from "./utils/auth-callback";
 export interface ProviderPreference {
   type: "injected" | "embedded";
   embeddedWalletType?: "app-wallet" | "user-wallet";
@@ -31,7 +43,7 @@ export class ProviderManager implements EventEmitter {
   constructor(config: BrowserSDKConfig) {
     debug.log(DebugCategory.PROVIDER_MANAGER, "Initializing ProviderManager", { config });
     this.config = config;
-    
+
     // Initialize default provider based on config
     debug.log(DebugCategory.PROVIDER_MANAGER, "Setting default provider");
     this.setDefaultProvider();
@@ -44,10 +56,10 @@ export class ProviderManager implements EventEmitter {
   }
 
   private getValidatedCurrentUrl(): string {
-    if (typeof window === 'undefined') return '';
+    if (typeof window === "undefined") return "";
     const currentUrl = window.location.href;
-    if (!currentUrl.startsWith('http:') && !currentUrl.startsWith('https:')) {
-      throw new Error('Invalid URL protocol - only HTTP/HTTPS URLs are supported');
+    if (!currentUrl.startsWith("http:") && !currentUrl.startsWith("https:")) {
+      throw new Error("Invalid URL protocol - only HTTP/HTTPS URLs are supported");
     }
     return currentUrl;
   }
@@ -101,12 +113,47 @@ export class ProviderManager implements EventEmitter {
 
   /**
    * Connect using the current provider
+   * Automatically switches provider based on authOptions.provider
    */
-  async connect(authOptions?: AuthOptions): Promise<ConnectResult> {
+  async connect(authOptions: AuthOptions): Promise<ConnectResult> {
     debug.info(DebugCategory.PROVIDER_MANAGER, "Starting connection", {
       currentProviderKey: this.currentProviderKey,
-      authOptions: authOptions ? { provider: authOptions.provider, hasJwtToken: !!authOptions.jwtToken } : undefined,
+      authOptions: { provider: authOptions.provider },
     });
+
+    // Auto-switch provider based on auth options
+    const requestedProvider = authOptions.provider;
+
+    // Determine target provider type
+    let targetProviderType: "injected" | "embedded" | null = null;
+
+    if (requestedProvider === "injected") {
+      targetProviderType = "injected";
+    } else if (EMBEDDED_PROVIDER_AUTH_TYPES.includes(requestedProvider)) {
+      targetProviderType = "embedded";
+    }
+
+    // Switch provider if needed
+    if (targetProviderType) {
+      const currentInfo = this.getCurrentProviderInfo();
+      if (currentInfo?.type !== targetProviderType) {
+        debug.log(DebugCategory.PROVIDER_MANAGER, "Auto-switching provider based on auth options", {
+          from: currentInfo?.type,
+          to: targetProviderType,
+          requestedProvider,
+        });
+
+        // Only pass embeddedWalletType when switching to embedded provider
+        const switchOptions: SwitchProviderOptions = {};
+        if (targetProviderType === "embedded") {
+          switchOptions.embeddedWalletType =
+            currentInfo?.embeddedWalletType ||
+            (this.config.embeddedWalletType as "app-wallet" | "user-wallet" | undefined);
+        }
+
+        this.switchProvider(targetProviderType, switchOptions);
+      }
+    }
 
     if (!this.currentProvider) {
       debug.error(DebugCategory.PROVIDER_MANAGER, "No provider selected");
@@ -116,8 +163,13 @@ export class ProviderManager implements EventEmitter {
     debug.log(DebugCategory.PROVIDER_MANAGER, "Delegating to provider connect method");
     const result = await this.currentProvider.connect(authOptions);
 
+    // Add provider type to result
+    const providerInfo = this.getCurrentProviderInfo();
+    result.providerType = providerInfo?.type;
+
     debug.log(DebugCategory.PROVIDER_MANAGER, "Connection successful, saving preferences", {
       addressCount: result.addresses?.length || 0,
+      providerType: result.providerType,
     });
 
     // Save provider preference after successful connection
@@ -125,6 +177,7 @@ export class ProviderManager implements EventEmitter {
 
     debug.info(DebugCategory.PROVIDER_MANAGER, "Connect completed", {
       addresses: result.addresses,
+      providerType: result.providerType,
     });
     return result;
   }
@@ -156,7 +209,6 @@ export class ProviderManager implements EventEmitter {
     return this.currentProvider?.isConnected() ?? false;
   }
 
-
   /**
    * Attempt auto-connect with fallback strategy
    * Tries embedded provider first if it exists, then injected provider
@@ -164,6 +216,13 @@ export class ProviderManager implements EventEmitter {
    */
   async autoConnect(): Promise<boolean> {
     debug.log(DebugCategory.PROVIDER_MANAGER, "Starting auto-connect with fallback strategy");
+
+    // Check if we're in a callback URL with a failure response
+    // If so, don't attempt fallback to another provider
+    if (isAuthFailureCallback()) {
+      debug.warn(DebugCategory.PROVIDER_MANAGER, "Auth failure detected in URL, skipping autoConnect fallback");
+      return false;
+    }
 
     // Try embedded provider first if it exists
     const embeddedWalletType = (this.config.embeddedWalletType || "user-wallet") as "app-wallet" | "user-wallet";
@@ -198,6 +257,12 @@ export class ProviderManager implements EventEmitter {
         debug.log(DebugCategory.PROVIDER_MANAGER, "Embedded auto-connect failed", {
           error: (error as Error).message,
         });
+
+        // If embedded auth failed and we're in a callback, don't try injected
+        if (isAuthCallbackUrl()) {
+          debug.log(DebugCategory.PROVIDER_MANAGER, "In auth callback URL, not attempting injected fallback");
+          return false;
+        }
       }
     }
 
@@ -350,7 +415,12 @@ export class ProviderManager implements EventEmitter {
     this.createProvider("injected");
 
     // Set the default provider based on config
-    this.switchProvider(defaultType, { embeddedWalletType: defaultEmbeddedType });
+    // Only pass embeddedWalletType if defaultType is embedded
+    const switchOptions: SwitchProviderOptions = {};
+    if (defaultType === "embedded") {
+      switchOptions.embeddedWalletType = defaultEmbeddedType;
+    }
+    this.switchProvider(defaultType, switchOptions);
   }
 
   /**
@@ -419,24 +489,4 @@ export class ProviderManager implements EventEmitter {
       console.error("Failed to save provider preference:", error);
     }
   }
-
-  /**
-   * Restore provider preference from localStorage
-   */
-
-  /*
-  private restoreProviderPreference(): void {
-    try {
-      const saved = localStorage.getItem("phantom-provider-preference");
-      if (saved) {
-        const preference: ProviderPreference = JSON.parse(saved);
-        this.switchProvider(preference.type, {
-          embeddedWalletType: preference.embeddedWalletType,
-        });
-      }
-    } catch (error) {
-      // Ignore localStorage errors - just use default provider
-      console.error("Failed to restore provider preference:", error);
-    }
-  }*/
 }

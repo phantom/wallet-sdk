@@ -1,6 +1,6 @@
 # @phantom/parsers
 
-A utility package for parsing and converting various message and transaction formats into base64url format for use with Phantom's API. This package provides a unified interface for handling different blockchain transaction formats and message types across multiple networks.
+A utility package for parsing and converting transaction formats into base64url format for use with Phantom's API. This package provides a unified interface for handling different blockchain transaction formats across multiple networks.
 
 ## Installation
 
@@ -12,10 +12,7 @@ yarn add @phantom/parsers
 
 ## Overview
 
-The parsers package provides two main functions:
-
-- **`parseMessage`** - Converts various message formats to base64url
-- **`parseTransactionToBase64Url`** - Converts various transaction formats to base64url for different blockchain networks
+- **`parseToKmsTransaction`** - Converts various transaction formats to base64url for different blockchain networks
 
 ## Supported Networks
 
@@ -26,40 +23,9 @@ The parsers package provides two main functions:
 
 ## API Reference
 
-### parseMessage(message)
+### parseToKmsTransaction(transaction, networkId)
 
-Converts various message formats to base64url encoding.
-
-**Parameters:**
-
-- `message` (string | Uint8Array | Buffer) - The message to parse
-
-**Returns:**
-
-- `ParsedMessage` object with:
-  - `base64url` (string) - Base64url encoded message
-  - `originalFormat` (string) - The detected input format
-
-**Example:**
-
-```typescript
-import { parseMessage } from "@phantom/parsers";
-
-// Plain text message
-const result1 = parseMessage("Hello, Phantom!");
-console.log(result1.base64url); // "SGVsbG8sIFBoYW50b20h"
-console.log(result1.originalFormat); // "string"
-
-// Uint8Array
-const bytes = new TextEncoder().encode("Hello, Phantom!");
-const result2 = parseMessage(bytes);
-console.log(result2.base64url); // "SGVsbG8sIFBoYW50b20h"
-console.log(result2.originalFormat); // "bytes"
-```
-
-### parseTransactionToBase64Url(transaction, networkId)
-
-Converts various transaction formats to base64url encoding based on the target network.
+Converts various transaction formats to different encoding based on the target network.
 
 **Parameters:**
 
@@ -78,25 +44,25 @@ Converts various transaction formats to base64url encoding based on the target n
 
 ```typescript
 import { Transaction } from "@solana/web3.js";
-import { parseTransactionToBase64Url } from "@phantom/parsers";
+import { parseToKmsTransaction } from "@phantom/parsers";
 import { NetworkId } from "@phantom/client";
 
 // Solana Web3.js Transaction
 const transaction = new Transaction().add(/* instructions */);
-const result = await parseTransactionToBase64Url(transaction, NetworkId.SOLANA_MAINNET);
+const result = await parseToKmsTransaction(transaction, NetworkId.SOLANA_MAINNET);
 
 // Raw bytes
 const rawBytes = new Uint8Array([1, 2, 3, 4]);
-const result2 = await parseTransactionToBase64Url(rawBytes, NetworkId.SOLANA_MAINNET);
+const result2 = await parseToKmsTransaction(rawBytes, NetworkId.SOLANA_MAINNET);
 
 // Hex string
-const result3 = await parseTransactionToBase64Url("0x01020304", NetworkId.SOLANA_MAINNET);
+const result3 = await parseToKmsTransaction("0x01020304", NetworkId.SOLANA_MAINNET);
 ```
 
 ### Ethereum/EVM
 
 ```typescript
-import { parseTransactionToBase64Url } from "@phantom/parsers";
+import { parseToKmsTransaction } from "@phantom/parsers";
 import { NetworkId } from "@phantom/client";
 
 // Viem/Ethers transaction object
@@ -108,45 +74,45 @@ const evmTransaction = {
   gasPrice: 20000000000n, // 20 gwei
 };
 
-const result = await parseTransactionToBase64Url(evmTransaction, NetworkId.ETHEREUM_MAINNET);
+const result = await parseToKmsTransaction(evmTransaction, NetworkId.ETHEREUM_MAINNET);
 
 // Raw transaction bytes
 const rawTx = new Uint8Array([
   /* transaction bytes */
 ]);
-const result2 = await parseTransactionToBase64Url(rawTx, NetworkId.ETHEREUM_MAINNET);
+const result2 = await parseToKmsTransaction(rawTx, NetworkId.ETHEREUM_MAINNET);
 
 // Hex-encoded transaction
-const result3 = await parseTransactionToBase64Url("0xf86c...", NetworkId.ETHEREUM_MAINNET);
+const result3 = await parseToKmsTransaction("0xf86c...", NetworkId.ETHEREUM_MAINNET);
 ```
 
 ### Bitcoin
 
 ```typescript
-import { parseTransactionToBase64Url } from "@phantom/parsers";
+import { parseToKmsTransaction } from "@phantom/parsers";
 import { NetworkId } from "@phantom/client";
 
 // Raw transaction bytes
 const bitcoinTx = new Uint8Array([
   /* bitcoin transaction bytes */
 ]);
-const result = await parseTransactionToBase64Url(bitcoinTx, NetworkId.BITCOIN_MAINNET);
+const result = await parseToKmsTransaction(bitcoinTx, NetworkId.BITCOIN_MAINNET);
 
 // Hex-encoded transaction
-const result2 = await parseTransactionToBase64Url("0x0100000001...", NetworkId.BITCOIN_MAINNET);
+const result2 = await parseToKmsTransaction("0x0100000001...", NetworkId.BITCOIN_MAINNET);
 ```
 
 ### Sui
 
 ```typescript
-import { parseTransactionToBase64Url } from "@phantom/parsers";
+import { parseToKmsTransaction } from "@phantom/parsers";
 import { NetworkId } from "@phantom/client";
 
 // Sui transaction bytes
 const suiTx = new Uint8Array([
   /* sui transaction bytes */
 ]);
-const result = await parseTransactionToBase64Url(suiTx, NetworkId.SUI_MAINNET);
+const result = await parseToKmsTransaction(suiTx, NetworkId.SUI_MAINNET);
 ```
 
 ## Format Detection
@@ -184,7 +150,7 @@ The parsers will throw descriptive errors for:
 
 ```typescript
 try {
-  const result = await parseTransactionToBase64Url(invalidData, "unsupported:network");
+  const result = await parseToKmsTransaction(invalidData, "unsupported:network");
 } catch (error) {
   console.error("Parsing failed:", error.message);
   // "Unsupported network: unsupported"

@@ -14,7 +14,11 @@ export interface CreateWalletResult {
   }[];
 }
 
-export type Transaction = string; // base64url encoded transaction
+// Transaction is an encoded string:
+// - Solana: base64url encoded
+// - Ethereum: RLP-encoded hex string
+// - Other chains: base64url encoded
+export type Transaction = string;
 
 export interface SignedTransaction {
   rawTransaction: string; // base64url encoded signed transaction

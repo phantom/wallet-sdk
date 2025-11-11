@@ -8,8 +8,6 @@ export const ANALYTICS_HEADERS = {
   PLATFORM_VERSION: "x-phantom-platform-version", // OS version, device model, etc.
 } as const;
 
-
-
 // Base headers required for all SDKs
 export interface BaseAnalyticsHeaders {
   [ANALYTICS_HEADERS.SDK_TYPE]: string;
@@ -32,7 +30,6 @@ export interface BrowserSdkHeaders extends BaseAnalyticsHeaders {
   [ANALYTICS_HEADERS.PLATFORM_VERSION]?: string; // Full user agent for more detailed info
 }
 
-
 // React Native SDK specific headers
 export interface ReactNativeSdkHeaders extends BaseAnalyticsHeaders {
   [ANALYTICS_HEADERS.SDK_TYPE]: "react-native";
@@ -42,11 +39,7 @@ export interface ReactNativeSdkHeaders extends BaseAnalyticsHeaders {
 }
 
 // Client SDK specific headers
-export type ClientSideSdkHeaders = BrowserSdkHeaders 
-  | ReactNativeSdkHeaders;
+export type ClientSideSdkHeaders = BrowserSdkHeaders | ReactNativeSdkHeaders;
 
 // Union type of all possible SDK headers
-export type SdkAnalyticsHeaders =
-  | ServerSdkHeaders
-  | ClientSideSdkHeaders;
-
+export type SdkAnalyticsHeaders = ServerSdkHeaders | ClientSideSdkHeaders;

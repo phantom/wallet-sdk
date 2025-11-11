@@ -6,8 +6,7 @@ import type { PlatformAdapter, DebugLogger } from "./interfaces";
 // Mock dependencies
 jest.mock("@phantom/api-key-stamper");
 jest.mock("@phantom/parsers", () => ({
-  parseMessage: jest.fn().mockReturnValue({ base64url: "mock-base64url" }),
-  parseTransactionToBase64Url: jest.fn().mockResolvedValue({ base64url: "mock-base64url", originalFormat: "mock" }),
+  parseToKmsTransaction: jest.fn().mockResolvedValue({ base64url: "mock-base64url", originalFormat: "mock" }),
   parseSignMessageResponse: jest.fn().mockReturnValue({ signature: "mock-signature", rawSignature: "mock-raw" }),
   parseTransactionResponse: jest.fn().mockReturnValue({ rawTransaction: "mock-raw-tx" }),
   parseSolanaTransactionSignature: jest.fn().mockReturnValue({ signature: "mock-signature", fallback: false }),
@@ -124,7 +123,7 @@ describe("EmbeddedProvider Core", () => {
 
       // Test that storage.getSession is called during connect
       try {
-        await provider.connect();
+        await provider.connect({ provider: "phantom" });
       } catch (error) {
         // Connection will fail, but storage should be called
       }
@@ -167,7 +166,7 @@ describe("EmbeddedProvider Core", () => {
       });
 
       try {
-        await provider.connect();
+        await provider.connect({ provider: "phantom" });
       } catch (error) {
         // Connection may fail, but URL params should be checked during session validation
       }
@@ -180,7 +179,7 @@ describe("EmbeddedProvider Core", () => {
       mockPlatform.authProvider.resumeAuthFromRedirect.mockReturnValue(null);
 
       try {
-        await provider.connect();
+        await provider.connect({ provider: "phantom" });
       } catch (error) {
         // Connection will fail, but stamper.init should be called during createOrganizationAndStamper
       }
@@ -194,7 +193,7 @@ describe("EmbeddedProvider Core", () => {
       mockPlatform.authProvider.resumeAuthFromRedirect.mockReturnValue(null);
 
       try {
-        await provider.connect();
+        await provider.connect({ provider: "phantom" });
       } catch (error) {
         // Connection will fail for user-wallet without proper auth setup
       }
@@ -209,7 +208,7 @@ describe("EmbeddedProvider Core", () => {
       mockPlatform.authProvider.resumeAuthFromRedirect.mockReturnValue(null);
 
       try {
-        await provider.connect();
+        await provider.connect({ provider: "google" });
       } catch (error) {
         // Connection will fail for user-wallet without proper auth setup
       }
@@ -238,7 +237,7 @@ describe("EmbeddedProvider Core", () => {
         organizationId: "org-123",
         appId: "app-123",
         stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
-        authProvider: "jwt",
+        authProvider: "google",
         userInfo: {},
         status: "completed" as const,
         createdAt: Date.now(),
@@ -251,7 +250,8 @@ describe("EmbeddedProvider Core", () => {
       mockPlatform.storage.getSession.mockResolvedValue(mockSession);
 
       provider["client"] = {
-        signMessage: jest.fn().mockResolvedValue("signed-message"),
+        ethereumSignMessage: jest.fn().mockResolvedValue("signed-message"),
+        signRawPayload: jest.fn().mockResolvedValue("signed-message"),
       } as any;
       provider["walletId"] = "test-wallet-id";
 
@@ -262,8 +262,8 @@ describe("EmbeddedProvider Core", () => {
       });
 
       // The stamper won't be called directly for signMessage - the client handles it
-      // But we can verify the client's signMessage was called
-      expect(provider["client"].signMessage).toHaveBeenCalled();
+      // But we can verify the client's signRawPayload was called (for Solana)
+      expect(provider["client"].signRawPayload).toHaveBeenCalled();
     });
 
     it.skip("should call platform stamper getKeyInfo during client initialization", async () => {
@@ -293,7 +293,7 @@ describe("EmbeddedProvider Core", () => {
       mockPlatform.stamper.getKeyInfo.mockReturnValue(null);
 
       try {
-        await provider.connect();
+        await provider.connect({ provider: "phantom" });
       } catch (error) {
         // May fail on getWalletAddresses, but stamper should be called
       }
@@ -321,62 +321,112 @@ describe("EmbeddedProvider Core", () => {
 
       expect(mockPlatform.stamper.resetKeyPair).toHaveBeenCalled();
     });
-
-    it("should use platform storage for session persistence during JWT auth", async () => {
-      mockPlatform.storage.getSession.mockResolvedValue(null);
-      mockPlatform.authProvider.resumeAuthFromRedirect.mockReturnValue(null);
-
-      const authOptions = {
-        provider: "jwt" as const,
-        jwtToken: "test-jwt-token",
-      };
-
-      // Mock JWT auth and organization creation
-      const mockJwtAuth = {
-        authenticate: jest.fn().mockResolvedValue({
-          walletId: "wallet-123",
-          provider: "jwt",
-          userInfo: { id: "user123" },
-        }),
-      };
-      provider["jwtAuth"] = mockJwtAuth;
-
-      try {
-        await provider.connect(authOptions);
-      } catch (error) {
-        // May fail on client initialization, but session should be saved
-      }
-
-      expect(mockPlatform.storage.saveSession).toHaveBeenCalledWith(
-        expect.objectContaining({
-          walletId: "wallet-123",
-          authProvider: "jwt",
-          status: "completed",
-        }),
-      );
-    });
   });
 
   describe("Auth Flow Validation", () => {
-    it("should validate JWT auth options correctly", async () => {
-      const invalidAuthOptions = {
-        provider: "jwt" as const,
-        // Missing jwtToken
-      };
-
-      await expect(provider.connect(invalidAuthOptions)).rejects.toThrow(
-        "JWT token is required when using JWT authentication",
-      );
-    });
-
     it("should validate invalid auth provider", async () => {
       const invalidAuthOptions = {
         provider: "invalid-provider" as any,
       };
 
       await expect(provider.connect(invalidAuthOptions)).rejects.toThrow(
-        'Invalid auth provider: invalid-provider. Must be "google", "apple", "jwt", or "phantom"',
+        'Invalid auth provider: invalid-provider. Must be "google", "apple", "phantom", "tiktok", or "x"',
       );
+    });
+  });
+
+  describe("Auth Flow - Happy Path for Different Providers (user-wallets)", () => {
+    beforeEach(() => {
+      // Ensure we're testing user-wallet type
+      expect(config.embeddedWalletType).toBe("user-wallet");
+
+      // Mock no existing session
+      mockPlatform.storage.getSession.mockResolvedValue(null);
+      mockPlatform.authProvider.resumeAuthFromRedirect.mockReturnValue(null);
+    });
+
+    it("should call platform auth provider for Apple authentication", async () => {
+      const authOptions = { provider: "apple" as const };
+
+      try {
+        await provider.connect(authOptions);
+      } catch (error) {
+        // Connection will fail due to redirect, but authenticate should be called
+      }
+
+      expect(mockPlatform.authProvider.authenticate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          provider: "apple",
+          publicKey: "11111111111111111111111111111111",
+          appId: "test-app-id",
+        }),
+      );
+    });
+
+    it("should call platform auth provider for X (Twitter) authentication", async () => {
+      const authOptions = { provider: "x" as const };
+
+      try {
+        await provider.connect(authOptions);
+      } catch (error) {
+        // Connection will fail due to redirect, but authenticate should be called
+      }
+
+      expect(mockPlatform.authProvider.authenticate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          provider: "x",
+          publicKey: "11111111111111111111111111111111",
+          appId: "test-app-id",
+        }),
+      );
+    });
+
+    it("should call platform auth provider for TikTok authentication", async () => {
+      const authOptions = { provider: "tiktok" as const };
+
+      try {
+        await provider.connect(authOptions);
+      } catch (error) {
+        // Connection will fail due to redirect, but authenticate should be called
+      }
+
+      expect(mockPlatform.authProvider.authenticate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          provider: "tiktok",
+          publicKey: "11111111111111111111111111111111",
+          appId: "test-app-id",
+        }),
+      );
+    });
+
+    it("should call platform phantomAppProvider for Phantom authentication", async () => {
+      // Mock Phantom app as available for this test
+      mockPlatform.phantomAppProvider.isAvailable.mockReturnValue(true);
+      mockPlatform.phantomAppProvider.authenticate.mockResolvedValue({
+        organizationId: "org-phantom-123",
+        walletId: "wallet-phantom-123",
+        publicKey: "11111111111111111111111111111111",
+        authUserId: "phantom-user-123",
+      });
+
+      const authOptions = { provider: "phantom" as const };
+
+      try {
+        await provider.connect(authOptions);
+      } catch (error) {
+        // Connection may fail on subsequent calls (e.g., getWalletAddresses)
+      }
+
+      // Phantom uses phantomAppProvider instead of authProvider
+      expect(mockPlatform.phantomAppProvider.authenticate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          publicKey: "11111111111111111111111111111111",
+          appId: "test-app-id",
+        }),
+      );
+
+      // Verify that authProvider.authenticate was NOT called for Phantom
+      expect(mockPlatform.authProvider.authenticate).not.toHaveBeenCalled();
     });
   });
 

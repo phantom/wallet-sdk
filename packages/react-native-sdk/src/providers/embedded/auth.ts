@@ -1,11 +1,12 @@
 import * as WebBrowser from "expo-web-browser";
-import type { AuthProvider, AuthResult, PhantomConnectOptions, JWTAuthOptions } from "@phantom/embedded-provider-core";
+import { Platform } from "react-native";
+import type { AuthProvider, AuthResult, PhantomConnectOptions } from "@phantom/embedded-provider-core";
 import { DEFAULT_AUTH_URL } from "@phantom/constants";
 
 declare const __SDK_VERSION__: string;
 
 export class ExpoAuthProvider implements AuthProvider {
-  async authenticate(options: PhantomConnectOptions | JWTAuthOptions): Promise<void | AuthResult> {
+  async authenticate(options: PhantomConnectOptions): Promise<void | AuthResult> {
     // Handle JWT authentication
     if ("jwtToken" in options) {
       // JWT authentication doesn't require web browser flow
@@ -15,8 +16,7 @@ export class ExpoAuthProvider implements AuthProvider {
 
     // Handle redirect-based authentication
     const phantomOptions = options as PhantomConnectOptions;
-    const { authUrl, redirectUrl, publicKey, sessionId, provider, appId } =
-      phantomOptions;
+    const { authUrl, redirectUrl, publicKey, sessionId, provider, appId } = phantomOptions;
 
     if (!redirectUrl) {
       throw new Error("redirectUrl is required for web browser authentication");
@@ -39,6 +39,8 @@ export class ExpoAuthProvider implements AuthProvider {
         clear_previous_session: (phantomOptions.clearPreviousSession ?? false).toString(),
         allow_refresh: (phantomOptions.allowRefresh ?? true).toString(),
         sdk_version: __SDK_VERSION__,
+        sdk_type: "react-native",
+        platform: Platform.OS,
       });
 
       // Add provider if specified (will skip provider selection)
@@ -79,9 +81,9 @@ export class ExpoAuthProvider implements AuthProvider {
         const url = new URL(result.url);
         const walletId = url.searchParams.get("wallet_id");
         const organizationId = url.searchParams.get("organization_id");
-        const provider = url.searchParams.get("provider");
         const accountDerivationIndex = url.searchParams.get("selected_account_index");
         const expiresInMs = url.searchParams.get("expires_in_ms");
+        const authUserId = url.searchParams.get("auth_user_id");
 
         if (!walletId) {
           throw new Error("Authentication failed: no walletId in redirect URL");
@@ -98,6 +100,7 @@ export class ExpoAuthProvider implements AuthProvider {
           provider,
           accountDerivationIndex,
           expiresInMs,
+          authUserId,
         });
 
         return {
@@ -106,6 +109,7 @@ export class ExpoAuthProvider implements AuthProvider {
           provider: provider || undefined,
           accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : 0,
           expiresInMs: expiresInMs ? parseInt(expiresInMs) : 0,
+          authUserId: authUserId || undefined,
         };
       } else if (result.type === "cancel") {
         throw new Error("User cancelled authentication");
