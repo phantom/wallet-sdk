@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { createContext, useContext, useState, useEffect, useMemo } from "react";
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
 import { BrowserSDK } from "@phantom/browser-sdk";
 import type {
   BrowserSDKConfig,
@@ -9,6 +9,8 @@ import type {
   ConnectEventData,
   ConnectResult,
 } from "@phantom/browser-sdk";
+import { Modal } from "./components/Modal";
+import { mergeTheme, type PhantomTheme, type CompletePhantomTheme } from "./themes";
 
 export type PhantomSDKConfig = BrowserSDKConfig;
 
@@ -30,19 +32,29 @@ interface PhantomContextValue {
   currentProviderType: "injected" | "embedded" | null;
   isClient: boolean;
   user: ConnectResult | null;
+  theme?: CompletePhantomTheme;
+  isModalOpen: boolean;
+  openModal: () => void;
+  closeModal: () => void;
 }
 
-const PhantomContext = createContext<PhantomContextValue | undefined>(undefined);
+export const PhantomContext = createContext<PhantomContextValue | undefined>(undefined);
 
 export interface PhantomProviderProps {
   children: ReactNode;
   config: PhantomSDKConfig;
   debugConfig?: PhantomDebugConfig;
+  theme?: Partial<PhantomTheme>;
+  appIcon?: string;
+  appName?: string;
 }
 
-export function PhantomProvider({ children, config, debugConfig }: PhantomProviderProps) {
+export function PhantomProvider({ children, config, debugConfig, theme, appIcon, appName }: PhantomProviderProps) {
   // Memoized config to avoid unnecessary SDK recreation
   const memoizedConfig: BrowserSDKConfig = useMemo(() => config, [config]);
+
+  // Memoized theme
+  const resolvedTheme = useMemo(() => (theme ? mergeTheme(theme) : undefined), [theme]);
 
   const [sdk, setSdk] = useState<BrowserSDK | null>(null);
   const [isClient, setIsClient] = useState(false);
@@ -55,6 +67,16 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
     (memoizedConfig.providerType as any) || null,
   );
   const [user, setUser] = useState<ConnectResult | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Modal control functions
+  const openModal = useCallback(() => {
+    setIsModalOpen(true);
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setIsModalOpen(false);
+  }, []);
 
   // Initialize client flag
   useEffect(() => {
@@ -176,11 +198,34 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       currentProviderType,
       isClient,
       user,
+      theme: resolvedTheme,
+      isModalOpen,
+      openModal,
+      closeModal,
     }),
-    [sdk, isConnected, isConnecting, isLoading, connectError, addresses, currentProviderType, isClient, user],
+    [
+      sdk,
+      isConnected,
+      isConnecting,
+      isLoading,
+      connectError,
+      addresses,
+      currentProviderType,
+      isClient,
+      user,
+      resolvedTheme,
+      isModalOpen,
+      openModal,
+      closeModal,
+    ],
   );
 
-  return <PhantomContext.Provider value={value}>{children}</PhantomContext.Provider>;
+  return (
+    <PhantomContext.Provider value={value}>
+      {children}
+      {resolvedTheme && <Modal isVisible={isModalOpen} onClose={closeModal} appIcon={appIcon} appName={appName} />}
+    </PhantomContext.Provider>
+  );
 }
 
 export function usePhantom() {

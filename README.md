@@ -5,7 +5,6 @@ A comprehensive suite of SDKs for integrating Phantom Wallet across different pl
 ### Frontend SDK Options:
 
 - **[React SDK](./packages/react-sdk/README.md)** - React hooks and components
-- **[React UI](./packages/react-ui/README.md)** - Complete UI solution with pre-built modals
 - **[Browser SDK](./packages/browser-sdk/README.md)** - Vanilla JavaScript/TypeScript
 - **[React Native SDK](./packages/react-native-sdk/README.md)** - Mobile app integration
 
@@ -163,42 +162,6 @@ await sdk.signAndSendTransaction({
 });
 ```
 
-### React UI - **Complete UI Solution**
-
-**[@phantom/react-ui](./packages/react-ui/README.md)** - Pre-built React UI components with automatic modal injection and chain-specific operations.
-
-```tsx
-import { PhantomProvider, useConnect, useSolana, useEthereum, AddressType } from "@phantom/react-ui";
-
-// App wrapper - includes react-sdk + UI theme
-<PhantomProvider
-  config={{
-    providerType: "embedded", // or "injected"
-    addressTypes: [AddressType.solana, AddressType.ethereum],
-    apiBaseUrl: "https://api.phantom.app/v1/wallets",
-    appId: "your-app-id",
-  }}
-  theme="dark"
->
-  <App />
-</PhantomProvider>;
-
-// Component - UI appears automatically
-function WalletOperations() {
-  const { connect } = useConnect();
-  const { solana } = useSolana();
-  const { ethereum } = useEthereum();
-
-  const handleOperations = async () => {
-    // Connection modals appear automatically (provider parameter is required)
-    await connect({ provider: "phantom" });
-
-    // Chain-specific operations with UI
-    await solana.signAndSendTransaction(solanaTransaction);
-    await ethereum.sendTransaction(ethTransaction);
-  };
-}
-```
 
 ## Examples
 
@@ -229,9 +192,7 @@ Server-side SDK for backend applications with built-in authentication. Depends o
 
 Thin wrapper over `@phantom/browser-sdk` that provides React hooks and context providers for Phantom integration.
 
-#### **[@phantom/react-ui](./packages/react-ui/README.md)** - Complete UI Solution
-
-Thin wrapper over `@phantom/react-sdk` that adds pre-built UI components (modals, buttons, etc.) with automatic injection and theming support.
+It also provides a Connect Modal and a Connect button.
 
 #### **[@phantom/browser-sdk](./packages/browser-sdk/README.md)** - Vanilla JS/TS SDK
 
@@ -313,7 +274,7 @@ Miscellaneous utility functions used across packages.
 
 ```
 Frontend Entry Points:
-  react-ui → react-sdk → browser-sdk → embedded-provider-core → client → (api-key-stamper | indexed-db-stamper)
+  react-sdk → browser-sdk → embedded-provider-core → client → (api-key-stamper | indexed-db-stamper)
                                      → browser-injected-sdk
 
 Backend Entry Point:

@@ -1,6 +1,6 @@
-# Phantom React UI Example
+# Phantom React SDK Example
 
-This example demonstrates how to use the `@phantom/react-ui` package to create a connect modal with built-in mobile deeplink support.
+This example demonstrates how to use the `@phantom/react-sdk` package to create a connect modal with built-in mobile deeplink support.
 
 ## Features
 
@@ -53,7 +53,7 @@ To test the mobile functionality:
 
 - `App.tsx` - Main app with PhantomProvider setup
 - `ConnectExample.tsx` - Connection demo component with device detection
-- Uses `@phantom/react-ui` for the modal UI
+- Uses `@phantom/react-sdk` for the modal UI and ConnectButton component
 - Uses `@phantom/browser-sdk` for mobile device detection
 
 ## Configuration

@@ -1,4 +1,5 @@
-import { PhantomProvider, type PhantomSDKConfig, AddressType } from "@phantom/react-ui";
+import { useState } from "react";
+import { PhantomProvider, type PhantomSDKConfig, AddressType, darkTheme, lightTheme } from "@phantom/react-sdk";
 import ConnectExample from "./ConnectExample";
 
 const config: PhantomSDKConfig = {
@@ -8,21 +9,69 @@ const config: PhantomSDKConfig = {
 };
 
 function App() {
+  const [isDark, setIsDark] = useState(true);
+  const currentTheme = isDark ? darkTheme : lightTheme;
+  const toggleTheme = () => setIsDark(!isDark);
+
   return (
-    <PhantomProvider config={config}>
+    <PhantomProvider
+      config={config}
+      theme={currentTheme}
+      appIcon="https://picsum.photos/seed/picsum/200"
+      appName="React SDK Demo"
+    >
       <div
         style={{
           minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "2rem",
-          maxWidth: "800px",
-          margin: "0 auto",
-          padding: "2rem",
+          width: "100%",
+          backgroundColor: currentTheme.background,
+          transition: "background-color 0.3s ease",
         }}
       >
+        <div
+          style={{
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "2rem",
+            maxWidth: "800px",
+            margin: "0 auto",
+            padding: "2rem",
+          }}
+        >
+        {/* Theme Toggle */}
+        <div
+          style={{
+            position: "fixed",
+            top: "2rem",
+            right: "2rem",
+            zIndex: 1000,
+          }}
+        >
+          <button
+            onClick={toggleTheme}
+            style={{
+              padding: "12px 20px",
+              background: currentTheme.background,
+              color: currentTheme.text,
+              border: `1px solid ${currentTheme.secondary}`,
+              borderRadius: currentTheme.borderRadius,
+              cursor: "pointer",
+              fontSize: "14px",
+              fontWeight: "500",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              transition: "all 0.3s ease",
+            }}
+          >
+            {isDark ? "☀️" : "🌙"}
+            <span>{isDark ? "Light" : "Dark"} Mode</span>
+          </button>
+        </div>
+
         <div
           style={{
             textAlign: "center",
@@ -38,16 +87,17 @@ function App() {
               marginBottom: "0.5rem",
             }}
           >
-            Phantom React UI Example
+            Phantom React SDK Demo
           </h1>
           <p
             style={{
-              color: "#6b7280",
+              color: currentTheme.secondary,
               fontSize: "1.1rem",
               lineHeight: "1.6",
+              transition: "color 0.3s ease",
             }}
           >
-            Test the connect modal with mobile deeplink support
+            Using ConnectButton component with built-in modal
           </p>
         </div>
 
@@ -57,48 +107,28 @@ function App() {
           style={{
             marginTop: "3rem",
             padding: "1.5rem",
-            background: "white",
-            borderRadius: "12px",
-            border: "1px solid #e5e7eb",
+            background: currentTheme.background,
+            borderRadius: currentTheme.borderRadius,
+            border: `1px solid ${currentTheme.secondary}`,
             textAlign: "center",
+            transition: "all 0.3s ease",
           }}
         >
-          <h3 style={{ margin: "0 0 1rem 0", color: "#1f2937" }}>📱 Mobile Testing</h3>
+          <h3 style={{ margin: "0 0 1rem 0", color: currentTheme.text, transition: "color 0.3s ease" }}>
+            📱 Mobile Testing
+          </h3>
           <p
             style={{
-              color: "#6b7280",
+              color: currentTheme.secondary,
               margin: "0",
               lineHeight: "1.5",
+              transition: "color 0.3s ease",
             }}
           >
             On mobile devices, you'll see an additional "Open in Phantom App" button that will redirect to the Phantom
             mobile app via phantom.app/ul
           </p>
         </div>
-
-        <ConnectExample />
-
-        <div
-          style={{
-            marginTop: "3rem",
-            padding: "1.5rem",
-            background: "white",
-            borderRadius: "12px",
-            border: "1px solid #e5e7eb",
-            textAlign: "center",
-          }}
-        >
-          <h3 style={{ margin: "0 0 1rem 0", color: "#1f2937" }}>📱 Mobile Testing</h3>
-          <p
-            style={{
-              color: "#6b7280",
-              margin: "0",
-              lineHeight: "1.5",
-            }}
-          >
-            On mobile devices, you'll see an additional "Open in Phantom App" button that will redirect to the Phantom
-            mobile app via phantom.app/ul
-          </p>
         </div>
       </div>
     </PhantomProvider>

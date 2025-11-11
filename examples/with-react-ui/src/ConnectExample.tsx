@@ -1,26 +1,13 @@
 import { useState } from "react";
-import { useConnect, useAccounts, useDisconnect, usePhantom, isMobileDevice } from "@phantom/react-ui";
+import { ConnectButton, useAccounts, usePhantom, isMobileDevice, AddressType, useTheme } from "@phantom/react-sdk";
 
 export default function ConnectExample() {
-  const { connect, isConnecting, error } = useConnect();
   const accounts = useAccounts();
-  const { disconnect } = useDisconnect();
   const { isConnected } = usePhantom();
+  const theme = useTheme();
 
   const [showDeviceInfo, setShowDeviceInfo] = useState(false);
   const isMobile = isMobileDevice();
-
-  const handleConnect = () => {
-    connect();
-  };
-
-  const handleDisconnect = async () => {
-    try {
-      await disconnect();
-    } catch (err) {
-      console.error("Error disconnecting:", err);
-    }
-  };
 
   return (
     <div
@@ -28,19 +15,21 @@ export default function ConnectExample() {
         width: "100%",
         maxWidth: "600px",
         padding: "2rem",
-        background: "white",
+        background: theme.background,
         borderRadius: "16px",
-        border: "1px solid #e5e7eb",
+        border: `1px solid ${theme.secondary}`,
         boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+        transition: "all 0.3s ease",
       }}
     >
       <h2
         style={{
           fontSize: "1.5rem",
           fontWeight: "600",
-          color: "#1f2937",
+          color: theme.text,
           marginBottom: "1.5rem",
           textAlign: "center",
+          transition: "color 0.3s ease",
         }}
       >
         Connection Test
@@ -52,12 +41,13 @@ export default function ConnectExample() {
           onClick={() => setShowDeviceInfo(!showDeviceInfo)}
           style={{
             background: "transparent",
-            border: "1px solid #d1d5db",
-            color: "#6b7280",
+            border: `1px solid ${theme.secondary}`,
+            color: theme.secondary,
             padding: "0.5rem 1rem",
             borderRadius: "6px",
             fontSize: "0.875rem",
             cursor: "pointer",
+            transition: "all 0.3s ease",
           }}
         >
           {showDeviceInfo ? "Hide" : "Show"} Device Info
@@ -68,10 +58,11 @@ export default function ConnectExample() {
             style={{
               marginTop: "1rem",
               padding: "1rem",
-              background: "#f9fafb",
+              background: theme.aux,
               borderRadius: "8px",
               fontSize: "0.875rem",
-              color: "#6b7280",
+              color: theme.secondary,
+              transition: "all 0.3s ease",
             }}
           >
             <p>
@@ -109,69 +100,63 @@ export default function ConnectExample() {
         >
           Status: {isConnected ? "Connected" : "Disconnected"}
         </h3>
-
-        {isConnecting && <p style={{ margin: "0", color: "#6b7280" }}>Connecting...</p>}
-
-        {error && <p style={{ margin: "0", color: "#dc2626", fontSize: "0.875rem" }}>Error: {error.message}</p>}
       </div>
 
-      {/* Connect/Disconnect Button */}
-      {!isConnected ? (
-        <button
-          onClick={handleConnect}
-          disabled={isConnecting}
+      {/* Primary Connect Button */}
+      <div style={{ marginBottom: "2rem" }}>
+        <h3
           style={{
-            width: "100%",
-            padding: "1rem",
-            background: isConnecting ? "#9ca3af" : "#ab9ff2",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
             fontSize: "1rem",
             fontWeight: "500",
-            cursor: isConnecting ? "not-allowed" : "pointer",
-            transition: "background-color 0.2s",
-            marginBottom: "1rem",
-          }}
-          onMouseOver={e => {
-            if (!isConnecting) {
-              e.currentTarget.style.background = "#9a8cf0";
-            }
-          }}
-          onMouseOut={e => {
-            if (!isConnecting) {
-              e.currentTarget.style.background = "#ab9ff2";
-            }
+            color: theme.text,
+            marginBottom: "0.5rem",
+            transition: "color 0.3s ease",
           }}
         >
-          {isConnecting ? "Connecting..." : "Connect Wallet"}
-        </button>
-      ) : (
-        <button
-          onClick={handleDisconnect}
+          Main Connection:
+        </h3>
+        <p
           style={{
-            width: "100%",
-            padding: "1rem",
-            background: "#ef4444",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
+            fontSize: "0.875rem",
+            color: theme.secondary,
+            marginBottom: "1rem",
+            transition: "color 0.3s ease",
+          }}
+        >
+          Click the button to connect. Once connected, it displays your wallet address.
+        </p>
+        <ConnectButton fullWidth={true} />
+      </div>
+
+      {/* ConnectButton Component Variations */}
+      <div style={{ marginBottom: "2rem" }}>
+        <h3
+          style={{
             fontSize: "1rem",
             fontWeight: "500",
-            cursor: "pointer",
-            transition: "background-color 0.2s",
-            marginBottom: "1rem",
-          }}
-          onMouseOver={e => {
-            e.currentTarget.style.background = "#dc2626";
-          }}
-          onMouseOut={e => {
-            e.currentTarget.style.background = "#ef4444";
+            color: theme.text,
+            marginBottom: "0.5rem",
+            transition: "color 0.3s ease",
           }}
         >
-          Disconnect
-        </button>
-      )}
+          Address-Specific Buttons:
+        </h3>
+        <p
+          style={{
+            fontSize: "0.875rem",
+            color: theme.secondary,
+            marginBottom: "1rem",
+            transition: "color 0.3s ease",
+          }}
+        >
+          These buttons show specific address types when connected.
+        </p>
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <ConnectButton fullWidth={false} />
+          <ConnectButton addressType={AddressType.solana} fullWidth={false} />
+          <ConnectButton addressType={AddressType.ethereum} fullWidth={false} />
+        </div>
+      </div>
 
       {/* Connected Accounts */}
       {isConnected && accounts && accounts.length > 0 && (
@@ -180,8 +165,9 @@ export default function ConnectExample() {
             style={{
               fontSize: "1.125rem",
               fontWeight: "500",
-              color: "#1f2937",
+              color: theme.text,
               marginBottom: "1rem",
+              transition: "color 0.3s ease",
             }}
           >
             Connected Accounts:
@@ -192,10 +178,11 @@ export default function ConnectExample() {
               key={index}
               style={{
                 padding: "1rem",
-                background: "#f9fafb",
-                border: "1px solid #e5e7eb",
+                background: theme.aux,
+                border: `1px solid ${theme.secondary}`,
                 borderRadius: "8px",
                 marginBottom: "0.5rem",
+                transition: "all 0.3s ease",
               }}
             >
               <div
@@ -225,12 +212,13 @@ export default function ConnectExample() {
                 style={{
                   fontFamily: "monospace",
                   fontSize: "0.875rem",
-                  color: "#6b7280",
+                  color: theme.secondary,
                   wordBreak: "break-all",
-                  background: "white",
+                  background: theme.background,
                   padding: "0.5rem",
                   borderRadius: "4px",
-                  border: "1px solid #d1d5db",
+                  border: `1px solid ${theme.secondary}`,
+                  transition: "all 0.3s ease",
                 }}
               >
                 {account.address}
@@ -246,11 +234,11 @@ export default function ConnectExample() {
           style={{
             marginTop: "1rem",
             padding: "1rem",
-            background: "#eff6ff",
-            border: "1px solid #bfdbfe",
+            background: theme.aux,
+            border: `1px solid ${theme.secondary}`,
             borderRadius: "8px",
             fontSize: "0.875rem",
-            color: "#1e40af",
+            color: theme.text,
           }}
         >
           <strong>📱 Mobile Device Detected:</strong>

@@ -104,6 +104,203 @@ function App() {
 }
 ```
 
+## Connection Modal
+
+The SDK includes a built-in connection modal UI that provides a user-friendly interface for connecting to Phantom. The modal supports multiple connection methods (Google, Apple, Phantom Login, browser extension) and handles all connection logic automatically.
+
+### Using the Modal
+
+To use the modal, pass a `theme` prop to `PhantomProvider` and use the `useModal()` hook to control visibility:
+
+```tsx
+import { PhantomProvider, useModal, darkTheme, usePhantom } from "@phantom/react-sdk";
+import { AddressType } from "@phantom/browser-sdk";
+
+function App() {
+  return (
+    <PhantomProvider
+      config={{
+        providerType: "embedded",
+        appId: "your-app-id",
+        addressTypes: [AddressType.solana, AddressType.ethereum],
+      }}
+      theme={darkTheme}
+      appIcon="https://your-app.com/icon.png"
+      appName="Your App Name"
+    >
+      <WalletComponent />
+    </PhantomProvider>
+  );
+}
+
+function WalletComponent() {
+  const { open, close, isOpened } = useModal();
+  const { isConnected, user } = usePhantom();
+
+  if (isConnected) {
+    return (
+      <div>
+        <p>Connected as {user?.email || "Unknown"}</p>
+      </div>
+    );
+  }
+
+  return (
+    <button onClick={open}>
+      Connect Wallet
+    </button>
+  );
+}
+```
+
+**Modal Features:**
+
+- **Multiple Auth Providers**: Google, Apple, Phantom Login, browser extension
+- **Automatic Provider Detection**: Shows browser extension option when Phantom is installed
+- **Mobile Support**: Displays deeplink option for Phantom mobile app on mobile devices
+- **Error Handling**: Clear error messages displayed in the modal
+- **Loading States**: Visual feedback during connection attempts
+- **Responsive Design**: Optimized for both mobile and desktop
+
+### useModal Hook
+
+Control the connection modal visibility:
+
+```tsx
+import { useModal } from "@phantom/react-sdk";
+
+function ConnectButton() {
+  const { open, close, isOpened } = useModal();
+
+  return (
+    <div>
+      <button onClick={open}>Open Modal</button>
+      <button onClick={close}>Close Modal</button>
+      <p>Modal is {isOpened ? "open" : "closed"}</p>
+    </div>
+  );
+}
+```
+
+**Returns:**
+
+- `open()` - Function to open the modal
+- `close()` - Function to close the modal
+- `isOpened` - Boolean indicating if modal is currently visible
+
+### ConnectButton Component
+
+A ready-to-use button component that handles the complete connection flow. When disconnected, it shows a "Connect Wallet" button that opens the connection modal. When connected, it displays the truncated wallet address and opens the wallet management modal on click.
+
+```tsx
+import { ConnectButton, AddressType } from "@phantom/react-sdk";
+
+function Header() {
+  return (
+    <div>
+      {/* Default: Shows first available address */}
+      <ConnectButton />
+
+      {/* Show specific address type */}
+      <ConnectButton addressType={AddressType.solana} />
+      <ConnectButton addressType={AddressType.ethereum} />
+
+      {/* Full width button */}
+      <ConnectButton fullWidth={true} />
+    </div>
+  );
+}
+```
+
+**Props:**
+
+- `addressType?: AddressType` - Specify which address type to display when connected (e.g., `AddressType.solana`, `AddressType.ethereum`). If not specified, shows the first available address.
+- `fullWidth?: boolean` - Whether the button should take full width of its container. Default: `false`
+
+**Features:**
+
+- **When disconnected**: Opens connection modal with auth provider options (Google, Apple, Phantom Login, browser extension)
+- **When connected**: Displays truncated address (e.g., "5Gv8r2...k3Hn") and opens wallet management modal on click
+- **Wallet modal**: Shows all connected addresses and provides a disconnect button
+- Uses theme styling for consistent appearance
+- Fully clickable in both states
+
+## Theming
+
+Customize the modal appearance by passing a theme object to the `PhantomProvider`. The SDK includes two built-in themes: `darkTheme` (default) and `lightTheme`.
+
+### Using Built-in Themes
+
+```tsx
+import { PhantomProvider, darkTheme, lightTheme } from "@phantom/react-sdk";
+
+// Use dark theme (default)
+<PhantomProvider config={config} theme={darkTheme}>
+  <App />
+</PhantomProvider>
+
+// Use light theme
+<PhantomProvider config={config} theme={lightTheme}>
+  <App />
+</PhantomProvider>
+```
+
+### Custom Theme
+
+You can pass a partial theme object to customize specific properties:
+
+```tsx
+import { PhantomProvider } from "@phantom/react-sdk";
+
+const customTheme = {
+  background: "#1a1a1a",
+  text: "#ffffff",
+  secondary: "#98979C",
+  brand: "#ab9ff2",
+  error: "#ff4444",
+  success: "#00ff00",
+  borderRadius: "16px",
+  overlay: "rgba(0, 0, 0, 0.8)",
+};
+
+<PhantomProvider config={config} theme={customTheme} appIcon="https://your-app.com/icon.png" appName="Your App">
+  <App />
+</PhantomProvider>;
+```
+
+### Theme Properties
+
+| Property       | Type     | Description                                               |
+| -------------- | -------- | --------------------------------------------------------- |
+| `background`   | `string` | Background color for modal                                |
+| `text`         | `string` | Primary text color                                        |
+| `secondary`    | `string` | Secondary color for text, borders, dividers (must be hex) |
+| `brand`        | `string` | Brand/primary action color                                |
+| `error`        | `string` | Error state color                                         |
+| `success`      | `string` | Success state color                                       |
+| `borderRadius` | `string` | Border radius for buttons and modal                       |
+| `overlay`      | `string` | Overlay background color (with opacity)                   |
+
+**Note:** The `secondary` color must be a hex color value (e.g., `#98979C`) as it's used to derive auxiliary colors with opacity.
+
+### Accessing Theme in Custom Components
+
+If you need to access the current theme in your own components, use the `useTheme()` hook:
+
+```tsx
+import { useTheme } from "@phantom/react-sdk";
+
+function CustomComponent() {
+  const theme = useTheme();
+
+  return (
+    <div style={{ backgroundColor: theme.background, color: theme.text }}>
+      Themed content
+    </div>
+  );
+}
+```
+
 ## Connection Flow
 
 The React SDK follows a clear connection pattern:
@@ -823,6 +1020,7 @@ Quick reference of all available hooks:
 | Hook                         | Purpose                                 | Returns                                             |
 | ---------------------------- | --------------------------------------- | --------------------------------------------------- |
 | `useConnect`                 | Connect to wallet                       | `{ connect, isConnecting, error }`                  |
+| `useModal`                   | Control connection modal                | `{ open, close, isOpened }`                         |
 | `useAccounts`                | Get wallet addresses                    | `WalletAddress[]` or `null`                         |
 | `useIsExtensionInstalled`    | Check extension status                  | `{ isLoading, isInstalled }`                        |
 | `useIsPhantomLoginAvailable` | Check Phantom Login availability        | `{ isLoading, isAvailable }`                        |
@@ -830,6 +1028,7 @@ Quick reference of all available hooks:
 | `useAutoConfirm`             | Auto-confirm management (injected only) | `{ enable, disable, status, supportedChains, ... }` |
 | `useSolana`                  | Solana chain operations                 | `{ signMessage, signAndSendTransaction, ... }`      |
 | `useEthereum`                | Ethereum chain operations               | `{ signPersonalMessage, sendTransaction, ... }`     |
+| `useTheme`                   | Access current theme                    | `CompletePhantomTheme`                              |
 | `usePhantom`                 | Get provider context                    | `{ isConnected, isReady }`                          |
 
 ## Configuration Reference

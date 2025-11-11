@@ -5,11 +5,18 @@ export type { PhantomProviderProps, PhantomSDKConfig, PhantomDebugConfig, Connec
 // Hooks
 export * from "./hooks";
 
+// Components
+export * from "./components";
+
+// Theme
+export { darkTheme, lightTheme, mergeTheme } from "./themes";
+export type { PhantomTheme, CompletePhantomTheme, HexColor } from "./themes";
+
 // Types
 export * from "./types";
 
 // Re-export useful types and utilities from browser-sdk
-export { NetworkId, AddressType, DebugLevel, debug } from "@phantom/browser-sdk";
+export { NetworkId, AddressType, DebugLevel, debug, isMobileDevice } from "@phantom/browser-sdk";
 
 export type {
   EmbeddedProviderEvent,
