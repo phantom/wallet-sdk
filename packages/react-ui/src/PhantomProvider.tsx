@@ -40,7 +40,7 @@ const PhantomUIContext = createContext<PhantomUIContextValue | null>(null);
 // Internal UI Provider that consumes react-sdk context
 function PhantomUIProvider({ children, theme = "light", customTheme }: Omit<PhantomUIProviderProps, "config">) {
   const baseConnect = useBaseConnect();
-  const { sdk, isPhantomAvailable: _isPhantomAvailable } = usePhantom();
+  const { sdk } = usePhantom();
   const isExtensionInstalled = useIsExtensionInstalled();
   const isPhantomLoginAvailable = useIsPhantomLoginAvailable();
 

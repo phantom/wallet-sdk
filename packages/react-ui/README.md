@@ -109,6 +109,25 @@ All other hooks work exactly the same as `@phantom/react-sdk`:
 
 ## API Reference
 
+### SDK Initialization
+
+Wait for SDK initialization before showing connect buttons:
+
+```tsx
+import { usePhantom, useConnect } from "@phantom/react-ui";
+
+function App() {
+  const { isLoading } = usePhantom();
+  const { connect } = useConnect();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  return <button onClick={connect}>Connect Wallet</button>;
+}
+```
+
 ### useConnect (Enhanced)
 
 The only UI-enhanced hook. Shows a modal for provider selection.
@@ -117,14 +136,14 @@ The only UI-enhanced hook. Shows a modal for provider selection.
 import { useConnect } from "@phantom/react-ui";
 
 function ConnectButton() {
-  const { connect, isConnecting, error } = useConnect();
+  const { connect, isConnecting, isLoading, error } = useConnect();
 
   const handleConnect = () => {
     connect(); // Shows modal automatically
   };
 
   return (
-    <button onClick={handleConnect} disabled={isConnecting}>
+    <button onClick={handleConnect} disabled={isConnecting || isLoading}>
       {isConnecting ? "Connecting..." : "Connect Wallet"}
     </button>
   );

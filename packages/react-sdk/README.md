@@ -173,6 +173,37 @@ await connect({
 });
 ```
 
+## SDK Initialization
+
+The SDK provides an `isLoading` state to track when initialization and autoconnect are in progress. This is useful for showing loading states before your app is ready.
+
+```tsx
+import { useConnect, usePhantom } from "@phantom/react-sdk";
+
+function App() {
+  const { isLoading } = usePhantom();
+  const { connect } = useConnect();
+
+  // Show loading state while SDK initializes
+  if (isLoading) {
+    return (
+      <div>
+        <h1>Initializing Phantom SDK...</h1>
+        <p>Please wait...</p>
+      </div>
+    );
+  }
+
+  // SDK is ready
+  return (
+    <div>
+      <h1>Welcome!</h1>
+      <button onClick={() => connect({ provider: "injected" })}>Connect Wallet</button>
+    </div>
+  );
+}
+```
+
 ## Provider Types
 
 ### Injected Provider
@@ -224,7 +255,7 @@ Connect to wallet:
 import { useConnect } from "@phantom/react-sdk";
 
 function ConnectButton() {
-  const { connect, isConnecting, error } = useConnect();
+  const { connect, isConnecting, isLoading, error } = useConnect();
 
   const handleConnect = async () => {
     try {
@@ -234,6 +265,11 @@ function ConnectButton() {
       console.error("Failed to connect:", err);
     }
   };
+
+  // Wait for SDK to finish initializing before showing connect button
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <button onClick={handleConnect} disabled={isConnecting}>
