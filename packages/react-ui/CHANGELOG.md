@@ -1,5 +1,15 @@
 # @phantom/react-ui
 
+## 2.0.0-beta.16
+
+### Patch Changes
+
+- c424eff: Update auth provider definitions and remove jwt
+- Updated dependencies [c424eff]
+  - @phantom/browser-sdk@1.0.0-beta.22
+  - @phantom/react-sdk@1.0.0-beta.22
+  - @phantom/client@1.0.0-beta.22
+
 ## 2.0.0-beta.15
 
 ### Patch Changes
