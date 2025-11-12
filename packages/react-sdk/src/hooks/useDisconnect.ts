@@ -17,7 +17,8 @@ export function useDisconnect() {
     try {
       await sdk.disconnect();
     } catch (err) {
-      setError(err as Error);
+      const error = err instanceof Error ? err : new Error(String(err));
+      setError(error);
       throw err;
     } finally {
       setIsDisconnecting(false);

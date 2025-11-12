@@ -125,7 +125,7 @@ export default function ConnectExample() {
         >
           Click the button to connect. Once connected, it displays your wallet address.
         </p>
-        <ConnectButton fullWidth={true} />
+        <ConnectButton fullWidth />
       </div>
 
       {/* ConnectButton Component Variations */}
