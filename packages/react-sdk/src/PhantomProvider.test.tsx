@@ -17,6 +17,7 @@ jest.mock("@phantom/browser-sdk", () => ({
     off: jest.fn(),
     configureDebug: jest.fn(),
   })),
+  isMobileDevice: jest.fn().mockReturnValue(false),
 }));
 
 describe("PhantomProvider", () => {

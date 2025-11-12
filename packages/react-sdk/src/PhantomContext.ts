@@ -12,7 +12,7 @@ export interface PhantomContextValue {
   currentProviderType: "injected" | "embedded" | null;
   isClient: boolean;
   user: ConnectResult | null;
-  theme?: CompletePhantomTheme;
+  theme: CompletePhantomTheme;
 }
 
 export const PhantomContext = createContext<PhantomContextValue | undefined>(undefined);

@@ -9,7 +9,7 @@ import type {
   WalletAddress,
   ConnectResult,
 } from "@phantom/browser-sdk";
-import { mergeTheme, type PhantomTheme } from "./themes";
+import { mergeTheme, darkTheme, type PhantomTheme } from "./themes";
 import { PhantomContext, type PhantomContextValue } from "./PhantomContext";
 import { ModalProvider } from "./ModalProvider";
 
@@ -36,8 +36,8 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
   // Memoized config to avoid unnecessary SDK recreation
   const memoizedConfig: BrowserSDKConfig = useMemo(() => config, [config]);
 
-  // Memoized theme
-  const resolvedTheme = useMemo(() => (theme ? mergeTheme(theme) : undefined), [theme]);
+  // Memoized theme - defaults to darkTheme if not provided
+  const resolvedTheme = useMemo(() => mergeTheme(theme || darkTheme), [theme]);
 
   const [sdk, setSdk] = useState<BrowserSDK | null>(null);
   const [isClient, setIsClient] = useState(false);

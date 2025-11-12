@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { useState, useCallback, useMemo } from "react";
-import { usePhantom } from "./PhantomContext";
 import { ModalContext, type ModalContextValue } from "./ModalContext";
 import { Modal } from "./components/Modal";
 
@@ -12,10 +11,8 @@ export interface ModalProviderProps {
 
 /**
  * Provider that manages modal state and renders the Modal component.
- * Uses lazy loading to break circular dependencies in the module graph.
  */
 export function ModalProvider({ children, appIcon, appName }: ModalProviderProps) {
-  const { theme } = usePhantom();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const openModal = useCallback(() => {
@@ -38,7 +35,7 @@ export function ModalProvider({ children, appIcon, appName }: ModalProviderProps
   return (
     <ModalContext.Provider value={modalContextValue}>
       {children}
-      {theme && <Modal isVisible={isModalOpen} onClose={closeModal} appIcon={appIcon} appName={appName} />}
+      <Modal isVisible={isModalOpen} onClose={closeModal} appIcon={appIcon} appName={appName} />
     </ModalContext.Provider>
   );
 }
