@@ -173,7 +173,18 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
       user,
       theme: resolvedTheme,
     }),
-    [sdk, isConnected, isConnecting, isLoading, connectError, addresses, currentProviderType, isClient, user, resolvedTheme],
+    [
+      sdk,
+      isConnected,
+      isConnecting,
+      isLoading,
+      connectError,
+      addresses,
+      currentProviderType,
+      isClient,
+      user,
+      resolvedTheme,
+    ],
   );
 
   return (
