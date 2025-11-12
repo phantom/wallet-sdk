@@ -35,7 +35,7 @@ function App() {
   // SDK configuration - embedded provider with autoConnect
   const config: PhantomSDKConfig = useMemo(
     () => ({
-      providerType: "embedded",
+      providers: ["google", "apple", "phantom", "injected"],
       addressTypes: [AddressType.solana, AddressType.ethereum, AddressType.bitcoinSegwit, AddressType.sui],
       appId: import.meta.env.VITE_APP_ID || "your-app-id",
       apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "https://api.phantom.app/v1/wallets",

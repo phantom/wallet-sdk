@@ -23,7 +23,7 @@ jest.mock("@phantom/browser-sdk", () => ({
 describe("PhantomProvider", () => {
   const mockConfig: BrowserSDKConfig = {
     appId: "test-app-id",
-    providerType: "embedded",
+    providers: ["google", "apple"],
     embeddedWalletType: "user-wallet",
     addressTypes: [AddressType.solana],
     apiBaseUrl: "https://api.test.com",

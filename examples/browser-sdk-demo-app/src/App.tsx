@@ -45,12 +45,12 @@ function App() {
 
       if (type === "injected") {
         return new BrowserSDK({
-          providerType: "injected",
+          providers: ["injected"],
           addressTypes: [AddressType.solana, AddressType.ethereum],
         });
       } else {
         const embeddedSdk = new BrowserSDK({
-          providerType: "embedded",
+          providers: ["google", "apple", "phantom"],
           apiBaseUrl: import.meta.env.VITE_WALLET_API,
           appId: import.meta.env.VITE_APP_ID || "your-app-id",
           embeddedWalletType: "user-wallet",

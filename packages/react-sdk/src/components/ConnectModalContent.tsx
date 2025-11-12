@@ -15,7 +15,7 @@ export interface ConnectModalContentProps {
 
 export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: ConnectModalContentProps) {
   const theme = useTheme();
-  const { sdk, isLoading } = usePhantom();
+  const { sdk, isLoading, allowedProviders } = usePhantom();
   const baseConnect = useConnect();
   const isExtensionInstalled = useIsExtensionInstalled();
   const isPhantomLoginAvailable = useIsPhantomLoginAvailable();
@@ -196,7 +196,8 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
               </Button>
             )}
 
-            {!isMobile && (
+            {/* Desktop Phantom Login button - only show if allowed */}
+            {!isMobile && allowedProviders.includes("phantom") && (
               <>
                 {isPhantomLoginAvailable.isAvailable && (
                   <LoginWithPhantomButton
@@ -208,23 +209,30 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
               </>
             )}
 
-            <Button
-              onClick={() => connectWithAuthProvider("google")}
-              disabled={isConnecting}
-              isLoading={isConnecting && providerType === "google"}
-            >
-              Continue with Google
-            </Button>
+            {/* Google button - only show if allowed */}
+            {allowedProviders.includes("google") && (
+              <Button
+                onClick={() => connectWithAuthProvider("google")}
+                disabled={isConnecting}
+                isLoading={isConnecting && providerType === "google"}
+              >
+                Continue with Google
+              </Button>
+            )}
 
-            <Button
-              onClick={() => connectWithAuthProvider("apple")}
-              disabled={isConnecting}
-              isLoading={isConnecting && providerType === "apple"}
-            >
-              Continue with Apple
-            </Button>
+            {/* Apple button - only show if allowed */}
+            {allowedProviders.includes("apple") && (
+              <Button
+                onClick={() => connectWithAuthProvider("apple")}
+                disabled={isConnecting}
+                isLoading={isConnecting && providerType === "apple"}
+              >
+                Continue with Apple
+              </Button>
+            )}
 
-            {!isMobile && isExtensionInstalled.isInstalled && (
+            {/* Injected provider button - only show if allowed and extension is installed */}
+            {!isMobile && allowedProviders.includes("injected") && isExtensionInstalled.isInstalled && (
               <>
                 <div style={dividerStyle}>
                   <div style={dividerLineStyle} />

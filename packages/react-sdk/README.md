@@ -41,7 +41,7 @@ function App() {
   return (
     <PhantomProvider
       config={{
-        providerType: "injected", // Uses Phantom browser extension
+        providers: ["injected"], // Only allow Phantom browser extension
         addressTypes: [AddressType.solana, AddressType.ethereum],
       }}
     >
@@ -83,7 +83,7 @@ function WalletComponent() {
 }
 ```
 
-### Embedded Wallet Setup
+### Multiple Authentication Methods
 
 ```tsx
 import { PhantomProvider } from "@phantom/react-sdk";
@@ -93,8 +93,8 @@ function App() {
   return (
     <PhantomProvider
       config={{
-        providerType: "embedded",
-        appId: "your-app-id", // Get your app ID from phantom.com/portal
+        providers: ["google", "apple", "phantom", "injected"], // Allow all auth methods
+        appId: "your-app-id", // Get your app ID from phantom.com/portal (required for embedded providers)
         addressTypes: [AddressType.solana, AddressType.ethereum],
       }}
     >
@@ -120,7 +120,7 @@ function App() {
   return (
     <PhantomProvider
       config={{
-        providerType: "embedded",
+        providers: ["google", "apple", "phantom", "injected"],
         appId: "your-app-id",
         addressTypes: [AddressType.solana, AddressType.ethereum],
       }}
@@ -393,16 +393,27 @@ function App() {
 }
 ```
 
-## Provider Types
+## Authentication Providers
 
-### Injected Provider
+The SDK supports multiple authentication providers that you configure via the `providers` array:
 
-Uses the Phantom browser extension installed by the user.
+### Available Providers
+
+- **`"injected"`** - Phantom browser extension (no `appId` required)
+- **`"google"`** - Google OAuth (requires `appId`)
+- **`"apple"`** - Apple ID (requires `appId`)
+- **`"phantom"`** - Phantom Login (requires `appId`)
+- **`"x"`** - X/Twitter (requires `appId`)
+- **`"tiktok"`** - TikTok (requires `appId`)
+
+### Configuration Examples
+
+**Browser Extension Only**
 
 ```tsx
 <PhantomProvider
   config={{
-    providerType: "injected",
+    providers: ["injected"], // Only allow browser extension
     addressTypes: [AddressType.solana, AddressType.ethereum],
   }}
 >
@@ -410,11 +421,23 @@ Uses the Phantom browser extension installed by the user.
 </PhantomProvider>
 ```
 
-### Embedded Provider
+**Multiple Authentication Methods**
 
-Creates non-custodial wallets embedded in your application.
+```tsx
+<PhantomProvider
+  config={{
+    providers: ["google", "apple", "phantom", "injected"], // Allow all methods
+    appId: "your-app-id", // Required for embedded providers
+    addressTypes: [AddressType.solana, AddressType.ethereum],
+  }}
+>
+  <YourApp />
+</PhantomProvider>
+```
 
-#### User Wallet
+### Embedded Wallet Type
+
+When using embedded providers (google, apple, phantom, etc.), you can specify the wallet type using `embeddedWalletType`. The default is `"user-wallet"`:
 
 - **Uses Phantom authentication** - user logs in with existing account
 - **Potentially funded** - brings existing wallet balance
@@ -423,9 +446,10 @@ Creates non-custodial wallets embedded in your application.
 ```tsx
 <PhantomProvider
   config={{
-    providerType: "embedded",
+    providers: ["google", "apple", "phantom"],
     appId: "your-app-id",
     addressTypes: [AddressType.solana, AddressType.ethereum],
+    embeddedWalletType: "user-wallet", // default, can be omitted
   }}
 >
   <YourApp />
@@ -1027,11 +1051,13 @@ Quick reference of all available hooks:
 
 ```typescript
 interface PhantomSDKConfig {
-  providerType: "injected" | "embedded";
+  // List of allowed authentication providers (REQUIRED)
+  providers: AuthProviderType[]; // e.g., ["google", "apple", "phantom", "injected"]
+
   addressTypes?: [AddressType, ...AddressType[]]; // Networks to enable (e.g., [AddressType.solana])
 
-  // Required for embedded provider only
-  appId: string; // Your app ID from phantom.com/portal (required for embedded provider)
+  // Required when using embedded providers (google, apple, phantom, x, tiktok)
+  appId?: string; // Your app ID from phantom.com/portal
 
   // Optional configuration
   apiBaseUrl?: string; // Phantom API base URL (optional, has default)
@@ -1039,8 +1065,12 @@ interface PhantomSDKConfig {
     authUrl?: string; // Custom auth URL (optional, defaults to "https://connect.phantom.app/login")
     redirectUrl?: string; // Custom redirect URL after authentication (optional)
   };
-  embeddedWalletType?: "user-wallet"; // Wallet type (optional, defaults to "user-wallet", currently the only supported type)
+  embeddedWalletType?: "user-wallet"; // Wallet type (optional, defaults to "user-wallet")
+  autoConnect?: boolean; // Auto-connect to existing session (default: true when embedded providers used)
 }
+
+// Valid provider types
+type AuthProviderType = "google" | "apple" | "phantom" | "x" | "tiktok" | "injected";
 ```
 
 ## Debug Configuration
@@ -1070,8 +1100,9 @@ function App() {
 
   // SDK configuration - static, won't change when debug settings change
   const config: PhantomSDKConfig = {
-    providerType: "embedded",
+    providers: ["google", "apple", "phantom"],
     appId: "your-app-id",
+    addressTypes: [AddressType.solana, AddressType.ethereum],
     // ... other config
   };
 

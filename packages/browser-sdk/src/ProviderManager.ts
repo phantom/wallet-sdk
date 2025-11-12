@@ -112,6 +112,13 @@ export class ProviderManager implements EventEmitter {
   }
 
   /**
+   * Check if a provider is allowed by the config
+   */
+  private isProviderAllowed(provider: string): boolean {
+    return this.config.providers.includes(provider as any);
+  }
+
+  /**
    * Connect using the current provider
    * Automatically switches provider based on authOptions.provider
    */
@@ -120,6 +127,13 @@ export class ProviderManager implements EventEmitter {
       currentProviderKey: this.currentProviderKey,
       authOptions: { provider: authOptions.provider },
     });
+
+    // Validate that the requested provider is allowed
+    if (!this.isProviderAllowed(authOptions.provider)) {
+      const error = `Provider "${authOptions.provider}" is not in the allowed providers list: ${JSON.stringify(this.config.providers)}`;
+      debug.error(DebugCategory.PROVIDER_MANAGER, error);
+      throw new Error(error);
+    }
 
     // Auto-switch provider based on auth options
     const requestedProvider = authOptions.provider;
@@ -163,13 +177,9 @@ export class ProviderManager implements EventEmitter {
     debug.log(DebugCategory.PROVIDER_MANAGER, "Delegating to provider connect method");
     const result = await this.currentProvider.connect(authOptions);
 
-    // Add provider type to result
-    const providerInfo = this.getCurrentProviderInfo();
-    result.providerType = providerInfo?.type;
-
     debug.log(DebugCategory.PROVIDER_MANAGER, "Connection successful, saving preferences", {
       addressCount: result.addresses?.length || 0,
-      providerType: result.providerType,
+      provider: authOptions.provider
     });
 
     // Save provider preference after successful connection
@@ -177,7 +187,7 @@ export class ProviderManager implements EventEmitter {
 
     debug.info(DebugCategory.PROVIDER_MANAGER, "Connect completed", {
       addresses: result.addresses,
-      providerType: result.providerType,
+      provider: authOptions.provider,
     });
     return result;
   }
@@ -211,7 +221,7 @@ export class ProviderManager implements EventEmitter {
 
   /**
    * Attempt auto-connect with fallback strategy
-   * Tries embedded provider first if it exists, then injected provider
+   * Tries embedded provider first if it exists and is allowed, then injected provider if allowed
    * Returns true if any provider successfully connected
    */
   async autoConnect(): Promise<boolean> {
@@ -224,11 +234,14 @@ export class ProviderManager implements EventEmitter {
       return false;
     }
 
-    // Try embedded provider first if it exists
     const embeddedWalletType = (this.config.embeddedWalletType || "user-wallet") as "app-wallet" | "user-wallet";
     const embeddedKey = this.getProviderKey("embedded", embeddedWalletType);
 
-    if (this.providers.has(embeddedKey)) {
+    // Check if embedded providers are allowed
+    const embeddedAllowed = this.config.providers.some(p => p !== "injected");
+
+    // Try embedded provider first if it exists and is allowed
+    if (embeddedAllowed && this.providers.has(embeddedKey)) {
       debug.log(DebugCategory.PROVIDER_MANAGER, "Trying auto-connect with existing embedded provider");
       const embeddedProvider = this.providers.get(embeddedKey)!;
 
@@ -266,10 +279,13 @@ export class ProviderManager implements EventEmitter {
       }
     }
 
-    // Try injected provider if embedded failed or doesn't exist
+    // Check if injected provider is allowed
+    const injectedAllowed = this.config.providers.includes("injected");
+
+    // Try injected provider if it's allowed and exists
     const injectedKey = this.getProviderKey("injected");
 
-    if (this.providers.has(injectedKey)) {
+    if (injectedAllowed && this.providers.has(injectedKey)) {
       debug.log(DebugCategory.PROVIDER_MANAGER, "Trying auto-connect with existing injected provider");
       const injectedProvider = this.providers.get(injectedKey)!;
 
@@ -294,7 +310,7 @@ export class ProviderManager implements EventEmitter {
       }
     }
 
-    debug.log(DebugCategory.PROVIDER_MANAGER, "Auto-connect failed for all existing providers");
+    debug.log(DebugCategory.PROVIDER_MANAGER, "Auto-connect failed for all allowed providers");
     return false;
   }
 
@@ -398,24 +414,36 @@ export class ProviderManager implements EventEmitter {
 
   /**
    * Set default provider based on initial config
-   * Creates both embedded and injected providers for autoConnect fallback
+   * Creates providers based on the allowed providers array
    */
   private setDefaultProvider(): void {
-    const defaultType = (this.config.providerType || "embedded") as "injected" | "embedded";
     const defaultEmbeddedType = (this.config.embeddedWalletType || "user-wallet") as "app-wallet" | "user-wallet";
 
-    // Create embedded provider if appId is available
-    if (this.config.appId) {
-      debug.log(DebugCategory.PROVIDER_MANAGER, "Creating embedded provider");
+    const hasInjected = this.config.providers.includes("injected");
+    const hasEmbedded = this.config.providers.some(p => p !== "injected");
+
+    // Create injected provider if allowed
+    if (hasInjected) {
+      debug.log(DebugCategory.PROVIDER_MANAGER, "Creating injected provider (allowed by providers array)");
+      this.createProvider("injected");
+    }
+
+    // Create embedded provider if any embedded auth types are allowed
+    if (hasEmbedded) {
+      debug.log(DebugCategory.PROVIDER_MANAGER, "Creating embedded provider (allowed by providers array)");
       this.createProvider("embedded", defaultEmbeddedType);
     }
 
-    // Always create injected provider
-    debug.log(DebugCategory.PROVIDER_MANAGER, "Creating injected provider");
-    this.createProvider("injected");
+    // Set default provider - prefer embedded if available, otherwise injected
+    let defaultType: "injected" | "embedded";
+    if (hasEmbedded && this.providers.has(`embedded-${defaultEmbeddedType}`)) {
+      defaultType = "embedded";
+    } else if (hasInjected && this.providers.has("injected")) {
+      defaultType = "injected";
+    } else {
+      throw new Error("No valid providers could be created from the providers array");
+    }
 
-    // Set the default provider based on config
-    // Only pass embeddedWalletType if defaultType is embedded
     const switchOptions: SwitchProviderOptions = {};
     if (defaultType === "embedded") {
       switchOptions.embeddedWalletType = defaultEmbeddedType;

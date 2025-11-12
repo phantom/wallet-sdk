@@ -956,7 +956,6 @@ describe("EmbeddedProvider Auth Flows", () => {
         walletId: "wallet-123",
         addresses: [{ addressType: "solana", address: "test-address" }],
         status: "completed",
-        providerType: "embedded",
         authUserId: undefined,
         authProvider: "google",
         source: "auto-connect",

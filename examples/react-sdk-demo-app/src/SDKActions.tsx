@@ -34,7 +34,7 @@ export function SDKActions() {
   const { disconnect, isDisconnecting } = useDisconnect();
   const { solana } = useSolana();
   const { ethereum } = useEthereum();
-  const { isConnected, currentProviderType, user } = usePhantom();
+  const { isConnected, user } = usePhantom();
   const autoConfirm = useAutoConfirm();
   const addresses = useAccounts();
   const [isSigningMessageType, setIsSigningMessageType] = useState<"solana" | "evm" | null>(null);
@@ -815,9 +815,7 @@ export function SDKActions() {
           {isConnected && user && (
             <div className="status-row">
               <span className="status-label">Auth Provider:</span>
-              <span className="status-value">
-                {user.providerType} {user.authProvider}
-              </span>
+              <span className="status-value">{user.authProvider}</span>
             </div>
           )}
           {user && (
@@ -909,7 +907,7 @@ export function SDKActions() {
         </div>
       )}
 
-      {isConnected && currentProviderType === "injected" && (
+      {isConnected && user?.authProvider === "injected" && (
         <div className="section">
           <h3>Auto-Confirm Settings</h3>
           <div className="status-card">

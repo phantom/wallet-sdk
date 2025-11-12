@@ -1,9 +1,10 @@
-import type { BrowserSDKConfig, ConnectResult, WalletAddress, AuthOptions } from "./types";
+import type { BrowserSDKConfig, ConnectResult, WalletAddress, AuthOptions, AuthProviderType } from "./types";
 import { ProviderManager, type ProviderPreference } from "./ProviderManager";
 import { debug, DebugCategory, type DebugLevel, type DebugCallback } from "./debug";
 import { waitForPhantomExtension } from "./waitForPhantomExtension";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
 import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-provider-core";
+import { EMBEDDED_PROVIDER_AUTH_TYPES } from "@phantom/embedded-provider-core";
 import type { InjectedProvider } from "./providers/injected";
 import { DEFAULT_EMBEDDED_WALLET_TYPE } from "@phantom/constants";
 import type {
@@ -12,39 +13,51 @@ import type {
   AutoConfirmSupportedChainsResult,
 } from "@phantom/browser-injected-sdk/auto-confirm";
 
-/**
- * Browser SDK with chain-specific API
- *
- * Usage:
- * ```typescript
- * const sdk = new BrowserSDK({ providerType: 'embedded', appId: 'your-app-id' });
- * await sdk.connect();
- *
- * // Chain-specific operations
- * await sdk.solana.signMessage(message);
- * await sdk.ethereum.signPersonalMessage(message, address);
- * ```
- */
+const BROWSER_SDK_PROVIDER_TYPES: readonly AuthProviderType[] = [...EMBEDDED_PROVIDER_AUTH_TYPES, "injected"] as const;
+
 export class BrowserSDK {
   private providerManager: ProviderManager;
 
   constructor(config: BrowserSDKConfig) {
     debug.info(DebugCategory.BROWSER_SDK, "Initializing BrowserSDK", {
-      providerType: config.providerType,
+      providers: config.providers,
       embeddedWalletType: config.embeddedWalletType,
       addressTypes: config.addressTypes,
     });
 
-    // Validate providerType
-    if (!["injected", "embedded"].includes(config.providerType)) {
-      debug.error(DebugCategory.BROWSER_SDK, "Invalid providerType", { providerType: config.providerType });
-      throw new Error(`Invalid providerType: ${config.providerType}. Must be "injected" or "embedded".`);
+    // Validate providers array
+    if (!Array.isArray(config.providers) || config.providers.length === 0) {
+      debug.error(DebugCategory.BROWSER_SDK, "Invalid providers array", { providers: config.providers });
+      throw new Error("providers must be a non-empty array of AuthProviderType");
+    }
+
+    // Validate each provider is a valid AuthProviderType
+    const invalidProviders = config.providers.filter(p => !BROWSER_SDK_PROVIDER_TYPES.includes(p));
+    if (invalidProviders.length > 0) {
+      debug.error(DebugCategory.BROWSER_SDK, "Invalid provider types", {
+        invalidProviders,
+        validProviders: BROWSER_SDK_PROVIDER_TYPES,
+      });
+      throw new Error(
+        `Invalid provider type(s): ${invalidProviders.join(", ")}. Valid providers are: ${BROWSER_SDK_PROVIDER_TYPES.join(", ")}`,
+      );
+    }
+
+    // Check if any embedded providers are included (non-"injected")
+    const hasEmbeddedProviders = config.providers.some(p => p !== "injected");
+
+    // Validate that appId is provided if using embedded providers
+    if (hasEmbeddedProviders && !config.appId) {
+      debug.error(DebugCategory.BROWSER_SDK, "appId required for embedded providers", {
+        providers: config.providers,
+      });
+      throw new Error("appId is required when using embedded providers (google, apple, phantom, etc.)");
     }
 
     const embeddedWalletType = config.embeddedWalletType || DEFAULT_EMBEDDED_WALLET_TYPE;
 
     // Validate embeddedWalletType if provided
-    if (config.providerType === "embedded" && !["app-wallet", "user-wallet"].includes(embeddedWalletType)) {
+    if (!["app-wallet", "user-wallet"].includes(embeddedWalletType)) {
       debug.error(DebugCategory.BROWSER_SDK, "Invalid embeddedWalletType", {
         embeddedWalletType: config.embeddedWalletType,
       });

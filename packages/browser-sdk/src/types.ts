@@ -21,33 +21,28 @@ export interface DebugConfig {
   callback?: DebugCallback;
 }
 
-export type BrowserSDKConfig = Prettify<ExtendedEmbeddedProviderConfig | ExtendedInjectedProviderConfig>;
+export type BrowserSDKConfig = Prettify<
+  Omit<EmbeddedProviderConfig, "authOptions" | "apiBaseUrl" | "embeddedWalletType" | "appId"> &
+    InjectedProviderConfig & {
+      // List of allowed authentication providers (REQUIRED)
+      providers: AuthProviderType[];
+
+      // Optional configuration - appId is required when using embedded providers (google, apple, phantom, etc.)
+      appId?: string;
+      apiBaseUrl?: string;
+      embeddedWalletType?: "app-wallet" | "user-wallet";
+      authOptions?: {
+        authUrl?: string;
+        redirectUrl?: string;
+      };
+    }
+>;
 
 // Improves display of a merged type on hover
 type Prettify<T> = {
   [K in keyof T]: T[K];
   // eslint-disable-next-line @typescript-eslint/ban-types
 } & {};
-
-interface ExtendedEmbeddedProviderConfig
-  extends Omit<EmbeddedProviderConfig, "authOptions" | "apiBaseUrl" | "embeddedWalletType"> {
-  providerType: "embedded";
-  // Optional in the SDK
-  apiBaseUrl?: string;
-  embeddedWalletType?: "app-wallet" | "user-wallet";
-  authOptions?: {
-    authUrl?: string;
-    redirectUrl?: string;
-  };
-}
-
-interface ExtendedInjectedProviderConfig extends InjectedProviderConfig {
-  providerType: "injected";
-  // Omitted EmbeddedProviderConfig properties
-  appId?: never;
-  authOptions?: never;
-  embeddedWalletType?: never;
-}
 
 type AuthProviderType = EmbeddedProviderAuthType | "injected";
 

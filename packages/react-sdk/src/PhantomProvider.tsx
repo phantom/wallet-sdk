@@ -18,7 +18,6 @@ export type PhantomSDKConfig = BrowserSDKConfig;
 export interface PhantomDebugConfig extends DebugConfig {}
 
 export interface ConnectOptions {
-  providerType?: "injected" | "embedded";
   embeddedWalletType?: "app-wallet" | "user-wallet";
   authOptions?: AuthOptions;
 }
@@ -46,9 +45,7 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
   const [isLoading, setIsLoading] = useState(true);
   const [connectError, setConnectError] = useState<Error | null>(null);
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
-  const [currentProviderType, setCurrentProviderType] = useState<"injected" | "embedded" | null>(
-    (memoizedConfig.providerType as any) || null,
-  );
+    
   const [user, setUser] = useState<ConnectResult | null>(null);
 
   // Initialize client flag
@@ -83,9 +80,6 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
 
         // Store the full ConnectResult as user
         setUser(data);
-
-        // Update current provider type from event data
-        setCurrentProviderType(data.providerType || null);
 
         const addrs = await sdk.getAddresses();
         setAddresses(addrs);
@@ -168,10 +162,10 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
       isLoading,
       connectError,
       addresses,
-      currentProviderType,
       isClient,
       user,
       theme: resolvedTheme,
+      allowedProviders: memoizedConfig.providers,
     }),
     [
       sdk,
@@ -180,10 +174,10 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
       isLoading,
       connectError,
       addresses,
-      currentProviderType,
       isClient,
       user,
       resolvedTheme,
+      memoizedConfig.providers,
     ],
   );
 
