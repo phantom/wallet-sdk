@@ -15,7 +15,7 @@ export interface ConnectModalContentProps {
 
 export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: ConnectModalContentProps) {
   const theme = useTheme();
-  const { isLoading } = usePhantom();
+  const { isLoading, allowedProviders } = usePhantom();
   const baseConnect = useConnect();
   const isExtensionInstalled = useIsExtensionInstalled();
   const isPhantomLoginAvailable = useIsPhantomLoginAvailable();
@@ -24,10 +24,10 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
   const [error, setError] = useState<Error | null>(null);
   const [providerType, setProviderType] = useState<AuthProviderType | "deeplink" | "injected" | null>(null);
 
-  // Check if this is a mobile device
   const isMobile = useMemo(() => isMobileDevice(), []);
 
-  // Connect with specific auth provider
+  const showDivider = !(allowedProviders.length === 1 && allowedProviders.includes("injected"));
+
   const connectWithAuthProvider = useCallback(
     async (provider: AuthProviderType) => {
       try {
@@ -37,7 +37,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
 
         await baseConnect.connect({ provider });
 
-        // Hide modal on successful connection
         onClose();
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err));
@@ -50,7 +49,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
     [baseConnect, onClose],
   );
 
-  // Connect with injected provider (when extension is installed)
   const connectWithInjected = useCallback(async () => {
     try {
       setIsConnecting(true);
@@ -61,7 +59,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
         provider: "injected",
       });
 
-      // Hide modal on successful connection
       onClose();
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
@@ -79,11 +76,9 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
       setError(null);
       setProviderType("deeplink");
 
-      // Generate and redirect to deeplink URL
       const deeplinkUrl = getDeeplinkToPhantom();
       window.location.href = deeplinkUrl;
 
-      // This code will likely never be reached due to the redirect
       onClose();
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
@@ -182,7 +177,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
           </div>
         ) : (
           <div style={buttonContainerStyle}>
-            {/* Mobile device with no Phantom extension - show deeplink button */}
             {isMobile && !isExtensionInstalled.isInstalled && (
               <Button
                 onClick={connectWithDeeplink}
@@ -193,7 +187,7 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
               </Button>
             )}
 
-            {!isMobile && (
+            {!isMobile && allowedProviders.includes("phantom") && (
               <>
                 {isPhantomLoginAvailable.isAvailable && (
                   <LoginWithPhantomButton
@@ -205,29 +199,35 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
               </>
             )}
 
-            <Button
-              onClick={() => connectWithAuthProvider("google")}
-              disabled={isConnecting}
-              isLoading={isConnecting && providerType === "google"}
-            >
-              Continue with Google
-            </Button>
+            {allowedProviders.includes("google") && (
+              <Button
+                onClick={() => connectWithAuthProvider("google")}
+                disabled={isConnecting}
+                isLoading={isConnecting && providerType === "google"}
+              >
+                Continue with Google
+              </Button>
+            )}
 
-            <Button
-              onClick={() => connectWithAuthProvider("apple")}
-              disabled={isConnecting}
-              isLoading={isConnecting && providerType === "apple"}
-            >
-              Continue with Apple
-            </Button>
+            {allowedProviders.includes("apple") && (
+              <Button
+                onClick={() => connectWithAuthProvider("apple")}
+                disabled={isConnecting}
+                isLoading={isConnecting && providerType === "apple"}
+              >
+                Continue with Apple
+              </Button>
+            )}
 
-            {!isMobile && isExtensionInstalled.isInstalled && (
+            {!isMobile && allowedProviders.includes("injected") && isExtensionInstalled.isInstalled && (
               <>
-                <div style={dividerStyle}>
-                  <div style={dividerLineStyle} />
-                  <span style={dividerTextStyle}>OR</span>
-                  <div style={dividerLineStyle} />
-                </div>
+                {showDivider && (
+                  <div style={dividerStyle}>
+                    <div style={dividerLineStyle} />
+                    <span style={dividerTextStyle}>OR</span>
+                    <div style={dividerLineStyle} />
+                  </div>
+                )}
 
                 <Button
                   variant="secondary"

@@ -14,7 +14,7 @@ export function phantomConnector() {
   const initializeSdk = async () => {
     if (!sdk) {
       sdk = new BrowserSDK({
-        providerType: "embedded",
+        providers: ["google", "apple"],
         appId: "test-app-id",
         apiBaseUrl: "https://staging-api.phantom.app/v1/wallets",
 

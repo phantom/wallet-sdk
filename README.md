@@ -12,24 +12,35 @@ A comprehensive suite of SDKs for integrating Phantom Wallet across different pl
 
 - **[@phantom/wallet-sdk](./packages/browser-embedded-sdk/README.md)** - ⚠️ **DEPRECATED** - Use [@phantom/browser-sdk](./packages/browser-sdk/README.md) or [@phantom/react-sdk](./packages/react-sdk/README.md) instead ([NPM](https://www.npmjs.com/package/@phantom/wallet-sdk))
 
-## Provider Types
+## Authentication Providers
 
-All frontend SDKs support two provider types:
+All frontend SDKs support multiple authentication providers that you can configure via the `providers` array:
 
-### 🔌 Injected Provider (Browser Extension)
+### 🔌 Injected Provider - `"injected"`
 
 Connect to the user's existing Phantom browser extension wallet:
 
 - Uses wallets already installed and funded by the user
 - Requires Phantom browser extension to be installed
 - Access to user's existing wallet history and assets
+- No `appId` required
 
-### 🔮 Embedded Provider (Non-Custodial)
+### 🔮 Embedded Providers (Non-Custodial)
 
 Create or use non-custodial embedded wallets within your application:
 
+- **`"google"`** - Google OAuth authentication
+- **`"apple"`** - Apple ID authentication
+- **`"phantom"`** - Phantom Login authentication
+- **`"x"`** - X (Twitter) authentication
+- **`"tiktok"`** - TikTok authentication
+
+Embedded providers create:
+
 - **App Wallet**: Fresh wallet created per application (unfunded, app-specific)
 - **User Wallet**: User's Phantom wallet accessed via authentication (potentially funded, portable across apps)
+
+All embedded providers require an `appId` from [phantom.com/portal](https://phantom.com/portal)
 
 ## SDK Overview
 
@@ -54,9 +65,9 @@ import {
 // App wrapper with provider and theme configuration
 <PhantomProvider
   config={{
-    providerType: "embedded", // or "injected"
+    providers: ["google", "apple", "phantom", "injected"], // Allowed auth providers
     addressTypes: [AddressType.solana, AddressType.ethereum],
-    appId: "your-app-id", // Required for embedded wallets
+    appId: "your-app-id", // Required when using embedded providers (google, apple, phantom, etc.)
     // Optional:
     // embeddedWalletType: "user-wallet", // or "app-wallet"
     // apiBaseUrl: "https://api.phantom.app/v1/wallets",
@@ -115,19 +126,20 @@ function AdvancedComponent() {
 ```typescript
 import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 
-// Injected Provider (Browser Extension)
+// Injected Provider Only (Browser Extension)
 const sdk = new BrowserSDK({
-  providerType: "injected",
+  providers: ["injected"], // Only allow browser extension
   addressTypes: [AddressType.solana, AddressType.ethereum],
 });
 
-// Embedded Provider (Non-Custodial)
+// Multiple Providers (Browser Extension + Embedded Auth)
 // const sdk = new BrowserSDK({
-//   providerType: "embedded",
-//   embeddedWalletType: "app-wallet",
+//   providers: ["google", "apple", "phantom", "injected"], // Allow all auth methods
 //   addressTypes: [AddressType.solana, AddressType.ethereum],
-//   apiBaseUrl: "https://api.phantom.app/v1/wallets",
-//   appId: "your-app-id",
+//   appId: "your-app-id", // Required when using embedded providers
+//   // Optional:
+//   // embeddedWalletType: "user-wallet",
+//   // apiBaseUrl: "https://api.phantom.app/v1/wallets",
 // });
 
 // Connect through SDK (provider parameter is required)

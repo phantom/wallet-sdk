@@ -222,9 +222,12 @@ Manages wallet connection functionality.
 const { connect, isConnecting, error } = useConnect();
 
 // Connect with specific provider
-await connect({ provider: "google" });
-await connect({ provider: "apple" });
-await connect({ provider: "jwt", jwtToken: "your-jwt-token" });
+await connect({ provider: "google" }); // Google OAuth
+await connect({ provider: "apple" }); // Apple ID
+await connect({ provider: "phantom" }); // Phantom Login
+await connect({ provider: "x" }); // X/Twitter
+await connect({ provider: "tiktok" }); // TikTok
+await connect({ provider: "jwt", jwtToken: "your-jwt-token" }); // Custom JWT
 ```
 
 #### useAccounts
@@ -325,13 +328,32 @@ await disconnect();
 
 ## Authentication Flows
 
-### OAuth Providers
+### Available Providers
 
-The SDK supports multiple OAuth providers:
+The SDK supports multiple authentication providers that you specify when calling `connect()`:
 
-- **Google** (`provider: 'google'`)
-- **Apple** (`provider: 'apple'`)
-- **JWT** (`provider: 'jwt'`) - For custom authentication
+- **Google** (`provider: "google"`) - Google OAuth authentication
+- **Apple** (`provider: "apple"`) - Apple ID authentication
+- **Phantom** (`provider: "phantom"`) - Phantom Login authentication
+- **X** (`provider: "x"`) - X/Twitter authentication
+- **TikTok** (`provider: "tiktok"`) - TikTok authentication
+- **JWT** (`provider: "jwt"`) - Custom JWT authentication (requires `jwtToken` parameter)
+
+**Example Usage:**
+
+```tsx
+// Google OAuth
+await connect({ provider: "google" });
+
+// Apple ID
+await connect({ provider: "apple" });
+
+// Phantom Login
+await connect({ provider: "phantom" });
+
+// JWT authentication
+await connect({ provider: "jwt", jwtToken: "your-jwt-token" });
+```
 
 ### Authentication Process
 

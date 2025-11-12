@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { BrowserSDK, WalletAddress, ConnectResult } from "@phantom/browser-sdk";
+import type { BrowserSDK, WalletAddress, ConnectResult, AuthProviderType } from "@phantom/browser-sdk";
 import type { CompletePhantomTheme } from "./themes";
 
 export interface PhantomContextValue {
@@ -9,10 +9,10 @@ export interface PhantomContextValue {
   isLoading: boolean;
   connectError: Error | null;
   addresses: WalletAddress[];
-  currentProviderType: "injected" | "embedded" | null;
   isClient: boolean;
   user: ConnectResult | null;
   theme: CompletePhantomTheme;
+  allowedProviders: AuthProviderType[];
 }
 
 export const PhantomContext = createContext<PhantomContextValue | undefined>(undefined);
