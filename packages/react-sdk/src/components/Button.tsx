@@ -1,4 +1,4 @@
-import React, { useState, useMemo, type CSSProperties, type ReactNode } from "react";
+import { useState, useMemo, type CSSProperties, type ReactNode } from "react";
 import { hexToRgba } from "../utils";
 import { useTheme } from "../hooks/useTheme";
 
@@ -151,7 +151,7 @@ export function LoginWithPhantomButton({
   const buttonStyle: CSSProperties = {
     ...baseStyle,
     backgroundColor,
-    color: theme.text,
+    color: "#FFFFFF",
   };
 
   const handleMouseEnter = () => {

@@ -1,6 +1,7 @@
 import * as React from "react";
 import { renderHook, waitFor } from "@testing-library/react";
-import { PhantomProvider, usePhantom } from "./PhantomProvider";
+import { PhantomProvider } from "./PhantomProvider";
+import { usePhantom } from "./PhantomContext";
 import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 import type { BrowserSDKConfig } from "@phantom/browser-sdk";
 
@@ -16,6 +17,7 @@ jest.mock("@phantom/browser-sdk", () => ({
     off: jest.fn(),
     configureDebug: jest.fn(),
   })),
+  isMobileDevice: jest.fn().mockReturnValue(false),
 }));
 
 describe("PhantomProvider", () => {

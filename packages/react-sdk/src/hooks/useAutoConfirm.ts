@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect } from "react";
-import { usePhantom } from "../PhantomProvider";
+import { usePhantom } from "../PhantomContext";
 import type {
   AutoConfirmEnableParams,
   AutoConfirmResult,

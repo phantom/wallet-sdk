@@ -6,6 +6,7 @@ import {
   type PhantomDebugConfig,
   DebugLevel,
   type DebugMessage,
+  darkTheme,
 } from "@phantom/react-sdk";
 import { Actions } from "./Actions";
 import { AuthCallback } from "./AuthCallback";
@@ -76,7 +77,13 @@ function App() {
         <Route
           path="/auth/callback"
           element={
-            <PhantomProvider config={config} debugConfig={debugConfig}>
+            <PhantomProvider
+              config={config}
+              debugConfig={debugConfig}
+              theme={darkTheme}
+              appIcon="https://phantom.app/img/logo.png"
+              appName="Phantom React SDK Demo"
+            >
               <AuthCallback />
             </PhantomProvider>
           }
@@ -84,7 +91,13 @@ function App() {
         <Route
           path="/"
           element={
-            <PhantomProvider config={config} debugConfig={debugConfig}>
+            <PhantomProvider
+              config={config}
+              debugConfig={debugConfig}
+              theme={darkTheme}
+              appIcon="https://phantom.app/img/logo.png"
+              appName="Phantom React SDK Demo"
+            >
               <Actions />
             </PhantomProvider>
           }

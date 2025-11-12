@@ -5,7 +5,6 @@ A comprehensive suite of SDKs for integrating Phantom Wallet across different pl
 ### Frontend SDK Options:
 
 - **[React SDK](./packages/react-sdk/README.md)** - React hooks and components
-- **[React UI](./packages/react-ui/README.md)** - Complete UI solution with pre-built modals
 - **[Browser SDK](./packages/browser-sdk/README.md)** - Vanilla JavaScript/TypeScript
 - **[React Native SDK](./packages/react-native-sdk/README.md)** - Mobile app integration
 
@@ -38,41 +37,74 @@ This repository contains multiple SDKs for different integration needs, prioriti
 
 ### React SDK
 
-**[@phantom/react-sdk](./packages/react-sdk/README.md)** - React hooks for Phantom integration with chain-specific APIs.
+**[@phantom/react-sdk](./packages/react-sdk/README.md)** - React hooks and components for Phantom integration with built-in UI components.
 
 ```tsx
-import { PhantomProvider, useConnect, useSolana, useEthereum, AddressType } from "@phantom/react-sdk";
+import {
+  PhantomProvider,
+  ConnectButton,
+  usePhantom,
+  useSolana,
+  useEthereum,
+  AddressType,
+  darkTheme,
+  lightTheme,
+} from "@phantom/react-sdk";
 
-// App wrapper with provider selection
+// App wrapper with provider and theme configuration
 <PhantomProvider
   config={{
-    providerType: "injected", // or "embedded"
+    providerType: "embedded", // or "injected"
     addressTypes: [AddressType.solana, AddressType.ethereum],
-    // For embedded wallets:
-    // embeddedWalletType: "app-wallet",
+    appId: "your-app-id", // Required for embedded wallets
+    // Optional:
+    // embeddedWalletType: "user-wallet", // or "app-wallet"
     // apiBaseUrl: "https://api.phantom.app/v1/wallets",
-    // appId: "your-app-id",
   }}
+  theme={darkTheme} // or lightTheme, or custom theme
+  appIcon="https://your-app.com/icon.png"
+  appName="Your App Name"
 >
   <App />
 </PhantomProvider>;
 
-// Component with chain-specific operations
+// Simple connection with ConnectButton component
 function WalletComponent() {
-  const { connect } = useConnect();
+  const { isConnected, addresses } = usePhantom();
   const { solana } = useSolana();
   const { ethereum } = useEthereum();
 
-  const handleConnect = async () => {
-    const { addresses } = await connect({ provider: "injected" });
-    console.log("Connected addresses:", addresses);
-  };
+  // ConnectButton handles the entire connection flow with built-in modal
+  return (
+    <div>
+      <ConnectButton fullWidth />
+
+      {isConnected && (
+        <div>
+          <p>Connected addresses:</p>
+          {addresses.map(addr => (
+            <p key={addr.address}>
+              {addr.addressType}: {addr.address}
+            </p>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Advanced usage with chain-specific operations
+function AdvancedComponent() {
+  const { solana } = useSolana();
+  const { ethereum } = useEthereum();
 
   const signMessages = async () => {
     const solanaSignature = await solana.signMessage("Hello Solana!");
     const accounts = await ethereum.getAccounts();
     const ethSignature = await ethereum.signPersonalMessage("Hello Ethereum!", accounts[0]);
   };
+
+  return <button onClick={signMessages}>Sign Messages</button>;
 }
 ```
 
@@ -163,47 +195,11 @@ await sdk.signAndSendTransaction({
 });
 ```
 
-### React UI - **Complete UI Solution**
-
-**[@phantom/react-ui](./packages/react-ui/README.md)** - Pre-built React UI components with automatic modal injection and chain-specific operations.
-
-```tsx
-import { PhantomProvider, useConnect, useSolana, useEthereum, AddressType } from "@phantom/react-ui";
-
-// App wrapper - includes react-sdk + UI theme
-<PhantomProvider
-  config={{
-    providerType: "embedded", // or "injected"
-    addressTypes: [AddressType.solana, AddressType.ethereum],
-    apiBaseUrl: "https://api.phantom.app/v1/wallets",
-    appId: "your-app-id",
-  }}
-  theme="dark"
->
-  <App />
-</PhantomProvider>;
-
-// Component - UI appears automatically
-function WalletOperations() {
-  const { connect } = useConnect();
-  const { solana } = useSolana();
-  const { ethereum } = useEthereum();
-
-  const handleOperations = async () => {
-    // Connection modals appear automatically (provider parameter is required)
-    await connect({ provider: "phantom" });
-
-    // Chain-specific operations with UI
-    await solana.signAndSendTransaction(solanaTransaction);
-    await ethereum.sendTransaction(ethTransaction);
-  };
-}
-```
-
 ## Examples
 
 You can find example applications in the [`examples/`](./examples) folder:
 
+- [`examples/with-modal`](./examples/with-modal) - React SDK with ConnectButton and modal UI
 - [`examples/react-sdk-demo-app`](./examples/react-sdk-demo-app)
 - [`examples/browser-sdk-demo-app`](./examples/browser-sdk-demo-app)
 - [`examples/react-native-sdk-demo-app`](./examples/react-native-sdk-demo-app)
@@ -225,13 +221,17 @@ Server-side SDK for backend applications with built-in authentication. Depends o
 - `@phantom/client` for API communication
 - `@phantom/api-key-stamper` for request authentication
 
-#### **[@phantom/react-sdk](./packages/react-sdk/README.md)** - React Hooks
+#### **[@phantom/react-sdk](./packages/react-sdk/README.md)** - React Hooks & Components
 
-Thin wrapper over `@phantom/browser-sdk` that provides React hooks and context providers for Phantom integration.
+Thin wrapper over `@phantom/browser-sdk` that provides React hooks, context providers, and pre-built UI components for Phantom integration.
 
-#### **[@phantom/react-ui](./packages/react-ui/README.md)** - Complete UI Solution
+**Features:**
 
-Thin wrapper over `@phantom/react-sdk` that adds pre-built UI components (modals, buttons, etc.) with automatic injection and theming support.
+- React hooks: `usePhantom`, `useConnect`, `useDisconnect`, `useSolana`, `useEthereum`
+- `ConnectButton` component - Ready-to-use button that handles the complete connection flow
+- Built-in connection modal with authentication providers (Google, Apple, Phantom Login, Browser Extension)
+- Theme system with `darkTheme` and `lightTheme` presets
+- Automatic mobile deeplink support for Phantom mobile app
 
 #### **[@phantom/browser-sdk](./packages/browser-sdk/README.md)** - Vanilla JS/TS SDK
 
@@ -313,7 +313,7 @@ Miscellaneous utility functions used across packages.
 
 ```
 Frontend Entry Points:
-  react-ui → react-sdk → browser-sdk → embedded-provider-core → client → (api-key-stamper | indexed-db-stamper)
+  react-sdk → browser-sdk → embedded-provider-core → client → (api-key-stamper | indexed-db-stamper)
                                      → browser-injected-sdk
 
 Backend Entry Point:

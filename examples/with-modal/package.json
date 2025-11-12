@@ -1,5 +1,5 @@
 {
-  "name": "@phantom/with-react-ui",
+  "name": "@phantom/with-modal",
   "private": true,
   "version": "0.0.1",
   "type": "module",
@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@phantom/react-ui": "workspace:^",
+    "@phantom/react-sdk": "workspace:^",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "vite": "^6.3.6"

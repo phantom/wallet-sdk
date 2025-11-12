@@ -1,14 +1,17 @@
 import type { ReactNode } from "react";
-import { createContext, useContext, useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { BrowserSDK } from "@phantom/browser-sdk";
 import type {
   BrowserSDKConfig,
-  WalletAddress,
   AuthOptions,
   DebugConfig,
   ConnectEventData,
+  WalletAddress,
   ConnectResult,
 } from "@phantom/browser-sdk";
+import { mergeTheme, darkTheme, type PhantomTheme } from "./themes";
+import { PhantomContext, type PhantomContextValue } from "./PhantomContext";
+import { ModalProvider } from "./ModalProvider";
 
 export type PhantomSDKConfig = BrowserSDKConfig;
 
@@ -20,29 +23,21 @@ export interface ConnectOptions {
   authOptions?: AuthOptions;
 }
 
-interface PhantomContextValue {
-  sdk: BrowserSDK | null;
-  isConnected: boolean;
-  isConnecting: boolean;
-  isLoading: boolean;
-  connectError: Error | null;
-  addresses: WalletAddress[];
-  currentProviderType: "injected" | "embedded" | null;
-  isClient: boolean;
-  user: ConnectResult | null;
-}
-
-const PhantomContext = createContext<PhantomContextValue | undefined>(undefined);
-
 export interface PhantomProviderProps {
   children: ReactNode;
   config: PhantomSDKConfig;
   debugConfig?: PhantomDebugConfig;
+  theme?: Partial<PhantomTheme>;
+  appIcon?: string;
+  appName?: string;
 }
 
-export function PhantomProvider({ children, config, debugConfig }: PhantomProviderProps) {
+export function PhantomProvider({ children, config, debugConfig, theme, appIcon, appName }: PhantomProviderProps) {
   // Memoized config to avoid unnecessary SDK recreation
   const memoizedConfig: BrowserSDKConfig = useMemo(() => config, [config]);
+
+  // Memoized theme - defaults to darkTheme if not provided
+  const resolvedTheme = useMemo(() => mergeTheme(theme || darkTheme), [theme]);
 
   const [sdk, setSdk] = useState<BrowserSDK | null>(null);
   const [isClient, setIsClient] = useState(false);
@@ -176,17 +171,27 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       currentProviderType,
       isClient,
       user,
+      theme: resolvedTheme,
     }),
-    [sdk, isConnected, isConnecting, isLoading, connectError, addresses, currentProviderType, isClient, user],
+    [
+      sdk,
+      isConnected,
+      isConnecting,
+      isLoading,
+      connectError,
+      addresses,
+      currentProviderType,
+      isClient,
+      user,
+      resolvedTheme,
+    ],
   );
 
-  return <PhantomContext.Provider value={value}>{children}</PhantomContext.Provider>;
-}
-
-export function usePhantom() {
-  const context = useContext(PhantomContext);
-  if (!context) {
-    throw new Error("usePhantom must be used within a PhantomProvider");
-  }
-  return context;
+  return (
+    <PhantomContext.Provider value={value}>
+      <ModalProvider appIcon={appIcon} appName={appName}>
+        {children}
+      </ModalProvider>
+    </PhantomContext.Provider>
+  );
 }
