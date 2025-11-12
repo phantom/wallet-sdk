@@ -5,7 +5,7 @@ export function ClientProvider({ children }: { children: React.ReactNode }) {
   return (
     <PhantomProvider
       config={{
-        providerType: "injected",
+        providers: ["injected"],
         addressTypes: [AddressType.solana],
       }}
     >
