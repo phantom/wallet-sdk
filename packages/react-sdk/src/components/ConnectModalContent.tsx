@@ -13,9 +13,9 @@ export interface ConnectModalContentProps {
   onClose: () => void;
 }
 
-export function ConnectModalContent({ appIcon, appName, onClose }: ConnectModalContentProps) {
+export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: ConnectModalContentProps) {
   const theme = useTheme();
-  const { sdk } = usePhantom();
+  const { sdk, isLoading } = usePhantom();
   const baseConnect = useConnect();
   const isExtensionInstalled = useIsExtensionInstalled();
   const isPhantomLoginAvailable = useIsPhantomLoginAvailable();
@@ -91,22 +91,20 @@ export function ConnectModalContent({ appIcon, appName, onClose }: ConnectModalC
       onClose();
     } catch (err) {
       setError(err as Error);
+    } finally {
       setIsConnecting(false);
       setProviderType(null);
     }
   }, [onClose]);
 
-  const appIconStyle: CSSProperties = appIcon
-    ? {
-        width: "56px",
-        height: "56px",
-        borderRadius: "50%",
-        display: "block",
-        margin: "0 auto 24px",
-        objectFit: "cover" as const,
-      }
-    : {};
-
+  const appIconStyle: CSSProperties = {
+    width: "56px",
+    height: "56px",
+    borderRadius: "50%",
+    display: "block",
+    margin: "0 auto 24px",
+    objectFit: "cover" as const,
+  };
   const buttonContainerStyle: CSSProperties = {
     display: "flex",
     flexDirection: "column" as const,
@@ -142,79 +140,113 @@ export function ConnectModalContent({ appIcon, appName, onClose }: ConnectModalC
     fontSize: "14px",
   };
 
+  const loadingContainerStyle: CSSProperties = {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "24px",
+    gap: "12px",
+  };
+
+  const spinnerStyle: CSSProperties = {
+    width: "40px",
+    height: "40px",
+    border: `3px solid ${theme.secondary}`,
+    borderTop: `3px solid ${theme.brand}`,
+    borderRadius: "50%",
+    animation: "spin 1s linear infinite",
+  };
+
+  const loadingTextStyle: CSSProperties = {
+    ...theme.typography.caption,
+    color: theme.secondary,
+  };
+
   return (
     <>
-      {/* App Icon */}
-      {appIcon && <img src={appIcon} alt={appName || "App"} style={appIconStyle} />}
+      <style>
+        {`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}
+      </style>
+      {appIcon && <img src={appIcon} alt={appName} style={appIconStyle} />}
 
-      {/* Body */}
       <div>
-        {/* Error Message */}
         {error && <div style={errorStyle}>{error.message}</div>}
 
-        {/* Provider Options */}
-        <div style={buttonContainerStyle}>
-          {/* Mobile device with no Phantom extension - show deeplink button */}
-          {isMobile && !isExtensionInstalled.isInstalled && (
-            <Button
-              onClick={connectWithDeeplink}
-              disabled={isConnecting}
-              isLoading={isConnecting && providerType === "deeplink"}
-            >
-              {isConnecting && providerType === "deeplink" ? "Opening Phantom..." : "Open in Phantom App"}
-            </Button>
-          )}
-
-          {!isMobile && (
-            <>
-              {isPhantomLoginAvailable.isAvailable && (
-                <LoginWithPhantomButton
-                  onClick={() => connectWithAuthProvider("phantom")}
-                  disabled={isConnecting}
-                  isLoading={isConnecting && providerType === "phantom"}
-                />
-              )}
-            </>
-          )}
-
-          <Button
-            onClick={() => connectWithAuthProvider("google")}
-            disabled={isConnecting}
-            isLoading={isConnecting && providerType === "google"}
-          >
-            Continue with Google
-          </Button>
-
-          <Button
-            onClick={() => connectWithAuthProvider("apple")}
-            disabled={isConnecting}
-            isLoading={isConnecting && providerType === "apple"}
-          >
-            Continue with Apple
-          </Button>
-
-          {!isMobile && isExtensionInstalled.isInstalled && (
-            <>
-              <div style={dividerStyle}>
-                <div style={dividerLineStyle} />
-                <span style={dividerTextStyle}>OR</span>
-                <div style={dividerLineStyle} />
-              </div>
-
+        {isLoading ? (
+          <div style={loadingContainerStyle}>
+            <div style={spinnerStyle} />
+            <div style={loadingTextStyle}>Loading...</div>
+          </div>
+        ) : (
+          <div style={buttonContainerStyle}>
+            {/* Mobile device with no Phantom extension - show deeplink button */}
+            {isMobile && !isExtensionInstalled.isInstalled && (
               <Button
-                variant="secondary"
-                onClick={connectWithInjected}
+                onClick={connectWithDeeplink}
                 disabled={isConnecting}
-                isLoading={isConnecting && providerType === "injected"}
+                isLoading={isConnecting && providerType === "deeplink"}
               >
-                <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span>Phantom</span>
-                </span>
-                <span style={{ color: theme.secondary }}>Detected</span>
+                {isConnecting && providerType === "deeplink" ? "Opening Phantom..." : "Open in Phantom App"}
               </Button>
-            </>
-          )}
-        </div>
+            )}
+
+            {!isMobile && (
+              <>
+                {isPhantomLoginAvailable.isAvailable && (
+                  <LoginWithPhantomButton
+                    onClick={() => connectWithAuthProvider("phantom")}
+                    disabled={isConnecting}
+                    isLoading={isConnecting && providerType === "phantom"}
+                  />
+                )}
+              </>
+            )}
+
+            <Button
+              onClick={() => connectWithAuthProvider("google")}
+              disabled={isConnecting}
+              isLoading={isConnecting && providerType === "google"}
+            >
+              Continue with Google
+            </Button>
+
+            <Button
+              onClick={() => connectWithAuthProvider("apple")}
+              disabled={isConnecting}
+              isLoading={isConnecting && providerType === "apple"}
+            >
+              Continue with Apple
+            </Button>
+
+            {!isMobile && isExtensionInstalled.isInstalled && (
+              <>
+                <div style={dividerStyle}>
+                  <div style={dividerLineStyle} />
+                  <span style={dividerTextStyle}>OR</span>
+                  <div style={dividerLineStyle} />
+                </div>
+
+                <Button
+                  variant="secondary"
+                  onClick={connectWithInjected}
+                  disabled={isConnecting}
+                  isLoading={isConnecting && providerType === "injected"}
+                >
+                  <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span>Phantom</span>
+                  </span>
+                  <span style={{ color: theme.secondary }}>Detected</span>
+                </Button>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </>
   );

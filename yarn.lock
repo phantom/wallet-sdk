@@ -5853,9 +5853,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/with-react-ui@workspace:examples/with-react-ui":
+"@phantom/with-modal@workspace:examples/with-modal":
   version: 0.0.0-use.local
-  resolution: "@phantom/with-react-ui@workspace:examples/with-react-ui"
+  resolution: "@phantom/with-modal@workspace:examples/with-modal"
   dependencies:
     "@phantom/react-sdk": "workspace:^"
     "@types/react": "npm:^19.1.2"

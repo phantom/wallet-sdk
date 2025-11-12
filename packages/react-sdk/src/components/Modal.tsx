@@ -86,7 +86,6 @@ export function Modal({ appIcon, appName, isVisible, onClose }: ModalProps) {
   return (
     <div style={overlayStyle} onClick={onClose}>
       <div style={modalStyle} onClick={e => e.stopPropagation()}>
-        {/* Header */}
         <div style={headerStyle}>
           <h3 style={titleStyle}>{isConnected ? "Wallet" : "Login or Sign Up"}</h3>
           <button
@@ -99,14 +98,12 @@ export function Modal({ appIcon, appName, isVisible, onClose }: ModalProps) {
           </button>
         </div>
 
-        {/* Body - Conditionally render based on connection state */}
         {isConnected ? (
           <ConnectedModalContent onClose={onClose} />
         ) : (
           <ConnectModalContent appIcon={appIcon} appName={appName} onClose={onClose} />
         )}
 
-        {/* Footer */}
         <div style={footerStyle}>Protected by Phantom</div>
       </div>
     </div>

@@ -199,7 +199,7 @@ await sdk.signAndSendTransaction({
 
 You can find example applications in the [`examples/`](./examples) folder:
 
-- [`examples/with-react-ui`](./examples/with-react-ui) - React SDK with ConnectButton and modal UI
+- [`examples/with-modal`](./examples/with-modal) - React SDK with ConnectButton and modal UI
 - [`examples/react-sdk-demo-app`](./examples/react-sdk-demo-app)
 - [`examples/browser-sdk-demo-app`](./examples/browser-sdk-demo-app)
 - [`examples/react-native-sdk-demo-app`](./examples/react-native-sdk-demo-app)

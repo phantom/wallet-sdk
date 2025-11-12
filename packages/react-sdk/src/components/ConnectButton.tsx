@@ -5,16 +5,7 @@ import { useTheme } from "../hooks/useTheme";
 import type { AddressType } from "@phantom/browser-sdk";
 
 export interface ConnectButtonProps {
-  /**
-   * The address type to display when connected (e.g., "solana", "ethereum")
-   * If not specified, shows the first available address
-   */
   addressType?: AddressType;
-
-  /**
-   * Whether the button should take full width of its container
-   * @default false
-   */
   fullWidth?: boolean;
 }
 
@@ -23,7 +14,6 @@ export function ConnectButton({ addressType, fullWidth = false }: ConnectButtonP
   const { open } = useModal();
   const { isConnected, addresses } = usePhantom();
 
-  // Find the address to display
   const displayAddress = useMemo(() => {
     if (!addresses || addresses.length === 0) return null;
 
@@ -31,11 +21,9 @@ export function ConnectButton({ addressType, fullWidth = false }: ConnectButtonP
       return addresses.find(addr => addr.addressType === addressType);
     }
 
-    // If no addressType specified, return first address
     return addresses[0];
   }, [addresses, addressType]);
 
-  // Truncate address for display
   const truncatedAddress = useMemo(() => {
     if (!displayAddress) return "";
     const addr = displayAddress.address;
