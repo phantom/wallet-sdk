@@ -179,7 +179,7 @@ export class ProviderManager implements EventEmitter {
 
     debug.log(DebugCategory.PROVIDER_MANAGER, "Connection successful, saving preferences", {
       addressCount: result.addresses?.length || 0,
-      provider: authOptions.provider
+      provider: authOptions.provider,
     });
 
     // Save provider preference after successful connection

@@ -24,8 +24,9 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
   const [error, setError] = useState<Error | null>(null);
   const [providerType, setProviderType] = useState<AuthProviderType | "deeplink" | "injected" | null>(null);
 
-  // Check if this is a mobile device
   const isMobile = useMemo(() => isMobileDevice(), []);
+
+  const showDivider = !(allowedProviders.length === 1 && allowedProviders.includes("injected"));
 
   // Connect with specific auth provider
   const connectWithAuthProvider = useCallback(
@@ -228,14 +229,15 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
               </Button>
             )}
 
-            {/* Injected provider button - only show if allowed and extension is installed */}
             {!isMobile && allowedProviders.includes("injected") && isExtensionInstalled.isInstalled && (
               <>
-                <div style={dividerStyle}>
-                  <div style={dividerLineStyle} />
-                  <span style={dividerTextStyle}>OR</span>
-                  <div style={dividerLineStyle} />
-                </div>
+                {showDivider && (
+                  <div style={dividerStyle}>
+                    <div style={dividerLineStyle} />
+                    <span style={dividerTextStyle}>OR</span>
+                    <div style={dividerLineStyle} />
+                  </div>
+                )}
 
                 <Button
                   variant="secondary"

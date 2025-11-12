@@ -680,13 +680,13 @@ sdk.off("connect", handleConnect);
 
 #### Event Types
 
-| Event           | Payload Type            | When Fired            | Key Data                                                |
-| --------------- | ----------------------- | --------------------- | ------------------------------------------------------- |
-| `connect_start` | `ConnectStartEventData` | Connection initiated  | `source`, `authOptions`                                 |
+| Event           | Payload Type            | When Fired            | Key Data                                            |
+| --------------- | ----------------------- | --------------------- | --------------------------------------------------- |
+| `connect_start` | `ConnectStartEventData` | Connection initiated  | `source`, `authOptions`                             |
 | `connect`       | `ConnectEventData`      | Connection successful | `provider`, `addresses`, `status`, `source`, `user` |
-| `connect_error` | `ConnectErrorEventData` | Connection failed     | `error`, `source`                                       |
-| `disconnect`    | `DisconnectEventData`   | Disconnected          | `source`                                                |
-| `error`         | `unknown`               | General SDK errors    | Error details                                           |
+| `connect_error` | `ConnectErrorEventData` | Connection failed     | `error`, `source`                                   |
+| `disconnect`    | `DisconnectEventData`   | Disconnected          | `source`                                            |
+| `error`         | `unknown`               | General SDK errors    | Error details                                       |
 
 #### Using Events with autoConnect()
 

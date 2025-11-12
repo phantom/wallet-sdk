@@ -36,6 +36,7 @@ Create or use non-custodial embedded wallets within your application:
 - **`"tiktok"`** - TikTok authentication
 
 Embedded providers create:
+
 - **App Wallet**: Fresh wallet created per application (unfunded, app-specific)
 - **User Wallet**: User's Phantom wallet accessed via authentication (potentially funded, portable across apps)
 

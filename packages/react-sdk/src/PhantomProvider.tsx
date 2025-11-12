@@ -45,7 +45,7 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
   const [isLoading, setIsLoading] = useState(true);
   const [connectError, setConnectError] = useState<Error | null>(null);
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
-    
+
   const [user, setUser] = useState<ConnectResult | null>(null);
 
   // Initialize client flag
