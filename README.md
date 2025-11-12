@@ -87,7 +87,7 @@ function WalletComponent() {
   // ConnectButton handles the entire connection flow with built-in modal
   return (
     <div>
-      <ConnectButton fullWidth={true} />
+      <ConnectButton fullWidth />
 
       {isConnected && (
         <div>

@@ -15,7 +15,7 @@ export interface ConnectModalContentProps {
 
 export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: ConnectModalContentProps) {
   const theme = useTheme();
-  const { sdk, isLoading, allowedProviders } = usePhantom();
+  const { isLoading, allowedProviders } = usePhantom();
   const baseConnect = useConnect();
   const isExtensionInstalled = useIsExtensionInstalled();
   const isPhantomLoginAvailable = useIsPhantomLoginAvailable();
@@ -40,7 +40,8 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
         // Hide modal on successful connection
         onClose();
       } catch (err) {
-        setError(err as Error);
+        const error = err instanceof Error ? err : new Error(String(err));
+        setError(error);
       } finally {
         setIsConnecting(false);
         setProviderType(null);
@@ -51,12 +52,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
 
   // Connect with injected provider (when extension is installed)
   const connectWithInjected = useCallback(async () => {
-    if (!sdk) {
-      const err = new Error("SDK not initialized");
-      setError(err);
-      return;
-    }
-
     try {
       setIsConnecting(true);
       setError(null);
@@ -69,12 +64,13 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
       // Hide modal on successful connection
       onClose();
     } catch (err) {
-      setError(err as Error);
+      const error = err instanceof Error ? err : new Error(String(err));
+      setError(error);
     } finally {
       setIsConnecting(false);
       setProviderType(null);
     }
-  }, [sdk, baseConnect, onClose]);
+  }, [baseConnect, onClose]);
 
   // Connect with deeplink (redirect to Phantom mobile app)
   const connectWithDeeplink = useCallback(() => {
@@ -90,7 +86,8 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
       // This code will likely never be reached due to the redirect
       onClose();
     } catch (err) {
-      setError(err as Error);
+      const error = err instanceof Error ? err : new Error(String(err));
+      setError(error);
     } finally {
       setIsConnecting(false);
       setProviderType(null);

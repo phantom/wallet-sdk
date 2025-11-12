@@ -844,7 +844,7 @@ export function SDKActions() {
             <h4 style={{ marginBottom: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
               ConnectButton (click to open wallet modal):
             </h4>
-            <ConnectButton fullWidth={true} />
+            <ConnectButton fullWidth />
           </div>
         )}
       </div>
@@ -878,7 +878,7 @@ export function SDKActions() {
             <h4 style={{ marginBottom: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
               Or use the ConnectButton component:
             </h4>
-            <ConnectButton fullWidth={true} />
+            <ConnectButton fullWidth />
           </div>
         </div>
       )}

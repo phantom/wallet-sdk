@@ -202,7 +202,7 @@ function Header() {
       <ConnectButton addressType={AddressType.ethereum} />
 
       {/* Full width button */}
-      <ConnectButton fullWidth={true} />
+      <ConnectButton fullWidth />
     </div>
   );
 }
