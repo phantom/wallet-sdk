@@ -1,6 +1,6 @@
 import { useMemo, type CSSProperties } from "react";
-import { usePhantom } from "../PhantomProvider";
-import { useModal } from "../hooks/useModal";
+import { usePhantom } from "../PhantomContext";
+import { useModal } from "../hooks";
 import { useTheme } from "../hooks/useTheme";
 import type { AddressType } from "@phantom/browser-sdk";
 

@@ -1,6 +1,9 @@
 // Provider
-export { PhantomProvider, usePhantom } from "./PhantomProvider";
+export { PhantomProvider } from "./PhantomProvider";
 export type { PhantomProviderProps, PhantomSDKConfig, PhantomDebugConfig, ConnectOptions } from "./PhantomProvider";
+
+// Context
+export { usePhantom } from "./PhantomContext";
 
 // Hooks
 export * from "./hooks";

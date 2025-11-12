@@ -3,8 +3,13 @@ export { useConnect } from "./useConnect";
 export { useDisconnect } from "./useDisconnect";
 
 // Modal management
-export { useModal } from "./useModal";
-export type { UseModalResult } from "./useModal";
+export { useModal } from "../ModalContext";
+
+export interface UseModalResult {
+  open: () => void;
+  close: () => void;
+  isOpened: boolean;
+}
 
 // Account management
 export { useAccounts } from "./useAccounts";

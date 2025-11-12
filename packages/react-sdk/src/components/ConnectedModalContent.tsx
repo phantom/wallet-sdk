@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from "react";
 import { Button } from "./Button";
 import { useTheme } from "../hooks/useTheme";
-import { usePhantom } from "../PhantomProvider";
+import { usePhantom } from "../PhantomContext";
 import { useDisconnect } from "../hooks/useDisconnect";
 
 export interface ConnectedModalContentProps {

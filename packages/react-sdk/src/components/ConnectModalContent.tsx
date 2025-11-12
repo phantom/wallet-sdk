@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, type CSSProperties } from "react";
 import { isMobileDevice, getDeeplinkToPhantom, type AuthProviderType } from "@phantom/browser-sdk";
 import { Button, LoginWithPhantomButton } from "./Button";
 import { useTheme } from "../hooks/useTheme";
-import { usePhantom } from "../PhantomProvider";
+import { usePhantom } from "../PhantomContext";
 import { useIsExtensionInstalled } from "../hooks/useIsExtensionInstalled";
 import { useIsPhantomLoginAvailable } from "../hooks/useIsPhantomLoginAvailable";
 import { useConnect } from "../hooks/useConnect";

@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { PhantomContext } from "../PhantomProvider";
+import { PhantomContext } from "../PhantomContext";
 import type { CompletePhantomTheme } from "../themes";
 
 export function useTheme(): CompletePhantomTheme {

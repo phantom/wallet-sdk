@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from "react";
 import { useTheme } from "../hooks/useTheme";
-import { usePhantom } from "../PhantomProvider";
+import { usePhantom } from "../PhantomContext";
 import { isMobileDevice } from "@phantom/browser-sdk";
 import { ConnectModalContent } from "./ConnectModalContent";
 import { ConnectedModalContent } from "./ConnectedModalContent";

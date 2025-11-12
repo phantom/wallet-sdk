@@ -1,16 +1,17 @@
 import type { ReactNode } from "react";
-import { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { BrowserSDK } from "@phantom/browser-sdk";
 import type {
   BrowserSDKConfig,
-  WalletAddress,
   AuthOptions,
   DebugConfig,
   ConnectEventData,
+  WalletAddress,
   ConnectResult,
 } from "@phantom/browser-sdk";
-import { Modal } from "./components/Modal";
-import { mergeTheme, type PhantomTheme, type CompletePhantomTheme } from "./themes";
+import { mergeTheme, type PhantomTheme } from "./themes";
+import { PhantomContext, type PhantomContextValue } from "./PhantomContext";
+import { ModalProvider } from "./ModalProvider";
 
 export type PhantomSDKConfig = BrowserSDKConfig;
 
@@ -21,24 +22,6 @@ export interface ConnectOptions {
   embeddedWalletType?: "app-wallet" | "user-wallet";
   authOptions?: AuthOptions;
 }
-
-interface PhantomContextValue {
-  sdk: BrowserSDK | null;
-  isConnected: boolean;
-  isConnecting: boolean;
-  isLoading: boolean;
-  connectError: Error | null;
-  addresses: WalletAddress[];
-  currentProviderType: "injected" | "embedded" | null;
-  isClient: boolean;
-  user: ConnectResult | null;
-  theme?: CompletePhantomTheme;
-  isModalOpen: boolean;
-  openModal: () => void;
-  closeModal: () => void;
-}
-
-export const PhantomContext = createContext<PhantomContextValue | undefined>(undefined);
 
 export interface PhantomProviderProps {
   children: ReactNode;
@@ -67,16 +50,6 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
     (memoizedConfig.providerType as any) || null,
   );
   const [user, setUser] = useState<ConnectResult | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Modal control functions
-  const openModal = useCallback(() => {
-    setIsModalOpen(true);
-  }, []);
-
-  const closeModal = useCallback(() => {
-    setIsModalOpen(false);
-  }, []);
 
   // Initialize client flag
   useEffect(() => {
@@ -199,39 +172,15 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
       isClient,
       user,
       theme: resolvedTheme,
-      isModalOpen,
-      openModal,
-      closeModal,
     }),
-    [
-      sdk,
-      isConnected,
-      isConnecting,
-      isLoading,
-      connectError,
-      addresses,
-      currentProviderType,
-      isClient,
-      user,
-      resolvedTheme,
-      isModalOpen,
-      openModal,
-      closeModal,
-    ],
+    [sdk, isConnected, isConnecting, isLoading, connectError, addresses, currentProviderType, isClient, user, resolvedTheme],
   );
 
   return (
     <PhantomContext.Provider value={value}>
-      {children}
-      {resolvedTheme && <Modal isVisible={isModalOpen} onClose={closeModal} appIcon={appIcon} appName={appName} />}
+      <ModalProvider appIcon={appIcon} appName={appName}>
+        {children}
+      </ModalProvider>
     </PhantomContext.Provider>
   );
-}
-
-export function usePhantom() {
-  const context = useContext(PhantomContext);
-  if (!context) {
-    throw new Error("usePhantom must be used within a PhantomProvider");
-  }
-  return context;
 }
