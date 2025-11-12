@@ -28,7 +28,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
 
   const showDivider = !(allowedProviders.length === 1 && allowedProviders.includes("injected"));
 
-  // Connect with specific auth provider
   const connectWithAuthProvider = useCallback(
     async (provider: AuthProviderType) => {
       try {
@@ -38,7 +37,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
 
         await baseConnect.connect({ provider });
 
-        // Hide modal on successful connection
         onClose();
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err));
@@ -51,7 +49,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
     [baseConnect, onClose],
   );
 
-  // Connect with injected provider (when extension is installed)
   const connectWithInjected = useCallback(async () => {
     try {
       setIsConnecting(true);
@@ -62,7 +59,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
         provider: "injected",
       });
 
-      // Hide modal on successful connection
       onClose();
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
@@ -80,11 +76,9 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
       setError(null);
       setProviderType("deeplink");
 
-      // Generate and redirect to deeplink URL
       const deeplinkUrl = getDeeplinkToPhantom();
       window.location.href = deeplinkUrl;
 
-      // This code will likely never be reached due to the redirect
       onClose();
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
@@ -183,7 +177,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
           </div>
         ) : (
           <div style={buttonContainerStyle}>
-            {/* Mobile device with no Phantom extension - show deeplink button */}
             {isMobile && !isExtensionInstalled.isInstalled && (
               <Button
                 onClick={connectWithDeeplink}
@@ -194,7 +187,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
               </Button>
             )}
 
-            {/* Desktop Phantom Login button - only show if allowed */}
             {!isMobile && allowedProviders.includes("phantom") && (
               <>
                 {isPhantomLoginAvailable.isAvailable && (
@@ -207,7 +199,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
               </>
             )}
 
-            {/* Google button - only show if allowed */}
             {allowedProviders.includes("google") && (
               <Button
                 onClick={() => connectWithAuthProvider("google")}
@@ -218,7 +209,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
               </Button>
             )}
 
-            {/* Apple button - only show if allowed */}
             {allowedProviders.includes("apple") && (
               <Button
                 onClick={() => connectWithAuthProvider("apple")}
