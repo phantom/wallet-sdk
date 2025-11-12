@@ -3,6 +3,7 @@ import { Button } from "./Button";
 import { useTheme } from "../hooks/useTheme";
 import { usePhantom } from "../PhantomContext";
 import { useDisconnect } from "../hooks/useDisconnect";
+import { Text } from "./Text";
 
 export interface ConnectedModalContentProps {
   onClose: () => void;
@@ -37,42 +38,28 @@ export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
   const accountListStyle: CSSProperties = {
     display: "flex",
     flexDirection: "column" as const,
-    gap: "12px",
+    gap: "16px",
+    width: "100%",
   };
 
-  const accountCardStyle: CSSProperties = {
-    padding: "16px",
-    background: theme.aux,
-    borderRadius: theme.borderRadius,
-    border: `1px solid ${theme.secondary}`,
-  };
-
-  const addressTypeLabelStyle: CSSProperties = {
-    ...theme.typography.label,
-    color: theme.secondary,
-    textTransform: "uppercase" as const,
-    marginBottom: "8px",
-    display: "block",
+  const accountItemStyle: CSSProperties = {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "8px",
+    width: "100%",
   };
 
   const addressTextStyle: CSSProperties = {
-    ...theme.typography.caption,
-    color: theme.text,
     fontFamily: "monospace",
     wordBreak: "break-all" as const,
   };
 
   const errorContainerStyle: CSSProperties = {
-    padding: "12px 16px",
-    background: theme.aux,
+    padding: "12px",
+    backgroundColor: "rgba(220, 53, 69, 0.1)",
     borderRadius: theme.borderRadius,
-    border: `1px solid ${theme.error}`,
-  };
-
-  const errorTextStyle: CSSProperties = {
-    ...theme.typography.caption,
-    color: theme.error,
-    margin: 0,
+    border: "1px solid rgba(220, 53, 69, 0.3)",
+    width: "100%",
   };
 
   return (
@@ -80,9 +67,13 @@ export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
       {addresses && addresses.length > 0 && (
         <div style={accountListStyle}>
           {addresses.map((account, index) => (
-            <div key={index} style={accountCardStyle}>
-              <span style={addressTypeLabelStyle}>{account.addressType}</span>
-              <div style={addressTextStyle}>{account.address}</div>
+            <div key={index} style={accountItemStyle}>
+              <Text variant="label" color={theme.secondary} style={{ textTransform: "uppercase" }}>
+                {account.addressType}
+              </Text>
+              <div style={addressTextStyle}>
+                <Text variant="caption">{account.address}</Text>
+              </div>
             </div>
           ))}
         </div>
@@ -90,12 +81,14 @@ export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
 
       {disconnectError && (
         <div style={errorContainerStyle}>
-          <p style={errorTextStyle}>Failed to disconnect</p>
+          <Text variant="caption" color={theme.error}>
+            Failed to disconnect
+          </Text>
         </div>
       )}
 
       <Button onClick={handleDisconnect} disabled={isDisconnecting} isLoading={isDisconnecting} fullWidth>
-        {isDisconnecting ? "Disconnecting..." : "Disconnect"}
+        <Text variant="captionBold">{isDisconnecting ? "Disconnecting..." : "Disconnect"}</Text>
       </Button>
     </>
   );

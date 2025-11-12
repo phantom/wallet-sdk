@@ -5,6 +5,7 @@ import { isMobileDevice } from "@phantom/browser-sdk";
 import { ConnectModalContent } from "./ConnectModalContent";
 import { ConnectedModalContent } from "./ConnectedModalContent";
 import { Icon } from "./Icon";
+import { Text } from "./Text";
 
 export interface ModalProps {
   appIcon?: string;
@@ -55,12 +56,8 @@ export function Modal({ appIcon, appName, isVisible, onClose }: ModalProps) {
   };
 
   const titleStyle: CSSProperties = {
-    margin: 0,
     marginBottom: "24px",
-    ...theme.typography.caption,
-    color: theme.secondary,
     fontFeatureSettings: '"liga" off, "clig" off',
-    textAlign: "center" as const,
   };
 
   const closeButtonStyle: CSSProperties = {
@@ -101,7 +98,11 @@ export function Modal({ appIcon, appName, isVisible, onClose }: ModalProps) {
     <div style={overlayStyle} onClick={onClose}>
       <div style={modalStyle} onClick={e => e.stopPropagation()}>
         <div style={headerStyle}>
-          <h3 style={titleStyle}>{isConnected ? "Wallet" : "Login or Sign Up"}</h3>
+          <div style={titleStyle}>
+            <Text variant="caption" color={theme.secondary}>
+              {isConnected ? "Wallet" : "Login or Sign Up"}
+            </Text>
+          </div>
           <button
             style={closeButtonStyle}
             onClick={onClose}
@@ -121,9 +122,13 @@ export function Modal({ appIcon, appName, isVisible, onClose }: ModalProps) {
         </div>
 
         <div style={footerStyle}>
-          <span>Powered by</span>
+          <Text variant="label" color={theme.secondary}>
+            Powered by
+          </Text>
           <Icon type="phantom" size={16} />
-          <span>Phantom</span>
+          <Text variant="label" color={theme.secondary}>
+            Phantom
+          </Text>
         </div>
       </div>
     </div>

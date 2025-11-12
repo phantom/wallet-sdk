@@ -7,6 +7,8 @@ import { useIsExtensionInstalled } from "../hooks/useIsExtensionInstalled";
 import { useIsPhantomLoginAvailable } from "../hooks/useIsPhantomLoginAvailable";
 import { useConnect } from "../hooks/useConnect";
 import { Icon } from "./Icon";
+import { BoundedIcon } from "./BoundedIcon";
+import { Text } from "./Text";
 import { hexToRgba } from "../utils";
 
 export interface ConnectModalContentProps {
@@ -126,7 +128,7 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
   const dividerLineStyle: CSSProperties = {
     flex: 1,
     height: "1px",
-    backgroundColor: hexToRgba(theme.aux, 0.1),
+    backgroundColor: hexToRgba(theme.secondary, 0.1),
   };
 
   const dividerTextStyle: CSSProperties = {
@@ -161,22 +163,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
     animation: "spin 1s linear infinite",
   };
 
-  const loadingTextStyle: CSSProperties = {
-    ...theme.typography.caption,
-    color: theme.secondary,
-  };
-
-  const iconBackgroundStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "32px",
-    height: "32px",
-    borderRadius: "8px",
-    backgroundColor: theme.aux,
-    padding: "6px",
-  };
-
   return (
     <>
       <style>
@@ -194,7 +180,9 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
       {isLoading ? (
         <div style={loadingContainerStyle}>
           <div style={spinnerStyle} />
-          <div style={loadingTextStyle}>Loading...</div>
+          <Text variant="label" color={theme.secondary}>
+            Loading...
+          </Text>
         </div>
       ) : (
         <div style={buttonContainerStyle}>
@@ -231,7 +219,7 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
                   centered={allowedProviders.includes("apple")}
                 >
                   <Icon type="google" size={20} />
-                  {!allowedProviders.includes("apple") && "Continue with Google"}
+                  {!allowedProviders.includes("apple") && <Text variant="captionBold">Continue with Google</Text>}
                 </Button>
               )}
 
@@ -244,7 +232,7 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
                   centered={allowedProviders.includes("google")}
                 >
                   <Icon type="apple" size={20} />
-                  {!allowedProviders.includes("google") && "Continue with Apple"}
+                  {!allowedProviders.includes("google") && <Text variant="captionBold">Continue with Apple</Text>}
                 </Button>
               )}
             </div>
@@ -267,15 +255,17 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
                 isLoading={isConnecting && providerType === "injected"}
                 fullWidth={true}
               >
-                <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <div style={iconBackgroundStyle}>
-                    <Icon type="phantom" size={20} />
-                  </div>
-                  <span>Phantom</span>
-                </span>
-                <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span style={{ color: theme.secondary }}>Detected</span>
-                  <Icon type="chevron-right" size={16} />
+                <span style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <BoundedIcon type="phantom" size={20} background="#AB9FF2" color="white" />
+                    <Text variant="captionBold">Phantom</Text>
+                  </span>
+                  <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <Text variant="label" color={theme.secondary}>
+                      Detected
+                    </Text>
+                    <Icon type="chevron-right" size={16} />
+                  </span>
                 </span>
               </Button>
             </>

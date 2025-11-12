@@ -2,32 +2,22 @@ import { useState, useMemo, type CSSProperties, type ReactNode } from "react";
 import { hexToRgba } from "../utils";
 import { useTheme } from "../hooks/useTheme";
 import { Icon } from "./Icon";
+import { Text } from "./Text";
 
 interface BaseButtonStyleOptions {
   fullWidth: boolean;
   disabled: boolean;
   fontSize?: CSSProperties["fontSize"];
   fontWeight?: CSSProperties["fontWeight"];
-  justifyContent?: CSSProperties["justifyContent"];
 }
 
 // Custom hook for base button styles
-const useBaseButtonStyle = ({
-  fullWidth,
-  disabled,
-  fontSize,
-  fontWeight,
-  justifyContent = "center",
-}: BaseButtonStyleOptions): CSSProperties => {
+const useBaseButtonStyle = ({ fullWidth, disabled, fontSize, fontWeight }: BaseButtonStyleOptions): CSSProperties => {
   const theme = useTheme();
 
   return {
-    display: "flex",
     height: "56px",
     padding: "12px 16px",
-    justifyContent,
-    alignItems: "center",
-    flex: fullWidth ? "1 0 0" : undefined,
     width: fullWidth ? "100%" : "auto",
     border: "none",
     borderRadius: theme.borderRadius,
@@ -62,7 +52,6 @@ export function Button({
   variant = "primary",
   fullWidth = true,
   isLoading = false,
-  centered = false,
 }: ButtonProps) {
   const theme = useTheme();
   const [isHovering, setIsHovering] = useState(false);
@@ -71,7 +60,6 @@ export function Button({
   const baseStyle = useBaseButtonStyle({
     fullWidth,
     disabled: disabled || isLoading,
-    justifyContent: centered ? "center" : "space-between",
   });
 
   const backgroundColor = useMemo(() => {
@@ -139,7 +127,6 @@ export function LoginWithPhantomButton({
   const baseStyle = useBaseButtonStyle({
     fullWidth,
     disabled: disabled || isLoading,
-    justifyContent: "space-between",
   });
 
   const backgroundColor = useMemo(() => {
@@ -180,7 +167,9 @@ export function LoginWithPhantomButton({
     >
       <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
         <Icon type="phantom" size={20} />
-        {isLoading ? "Connecting..." : children}
+        <Text variant="captionBold" color="#FFFFFF">
+          {isLoading ? "Connecting..." : children}
+        </Text>
       </span>
     </button>
   );
