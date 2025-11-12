@@ -38,7 +38,6 @@ export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
     display: "flex",
     flexDirection: "column" as const,
     gap: "12px",
-    marginBottom: "24px",
   };
 
   const accountCardStyle: CSSProperties = {
@@ -68,7 +67,6 @@ export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
     background: theme.aux,
     borderRadius: theme.borderRadius,
     border: `1px solid ${theme.error}`,
-    marginBottom: "16px",
   };
 
   const errorTextStyle: CSSProperties = {

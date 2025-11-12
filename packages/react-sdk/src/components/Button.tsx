@@ -1,6 +1,7 @@
 import { useState, useMemo, type CSSProperties, type ReactNode } from "react";
 import { hexToRgba } from "../utils";
 import { useTheme } from "../hooks/useTheme";
+import { Icon } from "./Icon";
 
 interface BaseButtonStyleOptions {
   fullWidth: boolean;
@@ -21,8 +22,13 @@ const useBaseButtonStyle = ({
   const theme = useTheme();
 
   return {
-    width: fullWidth ? "100%" : "auto",
+    display: "flex",
+    height: "56px",
     padding: "12px 16px",
+    justifyContent,
+    alignItems: "center",
+    flex: fullWidth ? "1 0 0" : undefined,
+    width: fullWidth ? "100%" : "auto",
     border: "none",
     borderRadius: theme.borderRadius,
     fontFamily: theme.typography.captionBold.fontFamily,
@@ -33,9 +39,6 @@ const useBaseButtonStyle = ({
     letterSpacing: theme.typography.captionBold.letterSpacing,
     cursor: disabled ? "not-allowed" : "pointer",
     transition: "background-color 0.2s",
-    display: "flex",
-    alignItems: "center",
-    justifyContent,
     gap: "8px",
     opacity: disabled ? 0.6 : 1,
   };
@@ -49,6 +52,7 @@ export interface ButtonProps {
   variant?: "primary" | "secondary";
   fullWidth?: boolean;
   isLoading?: boolean;
+  centered?: boolean;
 }
 
 export function Button({
@@ -58,6 +62,7 @@ export function Button({
   variant = "primary",
   fullWidth = true,
   isLoading = false,
+  centered = false,
 }: ButtonProps) {
   const theme = useTheme();
   const [isHovering, setIsHovering] = useState(false);
@@ -66,7 +71,7 @@ export function Button({
   const baseStyle = useBaseButtonStyle({
     fullWidth,
     disabled: disabled || isLoading,
-    justifyContent: variant === "primary" ? "center" : "space-between",
+    justifyContent: centered ? "center" : "space-between",
   });
 
   const backgroundColor = useMemo(() => {
@@ -134,6 +139,7 @@ export function LoginWithPhantomButton({
   const baseStyle = useBaseButtonStyle({
     fullWidth,
     disabled: disabled || isLoading,
+    justifyContent: "space-between",
   });
 
   const backgroundColor = useMemo(() => {
@@ -172,7 +178,10 @@ export function LoginWithPhantomButton({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {isLoading ? "Connecting..." : children}
+      <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <Icon type="phantom" size={20} />
+        {isLoading ? "Connecting..." : children}
+      </span>
     </button>
   );
 }
