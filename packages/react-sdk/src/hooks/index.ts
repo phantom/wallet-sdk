@@ -2,6 +2,15 @@
 export { useConnect } from "./useConnect";
 export { useDisconnect } from "./useDisconnect";
 
+// Modal management
+export { useModal } from "../ModalContext";
+
+export interface UseModalResult {
+  open: () => void;
+  close: () => void;
+  isOpened: boolean;
+}
+
 // Account management
 export { useAccounts } from "./useAccounts";
 
@@ -15,3 +24,6 @@ export { useAutoConfirm } from "./useAutoConfirm";
 // Chain-specific hooks
 export { useSolana } from "./useSolana";
 export { useEthereum } from "./useEthereum";
+
+// Theme management
+export { useTheme } from "./useTheme";

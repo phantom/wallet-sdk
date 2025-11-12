@@ -1,4 +1,4 @@
-import { usePhantom } from "../PhantomProvider";
+import { usePhantom } from "../PhantomContext";
 
 export function useAccounts() {
   const { addresses, isConnected } = usePhantom();

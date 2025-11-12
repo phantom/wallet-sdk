@@ -41,7 +41,7 @@ function App() {
   return (
     <PhantomProvider
       config={{
-        providerType: "injected", // Uses Phantom browser extension
+        providers: ["injected"], // Only allow Phantom browser extension
         addressTypes: [AddressType.solana, AddressType.ethereum],
       }}
     >
@@ -83,7 +83,7 @@ function WalletComponent() {
 }
 ```
 
-### Embedded Wallet Setup
+### Multiple Authentication Methods
 
 ```tsx
 import { PhantomProvider } from "@phantom/react-sdk";
@@ -93,14 +93,203 @@ function App() {
   return (
     <PhantomProvider
       config={{
-        providerType: "embedded",
-        appId: "your-app-id", // Get your app ID from phantom.com/portal
+        providers: ["google", "apple", "phantom", "injected"], // Allow all auth methods
+        appId: "your-app-id", // Get your app ID from phantom.com/portal (required for embedded providers)
         addressTypes: [AddressType.solana, AddressType.ethereum],
       }}
     >
       <YourApp />
     </PhantomProvider>
   );
+}
+```
+
+## Connection Modal
+
+The SDK includes a built-in connection modal UI that provides a user-friendly interface for connecting to Phantom. The modal supports multiple connection methods (Google, Apple, Phantom Login, browser extension) and handles all connection logic automatically.
+
+### Using the Modal
+
+To use the modal, pass a `theme` prop to `PhantomProvider` and use the `useModal()` hook to control visibility:
+
+```tsx
+import { PhantomProvider, useModal, darkTheme, usePhantom } from "@phantom/react-sdk";
+import { AddressType } from "@phantom/browser-sdk";
+
+function App() {
+  return (
+    <PhantomProvider
+      config={{
+        providers: ["google", "apple", "phantom", "injected"],
+        appId: "your-app-id",
+        addressTypes: [AddressType.solana, AddressType.ethereum],
+      }}
+      theme={darkTheme}
+      appIcon="https://your-app.com/icon.png"
+      appName="Your App Name"
+    >
+      <WalletComponent />
+    </PhantomProvider>
+  );
+}
+
+function WalletComponent() {
+  const { open, close, isOpened } = useModal();
+  const { isConnected, user } = usePhantom();
+
+  if (isConnected) {
+    return (
+      <div>
+        <p>Connected as {user?.email || "Unknown"}</p>
+      </div>
+    );
+  }
+
+  return <button onClick={open}>Connect Wallet</button>;
+}
+```
+
+**Modal Features:**
+
+- **Multiple Auth Providers**: Google, Apple, Phantom Login, browser extension
+- **Automatic Provider Detection**: Shows browser extension option when Phantom is installed
+- **Mobile Support**: Displays deeplink option for Phantom mobile app on mobile devices
+- **Error Handling**: Clear error messages displayed in the modal
+- **Loading States**: Visual feedback during connection attempts
+- **Responsive Design**: Optimized for both mobile and desktop
+
+### useModal Hook
+
+Control the connection modal visibility:
+
+```tsx
+import { useModal } from "@phantom/react-sdk";
+
+function ConnectButton() {
+  const { open, close, isOpened } = useModal();
+
+  return (
+    <div>
+      <button onClick={open}>Open Modal</button>
+      <button onClick={close}>Close Modal</button>
+      <p>Modal is {isOpened ? "open" : "closed"}</p>
+    </div>
+  );
+}
+```
+
+**Returns:**
+
+- `open()` - Function to open the modal
+- `close()` - Function to close the modal
+- `isOpened` - Boolean indicating if modal is currently visible
+
+### ConnectButton Component
+
+A ready-to-use button component that handles the complete connection flow. When disconnected, it shows a "Connect Wallet" button that opens the connection modal. When connected, it displays the truncated wallet address and opens the wallet management modal on click.
+
+```tsx
+import { ConnectButton, AddressType } from "@phantom/react-sdk";
+
+function Header() {
+  return (
+    <div>
+      {/* Default: Shows first available address */}
+      <ConnectButton />
+
+      {/* Show specific address type */}
+      <ConnectButton addressType={AddressType.solana} />
+      <ConnectButton addressType={AddressType.ethereum} />
+
+      {/* Full width button */}
+      <ConnectButton fullWidth />
+    </div>
+  );
+}
+```
+
+**Props:**
+
+- `addressType?: AddressType` - Specify which address type to display when connected (e.g., `AddressType.solana`, `AddressType.ethereum`). If not specified, shows the first available address.
+- `fullWidth?: boolean` - Whether the button should take full width of its container. Default: `false`
+
+**Features:**
+
+- **When disconnected**: Opens connection modal with auth provider options (Google, Apple, Phantom Login, browser extension)
+- **When connected**: Displays truncated address (e.g., "5Gv8r2...k3Hn") and opens wallet management modal on click
+- **Wallet modal**: Shows all connected addresses and provides a disconnect button
+- Uses theme styling for consistent appearance
+- Fully clickable in both states
+
+## Theming
+
+Customize the modal appearance by passing a theme object to the `PhantomProvider`. The SDK includes two built-in themes: `darkTheme` (default) and `lightTheme`.
+
+### Using Built-in Themes
+
+```tsx
+import { PhantomProvider, darkTheme, lightTheme } from "@phantom/react-sdk";
+
+// Use dark theme (default)
+<PhantomProvider config={config} theme={darkTheme}>
+  <App />
+</PhantomProvider>
+
+// Use light theme
+<PhantomProvider config={config} theme={lightTheme}>
+  <App />
+</PhantomProvider>
+```
+
+### Custom Theme
+
+You can pass a partial theme object to customize specific properties:
+
+```tsx
+import { PhantomProvider } from "@phantom/react-sdk";
+
+const customTheme = {
+  background: "#1a1a1a",
+  text: "#ffffff",
+  secondary: "#98979C",
+  brand: "#ab9ff2",
+  error: "#ff4444",
+  success: "#00ff00",
+  borderRadius: "16px",
+  overlay: "rgba(0, 0, 0, 0.8)",
+};
+
+<PhantomProvider config={config} theme={customTheme} appIcon="https://your-app.com/icon.png" appName="Your App">
+  <App />
+</PhantomProvider>;
+```
+
+### Theme Properties
+
+| Property       | Type     | Description                                               |
+| -------------- | -------- | --------------------------------------------------------- |
+| `background`   | `string` | Background color for modal                                |
+| `text`         | `string` | Primary text color                                        |
+| `secondary`    | `string` | Secondary color for text, borders, dividers (must be hex) |
+| `brand`        | `string` | Brand/primary action color                                |
+| `error`        | `string` | Error state color                                         |
+| `success`      | `string` | Success state color                                       |
+| `borderRadius` | `string` | Border radius for buttons and modal                       |
+| `overlay`      | `string` | Overlay background color (with opacity)                   |
+
+**Note:** The `secondary` color must be a hex color value (e.g., `#98979C`) as it's used to derive auxiliary colors with opacity.
+
+### Accessing Theme in Custom Components
+
+If you need to access the current theme in your own components, use the `useTheme()` hook:
+
+```tsx
+import { useTheme } from "@phantom/react-sdk";
+
+function CustomComponent() {
+  const theme = useTheme();
+
+  return <div style={{ backgroundColor: theme.background, color: theme.text }}>Themed content</div>;
 }
 ```
 
@@ -204,16 +393,27 @@ function App() {
 }
 ```
 
-## Provider Types
+## Authentication Providers
 
-### Injected Provider
+The SDK supports multiple authentication providers that you configure via the `providers` array:
 
-Uses the Phantom browser extension installed by the user.
+### Available Providers
+
+- **`"injected"`** - Phantom browser extension (no `appId` required)
+- **`"google"`** - Google OAuth (requires `appId`)
+- **`"apple"`** - Apple ID (requires `appId`)
+- **`"phantom"`** - Phantom Login (requires `appId`)
+- **`"x"`** - X/Twitter (requires `appId`)
+- **`"tiktok"`** - TikTok (requires `appId`)
+
+### Configuration Examples
+
+**Browser Extension Only**
 
 ```tsx
 <PhantomProvider
   config={{
-    providerType: "injected",
+    providers: ["injected"], // Only allow browser extension
     addressTypes: [AddressType.solana, AddressType.ethereum],
   }}
 >
@@ -221,11 +421,23 @@ Uses the Phantom browser extension installed by the user.
 </PhantomProvider>
 ```
 
-### Embedded Provider
+**Multiple Authentication Methods**
 
-Creates non-custodial wallets embedded in your application.
+```tsx
+<PhantomProvider
+  config={{
+    providers: ["google", "apple", "phantom", "injected"], // Allow all methods
+    appId: "your-app-id", // Required for embedded providers
+    addressTypes: [AddressType.solana, AddressType.ethereum],
+  }}
+>
+  <YourApp />
+</PhantomProvider>
+```
 
-#### User Wallet
+### Embedded Wallet Type
+
+When using embedded providers (google, apple, phantom, etc.), you can specify the wallet type using `embeddedWalletType`. The default is `"user-wallet"`:
 
 - **Uses Phantom authentication** - user logs in with existing account
 - **Potentially funded** - brings existing wallet balance
@@ -234,9 +446,10 @@ Creates non-custodial wallets embedded in your application.
 ```tsx
 <PhantomProvider
   config={{
-    providerType: "embedded",
+    providers: ["google", "apple", "phantom"],
     appId: "your-app-id",
     addressTypes: [AddressType.solana, AddressType.ethereum],
+    embeddedWalletType: "user-wallet", // default, can be omitted
   }}
 >
   <YourApp />
@@ -823,6 +1036,7 @@ Quick reference of all available hooks:
 | Hook                         | Purpose                                 | Returns                                             |
 | ---------------------------- | --------------------------------------- | --------------------------------------------------- |
 | `useConnect`                 | Connect to wallet                       | `{ connect, isConnecting, error }`                  |
+| `useModal`                   | Control connection modal                | `{ open, close, isOpened }`                         |
 | `useAccounts`                | Get wallet addresses                    | `WalletAddress[]` or `null`                         |
 | `useIsExtensionInstalled`    | Check extension status                  | `{ isLoading, isInstalled }`                        |
 | `useIsPhantomLoginAvailable` | Check Phantom Login availability        | `{ isLoading, isAvailable }`                        |
@@ -830,17 +1044,20 @@ Quick reference of all available hooks:
 | `useAutoConfirm`             | Auto-confirm management (injected only) | `{ enable, disable, status, supportedChains, ... }` |
 | `useSolana`                  | Solana chain operations                 | `{ signMessage, signAndSendTransaction, ... }`      |
 | `useEthereum`                | Ethereum chain operations               | `{ signPersonalMessage, sendTransaction, ... }`     |
+| `useTheme`                   | Access current theme                    | `CompletePhantomTheme`                              |
 | `usePhantom`                 | Get provider context                    | `{ isConnected, isReady }`                          |
 
 ## Configuration Reference
 
 ```typescript
 interface PhantomSDKConfig {
-  providerType: "injected" | "embedded";
+  // List of allowed authentication providers (REQUIRED)
+  providers: AuthProviderType[]; // e.g., ["google", "apple", "phantom", "injected"]
+
   addressTypes?: [AddressType, ...AddressType[]]; // Networks to enable (e.g., [AddressType.solana])
 
-  // Required for embedded provider only
-  appId: string; // Your app ID from phantom.com/portal (required for embedded provider)
+  // Required when using embedded providers (google, apple, phantom, x, tiktok)
+  appId?: string; // Your app ID from phantom.com/portal
 
   // Optional configuration
   apiBaseUrl?: string; // Phantom API base URL (optional, has default)
@@ -848,8 +1065,12 @@ interface PhantomSDKConfig {
     authUrl?: string; // Custom auth URL (optional, defaults to "https://connect.phantom.app/login")
     redirectUrl?: string; // Custom redirect URL after authentication (optional)
   };
-  embeddedWalletType?: "user-wallet"; // Wallet type (optional, defaults to "user-wallet", currently the only supported type)
+  embeddedWalletType?: "user-wallet"; // Wallet type (optional, defaults to "user-wallet")
+  autoConnect?: boolean; // Auto-connect to existing session (default: true when embedded providers used)
 }
+
+// Valid provider types
+type AuthProviderType = "google" | "apple" | "phantom" | "x" | "tiktok" | "injected";
 ```
 
 ## Debug Configuration
@@ -879,8 +1100,9 @@ function App() {
 
   // SDK configuration - static, won't change when debug settings change
   const config: PhantomSDKConfig = {
-    providerType: "embedded",
+    providers: ["google", "apple", "phantom"],
     appId: "your-app-id",
+    addressTypes: [AddressType.solana, AddressType.ethereum],
     // ... other config
   };
 

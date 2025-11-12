@@ -8,6 +8,7 @@ import {
   usePhantom,
   useAutoConfirm,
   NetworkId,
+  ConnectButton,
 } from "@phantom/react-sdk";
 import {
   SystemProgram,
@@ -33,7 +34,7 @@ export function SDKActions() {
   const { disconnect, isDisconnecting } = useDisconnect();
   const { solana } = useSolana();
   const { ethereum } = useEthereum();
-  const { isConnected, currentProviderType, user } = usePhantom();
+  const { isConnected, user } = usePhantom();
   const autoConfirm = useAutoConfirm();
   const addresses = useAccounts();
   const [isSigningMessageType, setIsSigningMessageType] = useState<"solana" | "evm" | null>(null);
@@ -814,9 +815,7 @@ export function SDKActions() {
           {isConnected && user && (
             <div className="status-row">
               <span className="status-label">Auth Provider:</span>
-              <span className="status-value">
-                {user.providerType} {user.authProvider}
-              </span>
+              <span className="status-value">{user.authProvider}</span>
             </div>
           )}
           {user && (
@@ -839,6 +838,15 @@ export function SDKActions() {
             </div>
           )}
         </div>
+
+        {isConnected && (
+          <div style={{ marginTop: "1rem" }}>
+            <h4 style={{ marginBottom: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
+              ConnectButton (click to open wallet modal):
+            </h4>
+            <ConnectButton fullWidth />
+          </div>
+        )}
       </div>
 
       {!isConnected && isLoading && (
@@ -865,6 +873,13 @@ export function SDKActions() {
             </button>
           </div>
           {connectError && <p className="error-text">Error: {connectError.message}</p>}
+
+          <div style={{ marginTop: "1.5rem" }}>
+            <h4 style={{ marginBottom: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
+              Or use the ConnectButton component:
+            </h4>
+            <ConnectButton fullWidth />
+          </div>
         </div>
       )}
 
@@ -892,7 +907,7 @@ export function SDKActions() {
         </div>
       )}
 
-      {isConnected && currentProviderType === "injected" && (
+      {isConnected && user?.authProvider === "injected" && (
         <div className="section">
           <h3>Auto-Confirm Settings</h3>
           <div className="status-card">

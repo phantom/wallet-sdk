@@ -320,7 +320,6 @@ export class EmbeddedProvider {
         walletId: this.walletId!,
         addresses: this.addresses,
         status: "completed",
-        providerType: "embedded",
         authUserId: session.authUserId,
         authProvider: session.authProvider,
       };
@@ -601,7 +600,6 @@ export class EmbeddedProvider {
         return {
           addresses: [],
           status: "pending",
-          providerType: "embedded",
           authProvider: authOptions.provider,
         } as ConnectResult;
       }
@@ -623,7 +621,6 @@ export class EmbeddedProvider {
         walletId: this.walletId!,
         addresses: this.addresses,
         status: "completed",
-        providerType: "embedded",
         authUserId: session?.authUserId,
         authProvider: session?.authProvider,
       };
@@ -1242,7 +1239,6 @@ export class EmbeddedProvider {
       walletId: this.walletId!,
       addresses: this.addresses,
       status: "completed",
-      providerType: "embedded",
       authUserId: session.authUserId,
       authProvider: session.authProvider,
     };
