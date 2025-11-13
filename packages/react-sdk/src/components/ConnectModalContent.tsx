@@ -1,15 +1,10 @@
 import { useState, useCallback, useMemo, type CSSProperties } from "react";
 import { isMobileDevice, getDeeplinkToPhantom, type AuthProviderType } from "@phantom/browser-sdk";
-import { Button, LoginWithPhantomButton } from "./Button";
-import { useTheme } from "../hooks/useTheme";
+import { Button, LoginWithPhantomButton, Icon, BoundedIcon, Text, hexToRgba, useTheme } from "@phantom/wallet-sdk-ui";
 import { usePhantom } from "../PhantomContext";
 import { useIsExtensionInstalled } from "../hooks/useIsExtensionInstalled";
 import { useIsPhantomLoginAvailable } from "../hooks/useIsPhantomLoginAvailable";
 import { useConnect } from "../hooks/useConnect";
-import { Icon } from "./Icon";
-import { BoundedIcon } from "./BoundedIcon";
-import { Text } from "./Text";
-import { hexToRgba } from "../utils";
 
 export interface ConnectModalContentProps {
   appIcon?: string;
@@ -23,12 +18,11 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
   const baseConnect = useConnect();
   const isExtensionInstalled = useIsExtensionInstalled();
   const isPhantomLoginAvailable = useIsPhantomLoginAvailable();
+  const isMobile = useMemo(() => isMobileDevice(), []);
 
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [providerType, setProviderType] = useState<AuthProviderType | "deeplink" | "injected" | null>(null);
-
-  const isMobile = useMemo(() => isMobileDevice(), []);
+  const [providerType, setProviderType] = useState<AuthProviderType | "deeplink" | null>(null);
 
   const showDivider = !(allowedProviders.length === 1 && allowedProviders.includes("injected"));
 
@@ -53,27 +47,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
     [baseConnect, onClose],
   );
 
-  const connectWithInjected = useCallback(async () => {
-    try {
-      setIsConnecting(true);
-      setError(null);
-      setProviderType("injected");
-
-      await baseConnect.connect({
-        provider: "injected",
-      });
-
-      onClose();
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      setError(error);
-    } finally {
-      setIsConnecting(false);
-      setProviderType(null);
-    }
-  }, [baseConnect, onClose]);
-
-  // Connect with deeplink (redirect to Phantom mobile app)
   const connectWithDeeplink = useCallback(() => {
     try {
       setIsConnecting(true);
@@ -250,7 +223,7 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
               )}
 
               <Button
-                onClick={connectWithInjected}
+                onClick={() => connectWithAuthProvider("injected")}
                 disabled={isConnecting}
                 isLoading={isConnecting && providerType === "injected"}
                 fullWidth={true}

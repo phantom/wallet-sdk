@@ -9,7 +9,7 @@ import type {
   WalletAddress,
   ConnectResult,
 } from "@phantom/browser-sdk";
-import { mergeTheme, darkTheme, type PhantomTheme } from "./themes";
+import { mergeTheme, darkTheme, ThemeProvider, type PhantomTheme } from "@phantom/wallet-sdk-ui";
 import { PhantomContext, type PhantomContextValue } from "./PhantomContext";
 import { ModalProvider } from "./ModalProvider";
 
@@ -182,10 +182,12 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
   );
 
   return (
-    <PhantomContext.Provider value={value}>
-      <ModalProvider appIcon={appIcon} appName={appName}>
-        {children}
-      </ModalProvider>
-    </PhantomContext.Provider>
+    <ThemeProvider theme={resolvedTheme}>
+      <PhantomContext.Provider value={value}>
+        <ModalProvider appIcon={appIcon} appName={appName}>
+          {children}
+        </ModalProvider>
+      </PhantomContext.Provider>
+    </ThemeProvider>
   );
 }

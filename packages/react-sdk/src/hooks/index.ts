@@ -25,5 +25,5 @@ export { useAutoConfirm } from "./useAutoConfirm";
 export { useSolana } from "./useSolana";
 export { useEthereum } from "./useEthereum";
 
-// Theme management
-export { useTheme } from "./useTheme";
+// Theme management - exported from @phantom/wallet-sdk-ui
+export { useTheme } from "@phantom/wallet-sdk-ui";

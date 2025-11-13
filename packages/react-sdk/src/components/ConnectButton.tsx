@@ -1,7 +1,7 @@
 import { useMemo, type CSSProperties } from "react";
 import { usePhantom } from "../PhantomContext";
 import { useModal } from "../hooks";
-import { useTheme } from "../hooks/useTheme";
+import { useTheme } from "@phantom/wallet-sdk-ui";
 import type { AddressType } from "@phantom/browser-sdk";
 
 export interface ConnectButtonProps {

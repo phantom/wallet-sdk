@@ -5722,6 +5722,7 @@ __metadata:
     "@phantom/browser-sdk": "workspace:^"
     "@phantom/chain-interfaces": "workspace:^"
     "@phantom/constants": "workspace:^"
+    "@phantom/wallet-sdk-ui": "workspace:^"
     "@testing-library/dom": "npm:^10.4.0"
     "@testing-library/react": "npm:^16.3.0"
     "@types/jest": "npm:^29.5.14"
@@ -5839,6 +5840,29 @@ __metadata:
     ts-jest: "npm:^29.1.2"
     tsup: "npm:^6.7.0"
     typescript: "npm:^5.0.4"
+  languageName: unknown
+  linkType: soft
+
+"@phantom/wallet-sdk-ui@workspace:^, @phantom/wallet-sdk-ui@workspace:packages/ui":
+  version: 0.0.0-use.local
+  resolution: "@phantom/wallet-sdk-ui@workspace:packages/ui"
+  dependencies:
+    "@types/react": "npm:^19.1.1"
+    eslint: "npm:8.53.0"
+    prettier: "npm:^3.5.2"
+    react: "npm:19.1.1"
+    react-native: "npm:0.79.5"
+    rimraf: "npm:^6.0.1"
+    tsup: "npm:^6.7.0"
+    typescript: "npm:^5.0.4"
+  peerDependencies:
+    react: ">=19.0.0"
+    react-native-svg: ">=15.0.0"
+  peerDependenciesMeta:
+    react-native:
+      optional: true
+    react-native-svg:
+      optional: true
   languageName: unknown
   linkType: soft
 
@@ -8538,6 +8562,15 @@ __metadata:
   dependencies:
     csstype: "npm:^3.0.2"
   checksum: 10c0/75e35b54883f5ed07d3b5cb16a4711b6dbb7ec6b74301bcb9bfa697c9d9fff022ec508e1719e7b2c69e2e8b042faac1125be7717b5e5e084f816a2c88e136920
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:^19.1.1":
+  version: 19.2.4
+  resolution: "@types/react@npm:19.2.4"
+  dependencies:
+    csstype: "npm:^3.0.2"
+  checksum: 10c0/c878262c4bce047e53a44ef644088fce359ebdfdca7060a4ac1717c8362563b9506a7ebae145977836e95d5948b8f8b426dcd516044c3a3c0563a6f1b60408ce
   languageName: node
   linkType: hard
 

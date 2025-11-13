@@ -1,9 +1,5 @@
-import { useState, type CSSProperties } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { useTheme } from "../hooks/useTheme";
-import { usePhantom } from "../PhantomContext";
-import { isMobileDevice } from "@phantom/browser-sdk";
-import { ConnectModalContent } from "./ConnectModalContent";
-import { ConnectedModalContent } from "./ConnectedModalContent";
 import { Icon } from "./Icon";
 import { Text } from "./Text";
 
@@ -12,13 +8,22 @@ export interface ModalProps {
   appName?: string;
   isVisible: boolean;
   onClose: () => void;
+  isConnected?: boolean;
+  isMobile?: boolean;
+  children: ReactNode;
 }
 
-export function Modal({ appIcon, appName, isVisible, onClose }: ModalProps) {
+export function Modal({
+  appIcon: _appIcon,
+  appName: _appName,
+  isVisible,
+  onClose,
+  isConnected,
+  isMobile = false,
+  children,
+}: ModalProps) {
   const theme = useTheme();
-  const { isConnected } = usePhantom();
   const [isCloseButtonHovering, setIsCloseButtonHovering] = useState(false);
-  const isMobile = isMobileDevice();
 
   if (!isVisible) return null;
 
@@ -113,13 +118,7 @@ export function Modal({ appIcon, appName, isVisible, onClose }: ModalProps) {
           </button>
         </div>
 
-        <div style={contentWrapperStyle}>
-          {isConnected ? (
-            <ConnectedModalContent onClose={onClose} />
-          ) : (
-            <ConnectModalContent appIcon={appIcon} appName={appName} onClose={onClose} />
-          )}
-        </div>
+        <div style={contentWrapperStyle}>{children}</div>
 
         <div style={footerStyle}>
           <Text variant="label" color={theme.secondary}>
