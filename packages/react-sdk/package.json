@@ -28,7 +28,8 @@
   "dependencies": {
     "@phantom/browser-sdk": "workspace:^",
     "@phantom/chain-interfaces": "workspace:^",
-    "@phantom/constants": "workspace:^"
+    "@phantom/constants": "workspace:^",
+    "@phantom/wallet-sdk-ui": "workspace:^"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.0",

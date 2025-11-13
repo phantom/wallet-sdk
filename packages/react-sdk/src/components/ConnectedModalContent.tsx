@@ -1,9 +1,7 @@
 import { useState, useEffect, type CSSProperties } from "react";
-import { Button } from "./Button";
-import { useTheme } from "../hooks/useTheme";
+import { Button, Text, useTheme } from "@phantom/wallet-sdk-ui";
 import { usePhantom } from "../PhantomContext";
 import { useDisconnect } from "../hooks/useDisconnect";
-import { Text } from "./Text";
 
 export interface ConnectedModalContentProps {
   onClose: () => void;

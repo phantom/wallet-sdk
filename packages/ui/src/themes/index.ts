@@ -3,7 +3,7 @@
  * Simple theme focused on colors and border radius
  */
 
-import { hexToRgba } from "./utils";
+import { hexToRgba } from "../utils/index";
 
 // Type-safe hex color string
 export type HexColor = `#${string}`;

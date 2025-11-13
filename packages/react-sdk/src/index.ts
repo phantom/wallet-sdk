@@ -11,9 +11,9 @@ export * from "./hooks";
 // Components
 export * from "./components";
 
-// Theme
-export { darkTheme, lightTheme, mergeTheme } from "./themes";
-export type { PhantomTheme, CompletePhantomTheme, HexColor } from "./themes";
+// Theme - re-exported from @phantom/wallet-sdk-ui
+export { darkTheme, lightTheme, mergeTheme } from "@phantom/wallet-sdk-ui";
+export type { PhantomTheme, CompletePhantomTheme, HexColor } from "@phantom/wallet-sdk-ui";
 
 // Types
 export * from "./types";
