@@ -203,20 +203,16 @@ export class PhantomClient {
    * This is phase 1 of the two-phase spending limit flow
    * @private
    */
-  private async augmentWithSpendingLimit(
+  private async prepareTransaction(
     transaction: string,
     organizationId: string,
-    walletId: string,
     submissionConfig: SubmissionConfig,
     account: string,
   ): Promise<AugmentWithSpendingLimitResponse> {
     try {
-      const chainTransaction = { solana: transaction };
-
       const request = {
-        transaction: chainTransaction,
+        transaction,
         organizationId,
-        walletId,
         submissionConfig,
         simulationConfig: { account },
       };
@@ -277,7 +273,6 @@ export class PhantomClient {
 
       // TWO-PHASE SPENDING LIMITS FLOW
       // Phase 1: Call wallet service to check spending limits and augment transaction if needed
-      let spendingLimitConfig: SpendingLimitConfig | undefined;
       let augmentedTransaction = encodedTransaction;
 
       // Always check spending limits for Solana transactions
@@ -290,16 +285,14 @@ export class PhantomClient {
 
         try {
           // Call wallet service augment endpoint
-          const augmentResponse = await this.augmentWithSpendingLimit(
+          const augmentResponse = await this.prepareTransaction(
             encodedTransaction,
             this.config.organizationId,
-            walletId,
             submissionConfig, // Non-null assertion safe because we validated above
             params.account, // Non-null assertion safe because we validated above
           );
 
           augmentedTransaction = augmentResponse.transaction;
-          spendingLimitConfig = augmentResponse.memoryConfigUsed;
         } catch (e: any) {
           const errorMessage = e?.message || String(e);
           throw new Error(
@@ -314,7 +307,6 @@ export class PhantomClient {
       const signRequest: SignTransactionRequest & {
         submissionConfig?: SubmissionConfig;
         simulationConfig?: SimulationConfig;
-        spendingLimitConfig?: SpendingLimitConfig;
       } = {
         organizationId: this.config.organizationId,
         walletId: walletId,
@@ -334,11 +326,6 @@ export class PhantomClient {
         signRequest.simulationConfig = {
           account: params.account,
         };
-      }
-
-      // Add spending limit config if available
-      if (spendingLimitConfig) {
-        signRequest.spendingLimitConfig = spendingLimitConfig;
       }
 
       const request: SignTransaction = {

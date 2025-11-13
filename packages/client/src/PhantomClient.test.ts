@@ -372,9 +372,8 @@ describe("PhantomClient Spending Limits Integration", () => {
       expect(mockAxiosPost).toHaveBeenCalledWith(
         "https://api.phantom.app/prepare",
         {
-          transaction: { solana: "original-tx-base64" },
+          transaction: "original-tx-base64", // Plain string, not wrapped
           organizationId: "org-123",
-          walletId: "wallet-123",
           submissionConfig: solanaSubmissionConfig,
           simulationConfig: { account: "UserAccount123" },
         },
@@ -729,10 +728,10 @@ describe("PhantomClient Spending Limits Integration", () => {
       expect(mockAxiosPost).toHaveBeenCalledWith(
         "https://api.phantom.app/prepare",
         expect.objectContaining({
-          transaction: { solana: "solana-tx-base64" },
+          transaction: "solana-tx-base64", // Plain string, not wrapped
           organizationId: "org-123",
-          walletId: "wallet-123",
           submissionConfig: submissionConfig,
+          simulationConfig: { account: "UserAccount123" },
         }),
         expect.any(Object),
       );
@@ -758,9 +757,8 @@ describe("PhantomClient Spending Limits Integration", () => {
       expect(mockAxiosPost).toHaveBeenCalledWith(
         "https://api.phantom.app/prepare",
         {
-          transaction: { solana: "tx-base64" },
+          transaction: "tx-base64", // Plain string, not wrapped
           organizationId: "org-123",
-          walletId: "wallet-123",
           submissionConfig: submissionConfig,
           simulationConfig: { account: "UserAccount123" },
         },
