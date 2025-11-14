@@ -245,7 +245,7 @@ export class PhantomClient {
       }
 
       // SubmissionConfig is used to: 1) submit the transaction onchain, 2) derive spending limits
-      const submissionConfig: SubmissionConfig | null = deriveSubmissionConfig(networkIdParam) || null;
+      const submissionConfig = deriveSubmissionConfig(networkIdParam);
 
       if (!submissionConfig) {
         throw new Error(`SubmissionConfig could not be derived for network ID: ${networkIdParam}`);
