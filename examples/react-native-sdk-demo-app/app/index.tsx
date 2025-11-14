@@ -141,10 +141,7 @@ export default function HomeScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Wallet Actions</Text>
 
-            <TouchableOpacity
-              style={[styles.button, styles.primaryButton]}
-              onPress={() => modal.open()}
-            >
+            <TouchableOpacity style={[styles.button, styles.primaryButton]} onPress={() => modal.open()}>
               <Text style={styles.buttonText}>Open Wallet Modal</Text>
             </TouchableOpacity>
 

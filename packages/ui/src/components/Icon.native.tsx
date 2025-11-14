@@ -2,7 +2,16 @@ import { View, type ViewStyle } from "react-native";
 import Svg, { Path, G, Mask, Rect, Defs, ClipPath } from "react-native-svg";
 import type { ReactElement } from "react";
 
-export type IconType = "phantom" | "google" | "apple" | "wallet" | "chevron-right" | "arrow-right" | "x" | "tiktok" | "close";
+export type IconType =
+  | "phantom"
+  | "google"
+  | "apple"
+  | "wallet"
+  | "chevron-right"
+  | "arrow-right"
+  | "x"
+  | "tiktok"
+  | "close";
 
 export interface IconProps {
   type: IconType;

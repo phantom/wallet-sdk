@@ -16,6 +16,6 @@ export interface ModalProps {
  */
 export function Modal(_props: ModalProps) {
   throw new Error(
-    "Modal component is not provided in the UI package for React Native. Import Modal from @phantom/react-native-sdk instead."
+    "Modal component is not provided in the UI package for React Native. Import Modal from @phantom/react-native-sdk instead.",
   );
 }

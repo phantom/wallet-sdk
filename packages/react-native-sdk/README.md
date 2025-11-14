@@ -420,14 +420,9 @@ Customize the modal appearance by passing a `theme` prop to the `PhantomProvider
 ```tsx
 import { PhantomProvider, darkTheme } from "@phantom/react-native-sdk";
 
-<PhantomProvider
-  config={config}
-  theme={darkTheme}
-  appIcon="https://your-app.com/icon.png"
-  appName="Your App Name"
->
+<PhantomProvider config={config} theme={darkTheme} appIcon="https://your-app.com/icon.png" appName="Your App Name">
   <App />
-</PhantomProvider>
+</PhantomProvider>;
 ```
 
 ### Custom Theme
@@ -448,7 +443,7 @@ const customTheme = {
 
 <PhantomProvider config={config} theme={customTheme}>
   <App />
-</PhantomProvider>
+</PhantomProvider>;
 ```
 
 **Theme Properties:**
@@ -487,7 +482,6 @@ await connect({ provider: "x" });
 
 // TikTok
 await connect({ provider: "tiktok" });
-
 ```
 
 ### Authentication Process

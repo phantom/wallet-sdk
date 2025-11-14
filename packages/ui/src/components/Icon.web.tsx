@@ -1,6 +1,15 @@
 import type { CSSProperties, ReactElement } from "react";
 
-export type IconType = "phantom" | "google" | "apple" | "wallet" | "chevron-right" | "arrow-right" | "x" | "tiktok" | "close";
+export type IconType =
+  | "phantom"
+  | "google"
+  | "apple"
+  | "wallet"
+  | "chevron-right"
+  | "arrow-right"
+  | "x"
+  | "tiktok"
+  | "close";
 
 export interface IconProps {
   type: IconType;
