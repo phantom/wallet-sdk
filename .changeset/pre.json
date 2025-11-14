@@ -28,12 +28,14 @@
     "with-wagmi": "0.1.0",
     "@phantom/with-modal": "0.0.1",
     "@phantom/utils": "1.0.0-beta.3",
-    "with-nextjs": "0.1.0"
+    "with-nextjs": "0.1.0",
+    "@phantom/wallet-sdk-ui": "1.0.0-beta.0"
   },
   "changesets": [
     "calm-jokes-tie",
     "chubby-owls-stay",
     "clear-parts-battle",
+    "cuddly-hounds-worry",
     "cuddly-rivers-rule",
     "curvy-jars-yell",
     "cute-days-yell",
@@ -54,9 +56,11 @@
     "spicy-bats-bathe",
     "ten-seas-juggle",
     "tired-baboons-trade",
+    "tired-mugs-slide",
     "tricky-ravens-yell",
     "vast-needles-jog",
     "warm-sites-unite",
+    "whole-flies-beg",
     "witty-carpets-unite"
   ]
 }

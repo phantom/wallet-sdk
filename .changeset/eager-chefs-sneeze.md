@@ -15,7 +15,6 @@
 "@phantom/api-key-stamper": patch
 "@phantom/browser-injected-sdk": patch
 "@phantom/indexed-db-stamper": patch
-"@phantom/react-ui": patch
 ---
 
 Bump all dependencies

@@ -1,8 +1,6 @@
 ---
-"with-wagmi": patch
 "@phantom/api-key-stamper": patch
 "@phantom/base64url": patch
-"@phantom/wallet-sdk": patch
 "@phantom/browser-injected-sdk": patch
 "@phantom/browser-sdk": patch
 "@phantom/chain-interfaces": patch
@@ -16,6 +14,8 @@
 "@phantom/react-sdk": patch
 "@phantom/sdk-types": patch
 "@phantom/server-sdk": patch
+"@phantom/wallet-sdk-ui": patch
+"@phantom/utils": patch
 ---
 
-Release with new interfaces, appId
+New version
