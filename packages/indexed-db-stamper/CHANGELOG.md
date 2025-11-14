@@ -1,5 +1,18 @@
 # @phantom/indexed-db-stamper
 
+## 1.0.0-beta.3
+
+### Patch Changes
+
+- f54d77f: New version
+- Updated dependencies [f54d77f]
+- Updated dependencies [b6aff60]
+- Updated dependencies [c424eff]
+  - @phantom/base64url@1.0.0-beta.10
+  - @phantom/crypto@1.0.0-beta.10
+  - @phantom/embedded-provider-core@1.0.0-beta.22
+  - @phantom/sdk-types@1.0.0-beta.10
+
 ## 1.0.0-beta.2
 
 ### Patch Changes

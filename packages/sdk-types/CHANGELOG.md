@@ -1,5 +1,12 @@
 # @phantom/sdk-types
 
+## 1.0.0-beta.10
+
+### Patch Changes
+
+- f54d77f: New version
+- b6aff60: Release new version
+
 ## 1.0.0-beta.9
 
 ### Patch Changes
