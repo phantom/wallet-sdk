@@ -32,7 +32,7 @@ jest.mock("@phantom/wallet-sdk-ui", () => ({
     appName?: string;
     isConnected?: boolean;
     isMobile?: boolean;
-  }) => (
+  }) =>
     isVisible ? (
       <div
         data-testid="modal"
@@ -42,21 +42,20 @@ jest.mock("@phantom/wallet-sdk-ui", () => ({
         data-appicon={appIcon}
         data-appname={appName}
       >
-        <button onClick={onClose} data-testid="modal-close">Close</button>
+        <button onClick={onClose} data-testid="modal-close">
+          Close
+        </button>
         {children}
       </div>
-    ) : null
-  ),
+    ) : null,
 }));
 
 jest.mock("./components/ConnectModalContent", () => ({
   ConnectModalContent: ({ appIcon, appName, onClose }: any) => (
-    <div
-      data-testid="connect-content"
-      data-appicon={appIcon}
-      data-appname={appName}
-    >
-      <button onClick={onClose} data-testid="connect-close">Close Connect</button>
+    <div data-testid="connect-content" data-appicon={appIcon} data-appname={appName}>
+      <button onClick={onClose} data-testid="connect-close">
+        Close Connect
+      </button>
     </div>
   ),
 }));
@@ -64,7 +63,9 @@ jest.mock("./components/ConnectModalContent", () => ({
 jest.mock("./components/ConnectedModalContent", () => ({
   ConnectedModalContent: ({ onClose }: { onClose: () => void }) => (
     <div data-testid="connected-content">
-      <button onClick={onClose} data-testid="connected-close">Close Connected</button>
+      <button onClick={onClose} data-testid="connected-close">
+        Close Connected
+      </button>
     </div>
   ),
 }));
@@ -97,7 +98,7 @@ describe("ModalProvider", () => {
           <div data-testid="test-child">Test Child</div>
         </ModalProvider>,
       );
-      
+
       expect(getByTestId("test-child")).toBeInTheDocument();
     });
 
@@ -107,7 +108,7 @@ describe("ModalProvider", () => {
           <div>Test</div>
         </ModalProvider>,
       );
-      
+
       expect(queryByTestId("modal")).not.toBeInTheDocument();
     });
 
@@ -125,7 +126,7 @@ describe("ModalProvider", () => {
           <TestComponent />
         </ModalProvider>,
       );
-      
+
       expect(getByTestId("modal")).toBeInTheDocument();
     });
 
@@ -148,7 +149,7 @@ describe("ModalProvider", () => {
           <TestComponent />
         </ModalProvider>,
       );
-      
+
       const modal = getByTestId("modal");
       expect(modal.dataset.isconnected).toBe("true");
     });
@@ -169,7 +170,7 @@ describe("ModalProvider", () => {
           <TestComponent />
         </ModalProvider>,
       );
-      
+
       const modal = getByTestId("modal");
       expect(modal.dataset.ismobile).toBe("true");
     });
@@ -188,7 +189,7 @@ describe("ModalProvider", () => {
           <TestComponent />
         </ModalProvider>,
       );
-      
+
       expect(getByTestId("connect-content")).toBeInTheDocument();
     });
 
@@ -211,7 +212,7 @@ describe("ModalProvider", () => {
           <TestComponent />
         </ModalProvider>,
       );
-      
+
       expect(getByTestId("connected-content")).toBeInTheDocument();
     });
 
@@ -229,11 +230,11 @@ describe("ModalProvider", () => {
           <TestComponent />
         </ModalProvider>,
       );
-      
+
       const modal = getByTestId("modal");
       expect(modal.dataset.appicon).toBe("https://example.com/icon.png");
       expect(modal.dataset.appname).toBe("Test App");
-      
+
       const connectContent = getByTestId("connect-content");
       expect(connectContent.dataset.appicon).toBe("https://example.com/icon.png");
       expect(connectContent.dataset.appname).toBe("Test App");
@@ -246,8 +247,12 @@ describe("ModalProvider", () => {
       return (
         <div>
           <div data-testid="modal-state">{isOpened ? "open" : "closed"}</div>
-          <button onClick={open} data-testid="open-button">Open</button>
-          <button onClick={close} data-testid="close-button">Close</button>
+          <button onClick={open} data-testid="open-button">
+            Open
+          </button>
+          <button onClick={close} data-testid="close-button">
+            Close
+          </button>
         </div>
       );
     };
@@ -258,7 +263,7 @@ describe("ModalProvider", () => {
           <TestComponent />
         </ModalProvider>,
       );
-      
+
       expect(getByTestId("modal-state")).toHaveTextContent("closed");
       expect(getByTestId("open-button")).toBeInTheDocument();
       expect(getByTestId("close-button")).toBeInTheDocument();
@@ -270,11 +275,11 @@ describe("ModalProvider", () => {
           <TestComponent />
         </ModalProvider>,
       );
-      
+
       expect(queryByTestId("modal")).not.toBeInTheDocument();
-      
+
       fireEvent.click(getByTestId("open-button"));
-      
+
       expect(getByTestId("modal")).toBeInTheDocument();
       expect(getByTestId("modal-state")).toHaveTextContent("open");
     });
@@ -285,10 +290,10 @@ describe("ModalProvider", () => {
           <TestComponent />
         </ModalProvider>,
       );
-      
+
       fireEvent.click(getByTestId("open-button"));
       expect(getByTestId("modal")).toBeInTheDocument();
-      
+
       fireEvent.click(getByTestId("close-button"));
       expect(queryByTestId("modal")).not.toBeInTheDocument();
       expect(getByTestId("modal-state")).toHaveTextContent("closed");
@@ -300,10 +305,10 @@ describe("ModalProvider", () => {
           <TestComponent />
         </ModalProvider>,
       );
-      
+
       fireEvent.click(getByTestId("open-button"));
       fireEvent.click(getByTestId("modal-close"));
-      
+
       expect(queryByTestId("modal")).not.toBeInTheDocument();
     });
 
@@ -313,10 +318,10 @@ describe("ModalProvider", () => {
           <TestComponent />
         </ModalProvider>,
       );
-      
+
       fireEvent.click(getByTestId("open-button"));
       fireEvent.click(getByTestId("connect-close"));
-      
+
       expect(queryByTestId("modal")).not.toBeInTheDocument();
     });
   });
@@ -336,23 +341,23 @@ describe("ModalProvider", () => {
           <TestComponent />
         </ModalProvider>,
       );
-      
+
       // Initially not connected
       expect(getByTestId("connect-content")).toBeInTheDocument();
       expect(queryByTestId("connected-content")).not.toBeInTheDocument();
-      
+
       // Update connection status
       mockUsePhantom.mockReturnValue({
         ...mockUsePhantom(),
         isConnected: true,
       } as any);
-      
+
       rerender(
         <ModalProvider>
           <TestComponent />
         </ModalProvider>,
       );
-      
+
       // Now connected
       expect(queryByTestId("connect-content")).not.toBeInTheDocument();
       expect(getByTestId("connected-content")).toBeInTheDocument();
@@ -376,7 +381,7 @@ describe("ModalProvider", () => {
       );
 
       expect(mockIsMobileDevice).toHaveBeenCalledTimes(1);
-      
+
       // Even if component rerenders, isMobileDevice shouldn't be called again
       render(
         <ModalProvider>

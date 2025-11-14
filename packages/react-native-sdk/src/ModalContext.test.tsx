@@ -26,9 +26,7 @@ jest.mock("./components/ConnectedModalContent", () => ({
 }));
 
 describe("useModal Hook", () => {
-  const wrapper = ({ children }: { children: ReactNode }) => (
-    <ModalProvider>{children}</ModalProvider>
-  );
+  const wrapper = ({ children }: { children: ReactNode }) => <ModalProvider>{children}</ModalProvider>;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -48,7 +46,7 @@ describe("useModal Hook", () => {
 
     it("should return modal context when used within ModalProvider", () => {
       const { result } = renderHook(() => useModal(), { wrapper });
-      
+
       expect(result.current).toEqual({
         isOpened: false,
         open: expect.any(Function),
@@ -60,31 +58,31 @@ describe("useModal Hook", () => {
   describe("Modal State Management", () => {
     it("should initially have modal closed", () => {
       const { result } = renderHook(() => useModal(), { wrapper });
-      
+
       expect(result.current.isOpened).toBe(false);
     });
 
     it("should open modal when open is called", () => {
       const { result } = renderHook(() => useModal(), { wrapper });
-      
+
       expect(result.current.isOpened).toBe(false);
-      
+
       act(() => {
         result.current.open();
       });
-      
+
       expect(result.current.isOpened).toBe(true);
     });
 
     it("should close modal when close is called", () => {
       const { result } = renderHook(() => useModal(), { wrapper });
-      
+
       // Open modal first
       act(() => {
         result.current.open();
       });
       expect(result.current.isOpened).toBe(true);
-      
+
       // Then close it
       act(() => {
         result.current.close();
@@ -94,24 +92,24 @@ describe("useModal Hook", () => {
 
     it("should handle multiple open/close cycles", () => {
       const { result } = renderHook(() => useModal(), { wrapper });
-      
+
       // First cycle
       act(() => {
         result.current.open();
       });
       expect(result.current.isOpened).toBe(true);
-      
+
       act(() => {
         result.current.close();
       });
       expect(result.current.isOpened).toBe(false);
-      
+
       // Second cycle
       act(() => {
         result.current.open();
       });
       expect(result.current.isOpened).toBe(true);
-      
+
       act(() => {
         result.current.close();
       });
@@ -120,12 +118,12 @@ describe("useModal Hook", () => {
 
     it("should be idempotent when calling open multiple times", () => {
       const { result } = renderHook(() => useModal(), { wrapper });
-      
+
       act(() => {
         result.current.open();
       });
       expect(result.current.isOpened).toBe(true);
-      
+
       act(() => {
         result.current.open();
       });
@@ -134,16 +132,16 @@ describe("useModal Hook", () => {
 
     it("should be idempotent when calling close multiple times", () => {
       const { result } = renderHook(() => useModal(), { wrapper });
-      
+
       act(() => {
         result.current.open();
       });
-      
+
       act(() => {
         result.current.close();
       });
       expect(result.current.isOpened).toBe(false);
-      
+
       act(() => {
         result.current.close();
       });
@@ -154,25 +152,25 @@ describe("useModal Hook", () => {
   describe("Function Stability", () => {
     it("should maintain stable references for open and close", () => {
       const { result, rerender } = renderHook(() => useModal(), { wrapper });
-      
+
       const initialOpen = result.current.open;
       const initialClose = result.current.close;
-      
+
       // Trigger state change
       act(() => {
         result.current.open();
       });
       rerender({});
-      
+
       expect(result.current.open).toBe(initialOpen);
       expect(result.current.close).toBe(initialClose);
-      
+
       // Trigger another state change
       act(() => {
         result.current.close();
       });
       rerender({});
-      
+
       expect(result.current.open).toBe(initialOpen);
       expect(result.current.close).toBe(initialClose);
     });
@@ -187,7 +185,7 @@ describe("useModal Hook", () => {
           const modal2 = useModal();
           return { modal1, modal2 };
         },
-        { wrapper }
+        { wrapper },
       );
 
       expect(result.current.modal1.isOpened).toBe(false);

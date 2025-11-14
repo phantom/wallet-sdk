@@ -32,12 +32,7 @@ jest.mock("@phantom/wallet-sdk-ui", () => ({
     </button>
   ),
   LoginWithPhantomButton: ({ onClick, disabled, isLoading }: any) => (
-    <button
-      data-testid="login-with-phantom-button"
-      onClick={onClick}
-      disabled={disabled}
-      data-loading={isLoading}
-    >
+    <button data-testid="login-with-phantom-button" onClick={onClick} disabled={disabled} data-loading={isLoading}>
       Login with Phantom
     </button>
   ),
@@ -63,10 +58,12 @@ describe("ConnectModalContent", () => {
   const mockUsePhantom = usePhantom as jest.MockedFunction<typeof usePhantom>;
   const mockUseConnect = useConnect as jest.MockedFunction<typeof useConnect>;
   const mockUseIsExtensionInstalled = useIsExtensionInstalled as jest.MockedFunction<typeof useIsExtensionInstalled>;
-  const mockUseIsPhantomLoginAvailable = useIsPhantomLoginAvailable as jest.MockedFunction<typeof useIsPhantomLoginAvailable>;
+  const mockUseIsPhantomLoginAvailable = useIsPhantomLoginAvailable as jest.MockedFunction<
+    typeof useIsPhantomLoginAvailable
+  >;
   const mockIsMobileDevice = isMobileDevice as jest.MockedFunction<typeof isMobileDevice>;
   const mockGetDeeplinkToPhantom = getDeeplinkToPhantom as jest.MockedFunction<typeof getDeeplinkToPhantom>;
-  
+
   const mockConnect = jest.fn();
 
   const defaultProps: ConnectModalContentProps = {
@@ -116,19 +113,19 @@ describe("ConnectModalContent", () => {
   describe("Provider Buttons", () => {
     it("should render Google button when google is in allowedProviders", () => {
       const { getByTestId } = renderComponent();
-      
+
       expect(getByTestId("icon-google")).toBeInTheDocument();
     });
 
     it("should render Apple button when apple is in allowedProviders", () => {
       const { getByTestId } = renderComponent();
-      
+
       expect(getByTestId("icon-apple")).toBeInTheDocument();
     });
 
     it("should render only Google icon when both providers are present", () => {
       const { getByTestId, queryByText } = renderComponent();
-      
+
       expect(getByTestId("icon-google")).toBeInTheDocument();
       expect(queryByText("Continue with Google")).not.toBeInTheDocument();
     });
@@ -140,7 +137,7 @@ describe("ConnectModalContent", () => {
       } as any);
 
       const { getByText } = renderComponent();
-      
+
       expect(getByText("Continue with Google")).toBeInTheDocument();
     });
 
@@ -151,7 +148,7 @@ describe("ConnectModalContent", () => {
       } as any);
 
       const { getByTestId, queryByTestId } = renderComponent();
-      
+
       expect(getByTestId("icon-google")).toBeInTheDocument();
       expect(queryByTestId("icon-apple")).not.toBeInTheDocument();
     });
@@ -169,7 +166,7 @@ describe("ConnectModalContent", () => {
       });
 
       const { getByTestId } = renderComponent();
-      
+
       expect(getByTestId("login-with-phantom-button")).toBeInTheDocument();
     });
 
@@ -185,7 +182,7 @@ describe("ConnectModalContent", () => {
       });
 
       const { queryByTestId } = renderComponent();
-      
+
       expect(queryByTestId("login-with-phantom-button")).not.toBeInTheDocument();
     });
 
@@ -200,7 +197,7 @@ describe("ConnectModalContent", () => {
       });
 
       const { queryByTestId } = renderComponent();
-      
+
       expect(queryByTestId("login-with-phantom-button")).not.toBeInTheDocument();
     });
   });
@@ -217,7 +214,7 @@ describe("ConnectModalContent", () => {
       });
 
       const { getByTestId, getByText } = renderComponent();
-      
+
       expect(getByTestId("bounded-icon-phantom")).toBeInTheDocument();
       expect(getByText("Phantom")).toBeInTheDocument();
       expect(getByText("Detected")).toBeInTheDocument();
@@ -234,7 +231,7 @@ describe("ConnectModalContent", () => {
       });
 
       const { getByText } = renderComponent();
-      
+
       expect(getByText("OR")).toBeInTheDocument();
     });
 
@@ -249,7 +246,7 @@ describe("ConnectModalContent", () => {
       });
 
       const { queryByText } = renderComponent();
-      
+
       expect(queryByText("OR")).not.toBeInTheDocument();
     });
 
@@ -265,7 +262,7 @@ describe("ConnectModalContent", () => {
       });
 
       const { queryByTestId } = renderComponent();
-      
+
       expect(queryByTestId("bounded-icon-phantom")).not.toBeInTheDocument();
     });
   });
@@ -279,15 +276,15 @@ describe("ConnectModalContent", () => {
       });
 
       const { getByText } = renderComponent();
-      
+
       expect(getByText("Open in Phantom App")).toBeInTheDocument();
     });
 
     it("should not show deeplink button on desktop", () => {
       mockIsMobileDevice.mockReturnValue(false);
-      
+
       const { queryByText } = renderComponent();
-      
+
       expect(queryByText("Open in Phantom App")).not.toBeInTheDocument();
     });
 
@@ -312,13 +309,13 @@ describe("ConnectModalContent", () => {
     it("should call connect with google provider when Google button is clicked", async () => {
       mockConnect.mockResolvedValue({ status: "completed" });
       const onClose = jest.fn();
-      
+
       const { getByTestId } = renderComponent({ onClose });
       const googleIcon = getByTestId("icon-google");
       const googleButton = googleIcon.closest("button");
-      
+
       fireEvent.click(googleButton!);
-      
+
       expect(mockConnect).toHaveBeenCalledWith({ provider: "google" });
       await waitFor(() => {
         expect(onClose).toHaveBeenCalled();
@@ -329,9 +326,9 @@ describe("ConnectModalContent", () => {
       const { getByTestId, getAllByTestId } = renderComponent();
       const googleIcon = getByTestId("icon-google");
       const googleButton = googleIcon.closest("button");
-      
+
       fireEvent.click(googleButton!);
-      
+
       await waitFor(() => {
         const buttons = getAllByTestId("button");
         buttons.forEach(button => {
@@ -346,9 +343,9 @@ describe("ConnectModalContent", () => {
       const googleButton = googleIcon.closest("button");
       const appleIcon = getByTestId("icon-apple");
       const appleButton = appleIcon.closest("button");
-      
+
       fireEvent.click(googleButton!);
-      
+
       await waitFor(() => {
         expect(googleButton?.dataset.loading).toBe("true");
         expect(appleButton?.dataset.loading).toBe("false");
@@ -360,11 +357,11 @@ describe("ConnectModalContent", () => {
     it("should show error message when connect fails", async () => {
       const errorMessage = "Failed to connect to Google";
       mockConnect.mockRejectedValue(new Error(errorMessage));
-      
+
       const { getByTestId, getByText } = renderComponent();
       const googleIcon = getByTestId("icon-google");
       fireEvent.click(googleIcon.closest("button")!);
-      
+
       await waitFor(() => {
         expect(getByText(errorMessage)).toBeInTheDocument();
       });
@@ -373,11 +370,11 @@ describe("ConnectModalContent", () => {
     it("should not call onClose when connect fails", async () => {
       mockConnect.mockRejectedValue(new Error("Connection failed"));
       const onClose = jest.fn();
-      
+
       const { getByTestId } = renderComponent({ onClose });
       const googleIcon = getByTestId("icon-google");
       fireEvent.click(googleIcon.closest("button")!);
-      
+
       await waitFor(() => {
         expect(onClose).not.toHaveBeenCalled();
       });
@@ -393,7 +390,7 @@ describe("ConnectModalContent", () => {
       } as any);
 
       const { queryByTestId } = renderComponent();
-      
+
       expect(queryByTestId("icon-google")).not.toBeInTheDocument();
       expect(queryByTestId("icon-apple")).not.toBeInTheDocument();
     });
@@ -401,11 +398,11 @@ describe("ConnectModalContent", () => {
 
   describe("App Info Display", () => {
     it("should display app icon when provided", () => {
-      const { getByAltText } = renderComponent({ 
+      const { getByAltText } = renderComponent({
         appIcon: "https://example.com/icon.png",
         appName: "App Icon",
       });
-      
+
       const img = getByAltText("App Icon") as HTMLImageElement;
       expect(img.src).toBe("https://example.com/icon.png");
     });

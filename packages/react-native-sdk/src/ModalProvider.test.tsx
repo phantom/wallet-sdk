@@ -42,15 +42,7 @@ jest.mock("./components/Modal", () => ({
 }));
 
 jest.mock("./components/ConnectModalContent", () => ({
-  ConnectModalContent: ({
-    onClose,
-    appIcon,
-    appName,
-  }: {
-    onClose: () => void;
-    appIcon?: string;
-    appName?: string;
-  }) => (
+  ConnectModalContent: ({ onClose, appIcon, appName }: { onClose: () => void; appIcon?: string; appName?: string }) => (
     <View
       testID="connect-content"
       // @ts-ignore - adding props for testing
@@ -105,7 +97,7 @@ describe("ModalProvider", () => {
           <mock-child />
         </ModalProvider>,
       );
-      
+
       expect(getByTestId("modal")).toBeTruthy();
     });
 
@@ -120,7 +112,7 @@ describe("ModalProvider", () => {
           <mock-child />
         </ModalProvider>,
       );
-      
+
       const modal = getByTestId("modal");
       expect(modal.props.isConnected).toBe(true);
     });
@@ -131,7 +123,7 @@ describe("ModalProvider", () => {
           <mock-child />
         </ModalProvider>,
       );
-      
+
       expect(getByTestId("connect-content")).toBeTruthy();
     });
 
@@ -146,7 +138,7 @@ describe("ModalProvider", () => {
           <mock-child />
         </ModalProvider>,
       );
-      
+
       expect(getByTestId("connected-content")).toBeTruthy();
     });
 
@@ -166,14 +158,7 @@ describe("ModalProvider", () => {
   describe("Modal State Management", () => {
     const TestComponent = () => {
       const { isOpened, open, close } = useModal();
-      return (
-        <mock-test-component
-          testID="test-component"
-          isModalOpen={isOpened}
-          onOpen={open}
-          onClose={close}
-        />
-      );
+      return <mock-test-component testID="test-component" isModalOpen={isOpened} onOpen={open} onClose={close} />;
     };
 
     it("should provide modal context to children", () => {
@@ -182,7 +167,7 @@ describe("ModalProvider", () => {
           <TestComponent />
         </ModalProvider>,
       );
-      
+
       const testComponent = getByTestId("test-component");
       expect(testComponent.props.isModalOpen).toBe(false);
       expect(typeof testComponent.props.onOpen).toBe("function");
@@ -195,14 +180,14 @@ describe("ModalProvider", () => {
           <TestComponent />
         </ModalProvider>,
       );
-      
+
       const testComponent = getByTestId("test-component");
       const modal = getByTestId("modal");
-      
+
       expect(modal.props.isVisible).toBe(false);
-      
+
       fireEvent(testComponent, "onOpen");
-      
+
       expect(getByTestId("modal").props.isVisible).toBe(true);
     });
 
@@ -212,13 +197,13 @@ describe("ModalProvider", () => {
           <TestComponent />
         </ModalProvider>,
       );
-      
+
       const testComponent = getByTestId("test-component");
-      
+
       // Open modal first
       fireEvent(testComponent, "onOpen");
       expect(getByTestId("modal").props.isVisible).toBe(true);
-      
+
       // Then close it
       fireEvent(testComponent, "onClose");
       expect(getByTestId("modal").props.isVisible).toBe(false);
@@ -230,17 +215,17 @@ describe("ModalProvider", () => {
           <TestComponent />
         </ModalProvider>,
       );
-      
+
       const testComponent = getByTestId("test-component");
-      
+
       // Open modal
       fireEvent(testComponent, "onOpen");
       expect(getByTestId("modal").props.isVisible).toBe(true);
-      
+
       // Close via Modal's onClose
       const modal = getByTestId("modal");
       fireEvent(modal, "onClose");
-      
+
       expect(getByTestId("modal").props.isVisible).toBe(false);
     });
   });
@@ -252,23 +237,23 @@ describe("ModalProvider", () => {
           <mock-child />
         </ModalProvider>,
       );
-      
+
       // Initially not connected
       expect(getByTestId("connect-content")).toBeTruthy();
       expect(queryByTestId("connected-content")).toBeNull();
-      
+
       // Update connection status
       mockUsePhantom.mockReturnValue({
         ...mockUsePhantom(),
         isConnected: true,
       } as any);
-      
+
       rerender(
         <ModalProvider>
           <mock-child />
         </ModalProvider>,
       );
-      
+
       // Now connected
       expect(queryByTestId("connect-content")).toBeNull();
       expect(getByTestId("connected-content")).toBeTruthy();
@@ -282,7 +267,7 @@ describe("ModalProvider", () => {
           <mock-child />
         </ModalProvider>,
       );
-      
+
       const connectContent = getByTestId("connect-content");
       expect(connectContent.props.appIcon).toBe("https://example.com/icon.png");
       expect(connectContent.props.appName).toBe("Test App");
@@ -305,7 +290,7 @@ describe("ModalProvider", () => {
 
       const connectContent = getByTestId("connect-content");
       expect(typeof connectContent.props.onClose).toBe("function");
-      
+
       // Verify onClose works
       fireEvent(connectContent, "onClose");
       expect(getByTestId("modal").props.isVisible).toBe(false);

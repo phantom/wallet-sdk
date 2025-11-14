@@ -43,7 +43,11 @@ describe("Modal Component", () => {
   const defaultProps: ModalProps = {
     isVisible: true,
     onClose: jest.fn(),
-    children: <View testID="modal-child"><Text>Test Content</Text></View>,
+    children: (
+      <View testID="modal-child">
+        <Text>Test Content</Text>
+      </View>
+    ),
   };
 
   const renderModal = (props: Partial<ModalProps> = {}) => {

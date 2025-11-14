@@ -80,38 +80,37 @@ describe("Modal Component (Web)", () => {
     it("should call onClose when close button is clicked", () => {
       const onClose = jest.fn();
       const { container } = renderModal({ onClose });
-      
+
       const closeButton = container.querySelector('[style*="cursor: pointer"]') as HTMLElement;
       fireEvent.click(closeButton);
-      
+
       expect(onClose).toHaveBeenCalledTimes(1);
     });
 
     it("should call onClose when clicking outside the modal", () => {
       const onClose = jest.fn();
       const { container } = renderModal({ onClose });
-      
+
       const overlay = container.firstChild as HTMLElement;
       fireEvent.click(overlay);
-      
+
       expect(onClose).toHaveBeenCalledTimes(1);
     });
 
     it("should not call onClose when clicking inside the modal", () => {
       const onClose = jest.fn();
       const { getByTestId } = renderModal({ onClose });
-      
+
       fireEvent.click(getByTestId("modal-child"));
-      
+
       expect(onClose).not.toHaveBeenCalled();
     });
-
   });
 
   describe("Props", () => {
     it("should not render appIcon even if provided", () => {
-      const { queryByRole } = renderModal({ 
-        appIcon: "https://example.com/icon.png" 
+      const { queryByRole } = renderModal({
+        appIcon: "https://example.com/icon.png",
       });
       // The current implementation doesn't use appIcon
       expect(queryByRole("img", { name: /app icon/i })).not.toBeInTheDocument();

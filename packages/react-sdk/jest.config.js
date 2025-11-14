@@ -9,7 +9,7 @@ const config = {
   // This file runs AFTER the environment is set up (includes jest-dom + Solana web3 mock)
   setupFilesAfterEnv: ["<rootDir>/src/test-setup.js"],
   transformIgnorePatterns: [
-    "node_modules/(?!(@solana|@noble|uuid|jayson|superstruct|@phantom|rpc-websockets|eventemitter3)/)"
+    "node_modules/(?!(@solana|@noble|uuid|jayson|superstruct|@phantom|rpc-websockets|eventemitter3)/)",
   ],
   testMatch: ["<rootDir>/src/**/*.test.{ts,tsx}"],
   moduleNameMapper: {
@@ -21,10 +21,7 @@ const config = {
     "^react-dom/(.*)$": path.resolve(__dirname, "node_modules/react-dom/$1"),
   },
   // Ignore these test patterns
-  testPathIgnorePatterns: [
-    "/node_modules/",
-    "/__mocks__/"
-  ]
+  testPathIgnorePatterns: ["/node_modules/", "/__mocks__/"],
 };
 
 module.exports = config;

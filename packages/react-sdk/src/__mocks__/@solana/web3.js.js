@@ -1,7 +1,7 @@
 export const Connection = jest.fn();
 export const PublicKey = jest.fn(() => ({
-  toString: () => 'mocked-public-key',
-  toBase58: () => 'mocked-public-key',
+  toString: () => "mocked-public-key",
+  toBase58: () => "mocked-public-key",
 }));
 export const Transaction = jest.fn();
 export const SystemProgram = {

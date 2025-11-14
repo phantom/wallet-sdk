@@ -11,13 +11,7 @@ jest.mock("../hooks/useDisconnect");
 jest.mock("@phantom/wallet-sdk-ui", () => ({
   ...jest.requireActual("@phantom/wallet-sdk-ui"),
   Button: ({ children, onClick, disabled, isLoading, variant }: any) => (
-    <button
-      data-testid="button"
-      onClick={onClick}
-      disabled={disabled}
-      data-loading={isLoading}
-      data-variant={variant}
-    >
+    <button data-testid="button" onClick={onClick} disabled={disabled} data-loading={isLoading} data-variant={variant}>
       {children}
     </button>
   ),
@@ -83,14 +77,14 @@ describe("ConnectedModalContent", () => {
   describe("Wallet Information Display", () => {
     it("should display wallet addresses", () => {
       const { getByText } = renderComponent();
-      
+
       expect(getByText("0x1234567890abcdef1234567890abcdef12345678")).toBeInTheDocument();
       expect(getByText("8B3fFH7wSrxPhLBPmSFXbJWnqfGNXvgszQRvZvwLTHTLS")).toBeInTheDocument();
     });
 
     it("should display address type labels", () => {
       const { getByText } = renderComponent();
-      
+
       expect(getByText("Ethereum")).toBeInTheDocument();
       expect(getByText("Solana")).toBeInTheDocument();
     });
@@ -110,7 +104,7 @@ describe("ConnectedModalContent", () => {
       });
 
       const { queryByText } = renderComponent();
-      
+
       expect(queryByText("Ethereum")).not.toBeInTheDocument();
       expect(queryByText("Solana")).not.toBeInTheDocument();
     });
@@ -132,7 +126,7 @@ describe("ConnectedModalContent", () => {
       });
 
       const { getByText } = renderComponent();
-      
+
       // Should display the full address if too short to truncate
       expect(getByText("0x123")).toBeInTheDocument();
     });
@@ -141,31 +135,31 @@ describe("ConnectedModalContent", () => {
   describe("Disconnect Functionality", () => {
     it("should show disconnect button", () => {
       const { getByText } = renderComponent();
-      
+
       const button = getByText("Disconnect").closest("button");
       expect(button).toBeInTheDocument();
     });
 
     it("should call disconnect when button is clicked", () => {
       mockDisconnect.mockResolvedValue(undefined);
-      
+
       const { getByText } = renderComponent();
       const button = getByText("Disconnect").closest("button") as HTMLButtonElement;
-      
+
       fireEvent.click(button);
-      
+
       expect(mockDisconnect).toHaveBeenCalled();
     });
 
     it("should call onClose after successful disconnect", async () => {
       mockDisconnect.mockResolvedValue(undefined);
       const onClose = jest.fn();
-      
+
       const { getByText } = renderComponent({ onClose });
       const button = getByText("Disconnect").closest("button") as HTMLButtonElement;
-      
+
       fireEvent.click(button);
-      
+
       await waitFor(() => {
         expect(onClose).toHaveBeenCalled();
       });
@@ -173,38 +167,44 @@ describe("ConnectedModalContent", () => {
 
     it("should show loading state while disconnecting", async () => {
       let resolveDisconnect: () => void;
-      mockDisconnect.mockImplementation(() => 
-        new Promise<void>(resolve => { resolveDisconnect = resolve; })
+      mockDisconnect.mockImplementation(
+        () =>
+          new Promise<void>(resolve => {
+            resolveDisconnect = resolve;
+          }),
       );
-      
+
       const { getByText } = renderComponent();
       const button = getByText("Disconnect").closest("button") as HTMLButtonElement;
-      
+
       fireEvent.click(button);
-      
+
       await waitFor(() => {
         expect(button.dataset.loading).toBe("true");
         expect(button).toBeDisabled();
       });
-      
+
       resolveDisconnect!();
     });
 
     it("should show correct text while disconnecting", async () => {
       let resolveDisconnect: () => void;
-      mockDisconnect.mockImplementation(() => 
-        new Promise<void>(resolve => { resolveDisconnect = resolve; })
+      mockDisconnect.mockImplementation(
+        () =>
+          new Promise<void>(resolve => {
+            resolveDisconnect = resolve;
+          }),
       );
-      
+
       const { getByText } = renderComponent();
-      
+
       const button = getByText("Disconnect").closest("button") as HTMLButtonElement;
       fireEvent.click(button);
-      
+
       await waitFor(() => {
         expect(getByText("Disconnecting...")).toBeInTheDocument();
       });
-      
+
       resolveDisconnect!();
     });
   });
@@ -212,12 +212,12 @@ describe("ConnectedModalContent", () => {
   describe("Error Handling", () => {
     it("should show error message when disconnect fails", async () => {
       mockDisconnect.mockRejectedValue(new Error("Something went wrong"));
-      
+
       const { getByText } = renderComponent();
       const button = getByText("Disconnect").closest("button") as HTMLButtonElement;
-      
+
       fireEvent.click(button);
-      
+
       await waitFor(() => {
         expect(getByText("Failed to disconnect")).toBeInTheDocument();
       });
@@ -226,12 +226,12 @@ describe("ConnectedModalContent", () => {
     it("should not call onClose when disconnect fails", async () => {
       mockDisconnect.mockRejectedValue(new Error("Disconnect failed"));
       const onClose = jest.fn();
-      
+
       const { getByText } = renderComponent({ onClose });
       const button = getByText("Disconnect").closest("button") as HTMLButtonElement;
-      
+
       fireEvent.click(button);
-      
+
       await waitFor(() => {
         expect(onClose).not.toHaveBeenCalled();
       });
@@ -239,12 +239,12 @@ describe("ConnectedModalContent", () => {
 
     it("should handle non-Error objects in catch block", async () => {
       mockDisconnect.mockRejectedValue("String error");
-      
+
       const { getByText } = renderComponent();
       const button = getByText("Disconnect").closest("button") as HTMLButtonElement;
-      
+
       fireEvent.click(button);
-      
+
       await waitFor(() => {
         expect(getByText("Failed to disconnect")).toBeInTheDocument();
       });
@@ -252,12 +252,12 @@ describe("ConnectedModalContent", () => {
 
     it("should handle undefined error", async () => {
       mockDisconnect.mockRejectedValue(undefined);
-      
+
       const { getByText } = renderComponent();
       const button = getByText("Disconnect").closest("button") as HTMLButtonElement;
-      
+
       fireEvent.click(button);
-      
+
       await waitFor(() => {
         expect(getByText("Failed to disconnect")).toBeInTheDocument();
       });
@@ -269,9 +269,7 @@ describe("ConnectedModalContent", () => {
     // assert that addresses render, not their exact truncated form.
     it("should render without crashing for long addresses", () => {
       mockUsePhantom.mockReturnValue({
-        addresses: [
-          { address: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", addressType: "Solana" as any },
-        ],
+        addresses: [{ address: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", addressType: "Solana" as any }],
         isConnected: true,
         sdk: null,
         isConnecting: false,

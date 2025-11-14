@@ -99,14 +99,14 @@ describe("ConnectModalContent", () => {
   describe("Provider Buttons", () => {
     it("should render Google button when google is in allowedProviders", () => {
       const { getByTestId, getByText } = renderComponent();
-      
+
       expect(() => getByTestId("icon-google")).not.toThrow();
       expect(getByText("Continue with Google")).toBeTruthy();
     });
 
     it("should render Apple button when apple is in allowedProviders", () => {
       const { getByTestId, getByText } = renderComponent();
-      
+
       expect(() => getByTestId("icon-apple")).not.toThrow();
       expect(getByText("Continue with Apple")).toBeTruthy();
     });
@@ -118,7 +118,7 @@ describe("ConnectModalContent", () => {
       } as any);
 
       const { getByTestId, getByText } = renderComponent();
-      
+
       expect(() => getByTestId("icon-x")).not.toThrow();
       expect(getByText("Continue with X")).toBeTruthy();
     });
@@ -130,7 +130,7 @@ describe("ConnectModalContent", () => {
       } as any);
 
       const { getByTestId, getByText } = renderComponent();
-      
+
       expect(() => getByTestId("icon-tiktok")).not.toThrow();
       expect(getByText("Continue with TikTok")).toBeTruthy();
     });
@@ -142,7 +142,7 @@ describe("ConnectModalContent", () => {
       } as any);
 
       const { getByTestId, queryByTestId, queryByText } = renderComponent();
-      
+
       expect(() => getByTestId("icon-google")).not.toThrow();
       expect(queryByTestId("icon-apple")).toBeNull();
       expect(queryByTestId("icon-x")).toBeNull();
@@ -157,7 +157,7 @@ describe("ConnectModalContent", () => {
       } as any);
 
       const { getByTestId } = renderComponent();
-      
+
       expect(() => getByTestId("icon-google")).not.toThrow();
       expect(() => getByTestId("icon-apple")).not.toThrow();
       expect(() => getByTestId("icon-x")).not.toThrow();
@@ -169,12 +169,12 @@ describe("ConnectModalContent", () => {
     it("should call connect with google provider when Google button is clicked", async () => {
       mockConnect.mockResolvedValue({ status: "completed" });
       const onClose = jest.fn();
-      
+
       const { getByText } = renderComponent({ onClose });
       const googleButton = getByText("Continue with Google").parent;
-      
+
       fireEvent.press(googleButton!);
-      
+
       expect(mockConnect).toHaveBeenCalledWith({ provider: "google" });
       await waitFor(() => {
         expect(onClose).toHaveBeenCalled();
@@ -184,12 +184,12 @@ describe("ConnectModalContent", () => {
     it("should call connect with apple provider when Apple button is clicked", async () => {
       mockConnect.mockResolvedValue({ status: "completed" });
       const onClose = jest.fn();
-      
+
       const { getByText } = renderComponent({ onClose });
       const appleButton = getByText("Continue with Apple").parent;
-      
+
       fireEvent.press(appleButton!);
-      
+
       expect(mockConnect).toHaveBeenCalledWith({ provider: "apple" });
       await waitFor(() => {
         expect(onClose).toHaveBeenCalled();
@@ -212,34 +212,32 @@ describe("ConnectModalContent", () => {
     it("should show error message when connect fails", async () => {
       const errorMessage = "Failed to connect to Google";
       mockConnect.mockRejectedValue(new Error(errorMessage));
-      
+
       const { getByText } = renderComponent();
       const googleButton = getByText("Continue with Google").parent;
-      
+
       fireEvent.press(googleButton!);
-      
+
       await waitFor(() => {
         expect(getByText(errorMessage)).toBeTruthy();
       });
     });
 
     it("should clear error when retrying with different provider", async () => {
-      mockConnect
-        .mockRejectedValueOnce(new Error("Failed to connect"))
-        .mockResolvedValueOnce({ status: "completed" });
-      
+      mockConnect.mockRejectedValueOnce(new Error("Failed to connect")).mockResolvedValueOnce({ status: "completed" });
+
       const { getByText, queryByText } = renderComponent();
-      
+
       // First attempt fails
       fireEvent.press(getByText("Continue with Google").parent!);
-      
+
       await waitFor(() => {
         expect(getByText("Failed to connect")).toBeTruthy();
       });
-      
+
       // Second attempt with different provider
       fireEvent.press(getByText("Continue with Apple").parent!);
-      
+
       await waitFor(() => {
         expect(queryByText("Failed to connect")).toBeNull();
       });
@@ -248,10 +246,10 @@ describe("ConnectModalContent", () => {
     it("should not call onClose when connect fails", async () => {
       mockConnect.mockRejectedValue(new Error("Connection failed"));
       const onClose = jest.fn();
-      
+
       const { getByText } = renderComponent({ onClose });
       fireEvent.press(getByText("Continue with Google").parent!);
-      
+
       await waitFor(() => {
         expect(onClose).not.toHaveBeenCalled();
       });
@@ -266,7 +264,7 @@ describe("ConnectModalContent", () => {
       } as any);
 
       const { getByTestId } = renderComponent();
-      
+
       expect(() => getByTestId("activity-indicator")).not.toThrow();
     });
 
@@ -288,14 +286,14 @@ describe("ConnectModalContent", () => {
   describe("App Icon", () => {
     it("should render app icon when provided", () => {
       const { getByTestId } = renderComponent({ appIcon: "https://example.com/icon.png" });
-      
+
       const appIcon = getByTestId("app-icon");
       expect(appIcon.props.source).toEqual({ uri: "https://example.com/icon.png" });
     });
 
     it("should not render app icon when not provided", () => {
       const { queryByTestId } = renderComponent();
-      
+
       expect(queryByTestId("app-icon")).toBeNull();
     });
   });
@@ -314,7 +312,7 @@ describe("ConnectModalContent", () => {
       } as any);
 
       const { queryByTestId } = renderComponent();
-      
+
       expect(queryByTestId("icon-google")).toBeNull();
       expect(queryByTestId("icon-apple")).toBeNull();
       expect(queryByTestId("icon-x")).toBeNull();
@@ -323,10 +321,10 @@ describe("ConnectModalContent", () => {
 
     it("should handle non-Error objects in catch block", async () => {
       mockConnect.mockRejectedValue("String error");
-      
+
       const { getByText } = renderComponent();
       fireEvent.press(getByText("Continue with Google").parent!);
-      
+
       await waitFor(() => {
         expect(getByText("String error")).toBeTruthy();
       });
