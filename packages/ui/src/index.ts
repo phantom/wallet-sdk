@@ -2,12 +2,6 @@
 export { darkTheme, lightTheme, mergeTheme, mergeThemeNative } from "./themes/index";
 export type {
   PhantomTheme,
-  CompletePhantomTheme,
-  CompletePhantomWebTheme,
-  CompletePhantomNativeTheme,
-  WebTypography,
-  NativeTypography,
-  HexColor,
 } from "./themes/index";
 export { ThemeProvider, useTheme } from "./themes/ThemeContext";
 
