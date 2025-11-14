@@ -122,7 +122,6 @@ export const lightTheme: PhantomTheme = {
   brand: loginWithPhantomColor,
 };
 
-
 export function mergeTheme(customTheme?: Partial<PhantomTheme>): ComputedPhantomWebTheme {
   const secondary = customTheme?.secondary || darkTheme.secondary;
   const isHex = secondary.startsWith("#");
@@ -163,7 +162,6 @@ export function mergeTheme(customTheme?: Partial<PhantomTheme>): ComputedPhantom
     },
   };
 }
-
 
 export function mergeThemeNative(customTheme?: Partial<PhantomTheme>): ComputedPhantomNativeTheme {
   const secondary = customTheme?.secondary || darkTheme.secondary;

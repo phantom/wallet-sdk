@@ -1,10 +1,6 @@
 // Theme exports
 export { darkTheme, lightTheme, mergeTheme, mergeThemeNative } from "./themes/index";
-export type {
-  PhantomTheme,
-  ComputedPhantomTheme,
-  HexColor,
-} from "./themes/index";
+export type { PhantomTheme, ComputedPhantomTheme, HexColor } from "./themes/index";
 export { ThemeProvider, useTheme } from "./themes/ThemeContext";
 
 // Utility exports
