@@ -1,11 +1,25 @@
+// Import jest-dom matchers
+require('@testing-library/jest-dom');
+
 // Polyfills for Solana Web3.js in Node.js test environment
 const { TextEncoder, TextDecoder } = require("util");
 
-// Import jest-dom matchers
-import '@testing-library/jest-dom';
-
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
+
+// Mock @solana/web3.js
+jest.mock('@solana/web3.js', () => ({
+  Connection: jest.fn(),
+  PublicKey: jest.fn(() => ({
+    toString: () => 'mocked-public-key',
+    toBase58: () => 'mocked-public-key',
+  })),
+  Transaction: jest.fn(),
+  SystemProgram: {
+    transfer: jest.fn(),
+  },
+  LAMPORTS_PER_SOL: 1000000000,
+}));
 
 // Mock EventTarget if not available
 if (typeof global.EventTarget === "undefined") {

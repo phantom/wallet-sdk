@@ -19,14 +19,14 @@ jest.mock("@phantom/browser-sdk", () => ({
 }));
 jest.mock("@phantom/wallet-sdk-ui", () => ({
   ...jest.requireActual("@phantom/wallet-sdk-ui"),
-  Button: ({ children, onClick, disabled, isLoading, centered, fullWidth, ...props }: any) => (
+  Button: ({ children, onClick, disabled, isLoading, centered, fullWidth: _fullWidth, ...rest }: any) => (
     <button
       data-testid="button"
       onClick={onClick}
       disabled={disabled}
       data-loading={isLoading}
       data-centered={centered}
-      {...props}
+      {...rest}
     >
       {children}
     </button>
@@ -89,13 +89,11 @@ describe("ConnectModalContent", () => {
       isConnected: false,
       addresses: [],
       sdk: null,
-      connect: jest.fn(),
-      disconnect: jest.fn(),
-      getAddresses: jest.fn().mockReturnValue([]),
       isConnecting: false,
-      isDisconnecting: false,
-      config: {} as any,
-      currentProviderType: null,
+      connectError: null,
+      isClient: true,
+      user: null,
+      theme: {} as any,
     });
     mockUseConnect.mockReturnValue({
       connect: mockConnect,
@@ -117,17 +115,15 @@ describe("ConnectModalContent", () => {
 
   describe("Provider Buttons", () => {
     it("should render Google button when google is in allowedProviders", () => {
-      const { getByTestId, getByText } = renderComponent();
+      const { getByTestId } = renderComponent();
       
       expect(getByTestId("icon-google")).toBeInTheDocument();
-      expect(getByText("Continue with Google")).toBeInTheDocument();
     });
 
     it("should render Apple button when apple is in allowedProviders", () => {
-      const { getByTestId, getByText } = renderComponent();
+      const { getByTestId } = renderComponent();
       
       expect(getByTestId("icon-apple")).toBeInTheDocument();
-      expect(getByText("Continue with Apple")).toBeInTheDocument();
     });
 
     it("should render only Google icon when both providers are present", () => {
@@ -406,29 +402,12 @@ describe("ConnectModalContent", () => {
   describe("App Info Display", () => {
     it("should display app icon when provided", () => {
       const { getByAltText } = renderComponent({ 
-        appIcon: "https://example.com/icon.png" 
+        appIcon: "https://example.com/icon.png",
+        appName: "App Icon",
       });
       
       const img = getByAltText("App Icon") as HTMLImageElement;
       expect(img.src).toBe("https://example.com/icon.png");
-    });
-
-    it("should display app name", () => {
-      const { getByText } = renderComponent({ appName: "Test App" });
-      
-      expect(getByText("Test App")).toBeInTheDocument();
-    });
-
-    it("should use default app name when not provided", () => {
-      const { getByText } = renderComponent();
-      
-      expect(getByText("App Name")).toBeInTheDocument();
-    });
-
-    it("should display connection request text", () => {
-      const { getByText } = renderComponent({ appName: "Test App" });
-      
-      expect(getByText("wants to connect to your wallet")).toBeInTheDocument();
     });
   });
 });

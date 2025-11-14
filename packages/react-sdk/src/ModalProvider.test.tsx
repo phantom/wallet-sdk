@@ -79,13 +79,12 @@ describe("ModalProvider", () => {
       isConnected: false,
       addresses: [],
       sdk: null,
-      connect: jest.fn(),
-      disconnect: jest.fn(),
-      getAddresses: jest.fn().mockReturnValue([]),
       isConnecting: false,
-      isDisconnecting: false,
-      config: {} as any,
-      currentProviderType: null,
+      isLoading: false,
+      connectError: null,
+      isClient: true,
+      user: null,
+      theme: {} as any,
       allowedProviders: ["google", "apple"],
     });
     mockIsMobileDevice.mockReturnValue(false);

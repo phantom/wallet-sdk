@@ -1,5 +1,6 @@
 import React from "react";
 import { render, fireEvent } from "@testing-library/react-native";
+import { View } from "react-native";
 import { ModalProvider } from "./ModalProvider";
 import { useModal } from "./ModalContext";
 import { usePhantom } from "./PhantomContext";
@@ -16,32 +17,53 @@ jest.mock("./components/Modal", () => ({
     isVisible,
     onClose,
     isConnected,
+    appIcon,
+    appName,
   }: {
     children: ReactNode;
     isVisible: boolean;
     onClose: () => void;
     isConnected?: boolean;
+    appIcon?: string;
+    appName?: string;
   }) => (
-    <mock-modal
+    <View
       testID="modal"
+      // @ts-ignore - adding props for testing
       isVisible={isVisible}
       onClose={onClose}
       isConnected={isConnected}
+      appIcon={appIcon}
+      appName={appName}
     >
       {children}
-    </mock-modal>
+    </View>
   ),
 }));
 
 jest.mock("./components/ConnectModalContent", () => ({
-  ConnectModalContent: ({ onClose }: { onClose: () => void }) => (
-    <mock-connect-content testID="connect-content" onClose={onClose} />
+  ConnectModalContent: ({
+    onClose,
+    appIcon,
+    appName,
+  }: {
+    onClose: () => void;
+    appIcon?: string;
+    appName?: string;
+  }) => (
+    <View
+      testID="connect-content"
+      // @ts-ignore - adding props for testing
+      onClose={onClose}
+      appIcon={appIcon}
+      appName={appName}
+    />
   ),
 }));
 
 jest.mock("./components/ConnectedModalContent", () => ({
   ConnectedModalContent: ({ onClose }: { onClose: () => void }) => (
-    <mock-connected-content testID="connected-content" onClose={onClose} />
+    <View testID="connected-content" /* @ts-ignore */ onClose={onClose} />
   ),
 }));
 
@@ -70,10 +92,10 @@ describe("ModalProvider", () => {
     it("should render children", () => {
       const { getByTestId } = render(
         <ModalProvider>
-          <mock-child testID="test-child" />
+          <View testID="test-child" />
         </ModalProvider>,
       );
-      
+
       expect(getByTestId("test-child")).toBeTruthy();
     });
 
@@ -131,10 +153,10 @@ describe("ModalProvider", () => {
     it("should pass appIcon and appName to Modal", () => {
       const { getByTestId } = render(
         <ModalProvider appIcon="https://example.com/icon.png" appName="Test App">
-          <mock-child />
+          <View />
         </ModalProvider>,
       );
-      
+
       const modal = getByTestId("modal");
       expect(modal.props.appIcon).toBe("https://example.com/icon.png");
       expect(modal.props.appName).toBe("Test App");
@@ -143,13 +165,13 @@ describe("ModalProvider", () => {
 
   describe("Modal State Management", () => {
     const TestComponent = () => {
-      const { isModalOpen, openModal, closeModal } = useModal();
+      const { isOpened, open, close } = useModal();
       return (
         <mock-test-component
           testID="test-component"
-          isModalOpen={isModalOpen}
-          onOpen={openModal}
-          onClose={closeModal}
+          isModalOpen={isOpened}
+          onOpen={open}
+          onClose={close}
         />
       );
     };
@@ -267,20 +289,20 @@ describe("ModalProvider", () => {
     });
 
     it("should pass onClose to modal content components", () => {
-      const { getByTestId } = render(
-        <ModalProvider>
-          <TestComponent />
-        </ModalProvider>,
-      );
-      
-      const TestComponent = () => {
-        const { openModal } = useModal();
+      const OpenOnMount = () => {
+        const { open } = useModal();
         React.useEffect(() => {
-          openModal();
-        }, [openModal]);
+          open();
+        }, [open]);
         return null;
       };
-      
+
+      const { getByTestId } = render(
+        <ModalProvider>
+          <OpenOnMount />
+        </ModalProvider>,
+      );
+
       const connectContent = getByTestId("connect-content");
       expect(typeof connectContent.props.onClose).toBe("function");
       

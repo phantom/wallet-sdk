@@ -91,7 +91,7 @@ export function ConnectModalContent({ appIcon, onClose }: ConnectModalContentPro
 
   return (
     <View style={styles.container}>
-      {appIcon && <Image source={{ uri: appIcon }} style={styles.appIcon} />}
+      {appIcon && <Image testID="app-icon" source={{ uri: appIcon }} style={styles.appIcon} />}
 
       {error && (
         <View style={styles.errorContainer}>
@@ -101,7 +101,7 @@ export function ConnectModalContent({ appIcon, onClose }: ConnectModalContentPro
 
       {isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.brand} />
+          <ActivityIndicator testID="activity-indicator" size="large" color={theme.brand} />
           <Text variant="label" color={theme.secondary}>
             Loading...
           </Text>

@@ -70,7 +70,7 @@
   },
   "devDependencies": {
     "@testing-library/jest-native": "^5.4.3",
-    "@testing-library/react-native": "^13.3.3",
+    "@testing-library/react-native": "14.0.0-alpha.1",
     "@types/jest": "^29.5.14",
     "@types/react": "~19.0.10",
     "@types/react-native": "^0.72.0",
@@ -90,7 +90,8 @@
     "rimraf": "^6.0.1",
     "ts-jest": "^29",
     "tsup": "^6.7.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "universal-test-renderer": "0.6.0"
   },
   "publishConfig": {
     "directory": "_release/package"

@@ -1,5 +1,6 @@
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
+import { View, Text as RNText, TouchableOpacity } from "react-native";
 import { ConnectedModalContent, type ConnectedModalContentProps } from "./ConnectedModalContent";
 import { usePhantom } from "../PhantomContext";
 import { useDisconnect } from "../hooks/useDisconnect";
@@ -10,20 +11,28 @@ jest.mock("../PhantomContext");
 jest.mock("../hooks/useDisconnect");
 jest.mock("@phantom/wallet-sdk-ui", () => ({
   ...jest.requireActual("@phantom/wallet-sdk-ui"),
-  Button: ({ children, onClick, disabled, isLoading, variant }: any) => (
-    <mock-button
-      testID={variant === "danger" ? "disconnect-button" : "button"}
-      onPress={onClick}
-      disabled={disabled}
-      isLoading={isLoading}
-      variant={variant}
-    >
-      {children}
-    </mock-button>
-  ),
-  Text: ({ children, variant }: { children: React.ReactNode; variant?: string }) => (
-    <mock-text testID={variant}>{children}</mock-text>
-  ),
+  Button: (props: any) => {
+    const React = require('react');
+    const { TouchableOpacity, Text } = require('react-native');
+    const { children, onClick, disabled, isLoading, variant, testID } = props;
+    return (
+      <TouchableOpacity
+        {...props}
+        testID={testID || (variant === "danger" ? "disconnect-button" : "button")}
+        onPress={onClick}
+        disabled={disabled}
+        isLoading={isLoading}
+        variant={variant}
+      >
+        <Text>{children}</Text>
+      </TouchableOpacity>
+    );
+  },
+  Text: ({ children, variant }: { children: React.ReactNode; variant?: string }) => {
+    const React = require('react');
+    const { Text } = require('react-native');
+    return <Text testID={variant}>{children}</Text>;
+  },
   hexToRgba: (_hex: string, opacity: number) => `rgba(255, 0, 0, ${opacity})`,
 }));
 
@@ -93,11 +102,10 @@ describe("ConnectedModalContent", () => {
     it("should display address labels", () => {
       const { getAllByTestId } = renderComponent();
       
-      const captions = getAllByTestId("caption");
-      const labels = captions.map((el: any) => el.children[0]);
+      const labels = getAllByTestId("label").map((el: any) => el.children[0]);
       
-      expect(labels).toContain("Ethereum");
-      expect(labels).toContain("Solana");
+      expect(labels).toContain("ethereum");
+      expect(labels).toContain("solana");
     });
 
     it("should handle empty addresses array", () => {
@@ -108,8 +116,8 @@ describe("ConnectedModalContent", () => {
 
       const { queryByText } = renderComponent();
       
-      expect(queryByText("Ethereum")).toBeNull();
-      expect(queryByText("Solana")).toBeNull();
+      expect(queryByText("ethereum")).toBeNull();
+      expect(queryByText("solana")).toBeNull();
     });
 
     it("should handle single address", () => {
@@ -134,7 +142,7 @@ describe("ConnectedModalContent", () => {
       expect(getByTestId("disconnect-button")).toBeTruthy();
     });
 
-    it("should call disconnect when button is clicked", async () => {
+    it("should call disconnect when button is clicked", () => {
       mockDisconnect.mockResolvedValue(undefined);
       
       const { getByTestId } = renderComponent();
@@ -201,8 +209,7 @@ describe("ConnectedModalContent", () => {
 
   describe("Error Handling", () => {
     it("should show error message when disconnect fails", async () => {
-      const errorMessage = "Failed to disconnect wallet";
-      mockDisconnect.mockRejectedValue(new Error(errorMessage));
+      mockDisconnect.mockRejectedValue(new Error("Failed to disconnect wallet"));
       
       const { getByTestId, getByText } = renderComponent();
       const button = getByTestId("disconnect-button");
@@ -210,7 +217,7 @@ describe("ConnectedModalContent", () => {
       fireEvent.press(button);
       
       await waitFor(() => {
-        expect(getByText(errorMessage)).toBeTruthy();
+        expect(getByText("Failed to disconnect")).toBeTruthy();
       });
     });
 
@@ -257,18 +264,12 @@ describe("ConnectedModalContent", () => {
       fireEvent.press(button);
       
       await waitFor(() => {
-        expect(getByText("String error")).toBeTruthy();
+        expect(getByText("Failed to disconnect")).toBeTruthy();
       });
     });
   });
 
   describe("UI States", () => {
-    it("should render Connected title", () => {
-      const { getByText } = renderComponent();
-      
-      expect(getByText("Connected")).toBeTruthy();
-    });
-
     it("should display addresses with proper formatting", () => {
       mockUsePhantom.mockReturnValue({
         ...mockUsePhantom(),

@@ -1,4 +1,5 @@
 // Test setup for React Native SDK
+// eslint-disable-next-line import/no-extraneous-dependencies
 import '@testing-library/jest-native/extend-expect';
 
 // Mock console methods to reduce noise in tests
