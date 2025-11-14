@@ -1,8 +1,3 @@
-/**
- * Theme type definitions for Phantom UI
- * Simple theme focused on colors and border radius
- */
-
 import { hexToRgba } from "../utils/index";
 
 // Type-safe hex color string
@@ -90,23 +85,21 @@ export interface NativeTypography {
   };
 }
 
-export type CompletePhantomWebTheme = PhantomTheme & {
-  aux: string; // Auxiliary color derived from secondary with opacity (rgba format)
+type ComputedPhantomWebTheme = PhantomTheme & {
+  aux: string;
   typography: WebTypography;
 };
 
-export type CompletePhantomNativeTheme = PhantomTheme & {
-  aux: string; // Auxiliary color derived from secondary with opacity (rgba format)
+type ComputedPhantomNativeTheme = PhantomTheme & {
+  aux: string;
   typography: NativeTypography;
 };
 
 // Union type for compatibility
-export type CompletePhantomTheme = CompletePhantomWebTheme | CompletePhantomNativeTheme;
+export type ComputedPhantomTheme = ComputedPhantomWebTheme | ComputedPhantomNativeTheme;
 
 export const loginWithPhantomColor: HexColor = "#7C63E7";
-/**
- * Dark theme configuration
- */
+
 export const darkTheme: PhantomTheme = {
   background: "#181818",
   text: "#FFFFFF",
@@ -118,9 +111,6 @@ export const darkTheme: PhantomTheme = {
   brand: loginWithPhantomColor,
 };
 
-/**
- * Light theme configuration
- */
 export const lightTheme: PhantomTheme = {
   background: "#FFFFFF",
   text: "#181818",
@@ -132,10 +122,8 @@ export const lightTheme: PhantomTheme = {
   brand: loginWithPhantomColor,
 };
 
-/**
- * Merge custom theme with base theme for Web
- */
-export function mergeTheme(customTheme?: Partial<PhantomTheme>): CompletePhantomWebTheme {
+
+export function mergeTheme(customTheme?: Partial<PhantomTheme>): ComputedPhantomWebTheme {
   const secondary = customTheme?.secondary || darkTheme.secondary;
   const isHex = secondary.startsWith("#");
 
@@ -176,10 +164,8 @@ export function mergeTheme(customTheme?: Partial<PhantomTheme>): CompletePhantom
   };
 }
 
-/**
- * Merge custom theme with base theme for React Native
- */
-export function mergeThemeNative(customTheme?: Partial<PhantomTheme>): CompletePhantomNativeTheme {
+
+export function mergeThemeNative(customTheme?: Partial<PhantomTheme>): ComputedPhantomNativeTheme {
   const secondary = customTheme?.secondary || darkTheme.secondary;
   const isHex = secondary.startsWith("#");
 

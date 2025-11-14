@@ -250,7 +250,7 @@ The main provider component that initializes the SDK and provides context to all
 interface PhantomProviderProps {
   config: PhantomSDKConfig;
   debugConfig?: PhantomDebugConfig;
-  theme?: Partial<CompletePhantomTheme>; // Optional: Customize modal appearance
+  theme?: PhantomTheme; // Optional: Customize modal appearance
   appIcon?: string; // Optional: Your app icon URL (shown in modal)
   appName?: string; // Optional: Your app name (shown in modal)
   children: ReactNode;

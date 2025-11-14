@@ -14,7 +14,7 @@ import {
   DEFAULT_EMBEDDED_WALLET_TYPE,
   DEFAULT_AUTH_URL,
 } from "@phantom/constants";
-import { ThemeProvider, darkTheme, type CompletePhantomTheme } from "@phantom/wallet-sdk-ui";
+import { ThemeProvider, darkTheme, type PhantomTheme } from "@phantom/wallet-sdk-ui";
 import { ModalProvider } from "./ModalProvider";
 import { PhantomContext, type PhantomContextValue } from "./PhantomContext";
 // Platform adapters for React Native/Expo
@@ -30,7 +30,7 @@ export interface PhantomProviderProps {
   children: ReactNode;
   config: PhantomSDKConfig;
   debugConfig?: PhantomDebugConfig;
-  theme?: Partial<CompletePhantomTheme>;
+  theme?: Partial<PhantomTheme>;
   appIcon?: string;
   appName?: string;
 }

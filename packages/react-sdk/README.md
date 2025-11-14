@@ -1044,7 +1044,7 @@ Quick reference of all available hooks:
 | `useAutoConfirm`             | Auto-confirm management (injected only) | `{ enable, disable, status, supportedChains, ... }` |
 | `useSolana`                  | Solana chain operations                 | `{ signMessage, signAndSendTransaction, ... }`      |
 | `useEthereum`                | Ethereum chain operations               | `{ signPersonalMessage, sendTransaction, ... }`     |
-| `useTheme`                   | Access current theme                    | `CompletePhantomTheme`                              |
+| `useTheme`                   | Access current theme                    | `PhantomTheme`                              |
 | `usePhantom`                 | Get provider context                    | `{ isConnected, isReady }`                          |
 
 ## Configuration Reference
