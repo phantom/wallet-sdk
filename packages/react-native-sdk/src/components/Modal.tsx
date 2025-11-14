@@ -18,8 +18,6 @@ export interface ModalProps {
 export function Modal({ isVisible, onClose, isConnected, children }: ModalProps) {
   const theme = useTheme();
 
-  const borderColor = `rgba(152, 151, 156, 0.10)`;
-
   const styles = StyleSheet.create({
     bottomSheet: {
       backgroundColor: theme.background,
@@ -49,7 +47,7 @@ export function Modal({ isVisible, onClose, isConnected, children }: ModalProps)
     },
     footer: {
       alignItems: "center",
-      borderColor: borderColor,
+      borderColor: theme.aux,
       borderTopWidth: 1,
       flexDirection: "row",
       gap: 4,

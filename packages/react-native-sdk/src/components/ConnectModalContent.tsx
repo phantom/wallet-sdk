@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { View, Image, StyleSheet, ActivityIndicator } from "react-native";
 import type { EmbeddedProviderAuthType } from "@phantom/embedded-provider-core";
-import { Button, Icon, Text, useTheme } from "@phantom/wallet-sdk-ui";
+import { Button, Icon, Text, useTheme, hexToRgba } from "@phantom/wallet-sdk-ui";
 import { usePhantom } from "../PhantomContext";
 import { useConnect } from "../hooks/useConnect";
 
@@ -22,8 +22,8 @@ export function ConnectModalContent({ appIcon, onClose }: ConnectModalContentPro
 
   const isLoading = contextIsConnecting || isConnecting;
 
-  const errorBackgroundColor = `${theme.error}1A`;
-  const errorBorderColor = `${theme.error}4D`;
+  const errorBackgroundColor = hexToRgba(theme.error, 0.1); // 10% opacity
+  const errorBorderColor = hexToRgba(theme.error, 0.3); // 30% opacity
   const errorTextColor = theme.error;
 
   const connectWithAuthProvider = useCallback(

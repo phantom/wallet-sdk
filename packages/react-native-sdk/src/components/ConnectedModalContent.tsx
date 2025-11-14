@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { View, StyleSheet } from "react-native";
-import { Button, Text, useTheme } from "@phantom/wallet-sdk-ui";
+import { Button, Text, useTheme, hexToRgba } from "@phantom/wallet-sdk-ui";
 import { usePhantom } from "../PhantomContext";
 import { useDisconnect } from "../hooks/useDisconnect";
 
@@ -15,8 +15,8 @@ export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [disconnectError, setDisconnectError] = useState<Error | null>(null);
 
-  const errorBackgroundColor = `${theme.error}1A`;
-  const errorBorderColor = `${theme.error}4D`;
+  const errorBackgroundColor = hexToRgba(theme.error, 0.1); // 10% opacity
+  const errorBorderColor = hexToRgba(theme.error, 0.3); // 30% opacity
 
   // Clear error state when component mounts (when modal opens)
   useEffect(() => {

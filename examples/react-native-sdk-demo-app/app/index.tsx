@@ -2,7 +2,7 @@ import React from "react";
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, SafeAreaView } from "react-native";
 import { useRouter } from "expo-router";
 import { useConnect, useAccounts, useDisconnect, useModal } from "@phantom/react-native-sdk";
-import { useThemeContext } from "./_layout";
+import { useThemeContext } from "./providers";
 
 export default function HomeScreen() {
   const router = useRouter();
