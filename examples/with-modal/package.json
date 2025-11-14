@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@phantom/react-sdk": "workspace:^",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "vite": "^6.3.6"
   },
   "devDependencies": {

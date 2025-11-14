@@ -68,7 +68,16 @@ export function phantomConnector() {
       }
     },
 
-    async connect() {
+    async connect<withCapabilities extends boolean = false>(parameters?: {
+      chainId?: number | undefined;
+      isReconnecting?: boolean | undefined;
+      withCapabilities?: withCapabilities | boolean | undefined;
+    }): Promise<{
+      accounts: withCapabilities extends true
+        ? readonly { address: `0x${string}`; capabilities: Record<string, unknown> }[]
+        : readonly `0x${string}`[];
+      chainId: number;
+    }> {
       if (!sdk) {
         await initializeSdk();
       }
@@ -82,11 +91,23 @@ export function phantomConnector() {
         }
 
         const chainId = await sdk!.ethereum.getChainId();
+        const accounts = ethereumAddresses.map(addr => addr.address as `0x${string}`);
+
+        // Handle withCapabilities if requested
+        if (parameters?.withCapabilities) {
+          return {
+            accounts: accounts.map(address => ({
+              address,
+              capabilities: {},
+            })),
+            chainId: chainId,
+          } as any;
+        }
 
         return {
-          accounts: ethereumAddresses.map(addr => addr.address as `0x${string}`),
+          accounts: accounts,
           chainId: chainId,
-        };
+        } as any;
       } catch (error) {
         throw new Error(`Failed to connect: ${error instanceof Error ? error.message : "Unknown error"}`);
       }

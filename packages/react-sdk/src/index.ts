@@ -13,7 +13,7 @@ export * from "./components";
 
 // Theme - re-exported from @phantom/wallet-sdk-ui
 export { darkTheme, lightTheme, mergeTheme } from "@phantom/wallet-sdk-ui";
-export type { PhantomTheme, CompletePhantomTheme, HexColor } from "@phantom/wallet-sdk-ui";
+export type { PhantomTheme, ComputedPhantomTheme, HexColor } from "@phantom/wallet-sdk-ui";
 
 // Types
 export * from "./types";

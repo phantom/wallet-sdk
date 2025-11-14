@@ -18,6 +18,8 @@ module.exports = {
   collectCoverageFrom: ["src/**/*.{ts,tsx}", "!src/**/*.d.ts", "!src/**/*.test.{ts,tsx}", "!src/**/index.{ts,tsx}"],
   setupFilesAfterEnv: ["<rootDir>/src/test/setup.ts"],
   moduleNameMapper: {
+    "^react$": "<rootDir>/node_modules/react",
+    "^react/jsx-runtime$": "<rootDir>/node_modules/react/jsx-runtime",
     "^@/(.*)$": "<rootDir>/src/$1",
     "^@phantom/crypto$": "<rootDir>/src/test/mocks/@phantom/crypto.js",
     "^@phantom/base64url$": "<rootDir>/src/test/mocks/@phantom/base64url.js",
@@ -27,6 +29,7 @@ module.exports = {
     "^expo-router$": "<rootDir>/src/test/mocks/expo-router.js",
     "^react-native$": "<rootDir>/src/test/mocks/react-native.js",
   },
+  moduleDirectories: ["node_modules", "<rootDir>/../../node_modules"],
   testPathIgnorePatterns: ["/node_modules/", "/dist/"],
-  transformIgnorePatterns: ["node_modules/(?!(react-native|@react-native|expo-.*)/)"],
+  transformIgnorePatterns: ["node_modules/(?!(react-native|@react-native|expo-.*|@phantom)/)"],
 };

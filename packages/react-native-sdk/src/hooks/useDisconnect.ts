@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { usePhantom } from "../PhantomProvider";
+import { usePhantom } from "../PhantomContext";
 
 export function useDisconnect() {
   const { sdk } = usePhantom();

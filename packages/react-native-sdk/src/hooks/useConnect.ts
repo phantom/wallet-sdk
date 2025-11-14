@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { usePhantom } from "../PhantomProvider";
+import { usePhantom } from "../PhantomContext";
 import type { ConnectOptions, ConnectResult } from "../types";
 
 export function useConnect() {

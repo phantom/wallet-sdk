@@ -1,4 +1,4 @@
-import { usePhantom } from "../PhantomProvider";
+import { usePhantom } from "../PhantomContext";
 import type { IEthereumChain } from "@phantom/chain-interfaces";
 
 /**

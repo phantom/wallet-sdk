@@ -1,29 +1,29 @@
 import { createContext, useContext, type ReactNode } from "react";
-import type { ComputedPhantomTheme } from "./index";
-import { darkTheme, mergeTheme } from "./index";
+import type { CompletePhantomNativeTheme } from "./index";
+import { darkTheme, mergeThemeNative } from "./index";
 
 export interface ThemeContextValue {
-  theme: ComputedPhantomTheme;
+  theme: CompletePhantomNativeTheme;
 }
 
 export const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export interface ThemeProviderProps {
   children: ReactNode;
-  theme?: Partial<ComputedPhantomTheme>;
+  theme?: Partial<CompletePhantomNativeTheme>;
 }
 
 /**
- * ThemeProvider for wallet-sdk-ui components.
- * Provides theme context to all child components.
+ * ThemeProvider for wallet-sdk-ui components in React Native.
+ * Provides theme context with native typography (unitless numbers instead of px strings).
  */
 export function ThemeProvider({ children, theme }: ThemeProviderProps) {
-  const resolvedTheme = mergeTheme(theme || darkTheme);
+  const resolvedTheme = mergeThemeNative(theme || darkTheme);
 
   return <ThemeContext.Provider value={{ theme: resolvedTheme }}>{children}</ThemeContext.Provider>;
 }
 
-export function useTheme(): ComputedPhantomTheme {
+export function useTheme(): CompletePhantomNativeTheme {
   const context = useContext(ThemeContext);
   if (!context) {
     throw new Error("useTheme must be used within a ThemeProvider");
