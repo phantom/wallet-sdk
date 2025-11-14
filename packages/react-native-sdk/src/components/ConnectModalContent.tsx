@@ -11,9 +11,6 @@ export interface ConnectModalContentProps {
   onClose: () => void;
 }
 
-// Only mobile auth providers: google, apple, x, tiktok
-type MobileAuthProvider = "google" | "apple" | "x" | "tiktok";
-
 export function ConnectModalContent({ appIcon, onClose }: ConnectModalContentProps) {
   const theme = useTheme();
   const { isConnecting: contextIsConnecting, allowedProviders } = usePhantom();
@@ -21,7 +18,7 @@ export function ConnectModalContent({ appIcon, onClose }: ConnectModalContentPro
 
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [providerType, setProviderType] = useState<MobileAuthProvider | null>(null);
+  const [providerType, setProviderType] = useState<EmbeddedProviderAuthType | null>(null);
 
   const isLoading = contextIsConnecting || isConnecting;
 
@@ -34,7 +31,7 @@ export function ConnectModalContent({ appIcon, onClose }: ConnectModalContentPro
       try {
         setIsConnecting(true);
         setError(null);
-        setProviderType(provider as MobileAuthProvider);
+        setProviderType(provider);
 
         await connect({ provider });
 
