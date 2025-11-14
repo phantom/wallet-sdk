@@ -1,5 +1,19 @@
 # @phantom/server-sdk
 
+## 1.0.0-beta.22
+
+### Patch Changes
+
+- f54d77f: New version
+- Updated dependencies [f54d77f]
+- Updated dependencies [b6aff60]
+  - @phantom/api-key-stamper@1.0.0-beta.10
+  - @phantom/base64url@1.0.0-beta.10
+  - @phantom/client@1.0.0-beta.22
+  - @phantom/constants@1.0.0-beta.10
+  - @phantom/parsers@1.0.0-beta.10
+  - @phantom/utils@1.0.0-beta.22
+
 ## 1.0.0-beta.21
 
 ### Patch Changes

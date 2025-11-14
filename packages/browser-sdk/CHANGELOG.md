@@ -1,5 +1,25 @@
 # @phantom/browser-sdk
 
+## 1.0.0-beta.22
+
+### Patch Changes
+
+- f54d77f: New version
+- b6aff60: Release new version
+- c424eff: Update auth provider definitions and remove jwt
+- Updated dependencies [f54d77f]
+- Updated dependencies [b6aff60]
+- Updated dependencies [c424eff]
+  - @phantom/base64url@1.0.0-beta.10
+  - @phantom/browser-injected-sdk@1.0.0-beta.7
+  - @phantom/chain-interfaces@1.0.0-beta.10
+  - @phantom/client@1.0.0-beta.22
+  - @phantom/constants@1.0.0-beta.10
+  - @phantom/embedded-provider-core@1.0.0-beta.22
+  - @phantom/indexed-db-stamper@1.0.0-beta.3
+  - @phantom/parsers@1.0.0-beta.10
+  - @phantom/sdk-types@1.0.0-beta.10
+
 ## 1.0.0-beta.21
 
 ### Patch Changes

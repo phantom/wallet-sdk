@@ -1,5 +1,16 @@
 # @phantom/browser-sdk
 
+## 1.0.0-beta.7
+
+### Patch Changes
+
+- f54d77f: New version
+- b6aff60: Release new version
+- Updated dependencies [f54d77f]
+- Updated dependencies [b6aff60]
+  - @phantom/constants@1.0.0-beta.10
+  - @phantom/sdk-types@1.0.0-beta.10
+
 ## 1.0.0-beta.6
 
 ### Patch Changes
