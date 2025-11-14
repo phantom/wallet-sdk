@@ -1,23 +1,26 @@
-import React from "react";
-import { render, fireEvent } from "@testing-library/react-native";
-import { Modal as RNModal, View, Text as RNText } from "react-native";
-import { Modal, type ModalProps } from "./Modal";
+import type React from "react";
+import { render } from "@testing-library/react-native";
+import type { ModalProps } from "./Modal";
+import { Modal } from "./Modal";
 import { ThemeProvider } from "@phantom/wallet-sdk-ui";
 
 // Mock @phantom/wallet-sdk-ui components
-jest.mock("@phantom/wallet-sdk-ui", () => ({
-  ...jest.requireActual("@phantom/wallet-sdk-ui"),
-  Icon: ({ type, testID }: { type: string; testID?: string }) => {
-    const React = require('react');
-    const { View } = require('react-native');
-    return <View testID={testID || `icon-${type}`} />;
-  },
-  Text: ({ children, testID }: { children: React.ReactNode; testID?: string }) => {
-    const React = require('react');
-    const { Text } = require('react-native');
-    return <Text testID={testID}>{children}</Text>;
-  },
-}));
+/* eslint-disable @typescript-eslint/no-var-requires */
+jest.mock("@phantom/wallet-sdk-ui", () => {
+  const React = require("react");
+  const { View, Text } = require("react-native");
+
+  return {
+    ...jest.requireActual("@phantom/wallet-sdk-ui"),
+    Icon: ({ type, testID }: { type: string; testID?: string }) => {
+      return <View testID={testID || `icon-${type}`} />;
+    },
+    Text: ({ children, testID }: { children: React.ReactNode; testID?: string }) => {
+      return <Text testID={testID}>{children}</Text>;
+    },
+  };
+});
+/* eslint-enable @typescript-eslint/no-var-requires */
 
 const mockTheme = {
   background: "#ffffff",
@@ -32,10 +35,15 @@ const mockTheme = {
 };
 
 describe("Modal Component", () => {
+  /* eslint-disable @typescript-eslint/no-var-requires */
+  const React = require("react");
+  const { View, Text } = require("react-native");
+  /* eslint-enable @typescript-eslint/no-var-requires */
+
   const defaultProps: ModalProps = {
     isVisible: true,
     onClose: jest.fn(),
-    children: <View testID="modal-child"><RNText>Test Content</RNText></View>,
+    children: <View testID="modal-child"><Text>Test Content</Text></View>,
   };
 
   const renderModal = (props: Partial<ModalProps> = {}) => {

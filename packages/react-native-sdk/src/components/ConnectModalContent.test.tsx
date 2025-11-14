@@ -1,7 +1,7 @@
-import React from "react";
+import type React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
-import { View, Text as RNText, TouchableOpacity, Image } from "react-native";
-import { ConnectModalContent, type ConnectModalContentProps } from "./ConnectModalContent";
+import type { ConnectModalContentProps } from "./ConnectModalContent";
+import { ConnectModalContent } from "./ConnectModalContent";
 import { usePhantom } from "../PhantomContext";
 import { useConnect } from "../hooks/useConnect";
 import { ThemeProvider } from "@phantom/wallet-sdk-ui";
@@ -9,38 +9,39 @@ import { ThemeProvider } from "@phantom/wallet-sdk-ui";
 // Mock dependencies
 jest.mock("../PhantomContext");
 jest.mock("../hooks/useConnect");
-jest.mock("@phantom/wallet-sdk-ui", () => ({
-  ...jest.requireActual("@phantom/wallet-sdk-ui"),
-  Button: (props: any) => {
-    const React = require('react');
-    const { View, Text } = require('react-native');
-    const { children, onClick, disabled, isLoading, testID, fullWidth } = props;
+/* eslint-disable @typescript-eslint/no-var-requires */
+jest.mock("@phantom/wallet-sdk-ui", () => {
+  const React = require("react");
+  const { View, Text } = require("react-native");
 
-    // Use View instead of TouchableOpacity to properly expose custom props
-    return (
-      <View
-        testID={testID || "button"}
-        onPress={onClick}
-        disabled={disabled}
-        isLoading={isLoading}
-        fullWidth={fullWidth}
-        accessible={!disabled}
-      >
-        <Text>{children}</Text>
-      </View>
-    );
-  },
-  Icon: ({ type }: { type: string }) => {
-    const React = require('react');
-    const { View } = require('react-native');
-    return <View testID={`icon-${type}`} />;
-  },
-  Text: ({ children }: { children: React.ReactNode }) => {
-    const React = require('react');
-    const { Text } = require('react-native');
-    return <Text>{children}</Text>;
-  },
-}));
+  return {
+    ...jest.requireActual("@phantom/wallet-sdk-ui"),
+    Button: (props: any) => {
+      const { children, onClick, disabled, isLoading, testID, fullWidth } = props;
+
+      // Use View instead of TouchableOpacity to properly expose custom props
+      return (
+        <View
+          testID={testID || "button"}
+          onPress={onClick}
+          disabled={disabled}
+          isLoading={isLoading}
+          fullWidth={fullWidth}
+          accessible={!disabled}
+        >
+          <Text>{children}</Text>
+        </View>
+      );
+    },
+    Icon: ({ type }: { type: string }) => {
+      return <View testID={`icon-${type}`} />;
+    },
+    Text: ({ children }: { children: React.ReactNode }) => {
+      return <Text>{children}</Text>;
+    },
+  };
+});
+/* eslint-enable @typescript-eslint/no-var-requires */
 
 const mockTheme = {
   background: "#ffffff",

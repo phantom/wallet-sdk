@@ -1,7 +1,7 @@
-import React from "react";
+import type React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
-import { View, Text as RNText, TouchableOpacity } from "react-native";
-import { ConnectedModalContent, type ConnectedModalContentProps } from "./ConnectedModalContent";
+import type { ConnectedModalContentProps } from "./ConnectedModalContent";
+import { ConnectedModalContent } from "./ConnectedModalContent";
 import { usePhantom } from "../PhantomContext";
 import { useDisconnect } from "../hooks/useDisconnect";
 import { ThemeProvider } from "@phantom/wallet-sdk-ui";
@@ -9,40 +9,43 @@ import { ThemeProvider } from "@phantom/wallet-sdk-ui";
 // Mock dependencies
 jest.mock("../PhantomContext");
 jest.mock("../hooks/useDisconnect");
-jest.mock("@phantom/wallet-sdk-ui", () => ({
-  ...jest.requireActual("@phantom/wallet-sdk-ui"),
-  Button: (props: any) => {
-    const React = require('react');
-    const { TouchableOpacity, Text } = require('react-native');
-    const { children, onClick, disabled, isLoading, variant } = props;
+/* eslint-disable @typescript-eslint/no-var-requires */
+jest.mock("@phantom/wallet-sdk-ui", () => {
+  const React = require("react");
+  const { TouchableOpacity, Text } = require("react-native");
 
-    // Check if this is the disconnect button by looking at the children text
-    const childText = React.Children.toArray(children).find((child: any) =>
-      typeof child === 'object' && child.props?.children &&
-      (child.props.children === 'Disconnect' || child.props.children === 'Disconnecting...')
-    );
-    const isDisconnectButton = !!childText;
+  return {
+    ...jest.requireActual("@phantom/wallet-sdk-ui"),
+    Button: (props: any) => {
+      const { children, onClick, disabled, isLoading, variant } = props;
 
-    return (
-      <TouchableOpacity
-        {...props}
-        testID={isDisconnectButton ? "disconnect-button" : "button"}
-        onPress={onClick}
-        disabled={disabled}
-        isLoading={isLoading}
-        variant={variant}
-      >
-        <Text>{children}</Text>
-      </TouchableOpacity>
-    );
-  },
-  Text: ({ children, variant }: { children: React.ReactNode; variant?: string }) => {
-    const React = require('react');
-    const { Text } = require('react-native');
-    return <Text testID={variant}>{children}</Text>;
-  },
-  hexToRgba: (_hex: string, opacity: number) => `rgba(255, 0, 0, ${opacity})`,
-}));
+      // Check if this is the disconnect button by looking at the children text
+      const childText = React.Children.toArray(children).find((child: any) =>
+        typeof child === "object" && child.props?.children &&
+        (child.props.children === "Disconnect" || child.props.children === "Disconnecting...")
+      );
+      const isDisconnectButton = !!childText;
+
+      return (
+        <TouchableOpacity
+          {...props}
+          testID={isDisconnectButton ? "disconnect-button" : "button"}
+          onPress={onClick}
+          disabled={disabled}
+          isLoading={isLoading}
+          variant={variant}
+        >
+          <Text>{children}</Text>
+        </TouchableOpacity>
+      );
+    },
+    Text: ({ children, variant }: { children: React.ReactNode; variant?: string }) => {
+      return <Text testID={variant}>{children}</Text>;
+    },
+    hexToRgba: (_hex: string, opacity: number) => `rgba(255, 0, 0, ${opacity})`,
+  };
+});
+/* eslint-enable @typescript-eslint/no-var-requires */
 
 const mockTheme = {
   background: "#ffffff",
