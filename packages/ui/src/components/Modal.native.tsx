@@ -11,9 +11,11 @@ export interface ModalProps {
 }
 
 /**
- * Modal component is not supported in React Native.
- * Use a bottom sheet or custom native modal implementation instead.
+ * Modal component is not provided in the UI package for React Native.
+ * Use the Modal component from @phantom/react-native-sdk instead.
  */
 export function Modal(_props: ModalProps) {
-  throw new Error("Modal component is not supported in React Native. Use a bottom sheet implementation instead.");
+  throw new Error(
+    "Modal component is not provided in the UI package for React Native. Import Modal from @phantom/react-native-sdk instead."
+  );
 }

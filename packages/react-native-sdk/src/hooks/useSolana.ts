@@ -1,4 +1,4 @@
-import { usePhantom } from "../PhantomProvider";
+import { usePhantom } from "../PhantomContext";
 import type { ISolanaChain } from "@phantom/chain-interfaces";
 
 /**

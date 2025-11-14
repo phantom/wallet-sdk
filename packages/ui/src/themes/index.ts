@@ -34,36 +34,74 @@ export interface PhantomTheme {
   brand: HexColor;
 }
 
-export type CompletePhantomTheme = PhantomTheme & {
-  aux: string; // Auxiliary color derived from secondary with opacity (rgba format)
-  // Typography
-  typography: {
-    caption: {
-      fontFamily: string;
-      fontSize: string;
-      fontStyle: string;
-      fontWeight: string;
-      lineHeight: string;
-      letterSpacing: string;
-    };
-    captionBold: {
-      fontFamily: string;
-      fontSize: string;
-      fontStyle: string;
-      fontWeight: string;
-      lineHeight: string;
-      letterSpacing: string;
-    };
-    label: {
-      fontFamily: string;
-      fontSize: string;
-      fontStyle: string;
-      fontWeight: string;
-      lineHeight: string;
-      letterSpacing: string;
-    };
+// Web typography uses strings with units
+export interface WebTypography {
+  caption: {
+    fontFamily: string;
+    fontSize: string;
+    fontStyle: string;
+    fontWeight: string;
+    lineHeight: string;
+    letterSpacing: string;
   };
+  captionBold: {
+    fontFamily: string;
+    fontSize: string;
+    fontStyle: string;
+    fontWeight: string;
+    lineHeight: string;
+    letterSpacing: string;
+  };
+  label: {
+    fontFamily: string;
+    fontSize: string;
+    fontStyle: string;
+    fontWeight: string;
+    lineHeight: string;
+    letterSpacing: string;
+  };
+}
+
+// Native typography uses numbers (unitless)
+export interface NativeTypography {
+  caption: {
+    fontFamily: string;
+    fontSize: number;
+    fontStyle: string;
+    fontWeight: string;
+    lineHeight: number;
+    letterSpacing: number;
+  };
+  captionBold: {
+    fontFamily: string;
+    fontSize: number;
+    fontStyle: string;
+    fontWeight: string;
+    lineHeight: number;
+    letterSpacing: number;
+  };
+  label: {
+    fontFamily: string;
+    fontSize: number;
+    fontStyle: string;
+    fontWeight: string;
+    lineHeight: number;
+    letterSpacing: number;
+  };
+}
+
+export type CompletePhantomWebTheme = PhantomTheme & {
+  aux: string; // Auxiliary color derived from secondary with opacity (rgba format)
+  typography: WebTypography;
 };
+
+export type CompletePhantomNativeTheme = PhantomTheme & {
+  aux: string; // Auxiliary color derived from secondary with opacity (rgba format)
+  typography: NativeTypography;
+};
+
+// Union type for compatibility
+export type CompletePhantomTheme = CompletePhantomWebTheme | CompletePhantomNativeTheme;
 
 export const loginWithPhantomColor: HexColor = "#7C63E7";
 /**
@@ -95,9 +133,9 @@ export const lightTheme: PhantomTheme = {
 };
 
 /**
- * Merge custom theme with base theme
+ * Merge custom theme with base theme for Web
  */
-export function mergeTheme(customTheme?: Partial<PhantomTheme>): CompletePhantomTheme {
+export function mergeTheme(customTheme?: Partial<PhantomTheme>): CompletePhantomWebTheme {
   const secondary = customTheme?.secondary || darkTheme.secondary;
   const isHex = secondary.startsWith("#");
 
@@ -133,6 +171,50 @@ export function mergeTheme(customTheme?: Partial<PhantomTheme>): CompletePhantom
         fontWeight: "400",
         lineHeight: "15px",
         letterSpacing: "-0.12px",
+      },
+    },
+  };
+}
+
+/**
+ * Merge custom theme with base theme for React Native
+ */
+export function mergeThemeNative(customTheme?: Partial<PhantomTheme>): CompletePhantomNativeTheme {
+  const secondary = customTheme?.secondary || darkTheme.secondary;
+  const isHex = secondary.startsWith("#");
+
+  if (!isHex) {
+    throw new Error("Secondary color must be a hex color to derive auxiliary color.");
+  }
+
+  return {
+    ...darkTheme,
+    ...customTheme,
+    aux: hexToRgba(secondary, 0.1),
+    typography: {
+      caption: {
+        fontFamily: "System",
+        fontSize: 14,
+        fontStyle: "normal",
+        fontWeight: "400",
+        lineHeight: 17,
+        letterSpacing: -0.14,
+      },
+      captionBold: {
+        fontFamily: "System",
+        fontSize: 14,
+        fontStyle: "normal",
+        fontWeight: "600",
+        lineHeight: 17,
+        letterSpacing: -0.14,
+      },
+      label: {
+        fontFamily: "System",
+        fontSize: 12,
+        fontStyle: "normal",
+        fontWeight: "400",
+        lineHeight: 15,
+        letterSpacing: -0.12,
       },
     },
   };

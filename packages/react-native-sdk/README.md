@@ -30,10 +30,10 @@ yarn add @phantom/react-native-sdk
 
 ```bash
 # For Expo projects
-npx expo install expo-secure-store expo-web-browser expo-auth-session expo-router
+npx expo install expo-secure-store expo-web-browser expo-auth-session expo-router react-native-svg
 
 # For bare React Native projects (additional setup required)
-npm install expo-secure-store expo-web-browser expo-auth-session
+npm install expo-secure-store expo-web-browser expo-auth-session react-native-svg
 
 # Required polyfill for cryptographic operations
 npm install react-native-get-random-values
@@ -83,12 +83,13 @@ Wrap your app with `PhantomProvider`:
 
 ```tsx
 // App.tsx or _layout.tsx (for Expo Router)
-import { PhantomProvider, AddressType } from "@phantom/react-native-sdk";
+import { PhantomProvider, AddressType, darkTheme } from "@phantom/react-native-sdk";
 
 export default function App() {
   return (
     <PhantomProvider
       config={{
+        providers: ["google", "apple"],
         appId: "your-app-id", // Get your app ID from phantom.com/portal
         scheme: "mywalletapp", // Must match app.json scheme
         addressTypes: [AddressType.solana],
@@ -96,6 +97,9 @@ export default function App() {
           redirectUrl: "mywalletapp://phantom-auth-callback",
         },
       }}
+      theme={darkTheme} // Optional: Customize modal appearance
+      appIcon="https://your-app.com/icon.png" // Optional: Your app icon
+      appName="Your App Name" // Optional: Your app name
     >
       <YourAppContent />
     </PhantomProvider>
@@ -103,7 +107,53 @@ export default function App() {
 }
 ```
 
-### 3. Use hooks in your components
+### 3. Use the connection modal (Recommended)
+
+The SDK includes a built-in bottom sheet modal that provides a user-friendly interface for connecting to Phantom. The modal supports multiple authentication methods (Google, Apple, X, TikTok) and handles all connection logic automatically.
+
+```tsx
+// WalletScreen.tsx
+import React from "react";
+import { View, Button, Text } from "react-native";
+import { useModal, useAccounts } from "@phantom/react-native-sdk";
+
+export function WalletScreen() {
+  const modal = useModal();
+  const { isConnected, addresses } = useAccounts();
+
+  if (!isConnected) {
+    return (
+      <View style={{ padding: 20 }}>
+        <Button title="Connect Wallet" onPress={() => modal.open()} />
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ padding: 20 }}>
+      <Text style={{ fontSize: 18, marginBottom: 10 }}>Wallet Connected</Text>
+      {addresses.map((addr, index) => (
+        <Text key={index}>
+          {addr.addressType}: {addr.address}
+        </Text>
+      ))}
+      <Button title="Manage Wallet" onPress={() => modal.open()} />
+    </View>
+  );
+}
+```
+
+**Modal Features:**
+
+- **Multiple Auth Providers**: Google, Apple, X (Twitter), TikTok
+- **Bottom Sheet UI**: Native bottom sheet design for mobile
+- **Automatic State Management**: Shows connect screen when disconnected, wallet management when connected
+- **Error Handling**: Clear error messages displayed in the modal
+- **Loading States**: Visual feedback during connection attempts
+
+### 4. Or use hooks directly
+
+Alternatively, you can use the hooks directly for more control:
 
 ```tsx
 // WalletScreen.tsx
@@ -197,6 +247,15 @@ The main provider component that initializes the SDK and provides context to all
 #### Configuration Options
 
 ```typescript
+interface PhantomProviderProps {
+  config: PhantomSDKConfig;
+  debugConfig?: PhantomDebugConfig;
+  theme?: Partial<CompletePhantomTheme>; // Optional: Customize modal appearance
+  appIcon?: string; // Optional: Your app icon URL (shown in modal)
+  appName?: string; // Optional: Your app name (shown in modal)
+  children: ReactNode;
+}
+
 interface PhantomSDKConfig {
   scheme: string; // Custom URL scheme for your app
   appId: string; // Your app ID from phantom.com/portal (required)
@@ -214,6 +273,34 @@ interface PhantomSDKConfig {
 
 ### Hooks
 
+#### useModal
+
+Control the connection modal visibility. The modal automatically shows the appropriate content based on connection status.
+
+```typescript
+const modal = useModal();
+
+// Open the modal
+modal.open(); // Shows connect options when disconnected, wallet management when connected
+
+// Close the modal
+modal.close();
+
+// Check if modal is open
+const isOpen = modal.isOpened;
+```
+
+**Returns:**
+
+- `open()` - Function to open the modal
+- `close()` - Function to close the modal
+- `isOpened` - Boolean indicating if modal is currently visible
+
+**Modal Behavior:**
+
+- **When disconnected**: Shows authentication provider options (Google, Apple, X, TikTok)
+- **When connected**: Shows connected wallet addresses and disconnect button
+
 #### useConnect
 
 Manages wallet connection functionality.
@@ -221,13 +308,11 @@ Manages wallet connection functionality.
 ```typescript
 const { connect, isConnecting, error } = useConnect();
 
-// Connect with specific provider
+// Connect with specific provider (React Native supported providers)
 await connect({ provider: "google" }); // Google OAuth
 await connect({ provider: "apple" }); // Apple ID
-await connect({ provider: "phantom" }); // Phantom Login
 await connect({ provider: "x" }); // X/Twitter
 await connect({ provider: "tiktok" }); // TikTok
-await connect({ provider: "jwt", jwtToken: "your-jwt-token" }); // Custom JWT
 ```
 
 #### useAccounts
@@ -326,6 +411,55 @@ const { disconnect, isDisconnecting } = useDisconnect();
 await disconnect();
 ```
 
+## Theming
+
+Customize the modal appearance by passing a `theme` prop to the `PhantomProvider`. The SDK includes built-in `darkTheme` (default).
+
+### Using Built-in Theme
+
+```tsx
+import { PhantomProvider, darkTheme } from "@phantom/react-native-sdk";
+
+<PhantomProvider
+  config={config}
+  theme={darkTheme}
+  appIcon="https://your-app.com/icon.png"
+  appName="Your App Name"
+>
+  <App />
+</PhantomProvider>
+```
+
+### Custom Theme
+
+You can pass a partial theme object to customize specific properties:
+
+```tsx
+import { PhantomProvider } from "@phantom/react-native-sdk";
+
+const customTheme = {
+  brand: "#7C3AED", // Primary brand color
+  background: "#1A1A1A", // Background color
+  primary: "#FFFFFF", // Primary text color
+  secondary: "#A0A0A0", // Secondary text color
+  error: "#EF4444", // Error color
+  borderRadius: 12, // Border radius for elements
+};
+
+<PhantomProvider config={config} theme={customTheme}>
+  <App />
+</PhantomProvider>
+```
+
+**Theme Properties:**
+
+- `brand` - Primary brand color (buttons, accents)
+- `background` - Background color for modal
+- `primary` - Primary text color
+- `secondary` - Secondary text color (labels, descriptions)
+- `error` - Error text and border color
+- `borderRadius` - Border radius for buttons and containers
+
 ## Authentication Flows
 
 ### Available Providers
@@ -334,10 +468,10 @@ The SDK supports multiple authentication providers that you specify when calling
 
 - **Google** (`provider: "google"`) - Google OAuth authentication
 - **Apple** (`provider: "apple"`) - Apple ID authentication
-- **Phantom** (`provider: "phantom"`) - Phantom Login authentication
 - **X** (`provider: "x"`) - X/Twitter authentication
 - **TikTok** (`provider: "tiktok"`) - TikTok authentication
-- **JWT** (`provider: "jwt"`) - Custom JWT authentication (requires `jwtToken` parameter)
+
+> **Note**: React Native SDK does not support Phantom Login or injected provider (browser extension) authentication. These are only available in the Browser SDK and React SDK for web applications.
 
 **Example Usage:**
 
@@ -348,11 +482,12 @@ await connect({ provider: "google" });
 // Apple ID
 await connect({ provider: "apple" });
 
-// Phantom Login
-await connect({ provider: "phantom" });
+// X/Twitter
+await connect({ provider: "x" });
 
-// JWT authentication
-await connect({ provider: "jwt", jwtToken: "your-jwt-token" });
+// TikTok
+await connect({ provider: "tiktok" });
+
 ```
 
 ### Authentication Process
@@ -395,6 +530,7 @@ import { PhantomProvider, AddressType } from "@phantom/react-native-sdk";
 <PhantomProvider
   config={{
     appId: "your-app-id",
+    providers: ["google", "apple"],
     scheme: "myapp",
     addressTypes: [AddressType.solana],
   }}
@@ -411,6 +547,7 @@ import { PhantomProvider, AddressType } from "@phantom/react-native-sdk";
 <PhantomProvider
   config={{
     appId: "your-app-id",
+    providers: ["google", "apple"],
     scheme: "mycompany-wallet",
     addressTypes: [AddressType.solana, AddressType.ethereum],
     authOptions: {

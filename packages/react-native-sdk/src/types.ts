@@ -6,8 +6,9 @@ export interface PhantomDebugConfig {
   enabled?: boolean;
 }
 
-export interface PhantomSDKConfig
+export interface PhantomSDKConfig 
   extends Omit<EmbeddedProviderConfig, "apiBaseUrl" | "embeddedWalletType" | "authOptions"> {
+  providers: EmbeddedProviderAuthType[];
   /** Custom URL scheme for your app (e.g., "myapp") */
   scheme: string;
   /** Base URL for Phantom API (default: "https://api.phantom.app/v1/wallets") */
@@ -19,6 +20,7 @@ export interface PhantomSDKConfig
     redirectUrl?: string;
   };
 }
+
 
 export interface ConnectOptions {
   /** OAuth provider to use (required) */

@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactElement } from "react";
 
-export type IconType = "phantom" | "google" | "apple" | "wallet" | "chevron-right" | "arrow-right";
+export type IconType = "phantom" | "google" | "apple" | "wallet" | "chevron-right" | "arrow-right" | "x" | "tiktok" | "close";
 
 export interface IconProps {
   type: IconType;
@@ -98,6 +98,37 @@ const ICONS: Record<IconType, { viewBox: string; path: string | ReactElement }> 
     path: (
       <path
         d="M8 3L13 8L8 13"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    ),
+  },
+  x: {
+    viewBox: "0 0 20 20",
+    path: (
+      <path
+        d="M11.9027 10.3294L18.3508 2.86914H16.7638L11.1193 9.31367L6.6541 2.86914H1.47656L8.23779 11.0869L1.47656 18.8691H3.06357L8.99963 12.0684L13.7142 18.8691H18.8917L11.9024 10.3294H11.9027ZM9.80014 11.1431L9.08779 10.1638L3.62974 4.01172H5.87232L10.3446 8.96953L11.057 9.94883L16.7646 17.7738H14.522L9.80014 11.1434V11.1431Z"
+        fill="currentColor"
+      />
+    ),
+  },
+  tiktok: {
+    viewBox: "0 0 20 20",
+    path: (
+      <path
+        d="M17.0156 7.54948C15.4792 7.54167 14.0156 6.94271 12.8958 5.89323V13.0573C12.8958 16.1042 10.401 18.599 7.35417 18.599C6.24219 18.599 5.21615 18.276 4.35417 17.7292C2.91927 16.8333 1.8776 15.3281 1.60938 13.5521C1.57813 13.3307 1.5625 13.1042 1.5625 12.8724C1.5625 9.82552 4.05729 7.33073 7.10417 7.33073C7.35156 7.33073 7.59375 7.35156 7.83073 7.38802V10.2708C7.59635 10.2161 7.35417 10.1849 7.10417 10.1849C5.63542 10.1849 4.44271 11.3776 4.44271 12.8464C4.44271 13.8333 4.97396 14.6875 5.76563 15.138C6.15104 15.3568 6.59375 15.4818 7.0651 15.4818C8.47917 15.4818 9.64323 14.3776 9.73438 13.0026C9.74219 12.9271 9.74479 5.3724 9.74479 5.3724H12.5469C12.6354 6.21615 12.9401 6.99479 13.4036 7.65885C14.0469 8.57552 14.9818 9.25521 16.0677 9.54948V7.54948H17.0156Z"
+        fill="currentColor"
+      />
+    ),
+  },
+  close: {
+    viewBox: "0 0 24 24",
+    path: (
+      <path
+        d="M18 6L6 18M6 6L18 18"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
