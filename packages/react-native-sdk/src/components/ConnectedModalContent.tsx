@@ -89,7 +89,12 @@ export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
         </View>
       )}
 
-      <Button onClick={handleDisconnect} disabled={isDisconnecting} isLoading={isDisconnecting} fullWidth>
+      <Button
+        onClick={handleDisconnect}
+        disabled={isDisconnecting}
+        isLoading={isDisconnecting}
+        fullWidth
+      >
         <Text variant="captionBold">{isDisconnecting ? "Disconnecting..." : "Disconnect"}</Text>
       </Button>
     </>
