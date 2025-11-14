@@ -8,7 +8,6 @@
 "@phantom/constants": major
 "@phantom/react-sdk": major
 "@phantom/sdk-types": major
-"@phantom/react-ui": major
 "@phantom/parsers": major
 "@phantom/chain-interfaces": major
 "@phantom/client": major
