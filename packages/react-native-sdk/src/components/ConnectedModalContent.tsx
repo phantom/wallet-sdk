@@ -94,7 +94,6 @@ export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
         disabled={isDisconnecting}
         isLoading={isDisconnecting}
         fullWidth
-        testID="disconnect-button"
       >
         <Text variant="captionBold">{isDisconnecting ? "Disconnecting..." : "Disconnect"}</Text>
       </Button>

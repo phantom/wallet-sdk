@@ -14,11 +14,19 @@ jest.mock("@phantom/wallet-sdk-ui", () => ({
   Button: (props: any) => {
     const React = require('react');
     const { TouchableOpacity, Text } = require('react-native');
-    const { children, onClick, disabled, isLoading, variant, testID } = props;
+    const { children, onClick, disabled, isLoading, variant } = props;
+
+    // Check if this is the disconnect button by looking at the children text
+    const childText = React.Children.toArray(children).find((child: any) =>
+      typeof child === 'object' && child.props?.children &&
+      (child.props.children === 'Disconnect' || child.props.children === 'Disconnecting...')
+    );
+    const isDisconnectButton = !!childText;
+
     return (
       <TouchableOpacity
         {...props}
-        testID={testID || (variant === "danger" ? "disconnect-button" : "button")}
+        testID={isDisconnectButton ? "disconnect-button" : "button"}
         onPress={onClick}
         disabled={disabled}
         isLoading={isLoading}
