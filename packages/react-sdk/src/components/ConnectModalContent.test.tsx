@@ -1,0 +1,434 @@
+import * as React from "react";
+import { render, fireEvent, waitFor } from "@testing-library/react";
+import { ConnectModalContent, type ConnectModalContentProps } from "./ConnectModalContent";
+import { usePhantom } from "../PhantomContext";
+import { useConnect } from "../hooks/useConnect";
+import { useIsExtensionInstalled } from "../hooks/useIsExtensionInstalled";
+import { useIsPhantomLoginAvailable } from "../hooks/useIsPhantomLoginAvailable";
+import { isMobileDevice, getDeeplinkToPhantom } from "@phantom/browser-sdk";
+import { ThemeProvider } from "@phantom/wallet-sdk-ui";
+
+// Mock dependencies
+jest.mock("../PhantomContext");
+jest.mock("../hooks/useConnect");
+jest.mock("../hooks/useIsExtensionInstalled");
+jest.mock("../hooks/useIsPhantomLoginAvailable");
+jest.mock("@phantom/browser-sdk", () => ({
+  isMobileDevice: jest.fn(),
+  getDeeplinkToPhantom: jest.fn(),
+}));
+jest.mock("@phantom/wallet-sdk-ui", () => ({
+  ...jest.requireActual("@phantom/wallet-sdk-ui"),
+  Button: ({ children, onClick, disabled, isLoading, centered, fullWidth, ...props }: any) => (
+    <button
+      data-testid="button"
+      onClick={onClick}
+      disabled={disabled}
+      data-loading={isLoading}
+      data-centered={centered}
+      {...props}
+    >
+      {children}
+    </button>
+  ),
+  LoginWithPhantomButton: ({ onClick, disabled, isLoading }: any) => (
+    <button
+      data-testid="login-with-phantom-button"
+      onClick={onClick}
+      disabled={disabled}
+      data-loading={isLoading}
+    >
+      Login with Phantom
+    </button>
+  ),
+  Icon: ({ type }: { type: string }) => <span data-testid={`icon-${type}`}>{type}</span>,
+  BoundedIcon: ({ type }: { type: string }) => <span data-testid={`bounded-icon-${type}`}>{type}</span>,
+  Text: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
+  hexToRgba: (_hex: string, opacity: number) => `rgba(255, 0, 0, ${opacity})`,
+}));
+
+const mockTheme = {
+  background: "#ffffff" as const,
+  text: "#000000" as const,
+  secondary: "#666666" as const,
+  aux: "#cccccc" as const,
+  overlay: "rgba(0, 0, 0, 0.7)" as const,
+  borderRadius: "16px" as const,
+  error: "#ff0000" as const,
+  success: "#00ff00" as const,
+  brand: "#0000ff" as const,
+};
+
+describe("ConnectModalContent", () => {
+  const mockUsePhantom = usePhantom as jest.MockedFunction<typeof usePhantom>;
+  const mockUseConnect = useConnect as jest.MockedFunction<typeof useConnect>;
+  const mockUseIsExtensionInstalled = useIsExtensionInstalled as jest.MockedFunction<typeof useIsExtensionInstalled>;
+  const mockUseIsPhantomLoginAvailable = useIsPhantomLoginAvailable as jest.MockedFunction<typeof useIsPhantomLoginAvailable>;
+  const mockIsMobileDevice = isMobileDevice as jest.MockedFunction<typeof isMobileDevice>;
+  const mockGetDeeplinkToPhantom = getDeeplinkToPhantom as jest.MockedFunction<typeof getDeeplinkToPhantom>;
+  
+  const mockConnect = jest.fn();
+
+  const defaultProps: ConnectModalContentProps = {
+    onClose: jest.fn(),
+  };
+
+  const renderComponent = (props: Partial<ConnectModalContentProps> = {}) => {
+    return render(
+      <ThemeProvider theme={mockTheme}>
+        <ConnectModalContent {...defaultProps} {...props} />
+      </ThemeProvider>,
+    );
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUsePhantom.mockReturnValue({
+      isLoading: false,
+      allowedProviders: ["google", "apple"],
+      isConnected: false,
+      addresses: [],
+      sdk: null,
+      connect: jest.fn(),
+      disconnect: jest.fn(),
+      getAddresses: jest.fn().mockReturnValue([]),
+      isConnecting: false,
+      isDisconnecting: false,
+      config: {} as any,
+      currentProviderType: null,
+    });
+    mockUseConnect.mockReturnValue({
+      connect: mockConnect,
+      isConnecting: false,
+      isLoading: false,
+      error: null,
+    });
+    mockUseIsExtensionInstalled.mockReturnValue({
+      isInstalled: false,
+      isLoading: false,
+    });
+    mockUseIsPhantomLoginAvailable.mockReturnValue({
+      isAvailable: false,
+      isLoading: false,
+    });
+    mockIsMobileDevice.mockReturnValue(false);
+    mockGetDeeplinkToPhantom.mockReturnValue("phantom://connect");
+  });
+
+  describe("Provider Buttons", () => {
+    it("should render Google button when google is in allowedProviders", () => {
+      const { getByTestId, getByText } = renderComponent();
+      
+      expect(getByTestId("icon-google")).toBeInTheDocument();
+      expect(getByText("Continue with Google")).toBeInTheDocument();
+    });
+
+    it("should render Apple button when apple is in allowedProviders", () => {
+      const { getByTestId, getByText } = renderComponent();
+      
+      expect(getByTestId("icon-apple")).toBeInTheDocument();
+      expect(getByText("Continue with Apple")).toBeInTheDocument();
+    });
+
+    it("should render only Google icon when both providers are present", () => {
+      const { getByTestId, queryByText } = renderComponent();
+      
+      expect(getByTestId("icon-google")).toBeInTheDocument();
+      expect(queryByText("Continue with Google")).not.toBeInTheDocument();
+    });
+
+    it("should render Google text when only Google is allowed", () => {
+      mockUsePhantom.mockReturnValue({
+        ...mockUsePhantom(),
+        allowedProviders: ["google"],
+      } as any);
+
+      const { getByText } = renderComponent();
+      
+      expect(getByText("Continue with Google")).toBeInTheDocument();
+    });
+
+    it("should not render buttons for providers not in allowedProviders", () => {
+      mockUsePhantom.mockReturnValue({
+        ...mockUsePhantom(),
+        allowedProviders: ["google"], // Only google
+      } as any);
+
+      const { getByTestId, queryByTestId } = renderComponent();
+      
+      expect(getByTestId("icon-google")).toBeInTheDocument();
+      expect(queryByTestId("icon-apple")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Phantom Login Button", () => {
+    it("should render Login with Phantom button when conditions are met", () => {
+      mockUsePhantom.mockReturnValue({
+        ...mockUsePhantom(),
+        allowedProviders: ["phantom"],
+      } as any);
+      mockUseIsPhantomLoginAvailable.mockReturnValue({
+        isAvailable: true,
+        isLoading: false,
+      });
+
+      const { getByTestId } = renderComponent();
+      
+      expect(getByTestId("login-with-phantom-button")).toBeInTheDocument();
+    });
+
+    it("should not render Login with Phantom on mobile", () => {
+      mockIsMobileDevice.mockReturnValue(true);
+      mockUsePhantom.mockReturnValue({
+        ...mockUsePhantom(),
+        allowedProviders: ["phantom"],
+      } as any);
+      mockUseIsPhantomLoginAvailable.mockReturnValue({
+        isAvailable: true,
+        isLoading: false,
+      });
+
+      const { queryByTestId } = renderComponent();
+      
+      expect(queryByTestId("login-with-phantom-button")).not.toBeInTheDocument();
+    });
+
+    it("should not render when phantom login is not available", () => {
+      mockUsePhantom.mockReturnValue({
+        ...mockUsePhantom(),
+        allowedProviders: ["phantom"],
+      } as any);
+      mockUseIsPhantomLoginAvailable.mockReturnValue({
+        isAvailable: false,
+        isLoading: false,
+      });
+
+      const { queryByTestId } = renderComponent();
+      
+      expect(queryByTestId("login-with-phantom-button")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Injected Provider", () => {
+    it("should render injected provider button when extension is installed", () => {
+      mockUsePhantom.mockReturnValue({
+        ...mockUsePhantom(),
+        allowedProviders: ["injected"],
+      } as any);
+      mockUseIsExtensionInstalled.mockReturnValue({
+        isInstalled: true,
+        isLoading: false,
+      });
+
+      const { getByTestId, getByText } = renderComponent();
+      
+      expect(getByTestId("bounded-icon-phantom")).toBeInTheDocument();
+      expect(getByText("Phantom")).toBeInTheDocument();
+      expect(getByText("Detected")).toBeInTheDocument();
+    });
+
+    it("should show divider when multiple providers", () => {
+      mockUsePhantom.mockReturnValue({
+        ...mockUsePhantom(),
+        allowedProviders: ["google", "injected"],
+      } as any);
+      mockUseIsExtensionInstalled.mockReturnValue({
+        isInstalled: true,
+        isLoading: false,
+      });
+
+      const { getByText } = renderComponent();
+      
+      expect(getByText("OR")).toBeInTheDocument();
+    });
+
+    it("should not show divider when only injected provider", () => {
+      mockUsePhantom.mockReturnValue({
+        ...mockUsePhantom(),
+        allowedProviders: ["injected"],
+      } as any);
+      mockUseIsExtensionInstalled.mockReturnValue({
+        isInstalled: true,
+        isLoading: false,
+      });
+
+      const { queryByText } = renderComponent();
+      
+      expect(queryByText("OR")).not.toBeInTheDocument();
+    });
+
+    it("should not render on mobile", () => {
+      mockIsMobileDevice.mockReturnValue(true);
+      mockUsePhantom.mockReturnValue({
+        ...mockUsePhantom(),
+        allowedProviders: ["injected"],
+      } as any);
+      mockUseIsExtensionInstalled.mockReturnValue({
+        isInstalled: true,
+        isLoading: false,
+      });
+
+      const { queryByTestId } = renderComponent();
+      
+      expect(queryByTestId("bounded-icon-phantom")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Mobile Deeplink", () => {
+    it("should show deeplink button on mobile without extension", () => {
+      mockIsMobileDevice.mockReturnValue(true);
+      mockUseIsExtensionInstalled.mockReturnValue({
+        isInstalled: false,
+        isLoading: false,
+      });
+
+      const { getByText } = renderComponent();
+      
+      expect(getByText("Open in Phantom App")).toBeInTheDocument();
+    });
+
+    it("should not show deeplink button on desktop", () => {
+      mockIsMobileDevice.mockReturnValue(false);
+      
+      const { queryByText } = renderComponent();
+      
+      expect(queryByText("Open in Phantom App")).not.toBeInTheDocument();
+    });
+
+    it("should navigate to deeplink URL when clicked", () => {
+      const originalLocation = window.location;
+      delete (window as any).location;
+      window.location = { ...originalLocation, href: "" } as any;
+
+      mockIsMobileDevice.mockReturnValue(true);
+      mockGetDeeplinkToPhantom.mockReturnValue("phantom://connect?app=test");
+
+      const { getByText } = renderComponent();
+      fireEvent.click(getByText("Open in Phantom App"));
+
+      expect(window.location.href).toBe("phantom://connect?app=test");
+
+      window.location = originalLocation as any;
+    });
+  });
+
+  describe("Button Interactions", () => {
+    it("should call connect with google provider when Google button is clicked", async () => {
+      mockConnect.mockResolvedValue({ status: "completed" });
+      const onClose = jest.fn();
+      
+      const { getByTestId } = renderComponent({ onClose });
+      const googleIcon = getByTestId("icon-google");
+      const googleButton = googleIcon.closest("button");
+      
+      fireEvent.click(googleButton!);
+      
+      expect(mockConnect).toHaveBeenCalledWith({ provider: "google" });
+      await waitFor(() => {
+        expect(onClose).toHaveBeenCalled();
+      });
+    });
+
+    it("should disable all buttons when connecting", async () => {
+      const { getByTestId, getAllByTestId } = renderComponent();
+      const googleIcon = getByTestId("icon-google");
+      const googleButton = googleIcon.closest("button");
+      
+      fireEvent.click(googleButton!);
+      
+      await waitFor(() => {
+        const buttons = getAllByTestId("button");
+        buttons.forEach(button => {
+          expect(button).toBeDisabled();
+        });
+      });
+    });
+
+    it("should show loading state only on clicked button", async () => {
+      const { getByTestId } = renderComponent();
+      const googleIcon = getByTestId("icon-google");
+      const googleButton = googleIcon.closest("button");
+      const appleIcon = getByTestId("icon-apple");
+      const appleButton = appleIcon.closest("button");
+      
+      fireEvent.click(googleButton!);
+      
+      await waitFor(() => {
+        expect(googleButton?.dataset.loading).toBe("true");
+        expect(appleButton?.dataset.loading).toBe("false");
+      });
+    });
+  });
+
+  describe("Error Handling", () => {
+    it("should show error message when connect fails", async () => {
+      const errorMessage = "Failed to connect to Google";
+      mockConnect.mockRejectedValue(new Error(errorMessage));
+      
+      const { getByTestId, getByText } = renderComponent();
+      const googleIcon = getByTestId("icon-google");
+      fireEvent.click(googleIcon.closest("button")!);
+      
+      await waitFor(() => {
+        expect(getByText(errorMessage)).toBeInTheDocument();
+      });
+    });
+
+    it("should not call onClose when connect fails", async () => {
+      mockConnect.mockRejectedValue(new Error("Connection failed"));
+      const onClose = jest.fn();
+      
+      const { getByTestId } = renderComponent({ onClose });
+      const googleIcon = getByTestId("icon-google");
+      fireEvent.click(googleIcon.closest("button")!);
+      
+      await waitFor(() => {
+        expect(onClose).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe("Loading States", () => {
+    it("should not render buttons when isLoading", () => {
+      mockUsePhantom.mockReturnValue({
+        ...mockUsePhantom(),
+        isLoading: true,
+        allowedProviders: ["google", "apple"],
+      } as any);
+
+      const { queryByTestId } = renderComponent();
+      
+      expect(queryByTestId("icon-google")).not.toBeInTheDocument();
+      expect(queryByTestId("icon-apple")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("App Info Display", () => {
+    it("should display app icon when provided", () => {
+      const { getByAltText } = renderComponent({ 
+        appIcon: "https://example.com/icon.png" 
+      });
+      
+      const img = getByAltText("App Icon") as HTMLImageElement;
+      expect(img.src).toBe("https://example.com/icon.png");
+    });
+
+    it("should display app name", () => {
+      const { getByText } = renderComponent({ appName: "Test App" });
+      
+      expect(getByText("Test App")).toBeInTheDocument();
+    });
+
+    it("should use default app name when not provided", () => {
+      const { getByText } = renderComponent();
+      
+      expect(getByText("App Name")).toBeInTheDocument();
+    });
+
+    it("should display connection request text", () => {
+      const { getByText } = renderComponent({ appName: "Test App" });
+      
+      expect(getByText("wants to connect to your wallet")).toBeInTheDocument();
+    });
+  });
+});

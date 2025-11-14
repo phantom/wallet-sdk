@@ -1,6 +1,9 @@
 // Polyfills for Solana Web3.js in Node.js test environment
 const { TextEncoder, TextDecoder } = require("util");
 
+// Import jest-dom matchers
+import '@testing-library/jest-dom';
+
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
