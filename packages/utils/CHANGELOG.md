@@ -1,5 +1,12 @@
 # @phantom/utils
 
+## 1.0.0-beta.22
+
+### Patch Changes
+
+- f54d77f: New version
+- b6aff60: Release new version
+
 ## 1.0.0-beta.21
 
 ## 1.0.0-beta.20

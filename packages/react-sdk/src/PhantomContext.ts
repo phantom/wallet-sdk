@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 import type { BrowserSDK, WalletAddress, ConnectResult, AuthProviderType } from "@phantom/browser-sdk";
-import type { CompletePhantomTheme } from "./themes";
+import type { CompletePhantomTheme } from "@phantom/wallet-sdk-ui";
 
 export interface PhantomContextValue {
   sdk: BrowserSDK | null;

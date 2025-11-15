@@ -1,28 +1,24 @@
 import { useState, useMemo, type CSSProperties, type ReactNode } from "react";
 import { hexToRgba } from "../utils";
 import { useTheme } from "../hooks/useTheme";
+import { Icon } from "./Icon";
+import { Text } from "./Text";
 
 interface BaseButtonStyleOptions {
   fullWidth: boolean;
   disabled: boolean;
   fontSize?: CSSProperties["fontSize"];
   fontWeight?: CSSProperties["fontWeight"];
-  justifyContent?: CSSProperties["justifyContent"];
 }
 
 // Custom hook for base button styles
-const useBaseButtonStyle = ({
-  fullWidth,
-  disabled,
-  fontSize,
-  fontWeight,
-  justifyContent = "center",
-}: BaseButtonStyleOptions): CSSProperties => {
+const useBaseButtonStyle = ({ fullWidth, disabled, fontSize, fontWeight }: BaseButtonStyleOptions): CSSProperties => {
   const theme = useTheme();
 
   return {
-    width: fullWidth ? "100%" : "auto",
+    height: "56px",
     padding: "12px 16px",
+    width: fullWidth ? "100%" : "auto",
     border: "none",
     borderRadius: theme.borderRadius,
     fontFamily: theme.typography.captionBold.fontFamily,
@@ -33,9 +29,6 @@ const useBaseButtonStyle = ({
     letterSpacing: theme.typography.captionBold.letterSpacing,
     cursor: disabled ? "not-allowed" : "pointer",
     transition: "background-color 0.2s",
-    display: "flex",
-    alignItems: "center",
-    justifyContent,
     gap: "8px",
     opacity: disabled ? 0.6 : 1,
   };
@@ -49,6 +42,7 @@ export interface ButtonProps {
   variant?: "primary" | "secondary";
   fullWidth?: boolean;
   isLoading?: boolean;
+  centered?: boolean;
 }
 
 export function Button({
@@ -66,7 +60,6 @@ export function Button({
   const baseStyle = useBaseButtonStyle({
     fullWidth,
     disabled: disabled || isLoading,
-    justifyContent: variant === "primary" ? "center" : "space-between",
   });
 
   const backgroundColor = useMemo(() => {
@@ -172,7 +165,12 @@ export function LoginWithPhantomButton({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {isLoading ? "Connecting..." : children}
+      <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <Icon type="phantom" size={20} />
+        <Text variant="captionBold" color="#FFFFFF">
+          {isLoading ? "Connecting..." : children}
+        </Text>
+      </span>
     </button>
   );
 }

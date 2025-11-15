@@ -1,0 +1,49 @@
+{
+  "name": "@phantom/wallet-sdk-ui",
+  "version": "1.0.0-beta.1",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "react-native": "dist/index.native.js",
+  "exports": {
+    ".": {
+      "react-native": "./dist/index.native.js",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "build": "rimraf ./dist && tsup",
+    "dev": "rimraf ./dist && tsup --watch",
+    "lint": "eslint --cache . --ext .ts,.tsx",
+    "check-types": "echo 'Skipping type check for platform-specific build'",
+    "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.1",
+    "eslint": "8.53.0",
+    "prettier": "^3.5.2",
+    "react": "19.1.1",
+    "react-native": "0.79.5",
+    "rimraf": "^6.0.1",
+    "tsup": "^6.7.0",
+    "typescript": "^5.0.4"
+  },
+  "peerDependencies": {
+    "react": ">=19.0.0",
+    "react-native-svg": ">=15.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react-native": {
+      "optional": true
+    },
+    "react-native-svg": {
+      "optional": true
+    }
+  }
+}

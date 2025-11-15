@@ -1,22 +1,29 @@
-import { useState, type CSSProperties } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { useTheme } from "../hooks/useTheme";
-import { usePhantom } from "../PhantomContext";
-import { isMobileDevice } from "@phantom/browser-sdk";
-import { ConnectModalContent } from "./ConnectModalContent";
-import { ConnectedModalContent } from "./ConnectedModalContent";
+import { Icon } from "./Icon";
+import { Text } from "./Text";
 
 export interface ModalProps {
   appIcon?: string;
   appName?: string;
   isVisible: boolean;
   onClose: () => void;
+  isConnected?: boolean;
+  isMobile?: boolean;
+  children: ReactNode;
 }
 
-export function Modal({ appIcon, appName, isVisible, onClose }: ModalProps) {
+export function Modal({
+  appIcon: _appIcon,
+  appName: _appName,
+  isVisible,
+  onClose,
+  isConnected,
+  isMobile = false,
+  children,
+}: ModalProps) {
   const theme = useTheme();
-  const { isConnected } = usePhantom();
   const [isCloseButtonHovering, setIsCloseButtonHovering] = useState(false);
-  const isMobile = isMobileDevice();
 
   if (!isVisible) return null;
 
@@ -37,12 +44,12 @@ export function Modal({ appIcon, appName, isVisible, onClose }: ModalProps) {
 
   const modalStyle: CSSProperties = {
     backgroundColor: theme.background,
-    borderRadius: "16px",
-    padding: "24px",
+    borderRadius: theme.borderRadius,
     maxWidth: isMobile ? "100%" : "350px",
     width: "100%",
     boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
     position: "relative" as const,
+    overflow: "hidden",
   };
 
   const headerStyle: CSSProperties = {
@@ -50,20 +57,17 @@ export function Modal({ appIcon, appName, isVisible, onClose }: ModalProps) {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: "24px",
+    padding: "28px 32px 0 32px",
   };
 
   const titleStyle: CSSProperties = {
-    margin: 0,
-    ...theme.typography.caption,
-    color: theme.secondary,
+    marginBottom: "24px",
     fontFeatureSettings: '"liga" off, "clig" off',
-    textAlign: "center" as const,
   };
 
   const closeButtonStyle: CSSProperties = {
     position: "absolute" as const,
-    right: 0,
+    right: "32px",
     top: "50%",
     transform: "translateY(-50%)",
     background: "none",
@@ -76,10 +80,22 @@ export function Modal({ appIcon, appName, isVisible, onClose }: ModalProps) {
     transition: "color 0.2s",
   };
 
+  const contentWrapperStyle: CSSProperties = {
+    padding: "0 32px 24px 32px",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "24px",
+  };
+
   const footerStyle: CSSProperties = {
-    marginTop: "24px",
-    textAlign: "center" as const,
-    ...theme.typography.label,
+    display: "flex",
+    padding: "16px",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: "4px",
+    borderTop: "1px solid rgba(152, 151, 156, 0.10)",
+    ...theme.typography.caption,
     color: theme.secondary,
   };
 
@@ -87,7 +103,11 @@ export function Modal({ appIcon, appName, isVisible, onClose }: ModalProps) {
     <div style={overlayStyle} onClick={onClose}>
       <div style={modalStyle} onClick={e => e.stopPropagation()}>
         <div style={headerStyle}>
-          <h3 style={titleStyle}>{isConnected ? "Wallet" : "Login or Sign Up"}</h3>
+          <div style={titleStyle}>
+            <Text variant="caption" color={theme.secondary}>
+              {isConnected ? "Wallet" : "Login or Sign Up"}
+            </Text>
+          </div>
           <button
             style={closeButtonStyle}
             onClick={onClose}
@@ -98,13 +118,17 @@ export function Modal({ appIcon, appName, isVisible, onClose }: ModalProps) {
           </button>
         </div>
 
-        {isConnected ? (
-          <ConnectedModalContent onClose={onClose} />
-        ) : (
-          <ConnectModalContent appIcon={appIcon} appName={appName} onClose={onClose} />
-        )}
+        <div style={contentWrapperStyle}>{children}</div>
 
-        <div style={footerStyle}>Protected by Phantom</div>
+        <div style={footerStyle}>
+          <Text variant="label" color={theme.secondary}>
+            Powered by
+          </Text>
+          <Icon type="phantom" size={16} />
+          <Text variant="label" color={theme.secondary}>
+            Phantom
+          </Text>
+        </div>
       </div>
     </div>
   );

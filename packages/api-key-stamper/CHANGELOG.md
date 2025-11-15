@@ -1,5 +1,16 @@
 # @phantom/api-key-stamper
 
+## 1.0.0-beta.10
+
+### Patch Changes
+
+- f54d77f: New version
+- Updated dependencies [f54d77f]
+- Updated dependencies [b6aff60]
+  - @phantom/base64url@1.0.0-beta.10
+  - @phantom/crypto@1.0.0-beta.10
+  - @phantom/sdk-types@1.0.0-beta.10
+
 ## 1.0.0-beta.9
 
 ### Patch Changes
