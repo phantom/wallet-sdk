@@ -23,10 +23,12 @@ export type Transaction = string;
 export interface SignedTransaction {
   rawTransaction: string; // base64url encoded signed transaction
   hash?: string; // Optional transaction hash if available
+  spendingContext?: SpendContext; // Optional spending context from /prepare endpoint
 }
 
 export interface SignedTransactionResult {
   rawTransaction: string; // base64url encoded signed transaction
+  spendingContext?: SpendContext; // Optional spending context from /prepare endpoint
 }
 
 export interface GetWalletsResult {
@@ -66,7 +68,7 @@ export interface SignTransactionParams {
   networkId: NetworkId;
   derivationIndex?: number; // Optional account derivation index (defaults to 0)
   account?: string; // Optional specific account address to use
-  walletType: "server-wallet" | "user-wallet"; 
+  walletType: "server-wallet" | "user-wallet";
 }
 
 export interface SignAndSendTransactionParams {
@@ -75,7 +77,7 @@ export interface SignAndSendTransactionParams {
   networkId: NetworkId;
   derivationIndex?: number; // Optional account derivation index (defaults to 0)
   account?: string; // Optional specific account address to use
-  walletType: "server-wallet" | "user-wallet"; 
+  walletType: "server-wallet" | "user-wallet";
 }
 
 export interface GetWalletWithTagParams {
@@ -141,8 +143,27 @@ export interface SpendingLimitConfig {
   memoryBump: number;
 }
 
+export interface SpendContext {
+  previousSpendCents: number;
+  newSpendCents: number;
+  totalSpendCents: number;
+  windowStartTimestamp?: number;
+}
+
 export interface AugmentWithSpendingLimitResponse {
   transaction: string; // base64url encoded with Lighthouse instructions
   simulationResult?: any;
-  memoryConfigUsed?: SpendingLimitConfig;
+  spendingContext?: SpendContext;
+}
+
+/**
+ * Spending state for an organization
+ */
+export interface SpendingState {
+  /** Amount in USD cents spent in the current 24-hour window */
+  currentSpendCents: number;
+  /** Daily spending limit in USD cents */
+  dailyLimitCents: number;
+  /** Unix timestamp (seconds) when the current 24-hour spending window started. None if the memory account doesn't exist yet. */
+  windowStartTimestamp?: number;
 }
