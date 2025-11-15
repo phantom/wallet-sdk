@@ -56,7 +56,8 @@ import {
   type SignMessageParams,
   type SignTransactionParams,
   type SignTypedDataParams,
-  type SpendingLimitConfig,
+  type SpendContext,
+  type SpendingState,
   type UserConfig,
 } from "./types";
 
@@ -228,12 +229,38 @@ export class PhantomClient {
   }
 
   /**
+   * Gets the current spending limit status for an organization without preparing a transaction
+   * @param organizationId The organization ID to check spending status for
+   * @returns The current spending state including spent amount, daily limit, and window start timestamp
+   */
+  async getSpendingStatus(organizationId?: string): Promise<SpendingState> {
+    try {
+      const orgId = organizationId || this.config.organizationId;
+      if (!orgId) {
+        throw new Error("organizationId is required to get spending status");
+      }
+
+      const response = await this.axiosInstance.get(`${this.config.apiBaseUrl}/spending-status`, {
+        params: {
+          organizationId: orgId,
+        },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      throw new Error(`Failed to get spending status: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  /**
    * Private method for shared signing logic
    */
   private async performTransactionSigning(
     params: SignTransactionParams,
     includeSubmissionConfig: boolean,
-  ): Promise<{ signedTransaction: string; hash?: string }> {
+  ): Promise<{ signedTransaction: string; hash?: string; spendingContext?: SpendContext }> {
     const walletId = params.walletId;
     const transactionParam = params.transaction;
     const networkIdParam = params.networkId;
@@ -274,6 +301,7 @@ export class PhantomClient {
       // TWO-PHASE SPENDING LIMITS FLOW
       // Phase 1: Call wallet service to check spending limits and augment transaction if needed
       let augmentedTransaction = encodedTransaction;
+      let spendingContext: SpendContext | undefined;
 
       // Always check spending limits for Solana transactions
       // If we don't receive an account
@@ -293,6 +321,7 @@ export class PhantomClient {
           );
 
           augmentedTransaction = augmentResponse.transaction;
+          spendingContext = augmentResponse.spendingContext;
         } catch (e: any) {
           const errorMessage = e?.message || String(e);
           throw new Error(
@@ -342,6 +371,7 @@ export class PhantomClient {
       return {
         signedTransaction: result.transaction as unknown as string, // Base64 encoded signed transaction
         hash,
+        spendingContext,
       };
     } catch (error: any) {
       const actionType = includeSubmissionConfig ? "sign and send" : "sign";
@@ -358,6 +388,7 @@ export class PhantomClient {
 
     return {
       rawTransaction: result.signedTransaction,
+      spendingContext: result.spendingContext,
     };
   }
 
@@ -369,6 +400,7 @@ export class PhantomClient {
     return {
       rawTransaction: result.signedTransaction,
       hash: result.hash,
+      spendingContext: result.spendingContext,
     };
   }
 
