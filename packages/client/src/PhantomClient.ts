@@ -43,7 +43,7 @@ import { Buffer } from "buffer";
 import { deriveSubmissionConfig } from "./caip2-mappings";
 import { DerivationPath, getNetworkConfig } from "./constants";
 import {
-  type AugmentWithSpendingLimitResponse,
+  type PrepareResponse,
   type AuthenticatorConfig,
   type CreateAuthenticatorParams,
   type CreateWalletResult,
@@ -205,7 +205,7 @@ export class PhantomClient {
     organizationId: string,
     submissionConfig: SubmissionConfig,
     account: string,
-  ): Promise<AugmentWithSpendingLimitResponse> {
+  ): Promise<PrepareResponse> {
     try {
       const request = {
         transaction,
@@ -248,7 +248,6 @@ export class PhantomClient {
         throw new Error(`SubmissionConfig could not be derived for network ID: ${networkIdParam}`);
       }
 
-      // Get network configuration with custom derivation index. Required for signing
       const networkConfig = getNetworkConfig(networkIdParam, derivationIndex);
 
       if (!networkConfig) {
@@ -258,7 +257,6 @@ export class PhantomClient {
       // Transaction is always a string (encoded via parsers)
       const encodedTransaction = transactionParam;
 
-      // Check if this is an EVM transaction using the network ID
       const isEvmTransaction = isEthereumChain(networkIdParam);
       const isSolanaTransaction = isSolanaChain(networkIdParam);
 

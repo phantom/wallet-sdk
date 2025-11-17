@@ -859,7 +859,6 @@ export class EmbeddedProvider {
       throw new Error("Failed to parse transaction: no valid encoding found");
     }
 
-    // Get account, fail if not supported
     const account = this.getAddressForNetwork(params.networkId);
     if (!account) {
       throw new Error(`No address found for network ${params.networkId}`);
@@ -916,7 +915,6 @@ export class EmbeddedProvider {
       throw new Error("Failed to parse transaction: no valid encoding found");
     }
 
-    // Get account, fail if not supported
     const account = this.getAddressForNetwork(params.networkId);
     if (!account) {
       throw new Error(`No address found for network ${params.networkId}`);

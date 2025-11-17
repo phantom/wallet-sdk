@@ -137,7 +137,7 @@ export interface SpendingLimitConfig {
   usdCentsLimitPerDay: number;
 }
 
-export interface AugmentWithSpendingLimitResponse {
+export interface PrepareResponse {
   transaction: string; // base64url encoded with Lighthouse instructions
   simulationResult?: any;
   memoryConfigUsed?: SpendingLimitConfig;
