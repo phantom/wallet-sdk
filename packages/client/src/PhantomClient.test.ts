@@ -337,7 +337,7 @@ describe("PhantomClient Spending Limits Integration", () => {
     jest.clearAllMocks();
   });
 
-  describe("prepareTransaction method", () => {
+  describe("prepare method", () => {
     const spendingConfig = {
       usdCentsLimitPerDay: 1000, // $10.00 per day
       memoryAccount: "MemAcc123",
@@ -359,7 +359,7 @@ describe("PhantomClient Spending Limits Integration", () => {
         },
       });
 
-      const augmentMethod = client["prepareTransaction"].bind(client);
+      const augmentMethod = client["prepare"].bind(client);
       const result = await augmentMethod(
         "original-tx-base64",
         "org-123",
@@ -389,7 +389,7 @@ describe("PhantomClient Spending Limits Integration", () => {
         },
       });
 
-      const augmentMethod = client["prepareTransaction"].bind(client);
+      const augmentMethod = client["prepare"].bind(client);
 
       await expect(
         augmentMethod("bad-tx", "org-123", solanaSubmissionConfig, "UserAccount123"),
@@ -612,7 +612,7 @@ describe("PhantomClient Spending Limits Integration", () => {
         },
       });
 
-      const augmentMethod = client["prepareTransaction"].bind(client);
+      const augmentMethod = client["prepare"].bind(client);
       const result = await augmentMethod("original-tx", "org-123", submissionConfig, "UserAccount123");
 
       expect(result.transaction).toBe("augmented-tx-with-lighthouse-instructions");
@@ -631,7 +631,7 @@ describe("PhantomClient Spending Limits Integration", () => {
         data: { transaction: "augmented-tx", simulationResult: {}, memoryConfigUsed: {} },
       });
 
-      const augmentMethod = client["prepareTransaction"].bind(client);
+      const augmentMethod = client["prepare"].bind(client);
       const result = await augmentMethod(
         "solana-tx-base64",
         "org-123",
@@ -666,7 +666,7 @@ describe("PhantomClient Spending Limits Integration", () => {
         network: "mainnet",
       };
 
-      const augmentMethod = client["prepareTransaction"].bind(client);
+      const augmentMethod = client["prepare"].bind(client);
       await augmentMethod("tx-base64", "org-123", submissionConfig, "UserAccount123");
 
       expect(mockAxiosPost).toHaveBeenCalledWith(

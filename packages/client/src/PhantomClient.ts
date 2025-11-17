@@ -200,12 +200,7 @@ export class PhantomClient {
     }
   }
 
-  /**
-   * Augments a transaction with spending limit enforcement instructions
-   * This is phase 1 of the two-phase spending limit flow
-   * @private
-   */
-  private async prepareTransaction(
+  private async prepare(
     transaction: string,
     organizationId: string,
     submissionConfig: SubmissionConfig,
@@ -286,8 +281,8 @@ export class PhantomClient {
         }
 
         try {
-          // Call wallet service augment endpoint
-          const augmentResponse = await this.prepareTransaction(
+          // Call wallet service prepare endpoint
+          const augmentResponse = await this.prepare(
             encodedTransaction,
             this.config.organizationId,
             submissionConfig, // Non-null assertion safe because we validated above
