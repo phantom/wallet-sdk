@@ -337,7 +337,7 @@ describe("PhantomClient Spending Limits Integration", () => {
     jest.clearAllMocks();
   });
 
-  describe("augmentWithSpendingLimit method", () => {
+  describe("prepareTransaction method", () => {
     const spendingConfig = {
       usdCentsLimitPerDay: 1000, // $10.00 per day
       memoryAccount: "MemAcc123",
@@ -359,11 +359,10 @@ describe("PhantomClient Spending Limits Integration", () => {
         },
       });
 
-      const augmentMethod = client["augmentWithSpendingLimit"].bind(client);
+      const augmentMethod = client["prepareTransaction"].bind(client);
       const result = await augmentMethod(
         "original-tx-base64",
         "org-123",
-        "wallet-123",
         solanaSubmissionConfig,
         "UserAccount123",
       );
@@ -390,10 +389,10 @@ describe("PhantomClient Spending Limits Integration", () => {
         },
       });
 
-      const augmentMethod = client["augmentWithSpendingLimit"].bind(client);
+      const augmentMethod = client["prepareTransaction"].bind(client);
 
       await expect(
-        augmentMethod("bad-tx", "org-123", "wallet-123", solanaSubmissionConfig, "UserAccount123"),
+        augmentMethod("bad-tx", "org-123", solanaSubmissionConfig, "UserAccount123"),
       ).rejects.toThrow("Failed to augment transaction");
     });
   });
@@ -620,88 +619,12 @@ describe("PhantomClient Spending Limits Integration", () => {
         },
       });
 
-      const augmentMethod = client["augmentWithSpendingLimit"].bind(client);
-      const result = await augmentMethod("original-tx", "org-123", "wallet-123", submissionConfig, "UserAccount123");
+      const augmentMethod = client["prepareTransaction"].bind(client);
+      const result = await augmentMethod("original-tx", "org-123", submissionConfig, "UserAccount123");
 
       expect(result.transaction).toBe("augmented-tx-with-lighthouse-instructions");
     });
 
-    it("should include spending limit config in sign request when augment returns config", async () => {
-      // Mock augment endpoint to return spending limit config
-      mockAxiosPost.mockResolvedValueOnce({
-        data: {
-          transaction: "augmented-tx",
-          simulationResult: {},
-          memoryConfigUsed: {
-            usdCentsLimitPerDay: 1000,
-            memoryAccount: "MemAcc123",
-            memoryId: 0,
-            memoryBump: 255,
-          },
-        },
-      });
-
-      mockKmsPost.mockResolvedValueOnce({
-        data: { result: { transaction: "signed-tx" } },
-      });
-
-      const performSigning = client["performTransactionSigning"].bind(client);
-      await performSigning(
-        {
-          walletId: "wallet-123",
-          transaction: "tx",
-          networkId: NetworkId.SOLANA_MAINNET,
-          account: "UserAccount123",
-          walletType: "user-wallet",
-        },
-        true,
-      );
-
-      // Should include the spending limit config returned from augment endpoint
-      expect(mockKmsPost).toHaveBeenCalledWith(
-        expect.objectContaining({
-          params: expect.objectContaining({
-            spendingLimitConfig: {
-              usdCentsLimitPerDay: 1000,
-              memoryAccount: "MemAcc123",
-              memoryId: 0,
-              memoryBump: 255,
-            },
-          }),
-        }),
-      );
-    });
-
-    it("should NOT include spending limit config when service returns pass-through (no limits)", async () => {
-      mockAxiosPost.mockResolvedValueOnce({
-        data: { transaction: "tx", simulationResult: {} },
-      });
-
-      mockKmsPost.mockResolvedValueOnce({
-        data: { result: { transaction: "signed-tx" } },
-      });
-
-      const performSigning = client["performTransactionSigning"].bind(client);
-      await performSigning(
-        {
-          walletId: "wallet-123",
-          transaction: "tx",
-          networkId: NetworkId.SOLANA_MAINNET,
-          account: "UserAccount123",
-          walletType: "user-wallet",
-        },
-        true,
-      );
-
-      // Should not include spending limit config when no limits found
-      expect(mockKmsPost).toHaveBeenCalledWith(
-        expect.objectContaining({
-          params: expect.not.objectContaining({
-            spendingLimitConfig: expect.anything(),
-          }),
-        }),
-      );
-    });
   });
 
   describe("augment endpoint request structure", () => {
@@ -715,11 +638,10 @@ describe("PhantomClient Spending Limits Integration", () => {
         data: { transaction: "augmented-tx", simulationResult: {}, memoryConfigUsed: {} },
       });
 
-      const augmentMethod = client["augmentWithSpendingLimit"].bind(client);
+      const augmentMethod = client["prepareTransaction"].bind(client);
       const result = await augmentMethod(
         "solana-tx-base64",
         "org-123",
-        "wallet-123",
         submissionConfig,
         "UserAccount123",
       );
@@ -751,8 +673,8 @@ describe("PhantomClient Spending Limits Integration", () => {
         network: "mainnet",
       };
 
-      const augmentMethod = client["augmentWithSpendingLimit"].bind(client);
-      await augmentMethod("tx-base64", "org-123", "wallet-123", submissionConfig, "UserAccount123");
+      const augmentMethod = client["prepareTransaction"].bind(client);
+      await augmentMethod("tx-base64", "org-123", submissionConfig, "UserAccount123");
 
       expect(mockAxiosPost).toHaveBeenCalledWith(
         "https://api.phantom.app/prepare",
