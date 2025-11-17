@@ -1,13 +1,16 @@
 import React from "react";
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, SafeAreaView } from "react-native";
 import { useRouter } from "expo-router";
-import { useConnect, useAccounts, useDisconnect } from "@phantom/react-native-sdk";
+import { useConnect, useAccounts, useDisconnect, useModal } from "@phantom/react-native-sdk";
+import { useThemeContext } from "./providers";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { connect, isConnecting, error: connectError } = useConnect();
   const { isConnected, addresses, walletId } = useAccounts();
   const { disconnect, isDisconnecting } = useDisconnect();
+  const modal = useModal();
+  const { currentTheme, setTheme } = useThemeContext();
 
   const handleConnect = async (provider: "google") => {
     try {
@@ -80,11 +83,51 @@ export default function HomeScreen() {
           )}
         </View>
 
+        {/* Theme Switcher */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Modal Theme</Text>
+          <Text style={styles.description}>Switch between different themes for the modal:</Text>
+          <View style={styles.themeButtonRow}>
+            <TouchableOpacity
+              style={[styles.themeButton, currentTheme === "dark" && styles.themeButtonActive]}
+              onPress={() => setTheme("dark")}
+            >
+              <Text style={[styles.themeButtonText, currentTheme === "dark" && styles.themeButtonTextActive]}>
+                Dark
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.themeButton, currentTheme === "light" && styles.themeButtonActive]}
+              onPress={() => setTheme("light")}
+            >
+              <Text style={[styles.themeButtonText, currentTheme === "light" && styles.themeButtonTextActive]}>
+                Light
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.themeButton, currentTheme === "custom" && styles.themeButtonActive]}
+              onPress={() => setTheme("custom")}
+            >
+              <Text style={[styles.themeButtonText, currentTheme === "custom" && styles.themeButtonTextActive]}>
+                Custom
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Authentication Options */}
         {!isConnected ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Connect Wallet</Text>
-            <Text style={styles.description}>Connect your Phantom wallet using Google authentication:</Text>
+            <Text style={styles.description}>Connect your Phantom wallet using various authentication methods:</Text>
+
+            <TouchableOpacity
+              style={[styles.button, styles.primaryButton]}
+              onPress={() => modal.open()}
+              disabled={isConnecting}
+            >
+              <Text style={styles.buttonText}>Open Connect Modal</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.button, styles.googleButton]}
@@ -97,6 +140,10 @@ export default function HomeScreen() {
         ) : (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Wallet Actions</Text>
+
+            <TouchableOpacity style={[styles.button, styles.primaryButton]} onPress={() => modal.open()}>
+              <Text style={styles.buttonText}>Open Wallet Modal</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity style={[styles.button, styles.primaryButton]} onPress={() => router.push("/wallet")}>
               <Text style={styles.buttonText}>Open Wallet Operations</Text>
@@ -261,5 +308,31 @@ const styles = StyleSheet.create({
   errorText: {
     color: "#dc2626",
     fontSize: 14,
+  },
+  themeButtonRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  themeButton: {
+    flex: 1,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    alignItems: "center",
+    backgroundColor: "#f3f4f6",
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  themeButtonActive: {
+    backgroundColor: "#6366f1",
+    borderColor: "#4f46e5",
+  },
+  themeButtonText: {
+    color: "#374151",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  themeButtonTextActive: {
+    color: "#ffffff",
   },
 });
