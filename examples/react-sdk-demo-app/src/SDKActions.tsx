@@ -48,6 +48,9 @@ export function SDKActions() {
   const [isStakingSol, setIsStakingSol] = useState(false);
   const [isSendingCustomSol, setIsSendingCustomSol] = useState(false);
   const [customSolAmount, setCustomSolAmount] = useState("");
+  const [customSolDestination, setCustomSolDestination] = useState(
+    "8dvUxPRHyHGw9W68yP73GkXCjBCjRJuLrANj9n1SXRGb",
+  );
   const [isSendingEthMainnet, setIsSendingEthMainnet] = useState(false);
   const [isSendingPolygon, setIsSendingPolygon] = useState(false);
 
@@ -278,7 +281,7 @@ export function SDKActions() {
         const transferInstruction = SystemProgram.transfer({
           fromPubkey: new PublicKey(solanaAddress),
           toPubkey: new PublicKey(solanaAddress), // Self-transfer for demo
-          lamports: 1000, // Very small amount: 0.000001 SOL
+          lamports: 3500000, //  small amount: 0.0035 SOL
         });
 
         const messageV0 = new TransactionMessage({
@@ -472,8 +475,14 @@ export function SDKActions() {
       // Get recent blockhash
       const { blockhash } = await connection.getLatestBlockhash();
 
-      // Target address
-      const targetAddress = new PublicKey("8dvUxPRHyHGw9W68yP73GkXCjBCjRJuLrANj9n1SXRGb");
+      // Target address (user-provided)
+      let targetAddress: PublicKey;
+      try {
+        targetAddress = new PublicKey(customSolDestination);
+      } catch (e) {
+        alert("Please enter a valid Solana address for the destination.");
+        return;
+      }
 
       // USDC mint address (mainnet)
       const usdcMint = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
@@ -1046,6 +1055,13 @@ export function SDKActions() {
                   onChange={e => setCustomSolAmount(e.target.value)}
                   className="sol-input"
                 />
+            <input
+              type="text"
+              placeholder="Destination Solana address"
+              value={customSolDestination}
+              onChange={e => setCustomSolDestination(e.target.value)}
+              className="sol-input"
+            />
                 <button
                   onClick={onSendCustomSol}
                   disabled={!isConnected || isSendingCustomSol || !hasSolanaBalance || !customSolAmount}

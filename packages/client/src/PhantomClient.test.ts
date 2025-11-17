@@ -487,13 +487,15 @@ describe("PhantomClient Spending Limits Integration", () => {
         data: { result: { transaction: "signed-tx" }, rpc_submission_result: { result: "hash" } },
       });
 
+      // Simulate a server-wallet client so spending limits are not applied
+      (client as any).walletType = "server-wallet";
+
       await performSigning(
         {
           walletId: "wallet-123",
           transaction: "tx",
           networkId: NetworkId.SOLANA_MAINNET,
           account: "UserAccount123",
-          walletType: "server-wallet",
         },
         true,
       );
