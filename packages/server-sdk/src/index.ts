@@ -101,6 +101,7 @@ export class ServerSDK {
         apiBaseUrl: config.apiBaseUrl || DEFAULT_WALLET_API_URL,
         organizationId: config.organizationId,
         headers,
+        walletType: "server-wallet",
       },
       stamper,
     );
@@ -202,6 +203,7 @@ export class ServerSDK {
         apiBaseUrl: this.config.apiBaseUrl || DEFAULT_WALLET_API_URL,
         organizationId: this.config.organizationId,
         headers,
+        walletType: "server-wallet",
       },
       new ApiKeyStamper({
         apiSecretKey: keyPair.secretKey,

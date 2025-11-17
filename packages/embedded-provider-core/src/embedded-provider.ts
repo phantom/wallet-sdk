@@ -873,7 +873,6 @@ export class EmbeddedProvider {
       networkId: params.networkId,
       derivationIndex: derivationIndex,
       account,
-      walletType: "user-wallet"
     });
 
     this.logger.info("EMBEDDED_PROVIDER", "Transaction signed successfully", {
@@ -931,7 +930,6 @@ export class EmbeddedProvider {
       networkId: params.networkId,
       derivationIndex: derivationIndex,
       account,
-      walletType: "user-wallet"
     });
 
     this.logger.info("EMBEDDED_PROVIDER", "Transaction signed and sent successfully", {

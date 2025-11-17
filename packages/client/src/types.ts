@@ -4,6 +4,7 @@ export interface PhantomClientConfig {
   apiBaseUrl: string;
   organizationId?: string;
   headers?: Partial<SdkAnalyticsHeaders>;
+  walletType?: "server-wallet" | "user-wallet";
 }
 
 export interface CreateWalletResult {
@@ -66,7 +67,6 @@ export interface SignTransactionParams {
   networkId: NetworkId;
   derivationIndex?: number; // Optional account derivation index (defaults to 0)
   account?: string; // Optional specific account address to use
-  walletType: "server-wallet" | "user-wallet"; 
 }
 
 export interface SignAndSendTransactionParams {
@@ -75,7 +75,6 @@ export interface SignAndSendTransactionParams {
   networkId: NetworkId;
   derivationIndex?: number; // Optional account derivation index (defaults to 0)
   account?: string; // Optional specific account address to use
-  walletType: "server-wallet" | "user-wallet"; 
 }
 
 export interface GetWalletWithTagParams {
@@ -136,9 +135,6 @@ export interface UserConfig {
 
 export interface SpendingLimitConfig {
   usdCentsLimitPerDay: number;
-  memoryAccount: string;
-  memoryId: number;
-  memoryBump: number;
 }
 
 export interface AugmentWithSpendingLimitResponse {

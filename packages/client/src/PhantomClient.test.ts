@@ -418,7 +418,6 @@ describe("PhantomClient Spending Limits Integration", () => {
           transaction: "tx",
           networkId: NetworkId.SOLANA_MAINNET,
           account: "UserAccount123",
-          walletType: "user-wallet",
         },
         true,
       );
@@ -444,7 +443,6 @@ describe("PhantomClient Spending Limits Integration", () => {
           transaction: "tx",
           networkId: NetworkId.SOLANA_MAINNET,
           account: "UserAccount123",
-          walletType: "user-wallet",
         },
         false, // includeSubmissionConfig = false, but augment should still be called
       );
@@ -457,7 +455,7 @@ describe("PhantomClient Spending Limits Integration", () => {
     it("should throw error when account parameter is missing for Solana user-wallet", async () => {
       await expect(
         performSigning(
-          { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET, walletType: "user-wallet" },
+          { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET },
           true,
         ),
       ).rejects.toThrow("Account is required to simulate Solana transactions with spending limits");
@@ -477,7 +475,6 @@ describe("PhantomClient Spending Limits Integration", () => {
           transaction: "0x1234",
           networkId: NetworkId.ETHEREUM_MAINNET,
           account: "0xUser",
-          walletType: "user-wallet",
         },
         true,
       );
@@ -519,7 +516,6 @@ describe("PhantomClient Spending Limits Integration", () => {
             transaction: "tx",
             networkId: NetworkId.SOLANA_MAINNET,
             account: "UserAccount123",
-            walletType: "user-wallet",
           },
           true,
         ),
@@ -542,7 +538,6 @@ describe("PhantomClient Spending Limits Integration", () => {
           transaction: "tx",
           networkId: NetworkId.SOLANA_MAINNET,
           account: "UserAccount123",
-          walletType: "user-wallet",
         },
         true,
       );
@@ -562,7 +557,6 @@ describe("PhantomClient Spending Limits Integration", () => {
           transaction: "0x1234",
           networkId: NetworkId.ETHEREUM_MAINNET,
           account: "0xUser",
-          walletType: "user-wallet",
         },
         true,
       );
@@ -588,7 +582,6 @@ describe("PhantomClient Spending Limits Integration", () => {
           transaction: "tx",
           networkId: NetworkId.SOLANA_MAINNET,
           account: "UserAccount123",
-          walletType: "user-wallet",
         },
         false,
       );

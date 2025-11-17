@@ -83,9 +83,11 @@ export class PhantomClient {
   private kmsApi: KMSRPCApi;
   private axiosInstance: AxiosInstance;
   public stamper?: Stamper;
+  private walletType: "server-wallet" | "user-wallet";
 
   constructor(config: PhantomClientConfig, stamper?: Stamper) {
     this.config = config;
+    this.walletType = config.walletType ?? "user-wallet";
 
     // Create axios instance
     this.axiosInstance = axios.create();
@@ -278,7 +280,7 @@ export class PhantomClient {
       // Always check spending limits for Solana transactions
       // If we don't receive an account
       // At this point, we've already validated that submissionConfig and account exist for Solana
-      if (isSolanaTransaction && params.walletType === "user-wallet") {
+      if (isSolanaTransaction && this.walletType === "user-wallet") {
         if (!params.account) {
           throw new Error("Account is required to simulate Solana transactions with spending limits");
         }
