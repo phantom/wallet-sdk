@@ -350,7 +350,7 @@ describe("PhantomClient Spending Limits Integration", () => {
       network: "mainnet",
     };
 
-    it("should call augment endpoint with correct request structure", async () => {
+    it("should call prepare endpoint with correct request structure", async () => {
       mockAxiosPost.mockResolvedValueOnce({
         data: {
           transaction: "augmented-tx",
@@ -359,8 +359,8 @@ describe("PhantomClient Spending Limits Integration", () => {
         },
       });
 
-      const augmentMethod = client["prepare"].bind(client);
-      const result = await augmentMethod(
+      const prepareMethod = client["prepare"].bind(client);
+      const result = await prepareMethod(
         "original-tx-base64",
         "org-123",
         solanaSubmissionConfig,
@@ -380,7 +380,7 @@ describe("PhantomClient Spending Limits Integration", () => {
       );
     });
 
-    it("should throw error when augment endpoint fails", async () => {
+    it("should throw error when prepare endpoint fails", async () => {
       mockAxiosPost.mockRejectedValueOnce({
         response: {
           data: {
@@ -389,21 +389,21 @@ describe("PhantomClient Spending Limits Integration", () => {
         },
       });
 
-      const augmentMethod = client["prepare"].bind(client);
+      const prepareMethod = client["prepare"].bind(client);
 
       await expect(
-        augmentMethod("bad-tx", "org-123", solanaSubmissionConfig, "UserAccount123"),
-      ).rejects.toThrow("Failed to augment transaction");
+        prepareMethod("bad-tx", "org-123", solanaSubmissionConfig, "UserAccount123"),
+      ).rejects.toThrow("Failed to prepare transaction");
     });
   });
 
-  describe("conditions for calling augment endpoint", () => {
+  describe("conditions for calling prepare endpoint", () => {
     const performSigning = (params: any, includeSubmissionConfig: boolean) => {
       return client["performTransactionSigning"](params, includeSubmissionConfig);
     };
 
-    it("should call augment and proceed without limits when service returns pass-through", async () => {
-      // Mock augment endpoint to 200 with same transaction and no memory config
+    it("should call prepare and proceed without limits when service returns pass-through", async () => {
+      // Mock prepare endpoint to 200 with same transaction and no memory config
       mockAxiosPost.mockResolvedValueOnce({
         data: { transaction: "tx", simulationResult: {} },
       });
@@ -422,13 +422,13 @@ describe("PhantomClient Spending Limits Integration", () => {
         true,
       );
 
-      // Augment should be called and we proceed
+      // Prepare should be called and we proceed
       expect(mockAxiosPost).toHaveBeenCalled();
       expect(mockKmsPost).toHaveBeenCalled();
     });
 
-    it("should call augment even when includeSubmissionConfig is false for Solana", async () => {
-      // Mock augment endpoint to return pass-through
+    it("should call prepare even when includeSubmissionConfig is false for Solana", async () => {
+      // Mock prepare endpoint to return pass-through
       mockAxiosPost.mockResolvedValueOnce({
         data: { transaction: "tx", simulationResult: {} },
       });
@@ -444,10 +444,10 @@ describe("PhantomClient Spending Limits Integration", () => {
           networkId: NetworkId.SOLANA_MAINNET,
           account: "UserAccount123",
         },
-        false, // includeSubmissionConfig = false, but augment should still be called
+        false, // includeSubmissionConfig = false, but prepare should still be called
       );
 
-      // Augment should be called even when includeSubmissionConfig is false
+      // Prepare should be called even when includeSubmissionConfig is false
       expect(mockAxiosPost).toHaveBeenCalled();
       expect(mockKmsPost).toHaveBeenCalled();
     });
@@ -460,11 +460,11 @@ describe("PhantomClient Spending Limits Integration", () => {
         ),
       ).rejects.toThrow("Account is required to simulate Solana transactions with spending limits");
 
-      // Augment should not be called because we fail before reaching it
+      // Prepare should not be called because we fail before reaching it
       expect(mockAxiosPost).not.toHaveBeenCalled();
     });
 
-    it("should NOT call augment for EVM transactions", async () => {
+    it("should NOT call prepare for EVM transactions", async () => {
       mockKmsPost.mockResolvedValue({
         data: { result: { transaction: "signed-tx" }, rpc_submission_result: { result: "hash" } },
       });
@@ -482,7 +482,7 @@ describe("PhantomClient Spending Limits Integration", () => {
       expect(mockAxiosPost).not.toHaveBeenCalled();
     });
 
-    it("should NOT call augment for Solana server-wallet transactions", async () => {
+    it("should NOT call prepare for Solana server-wallet transactions", async () => {
       mockKmsPost.mockResolvedValue({
         data: { result: { transaction: "signed-tx" }, rpc_submission_result: { result: "hash" } },
       });
@@ -505,9 +505,9 @@ describe("PhantomClient Spending Limits Integration", () => {
   });
 
   describe("error handling", () => {
-    it("should fail when augmentation service fails with non-spending-limit error", async () => {
-      // Mock augment endpoint to fail with a real error (not "No spending limit configuration found")
-      mockAxiosPost.mockRejectedValueOnce(new Error("Augmentation service unavailable"));
+    it("should fail when prepare service fails with non-spending-limit error", async () => {
+      // Mock prepare endpoint to fail with a real error (not "No spending limit configuration found")
+      mockAxiosPost.mockRejectedValueOnce(new Error("Prepare service unavailable"));
 
       const performSigning = client["performTransactionSigning"].bind(client);
 
@@ -524,7 +524,7 @@ describe("PhantomClient Spending Limits Integration", () => {
       ).rejects.toThrow("Failed to apply spending limits for this transaction");
     });
 
-    it("should continue signing when augment endpoint returns pass-through with no limits", async () => {
+    it("should continue signing when prepare endpoint returns pass-through with no limits", async () => {
       mockAxiosPost.mockResolvedValueOnce({
         data: { transaction: "tx", simulationResult: {} },
       });
@@ -547,7 +547,7 @@ describe("PhantomClient Spending Limits Integration", () => {
       expect(result.signedTransaction).toBe("signed-tx");
     });
 
-    it("should not call augment endpoint for EVM transactions", async () => {
+    it("should not call prepare endpoint for EVM transactions", async () => {
       mockKmsPost.mockResolvedValueOnce({
         data: { result: { transaction: "signed-tx" }, rpc_submission_result: { result: "hash" } },
       });
@@ -567,8 +567,8 @@ describe("PhantomClient Spending Limits Integration", () => {
       expect(mockAxiosPost).not.toHaveBeenCalled();
     });
 
-    it("should call augment endpoint even when includeSubmissionConfig is false", async () => {
-      // Mock augment endpoint to return pass-through
+    it("should call prepare endpoint even when includeSubmissionConfig is false", async () => {
+      // Mock prepare endpoint to return pass-through
       mockAxiosPost.mockResolvedValueOnce({
         data: { transaction: "tx", simulationResult: {} },
       });
@@ -589,13 +589,13 @@ describe("PhantomClient Spending Limits Integration", () => {
       );
 
       expect(result.signedTransaction).toBe("signed-tx");
-      // Augment should be called even when includeSubmissionConfig is false
+      // Prepare should be called even when includeSubmissionConfig is false
       expect(mockAxiosPost).toHaveBeenCalled();
     });
   });
 
-  describe("uses augmented transaction for signing", () => {
-    it("should use augmented transaction returned from augment endpoint", async () => {
+  describe("uses prepared transaction for signing", () => {
+    it("should use prepared transaction returned from prepare endpoint", async () => {
       const submissionConfig = {
         chain: "solana" as const,
         network: "mainnet",
@@ -614,15 +614,15 @@ describe("PhantomClient Spending Limits Integration", () => {
         },
       });
 
-      const augmentMethod = client["prepare"].bind(client);
-      const result = await augmentMethod("original-tx", "org-123", submissionConfig, "UserAccount123");
+      const prepareMethod = client["prepare"].bind(client);
+      const result = await prepareMethod("original-tx", "org-123", submissionConfig, "UserAccount123");
 
       expect(result.transaction).toBe("augmented-tx-with-lighthouse-instructions");
     });
 
   });
 
-  describe("augment endpoint request structure", () => {
+  describe("prepare endpoint request structure", () => {
     it("should send Solana transactions in ChainTransaction format", async () => {
       const submissionConfig = {
         chain: "solana" as const,
@@ -633,8 +633,8 @@ describe("PhantomClient Spending Limits Integration", () => {
         data: { transaction: "augmented-tx", simulationResult: {}, memoryConfigUsed: {} },
       });
 
-      const augmentMethod = client["prepare"].bind(client);
-      const result = await augmentMethod(
+      const prepareMethod = client["prepare"].bind(client);
+      const result = await prepareMethod(
         "solana-tx-base64",
         "org-123",
         submissionConfig,
@@ -654,11 +654,11 @@ describe("PhantomClient Spending Limits Integration", () => {
       );
     });
 
-    // Note: The augmentWithSpendingLimit method no longer receives chain information,
+    // Note: The prepare method no longer receives chain information,
     // so it cannot reject EVM transactions at the method level. Chain validation
     // should happen at a higher level before calling this method.
 
-    it("should include all required fields in augment request", async () => {
+    it("should include all required fields in prepare request", async () => {
       mockAxiosPost.mockResolvedValueOnce({
         data: { transaction: "augmented-tx", simulationResult: {}, memoryConfigUsed: {} },
       });
@@ -668,8 +668,8 @@ describe("PhantomClient Spending Limits Integration", () => {
         network: "mainnet",
       };
 
-      const augmentMethod = client["prepare"].bind(client);
-      await augmentMethod("tx-base64", "org-123", submissionConfig, "UserAccount123");
+      const prepareMethod = client["prepare"].bind(client);
+      await prepareMethod("tx-base64", "org-123", submissionConfig, "UserAccount123");
 
       expect(mockAxiosPost).toHaveBeenCalledWith(
         "https://api.phantom.app/prepare",

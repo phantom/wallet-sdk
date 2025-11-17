@@ -220,7 +220,7 @@ export class PhantomClient {
       });
       return response.data;
     } catch (error: any) {
-      throw new Error(`Failed to augment transaction: ${error.response?.data?.message || error.message}`);
+      throw new Error(`Failed to prepare transaction: ${error.response?.data?.message || error.message}`);
     }
   }
 
@@ -267,8 +267,8 @@ export class PhantomClient {
       };
 
       // TWO-PHASE SPENDING LIMITS FLOW
-      // Phase 1: Call wallet service to check spending limits and augment transaction if needed
-      let augmentedTransaction = encodedTransaction;
+      // Phase 1: Call wallet service to check spending limits and prepare transaction if needed
+      let preparedTransaction = encodedTransaction;
 
       // Always check spending limits for Solana transactions
       // If we don't receive an account
@@ -280,14 +280,14 @@ export class PhantomClient {
 
         try {
           // Call wallet service prepare endpoint
-          const augmentResponse = await this.prepare(
+          const prepareResponse = await this.prepare(
             encodedTransaction,
             this.config.organizationId,
             submissionConfig, // Non-null assertion safe because we validated above
             params.account, // Non-null assertion safe because we validated above
           );
 
-          augmentedTransaction = augmentResponse.transaction;
+          preparedTransaction = prepareResponse.transaction;
         } catch (e: any) {
           const errorMessage = e?.message || String(e);
           throw new Error(
@@ -298,7 +298,7 @@ export class PhantomClient {
       }
 
       // Phase 2: Sign the (possibly augmented) transaction
-      // Use augmentedTransaction which will have Lighthouse instructions if spending limits exist
+      // Use preparedTransaction which will have Lighthouse instructions if spending limits exist
       const signRequest: SignTransactionRequest & {
         submissionConfig?: SubmissionConfig;
         simulationConfig?: SimulationConfig;
@@ -307,7 +307,7 @@ export class PhantomClient {
         walletId: walletId,
         // For EVM transactions, use the object format with kind and bytes
         // For other chains, use the string directly
-        transaction: isEvmTransaction ? { kind: "RLP_ENCODED", bytes: augmentedTransaction } : augmentedTransaction,
+        transaction: isEvmTransaction ? { kind: "RLP_ENCODED", bytes: preparedTransaction } : preparedTransaction,
         derivationInfo: derivationInfo,
       } as any;
 
