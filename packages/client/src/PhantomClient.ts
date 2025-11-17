@@ -8,8 +8,8 @@ import {
   GetAccountsMethodEnum,
   GrantOrganizationAccessMethodEnum,
   KMSRPCApi,
-  SignRawPayloadMethodEnum,
   SignTransactionMethodEnum,
+  SignUTF8MessageMethodEnum,
   type UserPolicy,
   UserPolicyOneOfTypeEnum,
   type DerivationInfoAddressFormatEnum as AddressType,
@@ -33,10 +33,10 @@ import {
   type PartialKmsUser,
   type SignatureWithPublicKey,
   type SignedTransactionWithPublicKey,
-  type SignRawPayload,
-  type SignRawPayloadRequest,
   type SignTransaction,
   type SignTransactionRequest,
+  type SignUTF8Message,
+  type SignUtf8MessageRequest,
 } from "@phantom/openapi-wallet-service";
 import axios, { type AxiosInstance } from "axios";
 import { Buffer } from "buffer";
@@ -404,9 +404,9 @@ export class PhantomClient {
   }
 
   /**
-   * Sign a raw payload for now used for Solana Sign Message
+   * Sign a UTF-8 message for Solana
    */
-  async signRawPayload(params: SignMessageParams): Promise<string> {
+  async signUtf8Message(params: SignMessageParams): Promise<string> {
     const walletId = params.walletId;
     const messageParam = params.message;
     const networkIdParam = params.networkId;
@@ -429,22 +429,19 @@ export class PhantomClient {
         addressFormat: networkConfig.addressFormat,
       };
 
-      // Message is already base64url encoded
-      const base64StringMessage = messageParam;
-
-      const signRequest: SignRawPayloadRequest = {
+      const signRequest: SignUtf8MessageRequest = {
         organizationId: this.config.organizationId,
         walletId: walletId,
-        payload: base64StringMessage as any,
+        message: messageParam,
         algorithm: networkConfig.algorithm,
         derivationInfo: derivationInfo,
       };
 
-      const request: SignRawPayload = {
-        method: SignRawPayloadMethodEnum.signRawPayload,
+      const request: SignUTF8Message & { timestampMs: number } = {
+        method: SignUTF8MessageMethodEnum.signUtf8Message,
         params: signRequest,
         timestampMs: await getSecureTimestamp(),
-      } as any;
+      };
 
       const response = await this.kmsApi.postKmsRpc(request);
       const result = (response.data as any).result as SignatureWithPublicKey;

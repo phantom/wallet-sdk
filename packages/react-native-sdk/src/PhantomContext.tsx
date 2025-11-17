@@ -1,25 +1,24 @@
 import { createContext, useContext } from "react";
-import type { BrowserSDK, WalletAddress, ConnectResult, AuthProviderType } from "@phantom/browser-sdk";
-import type { PhantomTheme } from "@phantom/wallet-sdk-ui";
+import type { EmbeddedProvider, ConnectResult, EmbeddedProviderAuthType } from "@phantom/embedded-provider-core";
+import type { WalletAddress } from "./types";
 
 export interface PhantomContextValue {
-  sdk: BrowserSDK | null;
+  sdk: EmbeddedProvider;
   isConnected: boolean;
   isConnecting: boolean;
-  isLoading: boolean;
   connectError: Error | null;
   addresses: WalletAddress[];
-  isClient: boolean;
+  walletId: string | null;
+  setWalletId: (walletId: string | null) => void;
   user: ConnectResult | null;
-  theme: PhantomTheme;
-  allowedProviders: AuthProviderType[];
+  allowedProviders: EmbeddedProviderAuthType[];
 }
 
 export const PhantomContext = createContext<PhantomContextValue | undefined>(undefined);
 
-export function usePhantom() {
+export function usePhantom(): PhantomContextValue {
   const context = useContext(PhantomContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("usePhantom must be used within a PhantomProvider");
   }
   return context;
