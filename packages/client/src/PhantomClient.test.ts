@@ -360,12 +360,7 @@ describe("PhantomClient Spending Limits Integration", () => {
       });
 
       const prepareMethod = client["prepare"].bind(client);
-      const result = await prepareMethod(
-        "original-tx-base64",
-        "org-123",
-        solanaSubmissionConfig,
-        "UserAccount123",
-      );
+      const result = await prepareMethod("original-tx-base64", "org-123", solanaSubmissionConfig, "UserAccount123");
 
       expect(result.transaction).toBe("augmented-tx");
       expect(mockAxiosPost).toHaveBeenCalledWith(
@@ -391,9 +386,9 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       const prepareMethod = client["prepare"].bind(client);
 
-      await expect(
-        prepareMethod("bad-tx", "org-123", solanaSubmissionConfig, "UserAccount123"),
-      ).rejects.toThrow("Failed to prepare transaction");
+      await expect(prepareMethod("bad-tx", "org-123", solanaSubmissionConfig, "UserAccount123")).rejects.toThrow(
+        "Failed to prepare transaction",
+      );
     });
   });
 
@@ -454,10 +449,7 @@ describe("PhantomClient Spending Limits Integration", () => {
 
     it("should throw error when account parameter is missing for Solana user-wallet", async () => {
       await expect(
-        performSigning(
-          { walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET },
-          true,
-        ),
+        performSigning({ walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET }, true),
       ).rejects.toThrow("Account is required to simulate Solana transactions with spending limits");
 
       // Prepare should not be called because we fail before reaching it
@@ -619,7 +611,6 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       expect(result.transaction).toBe("augmented-tx-with-lighthouse-instructions");
     });
-
   });
 
   describe("prepare endpoint request structure", () => {
@@ -634,12 +625,7 @@ describe("PhantomClient Spending Limits Integration", () => {
       });
 
       const prepareMethod = client["prepare"].bind(client);
-      const result = await prepareMethod(
-        "solana-tx-base64",
-        "org-123",
-        submissionConfig,
-        "UserAccount123",
-      );
+      const result = await prepareMethod("solana-tx-base64", "org-123", submissionConfig, "UserAccount123");
 
       expect(result.transaction).toBe("augmented-tx");
       expect(mockAxiosPost).toHaveBeenCalledWith(

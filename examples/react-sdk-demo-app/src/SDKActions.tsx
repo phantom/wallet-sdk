@@ -48,9 +48,7 @@ export function SDKActions() {
   const [isStakingSol, setIsStakingSol] = useState(false);
   const [isSendingCustomSol, setIsSendingCustomSol] = useState(false);
   const [customSolAmount, setCustomSolAmount] = useState("");
-  const [customSolDestination, setCustomSolDestination] = useState(
-    "8dvUxPRHyHGw9W68yP73GkXCjBCjRJuLrANj9n1SXRGb",
-  );
+  const [customSolDestination, setCustomSolDestination] = useState("8dvUxPRHyHGw9W68yP73GkXCjBCjRJuLrANj9n1SXRGb");
   const [isSendingEthMainnet, setIsSendingEthMainnet] = useState(false);
   const [isSendingPolygon, setIsSendingPolygon] = useState(false);
 
@@ -1055,13 +1053,13 @@ export function SDKActions() {
                   onChange={e => setCustomSolAmount(e.target.value)}
                   className="sol-input"
                 />
-            <input
-              type="text"
-              placeholder="Destination Solana address"
-              value={customSolDestination}
-              onChange={e => setCustomSolDestination(e.target.value)}
-              className="sol-input"
-            />
+                <input
+                  type="text"
+                  placeholder="Destination Solana address"
+                  value={customSolDestination}
+                  onChange={e => setCustomSolDestination(e.target.value)}
+                  className="sol-input"
+                />
                 <button
                   onClick={onSendCustomSol}
                   disabled={!isConnected || isSendingCustomSol || !hasSolanaBalance || !customSolAmount}
