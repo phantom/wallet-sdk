@@ -1,6 +1,5 @@
 import {
   PhantomClient,
-  type SignMessageParams,
   type NetworkId,
   type CreateWalletResult,
   type GetWalletsResult,
@@ -114,20 +113,13 @@ export class ServerSDK {
    * @returns Promise<ParsedSignatureResult> - Parsed signature with explorer URL
    */
   async signMessage(params: ServerSignMessageParams): Promise<ParsedSignatureResult> {
-    // Parse the message to base64url format
-    const base64UrlMessage = stringToBase64url(params.message);
-
-    const signMessageParams: SignMessageParams = {
-      walletId: params.walletId,
-      message: base64UrlMessage,
-      networkId: params.networkId,
-      derivationIndex: params.derivationIndex,
-    };
-
     // Get raw response from client - use the appropriate method based on chain
     const rawResponse = isEthereumChain(params.networkId)
-      ? await this.client.ethereumSignMessage(signMessageParams)
-      : await this.client.signRawPayload(signMessageParams);
+      ? await this.client.ethereumSignMessage({
+          ...params,
+          message: stringToBase64url(params.message),
+        })
+      : await this.client.signUtf8Message(params);
 
     // Parse the response to get human-readable signature and explorer URL
     return parseSignMessageResponse(rawResponse, params.networkId);
