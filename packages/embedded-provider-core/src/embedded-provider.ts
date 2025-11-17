@@ -723,17 +723,14 @@ export class EmbeddedProvider {
       message: params.message,
     });
 
-    // Parse message to base64url format for client
-    const base64UrlMessage = stringToBase64url(params.message);
-
     // Get session to access derivation index
     const session = await this.storage.getSession();
     const derivationIndex = session?.accountDerivationIndex ?? 0;
 
     // Get raw response from client - use the appropriate method based on chain
-    const rawResponse = await this.client.signRawPayload({
+    const rawResponse = await this.client.signUtf8Message({
       walletId: this.walletId,
-      message: base64UrlMessage,
+      message: params.message,
       networkId: params.networkId,
       derivationIndex: derivationIndex,
     });
