@@ -251,7 +251,7 @@ describe("EmbeddedProvider Core", () => {
 
       provider["client"] = {
         ethereumSignMessage: jest.fn().mockResolvedValue("signed-message"),
-        signRawPayload: jest.fn().mockResolvedValue("signed-message"),
+        signUtf8Message: jest.fn().mockResolvedValue("signed-message"),
       } as any;
       provider["walletId"] = "test-wallet-id";
 
@@ -262,8 +262,8 @@ describe("EmbeddedProvider Core", () => {
       });
 
       // The stamper won't be called directly for signMessage - the client handles it
-      // But we can verify the client's signRawPayload was called (for Solana)
-      expect(provider["client"].signRawPayload).toHaveBeenCalled();
+      // But we can verify the client's signUtf8Message was called (for Solana)
+      expect(provider["client"].signUtf8Message).toHaveBeenCalled();
     });
 
     it.skip("should call platform stamper getKeyInfo during client initialization", async () => {
