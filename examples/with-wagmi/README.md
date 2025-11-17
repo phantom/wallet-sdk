@@ -26,11 +26,13 @@ wagmi hooks → Phantom Connector → Phantom SDK → Ethereum Provider (EIP-119
 ## Setup
 
 1. Install dependencies:
+
    ```bash
    yarn install
    ```
 
 2. Start the development server:
+
    ```bash
    yarn start
    ```
@@ -40,7 +42,7 @@ wagmi hooks → Phantom Connector → Phantom SDK → Ethereum Provider (EIP-119
 ## Key Files
 
 - `src/phantom-connector.ts` - Custom wagmi connector for Phantom SDK
-- `src/wagmi.ts` - wagmi configuration 
+- `src/wagmi.ts` - wagmi configuration
 - `src/WalletDemo.tsx` - Demo component showcasing the integration
 - `src/App.tsx` - Main app with wagmi and React Query providers
 
@@ -61,6 +63,7 @@ wagmi hooks → Phantom Connector → Phantom SDK → Ethereum Provider (EIP-119
 ## Next Steps
 
 This example can be extended to support:
+
 - Transaction sending with `useSendTransaction`
 - Contract interactions with `useReadContract` and `useWriteContract`
 - ENS resolution with `useEnsName` and `useEnsAddress`

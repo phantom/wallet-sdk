@@ -38,7 +38,7 @@ export function WalletInterface() {
           <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
             <p className="text-green-800 font-medium mb-2">✅ Wallet Connected</p>
             <div className="text-sm text-green-700">
-              {addresses.map((addr) => (
+              {addresses.map(addr => (
                 <div key={addr.addressType} className="font-mono break-all">
                   {addr.addressType}: {addr.address}
                 </div>
@@ -55,9 +55,7 @@ export function WalletInterface() {
 
           {signatureResult && (
             <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-blue-800 text-sm font-mono break-all">
-                {signatureResult}
-              </p>
+              <p className="text-blue-800 text-sm font-mono break-all">{signatureResult}</p>
             </div>
           )}
 

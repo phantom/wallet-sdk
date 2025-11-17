@@ -3,12 +3,11 @@
  * instead of relying on local machine time which can be manipulated
  */
 
-
 class TimeService {
   private static instance: TimeService;
   private cache: { timestamp: number; fetchedAt: number } | null = null;
   private readonly CACHE_DURATION = 30000; // 30 seconds cache
-  private readonly TIME_API_URL = 'https://time.phantom.app/utc';
+  private readonly TIME_API_URL = "https://time.phantom.app/utc";
 
   private constructor() {}
 
@@ -27,7 +26,7 @@ class TimeService {
     const now = Date.now();
 
     // Use cache if it's fresh (within CACHE_DURATION)
-    if (this.cache && (now - this.cache.fetchedAt) < this.CACHE_DURATION) {
+    if (this.cache && now - this.cache.fetchedAt < this.CACHE_DURATION) {
       // Adjust cached timestamp by elapsed time
       const elapsed = now - this.cache.fetchedAt;
       return this.cache.timestamp + elapsed;
@@ -90,7 +89,7 @@ export const getSecureTimestampSync = () => timeService.nowSync();
 
 // Test helper - only export in test environments
 export const __clearTimeCache = () => {
-  if (process.env.NODE_ENV === 'test') {
+  if (process.env.NODE_ENV === "test") {
     timeService.clearCache();
   }
 };

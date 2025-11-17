@@ -1,52 +1,51 @@
 import type { ReactNode } from "react";
-import { createContext, useContext, useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { BrowserSDK } from "@phantom/browser-sdk";
-import type { BrowserSDKConfig, WalletAddress, AuthOptions, DebugConfig, ConnectEventData, ConnectResult } from "@phantom/browser-sdk";
+import type {
+  BrowserSDKConfig,
+  AuthOptions,
+  DebugConfig,
+  ConnectEventData,
+  WalletAddress,
+  ConnectResult,
+} from "@phantom/browser-sdk";
+import { mergeTheme, darkTheme, ThemeProvider, type PhantomTheme } from "@phantom/wallet-sdk-ui";
+import { PhantomContext, type PhantomContextValue } from "./PhantomContext";
+import { ModalProvider } from "./ModalProvider";
 
 export type PhantomSDKConfig = BrowserSDKConfig;
 
 export interface PhantomDebugConfig extends DebugConfig {}
 
 export interface ConnectOptions {
-  providerType?: "injected" | "embedded";
   embeddedWalletType?: "app-wallet" | "user-wallet";
   authOptions?: AuthOptions;
 }
-
-interface PhantomContextValue {
-  sdk: BrowserSDK | null;
-  isConnected: boolean;
-  isConnecting: boolean;
-  connectError: Error | null;
-  addresses: WalletAddress[];
-  currentProviderType: "injected" | "embedded" | null;
-  isPhantomAvailable: boolean;
-  isClient: boolean;
-  user: ConnectResult | null;
-}
-
-const PhantomContext = createContext<PhantomContextValue | undefined>(undefined);
 
 export interface PhantomProviderProps {
   children: ReactNode;
   config: PhantomSDKConfig;
   debugConfig?: PhantomDebugConfig;
+  theme?: Partial<PhantomTheme>;
+  appIcon?: string;
+  appName?: string;
 }
 
-export function PhantomProvider({ children, config, debugConfig }: PhantomProviderProps) {
+export function PhantomProvider({ children, config, debugConfig, theme, appIcon, appName }: PhantomProviderProps) {
   // Memoized config to avoid unnecessary SDK recreation
   const memoizedConfig: BrowserSDKConfig = useMemo(() => config, [config]);
+
+  // Memoized theme - defaults to darkTheme if not provided
+  const resolvedTheme = useMemo(() => mergeTheme(theme || darkTheme), [theme]);
 
   const [sdk, setSdk] = useState<BrowserSDK | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [connectError, setConnectError] = useState<Error | null>(null);
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
-  const [currentProviderType, setCurrentProviderType] = useState<"injected" | "embedded" | null>(
-    (memoizedConfig.providerType as any) || null,
-  );
-  const [isPhantomAvailable, setIsPhantomAvailable] = useState(false);
+
   const [user, setUser] = useState<ConnectResult | null>(null);
 
   // Initialize client flag
@@ -81,9 +80,6 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
 
         // Store the full ConnectResult as user
         setUser(data);
-
-        // Update current provider type from event data
-        setCurrentProviderType(data.providerType || null);
 
         const addrs = await sdk.getAddresses();
         setAddresses(addrs);
@@ -142,25 +138,20 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
     if (!isClient || !sdk) return;
 
     const initialize = async () => {
-      // Check if Phantom extension is available (only for injected provider)
+      // Attempt auto-connect (it handles extension detection internally)
       try {
-        const available = await BrowserSDK.isPhantomInstalled();
-        setIsPhantomAvailable(available);
-      } catch (err) {
-        console.error("Error checking Phantom extension:", err);
-        setIsPhantomAvailable(false);
+        await sdk.autoConnect();
+      } catch (error) {
+        // Silent fail - auto-connect shouldn't break the app
+        console.error("Auto-connect error:", error);
       }
 
-      // Attempt auto-connect if enabled
-      if (memoizedConfig.autoConnect !== false) {
-        sdk.autoConnect().catch(() => {
-          // Silent fail - auto-connect is optional and shouldn't break the app
-        });
-      }
+      // Mark SDK as done loading after initialization complete
+      setIsLoading(false);
     };
 
     initialize();
-  }, [sdk, memoizedConfig.autoConnect, isClient]);
+  }, [sdk, isClient]);
 
   // Memoize context value to prevent unnecessary re-renders
   const value: PhantomContextValue = useMemo(
@@ -168,23 +159,35 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       sdk,
       isConnected,
       isConnecting,
+      isLoading,
       connectError,
       addresses,
-      currentProviderType,
-      isPhantomAvailable,
       isClient,
       user,
+      theme: resolvedTheme,
+      allowedProviders: memoizedConfig.providers,
     }),
-    [sdk, isConnected, isConnecting, connectError, addresses, currentProviderType, isPhantomAvailable, isClient, user],
+    [
+      sdk,
+      isConnected,
+      isConnecting,
+      isLoading,
+      connectError,
+      addresses,
+      isClient,
+      user,
+      resolvedTheme,
+      memoizedConfig.providers,
+    ],
   );
 
-  return <PhantomContext.Provider value={value}>{children}</PhantomContext.Provider>;
-}
-
-export function usePhantom() {
-  const context = useContext(PhantomContext);
-  if (!context) {
-    throw new Error("usePhantom must be used within a PhantomProvider");
-  }
-  return context;
+  return (
+    <ThemeProvider theme={resolvedTheme}>
+      <PhantomContext.Provider value={value}>
+        <ModalProvider appIcon={appIcon} appName={appName}>
+          {children}
+        </ModalProvider>
+      </PhantomContext.Provider>
+    </ThemeProvider>
+  );
 }

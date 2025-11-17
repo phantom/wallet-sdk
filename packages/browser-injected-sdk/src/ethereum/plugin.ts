@@ -1,7 +1,12 @@
 import type { Plugin } from "../index";
 import { connect } from "./connect";
 import { disconnect } from "./disconnect";
-import { addEventListener, removeEventListener, triggerEvent, type PhantomEthereumEventCallback } from "./eventListeners";
+import {
+  addEventListener,
+  removeEventListener,
+  triggerEvent,
+  type PhantomEthereumEventCallback,
+} from "./eventListeners";
 import { getAccounts } from "./getAccounts";
 import { signMessage, signPersonalMessage, signTypedData } from "./signMessage";
 import { signIn } from "./signIn";
@@ -48,12 +53,15 @@ async function bindProviderEvents(): Promise<void> {
   try {
     const strategy = await getProvider();
     const provider = strategy.getProvider();
-    
+
     if (provider) {
       provider.on("connect", () => {
-        provider.request({ method: "eth_accounts" }).then((accounts: string[]) => {
-          if (accounts?.length > 0) triggerEvent("connect", accounts);
-        }).catch(() => {});
+        provider
+          .request({ method: "eth_accounts" })
+          .then((accounts: string[]) => {
+            if (accounts?.length > 0) triggerEvent("connect", accounts);
+          })
+          .catch(() => {});
       });
       provider.on("disconnect", () => triggerEvent("disconnect", []));
       provider.on("accountsChanged", (accounts: string[]) => triggerEvent("accountsChanged", accounts));

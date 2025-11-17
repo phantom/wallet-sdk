@@ -8,6 +8,7 @@ import {
   usePhantom,
   useAutoConfirm,
   NetworkId,
+  ConnectButton,
 } from "@phantom/react-sdk";
 import {
   SystemProgram,
@@ -29,11 +30,11 @@ import bs58 from "bs58";
 import { useBalance } from "./hooks/useBalance";
 
 export function SDKActions() {
-  const { connect, isConnecting, error: connectError } = useConnect();
+  const { connect, isConnecting, isLoading, error: connectError } = useConnect();
   const { disconnect, isDisconnecting } = useDisconnect();
   const { solana } = useSolana();
   const { ethereum } = useEthereum();
-  const { isConnected, currentProviderType , user} = usePhantom(); 
+  const { isConnected, user } = usePhantom();
   const autoConfirm = useAutoConfirm();
   const addresses = useAccounts();
   const [isSigningMessageType, setIsSigningMessageType] = useState<"solana" | "evm" | null>(null);
@@ -61,7 +62,6 @@ export function SDKActions() {
     refetch: refetchSolanaBalance,
   } = useBalance(solanaAddress);
   const hasSolanaBalance = solanaBalance !== null && solanaBalance > 0;
-
 
   const onConnectInjected = async () => {
     try {
@@ -738,8 +738,6 @@ export function SDKActions() {
         return;
       }
       alert(`ETH transaction sent on Ethereum mainnet! Hash: ${result}`);
-
- 
     } catch (error) {
       console.error("Error sending ETH on mainnet:", error);
       alert(`Error sending ETH: ${(error as Error).message || error}`);
@@ -771,8 +769,6 @@ export function SDKActions() {
         return;
       }
       alert(`POL transaction sent on Polygon mainnet! Hash: ${result}`);
-
- 
     } catch (error) {
       console.error("Error sending POL on Polygon:", error);
       alert(`Error sending POL: ${(error as Error).message || error}`);
@@ -815,17 +811,18 @@ export function SDKActions() {
               {isConnected ? "Connected" : "Not Connected"}
             </span>
           </div>
-          {isConnected && currentProviderType && (
+
+          {isConnected && user && (
             <div className="status-row">
-              <span className="status-label">Provider:</span>
-              <span className="status-value">{currentProviderType}</span>
+              <span className="status-label">Auth Provider:</span>
+              <span className="status-value">{user.authProvider}</span>
             </div>
           )}
-          { user && (
-          <div className="status-row">
-            <span className="status-label">User ID:</span>
-            <span className="status-value">{user.authUserId ?? "Undefined"}</span>
-          </div>
+          {user && (
+            <div className="status-row">
+              <span className="status-label">User ID:</span>
+              <span className="status-value">{user.authUserId ?? "Undefined"}</span>
+            </div>
           )}
           {addresses &&
             addresses.map((address, index) => (
@@ -841,9 +838,27 @@ export function SDKActions() {
             </div>
           )}
         </div>
+
+        {isConnected && (
+          <div style={{ marginTop: "1rem" }}>
+            <h4 style={{ marginBottom: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
+              ConnectButton (click to open wallet modal):
+            </h4>
+            <ConnectButton fullWidth />
+          </div>
+        )}
       </div>
 
-      {!isConnected && (
+      {!isConnected && isLoading && (
+        <div className="section">
+          <h3>Initializing SDK...</h3>
+          <div className="status-card">
+            <p>Loading Phantom SDK...</p>
+          </div>
+        </div>
+      )}
+
+      {!isConnected && !isLoading && (
         <div className="section">
           <h3>Connection Options</h3>
           <div className="button-group">
@@ -858,6 +873,13 @@ export function SDKActions() {
             </button>
           </div>
           {connectError && <p className="error-text">Error: {connectError.message}</p>}
+
+          <div style={{ marginTop: "1.5rem" }}>
+            <h4 style={{ marginBottom: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
+              Or use the ConnectButton component:
+            </h4>
+            <ConnectButton fullWidth />
+          </div>
         </div>
       )}
 
@@ -885,8 +907,7 @@ export function SDKActions() {
         </div>
       )}
 
-
-      {isConnected && currentProviderType === "injected" && (
+      {isConnected && user?.authProvider === "injected" && (
         <div className="section">
           <h3>Auto-Confirm Settings</h3>
           <div className="status-card">
@@ -982,16 +1003,10 @@ export function SDKActions() {
                   ? "Insufficient SOL Balance (need > 0)"
                   : "Sign & Send Transaction (Solana)"}
             </button>
-            <button
-              onClick={onSendEthTransaction}
-              disabled={!isConnected || isSendingEthTransaction}
-            >
+            <button onClick={onSendEthTransaction} disabled={!isConnected || isSendingEthTransaction}>
               {isSendingEthTransaction ? "Sending..." : "Sign & Send Transaction (Ethereum)"}
             </button>
-            <button
-              onClick={onSendEthMainnet}
-              disabled={!isConnected || isSendingEthMainnet}
-            >
+            <button onClick={onSendEthMainnet} disabled={!isConnected || isSendingEthMainnet}>
               {isSendingEthMainnet ? "Sending..." : "Send 0.00001 ETH (Mainnet)"}
             </button>
             <button onClick={onSendPolygon} disabled={!isConnected || isSendingPolygon}>
@@ -1015,7 +1030,11 @@ export function SDKActions() {
                   : "Send 0.0001 SOL + 0.0001 USDC"}
             </button>
             <button onClick={onStakeSol} disabled={!isConnected || isStakingSol || !hasSolanaBalance}>
-              {isStakingSol ? "Staking SOL..." : !hasSolanaBalance ? "Insufficient SOL Balance (need > 0)" : "Stake 0.0025 SOL"}
+              {isStakingSol
+                ? "Staking SOL..."
+                : !hasSolanaBalance
+                  ? "Insufficient SOL Balance (need > 0)"
+                  : "Stake 0.0025 SOL"}
             </button>
 
             <div className="custom-sol-section">
@@ -1032,7 +1051,11 @@ export function SDKActions() {
                   disabled={!isConnected || isSendingCustomSol || !hasSolanaBalance || !customSolAmount}
                   className="send-custom-sol-btn"
                 >
-                  {isSendingCustomSol ? "Sending..." : !hasSolanaBalance ? "Insufficient SOL Balance (need > 0)" : "Send Custom SOL"}
+                  {isSendingCustomSol
+                    ? "Sending..."
+                    : !hasSolanaBalance
+                      ? "Insufficient SOL Balance (need > 0)"
+                      : "Send Custom SOL"}
                 </button>
               </div>
             </div>

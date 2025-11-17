@@ -8,11 +8,7 @@ import {
   type Organization,
 } from "@phantom/client";
 import { randomUUID, getSecureTimestampSync, isEthereumChain } from "@phantom/utils";
-import { 
-  ANALYTICS_HEADERS,
-  DEFAULT_WALLET_API_URL,
-  type ServerSdkHeaders 
-} from "@phantom/constants";
+import { ANALYTICS_HEADERS, DEFAULT_WALLET_API_URL, type ServerSdkHeaders } from "@phantom/constants";
 import { ApiKeyStamper } from "@phantom/api-key-stamper";
 import { base64urlEncode, stringToBase64url } from "@phantom/base64url";
 import bs58 from "bs58";
@@ -199,7 +195,7 @@ export class ServerSDK {
   createOrganization(name: string, keyPair: { publicKey: string; secretKey: string }): Promise<Organization> {
     // Create analytics headers for the temporary client
     const headers = createServerSdkHeaders(this.config.appId);
-    
+
     // Create a temporary PhantomClient instance with the stamper and analytics headers
     const tempClient = new PhantomClient(
       {

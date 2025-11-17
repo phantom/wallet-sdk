@@ -14,7 +14,7 @@ export default defineConfig({
   shims: true,
   esbuildOptions(options) {
     options.packages = "external";
-    
+
     // Add buffer polyfill for browser compatibility and SDK version replacement
     options.define = {
       ...options.define,

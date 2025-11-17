@@ -1,5 +1,28 @@
 # @phantom/parsers
 
+## 1.0.0-beta.10
+
+### Patch Changes
+
+- f54d77f: New version
+- b6aff60: Release new version
+- Updated dependencies [f54d77f]
+- Updated dependencies [b6aff60]
+  - @phantom/base64url@1.0.0-beta.10
+  - @phantom/constants@1.0.0-beta.10
+  - @phantom/sdk-types@1.0.0-beta.10
+  - @phantom/utils@1.0.0-beta.22
+
+## 1.0.0-beta.9
+
+### Patch Changes
+
+- Updated dependencies [68492cf]
+  - @phantom/sdk-types@1.0.0-beta.9
+  - @phantom/base64url@1.0.0-beta.9
+  - @phantom/constants@1.0.0-beta.9
+  - @phantom/utils@1.0.0-beta.21
+
 ## 1.0.0-beta.8
 
 ### Patch Changes

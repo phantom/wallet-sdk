@@ -14,7 +14,6 @@
 "@phantom/parsers": patch
 "@phantom/react-native-sdk": patch
 "@phantom/react-sdk": patch
-"@phantom/react-ui": patch
 "@phantom/sdk-types": patch
 "@phantom/server-sdk": patch
 ---

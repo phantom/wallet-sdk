@@ -1,12 +1,12 @@
 import type {
   WalletAddress,
-  ConnectResult,
+  ConnectResult as EmbeddedConnectResult,
   SignMessageParams,
   SignAndSendTransactionParams,
   SignMessageResult,
   SignedTransaction,
-  AuthOptions,
   EmbeddedProviderConfig,
+  EmbeddedProviderAuthType,
 } from "@phantom/embedded-provider-core";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
 import { AddressType } from "@phantom/client";
@@ -22,9 +22,20 @@ export interface DebugConfig {
 }
 
 export type BrowserSDKConfig = Prettify<
-  (ExtendedEmbeddedProviderConfig | ExtendedInjectedProviderConfig) & {
-    autoConnect?: boolean;
-  }
+  Omit<EmbeddedProviderConfig, "authOptions" | "apiBaseUrl" | "embeddedWalletType" | "appId"> &
+    InjectedProviderConfig & {
+      // List of allowed authentication providers (REQUIRED)
+      providers: AuthProviderType[];
+
+      // Optional configuration - appId is required when using embedded providers (google, apple, phantom, etc.)
+      appId?: string;
+      apiBaseUrl?: string;
+      embeddedWalletType?: "app-wallet" | "user-wallet";
+      authOptions?: {
+        authUrl?: string;
+        redirectUrl?: string;
+      };
+    }
 >;
 
 // Improves display of a merged type on hover
@@ -33,25 +44,16 @@ type Prettify<T> = {
   // eslint-disable-next-line @typescript-eslint/ban-types
 } & {};
 
-interface ExtendedEmbeddedProviderConfig
-  extends Omit<EmbeddedProviderConfig, "authOptions" | "apiBaseUrl" | "embeddedWalletType"> {
-  providerType: "embedded";
-  // Optional in the SDK
-  apiBaseUrl?: string;
-  embeddedWalletType?: "app-wallet" | "user-wallet";
-  authOptions?: {
-    authUrl?: string;
-    redirectUrl?: string;
-  };
-}
+type AuthProviderType = EmbeddedProviderAuthType | "injected";
 
-interface ExtendedInjectedProviderConfig extends InjectedProviderConfig {
-  providerType: "injected";
-  // Omitted EmbeddedProviderConfig properties
-  appId?: never;
-  authOptions?: never;
-  embeddedWalletType?: never;
-}
+type AuthOptions = {
+  provider: AuthProviderType;
+  customAuthData?: Record<string, any>;
+};
+
+type ConnectResult = Omit<EmbeddedConnectResult, "authProvider"> & {
+  authProvider?: AuthProviderType | undefined;
+};
 
 // Re-export types from core for convenience
 export type {
@@ -62,6 +64,7 @@ export type {
   SignMessageResult,
   SignedTransaction,
   AuthOptions,
+  AuthProviderType,
   DebugCallback,
   DebugLevel,
 };
@@ -70,7 +73,7 @@ export type {
 export { AddressType };
 
 export interface Provider {
-  connect(authOptions?: AuthOptions): Promise<ConnectResult>;
+  connect(authOptions: AuthOptions): Promise<ConnectResult>;
   disconnect(): Promise<void>;
   getAddresses(): WalletAddress[];
   isConnected(): boolean;

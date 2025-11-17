@@ -1,9 +1,9 @@
 import { useCallback } from "react";
-import { usePhantom } from "../PhantomProvider";
+import { usePhantom } from "../PhantomContext";
 import type { AuthOptions } from "@phantom/browser-sdk";
 
 export function useConnect() {
-  const { sdk, isConnecting, connectError, currentProviderType, isPhantomAvailable } = usePhantom();
+  const { sdk, isConnecting, isLoading, connectError } = usePhantom();
 
   const connect = useCallback(
     async (options: AuthOptions) => {
@@ -28,8 +28,7 @@ export function useConnect() {
   return {
     connect,
     isConnecting,
+    isLoading,
     error: connectError,
-    currentProviderType,
-    isPhantomAvailable,
   };
 }

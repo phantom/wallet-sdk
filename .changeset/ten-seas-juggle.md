@@ -5,7 +5,6 @@
 "@phantom/browser-sdk": patch
 "@phantom/server-sdk": patch
 "@phantom/react-sdk": patch
-"@phantom/react-ui": patch
 "@phantom/chain-interfaces": patch
 "@phantom/client": patch
 ---

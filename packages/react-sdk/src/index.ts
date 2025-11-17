@@ -1,23 +1,26 @@
 // Provider
-export { PhantomProvider, usePhantom } from "./PhantomProvider";
+export { PhantomProvider } from "./PhantomProvider";
 export type { PhantomProviderProps, PhantomSDKConfig, PhantomDebugConfig, ConnectOptions } from "./PhantomProvider";
+
+// Context
+export { usePhantom } from "./PhantomContext";
 
 // Hooks
 export * from "./hooks";
+
+// Components
+export * from "./components";
+
+// Theme - re-exported from @phantom/wallet-sdk-ui
+export { darkTheme, lightTheme, mergeTheme } from "@phantom/wallet-sdk-ui";
+export type { PhantomTheme, ComputedPhantomTheme, HexColor } from "@phantom/wallet-sdk-ui";
 
 // Types
 export * from "./types";
 
 // Re-export useful types and utilities from browser-sdk
-export { NetworkId, AddressType, DebugLevel, debug } from "@phantom/browser-sdk";
-export type {
-  DebugMessage,
-  AutoConfirmEnableParams,
-  AutoConfirmResult,
-  AutoConfirmSupportedChainsResult,
-} from "@phantom/browser-sdk";
+export { NetworkId, AddressType, DebugLevel, debug, isMobileDevice } from "@phantom/browser-sdk";
 
-// Re-export event types for typed event handlers
 export type {
   EmbeddedProviderEvent,
   ConnectEventData,
@@ -26,6 +29,11 @@ export type {
   DisconnectEventData,
   EmbeddedProviderEventMap,
   EventCallback,
+  DebugMessage,
+  AutoConfirmEnableParams,
+  AutoConfirmResult,
+  AutoConfirmSupportedChainsResult,
+  AuthOptions,
 } from "@phantom/browser-sdk";
 
 // Re-export chain interfaces

@@ -5,7 +5,7 @@ import type { ProviderStrategy } from "../../types";
 export interface SolanaStrategy {
   readonly type: ProviderStrategy;
   isConnected: boolean;
-  
+
   getProvider: () => PhantomSolanaProvider | null;
 
   connect: ({ onlyIfTrusted }: { onlyIfTrusted: boolean }) => Promise<string | undefined>;

@@ -1,8 +1,8 @@
 import type {
   AuthProvider,
   AuthResult,
+  EmbeddedProviderAuthType,
   PhantomConnectOptions,
-  JWTAuthOptions,
   URLParamsAccessor,
 } from "@phantom/embedded-provider-core";
 import { debug, DebugCategory } from "../../../debug";
@@ -20,13 +20,13 @@ export class BrowserAuthProvider implements AuthProvider {
 
   private getValidatedCurrentUrl(): string {
     const currentUrl = window.location.href;
-    if (!currentUrl.startsWith('http:') && !currentUrl.startsWith('https:')) {
-      throw new Error('Invalid URL protocol - only HTTP/HTTPS URLs are supported');
+    if (!currentUrl.startsWith("http:") && !currentUrl.startsWith("https:")) {
+      throw new Error("Invalid URL protocol - only HTTP/HTTPS URLs are supported");
     }
     return currentUrl;
   }
 
-  authenticate(options: PhantomConnectOptions | JWTAuthOptions): Promise<void | AuthResult> {
+  authenticate(options: PhantomConnectOptions): Promise<void | AuthResult> {
     return new Promise<void>(resolve => {
       // Check if this is JWT auth
       if ("jwtToken" in options) {
@@ -48,7 +48,8 @@ export class BrowserAuthProvider implements AuthProvider {
       const params = new URLSearchParams({
         public_key: phantomOptions.publicKey,
         app_id: phantomOptions.appId,
-        redirect_uri: phantomOptions.redirectUrl || (typeof window !== "undefined" ? this.getValidatedCurrentUrl() : ""),
+        redirect_uri:
+          phantomOptions.redirectUrl || (typeof window !== "undefined" ? this.getValidatedCurrentUrl() : ""),
         session_id: phantomOptions.sessionId,
         // OAuth session management - defaults to allow refresh unless explicitly clearing after logout
         clear_previous_session: (phantomOptions.clearPreviousSession ?? false).toString(),
@@ -86,8 +87,8 @@ export class BrowserAuthProvider implements AuthProvider {
       debug.info(DebugCategory.PHANTOM_CONNECT_AUTH, "Redirecting to Phantom Connect", { authUrl });
 
       // Validate auth URL before redirect
-      if (!authUrl.startsWith('https:') && !authUrl.startsWith('http://localhost')) {
-        throw new Error('Invalid auth URL - only HTTPS URLs are allowed for authentication');
+      if (!authUrl.startsWith("https:") && !authUrl.startsWith("http://localhost")) {
+        throw new Error("Invalid auth URL - only HTTPS URLs are allowed for authentication");
       }
 
       // Redirect to Phantom Connect
@@ -99,14 +100,13 @@ export class BrowserAuthProvider implements AuthProvider {
     });
   }
 
-  resumeAuthFromRedirect(): AuthResult | null {
+  resumeAuthFromRedirect(provider: EmbeddedProviderAuthType): AuthResult | null {
     try {
       const walletId = this.urlParamsAccessor.getParam("wallet_id");
       const sessionId = this.urlParamsAccessor.getParam("session_id");
       const accountDerivationIndex = this.urlParamsAccessor.getParam("selected_account_index");
       const error = this.urlParamsAccessor.getParam("error");
       const errorDescription = this.urlParamsAccessor.getParam("error_description");
-      
 
       if (error) {
         const errorMsg = errorDescription || error;
@@ -182,9 +182,13 @@ export class BrowserAuthProvider implements AuthProvider {
 
       // Check if we got a temporary organization ID (which indicates server-side issue)
       if (organizationId.startsWith("temp-")) {
-        debug.warn(DebugCategory.PHANTOM_CONNECT_AUTH, "Received temporary organization_id, server may not be configured properly", {
-          organizationId,
-        });
+        debug.warn(
+          DebugCategory.PHANTOM_CONNECT_AUTH,
+          "Received temporary organization_id, server may not be configured properly",
+          {
+            organizationId,
+          },
+        );
         // Continue anyway - the temp ID might be valid for this session
       }
 
@@ -194,6 +198,7 @@ export class BrowserAuthProvider implements AuthProvider {
         accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : 0,
         expiresInMs: expiresInMs ? parseInt(expiresInMs) : 0,
         authUserId: authUserId || undefined,
+        provider,
       };
     } catch (error) {
       // Clean up session storage on any error

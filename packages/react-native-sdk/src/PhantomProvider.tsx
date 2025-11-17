@@ -1,9 +1,22 @@
 import type { ReactNode } from "react";
-import { createContext, useContext, useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { EmbeddedProvider } from "@phantom/embedded-provider-core";
-import type { EmbeddedProviderConfig, PlatformAdapter, ConnectEventData, ConnectResult } from "@phantom/embedded-provider-core";
+import type {
+  EmbeddedProviderConfig,
+  PlatformAdapter,
+  ConnectEventData,
+  ConnectResult,
+} from "@phantom/embedded-provider-core";
 import type { PhantomSDKConfig, PhantomDebugConfig, WalletAddress } from "./types";
-import {ANALYTICS_HEADERS, DEFAULT_WALLET_API_URL, DEFAULT_EMBEDDED_WALLET_TYPE, DEFAULT_AUTH_URL } from "@phantom/constants";
+import {
+  ANALYTICS_HEADERS,
+  DEFAULT_WALLET_API_URL,
+  DEFAULT_EMBEDDED_WALLET_TYPE,
+  DEFAULT_AUTH_URL,
+} from "@phantom/constants";
+import { ThemeProvider, darkTheme, type PhantomTheme } from "@phantom/wallet-sdk-ui";
+import { ModalProvider } from "./ModalProvider";
+import { PhantomContext, type PhantomContextValue } from "./PhantomContext";
 // Platform adapters for React Native/Expo
 import { ExpoSecureStorage } from "./providers/embedded/storage";
 import { ExpoAuthProvider } from "./providers/embedded/auth";
@@ -13,26 +26,16 @@ import { ExpoLogger } from "./providers/embedded/logger";
 import { ReactNativePhantomAppProvider } from "./providers/embedded/phantom-app";
 import { Platform } from "react-native";
 
-interface PhantomContextValue {
-  sdk: EmbeddedProvider;
-  isConnected: boolean;
-  isConnecting: boolean;
-  connectError: Error | null;
-  addresses: WalletAddress[];
-  walletId: string | null;
-  setWalletId: (walletId: string | null) => void;
-  user: ConnectResult | null;
-}
-
-const PhantomContext = createContext<PhantomContextValue | undefined>(undefined);
-
 export interface PhantomProviderProps {
   children: ReactNode;
   config: PhantomSDKConfig;
   debugConfig?: PhantomDebugConfig;
+  theme?: Partial<PhantomTheme>;
+  appIcon?: string;
+  appName?: string;
 }
 
-export function PhantomProvider({ children, config, debugConfig }: PhantomProviderProps) {
+export function PhantomProvider({ children, config, debugConfig, theme, appIcon, appName }: PhantomProviderProps) {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectError, setConnectError] = useState<Error | null>(null);
@@ -51,8 +54,7 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       apiBaseUrl: config.apiBaseUrl || DEFAULT_WALLET_API_URL,
       embeddedWalletType: config.embeddedWalletType || DEFAULT_EMBEDDED_WALLET_TYPE,
       authOptions: {
-        ...(config.authOptions || {
-        }),
+        ...(config.authOptions || {}),
         redirectUrl,
         authUrl: config.authOptions?.authUrl || DEFAULT_AUTH_URL,
       },
@@ -95,7 +97,6 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
 
   // Event listener management - SDK already exists
   useEffect(() => {
-
     // Event handlers that need to be referenced for cleanup
     const handleConnectStart = () => {
       setIsConnecting(true);
@@ -156,14 +157,10 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
 
   // Initialize auto-connect
   useEffect(() => {
-
-    // Attempt auto-connect if enabled
-    if (config.autoConnect !== false) {
-      sdk.autoConnect().catch(() => {
-        // Silent fail - auto-connect is optional and shouldn't break the app
-      });
-    }
-  }, [sdk, config.autoConnect]);
+    sdk.autoConnect().catch(() => {
+      // Silent fail - auto-connect shouldn't break the app
+    });
+  }, [sdk]);
 
   // Memoize context value to prevent unnecessary re-renders
   const value: PhantomContextValue = useMemo(
@@ -176,17 +173,20 @@ export function PhantomProvider({ children, config, debugConfig }: PhantomProvid
       walletId,
       setWalletId,
       user,
+      allowedProviders: config.providers,
     }),
-    [sdk, isConnected, isConnecting, connectError, addresses, walletId, setWalletId, user],
+    [sdk, isConnected, isConnecting, connectError, addresses, walletId, setWalletId, user, config.providers],
   );
 
-  return <PhantomContext.Provider value={value}>{children}</PhantomContext.Provider>;
-}
+  const resolvedTheme = theme || darkTheme;
 
-export function usePhantom(): PhantomContextValue {
-  const context = useContext(PhantomContext);
-  if (context === undefined) {
-    throw new Error("usePhantom must be used within a PhantomProvider");
-  }
-  return context;
+  return (
+    <ThemeProvider theme={resolvedTheme}>
+      <PhantomContext.Provider value={value}>
+        <ModalProvider appIcon={appIcon} appName={appName}>
+          {children}
+        </ModalProvider>
+      </PhantomContext.Provider>
+    </ThemeProvider>
+  );
 }

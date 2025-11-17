@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect } from "react";
-import { usePhantom } from "../PhantomProvider";
+import { usePhantom } from "../PhantomContext";
 import type {
   AutoConfirmEnableParams,
   AutoConfirmResult,
@@ -17,13 +17,13 @@ export interface UseAutoConfirmResult {
 }
 
 export function useAutoConfirm(): UseAutoConfirmResult {
-  const { sdk, currentProviderType } = usePhantom();
+  const { sdk, user } = usePhantom();
   const [status, setStatus] = useState<AutoConfirmResult | null>(null);
   const [supportedChains, setSupportedChains] = useState<AutoConfirmSupportedChainsResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const isInjected = currentProviderType === "injected";
+  const isInjected = user?.authProvider === "injected";
 
   const enable = useCallback(
     async (params: AutoConfirmEnableParams): Promise<AutoConfirmResult> => {

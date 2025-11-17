@@ -126,7 +126,7 @@ console.log("Ethereum address:", ethereumAddress);
 The Server SDK provides two methods for handling transactions:
 
 1. **`signTransaction(params)`** - Signs a transaction without submitting it to the network
-   - Returns the signed transaction 
+   - Returns the signed transaction
    - No network interaction
    - Useful for offline signing or when you want to broadcast later
 

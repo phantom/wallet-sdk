@@ -1,5 +1,13 @@
 # @phantom/constants
 
+## 1.0.0-beta.10
+
+### Patch Changes
+
+- f54d77f: New version
+
+## 1.0.0-beta.9
+
 ## 1.0.0-beta.8
 
 ### Patch Changes

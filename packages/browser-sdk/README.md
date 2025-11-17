@@ -15,7 +15,7 @@ import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 
 // Connect to Phantom browser extension
 const sdk = new BrowserSDK({
-  providerType: "injected",
+  providers: ["injected"], // Only allow browser extension
   addressTypes: [AddressType.solana, AddressType.ethereum],
 });
 
@@ -35,14 +35,14 @@ const solanaResult = await sdk.solana.signAndSendTransaction(mySolanaTransaction
 const ethResult = await sdk.ethereum.sendTransaction(myEthTransaction);
 ```
 
-### Embedded Provider
+### Embedded Provider (Multiple Auth Methods)
 
 ```typescript
 import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 
-// Create embedded non-custodial wallet
+// Create embedded non-custodial wallet with multiple auth providers
 const sdk = new BrowserSDK({
-  providerType: "embedded",
+  providers: ["google", "apple", "phantom"], // Allow Google, Apple, and Phantom Login
   addressTypes: [AddressType.solana, AddressType.ethereum],
   appId: "your-app-id", // Get your app ID from phantom.com/portal
 });
@@ -72,14 +72,15 @@ After instantiating the SDK, use `sdk.connect()` to establish a connection to th
 ```typescript
 import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 
-// 1. Create SDK instance
+// 1. Create SDK instance with allowed providers
 const sdk = new BrowserSDK({
-  providerType: "injected",
+  providers: ["google", "apple", "phantom", "injected"], // Allowed auth providers
   addressTypes: [AddressType.solana, AddressType.ethereum],
+  appId: "your-app-id", // Required when using embedded providers
 });
 
-// 2. Connect to wallet (provider parameter is required)
-const { addresses } = await sdk.connect({ provider: "injected" });
+// 2. Connect to wallet (provider parameter must be in allowed providers list)
+const { addresses } = await sdk.connect({ provider: "google" });
 console.log("Connected addresses:", addresses);
 
 // 3. Use chain-specific methods
@@ -182,39 +183,50 @@ const accounts = await sdk.ethereum.getAccounts();
 const isConnected = sdk.ethereum.isConnected();
 ```
 
-## Provider Types
+## Authentication Providers
 
-### Injected Provider
+The SDK supports multiple authentication providers that you configure via the `providers` array:
 
-Uses the Phantom browser extension installed by the user. No additional configuration needed.
+### Available Providers
+
+- **`"injected"`** - Phantom browser extension (no `appId` required)
+- **`"google"`** - Google OAuth (requires `appId`)
+- **`"apple"`** - Apple ID (requires `appId`)
+- **`"phantom"`** - Phantom Login (requires `appId`)
+- **`"x"`** - X/Twitter (requires `appId`)
+- **`"tiktok"`** - TikTok (requires `appId`)
+
+### Configuration Examples
+
+**Injected Provider Only (Browser Extension)**
 
 ```typescript
 const sdk = new BrowserSDK({
-  providerType: "injected",
+  providers: ["injected"], // Only allow browser extension
   addressTypes: [AddressType.solana, AddressType.ethereum],
 });
 ```
 
-### Embedded Provider
-
-Creates a non-custodial wallet embedded in your application. Requires API configuration.
+**Multiple Authentication Methods**
 
 ```typescript
 const sdk = new BrowserSDK({
-  providerType: "embedded",
+  providers: ["google", "apple", "phantom", "injected"], // Allow all methods
   addressTypes: [AddressType.solana, AddressType.ethereum],
-  appId: "your-app-id", // Get your app ID from phantom.com/portal
+  appId: "your-app-id", // Required for embedded providers (google, apple, phantom, x, tiktok)
   authOptions: {
-    authUrl: "https://connect.phantom.app/login", // optional, defaults to "https://connect.phantom.app/login"
+    authUrl: "https://connect.phantom.app/login", // optional
     redirectUrl: "https://yourapp.com/callback", // optional, defaults to current page
   },
-  autoConnect: true, // optional, auto-connect to existing session (default: true for embedded)
+  autoConnect: true, // optional, auto-connect to existing session (default: true when embedded providers are used)
 });
 ```
 
 ### Embedded Wallet Type
 
-#### User Wallet (`'user-wallet'`)
+When using embedded providers (google, apple, phantom, etc.), you can specify the wallet type:
+
+#### User Wallet (`'user-wallet'`) - Default
 
 - **Uses Phantom authentication** - user logs in with existing Phantom account
 - **Potentially funded** - brings in user's existing wallet balance
@@ -223,9 +235,10 @@ const sdk = new BrowserSDK({
 
 ```typescript
 const sdk = new BrowserSDK({
-  providerType: "embedded",
+  providers: ["google", "apple", "phantom"],
   appId: "your-app-id",
   addressTypes: [AddressType.solana, AddressType.ethereum],
+  embeddedWalletType: "user-wallet", // default, can be omitted
 });
 ```
 
@@ -236,17 +249,16 @@ const sdk = new BrowserSDK({
 | `AddressType.solana`   | Solana Mainnet, Devnet, Testnet       |
 | `AddressType.ethereum` | Ethereum, Polygon, Arbitrum, and more |
 
-
 ### Auto-Connect Feature
 
 The SDK can automatically reconnect to existing sessions when instantiated, providing a seamless user experience.
 
 ```typescript
 const sdk = new BrowserSDK({
-  providerType: "embedded",
+  providers: ["google", "apple", "phantom"],
   appId: "your-app-id",
   addressTypes: [AddressType.solana],
-  autoConnect: true, // Default: true for embedded, false for injected
+  autoConnect: true, // Default: true when embedded providers are used, false for injected-only
 });
 
 // SDK will automatically check for existing valid session and connect in background
@@ -258,7 +270,7 @@ if (sdk.isConnected()) {
   const addresses = await sdk.getAddresses();
 } else {
   // First time or session expired, need to connect manually
-  await sdk.connect();
+  await sdk.connect({ provider: "google" });
 }
 ```
 
@@ -266,14 +278,14 @@ if (sdk.isConnected()) {
 
 ```typescript
 const sdk = new BrowserSDK({
-  providerType: "embedded",
+  providers: ["google", "apple", "phantom"],
   appId: "your-app-id",
   addressTypes: [AddressType.solana],
   autoConnect: false, // Disable auto-connect
 });
 
 // Now you must manually call connect() every time
-await sdk.connect();
+await sdk.connect({ provider: "google" });
 ```
 
 ## API Reference
@@ -288,21 +300,26 @@ new BrowserSDK(config: BrowserSDKConfig)
 
 ```typescript
 interface BrowserSDKConfig {
-  providerType: "injected" | "embedded";
+  // List of allowed authentication providers (REQUIRED)
+  providers: AuthProviderType[]; // e.g., ["google", "apple", "phantom", "injected"]
+
   addressTypes?: [AddressType, ...AddressType[]]; // Networks to enable (e.g., [AddressType.solana])
 
-  // Required for embedded provider only
-  appId?: string; // Your app ID from phantom.com/portal (required for embedded provider)
-  
+  // Required when using embedded providers (google, apple, phantom, x, tiktok)
+  appId?: string; // Your app ID from phantom.com/portal
+
   // Optional configuration
   apiBaseUrl?: string; // Phantom API base URL (optional, has default)
   authOptions?: {
     authUrl?: string; // Custom auth URL (optional, defaults to "https://connect.phantom.app/login")
     redirectUrl?: string; // Custom redirect URL after authentication (optional)
   };
-  embeddedWalletType?: "user-wallet"; // Wallet type (optional, defaults to "user-wallet", currently the only supported type)
-  autoConnect?: boolean; // Enable auto-connect to existing sessions (optional, defaults to true for embedded)
+  embeddedWalletType?: "user-wallet"; // Wallet type (optional, defaults to "user-wallet")
+  autoConnect?: boolean; // Auto-connect to existing session (default: true when embedded providers used)
 }
+
+// Valid provider types
+type AuthProviderType = "google" | "apple" | "phantom" | "x" | "tiktok" | "injected";
 ```
 
 ### Extension Detection
@@ -347,6 +364,7 @@ if (isAvailable) {
 Connect to wallet and get addresses for configured AddressTypes.
 
 **Parameters:**
+
 - `options: AuthOptions` (required) - Authentication options
   - `provider: "google" | "apple" | "jwt" | "phantom" | "injected"` (required) - Authentication provider to use
   - `jwtToken?: string` (optional) - JWT token (required when `provider` is "jwt")
@@ -362,7 +380,7 @@ const result = await sdk.connect({ provider: "phantom" });
 // Connect with Google authentication
 const result = await sdk.connect({ provider: "google" });
 
-// Returns: { addresses: WalletAddress[], status: "pending" | "completed", providerType: "embedded" | "injected" }
+// Returns: { addresses: WalletAddress[], status: "pending" | "completed", provider: "google" | "apple" | "injected" ...  }
 // addresses only includes types from addressTypes config
 ```
 
@@ -554,18 +572,18 @@ await sdk.ethereum.switchChain(42161); // Arbitrum One
 
 **Supported EVM Networks:**
 
-| Network | Chain ID | Usage |
-|---------|----------|-------|
-| Ethereum Mainnet | `1` | `switchChain(1)` |
+| Network          | Chain ID   | Usage                   |
+| ---------------- | ---------- | ----------------------- |
+| Ethereum Mainnet | `1`        | `switchChain(1)`        |
 | Ethereum Sepolia | `11155111` | `switchChain(11155111)` |
-| Polygon Mainnet | `137` | `switchChain(137)` |
-| Polygon Amoy | `80002` | `switchChain(80002)` |
-| Base Mainnet | `8453` | `switchChain(8453)` |
-| Base Sepolia | `84532` | `switchChain(84532)` |
-| Arbitrum One | `42161` | `switchChain(42161)` |
-| Arbitrum Sepolia | `421614` | `switchChain(421614)` |
-| Monad Mainnet | `143` | `switchChain(143)` |
-| Monad Testnet | `10143` | `switchChain(10143)` |
+| Polygon Mainnet  | `137`      | `switchChain(137)`      |
+| Polygon Amoy     | `80002`    | `switchChain(80002)`    |
+| Base Mainnet     | `8453`     | `switchChain(8453)`     |
+| Base Sepolia     | `84532`    | `switchChain(84532)`    |
+| Arbitrum One     | `42161`    | `switchChain(42161)`    |
+| Arbitrum Sepolia | `421614`   | `switchChain(421614)`   |
+| Monad Mainnet    | `143`      | `switchChain(143)`      |
+| Monad Testnet    | `10143`    | `switchChain(10143)`    |
 
 #### getChainId()
 
@@ -609,66 +627,66 @@ The SDK provides typed event handlers that allow you to listen for connection st
 #### Available Events
 
 ```typescript
-import { BrowserSDK } from '@phantom/browser-sdk';
+import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 import type {
   ConnectEventData,
   ConnectStartEventData,
   ConnectErrorEventData,
-  DisconnectEventData
-} from '@phantom/browser-sdk';
+  DisconnectEventData,
+} from "@phantom/browser-sdk";
 
 const sdk = new BrowserSDK({
-  providerType: 'embedded',
-  appId: 'your-app-id',
+  providers: ["google", "apple", "phantom"],
+  appId: "your-app-id",
   addressTypes: [AddressType.solana],
 });
 
 // 1. connect_start - Fired when connection starts
-sdk.on('connect_start', (data: ConnectStartEventData) => {
-  console.log('Connection starting:', data.source); // "auto-connect" | "manual-connect"
-  console.log('Auth options:', data.authOptions?.provider); // "google" | "apple" | etc.
+sdk.on("connect_start", (data: ConnectStartEventData) => {
+  console.log("Connection starting:", data.source); // "auto-connect" | "manual-connect"
+  console.log("Auth options:", data.authOptions?.provider); // "google" | "apple" | etc.
 });
 
 // 2. connect - Fired when connection succeeds (includes full ConnectResult)
-sdk.on('connect', (data: ConnectEventData) => {
-  console.log('Connected successfully!');
-  console.log('Provider type:', data.providerType); // "embedded" | "injected"
-  console.log('Wallet ID:', data.walletId); // only for embedded providers
-  console.log('Addresses:', data.addresses); // WalletAddress[]
-  console.log('Status:', data.status); // "pending" | "completed"
-  console.log('Source:', data.source); // "auto-connect" | "manual-connect" | "manual-existing" | "existing-session" | "manual"
+sdk.on("connect", (data: ConnectEventData) => {
+  console.log("Connected successfully!");
+  console.log("Provider type:", data.provider); // "google" | "apple" | "injected" ...
+  console.log("Wallet ID:", data.walletId); // only for embedded providers
+  console.log("Addresses:", data.addresses); // WalletAddress[]
+  console.log("Status:", data.status); // "pending" | "completed"
+  console.log("Source:", data.source); // "auto-connect" | "manual-connect" | "manual-existing" | "existing-session" | "manual"
 });
 
 // 3. connect_error - Fired when connection fails
-sdk.on('connect_error', (data: ConnectErrorEventData) => {
-  console.error('Connection failed:', data.error);
-  console.log('Source:', data.source); // "auto-connect" | "manual-connect"
+sdk.on("connect_error", (data: ConnectErrorEventData) => {
+  console.error("Connection failed:", data.error);
+  console.log("Source:", data.source); // "auto-connect" | "manual-connect"
 });
 
 // 4. disconnect - Fired when disconnected
-sdk.on('disconnect', (data: DisconnectEventData) => {
-  console.log('Disconnected from wallet');
-  console.log('Source:', data.source); // "manual"
+sdk.on("disconnect", (data: DisconnectEventData) => {
+  console.log("Disconnected from wallet");
+  console.log("Source:", data.source); // "manual"
 });
 
 // 5. error - General error handler
-sdk.on('error', (error: unknown) => {
-  console.error('SDK error:', error);
+sdk.on("error", (error: unknown) => {
+  console.error("SDK error:", error);
 });
 
 // Don't forget to remove listeners when done
-sdk.off('connect', handleConnect);
+sdk.off("connect", handleConnect);
 ```
 
 #### Event Types
 
-| Event | Payload Type | When Fired | Key Data |
-|-------|-------------|------------|----------|
-| `connect_start` | `ConnectStartEventData` | Connection initiated | `source`, `authOptions` |
-| `connect` | `ConnectEventData` | Connection successful | `providerType`, `addresses`, `status`, `source`, `user`|
-| `connect_error` | `ConnectErrorEventData` | Connection failed | `error`, `source` |
-| `disconnect` | `DisconnectEventData` | Disconnected | `source` |
-| `error` | `unknown` | General SDK errors | Error details |
+| Event           | Payload Type            | When Fired            | Key Data                                            |
+| --------------- | ----------------------- | --------------------- | --------------------------------------------------- |
+| `connect_start` | `ConnectStartEventData` | Connection initiated  | `source`, `authOptions`                             |
+| `connect`       | `ConnectEventData`      | Connection successful | `provider`, `addresses`, `status`, `source`, `user` |
+| `connect_error` | `ConnectErrorEventData` | Connection failed     | `error`, `source`                                   |
+| `disconnect`    | `DisconnectEventData`   | Disconnected          | `source`                                            |
+| `error`         | `unknown`               | General SDK errors    | Error details                                       |
 
 #### Using Events with autoConnect()
 
@@ -676,24 +694,24 @@ Event handlers are especially useful with `autoConnect()` since it doesn't retur
 
 ```typescript
 const sdk = new BrowserSDK({
-  providerType: 'embedded',
-  appId: 'your-app-id',
+  providers: ["google", "apple", "phantom"],
+  appId: "your-app-id",
   addressTypes: [AddressType.solana],
   autoConnect: true,
 });
 
 // Set up event listeners BEFORE autoConnect
-sdk.on('connect', (data: ConnectEventData) => {
-  console.log('Auto-connected successfully!');
-  console.log('Provider type:', data.providerType);
-  console.log('Addresses:', data.addresses);
+sdk.on("connect", (data: ConnectEventData) => {
+  console.log("Auto-connected successfully!");
+  console.log("Provider type:", data.provider);
+  console.log("Addresses:", data.addresses);
 
   // Update your UI state here
   updateUIWithAddresses(data.addresses);
 });
 
-sdk.on('connect_error', (data: ConnectErrorEventData) => {
-  console.log('Auto-connect failed:', data.error);
+sdk.on("connect_error", (data: ConnectErrorEventData) => {
+  console.log("Auto-connect failed:", data.error);
   // Show connect button to user
   showConnectButton();
 });
@@ -838,11 +856,12 @@ interface DebugMessage {
 ### Example: Debug Console Implementation
 
 ```typescript
-import { BrowserSDK, DebugLevel } from "@phantom/browser-sdk";
+import { BrowserSDK, DebugLevel, AddressType } from "@phantom/browser-sdk";
 
 const sdk = new BrowserSDK({
-  providerType: "embedded",
+  providers: ["google", "apple", "phantom"],
   appId: "your-app-id",
+  addressTypes: [AddressType.solana],
 });
 
 // Store debug messages
@@ -907,7 +926,7 @@ import {
 import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 
 const sdk = new BrowserSDK({
-  providerType: "injected",
+  providers: ["injected"],
   addressTypes: [AddressType.solana],
 });
 
@@ -960,7 +979,7 @@ import {
 import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 
 const sdk = new BrowserSDK({
-  providerType: "injected",
+  providers: ["injected"],
   addressTypes: [AddressType.solana],
 });
 
@@ -990,7 +1009,7 @@ console.log("Transaction signature:", result.hash);
 import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 
 const sdk = new BrowserSDK({
-  providerType: "injected",
+  providers: ["injected"],
   addressTypes: [AddressType.ethereum],
 });
 
@@ -1024,9 +1043,9 @@ import { parseEther, parseGwei, encodeFunctionData } from "viem";
 import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 
 const sdk = new BrowserSDK({
-  providerType: "embedded",
+  providers: ["google", "apple", "phantom"],
+  appId: "your-app-id",
   addressTypes: [AddressType.ethereum],
-  // ... config
 });
 
 // Simple transfer with viem utilities

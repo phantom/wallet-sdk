@@ -11,11 +11,10 @@ import {
 import { randomUUID } from "@phantom/utils";
 import { Buffer } from "buffer";
 import bs58 from "bs58";
-import { AUTHENTICATOR_EXPIRATION_TIME_MS } from "./constants";
+import { AUTHENTICATOR_EXPIRATION_TIME_MS, EMBEDDED_PROVIDER_AUTH_TYPES } from "./constants";
 
 import type { IEthereumChain, ISolanaChain } from "@phantom/chain-interfaces";
 import type { StamperWithKeyManagement } from "@phantom/sdk-types";
-import { JWTAuth } from "./auth/jwt-auth";
 import { EmbeddedEthereumChain, EmbeddedSolanaChain } from "./chains";
 import type {
   AuthProvider,
@@ -92,7 +91,6 @@ export class EmbeddedProvider {
   private client: PhantomClient | null = null;
   private walletId: string | null = null;
   private addresses: WalletAddress[] = [];
-  private jwtAuth: JWTAuth;
 
   // Built-in chain instances
   public readonly solana: ISolanaChain;
@@ -115,7 +113,6 @@ export class EmbeddedProvider {
     this.phantomAppProvider = platform.phantomAppProvider;
     this.urlParamsAccessor = platform.urlParamsAccessor;
     this.stamper = platform.stamper;
-    this.jwtAuth = new JWTAuth();
 
     // Initialize chain instances
     this.solana = new EmbeddedSolanaChain(this);
@@ -289,14 +286,18 @@ export class EmbeddedProvider {
    * Returns ConnectResult if connection succeeds, null if should continue with new auth flow.
    */
   private async tryExistingConnection(isAutoConnect: boolean): Promise<ConnectResult | null> {
-    // Get and validate existing session
     this.logger.log("EMBEDDED_PROVIDER", "Getting existing session");
     let session = await this.storage.getSession();
     session = await this.validateAndCleanSession(session);
 
+    if (!session) {
+      this.logger.log("EMBEDDED_PROVIDER", "No existing session found");
+      return null;
+    }
+
     // First priority: If we have a completed session, use it
     // This prevents unnecessary redirect resume when the session is already valid
-    if (session && session.status === "completed") {
+    if (session.status === "completed") {
       this.logger.info("EMBEDDED_PROVIDER", "Using existing completed session", {
         sessionId: session.sessionId,
         walletId: session.walletId,
@@ -304,7 +305,6 @@ export class EmbeddedProvider {
 
       await this.initializeClientFromSession(session);
 
-      // Update session timestamp
       session.lastUsed = Date.now();
       await this.storage.saveSession(session);
 
@@ -320,11 +320,10 @@ export class EmbeddedProvider {
         walletId: this.walletId!,
         addresses: this.addresses,
         status: "completed",
-        providerType: "embedded",
         authUserId: session.authUserId,
+        authProvider: session.authProvider,
       };
 
-      // Emit connect event for existing session success
       this.emit("connect", {
         ...result,
         source: "existing-session",
@@ -337,7 +336,7 @@ export class EmbeddedProvider {
     // Only attempt redirect resume if there's no valid completed session
     this.logger.log("EMBEDDED_PROVIDER", "No completed session found, checking for redirect resume");
     if (this.authProvider.resumeAuthFromRedirect) {
-      const authResult = this.authProvider.resumeAuthFromRedirect();
+      const authResult = this.authProvider.resumeAuthFromRedirect(session.authProvider);
       if (authResult) {
         this.logger.info("EMBEDDED_PROVIDER", "Resuming from redirect", {
           walletId: authResult.walletId,
@@ -361,7 +360,7 @@ export class EmbeddedProvider {
 
             // Clear any potentially stale session data and continue to fresh auth flow
             await this.storage.clearSession();
-            return null; // Let connect() method start a fresh auth flow
+            return null;
           }
 
           // Re-throw error if no authOptions (should fail) or if different error type
@@ -370,7 +369,6 @@ export class EmbeddedProvider {
       }
     }
 
-    // No existing connection available
     return null;
   }
 
@@ -379,12 +377,10 @@ export class EmbeddedProvider {
    * This ensures only supported auth providers are used and required tokens are present.
    */
   private validateAuthOptions(authOptions: AuthOptions): void {
-    if (!["google", "apple", "jwt", "phantom"].includes(authOptions.provider)) {
-      throw new Error(`Invalid auth provider: ${authOptions.provider}. Must be "google", "apple", "jwt", or "phantom"`);
-    }
-
-    if (authOptions.provider === "jwt" && !authOptions.jwtToken) {
-      throw new Error("JWT token is required when using JWT authentication");
+    if (!EMBEDDED_PROVIDER_AUTH_TYPES.includes(authOptions.provider)) {
+      throw new Error(
+        `Invalid auth provider: ${authOptions.provider}. Must be "google", "apple", "phantom", "tiktok", or "x"`,
+      );
     }
   }
 
@@ -398,7 +394,6 @@ export class EmbeddedProvider {
       return false;
     }
 
-    // Check required fields
     if (!session.walletId || !session.organizationId || !session.stamperInfo) {
       this.logger.log("EMBEDDED_PROVIDER", "Session missing required fields", {
         hasWalletId: !!session.walletId,
@@ -408,13 +403,11 @@ export class EmbeddedProvider {
       return false;
     }
 
-    // Check session status
     if (session.status !== "completed") {
       this.logger.log("EMBEDDED_PROVIDER", "Session not completed", { status: session.status });
       return false;
     }
 
-    // Sessions without authenticator timing are invalid
     if (!session.authenticatorExpiresAt) {
       this.logger.log("EMBEDDED_PROVIDER", "Session invalid - missing authenticator timing", {
         sessionId: session.sessionId,
@@ -422,7 +415,6 @@ export class EmbeddedProvider {
       return false;
     }
 
-    // Check authenticator expiration - if expired, session is invalid
     if (Date.now() >= session.authenticatorExpiresAt) {
       this.logger.log("EMBEDDED_PROVIDER", "Authenticator expired, session invalid", {
         authenticatorExpiresAt: new Date(session.authenticatorExpiresAt).toISOString(),
@@ -448,14 +440,11 @@ export class EmbeddedProvider {
     try {
       this.logger.log("EMBEDDED_PROVIDER", "Starting auto-connect attempt");
 
-      // Emit connect_start event for auto-connect
       this.emit("connect_start", { source: "auto-connect" });
 
-      // Try to use existing connection (redirect resume or completed session)
       const result = await this.tryExistingConnection(true);
 
       if (result) {
-        // Successfully connected using existing session or redirect
         this.logger.info("EMBEDDED_PROVIDER", "Auto-connect successful", {
           walletId: result.walletId,
           addressCount: result.addresses.length,
@@ -468,10 +457,8 @@ export class EmbeddedProvider {
         return;
       }
 
-      // No existing connection available - auto-connect should fail silently
       this.logger.log("EMBEDDED_PROVIDER", "Auto-connect failed: no valid session found");
 
-      // Emit connect_error to reset isConnecting state
       this.emit("connect_error", {
         error: "No valid session found",
         source: "auto-connect",
@@ -481,7 +468,6 @@ export class EmbeddedProvider {
         error: error instanceof Error ? error.message : String(error),
       });
 
-      // Emit connect_error to reset isConnecting state
       this.emit("connect_error", {
         error: error instanceof Error ? error.message : "Auto-connect failed",
         source: "auto-connect",
@@ -495,7 +481,6 @@ export class EmbeddedProvider {
    */
 
   private async initializeStamper(): Promise<StamperResponse> {
-    // Initialize stamper first
     this.logger.log("EMBEDDED_PROVIDER", "Initializing stamper");
     await this.stamper.init();
 
@@ -570,7 +555,6 @@ export class EmbeddedProvider {
       this.logger.info("EMBEDDED_PROVIDER", "Starting embedded provider connect", {
         authOptions: {
           provider: authOptions.provider,
-          hasJwtToken: !!authOptions.jwtToken,
         },
       });
 
@@ -616,13 +600,13 @@ export class EmbeddedProvider {
         return {
           addresses: [],
           status: "pending",
-          providerType: "embedded",
+          authProvider: authOptions.provider,
         } as ConnectResult;
       }
 
       // Update session last used timestamp (only for non-redirect flows)
       // For redirect flows, timestamp is updated before redirect to prevent race condition
-      if (authOptions.provider === "jwt" || this.config.embeddedWalletType === "app-wallet") {
+      if (this.config.embeddedWalletType === "app-wallet") {
         session.lastUsed = Date.now();
         await this.storage.saveSession(session);
       }
@@ -637,8 +621,8 @@ export class EmbeddedProvider {
         walletId: this.walletId!,
         addresses: this.addresses,
         status: "completed",
-        providerType: "embedded",
         authUserId: session?.authUserId,
+        authProvider: session?.authProvider,
       };
 
       // Emit connect event for manual connect success
@@ -654,10 +638,10 @@ export class EmbeddedProvider {
         error:
           error instanceof Error
             ? {
-              name: error.name,
-              message: error.message,
-              stack: error.stack,
-            }
+                name: error.name,
+                message: error.message,
+                stack: error.stack,
+              }
             : error,
       });
 
@@ -725,7 +709,7 @@ export class EmbeddedProvider {
       });
     }
   }
-  
+
   async signMessage(params: SignMessageParams): Promise<ParsedSignatureResult> {
     if (!this.client || !this.walletId) {
       throw new Error("Not connected");
@@ -985,10 +969,7 @@ export class EmbeddedProvider {
         authProvider: authOptions.provider,
       });
 
-      // Route to appropriate authentication flow based on authOptions
-      if (authOptions.provider === "jwt") {
-        return await this.handleJWTAuth(publicKey, stamperInfo, authOptions, expiresInMs);
-      } else if (authOptions.provider === "phantom") {
+      if (authOptions.provider === "phantom") {
         return await this.handlePhantomAuth(publicKey, stamperInfo, expiresInMs);
       } else {
         // This will redirect in browser, so we don't return a session
@@ -1024,13 +1005,13 @@ export class EmbeddedProvider {
 
       // Save session with app-wallet info
       const now = Date.now();
-      const session = {
+      const session: Session = {
         sessionId: generateSessionId(),
         walletId: walletId,
         organizationId: organizationId,
         appId: this.config.appId,
         stamperInfo,
-        authProvider: "app-wallet",
+        authProvider: "device", // For now app wallets have no auth provider.
         accountDerivationIndex: 0, // App wallets default to index 0
         status: "completed" as const,
         createdAt: now,
@@ -1048,65 +1029,6 @@ export class EmbeddedProvider {
   }
 
   /*
-   * We use this method to handle JWT-based authentication for user-wallets.
-   * It authenticates using the provided JWT token and creates a completed session.
-   */
-  private async handleJWTAuth(
-    publicKey: string,
-    stamperInfo: StamperInfo,
-    authOptions: AuthOptions,
-    localExpiresInMs: number,
-  ): Promise<Session> {
-    this.logger.info("EMBEDDED_PROVIDER", "Using JWT authentication flow");
-
-    // Use JWT authentication flow
-    if (!authOptions.jwtToken) {
-      this.logger.error("EMBEDDED_PROVIDER", "JWT token missing for JWT authentication");
-      throw new Error("JWT token is required for JWT authentication");
-    }
-
-    this.logger.log("EMBEDDED_PROVIDER", "Starting JWT authentication");
-    const authResult = await this.jwtAuth.authenticate({
-      publicKey,
-      appId: this.config.appId,
-      jwtToken: authOptions.jwtToken,
-    });
-    const walletId = authResult.walletId;
-    const organizationId = authResult.organizationId;
-
-    // Use expiresInMs from auth response if provided (and > 0), otherwise use local default
-    const expiresInMs = authResult.expiresInMs > 0 ? authResult.expiresInMs : localExpiresInMs;
-
-    this.logger.info("EMBEDDED_PROVIDER", "JWT authentication completed", {
-      walletId,
-      organizationId,
-      expiresInMs: expiresInMs,
-      source: authResult.expiresInMs ? "server" : "local",
-    });
-
-    // Save session with auth info
-    const now = Date.now();
-    const session = {
-      sessionId: generateSessionId(),
-      walletId: walletId,
-      organizationId: organizationId,
-      appId: this.config.appId,
-      stamperInfo,
-      authProvider: authResult.provider,
-      accountDerivationIndex: authResult.accountDerivationIndex,
-      status: "completed" as const,
-      createdAt: now,
-      lastUsed: now,
-      authenticatorCreatedAt: now,
-      authenticatorExpiresAt: Date.now() + expiresInMs,
-      lastRenewalAttempt: undefined,
-    };
-    this.logger.log("EMBEDDED_PROVIDER", "Saving JWT session");
-    await this.storage.saveSession(session);
-    return session;
-  }
-
-  /*
    * We use this method to handle Phantom app-based authentication for user-wallets.
    * This method uses the PhantomAppProvider to authenticate via the browser extension or mobile app.
    *
@@ -1118,11 +1040,7 @@ export class EmbeddedProvider {
    * 4. Start a polling mechanism to check for auth completion
    * 5. Update the session when the mobile app completes the auth
    */
-  private async handlePhantomAuth(
-    publicKey: string,
-    stamperInfo: StamperInfo,
-    expiresInMs: number,
-  ): Promise<Session> {
+  private async handlePhantomAuth(publicKey: string, stamperInfo: StamperInfo, expiresInMs: number): Promise<Session> {
     this.logger.info("EMBEDDED_PROVIDER", "Starting Phantom authentication flow");
 
     // Check if Phantom app is available (extension or mobile)
@@ -1240,7 +1158,7 @@ export class EmbeddedProvider {
     const authResult = await this.authProvider.authenticate({
       publicKey: publicKey,
       appId: this.config.appId,
-      provider: authOptions?.provider as "google" | "apple" | undefined,
+      provider: authOptions?.provider,
       redirectUrl: this.config.authOptions.redirectUrl,
       authUrl: this.config.authOptions.authUrl,
       sessionId: sessionId,
@@ -1335,8 +1253,8 @@ export class EmbeddedProvider {
       walletId: this.walletId!,
       addresses: this.addresses,
       status: "completed",
-      providerType: "embedded",
       authUserId: session.authUserId,
+      authProvider: session.authProvider,
     };
   }
 

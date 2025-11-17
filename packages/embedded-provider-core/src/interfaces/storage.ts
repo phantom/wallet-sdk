@@ -1,3 +1,5 @@
+import type { EmbeddedProviderAuthType } from "../types";
+
 export interface Keypair {
   publicKey: string;
   secretKey: string;
@@ -17,7 +19,7 @@ export interface Session {
   appId: string;
   stamperInfo: StamperInfo;
   keypair?: Keypair; // Keep for backward compatibility during migration
-  authProvider?: string;
+  authProvider: EmbeddedProviderAuthType; // Auth provider used for authentication
   status: "pending" | "completed" | "failed";
   createdAt: number;
   lastUsed: number;

@@ -1,5 +1,30 @@
 # @phantom/react-sdk
 
+## 1.0.0-beta.22
+
+### Patch Changes
+
+- f54d77f: New version
+- b6aff60: Release new version
+- c424eff: Update auth provider definitions and remove jwt
+- Updated dependencies [f54d77f]
+- Updated dependencies [b6aff60]
+- Updated dependencies [c424eff]
+  - @phantom/browser-sdk@1.0.0-beta.22
+  - @phantom/chain-interfaces@1.0.0-beta.10
+  - @phantom/constants@1.0.0-beta.10
+  - @phantom/wallet-sdk-ui@1.0.0-beta.1
+
+## 1.0.0-beta.21
+
+### Patch Changes
+
+- 68492cf: Fix dependency to correct number and add policy
+- Updated dependencies [68492cf]
+  - @phantom/browser-sdk@1.0.0-beta.21
+  - @phantom/constants@1.0.0-beta.9
+  - @phantom/chain-interfaces@1.0.0-beta.9
+
 ## 1.0.0-beta.20
 
 ### Patch Changes
