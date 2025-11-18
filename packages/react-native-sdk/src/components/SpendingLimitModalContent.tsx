@@ -22,7 +22,7 @@ export function SpendingLimitModalContent({ onClose }: SpendingLimitModalContent
         Would you like to increase your limit?
       </Text>
       <Text variant="caption" color={theme.secondary}>
-        You've reached your spending limit with this app
+        You’ve reached your spending limit with this app
       </Text>
       <Button fullWidth onClick={onClose}>
         <Text variant="captionBold">Manage spending limit</Text>

@@ -1,7 +1,7 @@
 import React from "react";
+import { Text, View } from "react-native";
 import { render } from "@testing-library/react-native";
 import { SpendingLimitModalContent } from "./SpendingLimitModalContent";
-import { ThemeProvider } from "@phantom/wallet-sdk-ui";
 
 const mockTheme = {
   background: "#ffffff",
@@ -15,16 +15,28 @@ const mockTheme = {
   brand: "#0000ff",
 };
 
+jest.mock("@phantom/wallet-sdk-ui", () => ({
+  // Map UI primitives to React Native equivalents for this test
+  Text: ({ children, ...props }: any) => (
+    <Text {...props}>
+      {children}
+    </Text>
+  ),
+  Button: ({ children, onClick }: any) => (
+    <View onTouchEnd={onClick}>
+      {children}
+    </View>
+  ),
+  useTheme: () => mockTheme,
+}));
+
 describe("SpendingLimitModalContent (RN)", () => {
   it("should render spending limit message and button", () => {
     const onClose = jest.fn();
-    const { getByText } = render(
-      <ThemeProvider theme={mockTheme as any}>
-        <SpendingLimitModalContent onClose={onClose} />
-      </ThemeProvider>,
-    );
+    const { getByText } = render(<SpendingLimitModalContent onClose={onClose} />);
 
     expect(getByText("Would you like to increase your limit?")).toBeTruthy();
+    expect(getByText("You’ve reached your spending limit with this app")).toBeTruthy();
     expect(getByText("Manage spending limit")).toBeTruthy();
   });
 });

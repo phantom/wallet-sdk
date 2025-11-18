@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Text, Button, useTheme } from "@phantom/wallet-sdk-ui";
 
 export interface SpendingLimitModalContentProps {

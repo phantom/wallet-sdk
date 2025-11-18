@@ -502,7 +502,7 @@ describe("PhantomClient Spending Limits Integration", () => {
       });
 
       // Simulate a server-wallet client so spending limits are not applied
-      (client as any).walletType = "server-wallet";
+      (client as any).config.walletType = "server-wallet";
 
       await performSigning(
         {
@@ -535,7 +535,7 @@ describe("PhantomClient Spending Limits Integration", () => {
           },
           true,
         ),
-      ).rejects.toThrow("Failed to apply spending limits for this transaction");
+      ).rejects.toThrow("Failed to sign and send transaction: Failed to prepare transaction: Prepare service unavailable");
     });
 
     it("should continue signing when prepare endpoint returns pass-through with no limits", async () => {

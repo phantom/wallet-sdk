@@ -87,6 +87,8 @@ describe("ModalProvider", () => {
       user: null,
       theme: {} as any,
       allowedProviders: ["google", "apple"],
+      spendingLimitError: false,
+      clearSpendingLimitError: jest.fn(),
     });
     mockIsMobileDevice.mockReturnValue(false);
   });

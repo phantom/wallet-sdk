@@ -1,4 +1,3 @@
-import * as React from "react";
 import { render } from "@testing-library/react";
 import { SpendingLimitModalContent } from "./SpendingLimitModalContent";
 import { ThemeProvider } from "@phantom/wallet-sdk-ui";
