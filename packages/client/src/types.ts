@@ -138,7 +138,14 @@ export interface SpendingLimitConfig {
 }
 
 export interface PrepareResponse {
-  transaction: string; // base64url encoded with Lighthouse instructions
+  transaction: string;
   simulationResult?: any;
   memoryConfigUsed?: SpendingLimitConfig;
+}
+
+export interface PrepareErrorResponse {
+  error: string;
+  errorCode?: string;
+  requestId?: string;
+  message?: string;
 }

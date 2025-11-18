@@ -12,6 +12,8 @@ export interface PhantomContextValue {
   setWalletId: (walletId: string | null) => void;
   user: ConnectResult | null;
   allowedProviders: EmbeddedProviderAuthType[];
+  spendingLimitError: boolean;
+  clearSpendingLimitError: () => void;
 }
 
 export const PhantomContext = createContext<PhantomContextValue | undefined>(undefined);

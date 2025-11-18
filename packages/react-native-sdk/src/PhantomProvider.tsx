@@ -42,6 +42,7 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
   const [walletId, setWalletId] = useState<string | null>(null);
   const [user, setUser] = useState<ConnectResult | null>(null);
+  const [spendingLimitError, setSpendingLimitError] = useState(false);
 
   // Memoized config to avoid unnecessary SDK recreation
   const memoizedConfig: EmbeddedProviderConfig = useMemo(() => {
@@ -138,6 +139,12 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
       setAddresses([]);
       setWalletId(null);
       setUser(null);
+      setSpendingLimitError(false);
+    };
+
+    const handleSpendingLimitReached = () => {
+      // We don't surface backend error text in the UI yet; just trigger the modal.
+      setSpendingLimitError(true);
     };
 
     // Add event listeners to SDK
@@ -145,6 +152,7 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
     sdk.on("connect", handleConnect);
     sdk.on("connect_error", handleConnectError);
     sdk.on("disconnect", handleDisconnect);
+    sdk.on("spending_limit_reached", handleSpendingLimitReached);
 
     // Cleanup function to remove event listeners when SDK changes or component unmounts
     return () => {
@@ -152,6 +160,7 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
       sdk.off("connect", handleConnect);
       sdk.off("connect_error", handleConnectError);
       sdk.off("disconnect", handleDisconnect);
+      sdk.off("spending_limit_reached", handleSpendingLimitReached);
     };
   }, [sdk]);
 
@@ -174,8 +183,10 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
       setWalletId,
       user,
       allowedProviders: config.providers,
+      spendingLimitError,
+      clearSpendingLimitError: () => setSpendingLimitError(false),
     }),
-    [sdk, isConnected, isConnecting, connectError, addresses, walletId, setWalletId, user, config.providers],
+    [sdk, isConnected, isConnecting, connectError, addresses, walletId, setWalletId, user, config.providers, spendingLimitError],
   );
 
   const resolvedTheme = theme || darkTheme;

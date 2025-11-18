@@ -44,6 +44,7 @@ import { deriveSubmissionConfig } from "./caip2-mappings";
 import { DerivationPath, getNetworkConfig } from "./constants";
 import {
   type PrepareResponse,
+  type PrepareErrorResponse,
   type AuthenticatorConfig,
   type CreateAuthenticatorParams,
   type CreateWalletResult,
@@ -76,6 +77,20 @@ export interface SubmissionConfig {
 
 export interface SimulationConfig {
   account: string; // The address/account that is signing the transaction
+}
+
+export class SpendingLimitError extends Error {
+  code: string;
+  requestId?: string;
+  raw?: PrepareErrorResponse | unknown;
+
+  constructor(message: string, options: { code: string; requestId?: string; raw?: PrepareErrorResponse | unknown }) {
+    super(message);
+    this.name = "SpendingLimitError";
+    this.code = options.code;
+    this.requestId = options.requestId;
+    this.raw = options.raw;
+  }
 }
 
 export class PhantomClient {
@@ -220,7 +235,19 @@ export class PhantomClient {
       });
       return response.data;
     } catch (error: any) {
-      throw new Error(`Failed to prepare transaction: ${error.response?.data?.message || error.message}`);
+      const data = error?.response?.data as PrepareErrorResponse | undefined;
+
+      if (data?.errorCode === "SPENDING_LIMITS_REACHED") {
+        // Preserve backend error text but standardize the error shape
+        throw new SpendingLimitError(data.error || "Spending limit reached", {
+          code: data.errorCode,
+          requestId: data.requestId,
+          raw: data,
+        });
+      }
+
+      const message = data?.message || data?.error || error.message;
+      throw new Error(`Failed to prepare transaction: ${message}`);
     }
   }
 
@@ -278,23 +305,14 @@ export class PhantomClient {
           throw new Error("Account is required to simulate Solana transactions with spending limits");
         }
 
-        try {
-          // Call wallet service prepare endpoint
-          const prepareResponse = await this.prepare(
-            encodedTransaction,
-            this.config.organizationId,
-            submissionConfig, // Non-null assertion safe because we validated above
-            params.account, // Non-null assertion safe because we validated above
-          );
+        const prepareResponse = await this.prepare(
+          encodedTransaction,
+          this.config.organizationId,
+          submissionConfig,
+          params.account,
+        );
 
-          preparedTransaction = prepareResponse.transaction;
-        } catch (e: any) {
-          const errorMessage = e?.message || String(e);
-          throw new Error(
-            `Failed to apply spending limits for this transaction: ${errorMessage}. ` +
-              `Transaction cannot proceed without spending limit enforcement.`,
-          );
-        }
+        preparedTransaction = prepareResponse.transaction;
       }
 
       // Phase 2: Sign the (possibly augmented) transaction
@@ -341,6 +359,10 @@ export class PhantomClient {
     } catch (error: any) {
       const actionType = includeSubmissionConfig ? "sign and send" : "sign";
       console.error(`Failed to ${actionType} transaction:`, error.response?.data || error.message);
+      // Preserve spending limit errors so callers can distinguish them
+      if (error instanceof SpendingLimitError) {
+        throw error;
+      }
       throw new Error(`Failed to ${actionType} transaction: ${error.response?.data?.message || error.message}`);
     }
   }

@@ -40,7 +40,13 @@ import type {
 import { retryWithBackoff } from "./utils/retry";
 import { generateSessionId } from "./utils/session";
 
-export type EmbeddedProviderEvent = "connect" | "connect_start" | "connect_error" | "disconnect" | "error";
+export type EmbeddedProviderEvent =
+  | "connect"
+  | "connect_start"
+  | "connect_error"
+  | "disconnect"
+  | "error"
+  | "spending_limit_reached";
 
 // Event payload types for type-safe event handling
 export interface ConnectEventData extends ConnectResult {
@@ -68,6 +74,7 @@ export interface EmbeddedProviderEventMap {
   connect_error: ConnectErrorEventData;
   disconnect: DisconnectEventData;
   error: any;
+  spending_limit_reached: { error: any };
 }
 
 export type EventCallback<T = any> = (data: T) => void;
@@ -919,13 +926,22 @@ export class EmbeddedProvider {
 
     // Get raw response from client
     // PhantomClient will handle EVM transaction formatting internally
-    const rawResponse = await this.client.signAndSendTransaction({
-      walletId: this.walletId,
-      transaction: transactionPayload,
-      networkId: params.networkId,
-      derivationIndex: derivationIndex,
-      account,
-    });
+    let rawResponse;
+    try {
+      rawResponse = await this.client.signAndSendTransaction({
+        walletId: this.walletId,
+        transaction: transactionPayload,
+        networkId: params.networkId,
+        derivationIndex: derivationIndex,
+        account,
+      });
+    } catch (error: any) {
+      // Normalize spending limit errors into a dedicated event while preserving the rejection
+      if (error && (error.code === "SPENDING_LIMITS_REACHED" || error.name === "SpendingLimitError")) {
+        this.emit("spending_limit_reached", { error });
+      }
+      throw error;
+    }
 
     this.logger.info("EMBEDDED_PROVIDER", "Transaction signed and sent successfully", {
       walletId: this.walletId,

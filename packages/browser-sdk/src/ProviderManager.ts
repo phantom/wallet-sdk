@@ -395,6 +395,7 @@ export class ProviderManager implements EventEmitter {
       "connect_error",
       "disconnect",
       "error",
+      "spending_limit_reached",
     ];
 
     for (const event of eventsToForward) {

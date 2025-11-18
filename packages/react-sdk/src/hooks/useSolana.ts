@@ -23,7 +23,6 @@ export function useSolana(): {
   return {
     // Chain instance with connection enforcement for signing methods
     solana: sdk.solana,
-    // State
     isAvailable: !!isConnected,
   };
 }
