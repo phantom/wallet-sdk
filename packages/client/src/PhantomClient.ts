@@ -43,6 +43,7 @@ import { Buffer } from "buffer";
 import { deriveSubmissionConfig } from "./caip2-mappings";
 import { DerivationPath, getNetworkConfig } from "./constants";
 import {
+  type PrepareResponse,
   type AuthenticatorConfig,
   type CreateAuthenticatorParams,
   type CreateWalletResult,
@@ -60,7 +61,8 @@ import {
 } from "./types";
 
 import type { Stamper } from "@phantom/sdk-types";
-import { getSecureTimestamp, randomUUID, isEthereumChain } from "@phantom/utils";
+import { getSecureTimestamp, randomUUID, isEthereumChain, isSolanaChain } from "@phantom/utils";
+
 type AddUserToOrganizationParams = Omit<AddUserToOrganizationRequest, "user"> & {
   replaceExpirable?: boolean;
   user: PartialKmsUser & { traits: { appId: string }; expiresInMs?: number };
@@ -83,7 +85,10 @@ export class PhantomClient {
   public stamper?: Stamper;
 
   constructor(config: PhantomClientConfig, stamper?: Stamper) {
-    this.config = config;
+    this.config = {
+      ...config,
+      walletType: config.walletType || "user-wallet",
+    };
 
     // Create axios instance
     this.axiosInstance = axios.create();
@@ -196,6 +201,74 @@ export class PhantomClient {
     }
   }
 
+  private async prepare(
+    transaction: string,
+    organizationId: string,
+    submissionConfig: SubmissionConfig,
+    account: string,
+  ): Promise<PrepareResponse> {
+    try {
+      const request = {
+        transaction,
+        organizationId,
+        submissionConfig,
+        simulationConfig: { account },
+      };
+      const response = await this.axiosInstance.post(`${this.config.apiBaseUrl}/prepare`, request, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      throw new Error(`Failed to prepare transaction: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  private async getTransactionForSigning(params: {
+    encodedTransaction: string;
+    networkId: SignTransactionParams["networkId"];
+    submissionConfig: SubmissionConfig;
+    account?: string;
+  }): Promise<string | { kind: "RLP_ENCODED"; bytes: string }> {
+    const { encodedTransaction, networkId, submissionConfig, account } = params;
+
+    const isEvmTransaction = isEthereumChain(networkId);
+    const isSolanaTransaction = isSolanaChain(networkId);
+
+    // For EVM transactions, use the object format with kind and bytes
+    if (isEvmTransaction) {
+      return { kind: "RLP_ENCODED", bytes: encodedTransaction };
+    }
+
+    // TWO-PHASE SPENDING LIMITS FLOW (Solana user-wallet only)
+    if (isSolanaTransaction && this.config.walletType === "user-wallet") {
+      if (!account) {
+        throw new Error("Account is required to simulate Solana transactions with spending limits");
+      }
+
+      try {
+        const prepareResponse = await this.prepare(
+          encodedTransaction,
+          this.config.organizationId as string,
+          submissionConfig,
+          account,
+        );
+
+        return prepareResponse.transaction;
+      } catch (e: unknown) {
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        throw new Error(
+          `Failed to apply spending limits for this transaction: ${errorMessage}. ` +
+            `Transaction cannot proceed without spending limit enforcement.`,
+        );
+      }
+    }
+
+    // Non-EVM chains (including Solana server-wallet): send the original transaction as-is
+    return encodedTransaction;
+  }
+
   /**
    * Private method for shared signing logic
    */
@@ -204,7 +277,7 @@ export class PhantomClient {
     includeSubmissionConfig: boolean,
   ): Promise<{ signedTransaction: string; hash?: string }> {
     const walletId = params.walletId;
-    const transactionParam = params.transaction;
+    const encodedTransaction = params.transaction;
     const networkIdParam = params.networkId;
     const derivationIndex = params.derivationIndex ?? 0;
 
@@ -212,26 +285,14 @@ export class PhantomClient {
       if (!this.config.organizationId) {
         throw new Error("organizationId is required to sign a transaction");
       }
-      // Transaction is always a string (encoded via parsers)
-      const encodedTransaction = transactionParam;
 
-      // Check if this is an EVM transaction using the network ID
-      const isEvmTransaction = isEthereumChain(networkIdParam);
+      // SubmissionConfig is used to: 1) submit the transaction onchain, 2) derive spending limits
+      const submissionConfig = deriveSubmissionConfig(networkIdParam);
 
-      let submissionConfig: SubmissionConfig | null = null;
-
-      if (includeSubmissionConfig) {
-        submissionConfig = deriveSubmissionConfig(networkIdParam) || null;
-
-        // If we don't have a submission config, the transaction will only be signed, not submitted
-        if (!submissionConfig) {
-          console.error(
-            `No submission config available for network ${networkIdParam}. Transaction will be signed but not submitted.`,
-          );
-        }
+      if (!submissionConfig) {
+        throw new Error(`SubmissionConfig could not be derived for network ID: ${networkIdParam}`);
       }
 
-      // Get network configuration with custom derivation index
       const networkConfig = getNetworkConfig(networkIdParam, derivationIndex);
 
       if (!networkConfig) {
@@ -244,21 +305,25 @@ export class PhantomClient {
         addressFormat: networkConfig.addressFormat,
       };
 
-      // Sign transaction request - include configs if available
+      const transactionForSigning = await this.getTransactionForSigning({
+        encodedTransaction,
+        networkId: networkIdParam,
+        submissionConfig,
+        account: params.account,
+      });
+
       const signRequest: SignTransactionRequest & {
         submissionConfig?: SubmissionConfig;
         simulationConfig?: SimulationConfig;
       } = {
         organizationId: this.config.organizationId,
         walletId: walletId,
-        // For EVM transactions, use the object format with kind and bytes
-        // For other chains, use the string directly
-        transaction: isEvmTransaction ? { kind: "RLP_ENCODED", bytes: encodedTransaction } : encodedTransaction,
+        transaction: transactionForSigning,
         derivationInfo: derivationInfo,
       } as any;
 
       // Add submission config if available and requested
-      if (includeSubmissionConfig && submissionConfig) {
+      if (includeSubmissionConfig) {
         signRequest.submissionConfig = submissionConfig;
       }
 

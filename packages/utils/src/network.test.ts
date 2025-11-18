@@ -1,4 +1,4 @@
-import { isEthereumChain, getChainPrefix } from "./network";
+import { isEthereumChain, getChainPrefix, isSolanaChain } from "./network";
 
 describe("Network Utilities", () => {
   describe("isEthereumChain", () => {
@@ -64,6 +64,24 @@ describe("Network Utilities", () => {
 
     it("should handle network IDs without chain ID", () => {
       expect(getChainPrefix("eip155")).toBe("eip155");
+    });
+  });
+
+  describe("isSolanaChain", () => {
+    it("should return true for Solana mainnet", () => {
+      expect(isSolanaChain("solana:mainnet")).toBe(true);
+    });
+
+    it("should return true for Solana devnet", () => {
+      expect(isSolanaChain("solana:devnet")).toBe(true);
+    });
+
+    it("should return false for Ethereum mainnet", () => {
+      expect(isSolanaChain("eip155:1")).toBe(false);
+    });
+
+    it("should return false for Bitcoin", () => {
+      expect(isSolanaChain("bitcoin:mainnet")).toBe(false);
     });
   });
 });
