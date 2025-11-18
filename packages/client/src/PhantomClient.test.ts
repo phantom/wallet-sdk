@@ -480,7 +480,7 @@ describe("PhantomClient Spending Limits Integration", () => {
       });
 
       // Simulate a server-wallet client so spending limits are not applied
-      (client as any).config = { walletType: "server-wallet" };
+      (client as any).config.walletType = "server-wallet";
 
       await performSigning(
         {

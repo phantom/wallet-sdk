@@ -225,6 +225,50 @@ export class PhantomClient {
     }
   }
 
+  private async getTransactionForSigning(params: {
+    encodedTransaction: string;
+    networkId: SignTransactionParams["networkId"];
+    submissionConfig: SubmissionConfig;
+    account?: string;
+  }): Promise<string | { kind: "RLP_ENCODED"; bytes: string }> {
+    const { encodedTransaction, networkId, submissionConfig, account } = params;
+
+    const isEvmTransaction = isEthereumChain(networkId);
+    const isSolanaTransaction = isSolanaChain(networkId);
+
+    // For EVM transactions, use the object format with kind and bytes
+    if (isEvmTransaction) {
+      return { kind: "RLP_ENCODED", bytes: encodedTransaction };
+    }
+
+    // TWO-PHASE SPENDING LIMITS FLOW (Solana user-wallet only)
+    if (isSolanaTransaction && this.config.walletType === "user-wallet") {
+      if (!account) {
+        throw new Error("Account is required to simulate Solana transactions with spending limits");
+      }
+
+      try {
+        const prepareResponse = await this.prepare(
+          encodedTransaction,
+          this.config.organizationId as string,
+          submissionConfig,
+          account,
+        );
+
+        return prepareResponse.transaction;
+      } catch (e: unknown) {
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        throw new Error(
+          `Failed to apply spending limits for this transaction: ${errorMessage}. ` +
+            `Transaction cannot proceed without spending limit enforcement.`,
+        );
+      }
+    }
+
+    // Non-EVM chains (including Solana server-wallet): send the original transaction as-is
+    return encodedTransaction;
+  }
+
   /**
    * Private method for shared signing logic
    */
@@ -255,57 +299,26 @@ export class PhantomClient {
         throw new Error(`Unsupported network ID: ${networkIdParam}`);
       }
 
-      const isEvmTransaction = isEthereumChain(networkIdParam);
-      const isSolanaTransaction = isSolanaChain(networkIdParam);
-
       const derivationInfo: DerivationInfo = {
         derivationPath: networkConfig.derivationPath,
         curve: networkConfig.curve,
         addressFormat: networkConfig.addressFormat,
       };
 
-      // TWO-PHASE SPENDING LIMITS FLOW
-      // Phase 1: Call wallet service to check spending limits and prepare transaction if needed
-      let preparedTransaction = encodedTransaction;
+      const transactionForSigning = await this.getTransactionForSigning({
+        encodedTransaction,
+        networkId: networkIdParam,
+        submissionConfig,
+        account: params.account,
+      });
 
-      // Always check spending limits for Solana transactions
-      // If we don't receive an account
-      // At this point, we've already validated that submissionConfig and account exist for Solana
-      if (isSolanaTransaction && this.config.walletType === "user-wallet") {
-        if (!params.account) {
-          throw new Error("Account is required to simulate Solana transactions with spending limits");
-        }
-
-        try {
-          // Call wallet service prepare endpoint
-          const prepareResponse = await this.prepare(
-            encodedTransaction,
-            this.config.organizationId,
-            submissionConfig,
-            params.account,
-          );
-
-          preparedTransaction = prepareResponse.transaction;
-        } catch (e: unknown) {
-          const errorMessage = e instanceof Error ? e.message : String(e);
-          throw new Error(
-            `Failed to apply spending limits for this transaction: ${errorMessage}. ` +
-              `Transaction cannot proceed without spending limit enforcement.`,
-          );
-        }
-      }
-
-      // Phase 2: Sign the (possibly augmented) transaction
-      // Use preparedTransaction which will have Lighthouse instructions if spending limits exist
       const signRequest: SignTransactionRequest & {
         submissionConfig?: SubmissionConfig;
         simulationConfig?: SimulationConfig;
       } = {
         organizationId: this.config.organizationId,
         walletId: walletId,
-        // For EVM transactions, use the object format with kind and bytes
-        // For other chains, use the string directly
-        transaction: isEvmTransaction ? { kind: "RLP_ENCODED", bytes: encodedTransaction } : preparedTransaction,
+        transaction: transactionForSigning,
         derivationInfo: derivationInfo,
       } as any;
 
