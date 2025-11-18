@@ -83,11 +83,12 @@ export class PhantomClient {
   private kmsApi: KMSRPCApi;
   private axiosInstance: AxiosInstance;
   public stamper?: Stamper;
-  private walletType: "server-wallet" | "user-wallet";
 
   constructor(config: PhantomClientConfig, stamper?: Stamper) {
-    this.config = config;
-    this.walletType = config.walletType ?? "user-wallet";
+    this.config = {
+      ...config,
+      walletType: config.walletType || "user-wallet",
+    };
 
     // Create axios instance
     this.axiosInstance = axios.create();
@@ -232,7 +233,7 @@ export class PhantomClient {
     includeSubmissionConfig: boolean,
   ): Promise<{ signedTransaction: string; hash?: string }> {
     const walletId = params.walletId;
-    const transactionParam = params.transaction;
+    const encodedTransaction = params.transaction;
     const networkIdParam = params.networkId;
     const derivationIndex = params.derivationIndex ?? 0;
 
@@ -254,9 +255,6 @@ export class PhantomClient {
         throw new Error(`Unsupported network ID: ${networkIdParam}`);
       }
 
-      // Transaction is always a string (encoded via parsers)
-      const encodedTransaction = transactionParam;
-
       const isEvmTransaction = isEthereumChain(networkIdParam);
       const isSolanaTransaction = isSolanaChain(networkIdParam);
 
@@ -273,7 +271,7 @@ export class PhantomClient {
       // Always check spending limits for Solana transactions
       // If we don't receive an account
       // At this point, we've already validated that submissionConfig and account exist for Solana
-      if (isSolanaTransaction && this.walletType === "user-wallet") {
+      if (isSolanaTransaction && this.config.walletType === "user-wallet") {
         if (!params.account) {
           throw new Error("Account is required to simulate Solana transactions with spending limits");
         }
@@ -283,13 +281,13 @@ export class PhantomClient {
           const prepareResponse = await this.prepare(
             encodedTransaction,
             this.config.organizationId,
-            submissionConfig, // Non-null assertion safe because we validated above
-            params.account, // Non-null assertion safe because we validated above
+            submissionConfig,
+            params.account,
           );
 
           preparedTransaction = prepareResponse.transaction;
-        } catch (e: any) {
-          const errorMessage = e?.message || String(e);
+        } catch (e: unknown) {
+          const errorMessage = e instanceof Error ? e.message : String(e);
           throw new Error(
             `Failed to apply spending limits for this transaction: ${errorMessage}. ` +
               `Transaction cannot proceed without spending limit enforcement.`,
@@ -307,7 +305,7 @@ export class PhantomClient {
         walletId: walletId,
         // For EVM transactions, use the object format with kind and bytes
         // For other chains, use the string directly
-        transaction: isEvmTransaction ? { kind: "RLP_ENCODED", bytes: preparedTransaction } : preparedTransaction,
+        transaction: isEvmTransaction ? { kind: "RLP_ENCODED", bytes: encodedTransaction } : preparedTransaction,
         derivationInfo: derivationInfo,
       } as any;
 
