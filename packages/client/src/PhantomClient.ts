@@ -238,10 +238,10 @@ export class PhantomClient {
     } catch (error: any) {
       const data = error?.response?.data as PrepareErrorResponse | undefined;
 
-      if (data?.errorCode === "SPENDING_LIMITS_REACHED") {
+      if (data?.errorCode === "SPENDING_LIMITS_REACHED" || data?.error?.startsWith("Transaction would exceed daily")) {
         // Preserve backend error text but standardize the error shape
         throw new SpendingLimitError(data.error || "Spending limit reached", {
-          code: data.errorCode,
+          code: data.errorCode || "SPENDING_LIMITS_REACHED",
           requestId: data.requestId,
           raw: data,
         });
