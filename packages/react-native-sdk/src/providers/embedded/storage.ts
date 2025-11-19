@@ -3,12 +3,10 @@ import type { EmbeddedStorage, Session } from "@phantom/embedded-provider-core";
 
 export class ExpoSecureStorage implements EmbeddedStorage {
   private readonly sessionKey = "phantom_session";
+  private readonly requireAuth = false; // Set to false to NOT require biometric/authentication for access
   private readonly logoutFlagKey = "phantom_should_clear_previous_session";
-  private readonly requireAuth: boolean;
 
-  constructor(requireAuth: boolean = false) {
-    this.requireAuth = requireAuth;
-  }
+  constructor() {}
 
   async saveSession(session: Session): Promise<void> {
     try {
