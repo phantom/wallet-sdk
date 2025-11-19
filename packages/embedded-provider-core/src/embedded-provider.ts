@@ -856,6 +856,11 @@ export class EmbeddedProvider {
       throw new Error("Failed to parse transaction: no valid encoding found");
     }
 
+    const account = this.getAddressForNetwork(params.networkId);
+    if (!account) {
+      throw new Error(`No address found for network ${params.networkId}`);
+    }
+
     // Get raw response from client
     // PhantomClient will handle EVM transaction formatting internally
     const rawResponse = await this.client.signTransaction({
@@ -863,7 +868,7 @@ export class EmbeddedProvider {
       transaction: transactionPayload,
       networkId: params.networkId,
       derivationIndex: derivationIndex,
-      account: this.getAddressForNetwork(params.networkId),
+      account,
     });
 
     this.logger.info("EMBEDDED_PROVIDER", "Transaction signed successfully", {
@@ -907,6 +912,11 @@ export class EmbeddedProvider {
       throw new Error("Failed to parse transaction: no valid encoding found");
     }
 
+    const account = this.getAddressForNetwork(params.networkId);
+    if (!account) {
+      throw new Error(`No address found for network ${params.networkId}`);
+    }
+
     // Get raw response from client
     // PhantomClient will handle EVM transaction formatting internally
     const rawResponse = await this.client.signAndSendTransaction({
@@ -914,7 +924,7 @@ export class EmbeddedProvider {
       transaction: transactionPayload,
       networkId: params.networkId,
       derivationIndex: derivationIndex,
-      account: this.getAddressForNetwork(params.networkId),
+      account,
     });
 
     this.logger.info("EMBEDDED_PROVIDER", "Transaction signed and sent successfully", {

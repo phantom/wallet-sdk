@@ -1,5 +1,7 @@
 import { PhantomClient } from "./PhantomClient";
 import type { UserConfig, CreateAuthenticatorParams, AuthenticatorConfig } from "./types";
+import { NetworkId } from "@phantom/constants";
+import axios from "axios";
 
 // Mock axios to prevent actual HTTP requests
 jest.mock("axios");
@@ -289,6 +291,381 @@ describe("PhantomClient Name Length Validation", () => {
 
       await expect(client.createOrganization("valid-org", [validUser, invalidUser])).rejects.toThrow(
         "Username name cannot exceed 64 characters. Current length: 65",
+      );
+    });
+  });
+});
+
+describe("PhantomClient Spending Limits Integration", () => {
+  let client: PhantomClient;
+  let mockAxiosPost: jest.Mock;
+  let mockKmsPost: jest.Mock;
+  let mockGetOrganization: jest.Mock;
+
+  beforeEach(() => {
+    mockAxiosPost = jest.fn();
+    const mockAxiosInstance = {
+      post: mockAxiosPost,
+      interceptors: {
+        request: { use: jest.fn() },
+      },
+    };
+
+    (axios.create as jest.Mock).mockReturnValue(mockAxiosInstance);
+
+    client = new PhantomClient({
+      apiBaseUrl: "https://api.phantom.app",
+      organizationId: "test-org-id",
+      headers: {},
+    });
+
+    mockKmsPost = jest.fn();
+    mockGetOrganization = jest.fn();
+
+    // Override private methods for testing
+    Object.defineProperty(client, "kmsApi", {
+      value: { postKmsRpc: mockKmsPost },
+      writable: true,
+    });
+    Object.defineProperty(client, "getOrganization", {
+      value: mockGetOrganization,
+      writable: true,
+    });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe("prepare method", () => {
+    const spendingConfig = {
+      usdCentsLimitPerDay: 1000, // $10.00 per day
+      memoryAccount: "MemAcc123",
+      memoryId: 0,
+      memoryBump: 255,
+    };
+
+    const solanaSubmissionConfig = {
+      chain: "solana" as const,
+      network: "mainnet",
+    };
+
+    it("should call prepare endpoint with correct request structure", async () => {
+      mockAxiosPost.mockResolvedValueOnce({
+        data: {
+          transaction: "augmented-tx",
+          simulationResult: { aggregated: { totalSpendUsd: 1.5 } },
+          memoryConfigUsed: spendingConfig,
+        },
+      });
+
+      const prepareMethod = client["prepare"].bind(client);
+      const result = await prepareMethod("original-tx-base64", "org-123", solanaSubmissionConfig, "UserAccount123");
+
+      expect(result.transaction).toBe("augmented-tx");
+      expect(mockAxiosPost).toHaveBeenCalledWith(
+        "https://api.phantom.app/prepare",
+        {
+          transaction: "original-tx-base64", // Plain string, not wrapped
+          organizationId: "org-123",
+          submissionConfig: solanaSubmissionConfig,
+          simulationConfig: { account: "UserAccount123" },
+        },
+        { headers: { "Content-Type": "application/json" } },
+      );
+    });
+
+    it("should throw error when prepare endpoint fails", async () => {
+      mockAxiosPost.mockRejectedValueOnce({
+        response: {
+          data: {
+            message: "Invalid transaction format",
+          },
+        },
+      });
+
+      const prepareMethod = client["prepare"].bind(client);
+
+      await expect(prepareMethod("bad-tx", "org-123", solanaSubmissionConfig, "UserAccount123")).rejects.toThrow(
+        "Failed to prepare transaction",
+      );
+    });
+  });
+
+  describe("conditions for calling prepare endpoint", () => {
+    const performSigning = (params: any, includeSubmissionConfig: boolean) => {
+      return client["performTransactionSigning"](params, includeSubmissionConfig);
+    };
+
+    it("should call prepare and proceed without limits when service returns pass-through", async () => {
+      // Mock prepare endpoint to 200 with same transaction and no memory config
+      mockAxiosPost.mockResolvedValueOnce({
+        data: { transaction: "tx", simulationResult: {} },
+      });
+
+      mockKmsPost.mockResolvedValue({
+        data: { result: { transaction: "signed-tx" }, rpc_submission_result: { result: "hash" } },
+      });
+
+      await performSigning(
+        {
+          walletId: "wallet-123",
+          transaction: "tx",
+          networkId: NetworkId.SOLANA_MAINNET,
+          account: "UserAccount123",
+        },
+        true,
+      );
+
+      // Prepare should be called and we proceed
+      expect(mockAxiosPost).toHaveBeenCalled();
+      expect(mockKmsPost).toHaveBeenCalled();
+    });
+
+    it("should call prepare even when includeSubmissionConfig is false for Solana", async () => {
+      // Mock prepare endpoint to return pass-through
+      mockAxiosPost.mockResolvedValueOnce({
+        data: { transaction: "tx", simulationResult: {} },
+      });
+
+      mockKmsPost.mockResolvedValue({
+        data: { result: { transaction: "signed-tx" } },
+      });
+
+      await performSigning(
+        {
+          walletId: "wallet-123",
+          transaction: "tx",
+          networkId: NetworkId.SOLANA_MAINNET,
+          account: "UserAccount123",
+        },
+        false, // includeSubmissionConfig = false, but prepare should still be called
+      );
+
+      // Prepare should be called even when includeSubmissionConfig is false
+      expect(mockAxiosPost).toHaveBeenCalled();
+      expect(mockKmsPost).toHaveBeenCalled();
+    });
+
+    it("should throw error when account parameter is missing for Solana user-wallet", async () => {
+      await expect(
+        performSigning({ walletId: "wallet-123", transaction: "tx", networkId: NetworkId.SOLANA_MAINNET }, true),
+      ).rejects.toThrow("Account is required to simulate Solana transactions with spending limits");
+
+      // Prepare should not be called because we fail before reaching it
+      expect(mockAxiosPost).not.toHaveBeenCalled();
+    });
+
+    it("should NOT call prepare for EVM transactions", async () => {
+      mockKmsPost.mockResolvedValue({
+        data: { result: { transaction: "signed-tx" }, rpc_submission_result: { result: "hash" } },
+      });
+
+      await performSigning(
+        {
+          walletId: "wallet-123",
+          transaction: "0x1234",
+          networkId: NetworkId.ETHEREUM_MAINNET,
+          account: "0xUser",
+        },
+        true,
+      );
+
+      expect(mockAxiosPost).not.toHaveBeenCalled();
+    });
+
+    it("should NOT call prepare for Solana server-wallet transactions", async () => {
+      mockKmsPost.mockResolvedValue({
+        data: { result: { transaction: "signed-tx" }, rpc_submission_result: { result: "hash" } },
+      });
+
+      // Simulate a server-wallet client so spending limits are not applied
+      (client as any).config.walletType = "server-wallet";
+
+      await performSigning(
+        {
+          walletId: "wallet-123",
+          transaction: "tx",
+          networkId: NetworkId.SOLANA_MAINNET,
+          account: "UserAccount123",
+        },
+        true,
+      );
+
+      expect(mockAxiosPost).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("error handling", () => {
+    it("should fail when prepare service fails with non-spending-limit error", async () => {
+      // Mock prepare endpoint to fail with a real error (not "No spending limit configuration found")
+      mockAxiosPost.mockRejectedValueOnce(new Error("Prepare service unavailable"));
+
+      const performSigning = client["performTransactionSigning"].bind(client);
+
+      await expect(
+        performSigning(
+          {
+            walletId: "wallet-123",
+            transaction: "tx",
+            networkId: NetworkId.SOLANA_MAINNET,
+            account: "UserAccount123",
+          },
+          true,
+        ),
+      ).rejects.toThrow("Failed to apply spending limits for this transaction");
+    });
+
+    it("should continue signing when prepare endpoint returns pass-through with no limits", async () => {
+      mockAxiosPost.mockResolvedValueOnce({
+        data: { transaction: "tx", simulationResult: {} },
+      });
+
+      mockKmsPost.mockResolvedValueOnce({
+        data: { result: { transaction: "signed-tx" }, rpc_submission_result: { result: "hash" } },
+      });
+
+      const performSigning = client["performTransactionSigning"].bind(client);
+      const result = await performSigning(
+        {
+          walletId: "wallet-123",
+          transaction: "tx",
+          networkId: NetworkId.SOLANA_MAINNET,
+          account: "UserAccount123",
+        },
+        true,
+      );
+
+      expect(result.signedTransaction).toBe("signed-tx");
+    });
+
+    it("should not call prepare endpoint for EVM transactions", async () => {
+      mockKmsPost.mockResolvedValueOnce({
+        data: { result: { transaction: "signed-tx" }, rpc_submission_result: { result: "hash" } },
+      });
+
+      const performSigning = client["performTransactionSigning"].bind(client);
+      const result = await performSigning(
+        {
+          walletId: "wallet-123",
+          transaction: "0x1234",
+          networkId: NetworkId.ETHEREUM_MAINNET,
+          account: "0xUser",
+        },
+        true,
+      );
+
+      expect(result.signedTransaction).toBe("signed-tx");
+      expect(mockAxiosPost).not.toHaveBeenCalled();
+    });
+
+    it("should call prepare endpoint even when includeSubmissionConfig is false", async () => {
+      // Mock prepare endpoint to return pass-through
+      mockAxiosPost.mockResolvedValueOnce({
+        data: { transaction: "tx", simulationResult: {} },
+      });
+
+      mockKmsPost.mockResolvedValueOnce({
+        data: { result: { transaction: "signed-tx" } },
+      });
+
+      const performSigning = client["performTransactionSigning"].bind(client);
+      const result = await performSigning(
+        {
+          walletId: "wallet-123",
+          transaction: "tx",
+          networkId: NetworkId.SOLANA_MAINNET,
+          account: "UserAccount123",
+        },
+        false,
+      );
+
+      expect(result.signedTransaction).toBe("signed-tx");
+      // Prepare should be called even when includeSubmissionConfig is false
+      expect(mockAxiosPost).toHaveBeenCalled();
+    });
+  });
+
+  describe("uses prepared transaction for signing", () => {
+    it("should use prepared transaction returned from prepare endpoint", async () => {
+      const submissionConfig = {
+        chain: "solana" as const,
+        network: "mainnet",
+      };
+
+      mockAxiosPost.mockResolvedValueOnce({
+        data: {
+          transaction: "augmented-tx-with-lighthouse-instructions",
+          simulationResult: {},
+          memoryConfigUsed: {
+            usdCentsLimitPerDay: 1000,
+            memoryAccount: "MemAcc123",
+            memoryId: 0,
+            memoryBump: 255,
+          },
+        },
+      });
+
+      const prepareMethod = client["prepare"].bind(client);
+      const result = await prepareMethod("original-tx", "org-123", submissionConfig, "UserAccount123");
+
+      expect(result.transaction).toBe("augmented-tx-with-lighthouse-instructions");
+    });
+  });
+
+  describe("prepare endpoint request structure", () => {
+    it("should send Solana transactions in ChainTransaction format", async () => {
+      const submissionConfig = {
+        chain: "solana" as const,
+        network: "mainnet",
+      };
+
+      mockAxiosPost.mockResolvedValueOnce({
+        data: { transaction: "augmented-tx", simulationResult: {}, memoryConfigUsed: {} },
+      });
+
+      const prepareMethod = client["prepare"].bind(client);
+      const result = await prepareMethod("solana-tx-base64", "org-123", submissionConfig, "UserAccount123");
+
+      expect(result.transaction).toBe("augmented-tx");
+      expect(mockAxiosPost).toHaveBeenCalledWith(
+        "https://api.phantom.app/prepare",
+        expect.objectContaining({
+          transaction: "solana-tx-base64", // Plain string, not wrapped
+          organizationId: "org-123",
+          submissionConfig: submissionConfig,
+          simulationConfig: { account: "UserAccount123" },
+        }),
+        expect.any(Object),
+      );
+    });
+
+    // Note: The prepare method no longer receives chain information,
+    // so it cannot reject EVM transactions at the method level. Chain validation
+    // should happen at a higher level before calling this method.
+
+    it("should include all required fields in prepare request", async () => {
+      mockAxiosPost.mockResolvedValueOnce({
+        data: { transaction: "augmented-tx", simulationResult: {}, memoryConfigUsed: {} },
+      });
+
+      const submissionConfig = {
+        chain: "solana" as const,
+        network: "mainnet",
+      };
+
+      const prepareMethod = client["prepare"].bind(client);
+      await prepareMethod("tx-base64", "org-123", submissionConfig, "UserAccount123");
+
+      expect(mockAxiosPost).toHaveBeenCalledWith(
+        "https://api.phantom.app/prepare",
+        {
+          transaction: "tx-base64", // Plain string, not wrapped
+          organizationId: "org-123",
+          submissionConfig: submissionConfig,
+          simulationConfig: { account: "UserAccount123" },
+        },
+        { headers: { "Content-Type": "application/json" } },
       );
     });
   });

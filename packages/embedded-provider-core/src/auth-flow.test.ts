@@ -1088,7 +1088,13 @@ describe("EmbeddedProvider Auth Flows", () => {
         return Promise.resolve();
       });
 
-      mockClient.getWalletAddresses.mockResolvedValue([]);
+      mockClient.getWalletAddresses.mockResolvedValue([
+        {
+          addressType: "solana",
+          address: "test-solana-address",
+          publicKey: "test-public-key",
+        },
+      ]);
       await provider.connect({ provider: "google" });
     });
 
@@ -1137,6 +1143,7 @@ describe("EmbeddedProvider Auth Flows", () => {
         transaction: expect.any(String),
         networkId: NetworkId.SOLANA_MAINNET,
         derivationIndex: 0,
+        account: "test-solana-address",
       });
       expect(result.hash).toBeDefined();
       expect(typeof result.blockExplorer === "string" || result.blockExplorer === undefined).toBe(true);
