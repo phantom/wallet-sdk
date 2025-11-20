@@ -17,16 +17,8 @@ const mockTheme = {
 
 jest.mock("@phantom/wallet-sdk-ui", () => ({
   // Map UI primitives to React Native equivalents for this test
-  Text: ({ children, ...props }: any) => (
-    <Text {...props}>
-      {children}
-    </Text>
-  ),
-  Button: ({ children, onClick }: any) => (
-    <View onTouchEnd={onClick}>
-      {children}
-    </View>
-  ),
+  Text: ({ children, ...props }: any) => <Text {...props}>{children}</Text>,
+  Button: ({ children, onClick }: any) => <View onTouchEnd={onClick}>{children}</View>,
   useTheme: () => mockTheme,
 }));
 
@@ -40,5 +32,3 @@ describe("SpendingLimitModalContent (RN)", () => {
     expect(getByText("Manage spending limit")).toBeTruthy();
   });
 });
-
-

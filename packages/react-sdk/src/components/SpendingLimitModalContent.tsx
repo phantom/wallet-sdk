@@ -21,5 +21,3 @@ export function SpendingLimitModalContent({ onClose }: SpendingLimitModalContent
     </div>
   );
 }
-
-

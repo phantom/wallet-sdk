@@ -270,7 +270,6 @@ export class PhantomClient {
       );
 
       return prepareResponse.transaction;
-      
     }
 
     // Non-EVM chains (including Solana server-wallet): send the original transaction as-is

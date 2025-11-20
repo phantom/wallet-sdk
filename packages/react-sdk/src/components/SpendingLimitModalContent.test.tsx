@@ -27,5 +27,3 @@ describe("SpendingLimitModalContent", () => {
     expect(getByText("Manage spending limit")).toBeInTheDocument();
   });
 });
-
-

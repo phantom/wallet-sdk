@@ -186,7 +186,18 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
       spendingLimitError,
       clearSpendingLimitError: () => setSpendingLimitError(false),
     }),
-    [sdk, isConnected, isConnecting, connectError, addresses, walletId, setWalletId, user, config.providers, spendingLimitError],
+    [
+      sdk,
+      isConnected,
+      isConnecting,
+      connectError,
+      addresses,
+      walletId,
+      setWalletId,
+      user,
+      config.providers,
+      spendingLimitError,
+    ],
   );
 
   const resolvedTheme = theme || darkTheme;

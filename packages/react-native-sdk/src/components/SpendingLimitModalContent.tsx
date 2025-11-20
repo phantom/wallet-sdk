@@ -30,5 +30,3 @@ export function SpendingLimitModalContent({ onClose }: SpendingLimitModalContent
     </View>
   );
 }
-
-
