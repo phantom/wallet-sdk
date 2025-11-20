@@ -66,6 +66,8 @@ describe("ConnectedModalContent", () => {
       user: null,
       theme: mockTheme,
       allowedProviders: [],
+      spendingLimitError: false,
+      clearSpendingLimitError: jest.fn(),
     });
     mockUseDisconnect.mockReturnValue({
       disconnect: mockDisconnect,
@@ -101,6 +103,8 @@ describe("ConnectedModalContent", () => {
         user: null,
         theme: mockTheme,
         allowedProviders: [],
+        spendingLimitError: false,
+        clearSpendingLimitError: jest.fn(),
       });
 
       const { queryByText } = renderComponent();
@@ -123,6 +127,8 @@ describe("ConnectedModalContent", () => {
         user: null,
         theme: mockTheme,
         allowedProviders: [],
+        spendingLimitError: false,
+        clearSpendingLimitError: jest.fn(),
       });
 
       const { getByText } = renderComponent();
@@ -279,6 +285,8 @@ describe("ConnectedModalContent", () => {
         user: null,
         theme: mockTheme,
         allowedProviders: [],
+        spendingLimitError: false,
+        clearSpendingLimitError: jest.fn(),
       });
 
       const { getByText } = renderComponent();

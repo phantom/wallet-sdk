@@ -379,7 +379,10 @@ describe("PhantomClient Spending Limits Integration", () => {
       mockAxiosPost.mockRejectedValueOnce({
         response: {
           data: {
-            message: "Invalid transaction format",
+            type: "invalid-transaction",
+            title: "Invalid Transaction",
+            detail: "Invalid transaction format",
+            requestId: "test-request-id",
           },
         },
       });
@@ -387,8 +390,38 @@ describe("PhantomClient Spending Limits Integration", () => {
       const prepareMethod = client["prepare"].bind(client);
 
       await expect(prepareMethod("bad-tx", "org-123", solanaSubmissionConfig, "UserAccount123")).rejects.toThrow(
-        "Failed to prepare transaction",
+        "Failed to prepare transaction: Invalid transaction format",
       );
+    });
+
+    it("should throw SpendingLimitError when spending limit is reached", async () => {
+      mockAxiosPost.mockRejectedValueOnce({
+        response: {
+          data: {
+            type: "spending-limit-exceeded",
+            title: "This transaction would surpass your configured spending limit",
+            detail:
+              "Transaction would exceed daily spending limit. Previous: $0.62, Transaction: $0.41, Total: $1.03, Limit: $1.00",
+            requestId: "2d8da771-896b-9568-a9b5-22bf89e8d882",
+            previousSpendCents: 62,
+            transactionSpendCents: 41,
+            totalSpendCents: 103,
+            limitCents: 100,
+          },
+        },
+      });
+
+      const prepareMethod = client["prepare"].bind(client);
+
+      await expect(prepareMethod("tx", "org-123", solanaSubmissionConfig, "UserAccount123")).rejects.toMatchObject({
+        name: "SpendingLimitError",
+        code: "SPENDING_LIMITS_REACHED",
+        requestId: "2d8da771-896b-9568-a9b5-22bf89e8d882",
+        previousSpendCents: 62,
+        transactionSpendCents: 41,
+        totalSpendCents: 103,
+        limitCents: 100,
+      });
     });
   });
 
@@ -513,7 +546,9 @@ describe("PhantomClient Spending Limits Integration", () => {
           },
           true,
         ),
-      ).rejects.toThrow("Failed to apply spending limits for this transaction");
+      ).rejects.toThrow(
+        "Failed to sign and send transaction: Failed to prepare transaction: Prepare service unavailable",
+      );
     });
 
     it("should continue signing when prepare endpoint returns pass-through with no limits", async () => {

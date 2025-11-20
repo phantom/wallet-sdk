@@ -13,6 +13,8 @@ export interface PhantomContextValue {
   user: ConnectResult | null;
   theme: PhantomTheme;
   allowedProviders: AuthProviderType[];
+  spendingLimitError: boolean;
+  clearSpendingLimitError: () => void;
 }
 
 export const PhantomContext = createContext<PhantomContextValue | undefined>(undefined);

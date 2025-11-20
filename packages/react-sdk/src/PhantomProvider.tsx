@@ -45,8 +45,8 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
   const [isLoading, setIsLoading] = useState(true);
   const [connectError, setConnectError] = useState<Error | null>(null);
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
-
   const [user, setUser] = useState<ConnectResult | null>(null);
+  const [spendingLimitError, setSpendingLimitError] = useState(false);
 
   // Initialize client flag
   useEffect(() => {
@@ -107,7 +107,13 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
       setIsConnecting(false);
       setConnectError(null);
       setAddresses([]);
+      setSpendingLimitError(false);
       setUser(null);
+    };
+
+    const handleSpendingLimitReached = () => {
+      // We don't surface backend error text in the UI yet; just trigger the modal.
+      setSpendingLimitError(true);
     };
 
     // Add event listeners to SDK
@@ -115,6 +121,7 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
     sdk.on("connect", handleConnect);
     sdk.on("connect_error", handleConnectError);
     sdk.on("disconnect", handleDisconnect);
+    sdk.on("spending_limit_reached", handleSpendingLimitReached);
 
     // Cleanup function to remove event listeners when SDK changes or component unmounts
     return () => {
@@ -122,6 +129,7 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
       sdk.off("connect", handleConnect);
       sdk.off("connect_error", handleConnectError);
       sdk.off("disconnect", handleDisconnect);
+      sdk.off("spending_limit_reached", handleSpendingLimitReached);
     };
   }, [sdk]);
 
@@ -166,6 +174,8 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
       user,
       theme: resolvedTheme,
       allowedProviders: memoizedConfig.providers,
+      spendingLimitError,
+      clearSpendingLimitError: () => setSpendingLimitError(false),
     }),
     [
       sdk,
@@ -178,6 +188,7 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
       user,
       resolvedTheme,
       memoizedConfig.providers,
+      spendingLimitError,
     ],
   );
 
