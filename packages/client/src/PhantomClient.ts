@@ -60,6 +60,7 @@ import {
   type SignTypedDataParams,
   type UserConfig,
 } from "./types";
+import { SpendingLimitError, TransactionBlockedError } from "./errors";
 
 import type { Stamper } from "@phantom/sdk-types";
 import { getSecureTimestamp, randomUUID, isEthereumChain, isSolanaChain } from "@phantom/utils";
@@ -77,20 +78,6 @@ export interface SubmissionConfig {
 
 export interface SimulationConfig {
   account: string; // The address/account that is signing the transaction
-}
-
-export class SpendingLimitError extends Error {
-  code: string;
-  requestId?: string;
-  raw?: PrepareErrorResponse | unknown;
-
-  constructor(message: string, options: { code: string; requestId?: string; raw?: PrepareErrorResponse | unknown }) {
-    super(message);
-    this.name = "SpendingLimitError";
-    this.code = options.code;
-    this.requestId = options.requestId;
-    this.raw = options.raw;
-  }
 }
 
 export class PhantomClient {
@@ -238,16 +225,17 @@ export class PhantomClient {
     } catch (error: any) {
       const data = error?.response?.data as PrepareErrorResponse | undefined;
 
-      if (data?.errorCode === "SPENDING_LIMITS_REACHED" || data?.error?.startsWith("Transaction would exceed daily")) {
-        // Preserve backend error text but standardize the error shape
-        throw new SpendingLimitError(data.error || "Spending limit reached", {
-          code: data.errorCode || "SPENDING_LIMITS_REACHED",
-          requestId: data.requestId,
-          raw: data,
-        });
+      // Check for spending limit errors
+      if (data?.type === "spending-limit-exceeded") {
+        throw new SpendingLimitError(data.detail, data);
       }
 
-      const message = data?.message || data?.error || error.message;
+      // Check for transaction blocked errors (e.g., insufficient funds)
+      if (data?.type === "transaction-blocked") {
+        throw new TransactionBlockedError(data.detail, data);
+      }
+
+      const message = data?.detail || data?.title || error.message;
       throw new Error(`Failed to prepare transaction: ${message}`);
     }
   }

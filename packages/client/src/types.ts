@@ -144,8 +144,18 @@ export interface PrepareResponse {
 }
 
 export interface PrepareErrorResponse {
-  error: string;
-  errorCode?: string;
-  requestId?: string;
-  message?: string;
+  // RFC 7807 Problem Details format
+  type: string; // e.g., "spending-limit-exceeded", "transaction-blocked"
+  title: string;
+  detail: string;
+  requestId: string;
+
+  // Spending limit specific fields
+  previousSpendCents?: number;
+  transactionSpendCents?: number;
+  totalSpendCents?: number;
+  limitCents?: number;
+
+  // Transaction blocked specific fields
+  scannerResult?: any; // Full simulation result when transaction is blocked
 }
