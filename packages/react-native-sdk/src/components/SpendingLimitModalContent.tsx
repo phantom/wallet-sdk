@@ -9,14 +9,14 @@ export function SpendingLimitModalContent({ onClose }: SpendingLimitModalContent
   const theme = useTheme();
 
   const styles = StyleSheet.create({
-    container: {
-      flexDirection: "column",
-      gap: 16,
-      width: "100%",
-    },
     buttons: {
       flexDirection: "row",
       gap: 8,
+      width: "100%",
+    },
+    container: {
+      flexDirection: "column",
+      gap: 16,
       width: "100%",
     },
   });
