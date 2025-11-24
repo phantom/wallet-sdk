@@ -415,7 +415,8 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       await expect(prepareMethod("tx", "org-123", solanaSubmissionConfig, "UserAccount123")).rejects.toMatchObject({
         name: "SpendingLimitError",
-        code: "SPENDING_LIMITS_REACHED",
+        type: "spending-limit-exceeded",
+        title: "This transaction would surpass your configured spending limit",
         requestId: "2d8da771-896b-9568-a9b5-22bf89e8d882",
         previousSpendCents: 62,
         transactionSpendCents: 41,

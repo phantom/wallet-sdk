@@ -15,7 +15,7 @@ const mockTheme = {
 };
 
 describe("SpendingLimitModalContent", () => {
-  it("should render spending limit message and button", () => {
+  it("should render spending limit message and buttons", () => {
     const onClose = jest.fn();
     const { getByText } = render(
       <ThemeProvider theme={mockTheme}>
@@ -24,6 +24,7 @@ describe("SpendingLimitModalContent", () => {
     );
 
     expect(getByText("Would you like to increase your limit?")).toBeInTheDocument();
-    expect(getByText("Manage spending limit")).toBeInTheDocument();
+    expect(getByText("Close")).toBeInTheDocument();
+    expect(getByText("Continue")).toBeInTheDocument();
   });
 });

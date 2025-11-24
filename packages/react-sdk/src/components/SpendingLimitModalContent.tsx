@@ -15,9 +15,14 @@ export function SpendingLimitModalContent({ onClose }: SpendingLimitModalContent
       <Text variant="caption" color={theme.secondary}>
         You've reached your spending limit with this app
       </Text>
-      <Button fullWidth onClick={onClose}>
-        <Text variant="captionBold">Manage spending limit</Text>
-      </Button>
+      <div style={{ display: "flex", flexDirection: "row", gap: 8, width: "100%" }}>
+        <Button fullWidth onClick={onClose}>
+          <Text variant="captionBold">Close</Text>
+        </Button>
+        <Button fullWidth onClick={onClose}>
+          <Text variant="captionBold">Continue</Text>
+        </Button>
+      </div>
     </div>
   );
 }

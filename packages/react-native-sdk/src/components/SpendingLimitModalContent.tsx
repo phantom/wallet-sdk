@@ -14,6 +14,11 @@ export function SpendingLimitModalContent({ onClose }: SpendingLimitModalContent
       gap: 16,
       width: "100%",
     },
+    buttons: {
+      flexDirection: "row",
+      gap: 8,
+      width: "100%",
+    },
   });
 
   return (
@@ -24,9 +29,14 @@ export function SpendingLimitModalContent({ onClose }: SpendingLimitModalContent
       <Text variant="caption" color={theme.secondary}>
         You’ve reached your spending limit with this app
       </Text>
-      <Button fullWidth onClick={onClose}>
-        <Text variant="captionBold">Manage spending limit</Text>
-      </Button>
+      <View style={styles.buttons}>
+        <Button fullWidth onClick={onClose}>
+          <Text variant="captionBold">Close</Text>
+        </Button>
+        <Button fullWidth onClick={onClose}>
+          <Text variant="captionBold">Continue</Text>
+        </Button>
+      </View>
     </View>
   );
 }

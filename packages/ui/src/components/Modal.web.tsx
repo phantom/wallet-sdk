@@ -57,7 +57,7 @@ export function Modal({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    padding: "28px 32px 0 32px",
+    padding: "24px 24px 0 24px",
   };
 
   const titleStyle: CSSProperties = {
@@ -70,6 +70,7 @@ export function Modal({
     right: "24px",
     top: "24px",
     transform: "none",
+    width: "auto",
     background: "none",
     border: "none",
     color: isCloseButtonHovering ? theme.secondary : theme.text,

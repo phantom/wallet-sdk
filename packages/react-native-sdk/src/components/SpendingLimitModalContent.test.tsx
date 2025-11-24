@@ -23,12 +23,13 @@ jest.mock("@phantom/wallet-sdk-ui", () => ({
 }));
 
 describe("SpendingLimitModalContent (RN)", () => {
-  it("should render spending limit message and button", () => {
+  it("should render spending limit message and buttons", () => {
     const onClose = jest.fn();
     const { getByText } = render(<SpendingLimitModalContent onClose={onClose} />);
 
     expect(getByText("Would you like to increase your limit?")).toBeTruthy();
     expect(getByText("You’ve reached your spending limit with this app")).toBeTruthy();
-    expect(getByText("Manage spending limit")).toBeTruthy();
+    expect(getByText("Close")).toBeTruthy();
+    expect(getByText("Continue")).toBeTruthy();
   });
 });

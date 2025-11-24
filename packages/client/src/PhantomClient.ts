@@ -226,13 +226,13 @@ export class PhantomClient {
       const data = error?.response?.data as PrepareErrorResponse | undefined;
 
       // Check for spending limit errors
-      if (data?.type === "spending-limit-exceeded") {
-        throw new SpendingLimitError(data.detail, data);
+      if (data?.type === "spending-limit-exceeded" || (data as any)?.error?.startsWith("Transaction would exceed")) {
+        throw new SpendingLimitError(data as PrepareErrorResponse);
       }
 
       // Check for transaction blocked errors (e.g., insufficient funds)
       if (data?.type === "transaction-blocked") {
-        throw new TransactionBlockedError(data.detail, data);
+        throw new TransactionBlockedError(data);
       }
 
       const message = data?.detail || data?.title || error.message;

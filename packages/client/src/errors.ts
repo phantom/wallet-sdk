@@ -1,39 +1,39 @@
 import type { PrepareErrorResponse } from "./types";
 
 export class SpendingLimitError extends Error {
-  code: string;
-  requestId?: string;
+  type: string;
+  title: string;
+  requestId: string;
   previousSpendCents?: number;
   transactionSpendCents?: number;
   totalSpendCents?: number;
   limitCents?: number;
-  raw?: PrepareErrorResponse;
 
-  constructor(message: string, data: PrepareErrorResponse) {
-    super(message);
+  constructor(data: PrepareErrorResponse) {
+    super(data.detail);
     this.name = "SpendingLimitError";
-    this.code = "SPENDING_LIMITS_REACHED";
+    this.type = data.type;
+    this.title = data.title;
     this.requestId = data.requestId;
     this.previousSpendCents = data.previousSpendCents;
     this.transactionSpendCents = data.transactionSpendCents;
     this.totalSpendCents = data.totalSpendCents;
     this.limitCents = data.limitCents;
-    this.raw = data;
   }
 }
 
 export class TransactionBlockedError extends Error {
-  code: string;
+  type: string;
+  title: string;
   requestId: string;
   scannerResult?: any;
-  raw: PrepareErrorResponse;
 
-  constructor(message: string, data: PrepareErrorResponse) {
-    super(message);
+  constructor(data: PrepareErrorResponse) {
+    super(data.detail);
     this.name = "TransactionBlockedError";
-    this.code = "TRANSACTION_BLOCKED";
+    this.type = data.type;
+    this.title = data.title;
     this.requestId = data.requestId;
     this.scannerResult = data.scannerResult;
-    this.raw = data;
   }
 }

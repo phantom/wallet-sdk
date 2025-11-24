@@ -937,7 +937,7 @@ export class EmbeddedProvider {
       });
     } catch (error: any) {
       // Normalize spending limit errors into a dedicated event while preserving the rejection
-      if (error && (error.code === "SPENDING_LIMITS_REACHED" || error.name === "SpendingLimitError")) {
+      if (error && error.name === "SpendingLimitError") {
         this.emit("spending_limit_reached", { error });
       }
       throw error;
