@@ -366,12 +366,9 @@ export function SDKActions() {
         }
 
         alert(`Transaction sent! Signature: ${result.signature}`);
-      } catch (error: any) {
-        if ((error as any)?.code === "SPENDING_LIMITS_REACHED") {
-          // React SDK will show a dedicated spending limit modal; avoid double-alerting here.
-          return;
-        }
-        throw error;
+      } catch (error) {
+        console.error("Error signing and sending transaction:", error);
+        alert(`Error signing and sending transaction: ${(error as Error).message || error}`);
       }
     } catch (error) {
       console.error("Error signing and sending transaction:", error);
