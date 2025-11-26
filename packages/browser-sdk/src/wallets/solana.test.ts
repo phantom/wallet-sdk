@@ -10,23 +10,24 @@ function createMockWallet(id: string): SolanaWalletAdapter {
       chains: ["solana:mainnet"],
     },
     connected: false,
-    async connect() {
-      return;
+    connect() {
+      return Promise.resolve();
     },
-    async disconnect() {
-      return;
+    disconnect() {
+      return Promise.resolve();
     },
-    async getAccounts() {
-      return [];
+    getAccounts() {
+      return Promise.resolve([]);
     },
-    async signTransaction(tx: unknown) {
-      return tx;
+    signTransaction(tx: unknown) {
+      return Promise.resolve(tx);
     },
-    async signAndSendTransaction(tx: unknown) {
-      return tx;
+    signAndSendTransaction(tx: unknown) {
+      return Promise.resolve(tx);
     },
-    async signMessage(message: Uint8Array | string) {
-      return typeof message === "string" ? new TextEncoder().encode(message) : message;
+    signMessage(message: Uint8Array | string) {
+      const bytes = typeof message === "string" ? new TextEncoder().encode(message) : message;
+      return Promise.resolve(bytes);
     },
   };
 }
