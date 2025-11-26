@@ -109,6 +109,67 @@ describe("InjectedProvider", () => {
       expect(provider.isConnected()).toBe(true);
     });
 
+    it("should default to Phantom wallet id when none is provided", async () => {
+      const provider = new InjectedProvider({
+        addressTypes: [AddressType.solana],
+      });
+
+      await provider.connect({ provider: "injected" });
+
+      const internal = provider as any;
+      expect(internal.selectedWalletId).toBe("phantom");
+    });
+
+    it("should accept an injected wallet id that exists in the registry", async () => {
+      const provider = new InjectedProvider({
+        addressTypes: [AddressType.solana],
+      });
+
+      const internal = provider as any;
+      internal.solanaWalletRegistry.register({
+        id: "other-wallet",
+        info: {
+          id: "other-wallet",
+          name: "Other Wallet",
+          chains: ["solana:mainnet"],
+        },
+        connected: false,
+        connect() {
+          return Promise.resolve();
+        },
+        disconnect() {
+          return Promise.resolve();
+        },
+        getAccounts() {
+          return Promise.resolve([]);
+        },
+        signTransaction(tx: unknown) {
+          return Promise.resolve(tx);
+        },
+        signAndSendTransaction(tx: unknown) {
+          return Promise.resolve(tx);
+        },
+        signMessage(message: Uint8Array | string) {
+          const bytes = typeof message === "string" ? new TextEncoder().encode(message) : message;
+          return Promise.resolve(bytes);
+        },
+      });
+
+      await provider.connect({ provider: "injected", walletId: "other-wallet" });
+
+      expect(internal.selectedWalletId).toBe("other-wallet");
+    });
+
+    it("should reject when an unknown injected wallet id is requested", async () => {
+      const provider = new InjectedProvider({
+        addressTypes: [AddressType.solana],
+      });
+
+      await expect(provider.connect({ provider: "injected", walletId: "unknown-wallet" })).rejects.toThrow(
+        "Unknown injected wallet id: unknown-wallet",
+      );
+    });
+
     it("should connect to Ethereum wallet when only Ethereum is enabled", async () => {
       const mockAddresses = ["0x742d35Cc6634C0532925a3b844Bc9e7595f6cE65"];
 

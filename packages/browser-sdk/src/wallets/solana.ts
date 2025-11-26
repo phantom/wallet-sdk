@@ -48,6 +48,10 @@ export class SolanaWalletRegistry {
     }
   }
 
+  has(id: SolanaWalletId): boolean {
+    return this.wallets.has(id);
+  }
+
   getAll(): SolanaWalletAdapter[] {
     return Array.from(this.wallets.values());
   }
