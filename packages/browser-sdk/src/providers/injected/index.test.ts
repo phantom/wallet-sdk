@@ -126,33 +126,11 @@ describe("InjectedProvider", () => {
       });
 
       const internal = provider as any;
-      internal.solanaWalletRegistry.register({
+      internal.walletRegistry.register({
         id: "other-wallet",
-        info: {
-          id: "other-wallet",
-          name: "Other Wallet",
-          chains: ["solana:mainnet"],
-        },
-        connected: false,
-        connect() {
-          return Promise.resolve();
-        },
-        disconnect() {
-          return Promise.resolve();
-        },
-        getAccounts() {
-          return Promise.resolve([]);
-        },
-        signTransaction(tx: unknown) {
-          return Promise.resolve(tx);
-        },
-        signAndSendTransaction(tx: unknown) {
-          return Promise.resolve(tx);
-        },
-        signMessage(message: Uint8Array | string) {
-          const bytes = typeof message === "string" ? new TextEncoder().encode(message) : message;
-          return Promise.resolve(bytes);
-        },
+        name: "Other Wallet",
+        addressTypes: [AddressType.solana],
+        chains: ["solana:mainnet"],
       });
 
       await provider.connect({ provider: "injected", walletId: "other-wallet" });

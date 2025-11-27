@@ -53,7 +53,7 @@ declare global {
 
 import { debug, DebugCategory } from "../../debug";
 import { InjectedSolanaChain, InjectedEthereumChain, type ChainCallbacks } from "./chains";
-import { SolanaWalletRegistry } from "../../wallets/solana";
+import { InjectedWalletRegistry } from "../../wallets/registry";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
 
 const WAS_CONNECTED_KEY = "phantom-injected-was-connected";
@@ -69,7 +69,7 @@ export class InjectedProvider implements Provider {
   private addresses: WalletAddress[] = [];
   private addressTypes: AddressType[];
   private phantom: PhantomExtended;
-  private solanaWalletRegistry = new SolanaWalletRegistry();
+  private walletRegistry = new InjectedWalletRegistry();
   private selectedWalletId: string | null = null;
 
   // Chain instances
@@ -166,7 +166,7 @@ export class InjectedProvider implements Provider {
 
     if (this.addressTypes.includes(AddressType.solana)) {
       if (this.selectedWalletId !== "phantom") {
-        if (!this.solanaWalletRegistry.has(requestedWalletId)) {
+        if (!this.walletRegistry.has(requestedWalletId)) {
           debug.error(DebugCategory.INJECTED_PROVIDER, "Unknown injected wallet id requested", {
             walletId: requestedWalletId,
           });
