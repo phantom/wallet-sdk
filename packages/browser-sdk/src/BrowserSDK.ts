@@ -1,4 +1,4 @@
-import type { BrowserSDKConfig, ConnectResult, WalletAddress, AuthOptions, AuthProviderType } from "./types";
+import type { BrowserSDKConfig, ConnectResult, WalletAddress, AuthOptions, AuthProviderType, AddressType } from "./types";
 import { ProviderManager, type ProviderPreference } from "./ProviderManager";
 import { debug, DebugCategory, type DebugLevel, type DebugCallback } from "./debug";
 import { waitForPhantomExtension } from "./waitForPhantomExtension";
@@ -7,6 +7,9 @@ import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-pro
 import { EMBEDDED_PROVIDER_AUTH_TYPES } from "@phantom/embedded-provider-core";
 import type { InjectedProvider } from "./providers/injected";
 import { DEFAULT_EMBEDDED_WALLET_TYPE } from "@phantom/constants";
+import type { InjectedWalletInfo } from "./wallets/registry";
+import { getWalletRegistry } from "./wallets/registry";
+import { discoverWallets } from "./wallets/discovery";
 import type {
   AutoConfirmEnableParams,
   AutoConfirmResult,
@@ -17,6 +20,8 @@ const BROWSER_SDK_PROVIDER_TYPES: readonly AuthProviderType[] = [...EMBEDDED_PRO
 
 export class BrowserSDK {
   private providerManager: ProviderManager;
+  private walletRegistry = getWalletRegistry();
+  private config: BrowserSDKConfig;
 
   constructor(config: BrowserSDKConfig) {
     debug.info(DebugCategory.BROWSER_SDK, "Initializing BrowserSDK", {
@@ -66,7 +71,38 @@ export class BrowserSDK {
       );
     }
 
+    this.config = config;
     this.providerManager = new ProviderManager(config);
+
+    this.discoverWallets(config.addressTypes || []);
+  }
+
+  private discoverWallets(addressTypes: AddressType[]): void {
+    debug.log(DebugCategory.BROWSER_SDK, "Starting wallet discovery", { addressTypes });
+
+    discoverWallets()
+      .then((discoveredWallets) => {
+        const relevantWallets = discoveredWallets.filter(wallet =>
+          wallet.addressTypes.some(type => addressTypes.includes(type))
+        );
+
+        for (const wallet of relevantWallets) {
+          this.walletRegistry.register(wallet);
+          debug.log(DebugCategory.BROWSER_SDK, "Registered discovered wallet", {
+            id: wallet.id,
+            name: wallet.name,
+            addressTypes: wallet.addressTypes,
+          });
+        }
+
+        debug.info(DebugCategory.BROWSER_SDK, "Wallet discovery completed", {
+          totalDiscovered: discoveredWallets.length,
+          relevantWallets: relevantWallets.length,
+        });
+      })
+      .catch((error) => {
+        debug.warn(DebugCategory.BROWSER_SDK, "Wallet discovery failed", { error });
+      });
   }
 
   // ===== CHAIN API =====
@@ -361,6 +397,34 @@ export class BrowserSDK {
         error: (error as Error).message,
       });
       throw error;
+    }
+  }
+
+  // ===== WALLET DISCOVERY METHODS =====
+
+  /**
+   * Get all discovered injected wallets that support the configured address types
+   * Uses the global wallet registry shared with InjectedProvider
+   */
+  getDiscoveredWallets(): InjectedWalletInfo[] {
+    debug.log(DebugCategory.BROWSER_SDK, "Getting discovered wallets");
+
+    try {
+      const addressTypes = this.config.addressTypes || [];
+      const wallets = addressTypes.length > 0
+        ? this.walletRegistry.getByAddressTypes(addressTypes)
+        : this.walletRegistry.getAll();
+
+      debug.log(DebugCategory.BROWSER_SDK, "Retrieved discovered wallets", {
+        count: wallets.length,
+        walletIds: wallets.map(w => w.id),
+      });
+      return wallets;
+    } catch (error) {
+      debug.error(DebugCategory.BROWSER_SDK, "Failed to get discovered wallets", {
+        error: (error as Error).message,
+      });
+      return [];
     }
   }
 }

@@ -38,3 +38,14 @@ export class InjectedWalletRegistry {
     return this.getAll().filter(wallet => wallet.addressTypes.some(t => allowed.has(t)));
   }
 }
+
+// Singleton instance of the wallet registry
+let walletRegistry: InjectedWalletRegistry | null = null;
+
+export function getWalletRegistry(): InjectedWalletRegistry {
+  if (!walletRegistry) {
+    walletRegistry = new InjectedWalletRegistry();
+  }
+  return walletRegistry;
+}
+
