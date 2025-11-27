@@ -17,7 +17,6 @@ interface EIP6963ProviderDetail {
   provider: any; // The actual provider object (window.ethereum-like)
 }
 
-
 interface WalletStandardWallet {
   readonly name: string;
   readonly icon: string;
@@ -38,7 +37,7 @@ interface WalletStandardAccount {
  * Discover EVM wallets using EIP-6963 standard
  */
 export function discoverEthereumWallets(): Promise<InjectedWalletInfo[]> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const wallets: InjectedWalletInfo[] = [];
     const discoveredProviders = new Map<string, EIP6963ProviderDetail>();
 
@@ -63,7 +62,7 @@ export function discoverEthereumWallets(): Promise<InjectedWalletInfo[]> {
     setTimeout(() => {
       for (const [, detail] of discoveredProviders) {
         const { info } = detail;
-        
+
         // Use rdns as the wallet ID (e.g., "io.metamask", "com.coinbase.wallet")
         // Fallback to name if rdns is not available
         const walletId = info.rdns
@@ -127,9 +126,7 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
       const registeredWallets: WalletStandardWallet[] = await walletsAPI.getWallets();
 
       for (const wallet of registeredWallets) {
-        const supportsSolana = wallet.chains.some(chain => 
-          chain.startsWith("solana:") || chain === "solana"
-        );
+        const supportsSolana = wallet.chains.some(chain => chain.startsWith("solana:") || chain === "solana");
 
         if (!supportsSolana) {
           continue;
@@ -141,9 +138,7 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
         }
 
         // Extract Solana chains
-        const solanaChains = wallet.chains.filter(chain => 
-          chain.startsWith("solana:") || chain === "solana"
-        );
+        const solanaChains = wallet.chains.filter(chain => chain.startsWith("solana:") || chain === "solana");
 
         const walletId = wallet.name.toLowerCase().replace(/\s+/g, "-");
 
@@ -152,9 +147,7 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
           name: wallet.name,
           icon: wallet.icon,
           addressTypes: [ClientAddressType.solana],
-          chains: solanaChains.length > 0 
-            ? solanaChains 
-            : ["solana:mainnet", "solana:devnet", "solana:testnet"],
+          chains: solanaChains.length > 0 ? solanaChains : ["solana:mainnet", "solana:devnet", "solana:testnet"],
         });
       }
     } catch (error) {
@@ -166,24 +159,16 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
   return wallets;
 }
 
-
 export async function discoverWallets(): Promise<InjectedWalletInfo[]> {
-  const [solanaWallets, ethereumWallets] = await Promise.all([
-    discoverSolanaWallets(),
-    discoverEthereumWallets(),
-  ]);
+  const [solanaWallets, ethereumWallets] = await Promise.all([discoverSolanaWallets(), discoverEthereumWallets()]);
 
   const walletMap = new Map<string, InjectedWalletInfo>();
 
   for (const wallet of [...solanaWallets, ...ethereumWallets]) {
     const existing = walletMap.get(wallet.id);
     if (existing) {
-      const mergedAddressTypes = Array.from(
-        new Set([...existing.addressTypes, ...wallet.addressTypes])
-      );
-      const mergedChains = Array.from(
-        new Set([...(existing.chains || []), ...(wallet.chains || [])])
-      );
+      const mergedAddressTypes = Array.from(new Set([...existing.addressTypes, ...wallet.addressTypes]));
+      const mergedChains = Array.from(new Set([...(existing.chains || []), ...(wallet.chains || [])]));
       walletMap.set(wallet.id, {
         ...existing,
         addressTypes: mergedAddressTypes,

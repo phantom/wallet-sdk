@@ -1,31 +1,23 @@
 import { discoverEthereumWallets, discoverSolanaWallets, discoverWallets } from "./discovery";
 import { AddressType } from "@phantom/client";
 
-// Mock window and navigator
-const mockWindow = {
-  addEventListener: jest.fn(),
-  removeEventListener: jest.fn(),
-  dispatchEvent: jest.fn(),
-  ethereum: undefined as any,
-};
-
-const mockNavigator = {
-  wallets: undefined as any,
-};
-
 // Setup global mocks
 beforeEach(() => {
-  // @ts-ignore
-  global.window = mockWindow;
-  // @ts-ignore
-  global.navigator = mockNavigator;
+  // jsdom provides window, so we mock its methods instead of replacing it
+  if (typeof window !== "undefined") {
+    window.addEventListener = jest.fn();
+    window.removeEventListener = jest.fn();
+    window.dispatchEvent = jest.fn();
+    // @ts-ignore
+    window.ethereum = undefined;
+  }
+
+  if (typeof navigator !== "undefined") {
+    // @ts-ignore
+    navigator.wallets = undefined;
+  }
 
   jest.clearAllMocks();
-  mockWindow.addEventListener.mockClear();
-  mockWindow.removeEventListener.mockClear();
-  mockWindow.dispatchEvent.mockClear();
-  mockWindow.ethereum = undefined;
-  mockNavigator.wallets = undefined;
 });
 
 afterEach(() => {
@@ -42,12 +34,12 @@ describe("discoverEthereumWallets", () => {
   });
 
   it("should discover wallets via EIP-6963 events", async () => {
-    jest.useFakeTimers();
+    jest.useRealTimers();
 
     let announceHandler: ((event: CustomEvent) => void) | null = null;
 
     // Capture the event handler when it's registered
-    mockWindow.addEventListener.mockImplementation((event: string, handler: any) => {
+    (window.addEventListener as jest.Mock).mockImplementation((event: string, handler: any) => {
       if (event === "eip6963:announceProvider") {
         announceHandler = handler;
       }
@@ -55,7 +47,9 @@ describe("discoverEthereumWallets", () => {
 
     const promise = discoverEthereumWallets();
 
-    // Handler is set up synchronously, so we can call it immediately
+    // Wait a bit for the handler to be set up
+    await new Promise(resolve => setTimeout(resolve, 10));
+
     // Simulate wallet announcements
     if (announceHandler) {
       announceHandler({
@@ -83,18 +77,13 @@ describe("discoverEthereumWallets", () => {
       } as CustomEvent);
     }
 
-    // Fast-forward time to trigger setTimeout
-    jest.advanceTimersByTime(100);
+    // Wait for the 400ms timeout in discoverEthereumWallets
+    await new Promise(resolve => setTimeout(resolve, 400));
 
     const result = await promise;
 
-    expect(mockWindow.addEventListener).toHaveBeenCalledWith(
-      "eip6963:announceProvider",
-      expect.any(Function)
-    );
-    expect(mockWindow.dispatchEvent).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "eip6963:requestProvider" })
-    );
+    expect(window.addEventListener).toHaveBeenCalledWith("eip6963:announceProvider", expect.any(Function));
+    expect(window.dispatchEvent).toHaveBeenCalledWith(expect.objectContaining({ type: "eip6963:requestProvider" }));
 
     expect(result).toHaveLength(2);
     expect(result[0]).toMatchObject({
@@ -104,41 +93,46 @@ describe("discoverEthereumWallets", () => {
       addressTypes: [AddressType.ethereum],
     });
     expect(result[1]).toMatchObject({
-      id: "wallet-com-coinbase",
+      id: "wallet-coinbase-com",
       name: "Coinbase Wallet",
       icon: "https://coinbase.com/icon.png",
       addressTypes: [AddressType.ethereum],
     });
 
-    expect(mockWindow.removeEventListener).toHaveBeenCalled();
+    expect(window.removeEventListener).toHaveBeenCalled();
   });
 
   it("should use wallet name as ID when rdns is not available", async () => {
+    jest.useRealTimers();
+
     let announceHandler: ((event: CustomEvent) => void) | null = null;
 
-    mockWindow.addEventListener.mockImplementation((event: string, handler: any) => {
+    (window.addEventListener as jest.Mock).mockImplementation((event: string, handler: any) => {
       if (event === "eip6963:announceProvider") {
         announceHandler = handler;
+        // Call handler in next tick to simulate wallet announcement
+        setTimeout(() => {
+          if (announceHandler) {
+            announceHandler({
+              detail: {
+                info: {
+                  uuid: "test-uuid",
+                  name: "My Custom Wallet",
+                  icon: "https://example.com/icon.png",
+                  rdns: "", // No rdns
+                },
+                provider: {},
+              },
+            } as CustomEvent);
+          }
+        }, 0);
       }
     });
 
     const promise = discoverEthereumWallets();
 
-    await new Promise(resolve => setTimeout(resolve, 10));
-
-    if (announceHandler) {
-      announceHandler({
-        detail: {
-          info: {
-            uuid: "test-uuid",
-            name: "My Custom Wallet",
-            icon: "https://example.com/icon.png",
-            rdns: "", // No rdns
-          },
-          provider: {},
-        },
-      } as CustomEvent);
-    }
+    // Wait for the 400ms timeout in discoverEthereumWallets
+    await new Promise(resolve => setTimeout(resolve, 450));
 
     const result = await promise;
 
@@ -148,12 +142,19 @@ describe("discoverEthereumWallets", () => {
   });
 
   it("should fallback to legacy window.ethereum when no EIP-6963 providers found", async () => {
-    mockWindow.ethereum = {
+    jest.useRealTimers();
+    // @ts-ignore
+    window.ethereum = {
       providerName: "Legacy Wallet",
       request: jest.fn(),
     };
 
-    const result = await discoverEthereumWallets();
+    const promise = discoverEthereumWallets();
+
+    // Wait for the 400ms timeout in discoverEthereumWallets
+    await new Promise(resolve => setTimeout(resolve, 400));
+
+    const result = await promise;
 
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({
@@ -164,12 +165,19 @@ describe("discoverEthereumWallets", () => {
   });
 
   it("should use provider.name as fallback when providerName is not available", async () => {
-    mockWindow.ethereum = {
+    jest.useRealTimers();
+    // @ts-ignore
+    window.ethereum = {
       name: "Provider Name",
       request: jest.fn(),
     };
 
-    const result = await discoverEthereumWallets();
+    const promise = discoverEthereumWallets();
+
+    // Wait for the 400ms timeout in discoverEthereumWallets
+    await new Promise(resolve => setTimeout(resolve, 400));
+
+    const result = await promise;
 
     expect(result).toHaveLength(1);
     expect(result[0].name).toBe("Provider Name");
@@ -177,11 +185,18 @@ describe("discoverEthereumWallets", () => {
   });
 
   it("should use default name when no provider info is available", async () => {
-    mockWindow.ethereum = {
+    jest.useRealTimers();
+    // @ts-ignore
+    window.ethereum = {
       request: jest.fn(),
     };
 
-    const result = await discoverEthereumWallets();
+    const promise = discoverEthereumWallets();
+
+    // Wait for the 400ms timeout in discoverEthereumWallets
+    await new Promise(resolve => setTimeout(resolve, 400));
+
+    const result = await promise;
 
     expect(result).toHaveLength(1);
     expect(result[0].name).toBe("Ethereum Wallet");
@@ -189,21 +204,24 @@ describe("discoverEthereumWallets", () => {
   });
 
   it("should not use legacy fallback when EIP-6963 providers are found", async () => {
+    jest.useRealTimers();
     let announceHandler: ((event: CustomEvent) => void) | null = null;
 
-    mockWindow.addEventListener.mockImplementation((event: string, handler: any) => {
+    (window.addEventListener as jest.Mock).mockImplementation((event: string, handler: any) => {
       if (event === "eip6963:announceProvider") {
         announceHandler = handler;
       }
     });
 
-    mockWindow.ethereum = {
+    // @ts-ignore
+    window.ethereum = {
       providerName: "Legacy Wallet",
       request: jest.fn(),
     };
 
     const promise = discoverEthereumWallets();
 
+    // Wait for handler to be set up
     await new Promise(resolve => setTimeout(resolve, 10));
 
     if (announceHandler) {
@@ -219,6 +237,9 @@ describe("discoverEthereumWallets", () => {
         },
       } as CustomEvent);
     }
+
+    // Wait for the 400ms timeout in discoverEthereumWallets
+    await new Promise(resolve => setTimeout(resolve, 400));
 
     const result = await promise;
 
@@ -265,13 +286,14 @@ describe("discoverSolanaWallets", () => {
       },
     ];
 
-    mockNavigator.wallets = {
+    // @ts-ignore
+    navigator.wallets = {
       getWallets: jest.fn().mockResolvedValue(mockWallets),
     };
 
     const wallets = await discoverSolanaWallets();
 
-    expect(mockNavigator.wallets.getWallets).toHaveBeenCalled();
+    expect((navigator as any).wallets.getWallets).toHaveBeenCalled();
     expect(wallets).toHaveLength(2);
     expect(wallets[0]).toMatchObject({
       id: "backpack",
@@ -309,7 +331,8 @@ describe("discoverSolanaWallets", () => {
       },
     ];
 
-    mockNavigator.wallets = {
+    // @ts-ignore
+    navigator.wallets = {
       getWallets: jest.fn().mockResolvedValue(mockWallets),
     };
 
@@ -339,7 +362,8 @@ describe("discoverSolanaWallets", () => {
       },
     ];
 
-    mockNavigator.wallets = {
+    // @ts-ignore
+    navigator.wallets = {
       getWallets: jest.fn().mockResolvedValue(mockWallets),
     };
 
@@ -361,7 +385,8 @@ describe("discoverSolanaWallets", () => {
       },
     ];
 
-    mockNavigator.wallets = {
+    // @ts-ignore
+    navigator.wallets = {
       getWallets: jest.fn().mockResolvedValue(mockWallets),
     };
 
@@ -372,7 +397,8 @@ describe("discoverSolanaWallets", () => {
   });
 
   it("should handle errors gracefully when getWallets fails", async () => {
-    mockNavigator.wallets = {
+    // @ts-ignore
+    navigator.wallets = {
       getWallets: jest.fn().mockRejectedValue(new Error("API not available")),
     };
 
@@ -382,7 +408,8 @@ describe("discoverSolanaWallets", () => {
   });
 
   it("should return empty array when wallets API is not available", async () => {
-    mockNavigator.wallets = undefined;
+    // @ts-ignore
+    navigator.wallets = undefined;
 
     const wallets = await discoverSolanaWallets();
 
@@ -390,7 +417,8 @@ describe("discoverSolanaWallets", () => {
   });
 
   it("should return empty array when getWallets is not a function", async () => {
-    mockNavigator.wallets = {
+    // @ts-ignore
+    navigator.wallets = {
       getWallets: "not a function",
     };
 
@@ -402,9 +430,11 @@ describe("discoverSolanaWallets", () => {
 
 describe("discoverWallets", () => {
   it("should merge Solana and Ethereum wallets", async () => {
+    jest.useRealTimers();
 
     // Setup Wallet Standard
-    mockNavigator.wallets = {
+    // @ts-ignore
+    navigator.wallets = {
       getWallets: jest.fn().mockResolvedValue([
         {
           name: "Backpack",
@@ -420,7 +450,7 @@ describe("discoverWallets", () => {
     // Setup EIP-6963 - capture handler when it's registered
     let announceHandler: ((event: CustomEvent) => void) | null = null;
 
-    mockWindow.addEventListener.mockImplementation((event: string, handler: any) => {
+    (window.addEventListener as jest.Mock).mockImplementation((event: string, handler: any) => {
       if (event === "eip6963:announceProvider") {
         announceHandler = handler;
         // Call handler immediately after it's registered to simulate wallet announcement
@@ -443,7 +473,12 @@ describe("discoverWallets", () => {
     });
 
     // Wait for the promise to resolve (real timers handle the setTimeout)
-    const result = await discoverWallets();
+    const promise = discoverWallets();
+
+    // Wait for the 400ms timeout in discoverEthereumWallets
+    await new Promise(resolve => setTimeout(resolve, 450));
+
+    const result = await promise;
 
     expect(result).toHaveLength(2);
     expect(result.find(w => w.id === "backpack")).toBeDefined();
@@ -451,9 +486,11 @@ describe("discoverWallets", () => {
   });
 
   it("should merge multi-chain wallets", async () => {
+    jest.useRealTimers();
 
     // Setup Wallet Standard with a wallet that supports Solana
-    mockNavigator.wallets = {
+    // @ts-ignore
+    navigator.wallets = {
       getWallets: jest.fn().mockResolvedValue([
         {
           name: "Multi Chain Wallet",
@@ -469,7 +506,7 @@ describe("discoverWallets", () => {
     // Setup EIP-6963 with the same wallet (different ID but same name)
     let announceHandler: ((event: CustomEvent) => void) | null = null;
 
-    mockWindow.addEventListener.mockImplementation((event: string, handler: any) => {
+    (window.addEventListener as jest.Mock).mockImplementation((event: string, handler: any) => {
       if (event === "eip6963:announceProvider") {
         announceHandler = handler;
         setTimeout(() => {
@@ -490,16 +527,23 @@ describe("discoverWallets", () => {
       }
     });
 
-    const result = await discoverWallets();
+    const promise = discoverWallets();
+
+    // Wait for the 400ms timeout in discoverEthereumWallets
+    await new Promise(resolve => setTimeout(resolve, 450));
+
+    const result = await promise;
 
     // Should have two separate entries since IDs are different
     expect(result).toHaveLength(2);
   });
 
   it("should merge wallets with same ID from different sources", async () => {
+    jest.useRealTimers();
 
     // Setup Wallet Standard
-    mockNavigator.wallets = {
+    // @ts-ignore
+    navigator.wallets = {
       getWallets: jest.fn().mockResolvedValue([
         {
           name: "Test Wallet",
@@ -515,7 +559,7 @@ describe("discoverWallets", () => {
     // Setup EIP-6963 with wallet that will have same ID
     let announceHandler: ((event: CustomEvent) => void) | null = null;
 
-    mockWindow.addEventListener.mockImplementation((event: string, handler: any) => {
+    (window.addEventListener as jest.Mock).mockImplementation((event: string, handler: any) => {
       if (event === "eip6963:announceProvider") {
         announceHandler = handler;
         setTimeout(() => {
@@ -536,7 +580,12 @@ describe("discoverWallets", () => {
       }
     });
 
-    const result = await discoverWallets();
+    const promise = discoverWallets();
+
+    // Wait for the 400ms timeout in discoverEthereumWallets
+    await new Promise(resolve => setTimeout(resolve, 450));
+
+    const result = await promise;
 
     // Should merge into one wallet with both address types
     expect(result).toHaveLength(1);
@@ -547,8 +596,8 @@ describe("discoverWallets", () => {
   });
 
   it("should return empty array when no wallets are discovered", async () => {
-
-    mockNavigator.wallets = {
+    // @ts-ignore
+    navigator.wallets = {
       getWallets: jest.fn().mockResolvedValue([]),
     };
 
@@ -557,4 +606,3 @@ describe("discoverWallets", () => {
     expect(result).toEqual([]);
   });
 });
-

@@ -1,4 +1,11 @@
-import type { BrowserSDKConfig, ConnectResult, WalletAddress, AuthOptions, AuthProviderType, AddressType } from "./types";
+import type {
+  BrowserSDKConfig,
+  ConnectResult,
+  WalletAddress,
+  AuthOptions,
+  AuthProviderType,
+  AddressType,
+} from "./types";
 import { ProviderManager, type ProviderPreference } from "./ProviderManager";
 import { debug, DebugCategory, type DebugLevel, type DebugCallback } from "./debug";
 import { waitForPhantomExtension } from "./waitForPhantomExtension";
@@ -74,16 +81,16 @@ export class BrowserSDK {
     this.config = config;
     this.providerManager = new ProviderManager(config);
 
-    this.discoverWallets(config.addressTypes || []);
+    this.discoverWallets(config.addressTypes);
   }
 
   private discoverWallets(addressTypes: AddressType[]): void {
     debug.log(DebugCategory.BROWSER_SDK, "Starting wallet discovery", { addressTypes });
 
     discoverWallets()
-      .then((discoveredWallets) => {
+      .then(discoveredWallets => {
         const relevantWallets = discoveredWallets.filter(wallet =>
-          wallet.addressTypes.some(type => addressTypes.includes(type))
+          wallet.addressTypes.some(type => addressTypes.includes(type)),
         );
 
         for (const wallet of relevantWallets) {
@@ -100,7 +107,7 @@ export class BrowserSDK {
           relevantWallets: relevantWallets.length,
         });
       })
-      .catch((error) => {
+      .catch(error => {
         debug.warn(DebugCategory.BROWSER_SDK, "Wallet discovery failed", { error });
       });
   }
@@ -236,45 +243,25 @@ export class BrowserSDK {
     }
   }
 
-  /**
-   * Debug configuration methods
-   * These allow dynamic debug configuration without SDK reinstantiation
-   */
-
-  /**
-   * Enable debug logging
-   */
   enableDebug(): void {
     debug.enable();
     debug.info(DebugCategory.BROWSER_SDK, "Debug logging enabled");
   }
 
-  /**
-   * Disable debug logging
-   */
   disableDebug(): void {
     debug.disable();
   }
 
-  /**
-   * Set debug level
-   */
   setDebugLevel(level: DebugLevel): void {
     debug.setLevel(level);
     debug.info(DebugCategory.BROWSER_SDK, "Debug level updated", { level });
   }
 
-  /**
-   * Set debug callback function
-   */
   setDebugCallback(callback: DebugCallback): void {
     debug.setCallback(callback);
     debug.info(DebugCategory.BROWSER_SDK, "Debug callback updated");
   }
 
-  /**
-   * Configure debug settings all at once
-   */
   configureDebug(config: { enabled?: boolean; level?: DebugLevel; callback?: DebugCallback }): void {
     if (config.enabled !== undefined) {
       if (config.enabled) {
@@ -400,20 +387,11 @@ export class BrowserSDK {
     }
   }
 
-  // ===== WALLET DISCOVERY METHODS =====
-
-  /**
-   * Get all discovered injected wallets that support the configured address types
-   * Uses the global wallet registry shared with InjectedProvider
-   */
   getDiscoveredWallets(): InjectedWalletInfo[] {
     debug.log(DebugCategory.BROWSER_SDK, "Getting discovered wallets");
 
     try {
-      const addressTypes = this.config.addressTypes || [];
-      const wallets = addressTypes.length > 0
-        ? this.walletRegistry.getByAddressTypes(addressTypes)
-        : this.walletRegistry.getAll();
+      const wallets = this.walletRegistry.getByAddressTypes(this.config.addressTypes);
 
       debug.log(DebugCategory.BROWSER_SDK, "Retrieved discovered wallets", {
         count: wallets.length,

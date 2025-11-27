@@ -48,4 +48,3 @@ export function getWalletRegistry(): InjectedWalletRegistry {
   }
   return walletRegistry;
 }
-
