@@ -41,15 +41,7 @@ jest.mock("@phantom/wallet-sdk-ui", () => {
         </TouchableOpacity>
       );
     },
-    Text: ({
-      children,
-      variant,
-      style,
-    }: {
-      children: React.ReactNode;
-      variant?: string;
-      style?: any;
-    }) => {
+    Text: ({ children, variant, style }: { children: React.ReactNode; variant?: string; style?: any }) => {
       return (
         <Text testID={variant} style={style}>
           {children}
