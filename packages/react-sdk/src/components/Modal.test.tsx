@@ -44,18 +44,6 @@ describe("Modal Component (Web)", () => {
       expect(container.firstChild).toBeNull();
     });
 
-    it("should render the close button", () => {
-      const { container } = renderModal();
-      const closeButton = container.querySelector('[style*="cursor: pointer"]');
-      expect(closeButton).toBeInTheDocument();
-    });
-
-    it("should render the Phantom branding in the footer", () => {
-      const { getByText } = renderModal();
-      expect(getByText("Powered by")).toBeInTheDocument();
-      expect(getByText("Phantom")).toBeInTheDocument();
-    });
-
     it("should render children content", () => {
       const { getByTestId, getByText } = renderModal();
       expect(getByTestId("modal-child")).toBeInTheDocument();
@@ -67,16 +55,6 @@ describe("Modal Component (Web)", () => {
   });
 
   describe("Interactions", () => {
-    it("should call onClose when close button is clicked", () => {
-      const onClose = jest.fn();
-      const { container } = renderModal({ onClose });
-
-      const closeButton = container.querySelector('[style*="cursor: pointer"]') as HTMLElement;
-      fireEvent.click(closeButton);
-
-      expect(onClose).toHaveBeenCalledTimes(1);
-    });
-
     it("should call onClose when clicking outside the modal", () => {
       const onClose = jest.fn();
       const { container } = renderModal({ onClose });

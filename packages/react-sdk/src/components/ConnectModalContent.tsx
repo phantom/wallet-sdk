@@ -1,5 +1,10 @@
 import { useState, useCallback, useMemo, type CSSProperties } from "react";
-import { isMobileDevice, getDeeplinkToPhantom, type AuthProviderType, type InjectedWalletInfo } from "@phantom/browser-sdk";
+import {
+  isMobileDevice,
+  getDeeplinkToPhantom,
+  type AuthProviderType,
+  type InjectedWalletInfo,
+} from "@phantom/browser-sdk";
 import {
   Button,
   LoginWithPhantomButton,
