@@ -12,7 +12,7 @@ jest.mock("../hooks/useDisconnect");
 /* eslint-disable @typescript-eslint/no-var-requires */
 jest.mock("@phantom/wallet-sdk-ui", () => {
   const React = require("react");
-  const { TouchableOpacity, Text } = require("react-native");
+  const { TouchableOpacity, Text, View } = require("react-native");
 
   return {
     ...jest.requireActual("@phantom/wallet-sdk-ui"),
@@ -41,8 +41,39 @@ jest.mock("@phantom/wallet-sdk-ui", () => {
         </TouchableOpacity>
       );
     },
-    Text: ({ children, variant }: { children: React.ReactNode; variant?: string }) => {
-      return <Text testID={variant}>{children}</Text>;
+    Text: ({ children, variant, style }: { children: React.ReactNode; variant?: string; style?: any }) => {
+      return (
+        <Text testID={variant} style={style}>
+          {children}
+        </Text>
+      );
+    },
+    ModalHeader: ({
+      title,
+      onClose,
+      goBack,
+      onGoBack,
+    }: {
+      title: string;
+      onClose?: () => void;
+      goBack?: boolean;
+      onGoBack?: () => void;
+    }) => {
+      return (
+        <View testID="modal-header">
+          {goBack && onGoBack && (
+            <TouchableOpacity testID="modal-header-back" onPress={onGoBack}>
+              <Text>Back</Text>
+            </TouchableOpacity>
+          )}
+          <Text testID="modal-header-title">{title}</Text>
+          {onClose && (
+            <TouchableOpacity testID="modal-header-close" onPress={onClose}>
+              <Text>×</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      );
     },
     hexToRgba: (_hex: string, opacity: number) => `rgba(255, 0, 0, ${opacity})`,
   };

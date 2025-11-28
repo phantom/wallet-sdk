@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { View, StyleSheet } from "react-native";
-import { Button, Text, useTheme, hexToRgba } from "@phantom/wallet-sdk-ui";
+import { Button, Text, useTheme, hexToRgba, ModalHeader } from "@phantom/wallet-sdk-ui";
 import { usePhantom } from "../PhantomContext";
 import { useDisconnect } from "../hooks/useDisconnect";
 
@@ -54,6 +54,14 @@ export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
     addressText: {
       fontFamily: "monospace",
     },
+    container: {
+      alignItems: "center",
+      flexDirection: "column",
+      gap: 24,
+      paddingBottom: 24,
+      paddingHorizontal: 32,
+      width: "100%",
+    },
     errorContainer: {
       backgroundColor: errorBackgroundColor,
       borderColor: errorBorderColor,
@@ -65,7 +73,9 @@ export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
   });
 
   return (
-    <>
+    <View style={styles.container}>
+      <ModalHeader title="Wallet" onClose={onClose} />
+
       {addresses && addresses.length > 0 && (
         <View style={styles.accountList}>
           {addresses.map((account, index) => (
@@ -92,6 +102,6 @@ export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
       <Button onClick={handleDisconnect} disabled={isDisconnecting} isLoading={isDisconnecting} fullWidth>
         <Text variant="captionBold">{isDisconnecting ? "Disconnecting..." : "Disconnect"}</Text>
       </Button>
-    </>
+    </View>
   );
 }
