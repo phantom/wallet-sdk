@@ -53,10 +53,12 @@ declare global {
 
 import { debug, DebugCategory } from "../../debug";
 import { InjectedSolanaChain, InjectedEthereumChain, type ChainCallbacks } from "./chains";
+import { InjectedWalletRegistry } from "../../wallets/registry";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
 
 const WAS_CONNECTED_KEY = "phantom-injected-was-connected";
 const WAS_CONNECTED_VALUE = "true";
+const LAST_WALLET_ID_KEY = "phantom-injected-last-wallet-id";
 
 export interface InjectedProviderConfig {
   addressTypes: AddressType[];
@@ -67,6 +69,8 @@ export class InjectedProvider implements Provider {
   private addresses: WalletAddress[] = [];
   private addressTypes: AddressType[];
   private phantom: PhantomExtended;
+  private walletRegistry = new InjectedWalletRegistry();
+  private selectedWalletId: string | null = null;
 
   // Chain instances
   private _solanaChain?: ISolanaChain;
@@ -149,6 +153,31 @@ export class InjectedProvider implements Provider {
 
     if (authOptions.provider !== "injected") {
       throw new Error(`Invalid provider for injected connection: ${authOptions.provider}. Must be "injected"`);
+    }
+
+    const requestedWalletId = authOptions.walletId || "phantom";
+    if (requestedWalletId === "phantom") {
+      // Default to Phantom injected provider
+      this.selectedWalletId = "phantom";
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Selected Phantom injected wallet for connection", {
+        walletId: "phantom",
+      });
+    }
+
+    if (this.addressTypes.includes(AddressType.solana)) {
+      if (this.selectedWalletId !== "phantom") {
+        if (!this.walletRegistry.has(requestedWalletId)) {
+          debug.error(DebugCategory.INJECTED_PROVIDER, "Unknown injected wallet id requested", {
+            walletId: requestedWalletId,
+          });
+          throw new Error(`Unknown injected wallet id: ${requestedWalletId}`);
+        }
+
+        this.selectedWalletId = requestedWalletId;
+        debug.log(DebugCategory.INJECTED_PROVIDER, "Selected injected wallet for connection", {
+          walletId: requestedWalletId,
+        });
+      }
     }
 
     this.emit("connect_start", {
@@ -237,9 +266,15 @@ export class InjectedProvider implements Provider {
       try {
         localStorage.setItem(WAS_CONNECTED_KEY, WAS_CONNECTED_VALUE);
         debug.log(DebugCategory.INJECTED_PROVIDER, "Set was-connected flag - auto-reconnect enabled");
+        if (this.selectedWalletId) {
+          localStorage.setItem(LAST_WALLET_ID_KEY, this.selectedWalletId);
+          debug.log(DebugCategory.INJECTED_PROVIDER, "Stored last injected wallet id", {
+            walletId: this.selectedWalletId,
+          });
+        }
       } catch (error) {
         // Ignore localStorage errors (e.g., in private browsing mode)
-        debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to set was-connected flag", { error });
+        debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to persist injected provider state", { error });
       }
 
       const result = {

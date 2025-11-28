@@ -48,6 +48,7 @@ type AuthProviderType = EmbeddedProviderAuthType | "injected";
 
 type AuthOptions = {
   provider: AuthProviderType;
+  walletId?: string;
   customAuthData?: Record<string, any>;
 };
 
