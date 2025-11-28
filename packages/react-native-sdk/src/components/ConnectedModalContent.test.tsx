@@ -44,12 +44,10 @@ jest.mock("@phantom/wallet-sdk-ui", () => {
     Text: ({
       children,
       variant,
-      color: _color,
       style,
     }: {
       children: React.ReactNode;
       variant?: string;
-      color?: string;
       style?: any;
     }) => {
       return (

@@ -36,17 +36,7 @@ jest.mock("@phantom/wallet-sdk-ui", () => {
     Icon: ({ type }: { type: string }) => {
       return <View testID={`icon-${type}`} />;
     },
-    Text: ({
-      children,
-      variant: _variant,
-      color: _color,
-      style,
-    }: {
-      children: React.ReactNode;
-      variant?: string;
-      color?: string;
-      style?: any;
-    }) => {
+    Text: ({ children, style }: { children: React.ReactNode; style?: any }) => {
       return <Text style={style}>{children}</Text>;
     },
     ModalHeader: ({
