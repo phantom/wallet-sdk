@@ -57,14 +57,12 @@ describe("useDiscoveredWallets", () => {
         name: "MetaMask",
         icon: "https://metamask.io/icon.png",
         addressTypes: [AddressType.ethereum],
-        chains: ["eip155:1"],
       },
       {
         id: "backpack",
         name: "Backpack",
         icon: "https://backpack.app/icon.png",
         addressTypes: [AddressType.solana],
-        chains: ["solana:mainnet"],
       },
     ];
 
