@@ -25,5 +25,9 @@ export { useAutoConfirm } from "./useAutoConfirm";
 export { useSolana } from "./useSolana";
 export { useEthereum } from "./useEthereum";
 
+// Wallet discovery
+export { useDiscoveredWallets } from "./useDiscoveredWallets";
+export type { UseDiscoveredWalletsResult } from "./useDiscoveredWallets";
+
 // Theme management - exported from @phantom/wallet-sdk-ui
 export { useTheme } from "@phantom/wallet-sdk-ui";

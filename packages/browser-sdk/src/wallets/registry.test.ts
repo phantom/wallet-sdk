@@ -6,7 +6,6 @@ function createWalletInfo(id: string, addressTypes: AddressType[]): InjectedWall
     id,
     name: `Wallet ${id}`,
     addressTypes,
-    chains: ["solana:mainnet"],
   };
 }
 

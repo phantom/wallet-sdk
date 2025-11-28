@@ -1,4 +1,13 @@
-// Global TypeScript declarations
+// Global TypeScript declarations for Wallet Standard and EIP-6963
 
-// SDK version placeholder that gets replaced at build time
-declare const __SDK_VERSION__: string;
+declare global {
+  // Wallet Standard API
+  interface Navigator {
+    wallets?: {
+      getWallets?: () => Promise<any[]>;
+    };
+  }
+}
+
+// Make this file a module
+export {};

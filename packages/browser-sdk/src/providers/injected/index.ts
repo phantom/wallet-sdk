@@ -53,7 +53,7 @@ declare global {
 
 import { debug, DebugCategory } from "../../debug";
 import { InjectedSolanaChain, InjectedEthereumChain, type ChainCallbacks } from "./chains";
-import { InjectedWalletRegistry } from "../../wallets/registry";
+import { getWalletRegistry, type InjectedWalletRegistry } from "../../wallets/registry";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
 
 const WAS_CONNECTED_KEY = "phantom-injected-was-connected";
@@ -69,7 +69,7 @@ export class InjectedProvider implements Provider {
   private addresses: WalletAddress[] = [];
   private addressTypes: AddressType[];
   private phantom: PhantomExtended;
-  private walletRegistry = new InjectedWalletRegistry();
+  private walletRegistry: InjectedWalletRegistry;
   private selectedWalletId: string | null = null;
 
   // Chain instances
@@ -86,6 +86,7 @@ export class InjectedProvider implements Provider {
 
     // Store config values
     this.addressTypes = config.addressTypes;
+    this.walletRegistry = getWalletRegistry();
     debug.log(DebugCategory.INJECTED_PROVIDER, "Address types configured", { addressTypes: this.addressTypes });
 
     // Create single phantom instance with all needed plugins

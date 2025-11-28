@@ -7,8 +7,6 @@ export interface InjectedWalletInfo {
   name: string;
   icon?: string;
   addressTypes: AddressType[];
-  // caip2 style chain identifiers, e.g. "solana:mainnet", "eip155:1".
-  chains?: string[];
 }
 
 export class InjectedWalletRegistry {
@@ -37,4 +35,14 @@ export class InjectedWalletRegistry {
     const allowed = new Set(addressTypes);
     return this.getAll().filter(wallet => wallet.addressTypes.some(t => allowed.has(t)));
   }
+}
+
+// Singleton instance of the wallet registry
+let walletRegistry: InjectedWalletRegistry | null = null;
+
+export function getWalletRegistry(): InjectedWalletRegistry {
+  if (!walletRegistry) {
+    walletRegistry = new InjectedWalletRegistry();
+  }
+  return walletRegistry;
 }

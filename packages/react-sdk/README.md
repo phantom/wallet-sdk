@@ -772,6 +772,39 @@ function EthereumOperations() {
 | Monad Mainnet    | `143`      | `ethereum.switchChain(143)`      |
 | Monad Testnet    | `10143`    | `ethereum.switchChain(10143)`    |
 
+### Wallet Discovery Hook
+
+#### useDiscoveredWallets
+
+Hook to get discovered injected wallets with automatic loading and error states. Discovers wallets using Wallet Standard (Solana) and EIP-6963 (Ethereum) standards.
+
+```tsx
+import { useDiscoveredWallets } from "@phantom/react-sdk";
+
+function WalletSelector() {
+  const { wallets, isLoading, error, refetch } = useDiscoveredWallets();
+
+  // wallets: InjectedWalletInfo[] - Array of discovered wallets
+  // isLoading: boolean - Loading state during discovery
+  // error: Error | null - Error state if discovery fails
+  // refetch: () => Promise<void> - Function to manually trigger discovery
+}
+```
+
+**Returns:**
+
+- `wallets: InjectedWalletInfo[]` - Array of discovered wallet information
+- `isLoading: boolean` - `true` while discovery is in progress
+- `error: Error | null` - Error object if discovery fails, `null` otherwise
+- `refetch: () => Promise<void>` - Async function to manually refresh the wallet list
+
+**Behavior:**
+
+- Automatically fetches discovered wallets when the SDK becomes available
+- If no wallets are found in the registry, triggers async `discoverWallets()` to discover them
+- Wallets are filtered based on the `addressTypes` configured in `PhantomProvider`
+- Phantom wallet is automatically included if available
+
 ### Auto-Confirm Hook (Injected Provider Only)
 
 #### useAutoConfirm
@@ -1042,6 +1075,7 @@ Quick reference of all available hooks:
 | `useIsPhantomLoginAvailable` | Check Phantom Login availability        | `{ isLoading, isAvailable }`                        |
 | `useDisconnect`              | Disconnect from wallet                  | `{ disconnect, isDisconnecting }`                   |
 | `useAutoConfirm`             | Auto-confirm management (injected only) | `{ enable, disable, status, supportedChains, ... }` |
+| `useDiscoveredWallets`       | Get discovered injected wallets         | `{ wallets, isLoading, error, refetch }`            |
 | `useSolana`                  | Solana chain operations                 | `{ signMessage, signAndSendTransaction, ... }`      |
 | `useEthereum`                | Ethereum chain operations               | `{ signPersonalMessage, sendTransaction, ... }`     |
 | `useTheme`                   | Access current theme                    | `PhantomTheme`                                      |
