@@ -165,7 +165,7 @@ export class InjectedProvider implements Provider {
       });
     }
 
-    if (this.addressTypes.includes(AddressType.solana) && this.selectedWalletId !== "phantom") {
+    if (this.addressTypes.includes(AddressType.solana) && this.selectedWalletId !== "phantom" ) {
       if (!this.walletRegistry.has(requestedWalletId)) {
         debug.error(DebugCategory.INJECTED_PROVIDER, "Unknown injected wallet id requested", {
           walletId: requestedWalletId,
