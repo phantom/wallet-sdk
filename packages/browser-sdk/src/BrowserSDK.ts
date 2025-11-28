@@ -1,11 +1,5 @@
-import type {
-  BrowserSDKConfig,
-  ConnectResult,
-  WalletAddress,
-  AuthOptions,
-  AuthProviderType,
-  AddressType,
-} from "./types";
+import type { BrowserSDKConfig, ConnectResult, WalletAddress, AuthOptions, AuthProviderType } from "./types";
+import { AddressType } from "@phantom/client";
 import { ProviderManager, type ProviderPreference } from "./ProviderManager";
 import { debug, DebugCategory, type DebugLevel, type DebugCallback } from "./debug";
 import { waitForPhantomExtension } from "./waitForPhantomExtension";
@@ -81,16 +75,16 @@ export class BrowserSDK {
     this.config = config;
     this.providerManager = new ProviderManager(config);
 
-    this.discoverWallets(config.addressTypes);
+    void this.discoverWallets();
   }
 
-  private discoverWallets(addressTypes: AddressType[]): void {
-    debug.log(DebugCategory.BROWSER_SDK, "Starting wallet discovery", { addressTypes });
+  discoverWallets(): Promise<InjectedWalletInfo[]> {
+    debug.log(DebugCategory.BROWSER_SDK, "Starting wallet discovery", { addressTypes: this.config.addressTypes });
 
-    discoverWallets()
+    return discoverWallets()
       .then(discoveredWallets => {
         const relevantWallets = discoveredWallets.filter(wallet =>
-          wallet.addressTypes.some(type => addressTypes.includes(type)),
+          wallet.addressTypes.some(type => this.config.addressTypes.includes(type)),
         );
 
         for (const wallet of relevantWallets) {
@@ -106,9 +100,12 @@ export class BrowserSDK {
           totalDiscovered: discoveredWallets.length,
           relevantWallets: relevantWallets.length,
         });
+
+        return relevantWallets;
       })
       .catch(error => {
         debug.warn(DebugCategory.BROWSER_SDK, "Wallet discovery failed", { error });
+        return []; // Return empty array on error
       });
   }
 
@@ -393,11 +390,45 @@ export class BrowserSDK {
     try {
       const wallets = this.walletRegistry.getByAddressTypes(this.config.addressTypes);
 
+      // Also include Phantom if it's available and matches the configured address types
+      const phantomWallets: InjectedWalletInfo[] = [];
+      if (typeof window !== "undefined" && (window as any).phantom) {
+        const phantom = (window as any).phantom;
+        const addressTypes: AddressType[] = [];
+
+        if (phantom.solana && this.config.addressTypes.includes(AddressType.solana)) {
+          addressTypes.push(AddressType.solana);
+        }
+        if (phantom.ethereum && this.config.addressTypes.includes(AddressType.ethereum)) {
+          addressTypes.push(AddressType.ethereum);
+        }
+
+        if (addressTypes.length > 0) {
+          phantomWallets.push({
+            id: "phantom",
+            name: "Phantom",
+            icon: "https://phantom.app/img/phantom-icon.svg",
+            addressTypes,
+            chains: addressTypes.includes(AddressType.solana)
+              ? ["solana:mainnet", "solana:devnet", "solana:testnet"]
+              : ["eip155:1", "eip155:5", "eip155:11155111"],
+          });
+        }
+      }
+
+      // Combine discovered wallets with Phantom, avoiding duplicates
+      const allWallets = [...wallets];
+      for (const phantomWallet of phantomWallets) {
+        if (!allWallets.find(w => w.id === phantomWallet.id)) {
+          allWallets.push(phantomWallet);
+        }
+      }
+
       debug.log(DebugCategory.BROWSER_SDK, "Retrieved discovered wallets", {
-        count: wallets.length,
-        walletIds: wallets.map(w => w.id),
+        count: allWallets.length,
+        walletIds: allWallets.map(w => w.id),
       });
-      return wallets;
+      return allWallets;
     } catch (error) {
       debug.error(DebugCategory.BROWSER_SDK, "Failed to get discovered wallets", {
         error: (error as Error).message,
