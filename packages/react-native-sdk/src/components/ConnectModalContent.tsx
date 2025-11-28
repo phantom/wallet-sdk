@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { View, Image, StyleSheet, ActivityIndicator } from "react-native";
 import type { EmbeddedProviderAuthType } from "@phantom/embedded-provider-core";
-import { Button, Icon, Text, useTheme, hexToRgba } from "@phantom/wallet-sdk-ui";
+import { Button, Icon, Text, useTheme, hexToRgba, ModalHeader } from "@phantom/wallet-sdk-ui";
 import { usePhantom } from "../PhantomContext";
 import { useConnect } from "../hooks/useConnect";
 
@@ -52,17 +52,20 @@ export function ConnectModalContent({ appIcon, onClose }: ConnectModalContentPro
       borderRadius: 28,
       height: 56,
       width: 56,
+      marginBottom: 12,
     },
     buttonContainer: {
       alignItems: "center",
       flexDirection: "column",
       gap: 12,
+      paddingHorizontal: 32,
       width: "100%",
     },
     container: {
       alignItems: "center",
       flexDirection: "column",
-      gap: 24,
+      gap: 12,
+      paddingBottom: 24,
       width: "100%",
     },
     errorContainer: {
@@ -87,10 +90,23 @@ export function ConnectModalContent({ appIcon, onClose }: ConnectModalContentPro
     spacer: {
       flex: 1,
     },
+    footer: {
+      alignItems: "center",
+      borderColor: theme.aux,
+      borderTopWidth: 1,
+      flexDirection: "row",
+      gap: 4,
+      justifyContent: "center",
+      marginTop: 24,
+      padding: 16,
+      width: "100%",
+    },
   });
 
   return (
     <View style={styles.container}>
+      <ModalHeader title="Login or Sign Up" onClose={onClose} />
+
       {appIcon && <Image testID="app-icon" source={{ uri: appIcon }} style={styles.appIcon} />}
 
       {error && (
@@ -166,6 +182,16 @@ export function ConnectModalContent({ appIcon, onClose }: ConnectModalContentPro
           )}
         </View>
       )}
+
+      <View style={styles.footer}>
+        <Text variant="label" color={theme.secondary}>
+          Powered by
+        </Text>
+        <Icon type="phantom" size={16} color={theme.secondary} />
+        <Text variant="label" color={theme.secondary}>
+          Phantom
+        </Text>
+      </View>
     </View>
   );
 }
