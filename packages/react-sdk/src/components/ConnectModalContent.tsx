@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, type CSSProperties } from "react";
-import { isMobileDevice, getDeeplinkToPhantom, type AuthProviderType } from "@phantom/browser-sdk";
+import { isMobileDevice, getDeeplinkToPhantom, type AuthProviderType, type InjectedWalletInfo } from "@phantom/browser-sdk";
 import {
   Button,
   LoginWithPhantomButton,
@@ -15,7 +15,6 @@ import { useIsExtensionInstalled } from "../hooks/useIsExtensionInstalled";
 import { useIsPhantomLoginAvailable } from "../hooks/useIsPhantomLoginAvailable";
 import { useConnect } from "../hooks/useConnect";
 import { useDiscoveredWallets } from "../hooks/useDiscoveredWallets";
-import type { InjectedWalletInfo } from "@phantom/browser-sdk";
 
 export interface ConnectModalContentProps {
   appIcon?: string;
