@@ -165,20 +165,18 @@ export class InjectedProvider implements Provider {
       });
     }
 
-    if (this.addressTypes.includes(AddressType.solana)) {
-      if (this.selectedWalletId !== "phantom") {
-        if (!this.walletRegistry.has(requestedWalletId)) {
-          debug.error(DebugCategory.INJECTED_PROVIDER, "Unknown injected wallet id requested", {
-            walletId: requestedWalletId,
-          });
-          throw new Error(`Unknown injected wallet id: ${requestedWalletId}`);
-        }
-
-        this.selectedWalletId = requestedWalletId;
-        debug.log(DebugCategory.INJECTED_PROVIDER, "Selected injected wallet for connection", {
+    if (this.addressTypes.includes(AddressType.solana) && this.selectedWalletId !== "phantom" ) {
+      if (!this.walletRegistry.has(requestedWalletId)) {
+        debug.error(DebugCategory.INJECTED_PROVIDER, "Unknown injected wallet id requested", {
           walletId: requestedWalletId,
         });
+        throw new Error(`Unknown injected wallet id: ${requestedWalletId}`);
       }
+
+      this.selectedWalletId = requestedWalletId;
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Selected injected wallet for connection", {
+        walletId: requestedWalletId,
+      });
     }
 
     this.emit("connect_start", {

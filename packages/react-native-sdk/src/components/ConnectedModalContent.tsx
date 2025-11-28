@@ -38,14 +38,6 @@ export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
   };
 
   const styles = StyleSheet.create({
-    container: {
-      alignItems: "center",
-      flexDirection: "column",
-      gap: 24,
-      paddingBottom: 24,
-      paddingHorizontal: 32,
-      width: "100%",
-    },
     accountItem: {
       flexDirection: "column",
       gap: 8,
@@ -61,6 +53,14 @@ export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
     },
     addressText: {
       fontFamily: "monospace",
+    },
+    container: {
+      alignItems: "center",
+      flexDirection: "column",
+      gap: 24,
+      paddingBottom: 24,
+      paddingHorizontal: 32,
+      width: "100%",
     },
     errorContainer: {
       backgroundColor: errorBackgroundColor,

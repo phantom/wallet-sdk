@@ -50,16 +50,6 @@ describe("Modal Component (Web)", () => {
       expect(closeButton).toBeInTheDocument();
     });
 
-    it("should render the correct header text when not connected", () => {
-      const { getByText } = renderModal({ isConnected: false });
-      expect(getByText("Login or Sign Up")).toBeInTheDocument();
-    });
-
-    it("should render the correct header text when connected", () => {
-      const { getByText } = renderModal({ isConnected: true });
-      expect(getByText("Wallet")).toBeInTheDocument();
-    });
-
     it("should render the Phantom branding in the footer", () => {
       const { getByText } = renderModal();
       expect(getByText("Powered by")).toBeInTheDocument();

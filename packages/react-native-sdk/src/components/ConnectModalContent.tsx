@@ -51,8 +51,8 @@ export function ConnectModalContent({ appIcon, onClose }: ConnectModalContentPro
     appIcon: {
       borderRadius: 28,
       height: 56,
-      width: 56,
       marginBottom: 12,
+      width: 56,
     },
     buttonContainer: {
       alignItems: "center",
@@ -80,16 +80,6 @@ export function ConnectModalContent({ appIcon, onClose }: ConnectModalContentPro
       color: errorTextColor,
       fontSize: 14,
     },
-    loadingContainer: {
-      alignItems: "center",
-      flexDirection: "column",
-      gap: 12,
-      justifyContent: "center",
-      padding: 24,
-    },
-    spacer: {
-      flex: 1,
-    },
     footer: {
       alignItems: "center",
       borderColor: theme.aux,
@@ -100,6 +90,16 @@ export function ConnectModalContent({ appIcon, onClose }: ConnectModalContentPro
       marginTop: 24,
       padding: 16,
       width: "100%",
+    },
+    loadingContainer: {
+      alignItems: "center",
+      flexDirection: "column",
+      gap: 12,
+      justifyContent: "center",
+      padding: 24,
+    },
+    spacer: {
+      flex: 1,
     },
   });
 
