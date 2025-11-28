@@ -5,6 +5,8 @@ import { usePhantom } from "../PhantomContext";
 import { useIsExtensionInstalled } from "../hooks/useIsExtensionInstalled";
 import { useIsPhantomLoginAvailable } from "../hooks/useIsPhantomLoginAvailable";
 import { useConnect } from "../hooks/useConnect";
+import { useDiscoveredWallets } from "../hooks/useDiscoveredWallets";
+import type { InjectedWalletInfo } from "@phantom/browser-sdk";
 
 export interface ConnectModalContentProps {
   appIcon?: string;
@@ -19,21 +21,33 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
   const isExtensionInstalled = useIsExtensionInstalled();
   const isPhantomLoginAvailable = useIsPhantomLoginAvailable();
   const isMobile = useMemo(() => isMobileDevice(), []);
+  const { wallets: discoveredWallets } = useDiscoveredWallets();
 
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [providerType, setProviderType] = useState<AuthProviderType | "deeplink" | null>(null);
+  const [showOtherWallets, setShowOtherWallets] = useState(false);
+  const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
 
   const showDivider = !(allowedProviders.length === 1 && allowedProviders.includes("injected"));
 
+  // Filter out Phantom from discovered wallets (it's shown separately)
+  const otherWallets = useMemo(() => {
+    return discoveredWallets.filter(wallet => wallet.id !== "phantom");
+  }, [discoveredWallets]);
+
+  const shouldShowOtherWalletsButton = otherWallets.length > 2;
+  const walletsToShowInline = shouldShowOtherWalletsButton ? [] : otherWallets;
+
   const connectWithAuthProvider = useCallback(
-    async (provider: AuthProviderType) => {
+    async (provider: AuthProviderType, walletId?: string) => {
       try {
         setIsConnecting(true);
         setError(null);
         setProviderType(provider);
+        setSelectedWalletId(walletId || null);
 
-        await baseConnect.connect({ provider });
+        await baseConnect.connect({ provider, walletId });
 
         onClose();
       } catch (err) {
@@ -42,9 +56,17 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
       } finally {
         setIsConnecting(false);
         setProviderType(null);
+        setSelectedWalletId(null);
       }
     },
     [baseConnect, onClose],
+  );
+
+  const connectWithWallet = useCallback(
+    async (wallet: InjectedWalletInfo) => {
+      await connectWithAuthProvider("injected", wallet.id);
+    },
+    [connectWithAuthProvider],
   );
 
   const connectWithDeeplink = useCallback(() => {
@@ -136,6 +158,43 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
     animation: "spin 1s linear infinite",
   };
 
+  const walletIconStyle: CSSProperties = {
+    width: "20px",
+    height: "20px",
+    borderRadius: "6px",
+    objectFit: "cover" as const,
+  };
+
+  const walletButtonContentStyle: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "8px",
+    width: "100%",
+  };
+
+  const walletButtonLeftStyle: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+  };
+
+  const walletButtonRightStyle: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+  };
+
+  const backButtonStyle: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    cursor: "pointer",
+    padding: "8px",
+    marginBottom: "16px",
+    color: theme.brand,
+  };
+
   return (
     <>
       <style>
@@ -211,7 +270,7 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
             </div>
           )}
 
-          {/* Injected provider button */}
+          {/* Injected provider section */}
           {!isMobile && allowedProviders.includes("injected") && isExtensionInstalled.isInstalled && (
             <>
               {showDivider && (
@@ -222,25 +281,113 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
                 </div>
               )}
 
-              <Button
-                onClick={() => connectWithAuthProvider("injected")}
-                disabled={isConnecting}
-                isLoading={isConnecting && providerType === "injected"}
-                fullWidth={true}
-              >
-                <span style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <BoundedIcon type="phantom" size={20} background="#AB9FF2" color="white" />
-                    <Text variant="captionBold">Phantom</Text>
-                  </span>
-                  <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <Text variant="label" color={theme.secondary}>
-                      Detected
-                    </Text>
-                    <Icon type="chevron-right" size={16} />
-                  </span>
-                </span>
-              </Button>
+              {showOtherWallets ? (
+                <>
+                  {/* Back button */}
+                  <div style={backButtonStyle} onClick={() => setShowOtherWallets(false)}>
+                    <Icon type="chevron-right" size={16} style={{ transform: "rotate(180deg)" }} />
+                    <Text variant="captionBold">Back</Text>
+                  </div>
+
+                  {/* All other wallets list */}
+                  {otherWallets.map(wallet => (
+                    <Button
+                      key={wallet.id}
+                      onClick={() => connectWithWallet(wallet)}
+                      disabled={isConnecting}
+                      isLoading={isConnecting && providerType === "injected" && selectedWalletId === wallet.id}
+                      fullWidth={true}
+                    >
+                      <span style={walletButtonContentStyle}>
+                        <span style={walletButtonLeftStyle}>
+                          {wallet.icon ? (
+                            <img src={wallet.icon} alt={wallet.name} style={walletIconStyle} />
+                          ) : (
+                            <BoundedIcon type="wallet" size={20} background={theme.aux} color={theme.primary} />
+                          )}
+                          <Text variant="captionBold">{wallet.name}</Text>
+                        </span>
+                        <span style={walletButtonRightStyle}>
+                          <Text variant="label" color={theme.secondary}>
+                            Detected
+                          </Text>
+                          <Icon type="chevron-right" size={16} />
+                        </span>
+                      </span>
+                    </Button>
+                  ))}
+                </>
+              ) : (
+                <>
+                  {/* Phantom button */}
+                  <Button
+                    onClick={() => connectWithAuthProvider("injected")}
+                    disabled={isConnecting}
+                    isLoading={isConnecting && providerType === "injected" && !selectedWalletId}
+                    fullWidth={true}
+                  >
+                    <span style={walletButtonContentStyle}>
+                      <span style={walletButtonLeftStyle}>
+                        <BoundedIcon type="phantom" size={20} background="#AB9FF2" color="white" />
+                        <Text variant="captionBold">Phantom</Text>
+                      </span>
+                      <span style={walletButtonRightStyle}>
+                        <Text variant="label" color={theme.secondary}>
+                          Detected
+                        </Text>
+                        <Icon type="chevron-right" size={16} />
+                      </span>
+                    </span>
+                  </Button>
+
+                  {/* Inline wallets (2 or fewer) */}
+                  {walletsToShowInline.map(wallet => (
+                    <Button
+                      key={wallet.id}
+                      onClick={() => connectWithWallet(wallet)}
+                      disabled={isConnecting}
+                      isLoading={isConnecting && providerType === "injected" && selectedWalletId === wallet.id}
+                      fullWidth={true}
+                    >
+                      <span style={walletButtonContentStyle}>
+                        <span style={walletButtonLeftStyle}>
+                          {wallet.icon ? (
+                            <img src={wallet.icon} alt={wallet.name} style={walletIconStyle} />
+                          ) : (
+                            <BoundedIcon type="wallet" size={20} background={theme.aux} color={theme.primary} />
+                          )}
+                          <Text variant="captionBold">{wallet.name}</Text>
+                        </span>
+                        <span style={walletButtonRightStyle}>
+                          <Text variant="label" color={theme.secondary}>
+                            Detected
+                          </Text>
+                          <Icon type="chevron-right" size={16} />
+                        </span>
+                      </span>
+                    </Button>
+                  ))}
+
+                  {/* Other Wallets button (if more than 2 wallets) */}
+                  {shouldShowOtherWalletsButton && (
+                    <Button
+                      onClick={() => setShowOtherWallets(true)}
+                      disabled={isConnecting}
+                      fullWidth={true}
+                    >
+                      <span style={walletButtonContentStyle}>
+                        <span style={walletButtonLeftStyle}>
+                          <BoundedIcon type="wallet" size={20} background={theme.aux} color={theme.primary} />
+                          <Text variant="captionBold">Other Wallets</Text>
+                        </span>
+                        <span style={walletButtonRightStyle}>
+                          <Icon type="chevron-right" size={16} />
+                        </span>
+                      </span>
+                    </Button>
+                  )}
+                </>
+              )}
             </>
           )}
         </div>
