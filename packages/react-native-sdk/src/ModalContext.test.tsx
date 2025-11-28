@@ -6,10 +6,14 @@ import { useModal } from "./ModalContext";
 import type { ReactNode } from "react";
 
 // Mock dependencies
+const mockClearSpendingLimitError = jest.fn();
+
 jest.mock("./PhantomContext", () => ({
   usePhantom: jest.fn(() => ({
     isConnected: false,
     addresses: [],
+    spendingLimitError: false,
+    clearSpendingLimitError: mockClearSpendingLimitError,
   })),
 }));
 

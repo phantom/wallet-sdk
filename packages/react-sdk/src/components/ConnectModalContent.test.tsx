@@ -91,6 +91,8 @@ describe("ConnectModalContent", () => {
       isClient: true,
       user: null,
       theme: {} as any,
+      spendingLimitError: false,
+      clearSpendingLimitError: jest.fn(),
     });
     mockUseConnect.mockReturnValue({
       connect: mockConnect,

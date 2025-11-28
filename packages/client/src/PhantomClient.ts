@@ -44,6 +44,7 @@ import { deriveSubmissionConfig } from "./caip2-mappings";
 import { DerivationPath, getNetworkConfig } from "./constants";
 import {
   type PrepareResponse,
+  type PrepareErrorResponse,
   type AuthenticatorConfig,
   type CreateAuthenticatorParams,
   type CreateWalletResult,
@@ -59,6 +60,7 @@ import {
   type SignTypedDataParams,
   type UserConfig,
 } from "./types";
+import { SpendingLimitError, TransactionBlockedError } from "./errors";
 
 import type { Stamper } from "@phantom/sdk-types";
 import { getSecureTimestamp, randomUUID, isEthereumChain, isSolanaChain } from "@phantom/utils";
@@ -221,7 +223,20 @@ export class PhantomClient {
       });
       return response.data;
     } catch (error: any) {
-      throw new Error(`Failed to prepare transaction: ${error.response?.data?.message || error.message}`);
+      const data = error?.response?.data as PrepareErrorResponse | undefined;
+
+      // Check for spending limit errors
+      if (data?.type === "spending-limit-exceeded" || (data as any)?.error?.startsWith("Transaction would exceed")) {
+        throw new SpendingLimitError(data as PrepareErrorResponse);
+      }
+
+      // Check for transaction blocked errors (e.g., insufficient funds)
+      if (data?.type === "transaction-blocked") {
+        throw new TransactionBlockedError(data);
+      }
+
+      const message = data?.detail || data?.title || error.message;
+      throw new Error(`Failed to prepare transaction: ${message}`);
     }
   }
 
@@ -247,22 +262,14 @@ export class PhantomClient {
         throw new Error("Account is required to simulate Solana transactions with spending limits");
       }
 
-      try {
-        const prepareResponse = await this.prepare(
-          encodedTransaction,
-          this.config.organizationId as string,
-          submissionConfig,
-          account,
-        );
+      const prepareResponse = await this.prepare(
+        encodedTransaction,
+        this.config.organizationId as string,
+        submissionConfig,
+        account,
+      );
 
-        return prepareResponse.transaction;
-      } catch (e: unknown) {
-        const errorMessage = e instanceof Error ? e.message : String(e);
-        throw new Error(
-          `Failed to apply spending limits for this transaction: ${errorMessage}. ` +
-            `Transaction cannot proceed without spending limit enforcement.`,
-        );
-      }
+      return prepareResponse.transaction;
     }
 
     // Non-EVM chains (including Solana server-wallet): send the original transaction as-is
@@ -352,6 +359,10 @@ export class PhantomClient {
     } catch (error: any) {
       const actionType = includeSubmissionConfig ? "sign and send" : "sign";
       console.error(`Failed to ${actionType} transaction:`, error.response?.data || error.message);
+      // Preserve spending limit errors so callers can distinguish them
+      if (error instanceof SpendingLimitError) {
+        throw error;
+      }
       throw new Error(`Failed to ${actionType} transaction: ${error.response?.data?.message || error.message}`);
     }
   }
