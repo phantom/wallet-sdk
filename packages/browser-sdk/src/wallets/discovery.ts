@@ -33,16 +33,41 @@ interface WalletStandardAccount {
   readonly features: readonly string[];
 }
 
-/**
- * Discover EVM wallets using EIP-6963 standard
- */
+function generateWalletIdFromEIP6963(info: EIP6963ProviderInfo): string {
+  if (info.rdns) {
+    return info.rdns.split(".").reverse().join("-");
+  }
+  return info.name.toLowerCase().replace(/\s+/g, "-");
+}
+
+function generateWalletIdFromName(name: string): string {
+  return name.toLowerCase().replace(/\s+/g, "-");
+}
+
+function processEIP6963Providers(providers: Map<string, EIP6963ProviderDetail>): InjectedWalletInfo[] {
+  const wallets: InjectedWalletInfo[] = [];
+
+  for (const [, detail] of providers) {
+    const { info } = detail;
+    const walletId = generateWalletIdFromEIP6963(info);
+
+    wallets.push({
+      id: walletId,
+      name: info.name,
+      icon: info.icon,
+      addressTypes: [ClientAddressType.ethereum],
+    });
+  }
+
+  return wallets;
+}
+
 export function discoverEthereumWallets(): Promise<InjectedWalletInfo[]> {
   return new Promise(resolve => {
-    const wallets: InjectedWalletInfo[] = [];
     const discoveredProviders = new Map<string, EIP6963ProviderDetail>();
 
     if (typeof window === "undefined") {
-      resolve(wallets);
+      resolve([]);
       return;
     }
 
@@ -55,64 +80,20 @@ export function discoverEthereumWallets(): Promise<InjectedWalletInfo[]> {
 
     window.addEventListener("eip6963:announceProvider", handleAnnounce as EventListener);
 
-    // Request providers to announce themselves
     window.dispatchEvent(new Event("eip6963:requestProvider"));
 
-    // Give wallets time to respond (they may load asynchronously)
-    setTimeout(() => {
-      for (const [, detail] of discoveredProviders) {
-        const { info } = detail;
-
-        // Use rdns as the wallet ID (e.g., "io.metamask", "com.coinbase.wallet")
-        // Fallback to name if rdns is not available
-        const walletId = info.rdns
-          ? info.rdns.split(".").reverse().join("-") // Convert "io.metamask" to "metamask-io"
-          : info.name.toLowerCase().replace(/\s+/g, "-");
-
-        wallets.push({
-          id: walletId,
-          name: info.name,
-          icon: info.icon,
-          addressTypes: [ClientAddressType.ethereum],
-          chains: ["eip155:1", "eip155:5", "eip155:11155111"], // mainnet, goerli, sepolia
-        });
-      }
-
-      // Fallback: Check for legacy window.ethereum if no EIP-6963 providers found
-      if (wallets.length === 0 && (window as any).ethereum) {
-        const provider = (window as any).ethereum;
-        let walletName = "Ethereum Wallet";
-        let walletId = "ethereum";
-
-        // Try to get wallet name from provider if available
-        if (provider.providerName) {
-          walletName = provider.providerName;
-          walletId = provider.providerName.toLowerCase().replace(/\s+/g, "-");
-        } else if (provider.name) {
-          walletName = provider.name;
-          walletId = provider.name.toLowerCase().replace(/\s+/g, "-");
-        }
-
-        wallets.push({
-          id: walletId,
-          name: walletName,
-          addressTypes: [ClientAddressType.ethereum],
-          chains: ["eip155:1", "eip155:5", "eip155:11155111"],
-        });
-      }
+    const processProviders = () => {
+      const wallets = processEIP6963Providers(discoveredProviders);
 
       window.removeEventListener("eip6963:announceProvider", handleAnnounce as EventListener);
 
       resolve(wallets);
-    }, 400); // Small delay to allow wallets to respond
+    };
+
+    setTimeout(processProviders, 400);
   });
 }
 
-/**
- * Discover Solana wallets using Wallet Standard
- * Wallet Standard uses window.navigator.wallets.getWallets() to discover all registered wallets
- * See: https://github.com/wallet-standard/wallet-standard
- */
 export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
   const wallets: InjectedWalletInfo[] = [];
 
@@ -137,17 +118,13 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
           continue;
         }
 
-        // Extract Solana chains
-        const solanaChains = wallet.chains.filter(chain => chain.startsWith("solana:") || chain === "solana");
-
-        const walletId = wallet.name.toLowerCase().replace(/\s+/g, "-");
+        const walletId = generateWalletIdFromName(wallet.name);
 
         wallets.push({
           id: walletId,
           name: wallet.name,
           icon: wallet.icon,
           addressTypes: [ClientAddressType.solana],
-          chains: solanaChains.length > 0 ? solanaChains : ["solana:mainnet", "solana:devnet", "solana:testnet"],
         });
       }
     } catch (error) {
@@ -168,11 +145,9 @@ export async function discoverWallets(): Promise<InjectedWalletInfo[]> {
     const existing = walletMap.get(wallet.id);
     if (existing) {
       const mergedAddressTypes = Array.from(new Set([...existing.addressTypes, ...wallet.addressTypes]));
-      const mergedChains = Array.from(new Set([...(existing.chains || []), ...(wallet.chains || [])]));
       walletMap.set(wallet.id, {
         ...existing,
         addressTypes: mergedAddressTypes,
-        chains: mergedChains,
         // Prefer icon from the most recent discovery
         icon: wallet.icon || existing.icon,
       });

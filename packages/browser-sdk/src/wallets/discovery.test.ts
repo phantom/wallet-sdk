@@ -8,8 +8,6 @@ beforeEach(() => {
     window.addEventListener = jest.fn();
     window.removeEventListener = jest.fn();
     window.dispatchEvent = jest.fn();
-    // @ts-ignore
-    window.ethereum = undefined;
   }
 
   if (typeof navigator !== "undefined") {
@@ -140,113 +138,6 @@ describe("discoverEthereumWallets", () => {
     expect(result[0].id).toBe("my-custom-wallet");
     expect(result[0].name).toBe("My Custom Wallet");
   });
-
-  it("should fallback to legacy window.ethereum when no EIP-6963 providers found", async () => {
-    jest.useRealTimers();
-    // @ts-ignore
-    window.ethereum = {
-      providerName: "Legacy Wallet",
-      request: jest.fn(),
-    };
-
-    const promise = discoverEthereumWallets();
-
-    // Wait for the 400ms timeout in discoverEthereumWallets
-    await new Promise(resolve => setTimeout(resolve, 400));
-
-    const result = await promise;
-
-    expect(result).toHaveLength(1);
-    expect(result[0]).toMatchObject({
-      id: "legacy-wallet",
-      name: "Legacy Wallet",
-      addressTypes: [AddressType.ethereum],
-    });
-  });
-
-  it("should use provider.name as fallback when providerName is not available", async () => {
-    jest.useRealTimers();
-    // @ts-ignore
-    window.ethereum = {
-      name: "Provider Name",
-      request: jest.fn(),
-    };
-
-    const promise = discoverEthereumWallets();
-
-    // Wait for the 400ms timeout in discoverEthereumWallets
-    await new Promise(resolve => setTimeout(resolve, 400));
-
-    const result = await promise;
-
-    expect(result).toHaveLength(1);
-    expect(result[0].name).toBe("Provider Name");
-    expect(result[0].id).toBe("provider-name");
-  });
-
-  it("should use default name when no provider info is available", async () => {
-    jest.useRealTimers();
-    // @ts-ignore
-    window.ethereum = {
-      request: jest.fn(),
-    };
-
-    const promise = discoverEthereumWallets();
-
-    // Wait for the 400ms timeout in discoverEthereumWallets
-    await new Promise(resolve => setTimeout(resolve, 400));
-
-    const result = await promise;
-
-    expect(result).toHaveLength(1);
-    expect(result[0].name).toBe("Ethereum Wallet");
-    expect(result[0].id).toBe("ethereum");
-  });
-
-  it("should not use legacy fallback when EIP-6963 providers are found", async () => {
-    jest.useRealTimers();
-    let announceHandler: ((event: CustomEvent) => void) | null = null;
-
-    (window.addEventListener as jest.Mock).mockImplementation((event: string, handler: any) => {
-      if (event === "eip6963:announceProvider") {
-        announceHandler = handler;
-      }
-    });
-
-    // @ts-ignore
-    window.ethereum = {
-      providerName: "Legacy Wallet",
-      request: jest.fn(),
-    };
-
-    const promise = discoverEthereumWallets();
-
-    // Wait for handler to be set up
-    await new Promise(resolve => setTimeout(resolve, 10));
-
-    if (announceHandler) {
-      announceHandler({
-        detail: {
-          info: {
-            uuid: "test-uuid",
-            name: "EIP6963 Wallet",
-            icon: "https://example.com/icon.png",
-            rdns: "com.example.wallet",
-          },
-          provider: {},
-        },
-      } as CustomEvent);
-    }
-
-    // Wait for the 400ms timeout in discoverEthereumWallets
-    await new Promise(resolve => setTimeout(resolve, 400));
-
-    const result = await promise;
-
-    // Should only have the EIP-6963 wallet, not the legacy one
-    expect(result).toHaveLength(1);
-    expect(result[0].name).toBe("EIP6963 Wallet");
-  });
 });
 
 describe("discoverSolanaWallets", () => {
@@ -300,14 +191,12 @@ describe("discoverSolanaWallets", () => {
       name: "Backpack",
       icon: "https://backpack.app/icon.png",
       addressTypes: [AddressType.solana],
-      chains: ["solana:mainnet", "solana:devnet"],
     });
     expect(wallets[1]).toMatchObject({
       id: "solflare",
       name: "Solflare",
       icon: "https://solflare.com/icon.png",
       addressTypes: [AddressType.solana],
-      chains: ["solana:mainnet"],
     });
   });
 
@@ -373,7 +262,7 @@ describe("discoverSolanaWallets", () => {
     expect(wallets[0].name).toBe("Backpack");
   });
 
-  it("should use default chains when wallet doesn't specify Solana chains", async () => {
+  it("should handle wallets with just 'solana' chain identifier", async () => {
     const mockWallets = [
       {
         name: "Generic Wallet",
@@ -393,7 +282,7 @@ describe("discoverSolanaWallets", () => {
     const wallets = await discoverSolanaWallets();
 
     expect(wallets).toHaveLength(1);
-    expect(wallets[0].chains).toEqual(["solana"]);
+    expect(wallets[0].name).toBe("Generic Wallet");
   });
 
   it("should handle errors gracefully when getWallets fails", async () => {
@@ -591,8 +480,6 @@ describe("discoverWallets", () => {
     expect(result).toHaveLength(1);
     expect(result[0].addressTypes).toContain(AddressType.solana);
     expect(result[0].addressTypes).toContain(AddressType.ethereum);
-    expect(result[0].chains).toContain("solana:mainnet");
-    expect(result[0].chains).toContain("eip155:1");
   });
 
   it("should return empty array when no wallets are discovered", async () => {

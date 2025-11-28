@@ -7,8 +7,6 @@ export interface InjectedWalletInfo {
   name: string;
   icon?: string;
   addressTypes: AddressType[];
-  // caip2 style chain identifiers, e.g. "solana:mainnet", "eip155:1".
-  chains?: string[];
 }
 
 export class InjectedWalletRegistry {
