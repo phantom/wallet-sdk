@@ -34,6 +34,8 @@ export type {
   AutoConfirmResult,
   AutoConfirmSupportedChainsResult,
   AuthOptions,
+  InjectedWalletInfo,
+  InjectedWalletId,
 } from "@phantom/browser-sdk";
 
 // Re-export chain interfaces

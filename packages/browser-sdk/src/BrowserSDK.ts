@@ -1,11 +1,4 @@
-import type {
-  BrowserSDKConfig,
-  ConnectResult,
-  WalletAddress,
-  AuthOptions,
-  AuthProviderType,
-  AddressType,
-} from "./types";
+import type { BrowserSDKConfig, ConnectResult, WalletAddress, AuthOptions, AuthProviderType } from "./types";
 import { ProviderManager, type ProviderPreference } from "./ProviderManager";
 import { debug, DebugCategory, type DebugLevel, type DebugCallback } from "./debug";
 import { waitForPhantomExtension } from "./waitForPhantomExtension";
@@ -81,16 +74,16 @@ export class BrowserSDK {
     this.config = config;
     this.providerManager = new ProviderManager(config);
 
-    this.discoverWallets(config.addressTypes);
+    void this.discoverWallets();
   }
 
-  private discoverWallets(addressTypes: AddressType[]): void {
-    debug.log(DebugCategory.BROWSER_SDK, "Starting wallet discovery", { addressTypes });
+  discoverWallets(): Promise<InjectedWalletInfo[]> {
+    debug.log(DebugCategory.BROWSER_SDK, "Starting wallet discovery", { addressTypes: this.config.addressTypes });
 
-    discoverWallets()
+    return discoverWallets()
       .then(discoveredWallets => {
         const relevantWallets = discoveredWallets.filter(wallet =>
-          wallet.addressTypes.some(type => addressTypes.includes(type)),
+          wallet.addressTypes.some(type => this.config.addressTypes.includes(type)),
         );
 
         for (const wallet of relevantWallets) {
@@ -106,9 +99,12 @@ export class BrowserSDK {
           totalDiscovered: discoveredWallets.length,
           relevantWallets: relevantWallets.length,
         });
+
+        return relevantWallets;
       })
       .catch(error => {
         debug.warn(DebugCategory.BROWSER_SDK, "Wallet discovery failed", { error });
+        return []; // Return empty array on error
       });
   }
 
@@ -391,13 +387,12 @@ export class BrowserSDK {
     debug.log(DebugCategory.BROWSER_SDK, "Getting discovered wallets");
 
     try {
-      const wallets = this.walletRegistry.getByAddressTypes(this.config.addressTypes);
-
+      const allWallets = this.walletRegistry.getByAddressTypes(this.config.addressTypes);
       debug.log(DebugCategory.BROWSER_SDK, "Retrieved discovered wallets", {
-        count: wallets.length,
-        walletIds: wallets.map(w => w.id),
+        count: allWallets.length,
+        walletIds: allWallets.map(w => w.id),
       });
-      return wallets;
+      return allWallets;
     } catch (error) {
       debug.error(DebugCategory.BROWSER_SDK, "Failed to get discovered wallets", {
         error: (error as Error).message,

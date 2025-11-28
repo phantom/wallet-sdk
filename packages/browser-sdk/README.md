@@ -620,6 +620,84 @@ Attempt auto-connection using existing session. Should be called after setting u
 await sdk.autoConnect();
 ```
 
+### Wallet Discovery Methods
+
+The SDK can discover multiple injected wallets using Wallet Standard for Solana and EIP-6963 for Ethereum. This allows users to choose from any installed wallet that supports the configured address types.
+
+#### discoverWallets()
+
+Asynchronously discover all available injected wallets that support the configured address types. This method uses Wallet Standard (`navigator.wallets.getWallets()`) for Solana wallets and EIP-6963 events for Ethereum wallets.
+
+**Returns:** `Promise<InjectedWalletInfo[]>` - Array of discovered wallet information
+
+```typescript
+// Discover wallets asynchronously
+const wallets = await sdk.discoverWallets();
+
+console.log("Discovered wallets:", wallets);
+// Example output:
+// [
+//   {
+//     id: "backpack",
+//     name: "Backpack",
+//     icon: "https://backpack.app/icon.png",
+//     addressTypes: [AddressType.solana],
+//     chains: ["solana:mainnet", "solana:devnet"]
+//   },
+//   {
+//     id: "metamask-io",
+//     name: "MetaMask",
+//     icon: "https://metamask.io/icon.png",
+//     addressTypes: [AddressType.ethereum],
+//     chains: ["eip155:1", "eip155:5", "eip155:11155111"]
+//   }
+// ]
+```
+
+**Behavior:**
+
+- Automatically filters wallets based on `config.addressTypes`
+- If `addressTypes` is undefined or empty, discovers all wallets regardless of chain support
+- Registers discovered wallets in the internal registry for later retrieval
+- Discovery typically takes ~400ms (EIP-6963 timeout)
+- Returns empty array on error (errors are logged but not thrown)
+
+**Note:** Discovery happens automatically when the SDK is instantiated. This method is useful for manually triggering discovery or refreshing the wallet list.
+
+#### getDiscoveredWallets()
+
+Get all currently discovered wallets from the internal registry. This is a synchronous method that returns wallets that have already been discovered.
+
+**Returns:** `InjectedWalletInfo[]` - Array of discovered wallet information
+
+```typescript
+// Get already discovered wallets (synchronous)
+const wallets = sdk.getDiscoveredWallets();
+
+console.log("Available wallets:", wallets);
+// Returns wallets that match the configured addressTypes
+// Also includes Phantom if available and matches addressTypes
+```
+
+**Behavior:**
+
+- Returns wallets from the internal registry that match `config.addressTypes`
+- Includes Phantom wallet if `window.phantom` is available and matches configured address types
+- Returns empty array if no wallets are discovered or if an error occurs
+- This is a synchronous read operation - it does not trigger new discovery
+
+**Wallet Information Structure:**
+
+```typescript
+interface InjectedWalletInfo {
+  id: string; // Unique wallet identifier (e.g., "backpack", "metamask-io")
+  name: string; // Human-readable wallet name (e.g., "Backpack", "MetaMask")
+  icon?: string; // Wallet icon URL (optional)
+  addressTypes: AddressType[]; // Supported address types (e.g., [AddressType.solana])
+  chains?: string[]; // Supported chains in CAIP-2 format (e.g., ["solana:mainnet"])
+}
+```
+
 ### Event Handlers
 
 The SDK provides typed event handlers that allow you to listen for connection state changes. This is especially useful for `autoConnect()` flows where you need to track the connection result.
