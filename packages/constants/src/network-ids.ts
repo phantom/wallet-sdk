@@ -8,6 +8,9 @@ export enum NetworkId {
   SOLANA_DEVNET = "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
   SOLANA_TESTNET = "solana:4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z",
 
+  // Solaxy Mainnet
+  SOLAXY_MAINNET = "solaxy:1936682104",
+  
   // Ethereum Networks
   ETHEREUM_MAINNET = "eip155:1",
   ETHEREUM_SEPOLIA = "eip155:11155111",
