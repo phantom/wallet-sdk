@@ -125,17 +125,43 @@ describe("InjectedProvider", () => {
         addressTypes: [AddressType.solana],
       });
 
+      // Mock ISolanaChain adapter - connect() returns { publicKey: string }
+      const mockSolanaChain = {
+        connect: jest.fn().mockResolvedValue({
+          publicKey: "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH",
+        }),
+        disconnect: jest.fn(),
+        signMessage: jest.fn(),
+        signTransaction: jest.fn(),
+        signAndSendTransaction: jest.fn(),
+        signAllTransactions: jest.fn(),
+        signAndSendAllTransactions: jest.fn(),
+        switchNetwork: jest.fn(),
+        getPublicKey: jest.fn(),
+        isConnected: jest.fn().mockReturnValue(false),
+        on: jest.fn(),
+        off: jest.fn(),
+        publicKey: null,
+        connected: false,
+      };
+
       const internal = provider as any;
       internal.walletRegistry.register({
         id: "other-wallet",
         name: "Other Wallet",
+        icon: "https://example.com/icon.png",
         addressTypes: [AddressType.solana],
-        chains: ["solana:mainnet"],
+        providers: {
+          solana: mockSolanaChain,
+        },
       });
 
-      await provider.connect({ provider: "injected", walletId: "other-wallet" });
+      const result = await provider.connect({ provider: "injected", walletId: "other-wallet" });
 
       expect(internal.selectedWalletId).toBe("other-wallet");
+      expect(mockSolanaChain.connect).toHaveBeenCalled();
+      expect(result.addresses).toHaveLength(1);
+      expect(result.addresses[0].address).toBe("GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH");
     });
 
     it("should reject when an unknown injected wallet id is requested", async () => {

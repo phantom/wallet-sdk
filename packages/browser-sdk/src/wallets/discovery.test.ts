@@ -90,12 +90,14 @@ describe("discoverEthereumWallets", () => {
       icon: "https://metamask.io/icon.png",
       addressTypes: [AddressType.ethereum],
     });
+    expect(result[0].providers?.ethereum).toBeDefined();
     expect(result[1]).toMatchObject({
       id: "wallet-coinbase-com",
       name: "Coinbase Wallet",
       icon: "https://coinbase.com/icon.png",
       addressTypes: [AddressType.ethereum],
     });
+    expect(result[1].providers?.ethereum).toBeDefined();
 
     expect(window.removeEventListener).toHaveBeenCalled();
   });
@@ -192,12 +194,14 @@ describe("discoverSolanaWallets", () => {
       icon: "https://backpack.app/icon.png",
       addressTypes: [AddressType.solana],
     });
+    expect(wallets[0].providers?.solana).toBeDefined();
     expect(wallets[1]).toMatchObject({
       id: "solflare",
       name: "Solflare",
       icon: "https://solflare.com/icon.png",
       addressTypes: [AddressType.solana],
     });
+    expect(wallets[1].providers?.solana).toBeDefined();
   });
 
   it("should skip wallets that don't support Solana chains", async () => {

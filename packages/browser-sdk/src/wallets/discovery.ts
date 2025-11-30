@@ -1,5 +1,6 @@
 import type { InjectedWalletInfo } from "./registry";
 import { AddressType as ClientAddressType } from "@phantom/client";
+import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
 
 /**
  * EIP-6963 Provider Info interface
@@ -48,7 +49,7 @@ function processEIP6963Providers(providers: Map<string, EIP6963ProviderDetail>):
   const wallets: InjectedWalletInfo[] = [];
 
   for (const [, detail] of providers) {
-    const { info } = detail;
+    const { info, provider } = detail;
     const walletId = generateWalletIdFromEIP6963(info);
 
     wallets.push({
@@ -56,6 +57,10 @@ function processEIP6963Providers(providers: Map<string, EIP6963ProviderDetail>):
       name: info.name,
       icon: info.icon,
       addressTypes: [ClientAddressType.ethereum],
+      providers: {
+        // EIP-6963 provider implements EIP-1193 interface (IEthereumChain)
+        ethereum: provider as unknown as IEthereumChain,
+      },
     });
   }
 
@@ -125,6 +130,10 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
           name: wallet.name,
           icon: wallet.icon,
           addressTypes: [ClientAddressType.solana],
+          providers: {
+            // Wallet Standard wallet implements standard methods compatible with ISolanaChain
+            solana: wallet as unknown as ISolanaChain,
+          },
         });
       }
     } catch (error) {
@@ -145,11 +154,16 @@ export async function discoverWallets(): Promise<InjectedWalletInfo[]> {
     const existing = walletMap.get(wallet.id);
     if (existing) {
       const mergedAddressTypes = Array.from(new Set([...existing.addressTypes, ...wallet.addressTypes]));
+      const mergedProviders = {
+        ...existing.providers,
+        ...wallet.providers,
+      };
       walletMap.set(wallet.id, {
         ...existing,
         addressTypes: mergedAddressTypes,
         // Prefer icon from the most recent discovery
         icon: wallet.icon || existing.icon,
+        providers: mergedProviders,
       });
     } else {
       walletMap.set(wallet.id, wallet);

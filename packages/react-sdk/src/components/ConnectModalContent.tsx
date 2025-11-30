@@ -37,7 +37,7 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
   const { wallets: discoveredWallets } = useDiscoveredWallets();
 
   const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [providerType, setProviderType] = useState<AuthProviderType | "deeplink" | null>(null);
   const [showOtherWallets, setShowOtherWallets] = useState(false);
   const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
@@ -63,9 +63,9 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
         await baseConnect.connect({ provider, walletId });
 
         onClose();
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error(String(err));
-        setError(error);
+      } catch {
+        const wallet = discoveredWallets.find(w => w.id === walletId); 
+        setError(`Failed to connect to ${wallet?.name || "wallet"}`);
       } finally {
         setIsConnecting(false);
         setProviderType(null);
@@ -92,9 +92,8 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
       window.location.href = deeplinkUrl;
 
       onClose();
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      setError(error);
+    } catch {
+      setError("Failed to open deeplink");
     } finally {
       setIsConnecting(false);
       setProviderType(null);
@@ -236,7 +235,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
         `}
       </style>
 
-      {error && <div style={errorStyle}>{error.message}</div>}
 
       {isLoading ? (
         <div style={loadingContainerStyle}>
@@ -249,10 +247,15 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
         <>
           <ModalHeader
             goBack={true}
-            onGoBack={() => setShowOtherWallets(false)}
+            onGoBack={() => {
+              setError(null);
+              setShowOtherWallets(false)
+            }}
             title="Other Wallets"
             onClose={onClose}
           />
+
+          {error && <div style={errorStyle}>{error}</div>}
 
           <div style={otherWalletsContainerStyle}>
             {otherWallets.map(wallet => (
@@ -289,6 +292,8 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
 
           <div style={connectContentContainerStyle}>
             {appIcon && <img src={appIcon} alt={appName} style={appIconStyle} />}
+
+            {error && <div style={errorStyle}>{error}</div>}
 
             {/* Mobile device with no Phantom extension - show deeplink button */}
             {isMobile && !isExtensionInstalled.isInstalled && (

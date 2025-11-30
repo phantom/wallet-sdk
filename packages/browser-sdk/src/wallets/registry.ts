@@ -1,12 +1,21 @@
+import type { IEthereumChain, ISolanaChain } from "@phantom/chain-interfaces";
 import type { AddressType } from "../types";
 
 export type InjectedWalletId = string;
+
+export interface WalletProviders {
+  /** EIP-6963 Ethereum provider (window.ethereum-like) */
+  ethereum?: IEthereumChain;
+  /** Wallet Standard Solana wallet object */
+  solana?: ISolanaChain;
+}
 
 export interface InjectedWalletInfo {
   id: InjectedWalletId;
   name: string;
   icon?: string;
   addressTypes: AddressType[];
+  providers?: WalletProviders;
 }
 
 export class InjectedWalletRegistry {

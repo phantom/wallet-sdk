@@ -14,6 +14,7 @@ export function ModalHeader({ goBack = false, onGoBack, title, onClose }: ModalH
     justifyContent: "center",
     alignItems: "center",
     padding: "28px 32px 0 32px",
+    height: "32px"
   };
 
   const titleStyle: CSSProperties = {
@@ -23,7 +24,6 @@ export function ModalHeader({ goBack = false, onGoBack, title, onClose }: ModalH
   const backButtonStyle: CSSProperties = {
     position: "absolute" as const,
     left: "32px",
-    top: "22px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -39,7 +39,6 @@ export function ModalHeader({ goBack = false, onGoBack, title, onClose }: ModalH
   const closeButtonStyle: CSSProperties = {
     position: "absolute" as const,
     right: "32px",
-    top: "22px",
     background: "none",
     border: "none",
     color: isCloseButtonHovering ? theme.secondary : theme.text,
@@ -48,6 +47,7 @@ export function ModalHeader({ goBack = false, onGoBack, title, onClose }: ModalH
     padding: "4px 8px",
     lineHeight: 1,
     transition: "color 0.2s",
+    width: "auto",
   };
 
   return (

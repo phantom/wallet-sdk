@@ -53,7 +53,7 @@ declare global {
 
 import { debug, DebugCategory } from "../../debug";
 import { InjectedSolanaChain, InjectedEthereumChain, type ChainCallbacks } from "./chains";
-import { getWalletRegistry, type InjectedWalletRegistry } from "../../wallets/registry";
+import { getWalletRegistry, type InjectedWalletRegistry, type InjectedWalletInfo } from "../../wallets/registry";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
 
 const WAS_CONNECTED_KEY = "phantom-injected-was-connected";
@@ -146,26 +146,13 @@ export class InjectedProvider implements Provider {
     return this._ethereumChain;
   }
 
-  async connect(authOptions: AuthOptions): Promise<ConnectResult> {
-    debug.info(DebugCategory.INJECTED_PROVIDER, "Starting injected provider connect", {
-      addressTypes: this.addressTypes,
-      provider: authOptions.provider,
-    });
-
-    if (authOptions.provider !== "injected") {
-      throw new Error(`Invalid provider for injected connection: ${authOptions.provider}. Must be "injected"`);
-    }
-
-    const requestedWalletId = authOptions.walletId || "phantom";
+  private validateAndSelectWallet(requestedWalletId: string): void {
     if (requestedWalletId === "phantom") {
-      // Default to Phantom injected provider
       this.selectedWalletId = "phantom";
       debug.log(DebugCategory.INJECTED_PROVIDER, "Selected Phantom injected wallet for connection", {
         walletId: "phantom",
       });
-    }
-
-    if (this.addressTypes.includes(AddressType.solana) && this.selectedWalletId !== "phantom" ) {
+    } else {
       if (!this.walletRegistry.has(requestedWalletId)) {
         debug.error(DebugCategory.INJECTED_PROVIDER, "Unknown injected wallet id requested", {
           walletId: requestedWalletId,
@@ -178,6 +165,226 @@ export class InjectedProvider implements Provider {
         walletId: requestedWalletId,
       });
     }
+  }
+
+  private async connectToPhantom(): Promise<WalletAddress[]> {
+    if (!this.phantom.extension?.isInstalled?.()) {
+      debug.error(DebugCategory.INJECTED_PROVIDER, "Phantom wallet extension not found");
+      const error = new Error("Phantom wallet not found");
+
+      this.emit("connect_error", {
+        error: error.message,
+        source: "manual-connect",
+      });
+
+      throw error;
+    }
+    debug.log(DebugCategory.INJECTED_PROVIDER, "Phantom extension detected");
+
+    const connectedAddresses: WalletAddress[] = [];
+
+    if (this.addressTypes.includes(AddressType.solana)) {
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Attempting Solana connection via Phantom");
+      try {
+        const publicKey = await this.phantom.solana.connect();
+        if (publicKey) {
+          connectedAddresses.push({
+            addressType: AddressType.solana,
+            address: publicKey,
+          });
+          debug.info(DebugCategory.INJECTED_PROVIDER, "Solana connected successfully via Phantom", {
+            address: publicKey,
+          });
+        }
+      } catch (err) {
+        debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to connect Solana via Phantom, stopping", { error: err });
+        this.emit("connect_error", {
+          error: err instanceof Error ? err.message : "Failed to connect",
+          source: "manual-connect",
+        });
+        throw err;
+      }
+    }
+
+    if (this.addressTypes.includes(AddressType.ethereum)) {
+      try {
+        const accounts = await this.phantom.ethereum.connect();
+        if (accounts && accounts.length > 0) {
+          connectedAddresses.push(
+            ...accounts.map((address: string) => ({
+              addressType: AddressType.ethereum,
+              address,
+            })),
+          );
+          debug.info(DebugCategory.INJECTED_PROVIDER, "Ethereum connected successfully via Phantom", {
+            addresses: accounts,
+          });
+        }
+      } catch (err) {
+        debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to connect Ethereum via Phantom, stopping", { error: err });
+        this.emit("connect_error", {
+          error: err instanceof Error ? err.message : "Failed to connect",
+          source: "manual-connect",
+        });
+        throw err;
+      }
+    }
+
+    return connectedAddresses;
+  }
+
+  private async connectToExternalWallet(walletInfo: InjectedWalletInfo): Promise<WalletAddress[]> {
+    if (!walletInfo.providers) {
+      const error = new Error(`Wallet adapter not available for wallet: ${this.selectedWalletId}`);
+      debug.error(DebugCategory.INJECTED_PROVIDER, "Wallet adapter not available", { walletId: this.selectedWalletId });
+      this.emit("connect_error", {
+        error: error.message,
+        source: "manual-connect",
+      });
+      throw error;
+    }
+
+    debug.log(DebugCategory.INJECTED_PROVIDER, "Connecting via discovered wallet adapter", {
+      walletId: this.selectedWalletId,
+    });
+
+    const connectedAddresses: WalletAddress[] = [];
+
+    if (this.addressTypes.includes(AddressType.solana) && walletInfo.providers.solana) {
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Attempting Solana connection via Wallet Standard", {
+        walletId: this.selectedWalletId,
+      });
+      try {
+        const result: any = await walletInfo.providers.solana.connect();
+        let address: string;
+
+        // Handle both { publicKey: string } and accounts array responses
+        if (result && typeof result === "object") {
+          if ("publicKey" in result) {
+            address = result.publicKey;
+          } else if (Array.isArray(result) && result.length > 0 && result[0]?.address) {
+            address = result[0].address;
+          } else {
+            throw new Error("Invalid response from wallet connect");
+          }
+        } else {
+          throw new Error("Invalid response from wallet connect");
+        }
+
+        if (address) {
+          connectedAddresses.push({
+            addressType: AddressType.solana,
+            address,
+          });
+          debug.info(DebugCategory.INJECTED_PROVIDER, "Solana connected successfully via Wallet Standard", {
+            address,
+            walletId: this.selectedWalletId,
+          });
+        }
+      } catch (err) {
+        debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to connect Solana via Wallet Standard, stopping", {
+          error: err,
+          walletId: this.selectedWalletId,
+        });
+        this.emit("connect_error", {
+          error: err instanceof Error ? err.message : "Failed to connect",
+          source: "manual-connect",
+        });
+        throw err;
+      }
+    }
+
+    if (this.addressTypes.includes(AddressType.ethereum) && walletInfo.providers.ethereum) {
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Attempting Ethereum connection via EIP-6963", {
+        walletId: this.selectedWalletId,
+      });
+      try {
+        // EIP-6963 provider uses request() method
+        const accounts = await walletInfo.providers.ethereum.request({ method: "eth_requestAccounts" });
+        if (Array.isArray(accounts) && accounts.length > 0) {
+          connectedAddresses.push(
+            ...accounts.map((address: string) => ({
+              addressType: AddressType.ethereum,
+              address,
+            })),
+          );
+          debug.info(DebugCategory.INJECTED_PROVIDER, "Ethereum connected successfully via EIP-6963", {
+            addresses: accounts,
+            walletId: this.selectedWalletId,
+          });
+        }
+      } catch (err) {
+        debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to connect Ethereum via EIP-6963, stopping", {
+          error: err,
+          walletId: this.selectedWalletId,
+        });
+        this.emit("connect_error", {
+          error: err instanceof Error ? err.message : "Failed to connect",
+          source: "manual-connect",
+        });
+        throw err;
+      }
+    }
+
+    return connectedAddresses;
+  }
+
+  private async finalizeConnection(connectedAddresses: WalletAddress[]): Promise<ConnectResult> {
+    if (connectedAddresses.length === 0) {
+      const error = new Error("Failed to connect to any supported wallet provider");
+      this.emit("connect_error", {
+        error: error.message,
+        source: "manual-connect",
+      });
+      throw error;
+    }
+
+    this.addresses = connectedAddresses;
+    this.connected = true;
+
+    const authUserId = await this.getAuthUserId("manual-connect");
+
+    try {
+      localStorage.setItem(WAS_CONNECTED_KEY, WAS_CONNECTED_VALUE);
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Set was-connected flag - auto-reconnect enabled");
+      if (this.selectedWalletId) {
+        localStorage.setItem(LAST_WALLET_ID_KEY, this.selectedWalletId);
+        debug.log(DebugCategory.INJECTED_PROVIDER, "Stored last injected wallet id", {
+          walletId: this.selectedWalletId,
+        });
+      }
+    } catch (error) {
+      // Ignore localStorage errors (e.g., in private browsing mode)
+      debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to persist injected provider state", { error });
+    }
+
+    const result = {
+      addresses: this.addresses,
+      status: "completed" as const,
+      authUserId,
+    };
+
+    this.emit("connect", {
+      addresses: this.addresses,
+      source: "manual-connect",
+      authUserId,
+    });
+
+    return result;
+  }
+
+  async connect(authOptions: AuthOptions): Promise<ConnectResult> {
+    debug.info(DebugCategory.INJECTED_PROVIDER, "Starting injected provider connect", {
+      addressTypes: this.addressTypes,
+      provider: authOptions.provider,
+    });
+
+    if (authOptions.provider !== "injected") {
+      throw new Error(`Invalid provider for injected connection: ${authOptions.provider}. Must be "injected"`);
+    }
+
+    const requestedWalletId = authOptions.walletId || "phantom";
+    this.validateAndSelectWallet(requestedWalletId);
 
     this.emit("connect_start", {
       source: "manual-connect",
@@ -185,110 +392,27 @@ export class InjectedProvider implements Provider {
     });
 
     try {
-      if (!this.phantom.extension?.isInstalled?.()) {
-        debug.error(DebugCategory.INJECTED_PROVIDER, "Phantom wallet extension not found");
-        const error = new Error("Phantom wallet not found");
+      let connectedAddresses: WalletAddress[];
 
-        this.emit("connect_error", {
-          error: error.message,
-          source: "manual-connect",
-        });
-
-        throw error;
-      }
-      debug.log(DebugCategory.INJECTED_PROVIDER, "Phantom extension detected");
-
-      const connectedAddresses: WalletAddress[] = [];
-
-      if (this.addressTypes.includes(AddressType.solana)) {
-        debug.log(DebugCategory.INJECTED_PROVIDER, "Attempting Solana connection");
-        try {
-          const publicKey = await this.phantom.solana.connect();
-          if (publicKey) {
-            connectedAddresses.push({
-              addressType: AddressType.solana,
-              address: publicKey,
-            });
-            debug.info(DebugCategory.INJECTED_PROVIDER, "Solana connected successfully", { address: publicKey });
-          }
-        } catch (err) {
-          debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to connect Solana, stopping", { error: err });
-
-          this.emit("connect_error", {
-            error: err instanceof Error ? err.message : "Failed to connect",
-            source: "manual-connect",
-          });
-
-          throw err;
-        }
-      }
-
-      if (this.addressTypes.includes(AddressType.ethereum)) {
-        try {
-          const accounts = await this.phantom.ethereum.connect();
-          if (accounts && accounts.length > 0) {
-            connectedAddresses.push(
-              ...accounts.map((address: string) => ({
-                addressType: AddressType.ethereum,
-                address,
-              })),
-            );
-            debug.info(DebugCategory.INJECTED_PROVIDER, "Ethereum connected successfully", { addresses: accounts });
-          }
-        } catch (err) {
-          debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to connect Ethereum, stopping", { error: err });
-
-          this.emit("connect_error", {
-            error: err instanceof Error ? err.message : "Failed to connect",
-            source: "manual-connect",
-          });
-
-          throw err;
-        }
-      }
-
-      if (connectedAddresses.length === 0) {
-        const error = new Error("Failed to connect to any supported wallet provider");
-
-        this.emit("connect_error", {
-          error: error.message,
-          source: "manual-connect",
-        });
-
-        throw error;
-      }
-
-      this.addresses = connectedAddresses;
-      this.connected = true;
-
-      const authUserId = await this.getAuthUserId("manual-connect");
-      try {
-        localStorage.setItem(WAS_CONNECTED_KEY, WAS_CONNECTED_VALUE);
-        debug.log(DebugCategory.INJECTED_PROVIDER, "Set was-connected flag - auto-reconnect enabled");
-        if (this.selectedWalletId) {
-          localStorage.setItem(LAST_WALLET_ID_KEY, this.selectedWalletId);
-          debug.log(DebugCategory.INJECTED_PROVIDER, "Stored last injected wallet id", {
+      if (this.selectedWalletId === "phantom") {
+        connectedAddresses = await this.connectToPhantom();
+      } else {
+        const walletInfo = this.walletRegistry.getAll().find(w => w.id === this.selectedWalletId);
+        if (!walletInfo || !walletInfo.providers) {
+          const error = new Error(`Wallet adapter not available for wallet: ${this.selectedWalletId}`);
+          debug.error(DebugCategory.INJECTED_PROVIDER, "Wallet adapter not available", {
             walletId: this.selectedWalletId,
           });
+          this.emit("connect_error", {
+            error: error.message,
+            source: "manual-connect",
+          });
+          throw error;
         }
-      } catch (error) {
-        // Ignore localStorage errors (e.g., in private browsing mode)
-        debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to persist injected provider state", { error });
+        connectedAddresses = await this.connectToExternalWallet(walletInfo);
       }
 
-      const result = {
-        addresses: this.addresses,
-        status: "completed" as const,
-        authUserId,
-      };
-
-      this.emit("connect", {
-        addresses: this.addresses,
-        source: "manual-connect",
-        authUserId,
-      });
-
-      return result;
+      return await this.finalizeConnection(connectedAddresses);
     } catch (error) {
       if (
         error instanceof Error &&
