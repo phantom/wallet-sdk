@@ -1,5 +1,15 @@
 import type { IEthereumChain, ISolanaChain } from "@phantom/chain-interfaces";
-import type { AddressType } from "../types";
+import { AddressType, type WalletAddress } from "../types";
+import { discoverWallets } from "./discovery";
+import { debug, DebugCategory } from "../debug";
+import { InjectedWalletSolanaChain } from "../providers/injected/chains/InjectedWalletSolanaChain";
+import { InjectedWalletEthereumChain } from "../providers/injected/chains/InjectedWalletEthereumChain";
+import { PhantomSolanaChain } from "../providers/injected/chains/SolanaChain";
+import { PhantomEthereumChain } from "../providers/injected/chains/EthereumChain";
+import type { Extension } from "@phantom/browser-injected-sdk";
+import type { Solana } from "@phantom/browser-injected-sdk/solana";
+import type { Ethereum } from "@phantom/browser-injected-sdk/ethereum";
+import type { AutoConfirmPlugin } from "@phantom/browser-injected-sdk/auto-confirm";
 
 export type InjectedWalletId = string;
 
@@ -16,13 +26,118 @@ export interface InjectedWalletInfo {
   icon?: string;
   addressTypes: AddressType[];
   providers?: WalletProviders;
+  connected: boolean;
+  addresses: WalletAddress[];
+}
+
+/**
+ * Phantom-specific wallet info that includes the Phantom instance for auto-confirm access
+ */
+export interface PhantomInjectedWalletInfo extends InjectedWalletInfo {
+  id: "phantom";
+  isPhantom: true;
+  phantomInstance: PhantomExtended;
+}
+
+/**
+ * PhantomExtended interface - matches the structure from InjectedProvider
+ */
+export interface PhantomExtended {
+  extension: Extension;
+  solana: Solana;
+  ethereum: Ethereum;
+  autoConfirm: AutoConfirmPlugin;
+}
+
+/**
+ * Type guard to check if a wallet is Phantom
+ */
+export function isPhantomWallet(wallet: InjectedWalletInfo | undefined): wallet is PhantomInjectedWalletInfo {
+  return wallet !== undefined && wallet.id === "phantom" && "isPhantom" in wallet && wallet.isPhantom === true;
 }
 
 export class InjectedWalletRegistry {
   private wallets = new Map<InjectedWalletId, InjectedWalletInfo>();
+  private discoveryPromise: Promise<void> | null = null;
 
   register(info: InjectedWalletInfo): void {
-    this.wallets.set(info.id, info);
+    // Wrap providers with debug-enabled chain classes
+    const wrappedProviders: WalletProviders = {};
+    
+    if (info.providers?.solana) {
+      wrappedProviders.solana = new InjectedWalletSolanaChain(
+        info.providers.solana,
+        info.id,
+        info.name,
+      );
+      debug.log(DebugCategory.BROWSER_SDK, "Wrapped Solana provider with InjectedWalletSolanaChain", {
+        walletId: info.id,
+        walletName: info.name,
+      });
+    }
+    
+    if (info.providers?.ethereum) {
+      wrappedProviders.ethereum = new InjectedWalletEthereumChain(
+        info.providers.ethereum,
+        info.id,
+        info.name,
+      );
+      debug.log(DebugCategory.BROWSER_SDK, "Wrapped Ethereum provider with InjectedWalletEthereumChain", {
+        walletId: info.id,
+        walletName: info.name,
+      });
+    }
+    
+    const wrappedInfo: InjectedWalletInfo = {
+      ...info,
+      providers: Object.keys(wrappedProviders).length > 0 ? wrappedProviders : info.providers,
+      connected: info.connected ?? false,
+      addresses: info.addresses ?? [],
+    };
+    
+    this.wallets.set(info.id, wrappedInfo);
+  }
+
+  /**
+   * Register Phantom wallet with its instance
+   * This creates wrapped providers and stores the Phantom instance for auto-confirm access
+   */
+  registerPhantom(phantomInstance: PhantomExtended, addressTypes: AddressType[], icon?: string): void {
+    const wrappedProviders: WalletProviders = {};
+    
+    // Create Phantom chain wrappers (they will use wallet registry for state)
+    if (addressTypes.includes(AddressType.solana) && phantomInstance.solana) {
+      wrappedProviders.solana = new PhantomSolanaChain(phantomInstance, "phantom", this);
+      debug.log(DebugCategory.BROWSER_SDK, "Created PhantomSolanaChain wrapper", {
+        walletId: "phantom",
+      });
+    }
+    
+    if (addressTypes.includes(AddressType.ethereum) && phantomInstance.ethereum) {
+      wrappedProviders.ethereum = new PhantomEthereumChain(phantomInstance, "phantom", this);
+      debug.log(DebugCategory.BROWSER_SDK, "Created PhantomEthereumChain wrapper", {
+        walletId: "phantom",
+      });
+    }
+
+    const phantomWallet: PhantomInjectedWalletInfo = {
+      id: "phantom",
+      name: "Phantom",
+      icon: icon || "https://phantom.app/img/phantom-icon-purple.png",
+      addressTypes,
+      providers: wrappedProviders,
+      isPhantom: true,
+      phantomInstance,
+      connected: false,
+      addresses: [],
+    };
+    
+    this.wallets.set("phantom", phantomWallet);
+    debug.log(DebugCategory.BROWSER_SDK, "Registered Phantom wallet with chain wrappers", {
+      addressTypes,
+      hasSolana: !!wrappedProviders.solana,
+      hasEthereum: !!wrappedProviders.ethereum,
+    });
   }
 
   unregister(id: InjectedWalletId): void {
@@ -31,6 +146,10 @@ export class InjectedWalletRegistry {
 
   has(id: InjectedWalletId): boolean {
     return this.wallets.has(id);
+  }
+
+  getById(id: InjectedWalletId): InjectedWalletInfo | undefined {
+    return this.wallets.get(id);
   }
 
   getAll(): InjectedWalletInfo[] {
@@ -43,6 +162,77 @@ export class InjectedWalletRegistry {
     }
     const allowed = new Set(addressTypes);
     return this.getAll().filter(wallet => wallet.addressTypes.some(t => allowed.has(t)));
+  }
+
+  setWalletConnected(walletId: InjectedWalletId, connected: boolean): void {
+    const wallet = this.wallets.get(walletId);
+    if (wallet) {
+      wallet.connected = connected;
+    }
+  }
+
+  setWalletAddresses(walletId: InjectedWalletId, addresses: WalletAddress[]): void {
+    const wallet = this.wallets.get(walletId);
+    if (wallet) {
+      wallet.addresses = addresses;
+    }
+  }
+
+  getWalletAddresses(walletId: InjectedWalletId): WalletAddress[] {
+    const wallet = this.wallets.get(walletId);
+    return wallet?.addresses ?? [];
+  }
+
+  isWalletConnected(walletId: InjectedWalletId): boolean {
+    const wallet = this.wallets.get(walletId);
+    return wallet?.connected ?? false;
+  }
+
+  discover(addressTypes?: AddressType[]): Promise<void> {
+    // If discovery is already in progress, return the existing promise
+    if (this.discoveryPromise) {
+      return this.discoveryPromise;
+    }
+
+    debug.log(DebugCategory.BROWSER_SDK, "Starting wallet discovery", { addressTypes });
+
+    this.discoveryPromise = discoverWallets(addressTypes)
+      .then(discoveredWallets => {
+        // Filter by address types if provided
+        const relevantWallets = addressTypes
+          ? discoveredWallets.filter(wallet =>
+              wallet.addressTypes.some(type => addressTypes.includes(type)),
+            )
+          : discoveredWallets;
+
+        // Register all relevant wallets
+        for (const wallet of relevantWallets) {
+          // Special handling for Phantom - use registerPhantom if it has phantomInstance
+          if (wallet.id === "phantom" && isPhantomWallet(wallet)) {
+            this.registerPhantom(wallet.phantomInstance, wallet.addressTypes, wallet.icon);
+          } else {
+            this.register(wallet);
+          }
+          debug.log(DebugCategory.BROWSER_SDK, "Registered discovered wallet", {
+            id: wallet.id,
+            name: wallet.name,
+            addressTypes: wallet.addressTypes,
+          });
+        }
+
+        debug.info(DebugCategory.BROWSER_SDK, "Wallet discovery completed", {
+          totalDiscovered: discoveredWallets.length,
+          relevantWallets: relevantWallets.length,
+        });
+      })
+      .catch(error => {
+        debug.warn(DebugCategory.BROWSER_SDK, "Wallet discovery failed", { error });
+        // Reset promise on error so it can be retried
+        this.discoveryPromise = null;
+        throw error;
+      });
+
+    return this.discoveryPromise;
   }
 }
 

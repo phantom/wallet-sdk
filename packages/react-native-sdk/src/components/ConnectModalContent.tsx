@@ -132,10 +132,13 @@ export function ConnectModalContent({ appIcon, onClose }: ConnectModalContentPro
               isLoading={isConnecting && providerType === "google"}
               fullWidth={true}
             >
-              <Icon type="google" size={20} color={theme.text} />
-              <Text variant="captionBold">Continue with Google</Text>
-              <View style={styles.spacer} />
-              <Icon type="chevron-right" size={16} color={theme.text} />
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <Icon type="google" size={20} color={theme.text} />
+                  <Text variant="captionBold">Continue with Google</Text>
+                </View>
+                <Icon type="chevron-right" size={16} color={theme.secondary} />
+              </View>
             </Button>
           )}
 
@@ -146,10 +149,13 @@ export function ConnectModalContent({ appIcon, onClose }: ConnectModalContentPro
               isLoading={isConnecting && providerType === "apple"}
               fullWidth={true}
             >
-              <Icon type="apple" size={20} color={theme.text} />
-              <Text variant="captionBold">Continue with Apple</Text>
-              <View style={styles.spacer} />
-              <Icon type="chevron-right" size={16} color={theme.text} />
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <Icon type="apple" size={20} color={theme.text} />
+                  <Text variant="captionBold">Continue with Apple</Text>
+                </View>
+                <Icon type="chevron-right" size={16} color={theme.secondary} />
+              </View>
             </Button>
           )}
 
@@ -160,10 +166,13 @@ export function ConnectModalContent({ appIcon, onClose }: ConnectModalContentPro
               isLoading={isConnecting && providerType === "x"}
               fullWidth={true}
             >
-              <Icon type="x" size={20} color={theme.text} />
-              <Text variant="captionBold">Continue with X</Text>
-              <View style={styles.spacer} />
-              <Icon type="chevron-right" size={16} color={theme.text} />
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <Icon type="x" size={20} color={theme.text} />
+                  <Text variant="captionBold">Continue with X</Text>
+                </View>
+                <Icon type="chevron-right" size={16} color={theme.secondary} />
+              </View>
             </Button>
           )}
 
@@ -174,10 +183,13 @@ export function ConnectModalContent({ appIcon, onClose }: ConnectModalContentPro
               isLoading={isConnecting && providerType === "tiktok"}
               fullWidth={true}
             >
-              <Icon type="tiktok" size={20} color={theme.text} />
-              <Text variant="captionBold">Continue with TikTok</Text>
-              <View style={styles.spacer} />
-              <Icon type="chevron-right" size={16} color={theme.text} />
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <Icon type="tiktok" size={20} color={theme.text} />
+                  <Text variant="captionBold">Continue with TikTok</Text>
+                </View>
+                <Icon type="chevron-right" size={16} color={theme.secondary} />
+              </View>
             </Button>
           )}
         </View>

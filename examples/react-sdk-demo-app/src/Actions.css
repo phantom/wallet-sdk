@@ -255,9 +255,9 @@ button:not(.primary):not(.small):hover:not(:disabled) {
 }
 
 button:disabled {
-  background-color: #f7fafc !important;
-  color: #a0aec0 !important;
-  border-color: #e2e8f0 !important;
+  background-color: #f7fafc ;
+  color: #a0aec0 ;
+  border-color: #e2e8f0 ;
   cursor: not-allowed;
 }
 

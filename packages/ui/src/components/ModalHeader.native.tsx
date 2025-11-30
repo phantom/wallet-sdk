@@ -46,7 +46,7 @@ export function ModalHeader({ goBack = false, onGoBack, title, onClose }: ModalH
       {goBack && onGoBack && (
         <TouchableOpacity style={backButtonStyle} onPress={onGoBack}>
           <View style={{ transform: [{ rotate: "180deg" }] }}>
-            <Icon type="chevron-right" size={16} />
+            <Icon type="chevron-right" size={16} color={theme.secondary} />
           </View>
         </TouchableOpacity>
       )}
@@ -57,7 +57,7 @@ export function ModalHeader({ goBack = false, onGoBack, title, onClose }: ModalH
       </View>
       {onClose && (
         <TouchableOpacity style={closeButtonStyle} onPress={onClose}>
-          <Text variant="caption" color={theme.text} style={{ fontSize: 24 }}>
+          <Text variant="caption" color={theme.secondary} style={{ fontSize: 24 }}>
             ×
           </Text>
         </TouchableOpacity>

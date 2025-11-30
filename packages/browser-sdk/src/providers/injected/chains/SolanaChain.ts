@@ -4,8 +4,8 @@ import type { Solana } from "@phantom/browser-injected-sdk/solana";
 import type { Extension } from "@phantom/browser-injected-sdk";
 import { AddressType } from "@phantom/client";
 import { Buffer } from "buffer";
-import type { ChainCallbacks } from "./ChainCallbacks";
 import type { Transaction, VersionedTransaction } from "@phantom/sdk-types";
+import type { InjectedWalletRegistry } from "../../../wallets/registry";
 
 interface PhantomExtended {
   extension: Extension;
@@ -13,50 +13,71 @@ interface PhantomExtended {
 }
 
 /**
- * Injected Solana chain implementation that is wallet adapter compliant
+ * Phantom Solana chain implementation that is wallet adapter compliant
+ * This wraps Phantom's Solana provider with event listeners and state management
  */
-export class InjectedSolanaChain implements ISolanaChain {
+export class PhantomSolanaChain implements ISolanaChain {
   private phantom: PhantomExtended;
-  private callbacks: ChainCallbacks;
-  private _connected: boolean = false;
+  private walletId: string;
+  private walletRegistry: InjectedWalletRegistry;
   private _publicKey: string | null = null;
   private eventEmitter: EventEmitter = new EventEmitter();
 
-  constructor(phantom: PhantomExtended, callbacks: ChainCallbacks) {
+  constructor(phantom: PhantomExtended, walletId: string, walletRegistry: InjectedWalletRegistry) {
     this.phantom = phantom;
-    this.callbacks = callbacks;
+    this.walletId = walletId;
+    this.walletRegistry = walletRegistry;
     this.setupEventListeners();
     this.syncInitialState();
   }
 
   // Wallet adapter compliant properties
   get connected(): boolean {
-    return this._connected;
+    return this.walletRegistry.isWalletConnected(this.walletId);
   }
 
   get publicKey(): string | null {
     return this._publicKey;
   }
 
-  // Connection methods - delegate to provider
-  connect(_options?: { onlyIfTrusted?: boolean }): Promise<{ publicKey: string }> {
-    if (!this.callbacks.isConnected()) {
-      return Promise.reject(new Error("Provider not connected. Call provider connect first."));
+  // Connection methods
+  async connect(options?: { onlyIfTrusted?: boolean }): Promise<{ publicKey: string }> {
+    const result = await this.phantom.solana.connect(options);
+    if (!result) {
+      throw new Error("Failed to connect to Solana wallet");
     }
-
-    const addresses = this.callbacks.getAddresses();
+    const publicKey = typeof result === "string" ? result : result.publicKey || "";
+    
+    // Update wallet registry state
+    const addresses = this.walletRegistry.getWalletAddresses(this.walletId);
     const solanaAddress = addresses.find(addr => addr.addressType === AddressType.solana);
-
-    if (!solanaAddress) {
-      return Promise.reject(new Error("Solana not enabled for this provider"));
-    }
-
-    this.updateConnectionState(true, solanaAddress.address);
-    return Promise.resolve({ publicKey: solanaAddress.address });
+    const newAddresses = solanaAddress 
+      ? addresses.map(addr => addr.addressType === AddressType.solana ? { ...addr, address: publicKey } : addr)
+      : [...addresses, { addressType: AddressType.solana, address: publicKey }];
+    
+    this.walletRegistry.setWalletAddresses(this.walletId, newAddresses);
+    this.walletRegistry.setWalletConnected(this.walletId, true);
+    this._publicKey = publicKey;
+    
+    return { publicKey };
   }
 
   async disconnect(): Promise<void> {
-    await this.callbacks.disconnect();
+    // For multi-chain wallets (Phantom), disconnect all chains
+    const wallet = this.walletRegistry.getById(this.walletId);
+    if (wallet && wallet.addressTypes.length > 1) {
+      // Clear all addresses for multi-chain wallet
+      this.walletRegistry.setWalletAddresses(this.walletId, []);
+    } else {
+      // For single-chain wallets, only clear Solana addresses
+      const addresses = this.walletRegistry.getWalletAddresses(this.walletId);
+      const filteredAddresses = addresses.filter(addr => addr.addressType !== AddressType.solana);
+      this.walletRegistry.setWalletAddresses(this.walletId, filteredAddresses);
+    }
+    
+    await this.phantom.solana.disconnect();
+    this.walletRegistry.setWalletConnected(this.walletId, false);
+    this._publicKey = null;
   }
 
   // Standard wallet adapter methods
@@ -74,7 +95,7 @@ export class InjectedSolanaChain implements ISolanaChain {
   }
 
   async signTransaction(transaction: Transaction | VersionedTransaction): Promise<Transaction | VersionedTransaction> {
-    if (!this.callbacks.isConnected()) {
+    if (!this.walletRegistry.isWalletConnected(this.walletId)) {
       return Promise.reject(new Error("Provider not connected. Call provider connect first."));
     }
 
@@ -94,7 +115,7 @@ export class InjectedSolanaChain implements ISolanaChain {
   async signAllTransactions(
     transactions: (Transaction | VersionedTransaction)[],
   ): Promise<(Transaction | VersionedTransaction)[]> {
-    if (!this.callbacks.isConnected()) {
+    if (!this.walletRegistry.isWalletConnected(this.walletId)) {
       return Promise.reject(new Error("Provider not connected. Call provider connect first."));
     }
 
@@ -109,7 +130,7 @@ export class InjectedSolanaChain implements ISolanaChain {
   async signAndSendAllTransactions(
     transactions: (Transaction | VersionedTransaction)[],
   ): Promise<{ signatures: string[] }> {
-    if (!this.callbacks.isConnected()) {
+    if (!this.walletRegistry.isWalletConnected(this.walletId)) {
       return Promise.reject(new Error("Provider not connected. Call provider connect first."));
     }
 
@@ -131,53 +152,58 @@ export class InjectedSolanaChain implements ISolanaChain {
   }
 
   isConnected(): boolean {
-    return this._connected && this.callbacks.isConnected();
+    return this.walletRegistry.isWalletConnected(this.walletId);
   }
 
   private setupEventListeners(): void {
     // Bridge phantom events to wallet adapter standard events
     this.phantom.solana.addEventListener("connect", (publicKey: string) => {
-      this.updateConnectionState(true, publicKey);
+      this._publicKey = publicKey;
+      const addresses = this.walletRegistry.getWalletAddresses(this.walletId);
+      const solanaAddress = addresses.find(addr => addr.addressType === AddressType.solana);
+      const newAddresses = solanaAddress
+        ? addresses.map(addr => addr.addressType === AddressType.solana ? { ...addr, address: publicKey } : addr)
+        : [...addresses, { addressType: AddressType.solana, address: publicKey }];
+      
+      this.walletRegistry.setWalletAddresses(this.walletId, newAddresses);
+      this.walletRegistry.setWalletConnected(this.walletId, true);
       this.eventEmitter.emit("connect", publicKey);
     });
 
     this.phantom.solana.addEventListener("disconnect", () => {
-      this.updateConnectionState(false, null);
+      const addresses = this.walletRegistry.getWalletAddresses(this.walletId);
+      const filteredAddresses = addresses.filter(addr => addr.addressType !== AddressType.solana);
+      this.walletRegistry.setWalletAddresses(this.walletId, filteredAddresses);
+      
+      // If no addresses left, mark as disconnected
+      if (filteredAddresses.length === 0) {
+        this.walletRegistry.setWalletConnected(this.walletId, false);
+      }
+      
+      this._publicKey = null;
       this.eventEmitter.emit("disconnect");
     });
 
     this.phantom.solana.addEventListener("accountChanged", (publicKey: string) => {
       this._publicKey = publicKey;
+      const addresses = this.walletRegistry.getWalletAddresses(this.walletId);
+      const newAddresses = addresses.map(addr =>
+        addr.addressType === AddressType.solana ? { ...addr, address: publicKey } : addr
+      );
+      this.walletRegistry.setWalletAddresses(this.walletId, newAddresses);
       this.eventEmitter.emit("accountChanged", publicKey);
-    });
-
-    // Listen to SDK events via callbacks (no circular reference)
-    this.callbacks.on("connect", data => {
-      const solanaAddress = data.addresses?.find((addr: any) => addr.addressType === AddressType.solana);
-
-      if (solanaAddress) {
-        this.updateConnectionState(true, solanaAddress.address);
-      }
-    });
-
-    this.callbacks.on("disconnect", () => {
-      this.updateConnectionState(false, null);
     });
   }
 
   private syncInitialState(): void {
-    if (this.callbacks.isConnected()) {
-      const solanaAddress = this.callbacks.getAddresses().find(addr => addr.addressType === AddressType.solana);
+    if (this.walletRegistry.isWalletConnected(this.walletId)) {
+      const addresses = this.walletRegistry.getWalletAddresses(this.walletId);
+      const solanaAddress = addresses.find(addr => addr.addressType === AddressType.solana);
 
       if (solanaAddress) {
-        this.updateConnectionState(true, solanaAddress.address);
+        this._publicKey = solanaAddress.address;
       }
     }
-  }
-
-  private updateConnectionState(connected: boolean, publicKey: string | null): void {
-    this._connected = connected;
-    this._publicKey = publicKey;
   }
 
   // Event methods for interface compliance

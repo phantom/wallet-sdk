@@ -1,4 +1,4 @@
-import type { BrowserSDKConfig, ConnectResult, WalletAddress, AuthOptions, AuthProviderType } from "./types";
+import type { BrowserSDKConfig, ConnectResult, WalletAddress, AuthOptions, AuthProviderType, AddressType } from "./types";
 import { ProviderManager, type ProviderPreference } from "./ProviderManager";
 import { debug, DebugCategory, type DebugLevel, type DebugCallback } from "./debug";
 import { waitForPhantomExtension } from "./waitForPhantomExtension";
@@ -9,7 +9,6 @@ import type { InjectedProvider } from "./providers/injected";
 import { DEFAULT_EMBEDDED_WALLET_TYPE } from "@phantom/constants";
 import type { InjectedWalletInfo } from "./wallets/registry";
 import { getWalletRegistry } from "./wallets/registry";
-import { discoverWallets } from "./wallets/discovery";
 import type {
   AutoConfirmEnableParams,
   AutoConfirmResult,
@@ -74,38 +73,12 @@ export class BrowserSDK {
     this.config = config;
     this.providerManager = new ProviderManager(config);
 
+    // Start wallet discovery (non-blocking)
     void this.discoverWallets();
   }
 
-  discoverWallets(): Promise<InjectedWalletInfo[]> {
-    debug.log(DebugCategory.BROWSER_SDK, "Starting wallet discovery", { addressTypes: this.config.addressTypes });
-
-    return discoverWallets()
-      .then(discoveredWallets => {
-        const relevantWallets = discoveredWallets.filter(wallet =>
-          wallet.addressTypes.some(type => this.config.addressTypes.includes(type)),
-        );
-
-        for (const wallet of relevantWallets) {
-          this.walletRegistry.register(wallet);
-          debug.log(DebugCategory.BROWSER_SDK, "Registered discovered wallet", {
-            id: wallet.id,
-            name: wallet.name,
-            addressTypes: wallet.addressTypes,
-          });
-        }
-
-        debug.info(DebugCategory.BROWSER_SDK, "Wallet discovery completed", {
-          totalDiscovered: discoveredWallets.length,
-          relevantWallets: relevantWallets.length,
-        });
-
-        return relevantWallets;
-      })
-      .catch(error => {
-        debug.warn(DebugCategory.BROWSER_SDK, "Wallet discovery failed", { error });
-        return []; // Return empty array on error
-      });
+  discoverWallets(): Promise<void> {
+    return this.walletRegistry.discover(this.config.addressTypes);
   }
 
   // ===== CHAIN API =====
@@ -191,6 +164,41 @@ export class BrowserSDK {
    */
   getCurrentProviderInfo(): ProviderPreference | null {
     return this.providerManager.getCurrentProviderInfo();
+  }
+
+  /**
+   * Get enabled address types for the current provider
+   * - For embedded provider: returns config.addressTypes
+   * - For Phantom injected: returns config.addressTypes
+   * - For discovered wallets: returns the wallet's addressTypes from registry
+   */
+  getEnabledAddressTypes(): AddressType[] {
+    const currentProvider = this.providerManager.getCurrentProvider();
+    if (!currentProvider) {
+      return [];
+    }
+
+    const providerInfo = this.getCurrentProviderInfo();
+    if (!providerInfo) {
+      return [];
+    }
+
+    // For embedded provider, use config.addressTypes
+    if (providerInfo.type === "embedded") {
+      return this.config.addressTypes;
+    }
+
+    // For injected provider, use the provider's getEnabledAddressTypes method
+    if (providerInfo.type === "injected") {
+      const injectedProvider = currentProvider as InjectedProvider;
+      if ("getEnabledAddressTypes" in injectedProvider && typeof injectedProvider.getEnabledAddressTypes === "function") {
+        return injectedProvider.getEnabledAddressTypes();
+      }
+      // Fallback to config.addressTypes
+      return this.config.addressTypes;
+    }
+
+    return [];
   }
 
   // ===== UTILITY METHODS =====
