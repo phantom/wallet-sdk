@@ -57,7 +57,6 @@ function generateWalletIdFromName(name: string): string {
 function processEIP6963Providers(providers: Map<string, EIP6963ProviderDetail>): InjectedWalletInfo[] {
   const wallets: InjectedWalletInfo[] = [];
 
-  console.log(`[EIP-6963] Processing ${providers.size} discovered providers`);
   debug.log(DebugCategory.BROWSER_SDK, "Processing EIP-6963 providers", {
     providerCount: providers.size,
     providerNames: Array.from(providers.values()).map(d => d.info.name),
@@ -73,7 +72,6 @@ function processEIP6963Providers(providers: Map<string, EIP6963ProviderDetail>):
       (info.rdns && (info.rdns.toLowerCase().includes("phantom") || info.rdns.toLowerCase() === "app.phantom"));
     
     if (isPhantom) {
-      console.log(`[EIP-6963] Skipping Phantom: ${info.name}`);
       debug.log(DebugCategory.BROWSER_SDK, "Skipping Phantom from EIP-6963", { name: info.name, rdns: info.rdns });
       continue;
     }
@@ -106,10 +104,6 @@ function processEIP6963Providers(providers: Map<string, EIP6963ProviderDetail>):
     });
   }
 
-  console.log(`[EIP-6963] Processed ${wallets.length} wallets`, {
-    walletIds: wallets.map(w => w.id),
-    walletNames: wallets.map(w => w.name),
-  });
   debug.log(DebugCategory.BROWSER_SDK, "EIP-6963 discovery completed", {
     discoveredCount: wallets.length,
     walletIds: wallets.map(w => w.id),
@@ -167,11 +161,6 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
     cachedWalletsArray = undefined;
     registeredWalletsSet.add(wallet);
     const featureKeys = wallet.features ? Object.keys(wallet.features) : [];
-    console.log(`[Wallet Standard] Wallet registered: ${wallet.name}`, {
-      chains: wallet.chains,
-      featureKeys,
-      totalWallets: registeredWalletsSet.size,
-    });
     debug.log(DebugCategory.BROWSER_SDK, "Wallet registered", {
       name: wallet.name,
       chains: wallet.chains,
@@ -215,7 +204,6 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
   // The event.detail is a callback function that wallets provide
   // We call that callback with the register API, and the wallet's callback will call register(wallet)
   const handleRegisterWalletEvent = (event: CustomEvent) => {
-    console.log("[Wallet Standard] register-wallet event received", event);
     const callback = (event as any).detail;
     if (typeof callback === 'function') {
       try {
@@ -251,7 +239,6 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
   
   try {
     window.dispatchEvent(new AppReadyEvent(registerAPI));
-    console.log("[Wallet Standard] Dispatched app-ready event");
     debug.log(DebugCategory.BROWSER_SDK, "Dispatched wallet-standard:app-ready event");
   } catch (error) {
     console.error('[Wallet Standard] Could not dispatch app-ready event', error);
@@ -283,7 +270,6 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
     (navigator as any).wallets = walletsAPI;
   }
   
-  console.log("[Wallet Standard] Initialized registry and dispatched app-ready event");
   debug.log(DebugCategory.BROWSER_SDK, "Initialized Wallet Standard registry");
 
   // Wait a bit for wallets to respond to app-ready event
@@ -300,7 +286,6 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
       note: "Wallet Standard API not properly initialized",
     };
     debug.log(DebugCategory.BROWSER_SDK, "Wallet Standard API not available", logData);
-    console.log("[Wallet Standard] API not available", logData);
     return wallets;
   }
 
@@ -309,7 +294,6 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
   const getWalletsFn = () => Promise.resolve([...walletsGetter.get()]);
 
   debug.log(DebugCategory.BROWSER_SDK, "Wallet Standard API detected, starting discovery");
-  console.log("[Wallet Standard] API detected, starting discovery");
 
   try {
     // Wallet Standard wallets may register asynchronously, so we try multiple times
@@ -335,7 +319,6 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
       
       debug.log(DebugCategory.BROWSER_SDK, `Wallet Standard getWallets attempt ${attempts + 1}`, logData);
       // Also log to console for debugging
-      console.log(`[Wallet Standard] Attempt ${attempts + 1}: Found ${registeredWallets.length} wallets`, logData);
 
       // If we found wallets or this is the last attempt, break
       if (registeredWallets.length > 0 || attempts === maxAttempts - 1) {
@@ -354,7 +337,6 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
       await new Promise(resolve => setTimeout(resolve, remainingWait));
       // Check one more time after the full wait
       registeredWallets = await getWalletsFn!();
-      console.log(`[Wallet Standard] Final check after ${eip6963Timeout}ms: Found ${registeredWallets.length} wallets`);
     }
     
     debug.log(DebugCategory.BROWSER_SDK, "Wallet Standard getWallets final result", {
@@ -382,10 +364,6 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
 
       if (!supportsSolana) {
         const featureKeys = wallet.features ? Object.keys(wallet.features) : [];
-        console.log(`[Wallet Standard] Wallet does not support Solana: ${wallet.name}`, {
-          chains: wallet.chains,
-          featureKeys,
-        });
         debug.log(DebugCategory.BROWSER_SDK, "Wallet does not support Solana", {
           walletName: wallet.name,
           chains: wallet.chains,
@@ -394,10 +372,6 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
         continue;
       }
       
-      console.log(`[Wallet Standard] Processing Solana wallet: ${wallet.name}`, {
-        chains: wallet.chains,
-        featureKeys: wallet.features ? Object.keys(wallet.features) : [],
-      });
 
       // Skip Phantom as is handled by our injected provider
       if (wallet.name.toLowerCase().includes("phantom")) {
@@ -452,7 +426,6 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
   };
   
   debug.log(DebugCategory.BROWSER_SDK, "Wallet Standard Solana discovery completed", finalLogData);
-  console.log("[Wallet Standard] Discovery completed", finalLogData);
 
   return wallets;
 }
@@ -477,13 +450,11 @@ async function getPhantomIconFromWalletStandard(): Promise<string | null> {
       const registeredWallets: WalletStandardWallet[] = walletsGetter.get();
       const phantomWallet = registeredWallets.find(w => w.name.toLowerCase().includes("phantom"));
       if (phantomWallet?.icon) {
-        console.log(`[Wallet Standard] Found Phantom icon from Wallet Standard: ${phantomWallet.icon}`);
         return phantomWallet.icon;
       }
     }
   } catch (error) {
     // Silently fail - we'll use default icon
-    console.log("[Wallet Standard] Could not get Phantom icon from Wallet Standard", error);
   }
 
   return null;
@@ -596,7 +567,9 @@ export async function discoverWallets(addressTypes?: ClientAddressType[]): Promi
         addresses: existing.addresses ?? [],
       };
       walletMap.set(wallet.id, mergedWallet);
-      console.log(`[Discovery] Merged wallet by ID: ${wallet.name} (${wallet.id})`, {
+      debug.log(DebugCategory.BROWSER_SDK, "Merged wallet by ID", {
+        walletName: wallet.name,
+        walletId: wallet.id,
         existingAddressTypes: existing.addressTypes,
         newAddressTypes: wallet.addressTypes,
         mergedAddressTypes,
