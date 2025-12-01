@@ -1,5 +1,5 @@
 import { useState, useEffect, type CSSProperties } from "react";
-import { Button, Text, useTheme } from "@phantom/wallet-sdk-ui";
+import { Button, Text, useTheme, ModalHeader } from "@phantom/wallet-sdk-ui";
 import { usePhantom } from "../PhantomContext";
 import { useDisconnect } from "../hooks/useDisconnect";
 
@@ -59,9 +59,16 @@ export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
     border: "1px solid rgba(220, 53, 69, 0.3)",
     width: "100%",
   };
+  const contentWrapperStyle: CSSProperties = {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "24px",
+  };
 
   return (
-    <>
+    <div style={contentWrapperStyle}>
+      <ModalHeader title="Wallet" onClose={onClose} />
       {addresses && addresses.length > 0 && (
         <div style={accountListStyle}>
           {addresses.map((account, index) => (
@@ -88,6 +95,6 @@ export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
       <Button onClick={handleDisconnect} disabled={isDisconnecting} isLoading={isDisconnecting} fullWidth>
         <Text variant="captionBold">{isDisconnecting ? "Disconnecting..." : "Disconnect"}</Text>
       </Button>
-    </>
+    </div>
   );
 }
