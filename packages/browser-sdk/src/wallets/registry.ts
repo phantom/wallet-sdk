@@ -3,6 +3,7 @@ import { AddressType, type WalletAddress } from "../types";
 import { discoverWallets } from "./discovery";
 import { debug, DebugCategory } from "../debug";
 import { InjectedWalletSolanaChain } from "../providers/injected/chains/InjectedWalletSolanaChain";
+import { WalletStandardSolanaAdapter } from "../providers/injected/chains/WalletStandardSolanaAdapter";
 import { InjectedWalletEthereumChain } from "../providers/injected/chains/InjectedWalletEthereumChain";
 import { PhantomSolanaChain } from "../providers/injected/chains/SolanaChain";
 import { PhantomEthereumChain } from "../providers/injected/chains/EthereumChain";
@@ -28,6 +29,8 @@ export interface InjectedWalletInfo {
   providers?: WalletProviders;
   connected: boolean;
   addresses: WalletAddress[];
+  /** Reverse DNS identifier from EIP-6963 (for potential future matching with Wallet Standard) */
+  rdns?: string;
 }
 
 /**
@@ -65,15 +68,35 @@ export class InjectedWalletRegistry {
     const wrappedProviders: WalletProviders = {};
     
     if (info.providers?.solana) {
-      wrappedProviders.solana = new InjectedWalletSolanaChain(
-        info.providers.solana,
-        info.id,
-        info.name,
-      );
-      debug.log(DebugCategory.BROWSER_SDK, "Wrapped Solana provider with InjectedWalletSolanaChain", {
-        walletId: info.id,
-        walletName: info.name,
-      });
+      // Check if this is a Wallet Standard wallet (has features object)
+      const isWalletStandard = info.providers.solana && 
+        typeof info.providers.solana === "object" &&
+        "features" in info.providers.solana &&
+        typeof (info.providers.solana as any).features === "object";
+      
+      if (isWalletStandard) {
+        // Use Wallet Standard adapter directly (it already implements ISolanaChain with debug logging)
+        wrappedProviders.solana = new WalletStandardSolanaAdapter(
+          info.providers.solana as any,
+          info.id,
+          info.name,
+        );
+        debug.log(DebugCategory.BROWSER_SDK, "Wrapped Wallet Standard Solana wallet with adapter", {
+          walletId: info.id,
+          walletName: info.name,
+        });
+      } else {
+        // Wrap regular ISolanaChain provider with debug logging wrapper
+        wrappedProviders.solana = new InjectedWalletSolanaChain(
+          info.providers.solana,
+          info.id,
+          info.name,
+        );
+        debug.log(DebugCategory.BROWSER_SDK, "Wrapped Solana provider with InjectedWalletSolanaChain", {
+          walletId: info.id,
+          walletName: info.name,
+        });
+      }
     }
     
     if (info.providers?.ethereum) {

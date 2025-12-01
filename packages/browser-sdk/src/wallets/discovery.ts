@@ -41,40 +41,13 @@ interface WalletStandardAccount {
 }
 
 function generateWalletIdFromEIP6963(info: EIP6963ProviderInfo): string {
-  // Normalize the name to create a consistent ID
-  const normalizedName = info.name.toLowerCase().replace(/\s+/g, "-");
-  
-  // If rdns exists, try to extract a meaningful identifier
-  // But prefer using normalized name for better matching with Wallet Standard
+  // If rdns exists, use it as the ID (reverse domain format: "com.example.wallet" -> "wallet-example-com")
+  // This is the stable identifier provided by the wallet
   if (info.rdns) {
-    // Extract key parts from rdns (e.g., "trustwallet" from "com.trustwallet.app")
-    const rdnsParts = info.rdns.split(".");
-    // Find the main identifier part (usually the second-to-last or last part before TLD)
-    const mainIdentifier = rdnsParts.length > 1 
-      ? rdnsParts[rdnsParts.length - 2] 
-      : rdnsParts[rdnsParts.length - 1];
-    
-    // Normalize the main identifier (remove common suffixes)
-    const normalizedRdns = mainIdentifier.toLowerCase().replace(/\s+/g, "-");
-    
-    // Extract the core name from the normalized name (remove "wallet", "extension", etc.)
-    const coreName = normalizedName.replace(/\b(wallet|extension|app|browser)\b/g, "").trim();
-    const coreRdns = normalizedRdns.replace(/\b(wallet|extension|app|browser)\b/g, "").trim();
-    
-    // If the core names match or one contains the other, use normalized name
-    // This helps match "Trust" (Wallet Standard) with "Trust Wallet" (EIP-6963)
-    if (coreName && coreRdns && (
-      coreName === coreRdns || 
-      coreName.includes(coreRdns) || 
-      coreRdns.includes(coreName)
-    )) {
-      return normalizedName;
-    }
-    
-    // Otherwise, use rdns-based ID
     return info.rdns.split(".").reverse().join("-");
   }
-  return normalizedName;
+  // Fallback to normalized name if no rdns
+  return info.name.toLowerCase().replace(/\s+/g, "-");
 }
 
 function generateWalletIdFromName(name: string): string {
@@ -106,19 +79,14 @@ function processEIP6963Providers(providers: Map<string, EIP6963ProviderDetail>):
     }
     
     const walletId = generateWalletIdFromEIP6963(info);
-    
-    // Also generate a normalized name-based ID for better matching with Wallet Standard
-    const normalizedNameId = info.name.toLowerCase().replace(/\s+/g, "-");
 
     console.log(`[EIP-6963] Discovered wallet: ${info.name}`, {
       walletId,
-      normalizedNameId,
       rdns: info.rdns,
       hasProvider: !!provider,
     });
     debug.log(DebugCategory.BROWSER_SDK, "Discovered EIP-6963 wallet", {
       walletId,
-      normalizedNameId,
       walletName: info.name,
       rdns: info.rdns,
     });
@@ -134,6 +102,7 @@ function processEIP6963Providers(providers: Map<string, EIP6963ProviderDetail>):
       },
       connected: false,
       addresses: [],
+      rdns: info.rdns, // Store rdns for potential future matching
     });
   }
 
@@ -605,56 +574,13 @@ export async function discoverWallets(addressTypes?: ClientAddressType[]): Promi
     walletMap.set("phantom", phantomWallet);
   }
 
-  // Add other wallets and merge by wallet ID or name (if IDs differ but names match)
+  // Add other wallets and merge only by exact ID match
+  // It's the wallet's responsibility to use consistent IDs across Wallet Standard and EIP-6963
   for (const wallet of [...solanaWallets, ...ethereumWallets]) {
-    // First try to find by ID
-    let existing = walletMap.get(wallet.id);
-    let mergeKey = wallet.id;
-    
-    // If not found by ID, try to find by name (for wallets discovered via different methods with different IDs)
-    // Handle cases like "Trust" vs "Trust Wallet" by checking if one name contains the other
-    if (!existing) {
-      const walletNameLower = wallet.name.toLowerCase().trim();
-      const existingByName = Array.from(walletMap.entries()).find(([_, w]) => {
-        const existingNameLower = w.name.toLowerCase().trim();
-        // Exact match
-        if (existingNameLower === walletNameLower) return true;
-        
-        // Extract the core name from each (remove common words like "wallet", "extension", etc.)
-        const walletCore = walletNameLower
-          .replace(/\b(wallet|extension|app|browser)\b/g, "")
-          .trim();
-        const existingCore = existingNameLower
-          .replace(/\b(wallet|extension|app|browser)\b/g, "")
-          .trim();
-        
-        // Check if core names match or one contains the other
-        if (walletCore && existingCore) {
-          return walletCore === existingCore || 
-                 walletCore.includes(existingCore) || 
-                 existingCore.includes(walletCore);
-        }
-        
-        return false;
-      });
-      if (existingByName) {
-        // Use the existing wallet's ID as the merge key
-        const [existingId, existingWallet] = existingByName;
-        walletMap.delete(existingId);
-        existing = existingWallet;
-        mergeKey = existingId; // Use the existing ID as the key
-        console.log(`[Discovery] Found wallet by name: "${wallet.name}" matches "${existing.name}", merging under ID: ${mergeKey} (was: ${wallet.id})`);
-        debug.log(DebugCategory.BROWSER_SDK, "Found wallet by name for merging", {
-          walletName: wallet.name,
-          existingName: existing.name,
-          existingId: mergeKey,
-          newId: wallet.id,
-        });
-      }
-    }
+    const existing = walletMap.get(wallet.id);
     
     if (existing) {
-      // Merge wallets with the same ID or name (e.g., Trust Wallet discovered via both Wallet Standard and EIP-6963)
+      // Merge wallets with the same ID (discovered via multiple methods)
       const mergedAddressTypes = Array.from(new Set([...existing.addressTypes, ...wallet.addressTypes]));
       const mergedProviders = {
         ...existing.providers,
@@ -662,7 +588,6 @@ export async function discoverWallets(addressTypes?: ClientAddressType[]): Promi
       };
       const mergedWallet = {
         ...existing,
-        id: mergeKey, // Use the merge key (existing ID) for consistency
         addressTypes: mergedAddressTypes,
         // Prefer icon from the most recent discovery
         icon: wallet.icon || existing.icon,
@@ -670,10 +595,8 @@ export async function discoverWallets(addressTypes?: ClientAddressType[]): Promi
         connected: existing.connected ?? false,
         addresses: existing.addresses ?? [],
       };
-      walletMap.set(mergeKey, mergedWallet);
-      console.log(`[Discovery] Merged wallet: ${wallet.name} (${mergeKey})`, {
-        existingId: existing.id,
-        newId: wallet.id,
+      walletMap.set(wallet.id, mergedWallet);
+      console.log(`[Discovery] Merged wallet by ID: ${wallet.name} (${wallet.id})`, {
         existingAddressTypes: existing.addressTypes,
         newAddressTypes: wallet.addressTypes,
         mergedAddressTypes,
@@ -682,10 +605,8 @@ export async function discoverWallets(addressTypes?: ClientAddressType[]): Promi
         mergedProviders: Object.keys(mergedProviders),
       });
       debug.log(DebugCategory.BROWSER_SDK, "Merged wallet from multiple discovery methods", {
-        walletId: mergeKey,
+        walletId: wallet.id,
         walletName: wallet.name,
-        existingId: existing.id,
-        newId: wallet.id,
         existingAddressTypes: existing.addressTypes,
         newAddressTypes: wallet.addressTypes,
         mergedAddressTypes,

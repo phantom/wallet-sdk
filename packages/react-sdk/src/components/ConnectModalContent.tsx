@@ -4,6 +4,7 @@ import {
   getDeeplinkToPhantom,
   type AuthProviderType,
   type InjectedWalletInfo,
+  type AddressType,
 } from "@phantom/browser-sdk";
 import {
   Button,
@@ -190,6 +191,44 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
     display: "flex",
     alignItems: "center",
     gap: "8px",
+    flex: 1,
+  };
+
+  const walletNameContainerStyle: CSSProperties = {
+    display: "flex",
+    flexDirection: "column",
+    gap: "4px",
+    alignItems: "flex-start",
+  };
+
+  const chainIndicatorsStyle: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+  };
+
+  const chainIndicatorStyle: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: "8px",
+    height: "8px",
+    padding: "0 2px",
+    borderRadius: "2px",
+    backgroundColor: theme.aux,
+    color: theme.text,
+    fontSize: "6px",
+    fontWeight: "bold",
+    lineHeight: "1",
+  };
+
+  const getChainLetter = (addressType: AddressType): string => {
+    const type = addressType.toLowerCase();
+    if (type.includes("ethereum") || type.includes("evm")) return "E";
+    if (type.includes("solana")) return "S";
+    if (type.includes("bitcoin")) return "B";
+    if (type.includes("sui")) return "U";
+    return addressType.charAt(0).toUpperCase();
   };
 
   const walletButtonRightStyle: CSSProperties = {
@@ -267,7 +306,18 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
                     ) : (
                       <BoundedIcon type="wallet" size={20} background={theme.aux} color={theme.text} />
                     )}
-                    <Text variant="captionBold">{wallet.name}</Text>
+                    <span style={walletNameContainerStyle}>
+                      <Text variant="captionBold">{wallet.name}</Text>
+                      {wallet.addressTypes && wallet.addressTypes.length > 0 && (
+                        <span style={chainIndicatorsStyle}>
+                          {wallet.addressTypes.map((addressType, index) => (
+                            <span key={index} style={chainIndicatorStyle} title={addressType}>
+                              {getChainLetter(addressType)}
+                            </span>
+                          ))}
+                        </span>
+                      )}
+                    </span>
                   </span>
                   <span style={walletButtonRightStyle}>
                     <Text variant="label" color={theme.secondary}>
@@ -376,7 +426,18 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
                         ) : (
                           <BoundedIcon type="wallet" size={20} background={theme.aux} color={theme.text} />
                         )}
-                        <Text variant="captionBold">{wallet.name}</Text>
+                        <span style={walletNameContainerStyle}>
+                          <Text variant="captionBold">{wallet.name}</Text>
+                          {wallet.addressTypes && wallet.addressTypes.length > 0 && (
+                            <span style={chainIndicatorsStyle}>
+                              {wallet.addressTypes.map((addressType, index) => (
+                                <span key={index} style={chainIndicatorStyle} title={addressType}>
+                                  {getChainLetter(addressType)}
+                                </span>
+                              ))}
+                            </span>
+                          )}
+                        </span>
                       </span>
                       <span style={walletButtonRightStyle}>
                         <Text variant="label" color={theme.secondary}>
