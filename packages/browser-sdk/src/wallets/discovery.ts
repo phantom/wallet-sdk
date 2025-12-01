@@ -78,11 +78,6 @@ function processEIP6963Providers(providers: Map<string, EIP6963ProviderDetail>):
     
     const walletId = generateWalletIdFromEIP6963(info);
 
-    console.log(`[EIP-6963] Discovered wallet: ${info.name}`, {
-      walletId,
-      rdns: info.rdns,
-      hasProvider: !!provider,
-    });
     debug.log(DebugCategory.BROWSER_SDK, "Discovered EIP-6963 wallet", {
       walletId,
       walletName: info.name,
@@ -209,7 +204,6 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
       try {
         callback(registerAPI);
       } catch (error) {
-        console.error('[Wallet Standard] Error calling wallet registration callback', error);
         debug.warn(DebugCategory.BROWSER_SDK, "Error calling wallet registration callback", { error });
       }
     }
@@ -218,7 +212,6 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
   try {
     window.addEventListener('wallet-standard:register-wallet', handleRegisterWalletEvent as EventListener);
   } catch (error) {
-    console.error('[Wallet Standard] Could not add register-wallet event listener', error);
     debug.warn(DebugCategory.BROWSER_SDK, "Could not add register-wallet event listener", { error });
   }
   
@@ -241,7 +234,6 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
     window.dispatchEvent(new AppReadyEvent(registerAPI));
     debug.log(DebugCategory.BROWSER_SDK, "Dispatched wallet-standard:app-ready event");
   } catch (error) {
-    console.error('[Wallet Standard] Could not dispatch app-ready event', error);
     debug.warn(DebugCategory.BROWSER_SDK, "Could not dispatch app-ready event", { error });
   }
   
@@ -586,10 +578,6 @@ export async function discoverWallets(addressTypes?: ClientAddressType[]): Promi
       });
     } else {
       walletMap.set(wallet.id, wallet);
-      console.log(`[Discovery] Added new wallet: ${wallet.name} (${wallet.id})`, {
-        addressTypes: wallet.addressTypes,
-        providers: Object.keys(wallet.providers || {}),
-      });
     }
   }
 
