@@ -1,5 +1,5 @@
 import { WalletStandardSolanaAdapter } from "./WalletStandardSolanaAdapter";
-import { Transaction, VersionedTransaction } from "@phantom/sdk-types";
+import type { Transaction, VersionedTransaction } from "@phantom/sdk-types";
 
 describe("WalletStandardSolanaAdapter", () => {
   let mockWallet: any;
@@ -54,8 +54,7 @@ describe("WalletStandardSolanaAdapter", () => {
         },
         "solana:signTransaction": {
           signTransaction: jest.fn().mockResolvedValue({
-            transaction: {} as Transaction,
-            signedTransaction: {} as Transaction,
+            transaction: {} as unknown as Transaction,
           }),
         },
         "solana:signAndSendTransaction": {
@@ -324,7 +323,7 @@ describe("WalletStandardSolanaAdapter", () => {
 
     beforeEach(async () => {
       await adapter.connect();
-      mockTransaction = {} as Transaction;
+      mockTransaction = {} as unknown as Transaction;
     });
 
     it("should sign transaction using solana:signTransaction feature", async () => {
@@ -351,7 +350,7 @@ describe("WalletStandardSolanaAdapter", () => {
 
     beforeEach(async () => {
       await adapter.connect();
-      mockTransaction = {} as Transaction;
+      mockTransaction = {} as unknown as Transaction;
     });
 
     it("should sign and send transaction using solana:signAndSendTransaction feature", async () => {
@@ -392,7 +391,7 @@ describe("WalletStandardSolanaAdapter", () => {
 
     beforeEach(async () => {
       await adapter.connect();
-      mockTransactions = [{} as Transaction, {} as Transaction];
+      mockTransactions = [{} as unknown as Transaction, {} as unknown as Transaction];
     });
 
     it("should sign all transactions using solana:signTransaction feature", async () => {
@@ -416,7 +415,7 @@ describe("WalletStandardSolanaAdapter", () => {
 
     beforeEach(async () => {
       await adapter.connect();
-      mockTransactions = [{} as Transaction, {} as Transaction];
+      mockTransactions = [{} as unknown as Transaction, {} as unknown as Transaction];
     });
 
     it("should sign and send all transactions", async () => {
