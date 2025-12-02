@@ -1,5 +1,11 @@
 # @phantom/utils
 
+## 1.0.0-beta.23
+
+### Patch Changes
+
+- 16319b0: Modal released, included first version of wallet discovery.
+
 ## 1.0.0-beta.22
 
 ### Patch Changes

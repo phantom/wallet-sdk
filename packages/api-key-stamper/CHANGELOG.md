@@ -1,5 +1,15 @@
 # @phantom/api-key-stamper
 
+## 1.0.0-beta.11
+
+### Patch Changes
+
+- 16319b0: Modal released, included first version of wallet discovery.
+- Updated dependencies [16319b0]
+  - @phantom/base64url@1.0.0-beta.11
+  - @phantom/crypto@1.0.0-beta.11
+  - @phantom/sdk-types@1.0.0-beta.11
+
 ## 1.0.0-beta.10
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @phantom/browser-sdk
 
+## 1.0.0-beta.8
+
+### Patch Changes
+
+- 16319b0: Modal released, included first version of wallet discovery.
+- Updated dependencies [16319b0]
+  - @phantom/constants@1.0.0-beta.11
+  - @phantom/sdk-types@1.0.0-beta.11
+
 ## 1.0.0-beta.7
 
 ### Patch Changes
