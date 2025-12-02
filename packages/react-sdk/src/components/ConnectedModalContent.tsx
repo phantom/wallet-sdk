@@ -95,7 +95,6 @@ export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
     width: "100%",
     minWidth: 0,
   };
-  
 
   return (
     <div style={contentWrapperStyle}>
