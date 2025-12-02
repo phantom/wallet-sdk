@@ -138,24 +138,6 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
     if (!isClient || !sdk) return;
 
     const initialize = async () => {
-      // Wait for wallet discovery to complete before attempting auto-connect
-      // This ensures Phantom and other wallets are registered in the registry
-      // We need to wait for discovery to complete AND ensure wallets are properly registered
-      // before marking the SDK as loaded, otherwise accessing sdk.solana or sdk.ethereum
-      // might fail if the wallet isn't registered with the expected chain support
-      try {
-        // Wait for discovery to complete - this ensures all wallets are registered
-        await sdk.discoverWallets();
-
-        // Give a small additional delay to ensure registry is fully updated
-        // (EIP-6963 discovery has a 400ms timeout, so we wait a bit more to be safe)
-        await new Promise(resolve => setTimeout(resolve, 100));
-      } catch (error) {
-        // Silent fail - discovery shouldn't break the app
-        console.error("Wallet discovery error:", error);
-      }
-
-      // Attempt auto-connect (it handles extension detection internally)
       try {
         await sdk.autoConnect();
       } catch (error) {
@@ -164,7 +146,6 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
       }
 
       // Mark SDK as done loading after initialization complete
-      // At this point, discovery has completed and wallets should be registered
       setIsLoading(false);
     };
 

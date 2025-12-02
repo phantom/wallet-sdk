@@ -1,4 +1,4 @@
-import { BoundedIcon, useTheme, Text } from "@phantom/wallet-sdk-ui";
+import { BoundedIcon, useTheme } from "@phantom/wallet-sdk-ui";
 import type { AddressType } from "@phantom/browser-sdk";
 import type { CSSProperties } from "react";
 

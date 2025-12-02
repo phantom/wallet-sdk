@@ -188,30 +188,7 @@ export class BrowserSDK {
       return [];
     }
 
-    const providerInfo = this.getCurrentProviderInfo();
-    if (!providerInfo) {
-      return [];
-    }
-
-    // For embedded provider, use config.addressTypes
-    if (providerInfo.type === "embedded") {
-      return this.config.addressTypes;
-    }
-
-    // For injected provider, use the provider's getEnabledAddressTypes method
-    if (providerInfo.type === "injected") {
-      const injectedProvider = currentProvider as InjectedProvider;
-      if (
-        "getEnabledAddressTypes" in injectedProvider &&
-        typeof injectedProvider.getEnabledAddressTypes === "function"
-      ) {
-        return injectedProvider.getEnabledAddressTypes();
-      }
-      // Fallback to config.addressTypes
-      return this.config.addressTypes;
-    }
-
-    return [];
+    return currentProvider.getEnabledAddressTypes();
   }
 
   // ===== UTILITY METHODS =====

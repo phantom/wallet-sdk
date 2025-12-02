@@ -161,7 +161,6 @@ describe("ConnectModalContent", () => {
       const { getByTestId, getByText } = renderComponent();
 
       expect(getByTestId("icon-google")).toBeInTheDocument();
-      // Now we always show text with icons
       expect(getByText("Continue with Google")).toBeInTheDocument();
     });
 

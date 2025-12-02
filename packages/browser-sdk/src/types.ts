@@ -80,6 +80,7 @@ export interface Provider {
   getAddresses(): WalletAddress[];
   isConnected(): boolean;
   autoConnect(): Promise<void>;
+  getEnabledAddressTypes(): AddressType[];
 
   // Chain access - providers expose their chains directly
   solana: ISolanaChain;
