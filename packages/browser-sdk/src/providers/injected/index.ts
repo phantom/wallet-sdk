@@ -1,4 +1,4 @@
-import type { Provider, ConnectResult, WalletAddress, AuthOptions } from "../../types";
+import type { Provider, ConnectResult, WalletAddress, AuthOptions, AuthProviderType } from "../../types";
 import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-provider-core";
 import { AddressType } from "@phantom/client";
 import type {
@@ -40,7 +40,13 @@ declare global {
 }
 
 import { debug, DebugCategory } from "../../debug";
-import { getWalletRegistry, type InjectedWalletRegistry, type InjectedWalletInfo, isPhantomWallet, type PhantomExtended } from "../../wallets/registry";
+import {
+  getWalletRegistry,
+  type InjectedWalletRegistry,
+  type InjectedWalletInfo,
+  isPhantomWallet,
+  type PhantomExtended,
+} from "../../wallets/registry";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
 
 const WAS_CONNECTED_KEY = "phantom-injected-was-connected";
@@ -51,10 +57,18 @@ export interface InjectedProviderConfig {
   addressTypes: AddressType[];
 }
 
+interface ConnectOptions {
+  onlyIfTrusted?: boolean; // For Solana: use onlyIfTrusted flag
+  silent?: boolean; // For Ethereum: use eth_accounts instead of eth_requestAccounts
+  skipEventListeners?: boolean; // Don't set up event listeners (for autoConnect)
+}
+
 export class InjectedProvider implements Provider {
   private addressTypes: AddressType[];
   private walletRegistry: InjectedWalletRegistry;
   private selectedWalletId: string | null = null;
+
+  private walletStates = new Map<string, { connected: boolean; addresses: WalletAddress[] }>();
 
   // Event management
   private eventListeners: Map<EmbeddedProviderEvent, Set<EventCallback>> = new Map();
@@ -74,7 +88,7 @@ export class InjectedProvider implements Provider {
     this.walletRegistry.discover(this.addressTypes).catch(error => {
       debug.warn(DebugCategory.INJECTED_PROVIDER, "Wallet discovery failed during initialization", { error });
     });
-    
+
     debug.info(DebugCategory.INJECTED_PROVIDER, "InjectedProvider initialized");
   }
 
@@ -104,7 +118,6 @@ export class InjectedProvider implements Provider {
     }
   }
 
-
   get solana(): ISolanaChain {
     if (!this.addressTypes.includes(AddressType.solana)) {
       throw new Error("Solana not enabled for this provider");
@@ -112,28 +125,28 @@ export class InjectedProvider implements Provider {
 
     const walletId = this.selectedWalletId || "phantom";
     const walletInfo = this.walletRegistry.getById(walletId);
-    
+
     if (!walletInfo) {
       // If wallet not found, it might still be discovering
       // Check if discovery is in progress by checking if the registry has a discovery promise
-      const registry = this.walletRegistry as any;
+      const registry = this.walletRegistry;
       if (registry.discoveryPromise) {
         throw new Error(
           `Wallet "${walletId}" not found. Wallet discovery is still in progress. ` +
-          `Please wait for sdk.discoverWallets() to complete before accessing chain properties.`
+            `Please wait for sdk.discoverWallets() to complete before accessing chain properties.`,
         );
       }
       throw new Error(
         `Wallet "${walletId}" not found. Please ensure wallet discovery has completed. ` +
-        `Make sure you call sdk.discoverWallets() and await it before accessing chain properties.`
+          `Make sure you call sdk.discoverWallets() and await it before accessing chain properties.`,
       );
     }
 
     if (!walletInfo.providers?.solana) {
       throw new Error(
         `Selected wallet "${walletInfo.name}" does not support Solana. ` +
-        `This wallet only supports: ${walletInfo.addressTypes.join(", ")}. ` +
-        `Make sure your SDK config includes Solana in addressTypes.`
+          `This wallet only supports: ${walletInfo.addressTypes.join(", ")}. ` +
+          `Make sure your SDK config includes Solana in addressTypes.`,
       );
     }
     return walletInfo.providers.solana;
@@ -149,33 +162,33 @@ export class InjectedProvider implements Provider {
 
     const walletId = this.selectedWalletId || "phantom";
     const walletInfo = this.walletRegistry.getById(walletId);
-    
+
     if (!walletInfo) {
       // If wallet not found, it might still be discovering
       const registry = this.walletRegistry as any;
       if (registry.discoveryPromise) {
         throw new Error(
           `Wallet "${walletId}" not found. Wallet discovery is still in progress. ` +
-          `Please wait for sdk.discoverWallets() to complete before accessing chain properties.`
+            `Please wait for sdk.discoverWallets() to complete before accessing chain properties.`,
         );
       }
       throw new Error(
         `Wallet "${walletId}" not found. Please ensure wallet discovery has completed. ` +
-        `Make sure you call sdk.discoverWallets() and await it before accessing chain properties.`
+          `Make sure you call sdk.discoverWallets() and await it before accessing chain properties.`,
       );
     }
 
     if (!walletInfo.providers?.ethereum) {
       throw new Error(
         `Selected wallet "${walletInfo.name}" does not support Ethereum. ` +
-        `This wallet only supports: ${walletInfo.addressTypes.join(", ")}. ` +
-        `Make sure your SDK config includes Ethereum in addressTypes.`
+          `This wallet only supports: ${walletInfo.addressTypes.join(", ")}. ` +
+          `Make sure your SDK config includes Ethereum in addressTypes.`,
       );
     }
     return walletInfo.providers.ethereum;
   }
 
-  private validateAndSelectWallet(requestedWalletId: string): void {
+  private validateAndSelectWallet(requestedWalletId: string): InjectedWalletInfo {
     if (!this.walletRegistry.has(requestedWalletId)) {
       debug.error(DebugCategory.INJECTED_PROVIDER, "Unknown injected wallet id requested", {
         walletId: requestedWalletId,
@@ -183,19 +196,30 @@ export class InjectedProvider implements Provider {
       throw new Error(`Unknown injected wallet id: ${requestedWalletId}`);
     }
 
+    const walletInfo = this.walletRegistry.getById(requestedWalletId);
+    if (!walletInfo || !walletInfo.providers) {
+      debug.warn(DebugCategory.INJECTED_PROVIDER, "Wallet not available for connection", {
+        walletId: requestedWalletId,
+      });
+      throw new Error(`Wallet not available for connection: ${requestedWalletId}`);
+    }
+
+    // Good walletId
     this.selectedWalletId = requestedWalletId;
     debug.log(DebugCategory.INJECTED_PROVIDER, "Selected injected wallet for connection", {
       walletId: requestedWalletId,
     });
+
+    return walletInfo;
   }
 
-  private async connectToWallet(walletInfo: InjectedWalletInfo): Promise<WalletAddress[]> {
+  private async connectToWallet(walletInfo: InjectedWalletInfo, options?: ConnectOptions): Promise<WalletAddress[]> {
     if (!walletInfo.providers) {
       const error = new Error(`Wallet adapter not available for wallet: ${this.selectedWalletId}`);
       debug.error(DebugCategory.INJECTED_PROVIDER, "Wallet adapter not available", { walletId: this.selectedWalletId });
       this.emit("connect_error", {
         error: error.message,
-        source: "manual-connect",
+        source: options?.skipEventListeners ? "auto-connect" : "manual-connect",
       });
       throw error;
     }
@@ -203,20 +227,24 @@ export class InjectedProvider implements Provider {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Connecting via wallet", {
       walletId: this.selectedWalletId,
       walletName: walletInfo.name,
+      options,
     });
 
-    // Set up event listeners for wallet account changes (works for both Phantom and external wallets)
-    this.setupExternalWalletEvents(walletInfo);
-    
-    // For Phantom, also set up browser-injected-sdk events
-    // This needs to happen after selectedWalletId is set, so we do it here
-    if (this.selectedWalletId === "phantom" && isPhantomWallet(walletInfo)) {
-      // Clear any existing browser-injected-sdk cleanup functions before setting up new ones
-      this.browserInjectedCleanupFunctions.forEach(cleanup => cleanup());
-      this.browserInjectedCleanupFunctions = [];
-      
-      this.setupBrowserInjectedEvents();
-      this.eventsInitialized = true;
+    // Set up event listeners only if not skipped (for autoConnect, we set them up after successful connection)
+    if (!options?.skipEventListeners) {
+      // Set up event listeners for wallet account changes (works for both Phantom and external wallets)
+      this.setupExternalWalletEvents(walletInfo);
+
+      // For Phantom, also set up browser-injected-sdk events
+      // This needs to happen after selectedWalletId is set, so we do it here
+      if (this.selectedWalletId === "phantom" && isPhantomWallet(walletInfo)) {
+        // Clear any existing browser-injected-sdk cleanup functions before setting up new ones
+        this.browserInjectedCleanupFunctions.forEach(cleanup => cleanup());
+        this.browserInjectedCleanupFunctions = [];
+
+        this.setupBrowserInjectedEvents();
+        this.eventsInitialized = true;
+      }
     }
 
     const connectedAddresses: WalletAddress[] = [];
@@ -225,11 +253,14 @@ export class InjectedProvider implements Provider {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Attempting Solana connection", {
         walletId: this.selectedWalletId,
         walletName: walletInfo.name,
+        onlyIfTrusted: options?.onlyIfTrusted,
       });
       try {
-        const result = await walletInfo.providers.solana.connect();
+        const result = await walletInfo.providers.solana.connect(
+          options?.onlyIfTrusted ? { onlyIfTrusted: true } : undefined,
+        );
         const address = result.publicKey;
-        
+
         connectedAddresses.push({
           addressType: AddressType.solana,
           address,
@@ -247,7 +278,7 @@ export class InjectedProvider implements Provider {
         });
         this.emit("connect_error", {
           error: err instanceof Error ? err.message : "Failed to connect",
-          source: "manual-connect",
+          source: options?.skipEventListeners ? "auto-connect" : "manual-connect",
         });
         throw err;
       }
@@ -257,10 +288,17 @@ export class InjectedProvider implements Provider {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Attempting Ethereum connection", {
         walletId: this.selectedWalletId,
         walletName: walletInfo.name,
+        silent: options?.silent,
       });
       try {
-        const accounts = await walletInfo.providers.ethereum.connect();
-        
+        let accounts: string[];
+        if (options?.silent) {
+          // For silent connection, use eth_accounts instead of eth_requestAccounts
+          accounts = await walletInfo.providers.ethereum.request<string[]>({ method: "eth_accounts" });
+        } else {
+          accounts = await walletInfo.providers.ethereum.connect();
+        }
+
         if (accounts.length > 0) {
           connectedAddresses.push(
             ...accounts.map((address: string) => ({
@@ -282,7 +320,7 @@ export class InjectedProvider implements Provider {
         });
         this.emit("connect_error", {
           error: err instanceof Error ? err.message : "Failed to connect",
-          source: "manual-connect",
+          source: options?.skipEventListeners ? "auto-connect" : "manual-connect",
         });
         throw err;
       }
@@ -291,7 +329,11 @@ export class InjectedProvider implements Provider {
     return connectedAddresses;
   }
 
-  private async finalizeConnection(connectedAddresses: WalletAddress[]): Promise<ConnectResult> {
+  private async finalizeConnection(
+    connectedAddresses: WalletAddress[],
+    authProvider?: AuthProviderType,
+    walletId?: string,
+  ): Promise<ConnectResult> {
     if (connectedAddresses.length === 0) {
       const error = new Error("Failed to connect to any supported wallet provider");
       this.emit("connect_error", {
@@ -301,15 +343,20 @@ export class InjectedProvider implements Provider {
       throw error;
     }
 
-    // Update wallet registry state
+    // Update wallet state
     if (this.selectedWalletId) {
-      this.walletRegistry.setWalletAddresses(this.selectedWalletId, connectedAddresses);
-      this.walletRegistry.setWalletConnected(this.selectedWalletId, true);
+      this.setWalletState(this.selectedWalletId, {
+        connected: true,
+        addresses: connectedAddresses,
+      });
     }
 
     debug.log(DebugCategory.INJECTED_PROVIDER, "Finalized connection with addresses", {
       addressCount: connectedAddresses.length,
-      addresses: connectedAddresses.map(addr => ({ type: addr.addressType, address: addr.address.substring(0, 10) + "..." })),
+      addresses: connectedAddresses.map(addr => ({
+        type: addr.addressType,
+        address: addr.address.substring(0, 10) + "...",
+      })),
     });
 
     const authUserId = await this.getAuthUserId("manual-connect");
@@ -332,6 +379,8 @@ export class InjectedProvider implements Provider {
       addresses: connectedAddresses,
       status: "completed" as const,
       authUserId,
+      authProvider,
+      walletId,
     };
 
     this.emit("connect", {
@@ -353,47 +402,21 @@ export class InjectedProvider implements Provider {
       throw new Error(`Invalid provider for injected connection: ${authOptions.provider}. Must be "injected"`);
     }
 
-    const requestedWalletId = authOptions.walletId || "phantom";
-    this.validateAndSelectWallet(requestedWalletId);
-
     this.emit("connect_start", {
       source: "manual-connect",
       providerType: "injected",
     });
 
     try {
-      if (!this.selectedWalletId) {
-        throw new Error("No wallet selected");
-      }
-
-      const walletInfo = this.walletRegistry.getById(this.selectedWalletId);
-      if (!walletInfo || !walletInfo.providers) {
-        const error = new Error(`Wallet adapter not available for wallet: ${this.selectedWalletId}`);
-        debug.error(DebugCategory.INJECTED_PROVIDER, "Wallet adapter not available", {
-          walletId: this.selectedWalletId,
-        });
-        this.emit("connect_error", {
-          error: error.message,
-          source: "manual-connect",
-        });
-        throw error;
-      }
-
+      const requestedWalletId = authOptions.walletId || "phantom";
+      const walletInfo = this.validateAndSelectWallet(requestedWalletId);
       const connectedAddresses = await this.connectToWallet(walletInfo);
-
-      return await this.finalizeConnection(connectedAddresses);
+      return await this.finalizeConnection(connectedAddresses, "injected", this.selectedWalletId || undefined);
     } catch (error) {
-      if (
-        error instanceof Error &&
-        !error.message.includes("Phantom wallet not found") &&
-        !error.message.includes("Failed to connect to any supported wallet provider")
-      ) {
-        this.emit("connect_error", {
-          error: error.message,
-          source: "manual-connect",
-        });
-      }
-
+      this.emit("connect_error", {
+        error: error instanceof Error ? error.message : "Failed to connect",
+        source: "manual-connect",
+      });
       throw error;
     }
   }
@@ -433,9 +456,11 @@ export class InjectedProvider implements Provider {
     // Clear external wallet event listeners tracking
     if (this.selectedWalletId) {
       this.externalWalletEventListenersSetup.delete(this.selectedWalletId);
-      // Update wallet registry state
-      this.walletRegistry.setWalletConnected(this.selectedWalletId, false);
-      this.walletRegistry.setWalletAddresses(this.selectedWalletId, []);
+      // Update wallet state
+      this.setWalletState(this.selectedWalletId, {
+        connected: false,
+        addresses: [],
+      });
     }
 
     try {
@@ -487,159 +512,23 @@ export class InjectedProvider implements Provider {
       // Wait for wallet discovery to complete before attempting to connect
       // This ensures Phantom and other wallets are registered in the registry
       await this.waitForWalletDiscovery(walletId);
+      const walletInfo = this.validateAndSelectWallet(walletId);
 
-      this.validateAndSelectWallet(walletId);
-
-      if (!this.selectedWalletId) {
-        debug.warn(DebugCategory.INJECTED_PROVIDER, "No wallet selected for auto-connect");
-        return;
-      }
-
-      const walletInfo = this.walletRegistry.getById(this.selectedWalletId);
-      if (!walletInfo || !walletInfo.providers) {
-        debug.warn(DebugCategory.INJECTED_PROVIDER, "Wallet not available for auto-connect", {
+      // Use connectToWallet with silent/trusted options
+      // Errors are expected and handled gracefully (don't throw)
+      let connectedAddresses: WalletAddress[] = [];
+      try {
+        connectedAddresses = await this.connectToWallet(walletInfo, {
+          onlyIfTrusted: true,
+          silent: true,
+          skipEventListeners: true, // Set up listeners only if connection succeeds
+        });
+      } catch (err) {
+        // Auto-connect failures are expected if wallet is not trusted
+        debug.log(DebugCategory.INJECTED_PROVIDER, "Auto-connect failed (expected if not trusted)", {
+          error: err,
           walletId: this.selectedWalletId,
         });
-        return;
-      }
-
-      const connectedAddresses: WalletAddress[] = [];
-
-      // Check if Phantom and verify extension is installed
-      if (this.selectedWalletId === "phantom" && isPhantomWallet(walletInfo)) {
-        const phantom = walletInfo.phantomInstance;
-        if (!phantom?.extension?.isInstalled?.()) {
-          debug.warn(DebugCategory.INJECTED_PROVIDER, "Phantom wallet extension not found for auto-connect");
-
-          this.emit("connect_error", {
-            error: "Phantom wallet not found",
-            source: "auto-connect",
-          });
-
-          return;
-        }
-
-        // Try Solana auto-connect if enabled
-        if (this.addressTypes.includes(AddressType.solana)) {
-          debug.log(DebugCategory.INJECTED_PROVIDER, "Attempting Solana auto-connect");
-          try {
-            // Use onlyIfTrusted=true for silent connection
-            const publicKeyResult = await phantom.solana.connect({ onlyIfTrusted: true });
-            if (!publicKeyResult) {
-              throw new Error("Failed to auto-connect to Solana wallet");
-            }
-            const publicKey = typeof publicKeyResult === "string" ? publicKeyResult : (publicKeyResult as unknown as { publicKey?: string })?.publicKey || "";
-            if (publicKey) {
-              connectedAddresses.push({
-                addressType: AddressType.solana,
-                address: publicKey,
-              });
-              debug.info(DebugCategory.INJECTED_PROVIDER, "Solana auto-connected successfully", { 
-                address: publicKey 
-              });
-            }
-          } catch (err) {
-            debug.log(DebugCategory.INJECTED_PROVIDER, "Solana auto-connect failed (expected if not trusted)", {
-              error: err,
-            });
-            throw err;
-          }
-        }
-
-        // Try Ethereum auto-connect if enabled
-        if (this.addressTypes.includes(AddressType.ethereum)) {
-          debug.log(DebugCategory.INJECTED_PROVIDER, "Attempting Ethereum auto-connect");
-          try {
-            // Use onlyIfTrusted=true for silent connection (uses eth_accounts instead of eth_requestAccounts)
-            const accounts = await phantom.ethereum.connect({ onlyIfTrusted: true });
-            if (accounts && accounts.length > 0) {
-              connectedAddresses.push(
-                ...accounts.map((address: string) => ({
-                  addressType: AddressType.ethereum,
-                  address,
-                })),
-              );
-              debug.info(DebugCategory.INJECTED_PROVIDER, "Ethereum auto-connected successfully", {
-                addresses: accounts,
-              });
-            }
-          } catch (err) {
-            debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum auto-connect failed (expected if not trusted)", {
-              error: err,
-            });
-          }
-        }
-      } else {
-        // External wallet auto-connect logic
-        debug.log(DebugCategory.INJECTED_PROVIDER, "Attempting auto-connect to external wallet", {
-          walletId: this.selectedWalletId,
-          walletName: walletInfo.name,
-        });
-
-        // Try Solana auto-connect if enabled
-        if (this.addressTypes.includes(AddressType.solana) && walletInfo.providers.solana) {
-          try {
-            // For Wallet Standard, try to get accounts without prompting
-            // Note: Wallet Standard doesn't have onlyIfTrusted, so we try connect() and catch if it fails
-            const result: any = await walletInfo.providers.solana.connect();
-            let address: string;
-
-            if (result && typeof result === "object") {
-              if ("publicKey" in result && !Array.isArray(result)) {
-                address = result.publicKey;
-              } else if (Array.isArray(result) && result.length > 0 && result[0]?.address) {
-                address = result[0].address;
-              } else {
-                throw new Error("Invalid response from wallet connect");
-              }
-            } else {
-              throw new Error("Invalid response from wallet connect");
-            }
-
-            if (address) {
-              connectedAddresses.push({
-                addressType: AddressType.solana,
-                address,
-              });
-              debug.info(DebugCategory.INJECTED_PROVIDER, "Solana auto-connected successfully", {
-                address,
-                walletId: this.selectedWalletId,
-                walletName: walletInfo.name,
-              });
-            }
-          } catch (err) {
-            debug.log(DebugCategory.INJECTED_PROVIDER, "Solana auto-connect failed (expected if not trusted)", {
-              error: err,
-              walletId: this.selectedWalletId,
-            });
-          }
-        }
-
-        // Try Ethereum auto-connect if enabled
-        if (this.addressTypes.includes(AddressType.ethereum) && walletInfo.providers.ethereum) {
-          try {
-            // For EIP-6963, use eth_accounts instead of eth_requestAccounts for silent connection
-            const accounts = await walletInfo.providers.ethereum.request({ method: "eth_accounts" });
-            if (Array.isArray(accounts) && accounts.length > 0) {
-              connectedAddresses.push(
-                ...accounts.map((address: string) => ({
-                  addressType: AddressType.ethereum,
-                  address,
-                })),
-              );
-              debug.info(DebugCategory.INJECTED_PROVIDER, "Ethereum auto-connected successfully", {
-                addresses: accounts,
-                walletId: this.selectedWalletId,
-                walletName: walletInfo.name,
-              });
-            }
-          } catch (err) {
-            debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum auto-connect failed (expected if not trusted)", {
-              error: err,
-              walletId: this.selectedWalletId,
-            });
-          }
-        }
       }
 
       if (connectedAddresses.length === 0) {
@@ -653,10 +542,25 @@ export class InjectedProvider implements Provider {
         return;
       }
 
-      // Update wallet registry state
+      // Set up event listeners after successful connection
+      this.setupExternalWalletEvents(walletInfo);
+
+      // For Phantom, also set up browser-injected-sdk events
+      if (this.selectedWalletId === "phantom" && isPhantomWallet(walletInfo)) {
+        // Clear any existing browser-injected-sdk cleanup functions before setting up new ones
+        this.browserInjectedCleanupFunctions.forEach(cleanup => cleanup());
+        this.browserInjectedCleanupFunctions = [];
+
+        this.setupBrowserInjectedEvents();
+        this.eventsInitialized = true;
+      }
+
+      // Update wallet state
       if (this.selectedWalletId) {
-        this.walletRegistry.setWalletAddresses(this.selectedWalletId, connectedAddresses);
-        this.walletRegistry.setWalletConnected(this.selectedWalletId, true);
+        this.setWalletState(this.selectedWalletId, {
+          connected: true,
+          addresses: connectedAddresses,
+        });
       }
 
       const authUserId = await this.getAuthUserId("auto-connect");
@@ -688,9 +592,20 @@ export class InjectedProvider implements Provider {
     }
   }
 
+  private getWalletState(walletId: string): { connected: boolean; addresses: WalletAddress[] } {
+    if (!this.walletStates.has(walletId)) {
+      this.walletStates.set(walletId, { connected: false, addresses: [] });
+    }
+    return this.walletStates.get(walletId)!;
+  }
+
+  private setWalletState(walletId: string, state: { connected: boolean; addresses: WalletAddress[] }): void {
+    this.walletStates.set(walletId, state);
+  }
+
   getAddresses(): WalletAddress[] {
     const walletId = this.selectedWalletId || "phantom";
-    return this.walletRegistry.getWalletAddresses(walletId);
+    return this.getWalletState(walletId).addresses;
   }
 
   /**
@@ -716,7 +631,7 @@ export class InjectedProvider implements Provider {
 
   isConnected(): boolean {
     const walletId = this.selectedWalletId || "phantom";
-    return this.walletRegistry.isWalletConnected(walletId);
+    return this.getWalletState(walletId).connected;
   }
 
   // AutoConfirm methods - only available for Phantom wallet
@@ -867,15 +782,17 @@ export class InjectedProvider implements Provider {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Solana connect event received", { publicKey });
 
       const walletId = this.selectedWalletId || "phantom";
-      const addresses = this.walletRegistry.getWalletAddresses(walletId);
+      const state = this.getWalletState(walletId);
       const solanaAddress = { addressType: AddressType.solana, address: publicKey };
-      const hasSolana = addresses.some(addr => addr.addressType === AddressType.solana);
+      const hasSolana = state.addresses.some(addr => addr.addressType === AddressType.solana);
       const newAddresses = hasSolana
-        ? addresses.map(addr => addr.addressType === AddressType.solana ? solanaAddress : addr)
-        : [...addresses, solanaAddress];
-      
-      this.walletRegistry.setWalletAddresses(walletId, newAddresses);
-      this.walletRegistry.setWalletConnected(walletId, true);
+        ? state.addresses.map(addr => (addr.addressType === AddressType.solana ? solanaAddress : addr))
+        : [...state.addresses, solanaAddress];
+
+      this.setWalletState(walletId, {
+        connected: true,
+        addresses: newAddresses,
+      });
 
       const authUserId = await this.getAuthUserId("Solana connect event");
 
@@ -891,13 +808,13 @@ export class InjectedProvider implements Provider {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Solana disconnect event received");
 
       const walletId = this.selectedWalletId || "phantom";
-      const addresses = this.walletRegistry.getWalletAddresses(walletId);
-      const filteredAddresses = addresses.filter(addr => addr.addressType !== AddressType.solana);
-      this.walletRegistry.setWalletAddresses(walletId, filteredAddresses);
-      
-      if (filteredAddresses.length === 0) {
-        this.walletRegistry.setWalletConnected(walletId, false);
-      }
+      const state = this.getWalletState(walletId);
+      const filteredAddresses = state.addresses.filter(addr => addr.addressType !== AddressType.solana);
+
+      this.setWalletState(walletId, {
+        connected: filteredAddresses.length > 0,
+        addresses: filteredAddresses,
+      });
 
       this.emit("disconnect", {
         source: "injected-extension",
@@ -909,13 +826,19 @@ export class InjectedProvider implements Provider {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Solana account changed event received", { publicKey });
 
       const walletId = this.selectedWalletId || "phantom";
-      const addresses = this.walletRegistry.getWalletAddresses(walletId);
-      const solanaIndex = addresses.findIndex(addr => addr.addressType === AddressType.solana);
-      const newAddresses = solanaIndex >= 0
-        ? addresses.map((addr, idx) => idx === solanaIndex ? { addressType: AddressType.solana, address: publicKey } : addr)
-        : [...addresses, { addressType: AddressType.solana, address: publicKey }];
-      
-      this.walletRegistry.setWalletAddresses(walletId, newAddresses);
+      const state = this.getWalletState(walletId);
+      const solanaIndex = state.addresses.findIndex(addr => addr.addressType === AddressType.solana);
+      const newAddresses =
+        solanaIndex >= 0
+          ? state.addresses.map((addr, idx) =>
+              idx === solanaIndex ? { addressType: AddressType.solana, address: publicKey } : addr,
+            )
+          : [...state.addresses, { addressType: AddressType.solana, address: publicKey }];
+
+      this.setWalletState(walletId, {
+        connected: true,
+        addresses: newAddresses,
+      });
 
       const authUserId = await this.getAuthUserId("Solana account changed event");
 
@@ -940,13 +863,15 @@ export class InjectedProvider implements Provider {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum connect event received", { accounts });
 
       const walletId = this.selectedWalletId || "phantom";
-      const addresses = this.walletRegistry.getWalletAddresses(walletId);
+      const state = this.getWalletState(walletId);
       const ethAddresses = accounts.map(address => ({ addressType: AddressType.ethereum, address }));
-      const otherAddresses = addresses.filter(addr => addr.addressType !== AddressType.ethereum);
+      const otherAddresses = state.addresses.filter(addr => addr.addressType !== AddressType.ethereum);
       const newAddresses = [...otherAddresses, ...ethAddresses];
-      
-      this.walletRegistry.setWalletAddresses(walletId, newAddresses);
-      this.walletRegistry.setWalletConnected(walletId, true);
+
+      this.setWalletState(walletId, {
+        connected: true,
+        addresses: newAddresses,
+      });
 
       const authUserId = await this.getAuthUserId("Ethereum connect event");
 
@@ -961,13 +886,13 @@ export class InjectedProvider implements Provider {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum disconnect event received");
 
       const walletId = this.selectedWalletId || "phantom";
-      const addresses = this.walletRegistry.getWalletAddresses(walletId);
-      const filteredAddresses = addresses.filter(addr => addr.addressType !== AddressType.ethereum);
-      this.walletRegistry.setWalletAddresses(walletId, filteredAddresses);
-      
-      if (filteredAddresses.length === 0) {
-        this.walletRegistry.setWalletConnected(walletId, false);
-      }
+      const state = this.getWalletState(walletId);
+      const filteredAddresses = state.addresses.filter(addr => addr.addressType !== AddressType.ethereum);
+
+      this.setWalletState(walletId, {
+        connected: filteredAddresses.length > 0,
+        addresses: filteredAddresses,
+      });
 
       this.emit("disconnect", {
         source: "injected-extension",
@@ -978,14 +903,17 @@ export class InjectedProvider implements Provider {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum accounts changed event received", { accounts });
 
       const walletId = this.selectedWalletId || "phantom";
-      const addresses = this.walletRegistry.getWalletAddresses(walletId);
-      const otherAddresses = addresses.filter(addr => addr.addressType !== AddressType.ethereum);
+      const state = this.getWalletState(walletId);
+      const otherAddresses = state.addresses.filter(addr => addr.addressType !== AddressType.ethereum);
 
       if (accounts && accounts.length > 0) {
         // User switched to a connected account - add new addresses
         const ethAddresses = accounts.map(address => ({ addressType: AddressType.ethereum, address }));
         const newAddresses = [...otherAddresses, ...ethAddresses];
-        this.walletRegistry.setWalletAddresses(walletId, newAddresses);
+        this.setWalletState(walletId, {
+          connected: true,
+          addresses: newAddresses,
+        });
 
         const authUserId = await this.getAuthUserId("Ethereum accounts changed event");
 
@@ -996,10 +924,10 @@ export class InjectedProvider implements Provider {
         });
       } else {
         // User switched to unconnected account - treat as disconnect
-        this.walletRegistry.setWalletAddresses(walletId, otherAddresses);
-        if (otherAddresses.length === 0) {
-          this.walletRegistry.setWalletConnected(walletId, false);
-        }
+        this.setWalletState(walletId, {
+          connected: otherAddresses.length > 0,
+          addresses: otherAddresses,
+        });
 
         this.emit("disconnect", {
           source: "injected-extension-account-change",
@@ -1009,10 +937,7 @@ export class InjectedProvider implements Provider {
 
     const cleanupConnect = phantom.ethereum.addEventListener("connect", handleEthereumConnect);
     const cleanupDisconnect = phantom.ethereum.addEventListener("disconnect", handleEthereumDisconnect);
-    const cleanupAccountsChanged = phantom.ethereum.addEventListener(
-      "accountsChanged",
-      handleEthereumAccountsChanged,
-    );
+    const cleanupAccountsChanged = phantom.ethereum.addEventListener("accountsChanged", handleEthereumAccountsChanged);
 
     this.browserInjectedCleanupFunctions.push(cleanupConnect, cleanupDisconnect, cleanupAccountsChanged);
   }
@@ -1041,14 +966,17 @@ export class InjectedProvider implements Provider {
         });
 
         const walletId = this.selectedWalletId!;
-        const addresses = this.walletRegistry.getWalletAddresses(walletId);
-        const otherAddresses = addresses.filter(addr => addr.addressType !== AddressType.ethereum);
+        const state = this.getWalletState(walletId);
+        const otherAddresses = state.addresses.filter(addr => addr.addressType !== AddressType.ethereum);
 
         if (accounts && accounts.length > 0) {
           // Add only the current accounts (should typically be 1, but handle multiple)
           const ethAddresses = accounts.map(address => ({ addressType: AddressType.ethereum, address }));
           const newAddresses = [...otherAddresses, ...ethAddresses];
-          this.walletRegistry.setWalletAddresses(walletId, newAddresses);
+          this.setWalletState(walletId, {
+            connected: true,
+            addresses: newAddresses,
+          });
 
           debug.log(DebugCategory.INJECTED_PROVIDER, "Updated Ethereum addresses after account change", {
             walletId,
@@ -1066,10 +994,10 @@ export class InjectedProvider implements Provider {
           });
         } else {
           // User switched to unconnected account - treat as disconnect
-          this.walletRegistry.setWalletAddresses(walletId, otherAddresses);
-          if (otherAddresses.length === 0) {
-            this.walletRegistry.setWalletConnected(walletId, false);
-          }
+          this.setWalletState(walletId, {
+            connected: otherAddresses.length > 0,
+            addresses: otherAddresses,
+          });
 
           this.emit("disconnect", {
             source: "external-wallet-account-change",
@@ -1097,12 +1025,15 @@ export class InjectedProvider implements Provider {
         });
 
         const walletId = this.selectedWalletId!;
-        const addresses = this.walletRegistry.getWalletAddresses(walletId);
-        const otherAddresses = addresses.filter(addr => addr.addressType !== AddressType.solana);
+        const state = this.getWalletState(walletId);
+        const otherAddresses = state.addresses.filter(addr => addr.addressType !== AddressType.solana);
 
         if (publicKey) {
           const newAddresses = [...otherAddresses, { addressType: AddressType.solana, address: publicKey }];
-          this.walletRegistry.setWalletAddresses(walletId, newAddresses);
+          this.setWalletState(walletId, {
+            connected: true,
+            addresses: newAddresses,
+          });
 
           const authUserId = await this.getAuthUserId("External wallet Solana account changed event");
 
@@ -1113,10 +1044,10 @@ export class InjectedProvider implements Provider {
           });
         } else {
           // Account disconnected
-          this.walletRegistry.setWalletAddresses(walletId, otherAddresses);
-          if (otherAddresses.length === 0) {
-            this.walletRegistry.setWalletConnected(walletId, false);
-          }
+          this.setWalletState(walletId, {
+            connected: otherAddresses.length > 0,
+            addresses: otherAddresses,
+          });
 
           this.emit("disconnect", {
             source: "external-wallet-account-change",

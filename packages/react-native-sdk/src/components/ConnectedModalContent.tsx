@@ -75,7 +75,7 @@ export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
   return (
     <View style={styles.container}>
       <ModalHeader title="Wallet" onClose={onClose} />
-      
+
       {addresses && addresses.length > 0 && (
         <View style={styles.accountList}>
           {addresses.map((account, index) => (

@@ -44,10 +44,10 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
       // Call standard:connect
       // Note: standard:connect may return accounts or void (and update wallet.accounts)
       const connectResult = await connectFeature.connect();
-      
+
       // After connecting, accounts should be available in wallet.accounts or returned from connect()
       let accounts: any[] | undefined;
-      
+
       if (Array.isArray(connectResult) && connectResult.length > 0) {
         // Some wallets return accounts directly
         accounts = connectResult;
@@ -55,7 +55,7 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
         // Others update wallet.accounts
         accounts = Array.from(this.wallet.accounts);
       }
-      
+
       debug.log(DebugCategory.INJECTED_PROVIDER, "Wallet Standard connect accounts", {
         walletId: this.walletId,
         walletName: this.walletName,
@@ -66,29 +66,31 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
         firstAccountType: accounts && accounts.length > 0 ? typeof accounts[0] : undefined,
         firstAccount: accounts && accounts.length > 0 ? accounts[0] : undefined,
       });
-      
+
       if (!accounts || accounts.length === 0) {
         throw new Error("No accounts available after connecting to wallet");
       }
 
       // Get the first account's address
       const firstAccount = accounts[0];
-      
+
       if (!firstAccount) {
         throw new Error("First account is null or undefined");
       }
 
       let address: string | undefined;
-      
+
       // Handle different account formats
       if (typeof firstAccount === "string") {
         address = firstAccount;
       } else if (typeof firstAccount === "object" && firstAccount !== null) {
         // Wallet Standard accounts have an 'address' property
-        address = firstAccount.address || 
-                  firstAccount.publicKey?.toString() || 
-                  (firstAccount.publicKey instanceof Uint8Array ? 
-                    Buffer.from(firstAccount.publicKey).toString("hex") : undefined);
+        address =
+          firstAccount.address ||
+          firstAccount.publicKey?.toString() ||
+          (firstAccount.publicKey instanceof Uint8Array
+            ? Buffer.from(firstAccount.publicKey).toString("hex")
+            : undefined);
       }
 
       if (!address) {
@@ -96,14 +98,17 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
           walletId: this.walletId,
           walletName: this.walletName,
           firstAccount,
-          accountKeys: typeof firstAccount === "object" && firstAccount !== null ? Object.keys(firstAccount) : undefined,
+          accountKeys:
+            typeof firstAccount === "object" && firstAccount !== null ? Object.keys(firstAccount) : undefined,
         });
-        throw new Error(`Could not extract address from account. Account structure: ${JSON.stringify(firstAccount, null, 2)}`);
+        throw new Error(
+          `Could not extract address from account. Account structure: ${JSON.stringify(firstAccount, null, 2)}`,
+        );
       }
 
       this._connected = true;
       this._publicKey = address;
-      
+
       debug.info(DebugCategory.INJECTED_PROVIDER, "Wallet Standard Solana connected", {
         walletId: this.walletId,
         walletName: this.walletName,
@@ -132,10 +137,10 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
       if (disconnectFeature && typeof disconnectFeature.disconnect === "function") {
         await disconnectFeature.disconnect();
       }
-      
+
       this._connected = false;
       this._publicKey = null;
-      
+
       debug.info(DebugCategory.INJECTED_PROVIDER, "Wallet Standard Solana disconnected", {
         walletId: this.walletId,
         walletName: this.walletName,
@@ -194,26 +199,27 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
         const numericKeys = Object.keys(signatureValue)
           .map(Number)
           .filter(k => !isNaN(k) && k >= 0);
-        
+
         if (numericKeys.length === 0) {
           throw new Error(`Could not parse signature object: no numeric keys found`);
         }
-        
+
         const maxKey = Math.max(...numericKeys);
         signature = new Uint8Array(maxKey + 1);
-        
+
         for (const key of numericKeys) {
           signature[key] = signatureValue[key] || 0;
         }
       } else {
         throw new Error(`Invalid signature format: ${typeof signatureValue}`);
       }
-      
+
       if (signature.length === 0) {
         throw new Error(`Signature is empty`);
       }
-      
-      const publicKey = signedMessageResult.account?.address || this.wallet.accounts?.[0]?.address || this._publicKey || "";
+
+      const publicKey =
+        signedMessageResult.account?.address || this.wallet.accounts?.[0]?.address || this._publicKey || "";
 
       debug.info(DebugCategory.INJECTED_PROVIDER, "Wallet Standard Solana signMessage success", {
         walletId: this.walletId,
@@ -273,7 +279,10 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
 
     try {
       const signAndSendTransactionFeature = this.wallet.features?.["solana:signAndSendTransaction"];
-      if (!signAndSendTransactionFeature || typeof signAndSendTransactionFeature.signAndSendTransaction !== "function") {
+      if (
+        !signAndSendTransactionFeature ||
+        typeof signAndSendTransactionFeature.signAndSendTransaction !== "function"
+      ) {
         throw new Error("Wallet Standard signAndSendTransaction feature not available");
       }
 
@@ -282,9 +291,8 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
         account: this.wallet.accounts?.[0],
       });
 
-      const signature = typeof result.signature === "string" 
-        ? result.signature 
-        : Buffer.from(result.signature).toString("base64");
+      const signature =
+        typeof result.signature === "string" ? result.signature : Buffer.from(result.signature).toString("base64");
 
       debug.info(DebugCategory.INJECTED_PROVIDER, "Wallet Standard Solana signAndSendTransaction success", {
         walletId: this.walletId,
@@ -356,7 +364,10 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
 
     try {
       const signAndSendTransactionFeature = this.wallet.features?.["solana:signAndSendTransaction"];
-      if (!signAndSendTransactionFeature || typeof signAndSendTransactionFeature.signAndSendTransaction !== "function") {
+      if (
+        !signAndSendTransactionFeature ||
+        typeof signAndSendTransactionFeature.signAndSendTransaction !== "function"
+      ) {
         throw new Error("Wallet Standard signAndSendTransaction feature not available");
       }
 
@@ -367,9 +378,8 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
           transaction,
           account: this.wallet.accounts?.[0],
         });
-        const signature = typeof result.signature === "string" 
-          ? result.signature 
-          : Buffer.from(result.signature).toString("base64");
+        const signature =
+          typeof result.signature === "string" ? result.signature : Buffer.from(result.signature).toString("base64");
         signatures.push(signature);
       }
 
@@ -417,4 +427,3 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
     }
   }
 }
-

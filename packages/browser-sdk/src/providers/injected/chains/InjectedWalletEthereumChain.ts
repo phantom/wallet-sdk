@@ -44,7 +44,14 @@ export class InjectedWalletEthereumChain implements IEthereumChain {
 
     try {
       // For methods that require authorization, ensure we're connected first
-      const requiresAuth = ["personal_sign", "eth_sign", "eth_signTypedData", "eth_signTypedData_v4", "eth_sendTransaction", "eth_signTransaction"].includes(args.method);
+      const requiresAuth = [
+        "personal_sign",
+        "eth_sign",
+        "eth_signTypedData",
+        "eth_signTypedData_v4",
+        "eth_sendTransaction",
+        "eth_signTransaction",
+      ].includes(args.method);
       if (requiresAuth && (!this._connected || this._accounts.length === 0)) {
         debug.log(DebugCategory.INJECTED_PROVIDER, "Method requires authorization, ensuring connection", {
           walletId: this.walletId,
@@ -377,7 +384,7 @@ export class InjectedWalletEthereumChain implements IEthereumChain {
         // Fallback to request()
         await this.request({ method: "wallet_switchEthereumChain", params: [{ chainId: hexChainId }] });
       }
-      
+
       this._chainId = hexChainId;
       this.eventEmitter.emit("chainChanged", this._chainId);
       debug.info(DebugCategory.INJECTED_PROVIDER, "External wallet Ethereum switchChain success", {
@@ -396,36 +403,28 @@ export class InjectedWalletEthereumChain implements IEthereumChain {
   }
 
   async getChainId(): Promise<number> {
-    try {
-      if (typeof this.provider.getChainId === "function") {
-        const chainId = await this.provider.getChainId();
-        this._chainId = `0x${chainId.toString(16)}`;
-        return chainId;
-      }
-      // Fallback to request()
-      const chainId = await this.request<string>({ method: "eth_chainId" });
-      const parsed = parseInt(chainId, 16);
-      this._chainId = chainId;
-      return parsed;
-    } catch (error) {
-      throw error;
+    if (typeof this.provider.getChainId === "function") {
+      const chainId = await this.provider.getChainId();
+      this._chainId = `0x${chainId.toString(16)}`;
+      return chainId;
     }
+    // Fallback to request()
+    const chainId = await this.request<string>({ method: "eth_chainId" });
+    const parsed = parseInt(chainId, 16);
+    this._chainId = chainId;
+    return parsed;
   }
 
   async getAccounts(): Promise<string[]> {
-    try {
-      if (typeof this.provider.getAccounts === "function") {
-        const accounts = await this.provider.getAccounts();
-        this._accounts = accounts;
-        return accounts;
-      }
-      // Fallback to request()
-      const accounts = await this.request<string[]>({ method: "eth_accounts" });
+    if (typeof this.provider.getAccounts === "function") {
+      const accounts = await this.provider.getAccounts();
       this._accounts = accounts;
       return accounts;
-    } catch (error) {
-      throw error;
     }
+    // Fallback to request()
+    const accounts = await this.request<string[]>({ method: "eth_accounts" });
+    this._accounts = accounts;
+    return accounts;
   }
 
   isConnected(): boolean {
@@ -467,4 +466,3 @@ export class InjectedWalletEthereumChain implements IEthereumChain {
     this.eventEmitter.off(event, listener);
   }
 }
-

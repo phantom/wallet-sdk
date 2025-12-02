@@ -34,8 +34,8 @@ export function useDiscoveredWallets(): UseDiscoveredWalletsResult {
         setIsLoading(false);
       } else {
         await sdk.discoverWallets();
-      const discoveredWallets = sdk.getDiscoveredWallets();
-      setWallets(discoveredWallets);
+        const discoveredWallets = sdk.getDiscoveredWallets();
+        setWallets(discoveredWallets);
         setIsLoading(false);
       }
     } catch (err) {

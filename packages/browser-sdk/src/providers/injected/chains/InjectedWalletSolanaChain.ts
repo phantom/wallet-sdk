@@ -40,7 +40,7 @@ export class InjectedWalletSolanaChain implements ISolanaChain {
 
     try {
       const result: any = await this.provider.connect(options);
-      
+
       // Handle string result (Phantom returns publicKey as string)
       if (typeof result === "string") {
         this._connected = true;
@@ -52,7 +52,7 @@ export class InjectedWalletSolanaChain implements ISolanaChain {
         });
         return { publicKey: result };
       }
-      
+
       // Handle object with publicKey property
       if (typeof result === "object" && result !== null && "publicKey" in result) {
         this._connected = true;
@@ -64,7 +64,7 @@ export class InjectedWalletSolanaChain implements ISolanaChain {
         });
         return result;
       }
-      
+
       // Handle array of accounts
       if (Array.isArray(result) && result.length > 0) {
         const firstAccount = result[0] as any;
@@ -79,7 +79,7 @@ export class InjectedWalletSolanaChain implements ISolanaChain {
           return { publicKey: firstAccount.address };
         }
       }
-      
+
       throw new Error("Unexpected connect result format");
     } catch (error) {
       debug.error(DebugCategory.INJECTED_PROVIDER, "External wallet Solana connect failed", {
@@ -292,4 +292,3 @@ export class InjectedWalletSolanaChain implements ISolanaChain {
     this.eventEmitter.off(event, listener);
   }
 }
-

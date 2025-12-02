@@ -45,8 +45,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
 
   const showDivider = !(allowedProviders.length === 1 && allowedProviders.includes("injected"));
 
- 
-
   const shouldShowOtherWalletsButton = discoveredWallets.length > 2;
   const walletsToShowInline = shouldShowOtherWalletsButton ? [] : discoveredWallets;
 
@@ -62,15 +60,28 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
 
         onClose();
       } catch {
-        const wallet = discoveredWallets.find(w => w.id === walletId); 
-        setError(`Failed to connect to ${wallet?.name || "wallet"}`);
+        const wallet = discoveredWallets.find(w => w.id === walletId);
+        const providerName =
+          wallet?.name ||
+          (provider === "google"
+            ? "Google"
+            : provider === "apple"
+              ? "Apple"
+              : provider === "x"
+                ? "X"
+                : provider === "tiktok"
+                  ? "TikTok"
+                  : provider === "phantom"
+                    ? "Phantom"
+                    : "wallet");
+        setError(`Failed to connect to ${providerName}`);
       } finally {
         setIsConnecting(false);
         setProviderType(null);
         setSelectedWalletId(null);
       }
     },
-    [baseConnect, onClose],
+    [baseConnect, discoveredWallets, onClose],
   );
 
   const connectWithWallet = useCallback(
@@ -267,7 +278,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
         `}
       </style>
 
-
       {isLoading ? (
         <div style={loadingContainerStyle}>
           <div style={spinnerStyle} />
@@ -281,12 +291,11 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
             goBack={true}
             onGoBack={() => {
               setError(null);
-              setShowOtherWallets(false)
+              setShowOtherWallets(false);
             }}
             title="Other Wallets"
             onClose={onClose}
           />
-
 
           <div style={otherWalletsContainerStyle}>
             {error && <div style={errorStyle}>{error}</div>}

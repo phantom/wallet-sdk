@@ -54,6 +54,7 @@ type AuthOptions = {
 
 type ConnectResult = Omit<EmbeddedConnectResult, "authProvider"> & {
   authProvider?: AuthProviderType | undefined;
+  walletId?: string | undefined;
 };
 
 // Re-export types from core for convenience

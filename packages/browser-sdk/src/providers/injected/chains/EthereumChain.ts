@@ -2,8 +2,6 @@ import { EventEmitter } from "eventemitter3";
 import type { IEthereumChain, EthTransactionRequest } from "@phantom/chain-interfaces";
 import type { Ethereum } from "@phantom/browser-injected-sdk/ethereum";
 import type { Extension } from "@phantom/browser-injected-sdk";
-import { AddressType } from "@phantom/client";
-import type { InjectedWalletRegistry } from "../../../wallets/registry";
 
 interface PhantomExtended {
   extension: Extension;
@@ -16,23 +14,18 @@ interface PhantomExtended {
  */
 export class PhantomEthereumChain implements IEthereumChain {
   private phantom: PhantomExtended;
-  private walletId: string;
-  private walletRegistry: InjectedWalletRegistry;
   private _chainId: string = "0x1";
   private _accounts: string[] = [];
   private eventEmitter: EventEmitter = new EventEmitter();
 
-  constructor(phantom: PhantomExtended, walletId: string, walletRegistry: InjectedWalletRegistry) {
+  constructor(phantom: PhantomExtended) {
     this.phantom = phantom;
-    this.walletId = walletId;
-    this.walletRegistry = walletRegistry;
     this.setupEventListeners();
-    this.syncInitialState();
   }
 
   // EIP-1193 compliant properties
   get connected(): boolean {
-    return this.walletRegistry.isWalletConnected(this.walletId);
+    return this._accounts.length > 0;
   }
 
   get chainId(): string {
@@ -60,34 +53,12 @@ export class PhantomEthereumChain implements IEthereumChain {
   // Connection methods
   async connect(): Promise<string[]> {
     const accounts = await this.phantom.ethereum.getAccounts();
-    
-    // Update wallet registry state
-    const addresses = this.walletRegistry.getWalletAddresses(this.walletId);
-    const newEthAddresses = accounts.map(addr => ({ addressType: AddressType.ethereum, address: addr }));
-    const otherAddresses = addresses.filter(addr => addr.addressType !== AddressType.ethereum);
-    
-    this.walletRegistry.setWalletAddresses(this.walletId, [...otherAddresses, ...newEthAddresses]);
-    this.walletRegistry.setWalletConnected(this.walletId, true);
     this._accounts = accounts;
-    
     return accounts;
   }
 
   async disconnect(): Promise<void> {
-    // For multi-chain wallets (Phantom), disconnect all chains
-    const wallet = this.walletRegistry.getById(this.walletId);
-    if (wallet && wallet.addressTypes.length > 1) {
-      // Clear all addresses for multi-chain wallet
-      this.walletRegistry.setWalletAddresses(this.walletId, []);
-    } else {
-      // For single-chain wallets, only clear Ethereum addresses
-      const addresses = this.walletRegistry.getWalletAddresses(this.walletId);
-      const filteredAddresses = addresses.filter(addr => addr.addressType !== AddressType.ethereum);
-      this.walletRegistry.setWalletAddresses(this.walletId, filteredAddresses);
-    }
-    
     await this.phantom.ethereum.disconnect();
-    this.walletRegistry.setWalletConnected(this.walletId, false);
     this._accounts = [];
   }
 
@@ -132,33 +103,18 @@ export class PhantomEthereumChain implements IEthereumChain {
   }
 
   isConnected(): boolean {
-    return this.walletRegistry.isWalletConnected(this.walletId);
+    return this.connected;
   }
 
   private setupEventListeners(): void {
     // Bridge phantom events to EIP-1193 standard events
     this.phantom.ethereum.addEventListener("connect", (accounts: string[]) => {
       this._accounts = accounts;
-      const addresses = this.walletRegistry.getWalletAddresses(this.walletId);
-      const ethAddresses = accounts.map(addr => ({ addressType: AddressType.ethereum, address: addr }));
-      const otherAddresses = addresses.filter(addr => addr.addressType !== AddressType.ethereum);
-      
-      this.walletRegistry.setWalletAddresses(this.walletId, [...otherAddresses, ...ethAddresses]);
-      this.walletRegistry.setWalletConnected(this.walletId, true);
       this.eventEmitter.emit("connect", { chainId: this._chainId });
       this.eventEmitter.emit("accountsChanged", accounts);
     });
 
     this.phantom.ethereum.addEventListener("disconnect", () => {
-      const addresses = this.walletRegistry.getWalletAddresses(this.walletId);
-      const filteredAddresses = addresses.filter(addr => addr.addressType !== AddressType.ethereum);
-      this.walletRegistry.setWalletAddresses(this.walletId, filteredAddresses);
-      
-      // If no addresses left, mark as disconnected
-      if (filteredAddresses.length === 0) {
-        this.walletRegistry.setWalletConnected(this.walletId, false);
-      }
-      
       this._accounts = [];
       this.eventEmitter.emit("disconnect", { code: 4900, message: "Provider disconnected" });
       this.eventEmitter.emit("accountsChanged", []);
@@ -166,11 +122,6 @@ export class PhantomEthereumChain implements IEthereumChain {
 
     this.phantom.ethereum.addEventListener("accountsChanged", (accounts: string[]) => {
       this._accounts = accounts;
-      const addresses = this.walletRegistry.getWalletAddresses(this.walletId);
-      const ethAddresses = accounts.map(addr => ({ addressType: AddressType.ethereum, address: addr }));
-      const otherAddresses = addresses.filter(addr => addr.addressType !== AddressType.ethereum);
-      
-      this.walletRegistry.setWalletAddresses(this.walletId, [...otherAddresses, ...ethAddresses]);
       this.eventEmitter.emit("accountsChanged", accounts);
     });
 
@@ -178,19 +129,6 @@ export class PhantomEthereumChain implements IEthereumChain {
       this._chainId = chainId;
       this.eventEmitter.emit("chainChanged", chainId);
     });
-  }
-
-  private syncInitialState(): void {
-    if (this.walletRegistry.isWalletConnected(this.walletId)) {
-      const addresses = this.walletRegistry.getWalletAddresses(this.walletId);
-      const ethAddresses = addresses
-        .filter(addr => addr.addressType === AddressType.ethereum)
-        .map(addr => addr.address);
-
-      if (ethAddresses.length > 0) {
-        this._accounts = ethAddresses;
-      }
-    }
   }
 
   // Event methods for interface compliance

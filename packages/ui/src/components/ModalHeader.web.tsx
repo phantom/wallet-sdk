@@ -13,7 +13,7 @@ export function ModalHeader({ goBack = false, onGoBack, title, onClose }: ModalH
     justifyContent: "center",
     alignItems: "center",
     padding: "28px 32px 0 32px",
-    height: "32px"
+    height: "32px",
   };
 
   const titleStyle: CSSProperties = {
@@ -61,11 +61,8 @@ export function ModalHeader({ goBack = false, onGoBack, title, onClose }: ModalH
         </Text>
       </div>
       {onClose && (
-        <button
-          style={closeButtonStyle}
-          onClick={onClose}
-        >
-          ×
+        <button style={closeButtonStyle} onClick={onClose}>
+          <Icon type="x" size={16} color={theme.secondary} />
         </button>
       )}
     </div>

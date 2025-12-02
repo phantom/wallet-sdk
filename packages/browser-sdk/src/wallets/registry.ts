@@ -1,5 +1,5 @@
 import type { IEthereumChain, ISolanaChain } from "@phantom/chain-interfaces";
-import { AddressType, type WalletAddress } from "../types";
+import { AddressType } from "../types";
 import { discoverWallets } from "./discovery";
 import { debug, DebugCategory } from "../debug";
 import { InjectedWalletSolanaChain } from "../providers/injected/chains/InjectedWalletSolanaChain";
@@ -27,8 +27,6 @@ export interface InjectedWalletInfo {
   icon?: string;
   addressTypes: AddressType[];
   providers?: WalletProviders;
-  connected: boolean;
-  addresses: WalletAddress[];
   /** Reverse DNS identifier from EIP-6963 (for potential future matching with Wallet Standard) */
   rdns?: string;
 }
@@ -61,63 +59,50 @@ export function isPhantomWallet(wallet: InjectedWalletInfo | undefined): wallet 
 
 export class InjectedWalletRegistry {
   private wallets = new Map<InjectedWalletId, InjectedWalletInfo>();
-  private discoveryPromise: Promise<void> | null = null;
+  public discoveryPromise: Promise<void> | null = null;
 
   register(info: InjectedWalletInfo): void {
     // Wrap providers with debug-enabled chain classes
     const wrappedProviders: WalletProviders = {};
-    
+
     if (info.providers?.solana) {
       // Check if this is a Wallet Standard wallet (has features object)
-      const isWalletStandard = info.providers.solana && 
+      const isWalletStandard =
+        info.providers.solana &&
         typeof info.providers.solana === "object" &&
         "features" in info.providers.solana &&
         typeof (info.providers.solana as any).features === "object";
-      
+
       if (isWalletStandard) {
         // Use Wallet Standard adapter directly (it already implements ISolanaChain with debug logging)
-        wrappedProviders.solana = new WalletStandardSolanaAdapter(
-          info.providers.solana as any,
-          info.id,
-          info.name,
-        );
+        wrappedProviders.solana = new WalletStandardSolanaAdapter(info.providers.solana as any, info.id, info.name);
         debug.log(DebugCategory.BROWSER_SDK, "Wrapped Wallet Standard Solana wallet with adapter", {
           walletId: info.id,
           walletName: info.name,
         });
       } else {
         // Wrap regular ISolanaChain provider with debug logging wrapper
-        wrappedProviders.solana = new InjectedWalletSolanaChain(
-          info.providers.solana,
-          info.id,
-          info.name,
-        );
+        wrappedProviders.solana = new InjectedWalletSolanaChain(info.providers.solana, info.id, info.name);
         debug.log(DebugCategory.BROWSER_SDK, "Wrapped Solana provider with InjectedWalletSolanaChain", {
           walletId: info.id,
           walletName: info.name,
         });
       }
     }
-    
+
     if (info.providers?.ethereum) {
-      wrappedProviders.ethereum = new InjectedWalletEthereumChain(
-        info.providers.ethereum,
-        info.id,
-        info.name,
-      );
+      wrappedProviders.ethereum = new InjectedWalletEthereumChain(info.providers.ethereum, info.id, info.name);
       debug.log(DebugCategory.BROWSER_SDK, "Wrapped Ethereum provider with InjectedWalletEthereumChain", {
         walletId: info.id,
         walletName: info.name,
       });
     }
-    
+
     const wrappedInfo: InjectedWalletInfo = {
       ...info,
       providers: Object.keys(wrappedProviders).length > 0 ? wrappedProviders : info.providers,
-      connected: info.connected ?? false,
-      addresses: info.addresses ?? [],
     };
-    
+
     this.wallets.set(info.id, wrappedInfo);
   }
 
@@ -127,17 +112,17 @@ export class InjectedWalletRegistry {
    */
   registerPhantom(phantomInstance: PhantomExtended, addressTypes: AddressType[], icon?: string): void {
     const wrappedProviders: WalletProviders = {};
-    
-    // Create Phantom chain wrappers (they will use wallet registry for state)
+
+    // Create Phantom chain wrappers
     if (addressTypes.includes(AddressType.solana) && phantomInstance.solana) {
-      wrappedProviders.solana = new PhantomSolanaChain(phantomInstance, "phantom", this);
+      wrappedProviders.solana = new PhantomSolanaChain(phantomInstance);
       debug.log(DebugCategory.BROWSER_SDK, "Created PhantomSolanaChain wrapper", {
         walletId: "phantom",
       });
     }
-    
+
     if (addressTypes.includes(AddressType.ethereum) && phantomInstance.ethereum) {
-      wrappedProviders.ethereum = new PhantomEthereumChain(phantomInstance, "phantom", this);
+      wrappedProviders.ethereum = new PhantomEthereumChain(phantomInstance);
       debug.log(DebugCategory.BROWSER_SDK, "Created PhantomEthereumChain wrapper", {
         walletId: "phantom",
       });
@@ -151,10 +136,8 @@ export class InjectedWalletRegistry {
       providers: wrappedProviders,
       isPhantom: true,
       phantomInstance,
-      connected: false,
-      addresses: [],
     };
-    
+
     this.wallets.set("phantom", phantomWallet);
     debug.log(DebugCategory.BROWSER_SDK, "Registered Phantom wallet with chain wrappers", {
       addressTypes,
@@ -187,30 +170,6 @@ export class InjectedWalletRegistry {
     return this.getAll().filter(wallet => wallet.addressTypes.some(t => allowed.has(t)));
   }
 
-  setWalletConnected(walletId: InjectedWalletId, connected: boolean): void {
-    const wallet = this.wallets.get(walletId);
-    if (wallet) {
-      wallet.connected = connected;
-    }
-  }
-
-  setWalletAddresses(walletId: InjectedWalletId, addresses: WalletAddress[]): void {
-    const wallet = this.wallets.get(walletId);
-    if (wallet) {
-      wallet.addresses = addresses;
-    }
-  }
-
-  getWalletAddresses(walletId: InjectedWalletId): WalletAddress[] {
-    const wallet = this.wallets.get(walletId);
-    return wallet?.addresses ?? [];
-  }
-
-  isWalletConnected(walletId: InjectedWalletId): boolean {
-    const wallet = this.wallets.get(walletId);
-    return wallet?.connected ?? false;
-  }
-
   discover(addressTypes?: AddressType[]): Promise<void> {
     // If discovery is already in progress, return the existing promise
     if (this.discoveryPromise) {
@@ -223,9 +182,7 @@ export class InjectedWalletRegistry {
       .then(discoveredWallets => {
         // Filter by address types if provided
         const relevantWallets = addressTypes
-          ? discoveredWallets.filter(wallet =>
-              wallet.addressTypes.some(type => addressTypes.includes(type)),
-            )
+          ? discoveredWallets.filter(wallet => wallet.addressTypes.some(type => addressTypes.includes(type)))
           : discoveredWallets;
 
         // Register all relevant wallets

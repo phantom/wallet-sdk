@@ -1,16 +1,13 @@
 import { PhantomEthereumChain } from "./EthereumChain";
-import { AddressType } from "@phantom/client";
-import { InjectedWalletRegistry } from "../../../wallets/registry";
 
 describe("PhantomEthereumChain", () => {
   let mockPhantom: any;
-  let walletRegistry: InjectedWalletRegistry;
   let ethereumChain: PhantomEthereumChain;
 
   beforeEach(() => {
     // Store event listeners for testing
     const eventListeners = new Map<string, any[]>();
-    
+
     // Create mock Phantom object
     mockPhantom = {
       extension: {
@@ -46,21 +43,11 @@ describe("PhantomEthereumChain", () => {
         removeEventListener: jest.fn(),
       },
     };
-    
+
     // Store eventListeners on mockPhantom for test access
     (mockPhantom.ethereum as any)._eventListeners = eventListeners;
 
-    // Create wallet registry and register Phantom wallet
-    walletRegistry = new InjectedWalletRegistry();
-    walletRegistry.registerPhantom(mockPhantom, [AddressType.ethereum]);
-    
-    // Set wallet as connected with an address for tests
-    walletRegistry.setWalletConnected("phantom", true);
-    walletRegistry.setWalletAddresses("phantom", [
-      { addressType: AddressType.ethereum, address: "0x1234567890abcdef1234567890abcdef12345678" },
-    ]);
-
-    ethereumChain = new PhantomEthereumChain(mockPhantom, "phantom", walletRegistry);
+    ethereumChain = new PhantomEthereumChain(mockPhantom);
   });
 
   afterEach(() => {
@@ -250,9 +237,7 @@ describe("PhantomEthereumChain", () => {
 
     it("should default to 0x1 (Ethereum mainnet)", () => {
       // Fresh instance should default to 0x1
-      const newRegistry = new InjectedWalletRegistry();
-      newRegistry.registerPhantom(mockPhantom, [AddressType.ethereum]);
-      const newEthereumChain = new PhantomEthereumChain(mockPhantom, "phantom", newRegistry);
+      const newEthereumChain = new PhantomEthereumChain(mockPhantom);
       expect(newEthereumChain.chainId).toBe("0x1");
     });
   });
@@ -292,7 +277,7 @@ describe("PhantomEthereumChain", () => {
       // Get the chainChanged listeners from the stored event listeners
       const eventListeners = (mockPhantom.ethereum as any)._eventListeners;
       const chainChangedListeners = eventListeners.get("chainChanged") || [];
-      
+
       expect(chainChangedListeners.length).toBeGreaterThan(0);
       const chainChangedListener = chainChangedListeners[chainChangedListeners.length - 1]; // Get the last one
 
@@ -311,7 +296,7 @@ describe("PhantomEthereumChain", () => {
       const eventListeners = (mockPhantom.ethereum as any)._eventListeners;
       const chainChangedListeners = eventListeners.get("chainChanged") || [];
       expect(chainChangedListeners.length).toBeGreaterThan(0);
-      
+
       // Get the last one (from PhantomEthereumChain.setupEventListeners)
       const chainChangedListener = chainChangedListeners[chainChangedListeners.length - 1];
 
@@ -320,14 +305,15 @@ describe("PhantomEthereumChain", () => {
 
       // Verify event was emitted
       expect(emitSpy).toHaveBeenCalledWith("chainChanged", "0x2105");
-      
+
       // Also verify internal state was updated
       expect((ethereumChain as any)._chainId).toBe("0x2105");
     });
   });
 
   describe("EIP-1193 compliance", () => {
-    it("should have connected property", () => {
+    it("should have connected property", async () => {
+      await ethereumChain.connect();
       expect(ethereumChain.connected).toBe(true);
     });
 

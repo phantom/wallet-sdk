@@ -250,7 +250,9 @@ describe("discoverSolanaWallets", () => {
 
     // @ts-ignore
     navigator.wallets = {
-      getWallets: jest.fn().mockResolvedValue(mockWallets),
+      getWallets: jest.fn().mockReturnValue({
+        get: () => mockWallets,
+      }),
     };
 
     const wallets = await discoverSolanaWallets();
@@ -295,7 +297,9 @@ describe("discoverSolanaWallets", () => {
 
     // @ts-ignore
     navigator.wallets = {
-      getWallets: jest.fn().mockResolvedValue(mockWallets),
+      getWallets: jest.fn().mockReturnValue({
+        get: () => mockWallets,
+      }),
     };
 
     const wallets = await discoverSolanaWallets();
@@ -326,7 +330,9 @@ describe("discoverSolanaWallets", () => {
 
     // @ts-ignore
     navigator.wallets = {
-      getWallets: jest.fn().mockResolvedValue(mockWallets),
+      getWallets: jest.fn().mockReturnValue({
+        get: () => mockWallets,
+      }),
     };
 
     const wallets = await discoverSolanaWallets();
@@ -349,7 +355,9 @@ describe("discoverSolanaWallets", () => {
 
     // @ts-ignore
     navigator.wallets = {
-      getWallets: jest.fn().mockResolvedValue(mockWallets),
+      getWallets: jest.fn().mockReturnValue({
+        get: () => mockWallets,
+      }),
     };
 
     const wallets = await discoverSolanaWallets();
@@ -361,7 +369,11 @@ describe("discoverSolanaWallets", () => {
   it("should handle errors gracefully when getWallets fails", async () => {
     // @ts-ignore
     navigator.wallets = {
-      getWallets: jest.fn().mockRejectedValue(new Error("API not available")),
+      getWallets: jest.fn().mockReturnValue({
+        get: () => {
+          throw new Error("API not available");
+        },
+      }),
     };
 
     const wallets = await discoverSolanaWallets();
@@ -397,16 +409,18 @@ describe("discoverWallets", () => {
     // Setup Wallet Standard
     // @ts-ignore
     navigator.wallets = {
-      getWallets: jest.fn().mockResolvedValue([
-        {
-          name: "Backpack",
-          icon: "https://backpack.app/icon.png",
-          version: "1.0.0",
-          chains: ["solana:mainnet"],
-          features: ["standard:connect"],
-          accounts: [],
-        },
-      ]),
+      getWallets: jest.fn().mockReturnValue({
+        get: () => [
+          {
+            name: "Backpack",
+            icon: "https://backpack.app/icon.png",
+            version: "1.0.0",
+            chains: ["solana:mainnet"],
+            features: ["standard:connect"],
+            accounts: [],
+          },
+        ],
+      }),
     };
 
     // Setup EIP-6963 - capture handler when it's registered
@@ -454,16 +468,18 @@ describe("discoverWallets", () => {
     // Setup Wallet Standard with a wallet that supports Solana
     // @ts-ignore
     navigator.wallets = {
-      getWallets: jest.fn().mockResolvedValue([
-        {
-          name: "Multi Chain Wallet",
-          icon: "https://example.com/icon.png",
-          version: "1.0.0",
-          chains: ["solana:mainnet"],
-          features: ["standard:connect"],
-          accounts: [],
-        },
-      ]),
+      getWallets: jest.fn().mockReturnValue({
+        get: () => [
+          {
+            name: "Multi Chain Wallet",
+            icon: "https://example.com/icon.png",
+            version: "1.0.0",
+            chains: ["solana:mainnet"],
+            features: ["standard:connect"],
+            accounts: [],
+          },
+        ],
+      }),
     };
 
     // Setup EIP-6963 with the same wallet (different ID but same name)
@@ -508,16 +524,18 @@ describe("discoverWallets", () => {
     // Setup Wallet Standard
     // @ts-ignore
     navigator.wallets = {
-      getWallets: jest.fn().mockResolvedValue([
-        {
-          name: "Test Wallet",
-          icon: "https://example.com/icon1.png",
-          version: "1.0.0",
-          chains: ["solana:mainnet"],
-          features: ["standard:connect"],
-          accounts: [],
-        },
-      ]),
+      getWallets: jest.fn().mockReturnValue({
+        get: () => [
+          {
+            name: "Test Wallet",
+            icon: "https://example.com/icon1.png",
+            version: "1.0.0",
+            chains: ["solana:mainnet"],
+            features: ["standard:connect"],
+            accounts: [],
+          },
+        ],
+      }),
     };
 
     // Setup EIP-6963 with wallet that will have same ID

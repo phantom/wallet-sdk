@@ -64,18 +64,18 @@ function processEIP6963Providers(providers: Map<string, EIP6963ProviderDetail>):
 
   for (const [, detail] of providers) {
     const { info, provider } = detail;
-    
+
     // Skip Phantom as it's handled by our custom discovery
     // Check both name and rdns to catch different variations
-    const isPhantom = 
+    const isPhantom =
       info.name.toLowerCase().includes("phantom") ||
       (info.rdns && (info.rdns.toLowerCase().includes("phantom") || info.rdns.toLowerCase() === "app.phantom"));
-    
+
     if (isPhantom) {
       debug.log(DebugCategory.BROWSER_SDK, "Skipping Phantom from EIP-6963", { name: info.name, rdns: info.rdns });
       continue;
     }
-    
+
     const walletId = generateWalletIdFromEIP6963(info);
 
     debug.log(DebugCategory.BROWSER_SDK, "Discovered EIP-6963 wallet", {
@@ -93,8 +93,6 @@ function processEIP6963Providers(providers: Map<string, EIP6963ProviderDetail>):
         // EIP-6963 provider implements EIP-1193 interface (IEthereumChain)
         ethereum: provider as unknown as IEthereumChain,
       },
-      connected: false,
-      addresses: [],
       rdns: info.rdns, // Store rdns for potential future matching
     });
   }
@@ -151,7 +149,7 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
   // Based on https://github.com/wallet-standard/wallet-standard/blob/master/packages/core/app/src/wallets.ts
   const registeredWalletsSet = new Set<WalletStandardWallet>();
   let cachedWalletsArray: WalletStandardWallet[] | undefined;
-  
+
   function addRegisteredWallet(wallet: WalletStandardWallet) {
     cachedWalletsArray = undefined;
     registeredWalletsSet.add(wallet);
@@ -163,44 +161,44 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
       totalWallets: registeredWalletsSet.size,
     });
   }
-  
+
   function removeRegisteredWallet(wallet: WalletStandardWallet) {
     cachedWalletsArray = undefined;
     registeredWalletsSet.delete(wallet);
   }
-  
+
   function getRegisteredWallets(): readonly WalletStandardWallet[] {
     if (!cachedWalletsArray) {
       cachedWalletsArray = [...registeredWalletsSet];
     }
     return cachedWalletsArray;
   }
-  
+
   // Register function that wallets will call
   function register(...wallets: WalletStandardWallet[]): () => void {
     // Filter out wallets that have already been registered
-    wallets = wallets.filter((wallet) => !registeredWalletsSet.has(wallet));
+    wallets = wallets.filter(wallet => !registeredWalletsSet.has(wallet));
     if (!wallets.length) {
       return () => {}; // No-op unregister
     }
-    
-    wallets.forEach((wallet) => addRegisteredWallet(wallet));
-    
+
+    wallets.forEach(wallet => addRegisteredWallet(wallet));
+
     // Return unregister function
     return function unregister(): void {
-      wallets.forEach((wallet) => removeRegisteredWallet(wallet));
+      wallets.forEach(wallet => removeRegisteredWallet(wallet));
     };
   }
-  
+
   // Create the register API object that will be passed to wallets
   const registerAPI = Object.freeze({ register });
-  
+
   // Listen for 'wallet-standard:register-wallet' events
   // The event.detail is a callback function that wallets provide
   // We call that callback with the register API, and the wallet's callback will call register(wallet)
   const handleRegisterWalletEvent = (event: CustomEvent) => {
     const callback = (event as any).detail;
-    if (typeof callback === 'function') {
+    if (typeof callback === "function") {
       try {
         callback(registerAPI);
       } catch (error) {
@@ -208,20 +206,20 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
       }
     }
   };
-  
+
   try {
-    window.addEventListener('wallet-standard:register-wallet', handleRegisterWalletEvent as EventListener);
+    window.addEventListener("wallet-standard:register-wallet", handleRegisterWalletEvent as EventListener);
   } catch (error) {
     debug.warn(DebugCategory.BROWSER_SDK, "Could not add register-wallet event listener", { error });
   }
-  
+
   // Dispatch 'wallet-standard:app-ready' event to notify wallets we're ready
   // The event.detail contains the register API object
   class AppReadyEvent extends Event {
     readonly detail: { register: typeof register };
-    
+
     constructor(api: { register: typeof register }) {
-      super('wallet-standard:app-ready', {
+      super("wallet-standard:app-ready", {
         bubbles: false,
         cancelable: false,
         composed: false,
@@ -229,25 +227,25 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
       this.detail = api;
     }
   }
-  
+
   try {
     window.dispatchEvent(new AppReadyEvent(registerAPI));
     debug.log(DebugCategory.BROWSER_SDK, "Dispatched wallet-standard:app-ready event");
   } catch (error) {
     debug.warn(DebugCategory.BROWSER_SDK, "Could not dispatch app-ready event", { error });
   }
-  
+
   // Create the Wallet Standard API matching @wallet-standard/app behavior
   // getWallets() returns an object with get(), on(), and register() methods
   const walletsAPI = {
-    getWallets: (): { 
+    getWallets: (): {
       get: () => readonly WalletStandardWallet[];
-      on: (event: 'register' | 'unregister', listener: (...wallets: WalletStandardWallet[]) => void) => () => void;
+      on: (event: "register" | "unregister", listener: (...wallets: WalletStandardWallet[]) => void) => () => void;
       register: typeof register;
     } => {
       return {
         get: getRegisteredWallets,
-        on: (_event: 'register' | 'unregister', _listener: (...wallets: WalletStandardWallet[]) => void) => {
+        on: (_event: "register" | "unregister", _listener: (...wallets: WalletStandardWallet[]) => void) => {
           // For now, we don't implement the event listener system fully
           // The wallets are registered synchronously via the register function
           return () => {}; // No-op unsubscribe
@@ -256,12 +254,12 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
       };
     },
   };
-  
+
   // Set it on navigator for Wallet Standard compatibility
   if (!(navigator as any).wallets) {
     (navigator as any).wallets = walletsAPI;
   }
-  
+
   debug.log(DebugCategory.BROWSER_SDK, "Initialized Wallet Standard registry");
 
   // Wait a bit for wallets to respond to app-ready event
@@ -270,7 +268,7 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
 
   // Get the wallets API (we just created it, so it should exist)
   const existingWalletsAPI = (navigator as any).wallets || (window as any).wallets;
-  
+
   if (!existingWalletsAPI || typeof existingWalletsAPI.getWallets !== "function") {
     const logData = {
       hasNavigator: !!navigator,
@@ -301,14 +299,14 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
 
     while (attempts < maxAttempts) {
       registeredWallets = await getWalletsFn!();
-      
+
       const logData = {
         attempt: attempts + 1,
         walletCount: registeredWallets.length,
         walletNames: registeredWallets.map(w => w.name),
         chains: registeredWallets.flatMap(w => w.chains),
       };
-      
+
       debug.log(DebugCategory.BROWSER_SDK, `Wallet Standard getWallets attempt ${attempts + 1}`, logData);
       // Also log to console for debugging
 
@@ -321,16 +319,16 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
       await new Promise(resolve => setTimeout(resolve, initialDelay));
       attempts++;
     }
-    
+
     // Ensure we've waited at least as long as EIP-6963 discovery
-    const totalWaitTime = initialDelay + (attempts * initialDelay);
+    const totalWaitTime = initialDelay + attempts * initialDelay;
     if (totalWaitTime < eip6963Timeout) {
       const remainingWait = eip6963Timeout - totalWaitTime;
       await new Promise(resolve => setTimeout(resolve, remainingWait));
       // Check one more time after the full wait
       registeredWallets = await getWalletsFn!();
     }
-    
+
     debug.log(DebugCategory.BROWSER_SDK, "Wallet Standard getWallets final result", {
       walletCount: registeredWallets.length,
       walletNames: registeredWallets.map(w => w.name),
@@ -342,17 +340,21 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
       // Examples: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp" (mainnet), "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1" (devnet)
       // Some wallets might also use just "solana" as a chain identifier
       // Features is an object, not an array - check if it has Solana-related feature keys
-      const supportsSolana = 
+      const supportsSolana =
         wallet.chains.some(chain => {
           const chainLower = chain.toLowerCase();
           return chainLower.startsWith("solana:") || chainLower === "solana";
         }) ||
-        (wallet.features && typeof wallet.features === 'object' && Object.keys(wallet.features).some(featureKey => {
-          const featureLower = featureKey.toLowerCase();
-          return featureLower.includes("solana") || 
-                 featureLower.includes("standard:connect") ||
-                 featureLower.includes("standard:signTransaction");
-        }));
+        (wallet.features &&
+          typeof wallet.features === "object" &&
+          Object.keys(wallet.features).some(featureKey => {
+            const featureLower = featureKey.toLowerCase();
+            return (
+              featureLower.includes("solana") ||
+              featureLower.includes("standard:connect") ||
+              featureLower.includes("standard:signTransaction")
+            );
+          }));
 
       if (!supportsSolana) {
         const featureKeys = wallet.features ? Object.keys(wallet.features) : [];
@@ -363,7 +365,6 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
         });
         continue;
       }
-      
 
       // Skip Phantom as is handled by our injected provider
       if (wallet.name.toLowerCase().includes("phantom")) {
@@ -398,8 +399,6 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
           // The InjectedWalletSolanaChain wrapper will handle the actual method calls
           solana: wallet as any as ISolanaChain,
         },
-        connected: false,
-        addresses: [],
       });
     }
   } catch (error) {
@@ -416,7 +415,7 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
     walletIds: wallets.map(w => w.id),
     walletNames: wallets.map(w => w.name),
   };
-  
+
   debug.log(DebugCategory.BROWSER_SDK, "Wallet Standard Solana discovery completed", finalLogData);
 
   return wallets;
@@ -425,7 +424,7 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
 /**
  * Get Phantom wallet icon from Wallet Standard if available
  */
-async function getPhantomIconFromWalletStandard(): Promise<string | null> {
+function getPhantomIconFromWalletStandard(): string | null {
   if (typeof window === "undefined" || typeof navigator === "undefined") {
     return null;
   }
@@ -511,11 +510,11 @@ export async function discoverPhantomWallet(addressTypes: ClientAddressType[]): 
 
 export async function discoverWallets(addressTypes?: ClientAddressType[]): Promise<InjectedWalletInfo[]> {
   const requestedAddressTypes = addressTypes || [];
-  
+
   debug.log(DebugCategory.BROWSER_SDK, "Starting all wallet discovery methods", {
     addressTypes: requestedAddressTypes,
   });
-  
+
   const [phantomWallet, solanaWallets, ethereumWallets] = await Promise.all([
     discoverPhantomWallet(requestedAddressTypes),
     discoverSolanaWallets(),
@@ -541,7 +540,7 @@ export async function discoverWallets(addressTypes?: ClientAddressType[]): Promi
   // It's the wallet's responsibility to use consistent IDs across Wallet Standard and EIP-6963
   for (const wallet of [...solanaWallets, ...ethereumWallets]) {
     const existing = walletMap.get(wallet.id);
-    
+
     if (existing) {
       // Merge wallets with the same ID (discovered via multiple methods)
       const mergedAddressTypes = Array.from(new Set([...existing.addressTypes, ...wallet.addressTypes]));
@@ -555,8 +554,6 @@ export async function discoverWallets(addressTypes?: ClientAddressType[]): Promi
         // Prefer icon from the most recent discovery
         icon: wallet.icon || existing.icon,
         providers: mergedProviders,
-        connected: existing.connected ?? false,
-        addresses: existing.addresses ?? [],
       };
       walletMap.set(wallet.id, mergedWallet);
       debug.log(DebugCategory.BROWSER_SDK, "Merged wallet by ID", {

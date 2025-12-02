@@ -6,8 +6,6 @@ function createWalletInfo(id: string, addressTypes: AddressType[]): InjectedWall
     id,
     name: `Wallet ${id}`,
     addressTypes,
-    connected: false,
-    addresses: [],
   };
 }
 

@@ -1,5 +1,5 @@
 import { WalletStandardSolanaAdapter } from "./WalletStandardSolanaAdapter";
-import type { Transaction, VersionedTransaction } from "@phantom/sdk-types";
+import type { Transaction } from "@phantom/sdk-types";
 
 describe("WalletStandardSolanaAdapter", () => {
   let mockWallet: any;
@@ -60,12 +60,13 @@ describe("WalletStandardSolanaAdapter", () => {
         "solana:signAndSendTransaction": {
           signAndSendTransaction: jest.fn().mockResolvedValue({
             signature: "5j7s8K9mN0pQ1rS2tU3vW4xY5zA6bC7dE8fG9hI0jK1lM2nO3pQ4rS5tU6vW7xY8z",
-          transaction: {} as Transaction,
-          account: {
-            address: testPublicKey,
-          },
-          chain: "solana:mainnet",
-        }),
+            transaction: {} as unknown as Transaction,
+            account: {
+              address: testPublicKey,
+            },
+            chain: "solana:mainnet",
+          }),
+        },
         "solana:signIn": {
           signIn: jest.fn(),
         },
@@ -133,6 +134,7 @@ describe("WalletStandardSolanaAdapter", () => {
 
     it("should throw error if no accounts are returned", async () => {
       mockWallet.features["standard:connect"].connect.mockResolvedValue([]);
+      mockWallet.accounts = []; // Clear accounts to ensure fallback also fails
 
       await expect(adapter.connect()).rejects.toThrow("No accounts available after connecting to wallet");
     });
@@ -281,9 +283,7 @@ describe("WalletStandardSolanaAdapter", () => {
     it("should throw error if signMessage feature is not available", async () => {
       delete mockWallet.features["solana:signMessage"];
 
-      await expect(adapter.signMessage("Hello")).rejects.toThrow(
-        "Wallet Standard signMessage feature not available",
-      );
+      await expect(adapter.signMessage("Hello")).rejects.toThrow("Wallet Standard signMessage feature not available");
     });
 
     it("should throw error if result is not an array", async () => {
@@ -488,4 +488,3 @@ describe("WalletStandardSolanaAdapter", () => {
     });
   });
 });
-

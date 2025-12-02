@@ -17,7 +17,7 @@ export function useEthereum(): {
     // Return a stub object for SSR, while SDK is initializing, or while discovery is in progress
     // We still return the chain object, but isAvailable will be false
     return {
-      ethereum: ({} as IEthereumChain),
+      ethereum: {} as IEthereumChain,
       isAvailable: false,
     };
   }
@@ -29,7 +29,7 @@ export function useEthereum(): {
   // This prevents errors when the selected wallet doesn't support Ethereum
   if (!isAvailable) {
     return {
-      ethereum: ({} as IEthereumChain),
+      ethereum: {} as IEthereumChain,
       isAvailable: false,
     };
   }
@@ -42,9 +42,9 @@ export function useEthereum(): {
   } catch (error) {
     // If accessing sdk.ethereum throws (e.g., wallet doesn't support Ethereum),
     // return a stub object instead of crashing
-    console.warn("Ethereum chain not available:", error);
+    // Ethereum chain not available
     return {
-      ethereum: ({} as IEthereumChain),
+      ethereum: {} as IEthereumChain,
       isAvailable: false,
     };
   }

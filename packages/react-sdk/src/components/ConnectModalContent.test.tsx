@@ -158,10 +158,11 @@ describe("ConnectModalContent", () => {
     });
 
     it("should render only Google icon when both providers are present", () => {
-      const { getByTestId, queryByText } = renderComponent();
+      const { getByTestId, getByText } = renderComponent();
 
       expect(getByTestId("icon-google")).toBeInTheDocument();
-      expect(queryByText("Continue with Google")).not.toBeInTheDocument();
+      // Now we always show text with icons
+      expect(getByText("Continue with Google")).toBeInTheDocument();
     });
 
     it("should render Google text when only Google is allowed", () => {
@@ -246,10 +247,22 @@ describe("ConnectModalContent", () => {
         isInstalled: true,
         isLoading: false,
       });
+      mockUseDiscoveredWallets.mockReturnValue({
+        wallets: [
+          {
+            id: "phantom",
+            name: "Phantom",
+            addressTypes: ["Solana" as any],
+          },
+        ],
+        isLoading: false,
+        error: null,
+        refetch: jest.fn(),
+      });
 
       const { getByTestId, getAllByText } = renderComponent();
 
-      expect(getByTestId("bounded-icon-phantom")).toBeInTheDocument();
+      expect(getByTestId("bounded-icon-wallet")).toBeInTheDocument();
       // "Phantom" appears in both the button and the footer, so use getAllByText
       expect(getAllByText("Phantom").length).toBeGreaterThan(0);
       expect(getByTestId("button")).toBeInTheDocument();

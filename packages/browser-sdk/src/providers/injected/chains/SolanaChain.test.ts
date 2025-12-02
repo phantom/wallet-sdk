@@ -1,11 +1,8 @@
 import { PhantomSolanaChain } from "./SolanaChain";
-import { AddressType } from "@phantom/client";
-import { InjectedWalletRegistry } from "../../../wallets/registry";
-import type { Transaction, VersionedTransaction } from "@phantom/sdk-types";
+import type { Transaction } from "@phantom/sdk-types";
 
 describe("PhantomSolanaChain", () => {
   let mockPhantom: any;
-  let walletRegistry: InjectedWalletRegistry;
   let solanaChain: PhantomSolanaChain;
   const testPublicKey = "Exb31jgzHxCJokKdeCkbCNEX6buTZxEFLXCaUWXe4VSM";
 
@@ -56,11 +53,7 @@ describe("PhantomSolanaChain", () => {
     // Store eventListeners on mockPhantom for test access
     (mockPhantom.solana as any)._eventListeners = eventListeners;
 
-    // Create wallet registry and register Phantom wallet
-    walletRegistry = new InjectedWalletRegistry();
-    walletRegistry.registerPhantom(mockPhantom, [AddressType.solana]);
-
-    solanaChain = new PhantomSolanaChain(mockPhantom, "phantom", walletRegistry);
+    solanaChain = new PhantomSolanaChain(mockPhantom);
   });
 
   afterEach(() => {
@@ -68,28 +61,27 @@ describe("PhantomSolanaChain", () => {
   });
 
   describe("constructor", () => {
-    it("should initialize with phantom, walletId, and walletRegistry", () => {
+    it("should initialize with phantom", () => {
       expect(solanaChain).toBeDefined();
       expect((solanaChain as any).phantom).toBe(mockPhantom);
-      expect((solanaChain as any).walletId).toBe("phantom");
-      expect((solanaChain as any).walletRegistry).toBe(walletRegistry);
     });
 
     it("should set up event listeners", () => {
       expect(mockPhantom.solana.addEventListener).toHaveBeenCalled();
     });
 
-    it("should sync initial state", () => {
-      // Initial state should be synced from registry
+    it("should have initial disconnected state", () => {
       expect(solanaChain.connected).toBe(false);
     });
   });
 
   describe("connected property", () => {
-    it("should return connection state from registry", () => {
+    it("should return false when not connected", () => {
       expect(solanaChain.connected).toBe(false);
+    });
 
-      walletRegistry.setWalletConnected("phantom", true);
+    it("should return true when connected", async () => {
+      await solanaChain.connect();
       expect(solanaChain.connected).toBe(true);
     });
   });
@@ -104,17 +96,13 @@ describe("PhantomSolanaChain", () => {
   });
 
   describe("connect", () => {
-    it("should connect to Phantom and update registry", async () => {
+    it("should connect to Phantom and update internal state", async () => {
       const result = await solanaChain.connect();
 
       expect(mockPhantom.solana.connect).toHaveBeenCalled();
       expect(result.publicKey).toBe(testPublicKey);
-      expect(walletRegistry.isWalletConnected("phantom")).toBe(true);
-      expect(walletRegistry.getWalletAddresses("phantom")).toContainEqual({
-        addressType: AddressType.solana,
-        address: testPublicKey,
-      });
       expect(solanaChain.publicKey).toBe(testPublicKey);
+      expect(solanaChain.connected).toBe(true);
     });
 
     it("should handle connect with onlyIfTrusted option", async () => {
@@ -131,8 +119,8 @@ describe("PhantomSolanaChain", () => {
       expect(result.publicKey).toBe(testPublicKey);
     });
 
-    it("should handle object result with publicKey property", async () => {
-      mockPhantom.solana.connect.mockResolvedValue({ publicKey: testPublicKey });
+    it("should handle string result from connect", async () => {
+      mockPhantom.solana.connect.mockResolvedValue(testPublicKey);
 
       const result = await solanaChain.connect();
 
@@ -145,67 +133,26 @@ describe("PhantomSolanaChain", () => {
       await expect(solanaChain.connect()).rejects.toThrow("Failed to connect to Solana wallet");
     });
 
-    it("should update existing Solana address if already exists", async () => {
-      walletRegistry.setWalletAddresses("phantom", [
-        { addressType: AddressType.solana, address: "old-address" },
-      ]);
+    it("should update publicKey when connecting", async () => {
+      (solanaChain as any)._publicKey = "old-address";
 
       await solanaChain.connect();
 
-      const addresses = walletRegistry.getWalletAddresses("phantom");
-      const solanaAddress = addresses.find((a) => a.addressType === AddressType.solana);
-      expect(solanaAddress?.address).toBe(testPublicKey);
-      expect(addresses.filter((a) => a.addressType === AddressType.solana).length).toBe(1);
+      expect(solanaChain.publicKey).toBe(testPublicKey);
     });
   });
 
   describe("disconnect", () => {
     beforeEach(async () => {
       await solanaChain.connect();
-      walletRegistry.setWalletAddresses("phantom", [
-        { addressType: AddressType.solana, address: testPublicKey },
-      ]);
     });
 
-    it("should disconnect from Phantom and clear registry for multi-chain wallet", async () => {
-      // Register as multi-chain wallet
-      const multiChainWallet = walletRegistry.getById("phantom");
-      if (multiChainWallet) {
-        multiChainWallet.addressTypes = [AddressType.solana, AddressType.ethereum];
-      }
-
+    it("should disconnect from Phantom and clear internal state", async () => {
       await solanaChain.disconnect();
 
       expect(mockPhantom.solana.disconnect).toHaveBeenCalled();
-      expect(walletRegistry.isWalletConnected("phantom")).toBe(false);
-      expect(walletRegistry.getWalletAddresses("phantom")).toEqual([]);
       expect(solanaChain.publicKey).toBeNull();
-    });
-
-    it("should only clear Solana addresses for single-chain wallet", async () => {
-      // Register as single-chain wallet
-      const singleChainWallet = walletRegistry.getById("phantom");
-      if (singleChainWallet) {
-        singleChainWallet.addressTypes = [AddressType.solana];
-      }
-
-      walletRegistry.setWalletAddresses("phantom", [
-        { addressType: AddressType.solana, address: testPublicKey },
-        { addressType: AddressType.ethereum, address: "0x123" },
-      ]);
-
-      await solanaChain.disconnect();
-
-      expect(mockPhantom.solana.disconnect).toHaveBeenCalled();
-      const addresses = walletRegistry.getWalletAddresses("phantom");
-      expect(addresses).not.toContainEqual({
-        addressType: AddressType.solana,
-        address: testPublicKey,
-      });
-      expect(addresses).toContainEqual({
-        addressType: AddressType.ethereum,
-        address: "0x123",
-      });
+      expect(solanaChain.connected).toBe(false);
     });
   });
 
@@ -218,9 +165,7 @@ describe("PhantomSolanaChain", () => {
       const message = "Hello from Phantom SDK!";
       const result = await solanaChain.signMessage(message);
 
-      expect(mockPhantom.solana.signMessage).toHaveBeenCalledWith(
-        new TextEncoder().encode(message),
-      );
+      expect(mockPhantom.solana.signMessage).toHaveBeenCalledWith(new TextEncoder().encode(message));
       expect(result.signature).toBeInstanceOf(Uint8Array);
       expect(result.publicKey).toBe(testPublicKey);
     });
@@ -270,7 +215,7 @@ describe("PhantomSolanaChain", () => {
     });
 
     it("should throw error when not connected", async () => {
-      walletRegistry.setWalletConnected("phantom", false);
+      (solanaChain as any)._publicKey = null;
 
       await expect(solanaChain.signTransaction(mockTransaction)).rejects.toThrow(
         "Provider not connected. Call provider connect first.",
@@ -317,7 +262,7 @@ describe("PhantomSolanaChain", () => {
     });
 
     it("should throw error when not connected", async () => {
-      walletRegistry.setWalletConnected("phantom", false);
+      (solanaChain as any)._publicKey = null;
 
       await expect(solanaChain.signAllTransactions(mockTransactions)).rejects.toThrow(
         "Provider not connected. Call provider connect first.",
@@ -341,7 +286,7 @@ describe("PhantomSolanaChain", () => {
     });
 
     it("should throw error when not connected", async () => {
-      walletRegistry.setWalletConnected("phantom", false);
+      (solanaChain as any)._publicKey = null;
 
       await expect(solanaChain.signAndSendAllTransactions(mockTransactions)).rejects.toThrow(
         "Provider not connected. Call provider connect first.",
@@ -388,21 +333,19 @@ describe("PhantomSolanaChain", () => {
       // Trigger the event listener that was set up in setupEventListeners
       const eventListeners = (mockPhantom.solana as any)._eventListeners;
       const connectListeners = eventListeners.get("connect") || [];
-      
+
       // The setupEventListeners should have registered a listener
       // We need to call it directly to simulate Phantom's event
-      if (connectListeners.length > 0) {
-        connectListeners[0](testPublicKey);
-      }
+      // Call all connect listeners with the public key
+      connectListeners.forEach((listener: (publicKey: string) => void) => listener(testPublicKey));
 
       expect(listener).toHaveBeenCalledWith(testPublicKey);
       expect(solanaChain.publicKey).toBe(testPublicKey);
-      expect(walletRegistry.isWalletConnected("phantom")).toBe(true);
+      expect(solanaChain.connected).toBe(true);
     });
 
     it("should emit disconnect event when Phantom emits disconnect", () => {
       // First connect to set up state
-      walletRegistry.setWalletConnected("phantom", true);
       (solanaChain as any)._publicKey = testPublicKey;
 
       const listener = jest.fn();
@@ -410,14 +353,13 @@ describe("PhantomSolanaChain", () => {
 
       const eventListeners = (mockPhantom.solana as any)._eventListeners;
       const disconnectListeners = eventListeners.get("disconnect") || [];
-      
-      if (disconnectListeners.length > 0) {
-        disconnectListeners[0]();
-      }
+
+      // Call all disconnect listeners
+      disconnectListeners.forEach((listener: () => void) => listener());
 
       expect(listener).toHaveBeenCalled();
       expect(solanaChain.publicKey).toBeNull();
-      expect(walletRegistry.isWalletConnected("phantom")).toBe(false);
+      expect(solanaChain.connected).toBe(false);
     });
 
     it("should emit accountChanged event when Phantom emits accountChanged", () => {
@@ -427,10 +369,9 @@ describe("PhantomSolanaChain", () => {
       const newPublicKey = "NewPublicKey123";
       const eventListeners = (mockPhantom.solana as any)._eventListeners;
       const accountChangedListeners = eventListeners.get("accountChanged") || [];
-      
-      if (accountChangedListeners.length > 0) {
-        accountChangedListeners[0](newPublicKey);
-      }
+
+      // Call all accountChanged listeners with the new public key
+      accountChangedListeners.forEach((listener: (publicKey: string) => void) => listener(newPublicKey));
 
       expect(listener).toHaveBeenCalledWith(newPublicKey);
       expect(solanaChain.publicKey).toBe(newPublicKey);
@@ -443,7 +384,7 @@ describe("PhantomSolanaChain", () => {
 
       const eventListeners = (mockPhantom.solana as any)._eventListeners;
       const connectListeners = eventListeners.get("connect") || [];
-      
+
       if (connectListeners.length > 0) {
         connectListeners[0](testPublicKey);
       }
@@ -451,29 +392,4 @@ describe("PhantomSolanaChain", () => {
       expect(listener).not.toHaveBeenCalled();
     });
   });
-
-  describe("syncInitialState", () => {
-    it("should sync publicKey from registry addresses", () => {
-      walletRegistry.setWalletConnected("phantom", true);
-      walletRegistry.setWalletAddresses("phantom", [
-        { addressType: AddressType.solana, address: testPublicKey },
-      ]);
-
-      const newChain = new PhantomSolanaChain(mockPhantom, "phantom", walletRegistry);
-
-      // syncInitialState is called in constructor and should set _publicKey
-      expect(newChain.publicKey).toBe(testPublicKey);
-    });
-
-    it("should handle missing Solana address in registry", () => {
-      walletRegistry.setWalletAddresses("phantom", [
-        { addressType: AddressType.ethereum, address: "0x123" },
-      ]);
-
-      const newChain = new PhantomSolanaChain(mockPhantom, "phantom", walletRegistry);
-
-      expect(newChain.publicKey).toBeNull();
-    });
-  });
 });
-

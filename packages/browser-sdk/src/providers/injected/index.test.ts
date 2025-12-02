@@ -45,7 +45,7 @@ describe("InjectedProvider", () => {
         isInstalled: () => true,
       },
       solana: {
-        connect: jest.fn().mockResolvedValue({ publicKey: "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH" }),
+        connect: jest.fn().mockResolvedValue("GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH"),
         disconnect: jest.fn(),
         getAccount: jest.fn(),
         signMessage: jest.fn().mockResolvedValue({ signature: "mock-signature" }),
@@ -456,7 +456,7 @@ describe("InjectedProvider", () => {
         const addEventListenerCalls = mockPhantomObject.ethereum.addEventListener.mock.calls;
         const accountsChangedCalls = addEventListenerCalls.filter((call: any[]) => call[0] === "accountsChanged");
         expect(accountsChangedCalls.length).toBeGreaterThan(0);
-        
+
         // Get the last handler (from InjectedProvider)
         const accountsChangedCall = accountsChangedCalls[accountsChangedCalls.length - 1];
         const accountsChangedHandler = accountsChangedCall[1];
@@ -487,7 +487,7 @@ describe("InjectedProvider", () => {
         const addEventListenerCalls = mockPhantomObject.ethereum.addEventListener.mock.calls;
         const accountsChangedCalls = addEventListenerCalls.filter((call: any[]) => call[0] === "accountsChanged");
         expect(accountsChangedCalls.length).toBeGreaterThan(0);
-        
+
         const accountsChangedCall = accountsChangedCalls[accountsChangedCalls.length - 1];
         const accountsChangedHandler = accountsChangedCall[1];
         accountsChangedHandler(emptyAccounts);
@@ -508,7 +508,10 @@ describe("InjectedProvider", () => {
         const emptyAccounts: string[] = [];
 
         const addEventListenerCalls = mockPhantomObject.ethereum.addEventListener.mock.calls;
-        const accountsChangedCall = addEventListenerCalls.find((call: any[]) => call[0] === "accountsChanged");
+        const accountsChangedCalls = addEventListenerCalls.filter((call: any[]) => call[0] === "accountsChanged");
+        expect(accountsChangedCalls.length).toBeGreaterThan(0);
+        // Get the last handler (from InjectedProvider)
+        const accountsChangedCall = accountsChangedCalls[accountsChangedCalls.length - 1];
         const accountsChangedHandler = accountsChangedCall[1];
         accountsChangedHandler(emptyAccounts);
 
@@ -543,7 +546,7 @@ describe("InjectedProvider", () => {
         // Use the last one which is from InjectedProvider.setupSolanaEvents
         const accountChangedCall = accountChangedCalls[accountChangedCalls.length - 1];
         const accountChangedHandler = accountChangedCall[1];
-        
+
         // Make sure the handler is async-aware
         if (accountChangedHandler) {
           await accountChangedHandler(newPublicKey);

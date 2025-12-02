@@ -17,7 +17,7 @@ export function useSolana(): {
     // Return a stub object for SSR, while SDK is initializing, or while discovery is in progress
     // We still return the chain object, but isAvailable will be false
     return {
-      solana: ({} as ISolanaChain),
+      solana: {} as ISolanaChain,
       isAvailable: false,
     };
   }
@@ -29,7 +29,7 @@ export function useSolana(): {
   // This prevents errors when the selected wallet doesn't support Solana
   if (!isAvailable) {
     return {
-      solana: ({} as ISolanaChain),
+      solana: {} as ISolanaChain,
       isAvailable: false,
     };
   }
@@ -42,9 +42,9 @@ export function useSolana(): {
   } catch (error) {
     // If accessing sdk.solana throws (e.g., wallet doesn't support Solana),
     // return a stub object instead of crashing
-    console.warn("Solana chain not available:", error);
+    // Solana chain not available
     return {
-      solana: ({} as ISolanaChain),
+      solana: {} as ISolanaChain,
       isAvailable: false,
     };
   }

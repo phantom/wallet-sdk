@@ -146,7 +146,7 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
       try {
         // Wait for discovery to complete - this ensures all wallets are registered
         await sdk.discoverWallets();
-        
+
         // Give a small additional delay to ensure registry is fully updated
         // (EIP-6963 discovery has a 400ms timeout, so we wait a bit more to be safe)
         await new Promise(resolve => setTimeout(resolve, 100));

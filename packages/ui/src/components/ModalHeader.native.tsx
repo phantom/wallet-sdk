@@ -15,10 +15,7 @@ export function ModalHeader({ goBack = false, onGoBack, title, onClose }: ModalH
     paddingTop: 28,
     paddingHorizontal: 32,
     marginBottom: 24,
-  };
-
-  const titleStyle: ViewStyle = {
-    // Title styling handled by Text component
+    width: "100%",
   };
 
   const backButtonStyle: ViewStyle = {
@@ -50,16 +47,14 @@ export function ModalHeader({ goBack = false, onGoBack, title, onClose }: ModalH
           </View>
         </TouchableOpacity>
       )}
-      <View style={titleStyle}>
+      <View>
         <Text variant="caption" color={theme.secondary}>
           {title}
         </Text>
       </View>
       {onClose && (
         <TouchableOpacity style={closeButtonStyle} onPress={onClose}>
-          <Text variant="caption" color={theme.secondary} style={{ fontSize: 24 }}>
-            ×
-          </Text>
+          <Icon type="x" size={16} color={theme.secondary} />
         </TouchableOpacity>
       )}
     </View>

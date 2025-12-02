@@ -108,29 +108,27 @@ export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
           </div>
         )}
 
-      {addresses && addresses.length > 0 && (
-        <div style={accountListStyle}>
-          {addresses.map((account, index) => (
-            <div key={index} style={accountItemStyle}>
-              <Text variant="label" color={theme.secondary} style={{ textTransform: "uppercase" }}>
-                {account.addressType}
-              </Text>
-              <div style={addressTextStyle}>
-                <Text variant="caption">{account.address}</Text>
+        {addresses && addresses.length > 0 && (
+          <div style={accountListStyle}>
+            {addresses.map((account, index) => (
+              <div key={index} style={accountItemStyle}>
+                <Text variant="label" color={theme.secondary} style={{ textTransform: "uppercase" }}>
+                  {account.addressType}
+                </Text>
+                <div style={addressTextStyle}>
+                  <Text variant="caption">{account.address}</Text>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-        </div>
-
-      <div style={disconnectButtonContainerStyle}>
-      <Button onClick={handleDisconnect} disabled={isDisconnecting} isLoading={isDisconnecting} fullWidth>
-        <Text variant="captionBold">{isDisconnecting ? "Disconnecting..." : "Disconnect"}</Text>
-      </Button>
+            ))}
+          </div>
+        )}
       </div>
 
+      <div style={disconnectButtonContainerStyle}>
+        <Button onClick={handleDisconnect} disabled={isDisconnecting} isLoading={isDisconnecting} fullWidth>
+          <Text variant="captionBold">{isDisconnecting ? "Disconnecting..." : "Disconnect"}</Text>
+        </Button>
+      </div>
     </div>
   );
 }

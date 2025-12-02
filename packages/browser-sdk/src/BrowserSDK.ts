@@ -1,7 +1,13 @@
-import type { BrowserSDKConfig, ConnectResult, WalletAddress, AuthOptions, AuthProviderType, AddressType } from "./types";
+import type {
+  BrowserSDKConfig,
+  ConnectResult,
+  WalletAddress,
+  AuthOptions,
+  AuthProviderType,
+  AddressType,
+} from "./types";
 import { ProviderManager, type ProviderPreference } from "./ProviderManager";
 import { debug, DebugCategory, type DebugLevel, type DebugCallback } from "./debug";
-import { waitForPhantomExtension } from "./waitForPhantomExtension";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
 import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-provider-core";
 import { EMBEDDED_PROVIDER_AUTH_TYPES } from "@phantom/embedded-provider-core";
@@ -21,6 +27,7 @@ export class BrowserSDK {
   private providerManager: ProviderManager;
   private walletRegistry = getWalletRegistry();
   private config: BrowserSDKConfig;
+  public isLoading = true;
 
   constructor(config: BrowserSDKConfig) {
     debug.info(DebugCategory.BROWSER_SDK, "Initializing BrowserSDK", {
@@ -74,11 +81,14 @@ export class BrowserSDK {
     this.providerManager = new ProviderManager(config);
 
     // Start wallet discovery (non-blocking)
+
     void this.discoverWallets();
   }
 
   discoverWallets(): Promise<void> {
-    return this.walletRegistry.discover(this.config.addressTypes);
+    return this.walletRegistry.discover(this.config.addressTypes).finally(() => {
+      this.isLoading = false;
+    });
   }
 
   // ===== CHAIN API =====
@@ -191,7 +201,10 @@ export class BrowserSDK {
     // For injected provider, use the provider's getEnabledAddressTypes method
     if (providerInfo.type === "injected") {
       const injectedProvider = currentProvider as InjectedProvider;
-      if ("getEnabledAddressTypes" in injectedProvider && typeof injectedProvider.getEnabledAddressTypes === "function") {
+      if (
+        "getEnabledAddressTypes" in injectedProvider &&
+        typeof injectedProvider.getEnabledAddressTypes === "function"
+      ) {
         return injectedProvider.getEnabledAddressTypes();
       }
       // Fallback to config.addressTypes
@@ -202,13 +215,6 @@ export class BrowserSDK {
   }
 
   // ===== UTILITY METHODS =====
-
-  /**
-   * Check if Phantom extension is installed
-   */
-  static async isPhantomInstalled(timeoutMs?: number): Promise<boolean> {
-    return waitForPhantomExtension(timeoutMs);
-  }
 
   /**
    * Add event listener for provider events (connect, connect_start, connect_error, disconnect, error)
