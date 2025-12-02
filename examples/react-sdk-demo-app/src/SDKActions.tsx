@@ -51,6 +51,7 @@ export function SDKActions() {
   const [customSolDestination, setCustomSolDestination] = useState("8dvUxPRHyHGw9W68yP73GkXCjBCjRJuLrANj9n1SXRGb");
   const [isSendingEthMainnet, setIsSendingEthMainnet] = useState(false);
   const [isSendingPolygon, setIsSendingPolygon] = useState(false);
+  const [isSwitchingNetwork, setIsSwitchingNetwork] = useState(false);
 
   const solanaAddress = addresses?.find(addr => addr.addressType === "Solana")?.address || null;
   const ethereumAddress = addresses?.find(addr => addr.addressType === "Ethereum")?.address || null;
@@ -475,7 +476,9 @@ export function SDKActions() {
         alert("Solana chain not available");
         return;
       }
-      alert(`All transactions signed! Results: ${JSON.stringify(results)}`);
+      // Note: Results may show as {} in JSON.stringify because they only have serialize() methods
+      // But the transactions are valid and can be used
+      alert(`All transactions signed! ${results.length} transaction(s) ready.`);
     } catch (error) {
       console.error("Error signing all transactions:", error);
       alert(`Error signing all transactions: ${(error as Error).message || error}`);
@@ -729,6 +732,14 @@ export function SDKActions() {
 
       const transaction = new VersionedTransaction(messageV0);
 
+      // Try to switch to mainnet first (for wallets like Solflare that need explicit chain switching)
+      try {
+        await solana.switchNetwork("mainnet");
+      } catch (error) {
+        // Ignore switch network errors - some wallets don't support it or are already on mainnet
+        console.log("Note: Could not switch network (may already be on mainnet):", error);
+      }
+
       // Sign and send transaction
       const result = await solana.signAndSendTransaction(transaction);
       if (!result) {
@@ -830,6 +841,23 @@ export function SDKActions() {
     } catch (error) {
       console.error("Error disabling auto-confirm:", error);
       alert(`Error disabling auto-confirm: ${(error as Error).message || error}`);
+    }
+  };
+
+  const onSwitchToSolanaMainnet = async () => {
+    if (!isConnected || !isSolanaAvailable) {
+      alert("Please connect your wallet first and ensure Solana is available.");
+      return;
+    }
+    try {
+      setIsSwitchingNetwork(true);
+      await solana.switchNetwork("mainnet");
+      alert("Switched to Solana mainnet!");
+    } catch (error) {
+      console.error("Error switching network:", error);
+      alert(`Error switching network: ${(error as Error).message || error}`);
+    } finally {
+      setIsSwitchingNetwork(false);
     }
   };
 
@@ -1035,6 +1063,12 @@ export function SDKActions() {
                 : !hasSolanaBalance
                   ? "Insufficient SOL Balance (need > 0)"
                   : "Sign & Send Transaction (Solana)"}
+            </button>
+            <button
+              onClick={onSwitchToSolanaMainnet}
+              disabled={!isConnected || isSwitchingNetwork || !isSolanaAvailable}
+            >
+              {isSwitchingNetwork ? "Switching..." : "Switch to Solana Mainnet"}
             </button>
             <button onClick={onSendEthTransaction} disabled={!isConnected || isSendingEthTransaction}>
               {isSendingEthTransaction ? "Sending..." : "Sign & Send Transaction (Ethereum)"}
