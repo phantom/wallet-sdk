@@ -169,34 +169,41 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
         throw new Error("Wallet Standard signTransaction feature not available");
       }
 
+      if (!this.wallet.accounts || this.wallet.accounts.length === 0) {
+        throw new Error("No accounts available. Please connect first.");
+      }
+
+      const account = this.wallet.accounts[0];
       const serializedTransaction = this.serializeTransaction(transaction);
 
-      const result = await signTransactionFeature.signTransaction({
+      // Wallet Standard signTransaction accepts rest parameters and returns an array
+      // Even for a single transaction, it returns [{ signedTransaction: Uint8Array }]
+      const results = await signTransactionFeature.signTransaction({
         transaction: serializedTransaction,
-        account: this.wallet.accounts?.[0],
+        account,
       });
 
-      // Wallet Standard returns { transaction: Uint8Array }
-      // Some wallets (like Solflare) return [{ signedTransaction: Uint8Array }]
+      // Wallet Standard returns [{ signedTransaction: Uint8Array }]
+      // Handle array result (standard) or single object (some wallets)
       let transactionData: any;
-      
-      if (Array.isArray(result) && result.length > 0) {
-        // Handle array format: [{ signedTransaction: ... }] or [{ transaction: ... }]
-        const firstItem = result[0];
+
+      if (Array.isArray(results) && results.length > 0) {
+        // Standard format: array with signedTransaction
+        const firstItem = results[0];
         if (firstItem && typeof firstItem === "object") {
           transactionData = firstItem.signedTransaction || firstItem.transaction;
         }
-      } else if (result && typeof result === "object" && !Array.isArray(result)) {
-        // Handle object format: { transaction: ... } or { signedTransaction: ... }
-        transactionData = result.transaction || result.signedTransaction;
+      } else if (results && typeof results === "object" && !Array.isArray(results)) {
+        // Fallback: single object format
+        transactionData = results.transaction || results.signedTransaction;
       }
-      
+
       if (!transactionData) {
         throw new Error("No transaction data found in Wallet Standard result");
       }
 
       const signedBytes = this.parseUint8Array(transactionData);
-      
+
       if (signedBytes.length === 0) {
         throw new Error("Empty signed transaction returned from Wallet Standard");
       }
@@ -225,16 +232,40 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
         throw new Error("Wallet Standard signAndSendTransaction feature not available");
       }
 
+      if (!this.wallet.accounts || this.wallet.accounts.length === 0) {
+        throw new Error("No accounts available. Please connect first.");
+      }
+
+      const account = this.wallet.accounts[0];
+      const chain = account.chains?.[0] || "solana:mainnet"; // Default to mainnet if not specified
       const serializedTransaction = this.serializeTransaction(transaction);
 
-      const result = await signAndSendTransactionFeature.signAndSendTransaction({
+      // Wallet Standard signAndSendTransaction accepts rest parameters and returns an array
+      // Even for a single transaction, it returns [{ signature: Uint8Array }]
+      const results = await signAndSendTransactionFeature.signAndSendTransaction({
         transaction: serializedTransaction,
-        account: this.wallet.accounts?.[0],
+        account,
+        chain,
       });
 
-      // Wallet Standard returns { signature: string | Uint8Array }
-      // Standard format: result.signature should be the signature
-      const signature = this.parseSignature(result);
+      // Handle array result (standard) or single object (some wallets)
+      let signatureOutput: any;
+      if (Array.isArray(results) && results.length > 0) {
+        signatureOutput = results[0];
+      } else if (results && typeof results === "object" && !Array.isArray(results)) {
+        signatureOutput = results;
+      } else {
+        throw new Error("Invalid signAndSendTransaction result format");
+      }
+
+      // Wallet Standard returns { signature: Uint8Array } - decode it to string
+      if (!signatureOutput.signature) {
+        throw new Error("No signature found in signAndSendTransaction result");
+      }
+
+      // Convert Uint8Array signature to base58 string
+      const signatureBytes = this.parseUint8Array(signatureOutput.signature);
+      const signature = bs58.encode(signatureBytes);
 
       return { signature };
     } catch (error) {
@@ -344,60 +375,6 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
       return transaction;
     }
     return new Uint8Array(0);
-  }
-
-  /**
-   * Parse a signature from Wallet Standard result
-   * Wallet Standard format: { signature: string | Uint8Array }
-   * Some wallets may return array-like objects with numeric keys (e.g., { "0": ... })
-   */
-  private parseSignature(result: any): string {
-    // Handle array-like results (some wallets return arrays)
-    if (Array.isArray(result) && result.length > 0) {
-      const firstItem = result[0];
-      if (typeof firstItem === "string") {
-        return firstItem;
-      }
-      if (firstItem instanceof Uint8Array) {
-        return bs58.encode(firstItem);
-      }
-      if (typeof firstItem === "object" && firstItem !== null && firstItem.signature) {
-        result = firstItem;
-      }
-    }
-
-    // Handle numeric key access (array-like object, e.g., { "0": ... })
-    if (result && typeof result === "object" && "0" in result && !("signature" in result)) {
-      const firstItem = result[0];
-      if (typeof firstItem === "string") {
-        return firstItem;
-      }
-      if (firstItem instanceof Uint8Array) {
-        return bs58.encode(firstItem);
-      }
-      // If it's an object with numeric keys representing a Uint8Array, parse it
-      const bytes = this.parseUint8Array(result);
-      if (bytes.length > 0) {
-        return bs58.encode(bytes);
-      }
-    }
-
-    // Standard format: result.signature
-    if (result?.signature) {
-      if (typeof result.signature === "string") {
-        return result.signature;
-      }
-      if (result.signature instanceof Uint8Array) {
-        return bs58.encode(result.signature);
-      }
-      if (Array.isArray(result.signature)) {
-        return bs58.encode(new Uint8Array(result.signature));
-      }
-    }
-
-    throw new Error(
-      `No signature found in Wallet Standard result. Result structure: ${JSON.stringify(result, null, 2)}`,
-    );
   }
 
   /**

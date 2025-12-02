@@ -710,11 +710,22 @@ export function SDKActions() {
       // Get recent blockhash
       const { blockhash } = await connection.getLatestBlockhash();
 
+      // Validate recipient address
+      if (!customSolDestination || customSolDestination.trim() === "") {
+        alert("Please enter a destination Solana address.");
+        return;
+      }
+
+      let targetAddress: PublicKey;
+      try {
+        targetAddress = new PublicKey(customSolDestination.trim());
+      } catch (error) {
+        alert("Invalid Solana address. Please enter a valid address.");
+        return;
+      }
+
       // Convert SOL to lamports
       const lamports = Math.floor(amount * LAMPORTS_PER_SOL);
-
-      // Target address
-      const targetAddress = new PublicKey("8dvUxPRHyHGw9W68yP73GkXCjBCjRJuLrANj9n1SXRGb");
 
       // Create transfer instruction
       const transferInstruction = SystemProgram.transfer({
@@ -737,7 +748,7 @@ export function SDKActions() {
         await solana.switchNetwork("mainnet");
       } catch (error) {
         // Ignore switch network errors - some wallets don't support it or are already on mainnet
-        console.log("Note: Could not switch network (may already be on mainnet):", error);
+        console.error("Note: Could not switch network (may already be on mainnet):", error);
       }
 
       // Sign and send transaction
