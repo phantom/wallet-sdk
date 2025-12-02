@@ -70,6 +70,7 @@ export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
   const contentWrapperStyle: CSSProperties = {
     display: "flex",
     flexDirection: "column",
+    alignItems: "center",
     gap: "24px",
   };
 
@@ -94,6 +95,7 @@ export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
     width: "100%",
     minWidth: 0,
   };
+  
 
   return (
     <div style={contentWrapperStyle}>
