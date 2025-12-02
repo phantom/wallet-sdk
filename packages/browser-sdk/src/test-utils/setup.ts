@@ -94,5 +94,6 @@ beforeEach(() => {
 afterEach(() => {
   // Restore original console.warn
   (console as any).warn = originalWarn;
-  jest.resetAllMocks();
+  // Don't reset all mocks - this would reset the parsers mock
+  // jest.resetAllMocks();
 });
