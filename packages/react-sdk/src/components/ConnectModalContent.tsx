@@ -209,7 +209,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
     gap: "4px",
   };
 
-
   const walletButtonRightStyle: CSSProperties = {
     display: "flex",
     alignItems: "center",
@@ -288,11 +287,7 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
                       {wallet.addressTypes && wallet.addressTypes.length > 0 && (
                         <span style={chainIndicatorsStyle}>
                           {wallet.addressTypes.map(addressType => (
-                            <ChainIcon
-                              key={`${wallet.id}-chain-${addressType}`}
-                              addressType={addressType}
-                              size={8}
-                            />
+                            <ChainIcon key={`${wallet.id}-chain-${addressType}`} addressType={addressType} size={8} />
                           ))}
                         </span>
                       )}
