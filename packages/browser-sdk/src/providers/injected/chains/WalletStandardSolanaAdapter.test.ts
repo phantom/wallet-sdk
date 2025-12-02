@@ -53,19 +53,22 @@ describe("WalletStandardSolanaAdapter", () => {
           ]),
         },
         "solana:signTransaction": {
-          signTransaction: jest.fn().mockResolvedValue({
-            transaction: {} as unknown as Transaction,
-          }),
+          signTransaction: jest.fn().mockResolvedValue([
+            {
+              signedTransaction: new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+            },
+          ]),
         },
         "solana:signAndSendTransaction": {
-          signAndSendTransaction: jest.fn().mockResolvedValue({
-            signature: "5j7s8K9mN0pQ1rS2tU3vW4xY5zA6bC7dE8fG9hI0jK1lM2nO3pQ4rS5tU6vW7xY8z",
-            transaction: {} as unknown as Transaction,
-            account: {
-              address: testPublicKey,
+          signAndSendTransaction: jest.fn().mockResolvedValue([
+            {
+              signature: new Uint8Array([
+                1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+                29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54,
+                55, 56, 57, 58, 59, 60, 61, 62, 63, 64,
+              ]),
             },
-            chain: "solana:mainnet",
-          }),
+          ]),
         },
         "solana:signIn": {
           signIn: jest.fn(),
@@ -323,17 +326,21 @@ describe("WalletStandardSolanaAdapter", () => {
 
     beforeEach(async () => {
       await adapter.connect();
-      mockTransaction = {} as unknown as Transaction;
+      // Create a mock transaction with serialize method
+      mockTransaction = {
+        serialize: jest.fn().mockReturnValue(new Uint8Array([1, 2, 3, 4, 5])),
+      } as unknown as Transaction;
     });
 
     it("should sign transaction using solana:signTransaction feature", async () => {
       const result = await adapter.signTransaction(mockTransaction);
 
       expect(mockWallet.features["solana:signTransaction"].signTransaction).toHaveBeenCalledWith({
-        transaction: mockTransaction,
+        transaction: expect.any(Uint8Array),
         account: mockWallet.accounts[0],
       });
       expect(result).toBeDefined();
+      expect(result).toBeInstanceOf(Object);
     });
 
     it("should throw error if signTransaction feature is not available", async () => {
@@ -357,8 +364,9 @@ describe("WalletStandardSolanaAdapter", () => {
       const result = await adapter.signAndSendTransaction(mockTransaction);
 
       expect(mockWallet.features["solana:signAndSendTransaction"].signAndSendTransaction).toHaveBeenCalledWith({
-        transaction: mockTransaction,
+        transaction: expect.any(Uint8Array),
         account: mockWallet.accounts[0],
+        chain: "solana:mainnet",
       });
       expect(result.signature).toBeDefined();
       expect(typeof result.signature).toBe("string");
@@ -366,9 +374,22 @@ describe("WalletStandardSolanaAdapter", () => {
 
     it("should handle signature as Uint8Array and convert to string", async () => {
       const signatureBytes = new Uint8Array([1, 2, 3, 4, 5]);
+      mockWallet.features["solana:signAndSendTransaction"].signAndSendTransaction.mockResolvedValue([
+        {
+          signature: signatureBytes,
+        },
+      ]);
+
+      const result = await adapter.signAndSendTransaction(mockTransaction);
+
+      expect(result.signature).toBeDefined();
+      expect(typeof result.signature).toBe("string");
+    });
+
+    it("should handle single object result format (fallback)", async () => {
+      const signatureBytes = new Uint8Array([1, 2, 3, 4, 5]);
       mockWallet.features["solana:signAndSendTransaction"].signAndSendTransaction.mockResolvedValue({
         signature: signatureBytes,
-        transaction: mockTransaction,
       });
 
       const result = await adapter.signAndSendTransaction(mockTransaction);

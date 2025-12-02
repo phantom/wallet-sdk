@@ -25,6 +25,29 @@ jest.mock("jose", () => ({
   },
 }));
 
+// Mock @phantom/parsers to avoid needing @solana/web3.js in tests
+// This completely mocks the parsers package to prevent it from loading @solana/web3.js
+jest.mock("@phantom/parsers", () => ({
+  parseToKmsTransaction: jest.fn().mockResolvedValue({ base64url: "mock-base64url", originalFormat: "mock" }),
+  parseSignMessageResponse: jest.fn().mockReturnValue({ signature: "mock-signature", rawSignature: "mock-raw" }),
+  parseTransactionResponse: jest.fn().mockReturnValue({
+    hash: "mock-transaction-hash",
+    rawTransaction: "mock-raw-tx",
+    blockExplorer: "https://explorer.com/tx/mock-transaction-hash",
+  }),
+  parseSolanaTransactionSignature: jest.fn().mockReturnValue({ signature: "mock-signature", fallback: false }),
+  deserializeSolanaTransaction: jest.fn((bytes: Uint8Array) => {
+    // Return a mock transaction object that has the expected interface
+    const mockTx = {
+      serialize: jest.fn().mockReturnValue(bytes),
+      version: 0,
+      message: {},
+      signatures: [],
+    };
+    return mockTx;
+  }),
+}));
+
 // Add fetch polyfill for testing
 (globalThis as any).fetch = jest.fn();
 
@@ -75,5 +98,6 @@ beforeEach(() => {
 afterEach(() => {
   // Restore original console.warn
   (console as any).warn = originalWarn;
-  jest.resetAllMocks();
+  // Don't reset all mocks - this would reset the parsers mock
+  // jest.resetAllMocks();
 });
