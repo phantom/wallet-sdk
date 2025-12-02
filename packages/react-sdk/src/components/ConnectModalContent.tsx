@@ -108,6 +108,7 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
   };
 
   const connectContentContainerStyle: CSSProperties = {
+    transition: "opacity 0.15s ease-in-out, transform 0.15s ease-in-out",
     display: "flex",
     flexDirection: "column" as const,
     alignItems: "center",
@@ -120,9 +121,10 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
     flexDirection: "column" as const,
     alignItems: "center",
     gap: "12px",
-    padding: "0 32px 24px 32px",
     maxHeight: "480px",
     overflowY: "auto" as const,
+    padding: "0 32px 32px 32px",
+    transition: "opacity 0.15s ease-in-out, transform 0.15s ease-in-out",
   };
 
   const dividerStyle: CSSProperties = {
@@ -209,21 +211,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
     gap: "4px",
   };
 
-  const chainIndicatorStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    minWidth: "8px",
-    height: "8px",
-    padding: "0 2px",
-    borderRadius: "2px",
-    backgroundColor: theme.aux,
-    color: theme.text,
-    fontSize: "6px",
-    fontWeight: "bold",
-    lineHeight: "1",
-  };
-
   const walletButtonRightStyle: CSSProperties = {
     display: "flex",
     alignItems: "center",
@@ -302,12 +289,7 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
                       {wallet.addressTypes && wallet.addressTypes.length > 0 && (
                         <span style={chainIndicatorsStyle}>
                           {wallet.addressTypes.map(addressType => (
-                            <ChainIcon
-                              key={`${wallet.id}-chain-${addressType}`}
-                              addressType={addressType}
-                              size={8}
-                              style={chainIndicatorStyle}
-                            />
+                            <ChainIcon key={`${wallet.id}-chain-${addressType}`} addressType={addressType} size={8} />
                           ))}
                         </span>
                       )}
@@ -418,7 +400,7 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
                         {wallet.icon ? (
                           <img src={wallet.icon} alt={wallet.name} style={walletIconStyle} />
                         ) : (
-                          <BoundedIcon type="wallet" size={20} background={theme.aux} color={theme.text} />
+                          <BoundedIcon type="wallet" size={10} background={theme.aux} color={theme.text} />
                         )}
                         <span style={walletNameContainerStyle}>
                           <Text variant="captionBold">{wallet.name}</Text>
@@ -429,7 +411,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
                                   key={`${wallet.id}-chain-${addressType}`}
                                   addressType={addressType}
                                   size={8}
-                                  style={chainIndicatorStyle}
                                 />
                               ))}
                             </span>

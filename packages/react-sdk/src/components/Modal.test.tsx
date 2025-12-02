@@ -21,6 +21,15 @@ describe("Modal Component (Web)", () => {
     children: <div data-testid="modal-child">Test Content</div>,
   };
 
+  // Mock ResizeObserver
+  const mockResizeObserver = jest.fn();
+  mockResizeObserver.mockReturnValue({
+    observe: jest.fn(),
+    unobserve: jest.fn(),
+    disconnect: jest.fn(),
+  });
+  global.ResizeObserver = mockResizeObserver as any;
+
   const renderModal = (props: Partial<ModalProps> = {}) => {
     return render(
       <ThemeProvider theme={mockTheme}>
