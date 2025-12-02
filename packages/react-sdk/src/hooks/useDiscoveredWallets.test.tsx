@@ -153,10 +153,10 @@ describe("useDiscoveredWallets", () => {
       },
     ];
     mockSDK.getDiscoveredWallets.mockReturnValue([]);
-    mockSDK.discoverWallets.mockImplementation(async () => {
+    mockSDK.discoverWallets.mockImplementation(() => {
       // After discoverWallets is called, getDiscoveredWallets should return the wallets
       mockSDK.getDiscoveredWallets.mockReturnValue(discoveredWallets);
-      return discoveredWallets;
+      return Promise.resolve(discoveredWallets);
     });
 
     const { result } = renderHook(() => useDiscoveredWallets(), {

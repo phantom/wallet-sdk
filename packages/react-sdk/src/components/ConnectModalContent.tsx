@@ -234,12 +234,24 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
   };
 
   const getChainLetter = (addressType: AddressType): string => {
-    const type = addressType.toLowerCase();
-    if (type.includes("ethereum") || type.includes("evm")) return "E";
-    if (type.includes("solana")) return "S";
-    if (type.includes("bitcoin")) return "B";
-    if (type.includes("sui")) return "U";
     return addressType.charAt(0).toUpperCase();
+  };
+
+  const isSolana = (addressType: AddressType): boolean => {
+    return addressType.toLowerCase().includes("solana");
+  };
+
+  const isEthereum = (addressType: AddressType): boolean => {
+    const type = addressType.toLowerCase();
+    return type.includes("ethereum") || type.includes("evm");
+  };
+
+  const isBitcoin = (addressType: AddressType): boolean => {
+    return addressType.toLowerCase().includes("bitcoin");
+  };
+
+  const isSui = (addressType: AddressType): boolean => {
+    return addressType.toLowerCase().includes("sui");
   };
 
   const walletButtonRightStyle: CSSProperties = {
@@ -321,7 +333,17 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
                         <span style={chainIndicatorsStyle}>
                           {wallet.addressTypes.map((addressType, index) => (
                             <span key={index} style={chainIndicatorStyle} title={addressType}>
-                              {getChainLetter(addressType)}
+                              {isSolana(addressType) ? (
+                                <Icon type="solana" size={8} color={theme.text} />
+                              ) : isEthereum(addressType) ? (
+                                <Icon type="ethereum" size={8} color={theme.text} />
+                              ) : isBitcoin(addressType) ? (
+                                <Icon type="bitcoin" size={8} color={theme.text} />
+                              ) : isSui(addressType) ? (
+                                <Icon type="sui" size={8} color={theme.text} />
+                              ) : (
+                                getChainLetter(addressType)
+                              )}
                             </span>
                           ))}
                         </span>
@@ -441,7 +463,15 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
                             <span style={chainIndicatorsStyle}>
                               {wallet.addressTypes.map((addressType, index) => (
                                 <span key={index} style={chainIndicatorStyle} title={addressType}>
-                                  {getChainLetter(addressType)}
+                                  {isSolana(addressType) ? (
+                                    <Icon type="solana" size={8} color={theme.text} />
+                                  ) : isEthereum(addressType) ? (
+                                    <Icon type="ethereum" size={8} color={theme.text} />
+                                  ) : isBitcoin(addressType) ? (
+                                    <Icon type="bitcoin" size={8} color={theme.text} />
+                                  ) : (
+                                    getChainLetter(addressType)
+                                  )}
                                 </span>
                               ))}
                             </span>
