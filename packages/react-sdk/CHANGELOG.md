@@ -1,5 +1,16 @@
 # @phantom/react-sdk
 
+## 1.0.0-beta.23
+
+### Patch Changes
+
+- 16319b0: Modal released, included first version of wallet discovery.
+- Updated dependencies [16319b0]
+  - @phantom/browser-sdk@1.0.0-beta.23
+  - @phantom/chain-interfaces@1.0.0-beta.11
+  - @phantom/constants@1.0.0-beta.11
+  - @phantom/wallet-sdk-ui@1.0.0-beta.2
+
 ## 1.0.0-beta.22
 
 ### Patch Changes

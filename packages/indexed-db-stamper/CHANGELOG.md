@@ -1,5 +1,16 @@
 # @phantom/indexed-db-stamper
 
+## 1.0.0-beta.4
+
+### Patch Changes
+
+- 16319b0: Modal released, included first version of wallet discovery.
+- Updated dependencies [16319b0]
+  - @phantom/base64url@1.0.0-beta.11
+  - @phantom/crypto@1.0.0-beta.11
+  - @phantom/embedded-provider-core@1.0.0-beta.23
+  - @phantom/sdk-types@1.0.0-beta.11
+
 ## 1.0.0-beta.3
 
 ### Patch Changes

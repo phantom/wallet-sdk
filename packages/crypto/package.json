@@ -1,6 +1,6 @@
 {
   "name": "@phantom/crypto",
-  "version": "1.0.0-beta.10",
+  "version": "1.0.0-beta.11",
   "description": "Cryptographic utilities for Phantom SDK",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

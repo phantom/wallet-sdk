@@ -1,5 +1,20 @@
 # @phantom/embedded-provider-core
 
+## 1.0.0-beta.23
+
+### Patch Changes
+
+- 16319b0: Modal released, included first version of wallet discovery.
+- Updated dependencies [16319b0]
+  - @phantom/api-key-stamper@1.0.0-beta.11
+  - @phantom/base64url@1.0.0-beta.11
+  - @phantom/chain-interfaces@1.0.0-beta.11
+  - @phantom/client@1.0.0-beta.23
+  - @phantom/constants@1.0.0-beta.11
+  - @phantom/parsers@1.0.0-beta.11
+  - @phantom/sdk-types@1.0.0-beta.11
+  - @phantom/utils@1.0.0-beta.23
+
 ## 1.0.0-beta.22
 
 ### Patch Changes

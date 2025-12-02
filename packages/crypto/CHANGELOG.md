@@ -1,5 +1,11 @@
 # @phantom/crypto
 
+## 1.0.0-beta.11
+
+### Patch Changes
+
+- 16319b0: Modal released, included first version of wallet discovery.
+
 ## 1.0.0-beta.10
 
 ### Patch Changes
