@@ -35,8 +35,8 @@
   "author": "Phantom",
   "repository": {
     "type": "git",
-    "url": "https://github.com/phantom/wallet-sdk.git",
-    "directory": "packages/chains"
+    "url": "https://github.com/phantom/phantom-connect-sdk",
+    "directory": "packages/chain-interfaces"
   },
   "dependencies": {
     "@phantom/constants": "workspace:^",

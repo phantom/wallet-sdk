@@ -41,7 +41,7 @@
   "author": "Phantom",
   "repository": {
     "type": "git",
-    "url": "https://github.com/phantom/wallet-sdk.git",
+    "url": "https://github.com/phantom/phantom-connect-sdk",
     "directory": "packages/react-native-sdk"
   },
   "dependencies": {
