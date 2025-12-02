@@ -121,6 +121,8 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
     alignItems: "center",
     gap: "12px",
     padding: "0 32px 24px 32px",
+    maxHeight: "480px",
+    overflowY: "auto" as const,
   };
 
   const dividerStyle: CSSProperties = {
