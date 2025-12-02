@@ -121,6 +121,8 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
     flexDirection: "column" as const,
     alignItems: "center",
     gap: "12px",
+    maxHeight: "480px",
+    overflowY: "auto" as const,
     padding: "0 32px 32px 32px",
     transition: "opacity 0.15s ease-in-out, transform 0.15s ease-in-out",
   };
