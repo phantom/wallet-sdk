@@ -1,5 +1,11 @@
 # @phantom/wallet-sdk
 
+## 0.1.3-beta.1
+
+### Patch Changes
+
+- fcebdff: adding new provenance info
+
 ## 0.1.3-beta.0
 
 ### Patch Changes

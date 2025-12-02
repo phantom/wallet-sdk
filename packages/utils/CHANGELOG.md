@@ -1,5 +1,12 @@
 # @phantom/utils
 
+## 1.0.0-beta.24
+
+### Patch Changes
+
+- d4e0097: Modal with release fixed
+- fcebdff: adding new provenance info
+
 ## 1.0.0-beta.23
 
 ### Patch Changes

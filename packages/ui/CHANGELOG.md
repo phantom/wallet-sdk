@@ -1,5 +1,12 @@
 # @phantom/wallet-sdk-ui
 
+## 1.0.0-beta.3
+
+### Patch Changes
+
+- d4e0097: Modal with release fixed
+- fcebdff: adding new provenance info
+
 ## 1.0.0-beta.2
 
 ### Patch Changes
