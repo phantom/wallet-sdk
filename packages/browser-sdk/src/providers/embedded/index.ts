@@ -12,7 +12,7 @@ import { debug, DebugCategory } from "../../debug";
 import { detectBrowser, getPlatformName } from "../../utils/browser-detection";
 import type { Provider } from "../../types";
 import { ANALYTICS_HEADERS } from "@phantom/constants";
-import { AddressType } from "@phantom/client";
+import type { AddressType } from "@phantom/client";
 
 export class EmbeddedProvider extends CoreEmbeddedProvider implements Provider {
   private addressTypes: AddressType[];
