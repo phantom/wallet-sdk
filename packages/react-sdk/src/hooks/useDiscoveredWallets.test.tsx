@@ -145,7 +145,6 @@ describe("useDiscoveredWallets", () => {
 
   it("should set loading state during fetch and use discoverWallets when no wallets found", async () => {
     // Mock to return empty initially, then discoverWallets returns wallets
-    mockSDK.getDiscoveredWallets.mockReturnValue([]);
     const discoveredWallets = [
       {
         id: "test-wallet",
@@ -153,7 +152,12 @@ describe("useDiscoveredWallets", () => {
         addressTypes: [AddressType.solana],
       },
     ];
-    mockSDK.discoverWallets.mockResolvedValue(discoveredWallets);
+    mockSDK.getDiscoveredWallets.mockReturnValue([]);
+    mockSDK.discoverWallets.mockImplementation(() => {
+      // After discoverWallets is called, getDiscoveredWallets should return the wallets
+      mockSDK.getDiscoveredWallets.mockReturnValue(discoveredWallets);
+      return Promise.resolve(discoveredWallets);
+    });
 
     const { result } = renderHook(() => useDiscoveredWallets(), {
       wrapper: createWrapper(),

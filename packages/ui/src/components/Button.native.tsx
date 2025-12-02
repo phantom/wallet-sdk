@@ -88,7 +88,7 @@ export interface LoginWithPhantomButtonProps {
 }
 
 export function LoginWithPhantomButton({
-  children = "Login with Phantom",
+  children = "Continue with Phantom",
   onClick,
   disabled = false,
   fullWidth = true,
@@ -120,8 +120,7 @@ export function LoginWithPhantomButton({
     opacity: disabled || isLoading ? 0.6 : 1,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
+    justifyContent: "space-between",
   };
 
   return (
@@ -139,6 +138,7 @@ export function LoginWithPhantomButton({
           {isLoading ? "Connecting..." : children}
         </Text>
       </View>
+      <Icon type="chevron-right" size={16} color="#FFFFFF" />
     </TouchableOpacity>
   );
 }

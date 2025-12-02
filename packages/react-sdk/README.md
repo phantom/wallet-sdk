@@ -601,7 +601,12 @@ import { useSolana } from "@phantom/react-sdk";
 import { VersionedTransaction, TransactionMessage, SystemProgram, PublicKey, Connection } from "@solana/web3.js";
 
 function SolanaOperations() {
-  const { solana } = useSolana();
+  const { solana, isAvailable } = useSolana();
+
+  // Check if Solana is available before using it
+  if (!isAvailable) {
+    return <div>Solana is not available for the current wallet</div>;
+  }
 
   const signMessage = async () => {
     const signature = await solana.signMessage("Hello Solana!");
@@ -656,7 +661,19 @@ function SolanaOperations() {
 - `switchNetwork(network)` - Switch between mainnet/devnet
 - `getPublicKey()` - Get current public key
 - `isConnected` - Connection status
-- `isAvailable` - Provider availability
+- `isAvailable` - Provider availability (see note below)
+
+**Note on `isAvailable`:**
+
+The `isAvailable` property indicates whether the Solana chain is available for the currently connected wallet:
+
+- **For embedded wallets** (Google, Apple, Phantom Login, etc.): `isAvailable` will be `true` for all networks configured in your `addressTypes` array, as embedded wallets support all configured networks.
+
+- **For Phantom injected wallet**: `isAvailable` will be `true` for all networks configured in your `addressTypes` array, as Phantom supports multiple networks.
+
+- **For other injected wallets** (discovered via Wallet Standard or EIP-6963): `isAvailable` depends on which networks the specific wallet supports. For example, if you connect to a wallet that only supports Ethereum, `isAvailable` will be `false` for Solana even if Solana is in your `addressTypes` configuration.
+
+Always check `isAvailable` before attempting to use chain-specific methods when working with injected wallets that may not support all networks.
 
 #### useEthereum
 
@@ -666,7 +683,12 @@ Hook for Ethereum chain operations:
 import { useEthereum } from "@phantom/react-sdk";
 
 function EthereumOperations() {
-  const { ethereum } = useEthereum();
+  const { ethereum, isAvailable } = useEthereum();
+
+  // Check if Ethereum is available before using it
+  if (!isAvailable) {
+    return <div>Ethereum is not available for the current wallet</div>;
+  }
 
   const signPersonalMessage = async () => {
     const accounts = await ethereum.getAccounts();
@@ -755,7 +777,19 @@ function EthereumOperations() {
 - `getChainId()` - Get current chain ID
 - `getAccounts()` - Get connected accounts
 - `isConnected` - Connection status
-- `isAvailable` - Provider availability
+- `isAvailable` - Provider availability (see note below)
+
+**Note on `isAvailable`:**
+
+The `isAvailable` property indicates whether the Ethereum chain is available for the currently connected wallet:
+
+- **For embedded wallets** (Google, Apple, Phantom Login, etc.): `isAvailable` will be `true` for all networks configured in your `addressTypes` array, as embedded wallets support all configured networks.
+
+- **For Phantom injected wallet**: `isAvailable` will be `true` for all networks configured in your `addressTypes` array, as Phantom supports multiple networks.
+
+- **For other injected wallets** (discovered via Wallet Standard or EIP-6963): `isAvailable` depends on which networks the specific wallet supports. For example, if you connect to a wallet that only supports Solana, `isAvailable` will be `false` for Ethereum even if Ethereum is in your `addressTypes` configuration.
+
+Always check `isAvailable` before attempting to use chain-specific methods when working with injected wallets that may not support all networks.
 
 **Supported EVM Networks:**
 

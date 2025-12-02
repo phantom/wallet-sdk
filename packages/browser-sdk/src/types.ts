@@ -54,6 +54,7 @@ type AuthOptions = {
 
 type ConnectResult = Omit<EmbeddedConnectResult, "authProvider"> & {
   authProvider?: AuthProviderType | undefined;
+  walletId?: string | undefined;
 };
 
 // Re-export types from core for convenience
@@ -79,6 +80,7 @@ export interface Provider {
   getAddresses(): WalletAddress[];
   isConnected(): boolean;
   autoConnect(): Promise<void>;
+  getEnabledAddressTypes(): AddressType[];
 
   // Chain access - providers expose their chains directly
   solana: ISolanaChain;

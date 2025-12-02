@@ -50,7 +50,8 @@ describe("discoverEthereumWallets", () => {
 
     // Simulate wallet announcements
     if (announceHandler) {
-      announceHandler({
+      const handler = announceHandler as (event: CustomEvent) => void;
+      handler({
         detail: {
           info: {
             uuid: "test-uuid-1",
@@ -62,7 +63,7 @@ describe("discoverEthereumWallets", () => {
         },
       } as CustomEvent);
 
-      announceHandler({
+      handler({
         detail: {
           info: {
             uuid: "test-uuid-2",
@@ -90,14 +91,83 @@ describe("discoverEthereumWallets", () => {
       icon: "https://metamask.io/icon.png",
       addressTypes: [AddressType.ethereum],
     });
+    expect(result[0].providers?.ethereum).toBeDefined();
     expect(result[1]).toMatchObject({
       id: "wallet-coinbase-com",
       name: "Coinbase Wallet",
       icon: "https://coinbase.com/icon.png",
       addressTypes: [AddressType.ethereum],
     });
+    expect(result[1].providers?.ethereum).toBeDefined();
 
     expect(window.removeEventListener).toHaveBeenCalled();
+  });
+
+  it("should skip Phantom wallets from EIP-6963 discovery", async () => {
+    jest.useRealTimers();
+
+    let announceHandler: ((event: CustomEvent) => void) | null = null;
+
+    (window.addEventListener as jest.Mock).mockImplementation((event: string, handler: any) => {
+      if (event === "eip6963:announceProvider") {
+        announceHandler = handler;
+      }
+    });
+
+    const promise = discoverEthereumWallets();
+
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    if (announceHandler) {
+      const handler = announceHandler as (event: CustomEvent) => void;
+      // Simulate Phantom announcement
+      handler({
+        detail: {
+          info: {
+            uuid: "phantom-uuid",
+            name: "Phantom",
+            icon: "https://phantom.app/icon.png",
+            rdns: "app.phantom",
+          },
+          provider: {},
+        },
+      } as CustomEvent);
+
+      // Also test with name variation
+      handler({
+        detail: {
+          info: {
+            uuid: "phantom-uuid-2",
+            name: "Phantom Wallet",
+            icon: "https://phantom.app/icon.png",
+            rdns: "com.phantom",
+          },
+          provider: {},
+        },
+      } as CustomEvent);
+
+      // Add a non-Phantom wallet to ensure it's still discovered
+      handler({
+        detail: {
+          info: {
+            uuid: "metamask-uuid",
+            name: "MetaMask",
+            icon: "https://metamask.io/icon.png",
+            rdns: "io.metamask",
+          },
+          provider: {},
+        },
+      } as CustomEvent);
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 400));
+
+    const result = await promise;
+
+    // Should only have MetaMask, not Phantom
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe("MetaMask");
+    expect(result[0].id).toBe("metamask-io");
   });
 
   it("should use wallet name as ID when rdns is not available", async () => {
@@ -111,7 +181,8 @@ describe("discoverEthereumWallets", () => {
         // Call handler in next tick to simulate wallet announcement
         setTimeout(() => {
           if (announceHandler) {
-            announceHandler({
+            const handler = announceHandler as (event: CustomEvent) => void;
+            handler({
               detail: {
                 info: {
                   uuid: "test-uuid",
@@ -179,7 +250,9 @@ describe("discoverSolanaWallets", () => {
 
     // @ts-ignore
     navigator.wallets = {
-      getWallets: jest.fn().mockResolvedValue(mockWallets),
+      getWallets: jest.fn().mockReturnValue({
+        get: () => mockWallets,
+      }),
     };
 
     const wallets = await discoverSolanaWallets();
@@ -192,12 +265,14 @@ describe("discoverSolanaWallets", () => {
       icon: "https://backpack.app/icon.png",
       addressTypes: [AddressType.solana],
     });
+    expect(wallets[0].providers?.solana).toBeDefined();
     expect(wallets[1]).toMatchObject({
       id: "solflare",
       name: "Solflare",
       icon: "https://solflare.com/icon.png",
       addressTypes: [AddressType.solana],
     });
+    expect(wallets[1].providers?.solana).toBeDefined();
   });
 
   it("should skip wallets that don't support Solana chains", async () => {
@@ -222,7 +297,9 @@ describe("discoverSolanaWallets", () => {
 
     // @ts-ignore
     navigator.wallets = {
-      getWallets: jest.fn().mockResolvedValue(mockWallets),
+      getWallets: jest.fn().mockReturnValue({
+        get: () => mockWallets,
+      }),
     };
 
     const wallets = await discoverSolanaWallets();
@@ -253,7 +330,9 @@ describe("discoverSolanaWallets", () => {
 
     // @ts-ignore
     navigator.wallets = {
-      getWallets: jest.fn().mockResolvedValue(mockWallets),
+      getWallets: jest.fn().mockReturnValue({
+        get: () => mockWallets,
+      }),
     };
 
     const wallets = await discoverSolanaWallets();
@@ -276,7 +355,9 @@ describe("discoverSolanaWallets", () => {
 
     // @ts-ignore
     navigator.wallets = {
-      getWallets: jest.fn().mockResolvedValue(mockWallets),
+      getWallets: jest.fn().mockReturnValue({
+        get: () => mockWallets,
+      }),
     };
 
     const wallets = await discoverSolanaWallets();
@@ -288,7 +369,11 @@ describe("discoverSolanaWallets", () => {
   it("should handle errors gracefully when getWallets fails", async () => {
     // @ts-ignore
     navigator.wallets = {
-      getWallets: jest.fn().mockRejectedValue(new Error("API not available")),
+      getWallets: jest.fn().mockReturnValue({
+        get: () => {
+          throw new Error("API not available");
+        },
+      }),
     };
 
     const wallets = await discoverSolanaWallets();
@@ -308,7 +393,7 @@ describe("discoverSolanaWallets", () => {
   it("should return empty array when getWallets is not a function", async () => {
     // @ts-ignore
     navigator.wallets = {
-      getWallets: "not a function",
+      getWallets: "not a function" as any,
     };
 
     const wallets = await discoverSolanaWallets();
@@ -324,16 +409,18 @@ describe("discoverWallets", () => {
     // Setup Wallet Standard
     // @ts-ignore
     navigator.wallets = {
-      getWallets: jest.fn().mockResolvedValue([
-        {
-          name: "Backpack",
-          icon: "https://backpack.app/icon.png",
-          version: "1.0.0",
-          chains: ["solana:mainnet"],
-          features: ["standard:connect"],
-          accounts: [],
-        },
-      ]),
+      getWallets: jest.fn().mockReturnValue({
+        get: () => [
+          {
+            name: "Backpack",
+            icon: "https://backpack.app/icon.png",
+            version: "1.0.0",
+            chains: ["solana:mainnet"],
+            features: ["standard:connect"],
+            accounts: [],
+          },
+        ],
+      }),
     };
 
     // Setup EIP-6963 - capture handler when it's registered
@@ -345,7 +432,8 @@ describe("discoverWallets", () => {
         // Call handler immediately after it's registered to simulate wallet announcement
         setTimeout(() => {
           if (announceHandler) {
-            announceHandler({
+            const handler = announceHandler as (event: CustomEvent) => void;
+            handler({
               detail: {
                 info: {
                   uuid: "test-uuid",
@@ -380,16 +468,18 @@ describe("discoverWallets", () => {
     // Setup Wallet Standard with a wallet that supports Solana
     // @ts-ignore
     navigator.wallets = {
-      getWallets: jest.fn().mockResolvedValue([
-        {
-          name: "Multi Chain Wallet",
-          icon: "https://example.com/icon.png",
-          version: "1.0.0",
-          chains: ["solana:mainnet"],
-          features: ["standard:connect"],
-          accounts: [],
-        },
-      ]),
+      getWallets: jest.fn().mockReturnValue({
+        get: () => [
+          {
+            name: "Multi Chain Wallet",
+            icon: "https://example.com/icon.png",
+            version: "1.0.0",
+            chains: ["solana:mainnet"],
+            features: ["standard:connect"],
+            accounts: [],
+          },
+        ],
+      }),
     };
 
     // Setup EIP-6963 with the same wallet (different ID but same name)
@@ -400,7 +490,8 @@ describe("discoverWallets", () => {
         announceHandler = handler;
         setTimeout(() => {
           if (announceHandler) {
-            announceHandler({
+            const handler = announceHandler as (event: CustomEvent) => void;
+            handler({
               detail: {
                 info: {
                   uuid: "test-uuid",
@@ -433,16 +524,18 @@ describe("discoverWallets", () => {
     // Setup Wallet Standard
     // @ts-ignore
     navigator.wallets = {
-      getWallets: jest.fn().mockResolvedValue([
-        {
-          name: "Test Wallet",
-          icon: "https://example.com/icon1.png",
-          version: "1.0.0",
-          chains: ["solana:mainnet"],
-          features: ["standard:connect"],
-          accounts: [],
-        },
-      ]),
+      getWallets: jest.fn().mockReturnValue({
+        get: () => [
+          {
+            name: "Test Wallet",
+            icon: "https://example.com/icon1.png",
+            version: "1.0.0",
+            chains: ["solana:mainnet"],
+            features: ["standard:connect"],
+            accounts: [],
+          },
+        ],
+      }),
     };
 
     // Setup EIP-6963 with wallet that will have same ID
@@ -453,7 +546,8 @@ describe("discoverWallets", () => {
         announceHandler = handler;
         setTimeout(() => {
           if (announceHandler) {
-            announceHandler({
+            const handler = announceHandler as (event: CustomEvent) => void;
+            handler({
               detail: {
                 info: {
                   uuid: "test-uuid",
