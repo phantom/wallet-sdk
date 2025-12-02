@@ -70,7 +70,6 @@ export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
   const contentWrapperStyle: CSSProperties = {
     display: "flex",
     flexDirection: "column",
-    alignItems: "center",
     gap: "24px",
   };
 

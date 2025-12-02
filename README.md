@@ -1,46 +1,11 @@
-# Phantom Wallet SDK
+# Phantom Connect SDK
 
-A comprehensive suite of SDKs for integrating Phantom Wallet across different platforms and use cases, supporting both Phantom browser extension and embedded non-custodial wallets.
+A comprehensive suite of SDKs for integrating Phantom Connect across different platforms and use cases.
 
-### Frontend SDK Options:
+## Getting Started
 
-- **[React SDK](./packages/react-sdk/README.md)** - React hooks and components
-- **[Browser SDK](./packages/browser-sdk/README.md)** - Vanilla JavaScript/TypeScript
-- **[React Native SDK](./packages/react-native-sdk/README.md)** - Mobile app integration
-
-### ⚠️ Deprecated Packages
-
-- **[@phantom/wallet-sdk](./packages/browser-embedded-sdk/README.md)** - ⚠️ **DEPRECATED** - Use [@phantom/browser-sdk](./packages/browser-sdk/README.md) or [@phantom/react-sdk](./packages/react-sdk/README.md) instead ([NPM](https://www.npmjs.com/package/@phantom/wallet-sdk))
-
-## Authentication Providers
-
-All frontend SDKs support multiple authentication providers that you can configure via the `providers` array:
-
-### 🔌 Injected Provider - `"injected"`
-
-Connect to the user's existing Phantom browser extension wallet:
-
-- Uses wallets already installed and funded by the user
-- Requires Phantom browser extension to be installed
-- Access to user's existing wallet history and assets
-- No `appId` required
-
-### 🔮 Embedded Providers (Non-Custodial)
-
-Create or use non-custodial embedded wallets within your application:
-
-- **`"google"`** - Google OAuth authentication
-- **`"apple"`** - Apple ID authentication
-- **`"phantom"`** - Phantom Login authentication
-- **`"x"`** - X (Twitter) authentication
-- **`"tiktok"`** - TikTok authentication
-
-Embedded providers create:
-
-- **App Wallet**: Fresh wallet created per application (unfunded, app-specific)
-- **User Wallet**: User's Phantom wallet accessed via authentication (potentially funded, portable across apps)
-
-All embedded providers require an `appId` from [phantom.com/portal](https://phantom.com/portal)
+- Create your app in [Phantom Portal](https://docs.phantom.com/phantom-portal/portal) and obtain your `appId`.
+- Choose one of our SDKs: React, React Native, Browser, Server.
 
 ## SDK Overview
 
@@ -69,7 +34,6 @@ import {
     addressTypes: [AddressType.solana, AddressType.ethereum],
     appId: "your-app-id", // Required when using embedded providers (google, apple, phantom, etc.)
     // Optional:
-    // embeddedWalletType: "user-wallet", // or "app-wallet"
     // apiBaseUrl: "https://api.phantom.app/v1/wallets",
   }}
   theme={darkTheme} // or lightTheme, or custom theme
@@ -82,8 +46,6 @@ import {
 // Simple connection with ConnectButton component
 function WalletComponent() {
   const { isConnected, addresses } = usePhantom();
-  const { solana } = useSolana();
-  const { ethereum } = useEthereum();
 
   // ConnectButton handles the entire connection flow with built-in modal
   return (
@@ -106,8 +68,8 @@ function WalletComponent() {
 
 // Advanced usage with chain-specific operations
 function AdvancedComponent() {
-  const { solana } = useSolana();
-  const { ethereum } = useEthereum();
+  const { solana, isAvailable: isSolanaAvailable } = useSolana();
+  const { ethereum, isAvailable: isEthereumAvailable } = useEthereum();
 
   const signMessages = async () => {
     const solanaSignature = await solana.signMessage("Hello Solana!");
@@ -126,21 +88,11 @@ function AdvancedComponent() {
 ```typescript
 import { BrowserSDK, AddressType } from "@phantom/browser-sdk";
 
-// Injected Provider Only (Browser Extension)
 const sdk = new BrowserSDK({
-  providers: ["injected"], // Only allow browser extension
+  providers: ["injected", "google"],
   addressTypes: [AddressType.solana, AddressType.ethereum],
+  appId: "your-app-id",
 });
-
-// Multiple Providers (Browser Extension + Embedded Auth)
-// const sdk = new BrowserSDK({
-//   providers: ["google", "apple", "phantom", "injected"], // Allow all auth methods
-//   addressTypes: [AddressType.solana, AddressType.ethereum],
-//   appId: "your-app-id", // Required when using embedded providers
-//   // Optional:
-//   // embeddedWalletType: "user-wallet",
-//   // apiBaseUrl: "https://api.phantom.app/v1/wallets",
-// });
 
 // Connect through SDK (provider parameter is required)
 const { addresses } = await sdk.connect({ provider: "injected" });
@@ -341,24 +293,19 @@ Phantom SDKs support multiple blockchain networks across Solana and EVM chains.
 
 ### Supported Blockchains
 
+Currently our libraries only fully support Solana.
+
 **Solana**: Mainnet, Devnet, Testnet
 
-**EVM Chains**:
+**Coming Soon**:
 
 - Ethereum (Mainnet, Sepolia)
 - Polygon (Mainnet, Amoy)
 - Base (Mainnet, Sepolia)
 - Arbitrum (One, Sepolia)
 - Monad (Mainnet, Testnet)
-
-**Coming Soon**: Bitcoin, Sui
-
-### Network Configuration
-
-Different SDKs use different network identifiers:
-
-- **[@phantom/server-sdk](./packages/server-sdk/README.md#network-support)** - Uses `NetworkId` enum for backend operations
-- **[@phantom/browser-sdk](./packages/browser-sdk/README.md)** and **[@phantom/react-sdk](./packages/react-sdk/README.md)** - Use chain IDs (numbers) for network switching
+- Bitcoin
+- Sui
 
 ## Give Feedback
 
