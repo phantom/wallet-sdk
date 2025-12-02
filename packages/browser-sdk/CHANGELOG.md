@@ -1,5 +1,21 @@
 # @phantom/browser-sdk
 
+## 1.0.0-beta.24
+
+### Patch Changes
+
+- d4e0097: Modal with release fixed
+- Updated dependencies [d4e0097]
+  - @phantom/base64url@1.0.0-beta.12
+  - @phantom/browser-injected-sdk@1.0.0-beta.9
+  - @phantom/chain-interfaces@1.0.0-beta.12
+  - @phantom/client@1.0.0-beta.24
+  - @phantom/constants@1.0.0-beta.12
+  - @phantom/embedded-provider-core@1.0.0-beta.24
+  - @phantom/indexed-db-stamper@1.0.0-beta.5
+  - @phantom/parsers@1.0.0-beta.12
+  - @phantom/sdk-types@1.0.0-beta.12
+
 ## 1.0.0-beta.23
 
 ### Patch Changes

@@ -1,5 +1,18 @@
 # @phantom/server-sdk
 
+## 1.0.0-beta.24
+
+### Patch Changes
+
+- d4e0097: Modal with release fixed
+- Updated dependencies [d4e0097]
+  - @phantom/api-key-stamper@1.0.0-beta.12
+  - @phantom/base64url@1.0.0-beta.12
+  - @phantom/client@1.0.0-beta.24
+  - @phantom/constants@1.0.0-beta.12
+  - @phantom/parsers@1.0.0-beta.12
+  - @phantom/utils@1.0.0-beta.24
+
 ## 1.0.0-beta.23
 
 ### Patch Changes

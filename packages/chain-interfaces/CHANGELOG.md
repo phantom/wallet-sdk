@@ -1,5 +1,15 @@
 # @phantom/chain-interfaces
 
+## 1.0.0-beta.12
+
+### Patch Changes
+
+- d4e0097: Modal with release fixed
+- Updated dependencies [d4e0097]
+  - @phantom/constants@1.0.0-beta.12
+  - @phantom/parsers@1.0.0-beta.12
+  - @phantom/sdk-types@1.0.0-beta.12
+
 ## 1.0.0-beta.11
 
 ### Patch Changes

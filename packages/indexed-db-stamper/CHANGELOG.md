@@ -1,5 +1,16 @@
 # @phantom/indexed-db-stamper
 
+## 1.0.0-beta.5
+
+### Patch Changes
+
+- d4e0097: Modal with release fixed
+- Updated dependencies [d4e0097]
+  - @phantom/base64url@1.0.0-beta.12
+  - @phantom/crypto@1.0.0-beta.12
+  - @phantom/embedded-provider-core@1.0.0-beta.24
+  - @phantom/sdk-types@1.0.0-beta.12
+
 ## 1.0.0-beta.4
 
 ### Patch Changes

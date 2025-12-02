@@ -1,5 +1,11 @@
 # @phantom/sdk-types
 
+## 1.0.0-beta.12
+
+### Patch Changes
+
+- d4e0097: Modal with release fixed
+
 ## 1.0.0-beta.11
 
 ### Patch Changes

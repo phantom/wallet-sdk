@@ -1,5 +1,16 @@
 # @phantom/react-sdk
 
+## 1.0.0-beta.24
+
+### Patch Changes
+
+- d4e0097: Modal with release fixed
+- Updated dependencies [d4e0097]
+  - @phantom/browser-sdk@1.0.0-beta.24
+  - @phantom/chain-interfaces@1.0.0-beta.12
+  - @phantom/constants@1.0.0-beta.12
+  - @phantom/wallet-sdk-ui@1.0.0-beta.3
+
 ## 1.0.0-beta.23
 
 ### Patch Changes
