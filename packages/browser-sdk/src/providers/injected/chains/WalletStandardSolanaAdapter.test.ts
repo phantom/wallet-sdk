@@ -1,24 +1,5 @@
 import { WalletStandardSolanaAdapter } from "./WalletStandardSolanaAdapter";
 import type { Transaction } from "@phantom/sdk-types";
-import * as parsers from "@phantom/parsers";
-
-// Mock deserializeSolanaTransaction to avoid needing valid transaction bytes in tests
-jest.mock("@phantom/parsers", () => {
-  const actual = jest.requireActual("@phantom/parsers");
-  return {
-    ...actual,
-    deserializeSolanaTransaction: jest.fn((bytes: Uint8Array) => {
-      // Return a mock transaction object that has the expected interface
-      const mockTx = {
-        serialize: jest.fn().mockReturnValue(bytes),
-        version: 0,
-        message: {},
-        signatures: [],
-      };
-      return mockTx as Transaction;
-    }),
-  };
-});
 
 describe("WalletStandardSolanaAdapter", () => {
   let mockWallet: any;
@@ -352,18 +333,6 @@ describe("WalletStandardSolanaAdapter", () => {
     });
 
     it("should sign transaction using solana:signTransaction feature", async () => {
-      // Ensure the mock is set up correctly
-      const deserializeMock = parsers.deserializeSolanaTransaction as jest.Mock;
-      deserializeMock.mockImplementation((bytes: Uint8Array) => {
-        const mockTx = {
-          serialize: jest.fn().mockReturnValue(bytes),
-          version: 0,
-          message: {},
-          signatures: [],
-        };
-        return mockTx as Transaction;
-      });
-
       const result = await adapter.signTransaction(mockTransaction);
 
       expect(mockWallet.features["solana:signTransaction"].signTransaction).toHaveBeenCalledWith({

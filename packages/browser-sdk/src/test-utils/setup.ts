@@ -25,6 +25,25 @@ jest.mock("jose", () => ({
   },
 }));
 
+// Mock @phantom/parsers to avoid needing @solana/web3.js in tests
+// This mocks deserializeSolanaTransaction which requires @solana/web3.js
+jest.mock("@phantom/parsers", () => {
+  const actual = jest.requireActual("@phantom/parsers");
+  return {
+    ...actual,
+    deserializeSolanaTransaction: jest.fn((bytes: Uint8Array) => {
+      // Return a mock transaction object that has the expected interface
+      const mockTx = {
+        serialize: jest.fn().mockReturnValue(bytes),
+        version: 0,
+        message: {},
+        signatures: [],
+      };
+      return mockTx;
+    }),
+  };
+});
+
 // Add fetch polyfill for testing
 (globalThis as any).fetch = jest.fn();
 
