@@ -138,7 +138,6 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
     if (!isClient || !sdk) return;
 
     const initialize = async () => {
-      // Attempt auto-connect (it handles extension detection internally)
       try {
         await sdk.autoConnect();
       } catch (error) {

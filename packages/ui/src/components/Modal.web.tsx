@@ -1,4 +1,4 @@
-import { type CSSProperties, type ReactNode } from "react";
+import { type CSSProperties, type ReactNode, useRef, useEffect, useState } from "react";
 import { useTheme } from "../hooks/useTheme";
 
 export interface ModalProps {
@@ -19,6 +19,36 @@ export function Modal({
   children,
 }: ModalProps) {
   const theme = useTheme();
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [contentHeight, setContentHeight] = useState<number | "auto">("auto");
+
+  useEffect(() => {
+    if (!isVisible || !contentRef.current) return;
+
+    // Measure content height
+    const measureHeight = () => {
+      if (contentRef.current) {
+        const height = contentRef.current.scrollHeight;
+        setContentHeight(height);
+      }
+    };
+
+    // Measure on mount and when children change
+    measureHeight();
+
+    // Use ResizeObserver to detect content size changes
+    const resizeObserver = new ResizeObserver(() => {
+      measureHeight();
+    });
+
+    if (contentRef.current) {
+      resizeObserver.observe(contentRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [isVisible, children]);
 
   if (!isVisible) return null;
 
@@ -45,12 +75,27 @@ export function Modal({
     boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
     position: "relative" as const,
     overflow: "hidden",
+    transition: "max-width 0.1s ease-in-out",
+  };
+
+  const modalContentWrapperStyle: CSSProperties = {
+    height: typeof contentHeight === "number" ? `${contentHeight}px` : "auto",
+    transition: "height 0.15s ease-in-out",
+    overflow: "hidden",
+  };
+
+  const modalContentStyle: CSSProperties = {
+    transition: "opacity 0.15s ease-in-out",
   };
 
   return (
     <div style={overlayStyle} onClick={onClose}>
       <div style={modalStyle} onClick={e => e.stopPropagation()}>
-        {children}
+        <div style={modalContentWrapperStyle}>
+          <div ref={contentRef} style={modalContentStyle}>
+            {children}
+          </div>
+        </div>
       </div>
     </div>
   );

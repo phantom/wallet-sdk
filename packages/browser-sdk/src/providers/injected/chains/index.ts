@@ -1,3 +1,2 @@
-export { InjectedSolanaChain } from "./SolanaChain";
-export { InjectedEthereumChain } from "./EthereumChain";
-export type { ChainCallbacks } from "./ChainCallbacks";
+export { PhantomSolanaChain } from "./SolanaChain";
+export { PhantomEthereumChain } from "./EthereumChain";

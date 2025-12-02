@@ -32,8 +32,8 @@ import { useBalance } from "./hooks/useBalance";
 export function SDKActions() {
   const { connect, isConnecting, isLoading, error: connectError } = useConnect();
   const { disconnect, isDisconnecting } = useDisconnect();
-  const { solana } = useSolana();
-  const { ethereum } = useEthereum();
+  const { solana, isAvailable: isSolanaAvailable } = useSolana();
+  const { ethereum, isAvailable: isEthereumAvailable } = useEthereum();
   const { isConnected, user } = usePhantom();
   const autoConfirm = useAutoConfirm();
   const addresses = useAccounts();
@@ -89,8 +89,8 @@ export function SDKActions() {
 
   // Attempt to sign a Solana transaction with a program ID that is NOT in the allowlist
   const onSignDeniedProgramTransaction = async () => {
-    if (!isConnected || !solanaAddress) {
-      alert("Please connect your wallet first.");
+    if (!isConnected || !solanaAddress || !isSolanaAvailable) {
+      alert("Please connect your wallet first and ensure Solana is available.");
       return;
     }
     try {
@@ -159,6 +159,10 @@ export function SDKActions() {
     try {
       setIsSigningMessageType(type);
       if (type === "solana") {
+        if (!isSolanaAvailable) {
+          alert("Solana chain not available. The selected wallet does not support Solana.");
+          return;
+        }
         const result = await solana.signMessage("Hello from Phantom SDK!");
         if (!result) {
           alert("Solana chain not available");
@@ -166,6 +170,10 @@ export function SDKActions() {
         }
         alert(`Message Signed! Signature: ${bs58.encode(result.signature)}`);
       } else {
+        if (!isEthereumAvailable) {
+          alert("Ethereum chain not available. The selected wallet does not support Ethereum.");
+          return;
+        }
         const ethAddress = addresses.find(addr => addr.addressType === "Ethereum");
         if (!ethAddress) {
           alert("No Ethereum address found");
@@ -173,7 +181,7 @@ export function SDKActions() {
         }
         const message = "Hello from Phantom SDK!";
         const prefixedMessage = "0x" + Buffer.from(message, "utf8").toString("hex");
-        const result = await ethereum?.signPersonalMessage(prefixedMessage, ethAddress.address);
+        const result = await ethereum.signPersonalMessage(prefixedMessage, ethAddress.address);
         if (!result) {
           alert("Ethereum chain not available");
           return;
@@ -191,6 +199,11 @@ export function SDKActions() {
   const onSignTypedData = async () => {
     if (!isConnected || !addresses || addresses.length === 0) {
       alert("Please connect your wallet first.");
+      return;
+    }
+
+    if (!isEthereumAvailable) {
+      alert("Ethereum chain not available. The selected wallet does not support Ethereum.");
       return;
     }
 
@@ -242,7 +255,7 @@ export function SDKActions() {
         },
       };
 
-      const result = await ethereum?.signTypedData(typedData, ethAddress.address);
+      const result = await ethereum.signTypedData(typedData, ethAddress.address);
       if (!result) {
         alert("Ethereum chain not available");
         return;
@@ -264,6 +277,10 @@ export function SDKActions() {
     try {
       setIsSigningOnlyTransaction(type);
       if (type === "solana") {
+        if (!isSolanaAvailable) {
+          alert("Solana chain not available. The selected wallet does not support Solana.");
+          return;
+        }
         if (!solanaAddress) {
           alert("No Solana address found");
           return;
@@ -298,6 +315,10 @@ export function SDKActions() {
         alert(`Transaction signed! Signature: ${JSON.stringify(result)}`);
       } else {
         // Ethereum
+        if (!isEthereumAvailable) {
+          alert("Ethereum chain not available. The selected wallet does not support Ethereum.");
+          return;
+        }
         const ethAddress = addresses.find(addr => addr.addressType === "Ethereum");
         if (!ethAddress) {
           alert("No Ethereum address found");
@@ -314,7 +335,7 @@ export function SDKActions() {
           chainId: numberToHex(11155111), // Sepolia testnet
         };
 
-        const result = await ethereum?.signTransaction(transactionParams);
+        const result = await ethereum.signTransaction(transactionParams);
         if (!result) {
           alert("Ethereum chain not available");
           return;
@@ -330,8 +351,8 @@ export function SDKActions() {
   };
 
   const onSignAndSendTransaction = async () => {
-    if (!isConnected || !solanaAddress) {
-      alert("Please connect your wallet first.");
+    if (!isConnected || !solanaAddress || !isSolanaAvailable) {
+      alert("Please connect your wallet first and ensure Solana is available.");
       return;
     }
     try {
@@ -379,6 +400,11 @@ export function SDKActions() {
       return;
     }
 
+    if (!isEthereumAvailable) {
+      alert("Ethereum chain not available. The selected wallet does not support Ethereum.");
+      return;
+    }
+
     const ethAddress = addresses.find(addr => addr.addressType === "Ethereum");
     if (!ethAddress) {
       alert("No Ethereum address found");
@@ -398,7 +424,7 @@ export function SDKActions() {
         chainId: numberToHex(11155111), // Sepolia testnet
       };
 
-      const result = await ethereum?.sendTransaction(transactionParams);
+      const result = await ethereum.sendTransaction(transactionParams);
       if (!result) {
         alert("Ethereum chain not available");
         return;
@@ -413,8 +439,8 @@ export function SDKActions() {
   };
 
   const onSignAllTransactions = async () => {
-    if (!isConnected || !solanaAddress) {
-      alert("Please connect your wallet first.");
+    if (!isConnected || !solanaAddress || !isSolanaAvailable) {
+      alert("Please connect your wallet first and ensure Solana is available.");
       return;
     }
     try {
@@ -459,8 +485,8 @@ export function SDKActions() {
   };
 
   const onSendTokens = async () => {
-    if (!isConnected || !solanaAddress) {
-      alert("Please connect your wallet first.");
+    if (!isConnected || !solanaAddress || !isSolanaAvailable) {
+      alert("Please connect your wallet first and ensure Solana is available.");
       return;
     }
     try {
@@ -555,8 +581,8 @@ export function SDKActions() {
   };
 
   const onStakeSol = async () => {
-    if (!isConnected || !solanaAddress) {
-      alert("Please connect your wallet first.");
+    if (!isConnected || !solanaAddress || !isSolanaAvailable) {
+      alert("Please connect your wallet first and ensure Solana is available.");
       return;
     }
     try {
@@ -659,8 +685,8 @@ export function SDKActions() {
   };
 
   const onSendCustomSol = async () => {
-    if (!isConnected || !solanaAddress) {
-      alert("Please connect your wallet first.");
+    if (!isConnected || !solanaAddress || !isSolanaAvailable) {
+      alert("Please connect your wallet first and ensure Solana is available.");
       return;
     }
 
@@ -723,8 +749,8 @@ export function SDKActions() {
   };
 
   const onSendEthMainnet = async () => {
-    if (!isConnected || !ethereumAddress) {
-      alert("Please connect your wallet first.");
+    if (!isConnected || !ethereumAddress || !isEthereumAvailable) {
+      alert("Please connect your wallet first and ensure Ethereum is available.");
       return;
     }
 
@@ -739,7 +765,7 @@ export function SDKActions() {
         chainId: numberToHex(1), // Ethereum mainnet
       };
 
-      const result = await ethereum?.sendTransaction(transactionParams);
+      const result = await ethereum.sendTransaction(transactionParams);
       if (!result) {
         alert("Ethereum chain not available");
         return;
@@ -754,8 +780,8 @@ export function SDKActions() {
   };
 
   const onSendPolygon = async () => {
-    if (!isConnected || !ethereumAddress) {
-      alert("Please connect your wallet first.");
+    if (!isConnected || !ethereumAddress || !isEthereumAvailable) {
+      alert("Please connect your wallet first and ensure Ethereum is available.");
       return;
     }
 
@@ -770,7 +796,7 @@ export function SDKActions() {
         chainId: numberToHex(137), // Polygon mainnet
       };
 
-      const result = await ethereum?.sendTransaction(transactionParams);
+      const result = await ethereum.sendTransaction(transactionParams);
       if (!result) {
         alert("Ethereum chain not available");
         return;

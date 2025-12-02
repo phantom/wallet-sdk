@@ -15,11 +15,13 @@ import {
   useTheme,
   ModalHeader,
 } from "@phantom/wallet-sdk-ui";
+import { getProviderName } from "@phantom/constants";
 import { usePhantom } from "../PhantomContext";
 import { useIsExtensionInstalled } from "../hooks/useIsExtensionInstalled";
 import { useIsPhantomLoginAvailable } from "../hooks/useIsPhantomLoginAvailable";
 import { useConnect } from "../hooks/useConnect";
 import { useDiscoveredWallets } from "../hooks/useDiscoveredWallets";
+import { ChainIcon } from "./ChainIcon";
 
 export interface ConnectModalContentProps {
   appIcon?: string;
@@ -37,20 +39,15 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
   const { wallets: discoveredWallets } = useDiscoveredWallets();
 
   const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [providerType, setProviderType] = useState<AuthProviderType | "deeplink" | null>(null);
   const [showOtherWallets, setShowOtherWallets] = useState(false);
   const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
 
   const showDivider = !(allowedProviders.length === 1 && allowedProviders.includes("injected"));
 
-  // Filter out Phantom from discovered wallets (it's shown separately)
-  const otherWallets = useMemo(() => {
-    return discoveredWallets.filter(wallet => wallet.id !== "phantom");
-  }, [discoveredWallets]);
-
-  const shouldShowOtherWalletsButton = otherWallets.length > 2;
-  const walletsToShowInline = shouldShowOtherWalletsButton ? [] : otherWallets;
+  const shouldShowOtherWalletsButton = discoveredWallets.length > 2;
+  const walletsToShowInline = shouldShowOtherWalletsButton ? [] : discoveredWallets;
 
   const connectWithAuthProvider = useCallback(
     async (provider: AuthProviderType, walletId?: string) => {
@@ -63,16 +60,17 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
         await baseConnect.connect({ provider, walletId });
 
         onClose();
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error(String(err));
-        setError(error);
+      } catch {
+        const wallet = discoveredWallets.find(w => w.id === walletId);
+        const providerName = wallet?.name || getProviderName(provider);
+        setError(`Failed to connect to ${providerName}`);
       } finally {
         setIsConnecting(false);
         setProviderType(null);
         setSelectedWalletId(null);
       }
     },
-    [baseConnect, onClose],
+    [baseConnect, discoveredWallets, onClose],
   );
 
   const connectWithWallet = useCallback(
@@ -92,9 +90,8 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
       window.location.href = deeplinkUrl;
 
       onClose();
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      setError(error);
+    } catch {
+      setError("Failed to open deeplink");
     } finally {
       setIsConnecting(false);
       setProviderType(null);
@@ -111,6 +108,7 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
   };
 
   const connectContentContainerStyle: CSSProperties = {
+    transition: "opacity 0.15s ease-in-out, transform 0.15s ease-in-out",
     display: "flex",
     flexDirection: "column" as const,
     alignItems: "center",
@@ -123,13 +121,8 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
     flexDirection: "column" as const,
     alignItems: "center",
     gap: "12px",
-    padding: "0 32px 24px 32px",
-  };
-
-  const socialButtonRowStyle: CSSProperties = {
-    display: "flex",
-    gap: "12px",
-    width: "100%",
+    padding: "0 32px 32px 32px",
+    transition: "opacity 0.15s ease-in-out, transform 0.15s ease-in-out",
   };
 
   const dividerStyle: CSSProperties = {
@@ -157,6 +150,7 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
     color: "#ff6b6b",
     border: "1px solid rgba(220, 53, 69, 0.3)",
     borderRadius: theme.borderRadius,
+    boxSizing: "border-box" as const,
     padding: "12px",
     width: "100%",
     fontSize: "14px",
@@ -199,12 +193,27 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
     display: "flex",
     alignItems: "center",
     gap: "8px",
+    flex: 1,
+  };
+
+  const walletNameContainerStyle: CSSProperties = {
+    display: "flex",
+    flexDirection: "column",
+    gap: "4px",
+    alignItems: "flex-start",
+  };
+
+  const chainIndicatorsStyle: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
   };
 
   const walletButtonRightStyle: CSSProperties = {
     display: "flex",
     alignItems: "center",
     gap: "8px",
+    color: theme.secondary,
   };
 
   const footerStyle: CSSProperties = {
@@ -236,8 +245,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
         `}
       </style>
 
-      {error && <div style={errorStyle}>{error.message}</div>}
-
       {isLoading ? (
         <div style={loadingContainerStyle}>
           <div style={spinnerStyle} />
@@ -249,13 +256,18 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
         <>
           <ModalHeader
             goBack={true}
-            onGoBack={() => setShowOtherWallets(false)}
+            onGoBack={() => {
+              setError(null);
+              setShowOtherWallets(false);
+            }}
             title="Other Wallets"
             onClose={onClose}
           />
 
           <div style={otherWalletsContainerStyle}>
-            {otherWallets.map(wallet => (
+            {error && <div style={errorStyle}>{error}</div>}
+
+            {discoveredWallets.map(wallet => (
               <Button
                 key={wallet.id}
                 onClick={() => connectWithWallet(wallet)}
@@ -270,13 +282,22 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
                     ) : (
                       <BoundedIcon type="wallet" size={20} background={theme.aux} color={theme.text} />
                     )}
-                    <Text variant="captionBold">{wallet.name}</Text>
+                    <span style={walletNameContainerStyle}>
+                      <Text variant="captionBold">{wallet.name}</Text>
+                      {wallet.addressTypes && wallet.addressTypes.length > 0 && (
+                        <span style={chainIndicatorsStyle}>
+                          {wallet.addressTypes.map(addressType => (
+                            <ChainIcon key={`${wallet.id}-chain-${addressType}`} addressType={addressType} size={8} />
+                          ))}
+                        </span>
+                      )}
+                    </span>
                   </span>
                   <span style={walletButtonRightStyle}>
                     <Text variant="label" color={theme.secondary}>
                       Detected
                     </Text>
-                    <Icon type="chevron-right" size={16} />
+                    <Icon type="chevron-right" size={16} color={theme.secondary} />
                   </span>
                 </span>
               </Button>
@@ -289,6 +310,8 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
 
           <div style={connectContentContainerStyle}>
             {appIcon && <img src={appIcon} alt={appName} style={appIconStyle} />}
+
+            {error && <div style={errorStyle}>{error}</div>}
 
             {/* Mobile device with no Phantom extension - show deeplink button */}
             {isMobile && !isExtensionInstalled.isInstalled && (
@@ -311,35 +334,43 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
               />
             )}
 
-            {/* Google and Apple in a row */}
-            {(allowedProviders.includes("google") || allowedProviders.includes("apple")) && (
-              <div style={socialButtonRowStyle}>
-                {allowedProviders.includes("google") && (
-                  <Button
-                    onClick={() => connectWithAuthProvider("google")}
-                    disabled={isConnecting}
-                    isLoading={isConnecting && providerType === "google"}
-                    fullWidth={true}
-                    centered={allowedProviders.includes("apple")}
-                  >
+            {/* Google and Apple buttons */}
+            {allowedProviders.includes("google") && (
+              <Button
+                onClick={() => connectWithAuthProvider("google")}
+                disabled={isConnecting}
+                isLoading={isConnecting && providerType === "google"}
+                fullWidth={true}
+              >
+                <span style={walletButtonContentStyle}>
+                  <span style={walletButtonLeftStyle}>
                     <Icon type="google" size={20} />
-                    {!allowedProviders.includes("apple") && <Text variant="captionBold">Continue with Google</Text>}
-                  </Button>
-                )}
+                    <Text variant="captionBold">Continue with Google</Text>
+                  </span>
+                  <span style={walletButtonRightStyle}>
+                    <Icon type="chevron-right" size={16} color={theme.secondary} />
+                  </span>
+                </span>
+              </Button>
+            )}
 
-                {allowedProviders.includes("apple") && (
-                  <Button
-                    onClick={() => connectWithAuthProvider("apple")}
-                    disabled={isConnecting}
-                    isLoading={isConnecting && providerType === "apple"}
-                    fullWidth={true}
-                    centered={allowedProviders.includes("google")}
-                  >
+            {allowedProviders.includes("apple") && (
+              <Button
+                onClick={() => connectWithAuthProvider("apple")}
+                disabled={isConnecting}
+                isLoading={isConnecting && providerType === "apple"}
+                fullWidth={true}
+              >
+                <span style={walletButtonContentStyle}>
+                  <span style={walletButtonLeftStyle}>
                     <Icon type="apple" size={20} />
-                    {!allowedProviders.includes("google") && <Text variant="captionBold">Continue with Apple</Text>}
-                  </Button>
-                )}
-              </div>
+                    <Text variant="captionBold">Continue with Apple</Text>
+                  </span>
+                  <span style={walletButtonRightStyle}>
+                    <Icon type="chevron-right" size={16} color={theme.secondary} />
+                  </span>
+                </span>
+              </Button>
             )}
 
             {/* Injected provider section */}
@@ -352,27 +383,6 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
                     <div style={dividerLineStyle} />
                   </div>
                 )}
-
-                {/* Phantom button */}
-                <Button
-                  onClick={() => connectWithAuthProvider("injected")}
-                  disabled={isConnecting}
-                  isLoading={isConnecting && providerType === "injected" && !selectedWalletId}
-                  fullWidth={true}
-                >
-                  <span style={walletButtonContentStyle}>
-                    <span style={walletButtonLeftStyle}>
-                      <BoundedIcon type="phantom" size={20} background="#AB9FF2" color="white" />
-                      <Text variant="captionBold">Phantom</Text>
-                    </span>
-                    <span style={walletButtonRightStyle}>
-                      <Text variant="label" color={theme.secondary}>
-                        Detected
-                      </Text>
-                      <Icon type="chevron-right" size={16} />
-                    </span>
-                  </span>
-                </Button>
 
                 {/* Inline wallets (2 or fewer) */}
                 {walletsToShowInline.map(wallet => (
@@ -388,15 +398,28 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
                         {wallet.icon ? (
                           <img src={wallet.icon} alt={wallet.name} style={walletIconStyle} />
                         ) : (
-                          <BoundedIcon type="wallet" size={20} background={theme.aux} color={theme.text} />
+                          <BoundedIcon type="wallet" size={10} background={theme.aux} color={theme.text} />
                         )}
-                        <Text variant="captionBold">{wallet.name}</Text>
+                        <span style={walletNameContainerStyle}>
+                          <Text variant="captionBold">{wallet.name}</Text>
+                          {wallet.addressTypes && wallet.addressTypes.length > 0 && (
+                            <span style={chainIndicatorsStyle}>
+                              {wallet.addressTypes.map(addressType => (
+                                <ChainIcon
+                                  key={`${wallet.id}-chain-${addressType}`}
+                                  addressType={addressType}
+                                  size={8}
+                                />
+                              ))}
+                            </span>
+                          )}
+                        </span>
                       </span>
                       <span style={walletButtonRightStyle}>
                         <Text variant="label" color={theme.secondary}>
                           Detected
                         </Text>
-                        <Icon type="chevron-right" size={16} />
+                        <Icon type="chevron-right" size={16} color={theme.secondary} />
                       </span>
                     </span>
                   </Button>
@@ -411,7 +434,7 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
                         <Text variant="captionBold">Other Wallets</Text>
                       </span>
                       <span style={walletButtonRightStyle}>
-                        <Icon type="chevron-right" size={16} />
+                        <Icon type="chevron-right" size={16} color={theme.secondary} />
                       </span>
                     </span>
                   </Button>

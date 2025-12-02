@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { type CSSProperties } from "react";
 import { useTheme } from "../hooks/useTheme";
 import { Icon } from "./Icon";
 import { Text } from "./Text";
@@ -6,7 +6,6 @@ import type { ModalHeaderProps } from "./ModalHeader";
 
 export function ModalHeader({ goBack = false, onGoBack, title, onClose }: ModalHeaderProps) {
   const theme = useTheme();
-  const [isCloseButtonHovering, setIsCloseButtonHovering] = useState(false);
 
   const headerStyle: CSSProperties = {
     position: "relative",
@@ -14,6 +13,7 @@ export function ModalHeader({ goBack = false, onGoBack, title, onClose }: ModalH
     justifyContent: "center",
     alignItems: "center",
     padding: "28px 32px 0 32px",
+    height: "32px",
   };
 
   const titleStyle: CSSProperties = {
@@ -23,13 +23,11 @@ export function ModalHeader({ goBack = false, onGoBack, title, onClose }: ModalH
   const backButtonStyle: CSSProperties = {
     position: "absolute" as const,
     left: "32px",
-    top: "22px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     cursor: "pointer",
     padding: "8px",
-    color: theme.text,
     background: "none",
     border: "none",
     width: "32px",
@@ -39,22 +37,22 @@ export function ModalHeader({ goBack = false, onGoBack, title, onClose }: ModalH
   const closeButtonStyle: CSSProperties = {
     position: "absolute" as const,
     right: "32px",
-    top: "22px",
     background: "none",
     border: "none",
-    color: isCloseButtonHovering ? theme.secondary : theme.text,
+    color: theme.secondary,
     fontSize: "24px",
     cursor: "pointer",
     padding: "4px 8px",
     lineHeight: 1,
     transition: "color 0.2s",
+    width: "auto",
   };
 
   return (
     <div style={headerStyle}>
       {goBack && onGoBack && (
         <button style={backButtonStyle} onClick={onGoBack}>
-          <Icon type="chevron-right" size={16} style={{ transform: "rotate(180deg)" }} />
+          <Icon type="chevron-right" size={16} color={theme.secondary} style={{ transform: "rotate(180deg)" }} />
         </button>
       )}
       <div style={titleStyle}>
@@ -63,13 +61,8 @@ export function ModalHeader({ goBack = false, onGoBack, title, onClose }: ModalH
         </Text>
       </div>
       {onClose && (
-        <button
-          style={closeButtonStyle}
-          onClick={onClose}
-          onMouseEnter={() => setIsCloseButtonHovering(true)}
-          onMouseLeave={() => setIsCloseButtonHovering(false)}
-        >
-          ×
+        <button style={closeButtonStyle} onClick={onClose}>
+          <Icon type="x" size={16} color={theme.secondary} />
         </button>
       )}
     </div>

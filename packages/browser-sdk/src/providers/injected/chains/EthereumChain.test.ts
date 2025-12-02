@@ -1,13 +1,13 @@
-import { InjectedEthereumChain } from "./EthereumChain";
-import { AddressType } from "@phantom/client";
-import { EventEmitter } from "eventemitter3";
+import { PhantomEthereumChain } from "./EthereumChain";
 
-describe("InjectedEthereumChain", () => {
+describe("PhantomEthereumChain", () => {
   let mockPhantom: any;
-  let mockCallbacks: any;
-  let ethereumChain: InjectedEthereumChain;
+  let ethereumChain: PhantomEthereumChain;
 
   beforeEach(() => {
+    // Store event listeners for testing
+    const eventListeners = new Map<string, any[]>();
+
     // Create mock Phantom object
     mockPhantom = {
       extension: {
@@ -24,27 +24,30 @@ describe("InjectedEthereumChain", () => {
         switchChain: jest.fn().mockResolvedValue(undefined),
         getChainId: jest.fn().mockResolvedValue("0x1"),
         getAccounts: jest.fn().mockResolvedValue(["0x1234567890abcdef1234567890abcdef12345678"]),
-        addEventListener: jest.fn(),
+        disconnect: jest.fn().mockResolvedValue(undefined),
+        addEventListener: jest.fn((event: string, listener: any) => {
+          if (!eventListeners.has(event)) {
+            eventListeners.set(event, []);
+          }
+          eventListeners.get(event)!.push(listener);
+          return () => {
+            const listeners = eventListeners.get(event);
+            if (listeners) {
+              const index = listeners.indexOf(listener);
+              if (index > -1) {
+                listeners.splice(index, 1);
+              }
+            }
+          };
+        }),
         removeEventListener: jest.fn(),
       },
     };
 
-    // Create mock callbacks with EventEmitter
-    const eventEmitter = new EventEmitter();
-    mockCallbacks = {
-      isConnected: jest.fn().mockReturnValue(true),
-      getAddresses: jest
-        .fn()
-        .mockReturnValue([
-          { addressType: AddressType.ethereum, address: "0x1234567890abcdef1234567890abcdef12345678" },
-        ]),
-      disconnect: jest.fn().mockResolvedValue(undefined),
-      on: (event: string, listener: any) => eventEmitter.on(event, listener),
-      off: (event: string, listener: any) => eventEmitter.off(event, listener),
-      emit: (event: string, ...args: any[]) => eventEmitter.emit(event, ...args),
-    };
+    // Store eventListeners on mockPhantom for test access
+    (mockPhantom.ethereum as any)._eventListeners = eventListeners;
 
-    ethereumChain = new InjectedEthereumChain(mockPhantom, mockCallbacks);
+    ethereumChain = new PhantomEthereumChain(mockPhantom);
   });
 
   afterEach(() => {
@@ -234,7 +237,7 @@ describe("InjectedEthereumChain", () => {
 
     it("should default to 0x1 (Ethereum mainnet)", () => {
       // Fresh instance should default to 0x1
-      const newEthereumChain = new InjectedEthereumChain(mockPhantom, mockCallbacks);
+      const newEthereumChain = new PhantomEthereumChain(mockPhantom);
       expect(newEthereumChain.chainId).toBe("0x1");
     });
   });
@@ -268,13 +271,18 @@ describe("InjectedEthereumChain", () => {
 
   describe("chainChanged event listener", () => {
     it("should update internal state when chainChanged event is received", () => {
-      const chainChangedListener = mockPhantom.ethereum.addEventListener.mock.calls.find(
-        (call: any) => call[0] === "chainChanged",
-      )?.[1];
+      // Verify initial state
+      expect((ethereumChain as any)._chainId).toBe("0x1");
 
-      expect(chainChangedListener).toBeDefined();
+      // Get the chainChanged listeners from the stored event listeners
+      const eventListeners = (mockPhantom.ethereum as any)._eventListeners;
+      const chainChangedListeners = eventListeners.get("chainChanged") || [];
 
-      // Simulate chainChanged event from provider
+      expect(chainChangedListeners.length).toBeGreaterThan(0);
+      const chainChangedListener = chainChangedListeners[chainChangedListeners.length - 1]; // Get the last one
+
+      // Simulate chainChanged event from provider by calling the listener directly
+      // The listener is an arrow function that captures 'this', so it should work
       chainChangedListener("0x89"); // Polygon
 
       // Verify internal state was updated
@@ -284,20 +292,28 @@ describe("InjectedEthereumChain", () => {
     it("should emit chainChanged event when received from provider", () => {
       const emitSpy = jest.spyOn((ethereumChain as any).eventEmitter, "emit");
 
-      const chainChangedListener = mockPhantom.ethereum.addEventListener.mock.calls.find(
-        (call: any) => call[0] === "chainChanged",
-      )?.[1];
+      // Get the chainChanged listeners
+      const eventListeners = (mockPhantom.ethereum as any)._eventListeners;
+      const chainChangedListeners = eventListeners.get("chainChanged") || [];
+      expect(chainChangedListeners.length).toBeGreaterThan(0);
+
+      // Get the last one (from PhantomEthereumChain.setupEventListeners)
+      const chainChangedListener = chainChangedListeners[chainChangedListeners.length - 1];
 
       // Simulate chainChanged event from provider
       chainChangedListener("0x2105"); // Base
 
       // Verify event was emitted
       expect(emitSpy).toHaveBeenCalledWith("chainChanged", "0x2105");
+
+      // Also verify internal state was updated
+      expect((ethereumChain as any)._chainId).toBe("0x2105");
     });
   });
 
   describe("EIP-1193 compliance", () => {
-    it("should have connected property", () => {
+    it("should have connected property", async () => {
+      await ethereumChain.connect();
       expect(ethereumChain.connected).toBe(true);
     });
 

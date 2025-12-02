@@ -13,11 +13,6 @@ import { isPhantomExtensionInstalled } from "@phantom/browser-injected-sdk";
  * Usage:
  * ```typescript
  * const isAvailable = await isPhantomLoginAvailable();
- * if (isAvailable) {
- *   console.log("Phantom Login is available!");
- * } else {
- *   console.log("Phantom Login is not available");
- * }
  * ```
  */
 export async function isPhantomLoginAvailable(timeoutMs: number = 3000): Promise<boolean> {
