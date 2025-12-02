@@ -2,6 +2,11 @@
   "name": "@phantom/constants",
   "version": "1.0.0-beta.11",
   "description": "Shared constants for Phantom Wallet SDK",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phantom/phantom-connect-sdk",
+    "directory": "packages/constants"
+  },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
