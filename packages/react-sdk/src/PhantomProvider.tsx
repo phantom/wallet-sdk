@@ -110,7 +110,6 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
     };
 
     const handleSpendingLimitReached = () => {
-      // We don't surface backend error text in the UI yet; just trigger the modal.
       setErrors((prev: PhantomErrors) => ({ ...prev, spendingLimit: true }));
     };
 

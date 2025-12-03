@@ -60,7 +60,7 @@ import {
   type SignTypedDataParams,
   type UserConfig,
 } from "./types";
-import { WalletServiceError, parseWalletServiceError } from "./errors";
+import { WalletServiceError, parseWalletServiceError, getAxiosErrorData, getErrorMessage } from "./errors";
 
 import type { Stamper } from "@phantom/sdk-types";
 import { getSecureTimestamp, randomUUID, isEthereumChain, isSolanaChain } from "@phantom/utils";
@@ -222,16 +222,15 @@ export class PhantomClient {
         },
       });
       return response.data;
-    } catch (error: any) {
-      const data = error?.response?.data as PrepareErrorResponse | undefined;
+    } catch (error: unknown) {
+      const data = getAxiosErrorData<PrepareErrorResponse>(error);
 
-      // Try to parse as wallet service error (RFC 7807 Problem Details format)
       const walletServiceError = parseWalletServiceError(data);
       if (walletServiceError) {
         throw walletServiceError;
       }
 
-      const message = data?.detail || data?.title || error.message;
+      const message = data?.detail || getErrorMessage(error, "Failed to prepare transaction");
       throw new Error(`Failed to prepare transaction: ${message}`);
     }
   }
