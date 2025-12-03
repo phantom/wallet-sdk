@@ -298,10 +298,6 @@ function AuthCallbackPage() {
     navigate("/");
   };
 
-  const handleRetry = () => {
-    window.location.reload();
-  };
-
   // Loading state - SDK is processing the callback
   if (isConnecting) {
     return (
@@ -338,7 +334,6 @@ function AuthCallbackPage() {
         <h1>Authentication Failed</h1>
         <p>{connectError.message || "An unknown error occurred during authentication."}</p>
         <div>
-          <button onClick={handleRetry}>Retry Authentication</button>
           <button onClick={handleGoHome}>Go to Main App</button>
         </div>
       </div>
