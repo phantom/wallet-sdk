@@ -963,7 +963,6 @@ export function SDKActions() {
         </div>
       )}
 
-
       {isConnected && solanaAddress && (
         <div className="section">
           <h3>SOL Balance</h3>
