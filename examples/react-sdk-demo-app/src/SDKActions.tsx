@@ -9,6 +9,7 @@ import {
   useAutoConfirm,
   NetworkId,
   ConnectButton,
+  ConnectBox,
 } from "@phantom/react-sdk";
 import {
   SystemProgram,
@@ -952,8 +953,16 @@ export function SDKActions() {
             </h4>
             <ConnectButton fullWidth />
           </div>
+
+          <div style={{ marginTop: "1.5rem" }}>
+            <h4 style={{ marginBottom: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
+              Or use the ConnectBox component:
+            </h4>
+            <ConnectBox maxWidth="500px" />
+          </div>
         </div>
       )}
+
 
       {isConnected && solanaAddress && (
         <div className="section">
