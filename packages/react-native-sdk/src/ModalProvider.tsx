@@ -17,7 +17,7 @@ export interface ModalProviderProps {
  * Provider that manages modal state and renders the Modal component.
  */
 export function ModalProvider({ children, appIcon, appName }: ModalProviderProps) {
-  const { isConnected, spendingLimitError, clearSpendingLimitError } = usePhantom();
+  const { isConnected, errors, clearError } = usePhantom();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const openModal = useCallback(() => {
@@ -26,10 +26,10 @@ export function ModalProvider({ children, appIcon, appName }: ModalProviderProps
 
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
-    clearSpendingLimitError();
-  }, [clearSpendingLimitError]);
+    clearError("spendingLimit");
+  }, [clearError]);
 
-  const isSpendingLimitOpen = !!spendingLimitError;
+  const isSpendingLimitOpen = !!errors.spendingLimit;
 
   const modalContextValue: ModalContextValue = useMemo(
     () => ({
@@ -43,7 +43,13 @@ export function ModalProvider({ children, appIcon, appName }: ModalProviderProps
   return (
     <ModalContext.Provider value={modalContextValue}>
       {children}
-      <Modal isVisible={isModalOpen} onClose={closeModal} appIcon={appIcon} appName={appName} isMobile={true}>
+      <Modal
+        isVisible={isModalOpen || isSpendingLimitOpen}
+        onClose={closeModal}
+        appIcon={appIcon}
+        appName={appName}
+        isMobile={true}
+      >
         {isSpendingLimitOpen ? (
           <SpendingLimitModalContent onClose={closeModal} />
         ) : isConnected ? (

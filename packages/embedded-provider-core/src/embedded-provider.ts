@@ -1,5 +1,5 @@
 import { base64urlEncode, stringToBase64url } from "@phantom/base64url";
-import { AddressType, PhantomClient } from "@phantom/client";
+import { AddressType, PhantomClient, SpendingLimitError } from "@phantom/client";
 import type { NetworkId } from "@phantom/constants";
 import {
   parseSignMessageResponse,
@@ -74,7 +74,7 @@ export interface EmbeddedProviderEventMap {
   connect_error: ConnectErrorEventData;
   disconnect: DisconnectEventData;
   error: any;
-  spending_limit_reached: { error: any };
+  spending_limit_reached: { error: SpendingLimitError };
 }
 
 export type EventCallback<T = any> = (data: T) => void;
@@ -937,7 +937,7 @@ export class EmbeddedProvider {
       });
     } catch (error: any) {
       // Normalize spending limit errors into a dedicated event while preserving the rejection
-      if (error && error.name === "SpendingLimitError") {
+      if (error instanceof SpendingLimitError) {
         this.emit("spending_limit_reached", { error });
       }
       throw error;

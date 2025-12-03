@@ -60,7 +60,7 @@ import {
   type SignTypedDataParams,
   type UserConfig,
 } from "./types";
-import { SpendingLimitError, TransactionBlockedError } from "./errors";
+import { WalletServiceError, parseWalletServiceError } from "./errors";
 
 import type { Stamper } from "@phantom/sdk-types";
 import { getSecureTimestamp, randomUUID, isEthereumChain, isSolanaChain } from "@phantom/utils";
@@ -225,14 +225,10 @@ export class PhantomClient {
     } catch (error: any) {
       const data = error?.response?.data as PrepareErrorResponse | undefined;
 
-      // Check for spending limit errors
-      if (data?.type === "spending-limit-exceeded" || (data as any)?.error?.startsWith("Transaction would exceed")) {
-        throw new SpendingLimitError(data as PrepareErrorResponse);
-      }
-
-      // Check for transaction blocked errors (e.g., insufficient funds)
-      if (data?.type === "transaction-blocked") {
-        throw new TransactionBlockedError(data);
+      // Try to parse as wallet service error (RFC 7807 Problem Details format)
+      const walletServiceError = parseWalletServiceError(data);
+      if (walletServiceError) {
+        throw walletServiceError;
       }
 
       const message = data?.detail || data?.title || error.message;
@@ -359,10 +355,12 @@ export class PhantomClient {
     } catch (error: any) {
       const actionType = includeSubmissionConfig ? "sign and send" : "sign";
       console.error(`Failed to ${actionType} transaction:`, error.response?.data || error.message);
-      // Preserve spending limit errors so callers can distinguish them
-      if (error instanceof SpendingLimitError) {
+
+      // Preserve wallet service errors so callers can distinguish them
+      if (error instanceof WalletServiceError) {
         throw error;
       }
+
       throw new Error(`Failed to ${actionType} transaction: ${error.response?.data?.message || error.message}`);
     }
   }

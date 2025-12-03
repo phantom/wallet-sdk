@@ -2,18 +2,22 @@ import { createContext, useContext } from "react";
 import type { EmbeddedProvider, ConnectResult, EmbeddedProviderAuthType } from "@phantom/embedded-provider-core";
 import type { WalletAddress } from "./types";
 
+export interface PhantomErrors {
+  connect?: Error;
+  spendingLimit?: boolean;
+}
+
 export interface PhantomContextValue {
   sdk: EmbeddedProvider;
   isConnected: boolean;
   isConnecting: boolean;
-  connectError: Error | null;
+  errors: PhantomErrors;
   addresses: WalletAddress[];
   walletId: string | null;
   setWalletId: (walletId: string | null) => void;
   user: ConnectResult | null;
   allowedProviders: EmbeddedProviderAuthType[];
-  spendingLimitError: boolean;
-  clearSpendingLimitError: () => void;
+  clearError: (key: keyof PhantomErrors) => void;
 }
 
 export const PhantomContext = createContext<PhantomContextValue | undefined>(undefined);

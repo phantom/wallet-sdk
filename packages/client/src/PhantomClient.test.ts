@@ -1,6 +1,7 @@
 import { PhantomClient } from "./PhantomClient";
 import type { UserConfig, CreateAuthenticatorParams, AuthenticatorConfig } from "./types";
 import { NetworkId } from "@phantom/constants";
+import { SpendingLimitError } from "./errors";
 import axios from "axios";
 
 // Mock axios to prevent actual HTTP requests
@@ -413,7 +414,10 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       const prepareMethod = client["prepare"].bind(client);
 
-      await expect(prepareMethod("tx", "org-123", solanaSubmissionConfig, "UserAccount123")).rejects.toMatchObject({
+      const error = await prepareMethod("tx", "org-123", solanaSubmissionConfig, "UserAccount123").catch(e => e);
+
+      expect(error).toBeInstanceOf(SpendingLimitError);
+      expect(error).toMatchObject({
         name: "SpendingLimitError",
         type: "spending-limit-exceeded",
         title: "This transaction would surpass your configured spending limit",

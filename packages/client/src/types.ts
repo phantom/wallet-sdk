@@ -143,13 +143,23 @@ export interface PrepareResponse {
   memoryConfigUsed?: SpendingLimitConfig;
 }
 
-export interface PrepareErrorResponse {
-  // RFC 7807 Problem Details format
-  type: string; // e.g., "spending-limit-exceeded", "transaction-blocked"
+/**
+ * Known error types from the wallet service
+ */
+export type WalletServiceErrorType = "spending-limit-exceeded" | "transaction-blocked";
+
+/**
+ * Base interface for RFC 7807 Problem Details format
+ * See: https://datatracker.ietf.org/doc/html/rfc7807
+ */
+export interface ProblemDetails {
+  type: WalletServiceErrorType;
   title: string;
   detail: string;
   requestId: string;
+}
 
+export interface PrepareErrorResponse extends ProblemDetails {
   // Spending limit specific fields
   previousSpendCents?: number;
   transactionSpendCents?: number;

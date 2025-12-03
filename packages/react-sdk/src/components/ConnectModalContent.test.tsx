@@ -115,18 +115,17 @@ describe("ConnectModalContent", () => {
       addresses: [],
       sdk: null,
       isConnecting: false,
-      connectError: null,
+      errors: {},
       isClient: true,
       user: null,
       theme: {} as any,
-      spendingLimitError: false,
-      clearSpendingLimitError: jest.fn(),
+      clearError: jest.fn(),
     });
     mockUseConnect.mockReturnValue({
       connect: mockConnect,
       isConnecting: false,
       isLoading: false,
-      error: null,
+      error: undefined,
     });
     mockUseIsExtensionInstalled.mockReturnValue({
       isInstalled: false,

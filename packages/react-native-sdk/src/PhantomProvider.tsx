@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { EmbeddedProvider } from "@phantom/embedded-provider-core";
 import type {
   EmbeddedProviderConfig,
@@ -16,7 +16,7 @@ import {
 } from "@phantom/constants";
 import { ThemeProvider, darkTheme, type PhantomTheme } from "@phantom/wallet-sdk-ui";
 import { ModalProvider } from "./ModalProvider";
-import { PhantomContext, type PhantomContextValue } from "./PhantomContext";
+import { PhantomContext, type PhantomContextValue, type PhantomErrors } from "./PhantomContext";
 // Platform adapters for React Native/Expo
 import { ExpoSecureStorage } from "./providers/embedded/storage";
 import { ExpoAuthProvider } from "./providers/embedded/auth";
@@ -38,11 +38,10 @@ export interface PhantomProviderProps {
 export function PhantomProvider({ children, config, debugConfig, theme, appIcon, appName }: PhantomProviderProps) {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [connectError, setConnectError] = useState<Error | null>(null);
+  const [errors, setErrors] = useState<PhantomErrors>({});
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
   const [walletId, setWalletId] = useState<string | null>(null);
   const [user, setUser] = useState<ConnectResult | null>(null);
-  const [spendingLimitError, setSpendingLimitError] = useState(false);
 
   // Memoized config to avoid unnecessary SDK recreation
   const memoizedConfig: EmbeddedProviderConfig = useMemo(() => {
@@ -101,7 +100,7 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
     // Event handlers that need to be referenced for cleanup
     const handleConnectStart = () => {
       setIsConnecting(true);
-      setConnectError(null);
+      setErrors((prev: PhantomErrors) => ({ ...prev, connect: undefined }));
     };
 
     const handleConnect = async (data: ConnectEventData) => {
@@ -128,23 +127,22 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
 
     const handleConnectError = (errorData: any) => {
       setIsConnecting(false);
-      setConnectError(new Error(errorData.error || "Connection failed"));
+      setErrors((prev: PhantomErrors) => ({ ...prev, connect: new Error(errorData.error || "Connection failed") }));
       setAddresses([]);
     };
 
     const handleDisconnect = () => {
       setIsConnected(false);
       setIsConnecting(false);
-      setConnectError(null);
+      setErrors({});
       setAddresses([]);
       setWalletId(null);
       setUser(null);
-      setSpendingLimitError(false);
     };
 
     const handleSpendingLimitReached = () => {
       // We don't surface backend error text in the UI yet; just trigger the modal.
-      setSpendingLimitError(true);
+      setErrors((prev: PhantomErrors) => ({ ...prev, spendingLimit: true }));
     };
 
     // Add event listeners to SDK
@@ -171,33 +169,29 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
     });
   }, [sdk]);
 
+  const clearError = useCallback((key: keyof PhantomErrors) => {
+    setErrors((prev: PhantomErrors) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }, []);
+
   // Memoize context value to prevent unnecessary re-renders
   const value: PhantomContextValue = useMemo(
     () => ({
       sdk,
       isConnected,
       isConnecting,
-      connectError,
+      errors,
       addresses,
       walletId,
       setWalletId,
       user,
       allowedProviders: config.providers,
-      spendingLimitError,
-      clearSpendingLimitError: () => setSpendingLimitError(false),
+      clearError,
     }),
-    [
-      sdk,
-      isConnected,
-      isConnecting,
-      connectError,
-      addresses,
-      walletId,
-      setWalletId,
-      user,
-      config.providers,
-      spendingLimitError,
-    ],
+    [sdk, isConnected, isConnecting, errors, addresses, walletId, setWalletId, user, config.providers, clearError],
   );
 
   const resolvedTheme = theme || darkTheme;

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { BrowserSDK } from "@phantom/browser-sdk";
 import type {
   BrowserSDKConfig,
@@ -10,7 +10,7 @@ import type {
   ConnectResult,
 } from "@phantom/browser-sdk";
 import { mergeTheme, darkTheme, ThemeProvider, type PhantomTheme } from "@phantom/wallet-sdk-ui";
-import { PhantomContext, type PhantomContextValue } from "./PhantomContext";
+import { PhantomContext, type PhantomContextValue, type PhantomErrors } from "./PhantomContext";
 import { ModalProvider } from "./ModalProvider";
 
 export type PhantomSDKConfig = BrowserSDKConfig;
@@ -43,10 +43,9 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [connectError, setConnectError] = useState<Error | null>(null);
+  const [errors, setErrors] = useState<PhantomErrors>({});
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
   const [user, setUser] = useState<ConnectResult | null>(null);
-  const [spendingLimitError, setSpendingLimitError] = useState(false);
 
   // Initialize client flag
   useEffect(() => {
@@ -70,7 +69,7 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
     // Event handlers that need to be referenced for cleanup
     const handleConnectStart = () => {
       setIsConnecting(true);
-      setConnectError(null);
+      setErrors((prev: PhantomErrors) => ({ ...prev, connect: undefined }));
     };
 
     const handleConnect = async (data: ConnectEventData) => {
@@ -98,22 +97,21 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
     const handleConnectError = (errorData: any) => {
       setIsConnecting(false);
       setIsConnected(false);
-      setConnectError(new Error(errorData.error || "Connection failed"));
+      setErrors((prev: PhantomErrors) => ({ ...prev, connect: new Error(errorData.error || "Connection failed") }));
       setAddresses([]);
     };
 
     const handleDisconnect = () => {
       setIsConnected(false);
       setIsConnecting(false);
-      setConnectError(null);
+      setErrors({});
       setAddresses([]);
-      setSpendingLimitError(false);
       setUser(null);
     };
 
     const handleSpendingLimitReached = () => {
       // We don't surface backend error text in the UI yet; just trigger the modal.
-      setSpendingLimitError(true);
+      setErrors((prev: PhantomErrors) => ({ ...prev, spendingLimit: true }));
     };
 
     // Add event listeners to SDK
@@ -160,6 +158,14 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
     initialize();
   }, [sdk, isClient]);
 
+  const clearError = useCallback((key: keyof PhantomErrors) => {
+    setErrors((prev: PhantomErrors) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }, []);
+
   // Memoize context value to prevent unnecessary re-renders
   const value: PhantomContextValue = useMemo(
     () => ({
@@ -167,27 +173,26 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
       isConnected,
       isConnecting,
       isLoading,
-      connectError,
+      errors,
       addresses,
       isClient,
       user,
       theme: resolvedTheme,
       allowedProviders: memoizedConfig.providers,
-      spendingLimitError,
-      clearSpendingLimitError: () => setSpendingLimitError(false),
+      clearError,
     }),
     [
       sdk,
       isConnected,
       isConnecting,
       isLoading,
-      connectError,
+      errors,
       addresses,
       isClient,
       user,
       resolvedTheme,
       memoizedConfig.providers,
-      spendingLimitError,
+      clearError,
     ],
   );
 
