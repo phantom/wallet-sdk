@@ -422,40 +422,10 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
 }
 
 /**
- * Get Phantom wallet icon from Wallet Standard if available
- */
-function getPhantomIconFromWalletStandard(): string | null {
-  if (typeof window === "undefined" || typeof navigator === "undefined") {
-    return null;
-  }
-
-  const walletsAPI = (navigator as any).wallets;
-  if (!walletsAPI || typeof walletsAPI.getWallets !== "function") {
-    return null;
-  }
-
-  try {
-    // getWallets() returns an object with .get() method
-    const walletsGetter = walletsAPI.getWallets();
-    if (walletsGetter && typeof walletsGetter.get === "function") {
-      const registeredWallets: WalletStandardWallet[] = walletsGetter.get();
-      const phantomWallet = registeredWallets.find(w => w.name.toLowerCase().includes("phantom"));
-      if (phantomWallet?.icon) {
-        return phantomWallet.icon;
-      }
-    }
-  } catch (error) {
-    // Silently fail - we'll use default icon
-  }
-
-  return null;
-}
-
-/**
  * Discover Phantom wallet if extension is installed
  * Creates Phantom instance with plugins and returns wallet info
  */
-export async function discoverPhantomWallet(addressTypes: ClientAddressType[]): Promise<InjectedWalletInfo | null> {
+export function discoverPhantomWallet(addressTypes: ClientAddressType[]): InjectedWalletInfo | null {
   if (typeof window === "undefined") {
     return null;
   }
@@ -463,19 +433,6 @@ export async function discoverPhantomWallet(addressTypes: ClientAddressType[]): 
   // Check if Phantom extension is installed
   if (!isPhantomExtensionInstalled()) {
     return null;
-  }
-
-  // Try to get icon from Wallet Standard first
-  // Wait a bit for Wallet Standard registry to be initialized and Phantom to register
-  let icon = await getPhantomIconFromWalletStandard();
-  if (!icon) {
-    // Wait a bit more and try again (Wallet Standard discovery might still be in progress)
-    await new Promise(resolve => setTimeout(resolve, 200));
-    icon = await getPhantomIconFromWalletStandard();
-  }
-  // Fallback to default icon if not found in Wallet Standard
-  if (!icon) {
-    icon = "https://phantom.app/img/phantom-icon-purple.png";
   }
 
   // Create Phantom instance with plugins
@@ -497,7 +454,7 @@ export async function discoverPhantomWallet(addressTypes: ClientAddressType[]): 
   return {
     id: "phantom",
     name: "Phantom",
-    icon,
+    icon: undefined, // Icon will be rendered from icons package in UI components
     addressTypes,
     providers: {
       solana: addressTypes.includes(ClientAddressType.solana) ? (phantomInstance.solana as any) : undefined,
@@ -515,11 +472,8 @@ export async function discoverWallets(addressTypes?: ClientAddressType[]): Promi
     addressTypes: requestedAddressTypes,
   });
 
-  const [phantomWallet, solanaWallets, ethereumWallets] = await Promise.all([
-    discoverPhantomWallet(requestedAddressTypes),
-    discoverSolanaWallets(),
-    discoverEthereumWallets(),
-  ]);
+  const [solanaWallets, ethereumWallets] = await Promise.all([discoverSolanaWallets(), discoverEthereumWallets()]);
+  const phantomWallet = discoverPhantomWallet(requestedAddressTypes);
 
   debug.log(DebugCategory.BROWSER_SDK, "All wallet discovery methods completed", {
     phantomFound: !!phantomWallet,
