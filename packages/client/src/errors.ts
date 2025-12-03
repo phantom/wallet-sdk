@@ -1,4 +1,4 @@
-import type { AxiosError } from "axios";
+import { isAxiosError } from "axios";
 import type { PrepareErrorResponse, IWalletServiceError, WalletServiceErrorType } from "./types";
 
 export class WalletServiceError extends Error implements IWalletServiceError {
@@ -17,37 +17,21 @@ export class WalletServiceError extends Error implements IWalletServiceError {
   }
 }
 
-export function isAxiosError(error: unknown): error is AxiosError<unknown> {
-  if (typeof error !== "object" || error === null) {
-    return false;
-  }
-  
-  if ("isAxiosError" in error && (error as AxiosError).isAxiosError === true) {
-    return true;
-  }
-  
-  if ("response" in error && typeof (error as any).response === "object" && (error as any).response !== null) {
-    return true;
-  }
-  
-  return false;
-}
-
 export function getAxiosErrorData<T = unknown>(error: unknown): T | undefined {
   if (isAxiosError(error)) {
-    return (error as AxiosError<unknown>).response?.data as T | undefined;
-  }
-  if (typeof error === "object" && error !== null && "response" in error) {
-    const errorWithResponse = error as { response?: { data?: T } };
-    return errorWithResponse.response?.data;
+    return error.response?.data as T | undefined;
   }
   return undefined;
 }
 
 export function getErrorMessage(error: unknown, fallbackMessage = "An error occurred"): string {
   if (isAxiosError(error)) {
-    const data = error.response?.data as { message?: string; detail?: string; title?: string } | undefined;
-    return data?.message || data?.detail || data?.title || error.message || fallbackMessage;
+    const data = error.response?.data;
+    if (data && typeof data === "object") {
+      const errorData = data as { message?: string; detail?: string; title?: string };
+      return errorData.message || errorData.detail || errorData.title || error.message || fallbackMessage;
+    }
+    return error.message || fallbackMessage;
   }
   if (error instanceof Error) {
     return error.message;
