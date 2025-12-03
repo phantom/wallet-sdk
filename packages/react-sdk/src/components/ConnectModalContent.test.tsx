@@ -261,7 +261,7 @@ describe("ConnectModalContent", () => {
 
       const { getByTestId, getAllByText } = renderComponent();
 
-      expect(getByTestId("bounded-icon-wallet")).toBeInTheDocument();
+      expect(getByTestId("bounded-icon-phantom")).toBeInTheDocument();
       // "Phantom" appears in both the button and the footer, so use getAllByText
       expect(getAllByText("Phantom").length).toBeGreaterThan(0);
       expect(getByTestId("button")).toBeInTheDocument();

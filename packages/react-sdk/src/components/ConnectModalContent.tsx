@@ -279,26 +279,27 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
               >
                 <span style={walletButtonContentStyle}>
                   <span style={walletButtonLeftStyle}>
-                    {wallet.icon ? (
+                    {wallet.id === "phantom" ? (
+                      <BoundedIcon type="phantom" size={20} background={"#aba0f2"} color={"white"} />
+                    ) : wallet.icon ? (
                       <img src={wallet.icon} alt={wallet.name} style={walletIconStyle} />
                     ) : (
                       <BoundedIcon type="wallet" size={20} background={theme.aux} color={theme.text} />
                     )}
                     <span style={walletNameContainerStyle}>
                       <Text variant="captionBold">{wallet.name}</Text>
-                      {wallet.addressTypes && wallet.addressTypes.length > 0 && (
-                        <span style={chainIndicatorsStyle}>
-                          {wallet.addressTypes.map(addressType => (
-                            <ChainIcon key={`${wallet.id}-chain-${addressType}`} addressType={addressType} size={8} />
-                          ))}
-                        </span>
-                      )}
                     </span>
                   </span>
                   <span style={walletButtonRightStyle}>
-                    <Text variant="label" color={theme.secondary}>
-                      Detected
-                    </Text>
+                    {wallet.addressTypes && wallet.addressTypes.length > 0 && (
+                      <span style={chainIndicatorsStyle}>
+                        {wallet.addressTypes.map(addressType => (
+                          <span key={`${wallet.id}-chain-${addressType}`}>
+                            <ChainIcon addressType={addressType} size={8} />
+                          </span>
+                        ))}
+                      </span>
+                    )}
                     <Icon type="chevron-right" size={16} color={theme.secondary} />
                   </span>
                 </span>
@@ -397,30 +398,27 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
                   >
                     <span style={walletButtonContentStyle}>
                       <span style={walletButtonLeftStyle}>
-                        {wallet.icon ? (
+                        {wallet.id === "phantom" ? (
+                          <BoundedIcon type="phantom" size={20} background={"#aba0f2"} color={"white"} />
+                        ) : wallet.icon ? (
                           <img src={wallet.icon} alt={wallet.name} style={walletIconStyle} />
                         ) : (
                           <BoundedIcon type="wallet" size={10} background={theme.aux} color={theme.text} />
                         )}
                         <span style={walletNameContainerStyle}>
                           <Text variant="captionBold">{wallet.name}</Text>
-                          {wallet.addressTypes && wallet.addressTypes.length > 0 && (
-                            <span style={chainIndicatorsStyle}>
-                              {wallet.addressTypes.map(addressType => (
-                                <ChainIcon
-                                  key={`${wallet.id}-chain-${addressType}`}
-                                  addressType={addressType}
-                                  size={8}
-                                />
-                              ))}
-                            </span>
-                          )}
                         </span>
                       </span>
                       <span style={walletButtonRightStyle}>
-                        <Text variant="label" color={theme.secondary}>
-                          Detected
-                        </Text>
+                        {wallet.addressTypes && wallet.addressTypes.length > 0 && (
+                          <span style={chainIndicatorsStyle}>
+                            {wallet.addressTypes.map(addressType => (
+                              <span key={`${wallet.id}-chain-${addressType}`}>
+                                <ChainIcon addressType={addressType} size={8} />
+                              </span>
+                            ))}
+                          </span>
+                        )}
                         <Icon type="chevron-right" size={16} color={theme.secondary} />
                       </span>
                     </span>
