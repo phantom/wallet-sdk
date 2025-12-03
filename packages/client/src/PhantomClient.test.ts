@@ -2,7 +2,7 @@ import { PhantomClient } from "./PhantomClient";
 import type { UserConfig, CreateAuthenticatorParams, AuthenticatorConfig } from "./types";
 import { NetworkId } from "@phantom/constants";
 import { SpendingLimitError } from "./errors";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
 // Mock axios to prevent actual HTTP requests
 jest.mock("axios");
@@ -377,16 +377,21 @@ describe("PhantomClient Spending Limits Integration", () => {
     });
 
     it("should throw error when prepare endpoint fails", async () => {
-      mockAxiosPost.mockRejectedValueOnce({
-        response: {
-          data: {
-            type: "invalid-transaction",
-            title: "Invalid Transaction",
-            detail: "Invalid transaction format",
-            requestId: "test-request-id",
-          },
+      const axiosError = new Error("Request failed") as AxiosError;
+      (axiosError as any).isAxiosError = true;
+      axiosError.response = {
+        data: {
+          type: "invalid-transaction",
+          title: "Invalid Transaction",
+          detail: "Invalid transaction format",
+          requestId: "test-request-id",
         },
-      });
+        status: 400,
+        statusText: "Bad Request",
+        headers: {},
+        config: {} as any,
+      };
+      mockAxiosPost.mockRejectedValueOnce(axiosError);
 
       const prepareMethod = client["prepare"].bind(client);
 
@@ -396,21 +401,26 @@ describe("PhantomClient Spending Limits Integration", () => {
     });
 
     it("should throw SpendingLimitError when spending limit is reached", async () => {
-      mockAxiosPost.mockRejectedValueOnce({
-        response: {
-          data: {
-            type: "spending-limit-exceeded",
-            title: "This transaction would surpass your configured spending limit",
-            detail:
-              "Transaction would exceed daily spending limit. Previous: $0.62, Transaction: $0.41, Total: $1.03, Limit: $1.00",
-            requestId: "2d8da771-896b-9568-a9b5-22bf89e8d882",
-            previousSpendCents: 62,
-            transactionSpendCents: 41,
-            totalSpendCents: 103,
-            limitCents: 100,
-          },
+      const axiosError = new Error("Request failed") as AxiosError;
+      (axiosError as any).isAxiosError = true;
+      axiosError.response = {
+        data: {
+          type: "spending-limit-exceeded",
+          title: "This transaction would surpass your configured spending limit",
+          detail:
+            "Transaction would exceed daily spending limit. Previous: $0.62, Transaction: $0.41, Total: $1.03, Limit: $1.00",
+          requestId: "2d8da771-896b-9568-a9b5-22bf89e8d882",
+          previousSpendCents: 62,
+          transactionSpendCents: 41,
+          totalSpendCents: 103,
+          limitCents: 100,
         },
-      });
+        status: 400,
+        statusText: "Bad Request",
+        headers: {},
+        config: {} as any,
+      };
+      mockAxiosPost.mockRejectedValueOnce(axiosError);
 
       const prepareMethod = client["prepare"].bind(client);
 

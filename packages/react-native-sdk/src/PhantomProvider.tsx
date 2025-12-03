@@ -169,11 +169,7 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
   }, [sdk]);
 
   const clearError = useCallback((key: keyof PhantomErrors) => {
-    setErrors((prev: PhantomErrors) => {
-      const next = { ...prev };
-      delete next[key];
-      return next;
-    });
+    setErrors(({ [key]: _, ...next }: PhantomErrors) => next);
   }, []);
 
   // Memoize context value to prevent unnecessary re-renders
