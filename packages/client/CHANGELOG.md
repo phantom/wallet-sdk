@@ -1,5 +1,18 @@
 # @phantom/client
 
+## 1.0.0-beta.25
+
+### Patch Changes
+
+- b470bcf: Sec patch
+- Updated dependencies [b470bcf]
+  - @phantom/api-key-stamper@1.0.0-beta.13
+  - @phantom/base64url@1.0.0-beta.13
+  - @phantom/constants@1.0.0-beta.13
+  - @phantom/crypto@1.0.0-beta.13
+  - @phantom/sdk-types@1.0.0-beta.13
+  - @phantom/utils@1.0.0-beta.25
+
 ## 1.0.0-beta.24
 
 ### Patch Changes

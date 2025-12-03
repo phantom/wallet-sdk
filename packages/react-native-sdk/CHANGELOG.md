@@ -1,5 +1,21 @@
 # @phantom/react-native-sdk
 
+## 1.0.0-beta.25
+
+### Patch Changes
+
+- b470bcf: Sec patch
+- Updated dependencies [b470bcf]
+  - @phantom/api-key-stamper@1.0.0-beta.13
+  - @phantom/base64url@1.0.0-beta.13
+  - @phantom/chain-interfaces@1.0.0-beta.13
+  - @phantom/client@1.0.0-beta.25
+  - @phantom/constants@1.0.0-beta.13
+  - @phantom/crypto@1.0.0-beta.13
+  - @phantom/embedded-provider-core@1.0.0-beta.25
+  - @phantom/sdk-types@1.0.0-beta.13
+  - @phantom/wallet-sdk-ui@1.0.0-beta.4
+
 ## 1.0.0-beta.24
 
 ### Patch Changes
