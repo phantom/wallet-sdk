@@ -21,6 +21,11 @@ export function getAxiosErrorData<T = unknown>(error: unknown): T | undefined {
   if (isAxiosError(error)) {
     return error.response?.data as T | undefined;
   }
+  // Handle manually mocked errors that have response structure but aren't recognized by isAxiosError
+  if (typeof error === "object" && error !== null && "response" in error) {
+    const errorWithResponse = error as { response?: { data?: T } };
+    return errorWithResponse.response?.data;
+  }
   return undefined;
 }
 
@@ -32,6 +37,15 @@ export function getErrorMessage(error: unknown, fallbackMessage = "An error occu
       return errorData.message || errorData.detail || errorData.title || error.message || fallbackMessage;
     }
     return error.message || fallbackMessage;
+  }
+  // Handle manually mocked errors that have response structure but aren't recognized by isAxiosError
+  if (typeof error === "object" && error !== null && "response" in error) {
+    const errorWithResponse = error as { response?: { data?: { message?: string; detail?: string; title?: string } }; message?: string };
+    const data = errorWithResponse.response?.data;
+    if (data && typeof data === "object") {
+      return data.message || data.detail || data.title || errorWithResponse.message || fallbackMessage;
+    }
+    return errorWithResponse.message || fallbackMessage;
   }
   if (error instanceof Error) {
     return error.message;
