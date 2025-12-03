@@ -28,16 +28,16 @@ export function getErrorMessage(error: unknown, fallbackMessage = "An error occu
   if (error instanceof WalletServiceError) {
     return error.detail || error.title || error.message || fallbackMessage;
   }
-  
+
   const data = getAxiosErrorData<{ message?: string; detail?: string; title?: string }>(error);
   if (data) {
     return data.message || data.detail || data.title || fallbackMessage;
   }
-  
+
   if (isAxiosError(error)) {
     return error.message || fallbackMessage;
   }
-  
+
   if (error instanceof Error) {
     return error.message;
   }
