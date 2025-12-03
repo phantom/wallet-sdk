@@ -1,5 +1,15 @@
 # @phantom/api-key-stamper
 
+## 1.0.0-beta.13
+
+### Patch Changes
+
+- b470bcf: Sec patch
+- Updated dependencies [b470bcf]
+  - @phantom/base64url@1.0.0-beta.13
+  - @phantom/crypto@1.0.0-beta.13
+  - @phantom/sdk-types@1.0.0-beta.13
+
 ## 1.0.0-beta.12
 
 ### Patch Changes

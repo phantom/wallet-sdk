@@ -1,5 +1,21 @@
 # @phantom/browser-sdk
 
+## 1.0.0-beta.25
+
+### Patch Changes
+
+- b470bcf: Sec patch
+- Updated dependencies [b470bcf]
+  - @phantom/base64url@1.0.0-beta.13
+  - @phantom/browser-injected-sdk@1.0.0-beta.10
+  - @phantom/chain-interfaces@1.0.0-beta.13
+  - @phantom/client@1.0.0-beta.25
+  - @phantom/constants@1.0.0-beta.13
+  - @phantom/embedded-provider-core@1.0.0-beta.25
+  - @phantom/indexed-db-stamper@1.0.0-beta.6
+  - @phantom/parsers@1.0.0-beta.13
+  - @phantom/sdk-types@1.0.0-beta.13
+
 ## 1.0.0-beta.24
 
 ### Patch Changes

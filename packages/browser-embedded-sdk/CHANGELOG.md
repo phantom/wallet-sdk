@@ -1,5 +1,11 @@
 # @phantom/wallet-sdk
 
+## 0.1.3-beta.2
+
+### Patch Changes
+
+- b470bcf: Sec patch
+
 ## 0.1.3-beta.1
 
 ### Patch Changes
