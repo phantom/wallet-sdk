@@ -132,30 +132,6 @@ describe("ModalProvider", () => {
       expect(getByTestId("modal")).toBeInTheDocument();
     });
 
-    it("should pass isConnected prop to Modal", () => {
-      mockUsePhantom.mockReturnValue({
-        ...mockUsePhantom(),
-        isConnected: true,
-      } as any);
-
-      const TestComponent = () => {
-        const { open } = useModal();
-        React.useEffect(() => {
-          open();
-        }, [open]);
-        return null;
-      };
-
-      const { getByTestId } = render(
-        <ModalProvider>
-          <TestComponent />
-        </ModalProvider>,
-      );
-
-      const modal = getByTestId("modal");
-      expect(modal.dataset.isconnected).toBe("true");
-    });
-
     it("should detect mobile device correctly", () => {
       mockIsMobileDevice.mockReturnValue(true);
 

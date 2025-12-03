@@ -5,7 +5,6 @@ export interface ModalProps {
   appName?: string;
   isVisible: boolean;
   onClose: () => void;
-  isConnected?: boolean;
   isMobile?: boolean;
   children: ReactNode;
 }

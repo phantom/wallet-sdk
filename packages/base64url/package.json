@@ -1,7 +1,12 @@
 {
   "name": "@phantom/base64url",
-  "version": "1.0.0-beta.10",
+  "version": "1.0.0-beta.12",
   "description": "Isomorphic base64url encoding/decoding utilities",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phantom/phantom-connect-sdk",
+    "directory": "packages/base64url"
+  },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",

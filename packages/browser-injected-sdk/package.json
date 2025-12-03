@@ -1,6 +1,11 @@
 {
   "name": "@phantom/browser-injected-sdk",
-  "version": "1.0.0-beta.7",
+  "version": "1.0.0-beta.9",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phantom/phantom-connect-sdk",
+    "directory": "packages/browser-injected-sdk"
+  },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",

@@ -12,11 +12,13 @@ import { debug, DebugCategory } from "../../debug";
 import { detectBrowser, getPlatformName } from "../../utils/browser-detection";
 import type { Provider } from "../../types";
 import { ANALYTICS_HEADERS } from "@phantom/constants";
+import type { AddressType } from "@phantom/client";
 
 export class EmbeddedProvider extends CoreEmbeddedProvider implements Provider {
+  private addressTypes: AddressType[];
+
   constructor(config: EmbeddedProviderConfig) {
     debug.log(DebugCategory.EMBEDDED_PROVIDER, "Initializing Browser EmbeddedProvider", { config });
-
     // Create browser platform adapter
     const urlParamsAccessor = new BrowserURLParamsAccessor();
     const stamper = new IndexedDbStamper({
@@ -51,6 +53,12 @@ export class EmbeddedProvider extends CoreEmbeddedProvider implements Provider {
 
     super(config, platform, logger);
 
+    this.addressTypes = config.addressTypes;
+
     debug.info(DebugCategory.EMBEDDED_PROVIDER, "Browser EmbeddedProvider initialized");
+  }
+
+  getEnabledAddressTypes(): AddressType[] {
+    return this.addressTypes;
   }
 }

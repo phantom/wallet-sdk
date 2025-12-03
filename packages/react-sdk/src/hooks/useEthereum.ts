@@ -1,5 +1,6 @@
 import { usePhantom } from "../PhantomContext";
 import type { IEthereumChain } from "@phantom/chain-interfaces";
+import { AddressType } from "@phantom/browser-sdk";
 
 /**
  * Hook for Ethereum chain operations
@@ -10,20 +11,41 @@ export function useEthereum(): {
   ethereum: IEthereumChain;
   isAvailable: boolean;
 } {
-  const { sdk, isConnected, isClient } = usePhantom();
+  const { sdk, isClient, isLoading } = usePhantom();
 
-  if (!isClient || !sdk) {
-    // Return a stub object for SSR or while SDK is initializing
+  if (!isClient || !sdk || isLoading) {
+    // Return a stub object for SSR, while SDK is initializing, or while discovery is in progress
+    // We still return the chain object, but isAvailable will be false
     return {
-      ethereum: {} as IEthereumChain, // This will be replaced when SDK is ready
+      ethereum: {} as IEthereumChain,
       isAvailable: false,
     };
   }
 
-  return {
-    // Chain instance with connection enforcement for signing methods
-    ethereum: sdk.ethereum,
-    // State
-    isAvailable: !!isConnected,
-  };
+  const enabledAddressTypes = sdk.getEnabledAddressTypes();
+  const isAvailable = enabledAddressTypes.includes(AddressType.ethereum);
+
+  // Only access sdk.ethereum if it's available, otherwise return a stub
+  // This prevents errors when the selected wallet doesn't support Ethereum
+  if (!isAvailable) {
+    return {
+      ethereum: {} as IEthereumChain,
+      isAvailable: false,
+    };
+  }
+
+  try {
+    return {
+      ethereum: sdk.ethereum,
+      isAvailable: true,
+    };
+  } catch (error) {
+    // If accessing sdk.ethereum throws (e.g., wallet doesn't support Ethereum),
+    // return a stub object instead of crashing
+    // Ethereum chain not available
+    return {
+      ethereum: {} as IEthereumChain,
+      isAvailable: false,
+    };
+  }
 }

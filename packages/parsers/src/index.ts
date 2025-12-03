@@ -5,7 +5,12 @@ import { Buffer } from "buffer";
 import { Transaction as EthersTransaction, getAddress } from "ethers";
 
 // Re-export response parsers
-export { parseSignMessageResponse, parseTransactionResponse, parseSolanaSignedTransaction } from "./response-parsers";
+export {
+  parseSignMessageResponse,
+  parseTransactionResponse,
+  parseSolanaSignedTransaction,
+  deserializeSolanaTransaction,
+} from "./response-parsers";
 
 export interface ParsedTransaction {
   /** The parsed transaction string (base64url for Solana/Sui/Bitcoin, RLP-encoded hex for EVM) */

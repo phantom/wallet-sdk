@@ -43,14 +43,7 @@ export function ModalProvider({ children, appIcon, appName }: ModalProviderProps
   return (
     <ModalContext.Provider value={modalContextValue}>
       {children}
-      <Modal
-        isVisible={isModalOpen || isSpendingLimitOpen}
-        onClose={closeModal}
-        appIcon={appIcon}
-        appName={appName}
-        isConnected={isConnected}
-        isMobile={true}
-      >
+      <Modal isVisible={isModalOpen} onClose={closeModal} appIcon={appIcon} appName={appName} isMobile={true}>
         {isSpendingLimitOpen ? (
           <SpendingLimitModalContent onClose={closeModal} />
         ) : isConnected ? (

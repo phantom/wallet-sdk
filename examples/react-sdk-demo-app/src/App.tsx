@@ -81,7 +81,7 @@ function App() {
               config={config}
               debugConfig={debugConfig}
               theme={darkTheme}
-              appIcon="https://phantom.app/img/logo.png"
+              appIcon="https://picsum.photos/200"
               appName="Phantom React SDK Demo"
             >
               <AuthCallback />
@@ -95,7 +95,7 @@ function App() {
               config={config}
               debugConfig={debugConfig}
               theme={darkTheme}
-              appIcon="https://phantom.app/img/logo.png"
+              appIcon="https://picsum.photos/200"
               appName="Phantom React SDK Demo"
             >
               <Actions />

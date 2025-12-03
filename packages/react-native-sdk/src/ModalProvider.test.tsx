@@ -103,22 +103,6 @@ describe("ModalProvider", () => {
       expect(getByTestId("modal")).toBeTruthy();
     });
 
-    it("should pass isConnected prop to Modal", () => {
-      mockUsePhantom.mockReturnValue({
-        ...mockUsePhantom(),
-        isConnected: true,
-      } as any);
-
-      const { getByTestId } = render(
-        <ModalProvider>
-          <mock-child />
-        </ModalProvider>,
-      );
-
-      const modal = getByTestId("modal");
-      expect(modal.props.isConnected).toBe(true);
-    });
-
     it("should render ConnectModalContent when not connected", () => {
       const { getByTestId } = render(
         <ModalProvider>

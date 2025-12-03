@@ -1,5 +1,29 @@
 # @phantom/parsers
 
+## 1.0.0-beta.12
+
+### Patch Changes
+
+- d4e0097: Modal with release fixed
+- fcebdff: adding new provenance info
+- Updated dependencies [d4e0097]
+- Updated dependencies [fcebdff]
+  - @phantom/base64url@1.0.0-beta.12
+  - @phantom/constants@1.0.0-beta.12
+  - @phantom/sdk-types@1.0.0-beta.12
+  - @phantom/utils@1.0.0-beta.24
+
+## 1.0.0-beta.11
+
+### Patch Changes
+
+- 16319b0: Modal released, included first version of wallet discovery.
+- Updated dependencies [16319b0]
+  - @phantom/base64url@1.0.0-beta.11
+  - @phantom/constants@1.0.0-beta.11
+  - @phantom/sdk-types@1.0.0-beta.11
+  - @phantom/utils@1.0.0-beta.23
+
 ## 1.0.0-beta.10
 
 ### Patch Changes
