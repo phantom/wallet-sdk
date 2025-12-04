@@ -1,5 +1,21 @@
 # @phantom/react-native-sdk
 
+## 1.0.0-beta.26
+
+### Patch Changes
+
+- 574e5aa: Fix prepare error response parsing
+- Updated dependencies [574e5aa]
+  - @phantom/api-key-stamper@1.0.0-beta.14
+  - @phantom/base64url@1.0.0-beta.14
+  - @phantom/chain-interfaces@1.0.0-beta.14
+  - @phantom/client@1.0.0-beta.26
+  - @phantom/constants@1.0.0-beta.14
+  - @phantom/crypto@1.0.0-beta.14
+  - @phantom/embedded-provider-core@1.0.0-beta.26
+  - @phantom/sdk-types@1.0.0-beta.14
+  - @phantom/wallet-sdk-ui@1.0.0-beta.5
+
 ## 1.0.0-beta.25
 
 ### Patch Changes
