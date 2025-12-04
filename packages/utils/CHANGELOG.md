@@ -1,5 +1,17 @@
 # @phantom/utils
 
+## 1.0.0-beta.26
+
+### Patch Changes
+
+- 574e5aa: Fix prepare error response parsing
+
+## 1.0.0-beta.25
+
+### Patch Changes
+
+- b470bcf: Sec patch
+
 ## 1.0.0-beta.24
 
 ### Patch Changes

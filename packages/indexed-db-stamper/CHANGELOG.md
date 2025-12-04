@@ -1,5 +1,27 @@
 # @phantom/indexed-db-stamper
 
+## 1.0.0-beta.7
+
+### Patch Changes
+
+- 574e5aa: Fix prepare error response parsing
+- Updated dependencies [574e5aa]
+  - @phantom/base64url@1.0.0-beta.14
+  - @phantom/crypto@1.0.0-beta.14
+  - @phantom/embedded-provider-core@1.0.0-beta.26
+  - @phantom/sdk-types@1.0.0-beta.14
+
+## 1.0.0-beta.6
+
+### Patch Changes
+
+- b470bcf: Sec patch
+- Updated dependencies [b470bcf]
+  - @phantom/base64url@1.0.0-beta.13
+  - @phantom/crypto@1.0.0-beta.13
+  - @phantom/embedded-provider-core@1.0.0-beta.25
+  - @phantom/sdk-types@1.0.0-beta.13
+
 ## 1.0.0-beta.5
 
 ### Patch Changes

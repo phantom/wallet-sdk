@@ -1,5 +1,23 @@
 # @phantom/browser-sdk
 
+## 1.0.0-beta.11
+
+### Patch Changes
+
+- 574e5aa: Fix prepare error response parsing
+- Updated dependencies [574e5aa]
+  - @phantom/constants@1.0.0-beta.14
+  - @phantom/sdk-types@1.0.0-beta.14
+
+## 1.0.0-beta.10
+
+### Patch Changes
+
+- b470bcf: Sec patch
+- Updated dependencies [b470bcf]
+  - @phantom/constants@1.0.0-beta.13
+  - @phantom/sdk-types@1.0.0-beta.13
+
 ## 1.0.0-beta.9
 
 ### Patch Changes
