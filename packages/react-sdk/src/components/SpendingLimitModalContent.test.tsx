@@ -14,6 +14,29 @@ const mockTheme = {
   brand: "#0000ff" as const,
 };
 
+const mockConnect = jest.fn();
+const mockDisconnect = jest.fn();
+
+jest.mock("../PhantomContext", () => ({
+  usePhantom: () => ({
+    user: {
+      authProvider: "google" as const,
+    },
+  }),
+}));
+
+jest.mock("../hooks/useConnect", () => ({
+  useConnect: () => ({
+    connect: mockConnect,
+  }),
+}));
+
+jest.mock("../hooks/useDisconnect", () => ({
+  useDisconnect: () => ({
+    disconnect: mockDisconnect,
+  }),
+}));
+
 describe("SpendingLimitModalContent", () => {
   it("should render spending limit message and buttons", () => {
     const onClose = jest.fn();
@@ -23,8 +46,9 @@ describe("SpendingLimitModalContent", () => {
       </ThemeProvider>,
     );
 
-    expect(getByText("Would you like to increase your limit?")).toBeInTheDocument();
-    expect(getByText("Close")).toBeInTheDocument();
-    expect(getByText("Continue")).toBeInTheDocument();
+    expect(getByText("Spending Limit Reached")).toBeInTheDocument();
+    expect(getByText(/You've reached your spending limit with this app/)).toBeInTheDocument();
+    expect(getByText("Cancel")).toBeInTheDocument();
+    expect(getByText("Change Limit")).toBeInTheDocument();
   });
 });
