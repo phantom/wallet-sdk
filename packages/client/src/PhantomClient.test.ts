@@ -604,7 +604,6 @@ describe("PhantomClient Spending Limits Integration", () => {
     });
 
     it("should propagate transaction-blocked error with detail message from prepare to signTransaction", async () => {
-      // Create a proper AxiosError that will be recognized by isAxiosError
       const axiosError = Object.create(AxiosError.prototype);
       axiosError.message = "Request failed";
       Object.defineProperty(axiosError, "isAxiosError", {
