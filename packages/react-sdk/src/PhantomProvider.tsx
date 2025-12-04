@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { BrowserSDK } from "@phantom/browser-sdk";
 import type {
   BrowserSDKConfig,
@@ -10,7 +10,7 @@ import type {
   ConnectResult,
 } from "@phantom/browser-sdk";
 import { mergeTheme, darkTheme, ThemeProvider, type PhantomTheme } from "@phantom/wallet-sdk-ui";
-import { PhantomContext, type PhantomContextValue } from "./PhantomContext";
+import { PhantomContext, type PhantomContextValue, type PhantomErrors } from "./PhantomContext";
 import { ModalProvider } from "./ModalProvider";
 
 export type PhantomSDKConfig = BrowserSDKConfig;
@@ -43,9 +43,8 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [connectError, setConnectError] = useState<Error | null>(null);
+  const [errors, setErrors] = useState<PhantomErrors>({});
   const [addresses, setAddresses] = useState<WalletAddress[]>([]);
-
   const [user, setUser] = useState<ConnectResult | null>(null);
 
   // Initialize client flag
@@ -70,7 +69,7 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
     // Event handlers that need to be referenced for cleanup
     const handleConnectStart = () => {
       setIsConnecting(true);
-      setConnectError(null);
+      setErrors((prev: PhantomErrors) => ({ ...prev, connect: undefined }));
     };
 
     const handleConnect = async (data: ConnectEventData) => {
@@ -107,9 +106,9 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
 
       if (isAutoConnectNoSession) {
         // Clear any previous error state, but don't set a new error for this expected case
-        setConnectError(null);
+        setErrors((prev: PhantomErrors) => ({ ...prev, connect: undefined }));
       } else {
-        setConnectError(new Error(errorData.error || "Connection failed"));
+        setErrors((prev: PhantomErrors) => ({ ...prev, connect: new Error(errorData.error || "Connection failed") }));
       }
 
       setAddresses([]);
@@ -118,9 +117,13 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
     const handleDisconnect = () => {
       setIsConnected(false);
       setIsConnecting(false);
-      setConnectError(null);
+      setErrors({});
       setAddresses([]);
       setUser(null);
+    };
+
+    const handleSpendingLimitReached = () => {
+      setErrors((prev: PhantomErrors) => ({ ...prev, spendingLimit: true }));
     };
 
     // Add event listeners to SDK
@@ -128,6 +131,7 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
     sdk.on("connect", handleConnect);
     sdk.on("connect_error", handleConnectError);
     sdk.on("disconnect", handleDisconnect);
+    sdk.on("spending_limit_reached", handleSpendingLimitReached);
 
     // Cleanup function to remove event listeners when SDK changes or component unmounts
     return () => {
@@ -135,6 +139,7 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
       sdk.off("connect", handleConnect);
       sdk.off("connect_error", handleConnectError);
       sdk.off("disconnect", handleDisconnect);
+      sdk.off("spending_limit_reached", handleSpendingLimitReached);
     };
   }, [sdk]);
 
@@ -165,6 +170,14 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
     initialize();
   }, [sdk, isClient]);
 
+  const clearError = useCallback((key: keyof PhantomErrors) => {
+    setErrors((prev: PhantomErrors) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }, []);
+
   // Memoize context value to prevent unnecessary re-renders
   const value: PhantomContextValue = useMemo(
     () => ({
@@ -172,24 +185,26 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
       isConnected,
       isConnecting,
       isLoading,
-      connectError,
+      errors,
       addresses,
       isClient,
       user,
       theme: resolvedTheme,
       allowedProviders: memoizedConfig.providers,
+      clearError,
     }),
     [
       sdk,
       isConnected,
       isConnecting,
       isLoading,
-      connectError,
+      errors,
       addresses,
       isClient,
       user,
       resolvedTheme,
       memoizedConfig.providers,
+      clearError,
     ],
   );
 

@@ -138,7 +138,27 @@ export interface SpendingLimitConfig {
 }
 
 export interface PrepareResponse {
-  transaction: string; // base64url encoded with Lighthouse instructions
+  transaction: string;
   simulationResult?: any;
   memoryConfigUsed?: SpendingLimitConfig;
+}
+
+export type WalletServiceErrorType = "spending-limit-exceeded" | "transaction-blocked";
+
+export interface IWalletServiceError {
+  type: WalletServiceErrorType;
+  title: string;
+  detail: string;
+  requestId: string;
+}
+
+export interface PrepareErrorResponse extends IWalletServiceError {
+  // Spending limit specific fields
+  previousSpendCents?: number;
+  transactionSpendCents?: number;
+  totalSpendCents?: number;
+  limitCents?: number;
+
+  // Transaction blocked specific fields
+  scannerResult?: any; // Full simulation result when transaction is blocked
 }
