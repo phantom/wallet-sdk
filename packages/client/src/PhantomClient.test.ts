@@ -513,7 +513,33 @@ describe("PhantomClient Spending Limits Integration", () => {
           },
           true,
         ),
-      ).rejects.toThrow("Failed to apply spending limits for this transaction");
+      ).rejects.toThrow("Failed to submit transaction");
+    });
+
+    it("should throw detail message when prepare endpoint returns transaction-blocked error", async () => {
+      mockAxiosPost.mockRejectedValueOnce({
+        response: {
+          data: {
+            type: "transaction-blocked",
+            title: "This transaction has been blocked",
+            detail: "account does not have enough SOL to perform the operation",
+          },
+        },
+      });
+
+      const performSigning = client["performTransactionSigning"].bind(client);
+
+      await expect(
+        performSigning(
+          {
+            walletId: "wallet-123",
+            transaction: "tx",
+            networkId: NetworkId.SOLANA_MAINNET,
+            account: "UserAccount123",
+          },
+          true,
+        ),
+      ).rejects.toThrow("account does not have enough SOL to perform the operation");
     });
 
     it("should continue signing when prepare endpoint returns pass-through with no limits", async () => {

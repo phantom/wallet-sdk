@@ -221,7 +221,12 @@ export class PhantomClient {
       });
       return response.data;
     } catch (error: any) {
-      throw new Error(`Failed to prepare transaction: ${error.response?.data?.message || error.message}`);
+      // If it's a transaction-blocked error, throw just the detail message
+      const errorData = error.response?.data;
+      if (errorData?.type === "transaction-blocked" && errorData?.detail) {
+        throw new Error(errorData.detail);
+      }
+      throw new Error(`Failed to prepare transaction: ${errorData?.message || error.message}`);
     }
   }
 
@@ -258,10 +263,7 @@ export class PhantomClient {
         return prepareResponse.transaction;
       } catch (e: unknown) {
         const errorMessage = e instanceof Error ? e.message : String(e);
-        throw new Error(
-          `Failed to apply spending limits for this transaction: ${errorMessage}. ` +
-            `Transaction cannot proceed without spending limit enforcement.`,
-        );
+        throw new Error(`Failed to submit transaction: ${errorMessage}`);
       }
     }
 
