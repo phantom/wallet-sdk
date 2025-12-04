@@ -224,9 +224,9 @@ export class PhantomClient {
       return response.data;
     } catch (error: unknown) {
       const data = getAxiosErrorData<PrepareErrorResponse>(error);
-      
+
       // Also check error.response?.data for manually mocked errors in tests
-      const errorData = data || (error as any)?.response?.data as PrepareErrorResponse | undefined;
+      const errorData = data || ((error as any)?.response?.data as PrepareErrorResponse | undefined);
 
       // Check for wallet service errors (like SpendingLimitError or transaction-blocked)
       const walletServiceError = parseWalletServiceError(errorData);
@@ -276,7 +276,7 @@ export class PhantomClient {
         if (e instanceof WalletServiceError) {
           throw e;
         }
-      
+
         const errorMessage = e instanceof Error ? e.message : String(e);
         throw new Error(errorMessage);
       }
