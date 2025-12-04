@@ -1,5 +1,11 @@
 # @phantom/sdk-types
 
+## 1.0.0-beta.14
+
+### Patch Changes
+
+- 574e5aa: Fix prepare error response parsing
+
 ## 1.0.0-beta.13
 
 ### Patch Changes
