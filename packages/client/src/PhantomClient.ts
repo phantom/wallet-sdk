@@ -224,14 +224,19 @@ export class PhantomClient {
       return response.data;
     } catch (error: unknown) {
       const data = getAxiosErrorData<PrepareErrorResponse>(error);
+      
+      // Also check error.response?.data for manually mocked errors in tests
+      const errorData = data || (error as any)?.response?.data as PrepareErrorResponse | undefined;
 
-      const walletServiceError = parseWalletServiceError(data);
+      // Check for wallet service errors (like SpendingLimitError or transaction-blocked)
+      const walletServiceError = parseWalletServiceError(errorData);
       if (walletServiceError) {
         throw walletServiceError;
       }
 
-      const message = data?.detail || getErrorMessage(error, "Failed to prepare transaction");
-      throw new Error(`Failed to prepare transaction: ${message}`);
+      // Fall back to generic error message
+      const message = errorData?.detail || getErrorMessage(error, "Failed to submit transaction");
+      throw new Error(message);
     }
   }
 
@@ -257,14 +262,24 @@ export class PhantomClient {
         throw new Error("Account is required to simulate Solana transactions with spending limits");
       }
 
-      const prepareResponse = await this.prepare(
-        encodedTransaction,
-        this.config.organizationId as string,
-        submissionConfig,
-        account,
-      );
+      try {
+        const prepareResponse = await this.prepare(
+          encodedTransaction,
+          this.config.organizationId as string,
+          submissionConfig,
+          account,
+        );
 
-      return prepareResponse.transaction;
+        return prepareResponse.transaction;
+      } catch (e: unknown) {
+        // If it's a WalletServiceError, re-throw it as-is (it will be handled in performTransactionSigning)
+        if (e instanceof WalletServiceError) {
+          throw e;
+        }
+      
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        throw new Error(errorMessage);
+      }
     }
 
     // Non-EVM chains (including Solana server-wallet): send the original transaction as-is
@@ -351,16 +366,15 @@ export class PhantomClient {
         signedTransaction: result.transaction as unknown as string, // Base64 encoded signed transaction
         hash,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       const actionType = includeSubmissionConfig ? "sign and send" : "sign";
-      console.error(`Failed to ${actionType} transaction:`, error.response?.data || error.message);
 
       // Preserve wallet service errors so callers can distinguish them
       if (error instanceof WalletServiceError) {
         throw error;
       }
 
-      throw new Error(`Failed to ${actionType} transaction: ${error.response?.data?.message || error.message}`);
+      throw new Error(getErrorMessage(error, `Failed to ${actionType} transaction`));
     }
   }
 

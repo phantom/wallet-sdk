@@ -1,5 +1,11 @@
 # @phantom/crypto
 
+## 1.0.0-beta.13
+
+### Patch Changes
+
+- b470bcf: Sec patch
+
 ## 1.0.0-beta.12
 
 ### Patch Changes

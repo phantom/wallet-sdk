@@ -110,7 +110,7 @@ export class InjectedWalletRegistry {
    * Register Phantom wallet with its instance
    * This creates wrapped providers and stores the Phantom instance for auto-confirm access
    */
-  registerPhantom(phantomInstance: PhantomExtended, addressTypes: AddressType[], icon?: string): void {
+  registerPhantom(phantomInstance: PhantomExtended, addressTypes: AddressType[]): void {
     const wrappedProviders: WalletProviders = {};
 
     // Create Phantom chain wrappers
@@ -131,7 +131,7 @@ export class InjectedWalletRegistry {
     const phantomWallet: PhantomInjectedWalletInfo = {
       id: "phantom",
       name: "Phantom",
-      icon: icon || "https://phantom.app/img/phantom-icon-purple.png",
+      icon: "", // Icon will be rendered from icons package in UI components
       addressTypes,
       providers: wrappedProviders,
       isPhantom: true,
@@ -189,7 +189,7 @@ export class InjectedWalletRegistry {
         for (const wallet of relevantWallets) {
           // Special handling for Phantom - use registerPhantom if it has phantomInstance
           if (wallet.id === "phantom" && isPhantomWallet(wallet)) {
-            this.registerPhantom(wallet.phantomInstance, wallet.addressTypes, wallet.icon);
+            this.registerPhantom(wallet.phantomInstance, wallet.addressTypes);
           } else {
             this.register(wallet);
           }

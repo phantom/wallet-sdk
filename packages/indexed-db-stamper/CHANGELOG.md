@@ -1,5 +1,16 @@
 # @phantom/indexed-db-stamper
 
+## 1.0.0-beta.6
+
+### Patch Changes
+
+- b470bcf: Sec patch
+- Updated dependencies [b470bcf]
+  - @phantom/base64url@1.0.0-beta.13
+  - @phantom/crypto@1.0.0-beta.13
+  - @phantom/embedded-provider-core@1.0.0-beta.25
+  - @phantom/sdk-types@1.0.0-beta.13
+
 ## 1.0.0-beta.5
 
 ### Patch Changes

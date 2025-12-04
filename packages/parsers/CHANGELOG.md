@@ -1,5 +1,16 @@
 # @phantom/parsers
 
+## 1.0.0-beta.13
+
+### Patch Changes
+
+- b470bcf: Sec patch
+- Updated dependencies [b470bcf]
+  - @phantom/base64url@1.0.0-beta.13
+  - @phantom/constants@1.0.0-beta.13
+  - @phantom/sdk-types@1.0.0-beta.13
+  - @phantom/utils@1.0.0-beta.25
+
 ## 1.0.0-beta.12
 
 ### Patch Changes
