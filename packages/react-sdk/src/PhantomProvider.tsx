@@ -98,7 +98,20 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
     const handleConnectError = (errorData: any) => {
       setIsConnecting(false);
       setIsConnected(false);
-      setConnectError(new Error(errorData.error || "Connection failed"));
+
+      // Don't treat "No valid session found" or "No trusted connections available" from auto-connect as errors
+      // These are expected states when no session exists, not actual errors
+      const isAutoConnectNoSession =
+        errorData.source === "auto-connect" &&
+        (errorData.error === "No valid session found" || errorData.error === "No trusted connections available");
+
+      if (isAutoConnectNoSession) {
+        // Clear any previous error state, but don't set a new error for this expected case
+        setConnectError(null);
+      } else {
+        setConnectError(new Error(errorData.error || "Connection failed"));
+      }
+
       setAddresses([]);
     };
 

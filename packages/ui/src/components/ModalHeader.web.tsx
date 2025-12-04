@@ -4,7 +4,7 @@ import { Icon } from "./Icon";
 import { Text } from "./Text";
 import type { ModalHeaderProps } from "./ModalHeader";
 
-export function ModalHeader({ goBack = false, onGoBack, title, onClose }: ModalHeaderProps) {
+export function ModalHeader({ goBack = false, onGoBack, title, onClose, hideCloseButton = false }: ModalHeaderProps) {
   const theme = useTheme();
 
   const headerStyle: CSSProperties = {
@@ -60,7 +60,7 @@ export function ModalHeader({ goBack = false, onGoBack, title, onClose }: ModalH
           {title}
         </Text>
       </div>
-      {onClose && (
+      {onClose && !hideCloseButton && (
         <button style={closeButtonStyle} onClick={onClose}>
           <Icon type="x" size={16} color={theme.secondary} />
         </button>

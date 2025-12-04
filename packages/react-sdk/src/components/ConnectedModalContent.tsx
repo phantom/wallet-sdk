@@ -5,9 +5,10 @@ import { useDisconnect } from "../hooks/useDisconnect";
 
 export interface ConnectedModalContentProps {
   onClose: () => void;
+  hideCloseButton?: boolean;
 }
 
-export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
+export function ConnectedModalContent({ onClose, hideCloseButton = false }: ConnectedModalContentProps) {
   const theme = useTheme();
   const { addresses } = usePhantom();
   const { disconnect } = useDisconnect();
@@ -97,7 +98,7 @@ export function ConnectedModalContent({ onClose }: ConnectedModalContentProps) {
 
   return (
     <div style={contentWrapperStyle}>
-      <ModalHeader title="Wallet" onClose={onClose} />
+      <ModalHeader title="Wallet" onClose={onClose} hideCloseButton={hideCloseButton} />
 
       <div style={accountListContainerStyle}>
         {disconnectError && (

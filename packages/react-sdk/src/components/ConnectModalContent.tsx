@@ -27,9 +27,15 @@ export interface ConnectModalContentProps {
   appIcon?: string;
   appName?: string;
   onClose: () => void;
+  hideCloseButton?: boolean;
 }
 
-export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: ConnectModalContentProps) {
+export function ConnectModalContent({
+  appIcon,
+  appName = "App Name",
+  onClose,
+  hideCloseButton = false,
+}: ConnectModalContentProps) {
   const theme = useTheme();
   const { isLoading, allowedProviders } = usePhantom();
   const baseConnect = useConnect();
@@ -43,6 +49,10 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
   const [providerType, setProviderType] = useState<AuthProviderType | "deeplink" | null>(null);
   const [showOtherWallets, setShowOtherWallets] = useState(false);
   const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
+
+  // Handle auth callback states - prioritize baseConnect states for auth flow
+  const isConnectingState = baseConnect.isConnecting || isConnecting;
+  const errorState = baseConnect.error ? baseConnect.error.message : error;
 
   const showDivider = !(allowedProviders.length === 1 && allowedProviders.includes("injected"));
 
@@ -247,7 +257,7 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
         `}
       </style>
 
-      {isLoading ? (
+      {isLoading || baseConnect.isConnecting ? (
         <div style={loadingContainerStyle}>
           <div style={spinnerStyle} />
           <Text variant="label" color={theme.secondary}>
@@ -264,17 +274,18 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
             }}
             title="Other Wallets"
             onClose={onClose}
+            hideCloseButton={hideCloseButton}
           />
 
           <div style={otherWalletsContainerStyle}>
-            {error && <div style={errorStyle}>{error}</div>}
+            {errorState && <div style={errorStyle}>{errorState}</div>}
 
             {discoveredWallets.map(wallet => (
               <Button
                 key={wallet.id}
                 onClick={() => connectWithWallet(wallet)}
-                disabled={isConnecting}
-                isLoading={isConnecting && providerType === "injected" && selectedWalletId === wallet.id}
+                disabled={isConnectingState}
+                isLoading={isConnectingState && providerType === "injected" && selectedWalletId === wallet.id}
                 fullWidth={true}
               >
                 <span style={walletButtonContentStyle}>
@@ -309,19 +320,19 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
         </>
       ) : (
         <>
-          <ModalHeader title="Login or Sign Up" onClose={onClose} />
+          <ModalHeader title="Login or Sign Up" onClose={onClose} hideCloseButton={hideCloseButton} />
 
           <div style={connectContentContainerStyle}>
             {appIcon && <img src={appIcon} alt={appName} style={appIconStyle} />}
 
-            {error && <div style={errorStyle}>{error}</div>}
+            {errorState && <div style={errorStyle}>{errorState}</div>}
 
             {/* Mobile device with no Phantom extension - show deeplink button */}
             {isMobile && !isExtensionInstalled.isInstalled && (
               <Button
                 onClick={connectWithDeeplink}
-                disabled={isConnecting}
-                isLoading={isConnecting && providerType === "deeplink"}
+                disabled={isConnectingState}
+                isLoading={isConnectingState && providerType === "deeplink"}
                 fullWidth={true}
               >
                 {isConnecting && providerType === "deeplink" ? "Opening Phantom..." : "Open in Phantom App"}
@@ -332,8 +343,8 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
             {!isMobile && allowedProviders.includes("phantom") && isPhantomLoginAvailable.isAvailable && (
               <LoginWithPhantomButton
                 onClick={() => connectWithAuthProvider("phantom")}
-                disabled={isConnecting}
-                isLoading={isConnecting && providerType === "phantom"}
+                disabled={isConnectingState}
+                isLoading={isConnectingState && providerType === "phantom"}
               />
             )}
 
@@ -341,8 +352,8 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
             {allowedProviders.includes("google") && (
               <Button
                 onClick={() => connectWithAuthProvider("google")}
-                disabled={isConnecting}
-                isLoading={isConnecting && providerType === "google"}
+                disabled={isConnectingState}
+                isLoading={isConnectingState && providerType === "google"}
                 fullWidth={true}
               >
                 <span style={walletButtonContentStyle}>
@@ -360,8 +371,8 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
             {allowedProviders.includes("apple") && (
               <Button
                 onClick={() => connectWithAuthProvider("apple")}
-                disabled={isConnecting}
-                isLoading={isConnecting && providerType === "apple"}
+                disabled={isConnectingState}
+                isLoading={isConnectingState && providerType === "apple"}
                 fullWidth={true}
               >
                 <span style={walletButtonContentStyle}>
@@ -392,8 +403,8 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
                   <Button
                     key={wallet.id}
                     onClick={() => connectWithWallet(wallet)}
-                    disabled={isConnecting}
-                    isLoading={isConnecting && providerType === "injected" && selectedWalletId === wallet.id}
+                    disabled={isConnectingState}
+                    isLoading={isConnectingState && providerType === "injected" && selectedWalletId === wallet.id}
                     fullWidth={true}
                   >
                     <span style={walletButtonContentStyle}>
@@ -427,7 +438,7 @@ export function ConnectModalContent({ appIcon, appName = "App Name", onClose }: 
 
                 {/* Other Wallets button (if more than 2 wallets) */}
                 {shouldShowOtherWalletsButton && (
-                  <Button onClick={() => setShowOtherWallets(true)} disabled={isConnecting} fullWidth={true}>
+                  <Button onClick={() => setShowOtherWallets(true)} disabled={isConnectingState} fullWidth={true}>
                     <span style={walletButtonContentStyle}>
                       <span style={walletButtonLeftStyle}>
                         <BoundedIcon type="wallet" size={20} background={theme.aux} color={theme.text} />

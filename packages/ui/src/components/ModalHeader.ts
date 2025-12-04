@@ -3,6 +3,7 @@ export interface ModalHeaderProps {
   onGoBack?: () => void;
   title: string;
   onClose?: () => void;
+  hideCloseButton?: boolean;
 }
 
 // Re-export from web version for TypeScript type generation
