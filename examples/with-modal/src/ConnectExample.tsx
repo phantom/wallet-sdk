@@ -1,100 +1,167 @@
-import { ConnectButton, useAccounts, usePhantom, isMobileDevice, AddressType, useTheme } from "@phantom/react-sdk";
+import { useState } from "react";
+import {
+  ConnectButton,
+  useAccounts,
+  usePhantom,
+  isMobileDevice,
+  AddressType,
+  useTheme,
+  ConnectBox,
+} from "@phantom/react-sdk";
 
-export default function ConnectExample() {
+interface ConnectExampleProps {
+  appIcon?: string;
+  appName?: string;
+}
+
+export default function ConnectExample({ appIcon, appName }: ConnectExampleProps) {
   const accounts = useAccounts();
   const { isConnected } = usePhantom();
   const theme = useTheme();
   const isMobile = isMobileDevice();
+  const [activeTab, setActiveTab] = useState<"connectbox" | "buttons">("connectbox");
 
   return (
     <div
       style={{
         width: "100%",
         maxWidth: "600px",
-        padding: "2rem",
-        background: theme.background,
-        borderRadius: "16px",
-        border: `1px solid ${theme.secondary}`,
-        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-        transition: "all 0.3s ease",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
       }}
     >
-      {/* Connection Status */}
+      {/* Top Bar: Status and Tabs */}
       <div
         style={{
-          padding: "1rem",
-          background: isConnected ? "#f0fdf4" : "#fef2f2",
-          border: `1px solid ${isConnected ? "#bbf7d0" : "#fecaca"}`,
-          borderRadius: "8px",
-          marginBottom: "1.5rem",
+          width: "100%",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "100px",
         }}
       >
-        <h3
+        {/* Tabs */}
+        <div
           style={{
-            margin: "0 0 0.5rem 0",
-            color: isConnected ? "#16a34a" : "#dc2626",
-            fontSize: "1rem",
+            display: "flex",
+            gap: "0.5rem",
           }}
         >
-          Status: {isConnected ? "Connected" : "Disconnected"}
-        </h3>
-      </div>
-
-      {/* Primary Connect Button */}
-      <div style={{ marginBottom: "2rem" }}>
-        <h3
-          style={{
-            fontSize: "1rem",
-            fontWeight: "500",
-            color: theme.text,
-            marginBottom: "0.5rem",
-            transition: "color 0.3s ease",
-          }}
-        >
-          Main Connection:
-        </h3>
-        <p
-          style={{
-            fontSize: "0.875rem",
-            color: theme.secondary,
-            marginBottom: "1rem",
-            transition: "color 0.3s ease",
-          }}
-        >
-          Click the button to connect. Once connected, it displays your wallet address.
-        </p>
-        <ConnectButton fullWidth />
-      </div>
-
-      {/* ConnectButton Component Variations */}
-      <div style={{ marginBottom: "2rem" }}>
-        <h3
-          style={{
-            fontSize: "1rem",
-            fontWeight: "500",
-            color: theme.text,
-            marginBottom: "0.5rem",
-            transition: "color 0.3s ease",
-          }}
-        >
-          Address-Specific Buttons:
-        </h3>
-        <p
-          style={{
-            fontSize: "0.875rem",
-            color: theme.secondary,
-            marginBottom: "1rem",
-            transition: "color 0.3s ease",
-          }}
-        >
-          These buttons show specific address types when connected.
-        </p>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-          <ConnectButton fullWidth={false} />
-          <ConnectButton addressType={AddressType.solana} fullWidth={false} />
-          <ConnectButton addressType={AddressType.ethereum} fullWidth={false} />
+          <button
+            onClick={() => setActiveTab("connectbox")}
+            style={{
+              padding: "0.5rem 1rem",
+              background: "transparent",
+              border: "none",
+              borderBottom:
+                activeTab === "connectbox" ? `2px solid ${theme.brand || theme.text}` : "2px solid transparent",
+              color: activeTab === "connectbox" ? theme.text : theme.secondary,
+              cursor: "pointer",
+              fontSize: "0.875rem",
+              fontWeight: activeTab === "connectbox" ? "600" : "400",
+              transition: "all 0.2s ease",
+            }}
+          >
+            Connect Box
+          </button>
+          <button
+            onClick={() => setActiveTab("buttons")}
+            style={{
+              padding: "0.5rem 1rem",
+              background: "transparent",
+              border: "none",
+              borderBottom:
+                activeTab === "buttons" ? `2px solid ${theme.brand || theme.text}` : "2px solid transparent",
+              color: activeTab === "buttons" ? theme.text : theme.secondary,
+              cursor: "pointer",
+              fontSize: "0.875rem",
+              fontWeight: activeTab === "buttons" ? "600" : "400",
+              transition: "all 0.2s ease",
+            }}
+          >
+            Connect Buttons
+          </button>
         </div>
+
+        {/* Connection Status - Small and less prominent */}
+        <span
+          style={{
+            fontSize: "0.75rem",
+            color: isConnected ? "#16a34a" : "#dc2626",
+            fontWeight: "500",
+          }}
+        >
+          {isConnected ? "Connected" : "Disconnected"}
+        </span>
       </div>
+
+      {/* Tab Content */}
+      {activeTab === "connectbox" && (
+        <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
+          <ConnectBox appIcon={appIcon} appName={appName} />
+        </div>
+      )}
+
+      {activeTab === "buttons" && (
+        <div style={{ width: "100%" }}>
+          {/* Primary Connect Button */}
+          <div style={{ marginBottom: "2rem" }}>
+            <h3
+              style={{
+                fontSize: "1rem",
+                fontWeight: "500",
+                color: theme.text,
+                marginBottom: "0.5rem",
+                transition: "color 0.3s ease",
+              }}
+            >
+              Main Connection:
+            </h3>
+            <p
+              style={{
+                fontSize: "0.875rem",
+                color: theme.secondary,
+                marginBottom: "1rem",
+                transition: "color 0.3s ease",
+              }}
+            >
+              Click the button to connect. Once connected, it displays your wallet address.
+            </p>
+            <ConnectButton fullWidth />
+          </div>
+
+          {/* ConnectButton Component Variations */}
+          <div style={{ marginBottom: "2rem" }}>
+            <h3
+              style={{
+                fontSize: "1rem",
+                fontWeight: "500",
+                color: theme.text,
+                marginBottom: "0.5rem",
+                transition: "color 0.3s ease",
+              }}
+            >
+              Address-Specific Buttons:
+            </h3>
+            <p
+              style={{
+                fontSize: "0.875rem",
+                color: theme.secondary,
+                marginBottom: "1rem",
+                transition: "color 0.3s ease",
+              }}
+            >
+              These buttons show specific address types when connected.
+            </p>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              <ConnectButton fullWidth={false} />
+              <ConnectButton addressType={AddressType.solana} fullWidth={false} />
+              <ConnectButton addressType={AddressType.ethereum} fullWidth={false} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Connected Accounts */}
       {isConnected && accounts && accounts.length > 0 && (

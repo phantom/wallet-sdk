@@ -19,6 +19,9 @@ const initialConfig: PhantomSDKConfig = {
   appId: "7b91c1dd-c3c2-4088-8db3-3e9e6b72ce96",
 };
 
+const APP_ICON = "https://picsum.photos/seed/picsum/200";
+const APP_NAME = "React SDK Demo";
+
 function App() {
   const [enabledProviders, setEnabledProviders] = useState<AuthProviderType[]>([
     "google",
@@ -69,12 +72,7 @@ function App() {
   );
 
   return (
-    <PhantomProvider
-      config={config}
-      theme={resolvedTheme}
-      appIcon="https://picsum.photos/seed/picsum/200"
-      appName="React SDK Demo"
-    >
+    <PhantomProvider config={config} theme={resolvedTheme} appIcon={APP_ICON} appName={APP_NAME}>
       <style>
         {`
           @media (max-width: 768px) {
@@ -124,7 +122,6 @@ function App() {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            justifyContent: "center",
             gap: "2rem",
             padding: "2rem",
             backgroundColor: "#0a0a0a",
@@ -132,35 +129,7 @@ function App() {
             backgroundSize: "20px 20px",
           }}
         >
-          <ConnectExample />
-
-          <div
-            style={{
-              marginTop: "3rem",
-              padding: "1.5rem",
-              background: resolvedTheme.background,
-              borderRadius: resolvedTheme.borderRadius,
-              border: `1px solid ${resolvedTheme.secondary}`,
-              textAlign: "center",
-              transition: "all 0.3s ease",
-              maxWidth: "600px",
-            }}
-          >
-            <h3 style={{ margin: "0 0 1rem 0", color: resolvedTheme.text, transition: "color 0.3s ease" }}>
-              📱 Mobile Testing
-            </h3>
-            <p
-              style={{
-                color: resolvedTheme.secondary,
-                margin: "0",
-                lineHeight: "1.5",
-                transition: "color 0.3s ease",
-              }}
-            >
-              On mobile devices, you'll see an additional "Open in Phantom App" button that will redirect to the Phantom
-              mobile app via phantom.app/ul
-            </p>
-          </div>
+          <ConnectExample appIcon={APP_ICON} appName={APP_NAME} />
         </div>
       </div>
     </PhantomProvider>
