@@ -388,70 +388,72 @@ export function ConnectModalContent({
             )}
 
             {/* Injected provider section */}
-            {!isMobile && allowedProviders.includes("injected") && isExtensionInstalled.isInstalled && (
-              <>
-                {showDivider && (
-                  <div style={dividerStyle}>
-                    <div style={dividerLineStyle} />
-                    <span style={dividerTextStyle}>OR</span>
-                    <div style={dividerLineStyle} />
-                  </div>
-                )}
+            {!isMobile &&
+              allowedProviders.includes("injected") &&
+              (isExtensionInstalled.isInstalled || discoveredWallets.length > 0) && (
+                <>
+                  {showDivider && (
+                    <div style={dividerStyle}>
+                      <div style={dividerLineStyle} />
+                      <span style={dividerTextStyle}>OR</span>
+                      <div style={dividerLineStyle} />
+                    </div>
+                  )}
 
-                {/* Inline wallets (2 or fewer) */}
-                {walletsToShowInline.map(wallet => (
-                  <Button
-                    key={wallet.id}
-                    onClick={() => connectWithWallet(wallet)}
-                    disabled={isConnectingState}
-                    isLoading={isConnectingState && providerType === "injected" && selectedWalletId === wallet.id}
-                    fullWidth={true}
-                  >
-                    <span style={walletButtonContentStyle}>
-                      <span style={walletButtonLeftStyle}>
-                        {wallet.id === "phantom" ? (
-                          <BoundedIcon type="phantom" size={20} background={"#aba0f2"} color={"white"} />
-                        ) : wallet.icon ? (
-                          <img src={wallet.icon} alt={wallet.name} style={walletIconStyle} />
-                        ) : (
-                          <BoundedIcon type="wallet" size={10} background={theme.aux} color={theme.text} />
-                        )}
-                        <span style={walletNameContainerStyle}>
-                          <Text variant="captionBold">{wallet.name}</Text>
+                  {/* Inline wallets (2 or fewer) */}
+                  {walletsToShowInline.map(wallet => (
+                    <Button
+                      key={wallet.id}
+                      onClick={() => connectWithWallet(wallet)}
+                      disabled={isConnectingState}
+                      isLoading={isConnectingState && providerType === "injected" && selectedWalletId === wallet.id}
+                      fullWidth={true}
+                    >
+                      <span style={walletButtonContentStyle}>
+                        <span style={walletButtonLeftStyle}>
+                          {wallet.id === "phantom" ? (
+                            <BoundedIcon type="phantom" size={20} background={"#aba0f2"} color={"white"} />
+                          ) : wallet.icon ? (
+                            <img src={wallet.icon} alt={wallet.name} style={walletIconStyle} />
+                          ) : (
+                            <BoundedIcon type="wallet" size={10} background={theme.aux} color={theme.text} />
+                          )}
+                          <span style={walletNameContainerStyle}>
+                            <Text variant="captionBold">{wallet.name}</Text>
+                          </span>
+                        </span>
+                        <span style={walletButtonRightStyle}>
+                          {wallet.addressTypes && wallet.addressTypes.length > 0 && (
+                            <span style={chainIndicatorsStyle}>
+                              {wallet.addressTypes.map(addressType => (
+                                <span key={`${wallet.id}-chain-${addressType}`}>
+                                  <ChainIcon addressType={addressType} size={8} />
+                                </span>
+                              ))}
+                            </span>
+                          )}
+                          <Icon type="chevron-right" size={16} color={theme.secondary} />
                         </span>
                       </span>
-                      <span style={walletButtonRightStyle}>
-                        {wallet.addressTypes && wallet.addressTypes.length > 0 && (
-                          <span style={chainIndicatorsStyle}>
-                            {wallet.addressTypes.map(addressType => (
-                              <span key={`${wallet.id}-chain-${addressType}`}>
-                                <ChainIcon addressType={addressType} size={8} />
-                              </span>
-                            ))}
-                          </span>
-                        )}
-                        <Icon type="chevron-right" size={16} color={theme.secondary} />
-                      </span>
-                    </span>
-                  </Button>
-                ))}
+                    </Button>
+                  ))}
 
-                {/* Other Wallets button (if more than 2 wallets) */}
-                {shouldShowOtherWalletsButton && (
-                  <Button onClick={() => setShowOtherWallets(true)} disabled={isConnectingState} fullWidth={true}>
-                    <span style={walletButtonContentStyle}>
-                      <span style={walletButtonLeftStyle}>
-                        <BoundedIcon type="wallet" size={20} background={theme.aux} color={theme.text} />
-                        <Text variant="captionBold">Other Wallets</Text>
+                  {/* Other Wallets button (if more than 2 wallets) */}
+                  {shouldShowOtherWalletsButton && (
+                    <Button onClick={() => setShowOtherWallets(true)} disabled={isConnectingState} fullWidth={true}>
+                      <span style={walletButtonContentStyle}>
+                        <span style={walletButtonLeftStyle}>
+                          <BoundedIcon type="wallet" size={20} background={theme.aux} color={theme.text} />
+                          <Text variant="captionBold">Other Wallets</Text>
+                        </span>
+                        <span style={walletButtonRightStyle}>
+                          <Icon type="chevron-right" size={16} color={theme.secondary} />
+                        </span>
                       </span>
-                      <span style={walletButtonRightStyle}>
-                        <Icon type="chevron-right" size={16} color={theme.secondary} />
-                      </span>
-                    </span>
-                  </Button>
-                )}
-              </>
-            )}
+                    </Button>
+                  )}
+                </>
+              )}
           </div>
 
           {/* Footer - only on main connection screen */}
