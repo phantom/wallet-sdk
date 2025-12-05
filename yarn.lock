@@ -5198,6 +5198,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@phantom/api-key-stamper@npm:^0.1.5":
+  version: 0.1.5
+  resolution: "@phantom/api-key-stamper@npm:0.1.5"
+  dependencies:
+    "@phantom/base64url": "npm:^0.1.0"
+    "@phantom/crypto": "npm:^0.1.2"
+    "@phantom/sdk-types": "npm:^0.1.4"
+    axios: "npm:^1.10.0"
+    bs58: "npm:^6.0.0"
+    buffer: "npm:^6.0.3"
+  checksum: 10c0/c36b9802f94cc8e867c1c32927d02bd2dca94afedf4b630211dd5f94c17e1e6168f7df9010f71547d276a46aa32faefcb0466332f3ba0d3b0295caf94a0b0085
+  languageName: node
+  linkType: hard
+
 "@phantom/api-key-stamper@workspace:^, @phantom/api-key-stamper@workspace:packages/api-key-stamper":
   version: 0.0.0-use.local
   resolution: "@phantom/api-key-stamper@workspace:packages/api-key-stamper"
@@ -5220,6 +5234,13 @@ __metadata:
     typescript: "npm:^5.0.4"
   languageName: unknown
   linkType: soft
+
+"@phantom/base64url@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "@phantom/base64url@npm:0.1.0"
+  checksum: 10c0/2d44477d6e195645b9e2dfe97d423dbe627ec53dd948712325b2241f397a9920c01edda2a20e8db3c72c8111a77055ee15b08f9a8ff088a94102e0abd8fbf9cf
+  languageName: node
+  linkType: hard
 
 "@phantom/base64url@workspace:^, @phantom/base64url@workspace:packages/base64url":
   version: 0.0.0-use.local
@@ -5253,6 +5274,15 @@ __metadata:
     vite: "npm:^6.3.6"
   languageName: unknown
   linkType: soft
+
+"@phantom/browser-injected-sdk@npm:^0.0.10":
+  version: 0.0.10
+  resolution: "@phantom/browser-injected-sdk@npm:0.0.10"
+  dependencies:
+    "@solana/web3.js": "npm:^1.98.2"
+  checksum: 10c0/fcc9720c8e088cdb74035ec4652ec3d3d341211cd90e5cf801b30e44f343d75893ab040b9e30b75ac971f914f3490481c235d3e84b714a257550cbf5168b4cbc
+  languageName: node
+  linkType: hard
 
 "@phantom/browser-injected-sdk@workspace:^, @phantom/browser-injected-sdk@workspace:packages/browser-injected-sdk":
   version: 0.0.0-use.local
@@ -5291,6 +5321,26 @@ __metadata:
     vite: "npm:^6.3.6"
   languageName: unknown
   linkType: soft
+
+"@phantom/browser-sdk@npm:^0.3.9":
+  version: 0.3.9
+  resolution: "@phantom/browser-sdk@npm:0.3.9"
+  dependencies:
+    "@phantom/base64url": "npm:^0.1.0"
+    "@phantom/browser-injected-sdk": "npm:^0.0.10"
+    "@phantom/client": "npm:^0.1.11"
+    "@phantom/constants": "npm:^0.0.3"
+    "@phantom/embedded-provider-core": "npm:^0.1.10"
+    "@phantom/indexed-db-stamper": "npm:^0.1.5"
+    "@phantom/parsers": "npm:^0.0.7"
+    axios: "npm:^1.10.0"
+    bs58: "npm:^6.0.0"
+    buffer: "npm:^6.0.3"
+    jose: "npm:^6.0.12"
+    tweetnacl: "npm:^1.0.3"
+  checksum: 10c0/19016464e4b3d7b3557b5338f323442a5687a5949c8bf4997241f43ec54c773297cac0188d341411a92d4b85b44b7479146f9af54f66ed2875476dfd364bea74
+  languageName: node
+  linkType: hard
 
 "@phantom/browser-sdk@workspace:^, @phantom/browser-sdk@workspace:packages/browser-sdk":
   version: 0.0.0-use.local
@@ -5344,6 +5394,23 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@phantom/client@npm:^0.1.11":
+  version: 0.1.11
+  resolution: "@phantom/client@npm:0.1.11"
+  dependencies:
+    "@phantom/api-key-stamper": "npm:^0.1.5"
+    "@phantom/base64url": "npm:^0.1.0"
+    "@phantom/constants": "npm:^0.0.3"
+    "@phantom/crypto": "npm:^0.1.2"
+    "@phantom/openapi-wallet-service": "npm:^0.1.9"
+    "@phantom/sdk-types": "npm:^0.1.5"
+    axios: "npm:^1.10.0"
+    bs58: "npm:^6.0.0"
+    buffer: "npm:^6.0.3"
+  checksum: 10c0/98a361360cce138387f0184277f514c3ce52d56c9cb792eff26f9d25dcc050884235a886fd84ed79d805bd2649a7a091bb40fc25349ef12a51186ca8d2b12c30
+  languageName: node
+  linkType: hard
+
 "@phantom/client@workspace:^, @phantom/client@workspace:packages/client":
   version: 0.0.0-use.local
   resolution: "@phantom/client@workspace:packages/client"
@@ -5370,6 +5437,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@phantom/constants@npm:^0.0.3":
+  version: 0.0.3
+  resolution: "@phantom/constants@npm:0.0.3"
+  checksum: 10c0/6bbe0df82fd531e3f3743340ff4bf4ce209af128e5745520ed929f6c9c3c5b27bf7449301699e274e92c7c71377cec15d62722f1e4cb759631b649c18e23d949
+  languageName: node
+  linkType: hard
+
 "@phantom/constants@workspace:^, @phantom/constants@workspace:packages/constants":
   version: 0.0.0-use.local
   resolution: "@phantom/constants@workspace:packages/constants"
@@ -5386,6 +5460,17 @@ __metadata:
     typescript: "npm:^5.0.4"
   languageName: unknown
   linkType: soft
+
+"@phantom/crypto@npm:^0.1.2":
+  version: 0.1.2
+  resolution: "@phantom/crypto@npm:0.1.2"
+  dependencies:
+    bs58: "npm:^5.0.0"
+    buffer: "npm:^6.0.3"
+    tweetnacl: "npm:^1.0.3"
+  checksum: 10c0/f9af1b1aa7cb12ee5c9f4e6cc60db1f4b158f08e6ba2f18fcbc5349b892de4c7cb833e8c3a9b491426ce6806c7b36b5e14f36d31ef0b31d414509844ad14812f
+  languageName: node
+  linkType: hard
 
 "@phantom/crypto@workspace:^, @phantom/crypto@workspace:packages/crypto":
   version: 0.0.0-use.local
@@ -5406,6 +5491,23 @@ __metadata:
     typescript: "npm:^5.0.4"
   languageName: unknown
   linkType: soft
+
+"@phantom/embedded-provider-core@npm:^0.1.10, @phantom/embedded-provider-core@npm:^0.1.9":
+  version: 0.1.10
+  resolution: "@phantom/embedded-provider-core@npm:0.1.10"
+  dependencies:
+    "@phantom/api-key-stamper": "npm:^0.1.5"
+    "@phantom/base64url": "npm:^0.1.0"
+    "@phantom/client": "npm:^0.1.11"
+    "@phantom/constants": "npm:^0.0.3"
+    "@phantom/parsers": "npm:^0.0.7"
+    "@phantom/sdk-types": "npm:^0.1.5"
+    bs58: "npm:^6.0.0"
+  peerDependencies:
+    typescript: ">=4.5.0"
+  checksum: 10c0/1b7d8b13a4facdfe68f821b90c64e1ccad27ae0a43c9645309d3f5cd4721260b07104c5c9e6a2a32ade5e1b20dc3a7e275123cf2338d9bf959311bd6e0f0e595
+  languageName: node
+  linkType: hard
 
 "@phantom/embedded-provider-core@workspace:^, @phantom/embedded-provider-core@workspace:packages/embedded-provider-core":
   version: 0.0.0-use.local
@@ -5436,6 +5538,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@phantom/indexed-db-stamper@npm:^0.1.5":
+  version: 0.1.5
+  resolution: "@phantom/indexed-db-stamper@npm:0.1.5"
+  dependencies:
+    "@phantom/base64url": "npm:^0.1.0"
+    "@phantom/crypto": "npm:^0.1.2"
+    "@phantom/embedded-provider-core": "npm:^0.1.9"
+    "@phantom/sdk-types": "npm:^0.1.5"
+    bs58: "npm:^6.0.0"
+    buffer: "npm:^6.0.3"
+  checksum: 10c0/211acab2dc176a41e7e481e41d90955eab7dc05390546b2fe0afc20dfe106da3972e3beee682d88325b887169f39cfc2c942e3afada4540877b7f972da842e60
+  languageName: node
+  linkType: hard
+
 "@phantom/indexed-db-stamper@workspace:^, @phantom/indexed-db-stamper@workspace:packages/indexed-db-stamper":
   version: 0.0.0-use.local
   resolution: "@phantom/indexed-db-stamper@workspace:packages/indexed-db-stamper"
@@ -5461,12 +5577,43 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@phantom/openapi-wallet-service@npm:0.1.11":
+"@phantom/openapi-wallet-service@npm:0.1.11, @phantom/openapi-wallet-service@npm:^0.1.9":
   version: 0.1.11
   resolution: "@phantom/openapi-wallet-service@npm:0.1.11"
   dependencies:
     axios: "npm:^1.12.2"
   checksum: 10c0/b9af2580907c055967b2d0fa7003ad9ee94953c37c62093e49d15e466599d7e242049c7d0eaeefc0b7ea466daeddf28d75aa01d5b68d9d651921f598ed7b6c5f
+  languageName: node
+  linkType: hard
+
+"@phantom/parsers@npm:^0.0.7":
+  version: 0.0.7
+  resolution: "@phantom/parsers@npm:0.0.7"
+  dependencies:
+    "@mysten/sui.js": "npm:^0.50.0"
+    "@phantom/base64url": "npm:^0.1.0"
+    "@phantom/constants": "npm:^0.0.3"
+    "@solana/kit": "npm:^2.1.1"
+    "@solana/web3.js": "npm:^1.95.0"
+    bitcoinjs-lib: "npm:^6.1.0"
+    bs58: "npm:^6.0.0"
+    buffer: "npm:^6.0.3"
+    ethers: "npm:^6.0.0"
+    viem: "npm:^2.0.0"
+  dependenciesMeta:
+    "@mysten/sui.js":
+      optional: true
+    "@solana/kit":
+      optional: true
+    "@solana/web3.js":
+      optional: true
+    bitcoinjs-lib:
+      optional: true
+    ethers:
+      optional: true
+    viem:
+      optional: true
+  checksum: 10c0/e5170e9ecd2ce0f5b401b0157f2f6070feb35db4dacbc092b6041496107dc073d4a84a7b51724834ca79bc20eb6a991ecff59c94e3986e81fb92875d585da586
   languageName: node
   linkType: hard
 
@@ -5613,6 +5760,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@phantom/react-sdk@npm:0.3.9":
+  version: 0.3.9
+  resolution: "@phantom/react-sdk@npm:0.3.9"
+  dependencies:
+    "@phantom/browser-sdk": "npm:^0.3.9"
+  peerDependencies:
+    react: ">=19.0.0"
+  checksum: 10c0/b34594a331214634095e3d3689c80f24ff584dfbe94b1c499bc24593500c21232b38e7d729dcd615e58a29a88099f24a613b0cb1f56e00718d5f5c1cceea5220
+  languageName: node
+  linkType: hard
+
 "@phantom/react-sdk@workspace:^, @phantom/react-sdk@workspace:packages/react-sdk":
   version: 0.0.0-use.local
   resolution: "@phantom/react-sdk@workspace:packages/react-sdk"
@@ -5668,6 +5826,16 @@ __metadata:
     typescript: "npm:^5.8.3"
   languageName: unknown
   linkType: soft
+
+"@phantom/sdk-types@npm:^0.1.4, @phantom/sdk-types@npm:^0.1.5":
+  version: 0.1.5
+  resolution: "@phantom/sdk-types@npm:0.1.5"
+  dependencies:
+    "@phantom/openapi-wallet-service": "npm:^0.1.9"
+    buffer: "npm:^6.0.3"
+  checksum: 10c0/5e384f4cbb6971435dd1cfc0f65d0daeaa4e1b64cae38216c1704e7482b45d840357b2a6877842bf909a0c559a150db5bd8e68a3cf5c129b8d45b78cedf3cc69
+  languageName: node
+  linkType: hard
 
 "@phantom/sdk-types@workspace:^, @phantom/sdk-types@workspace:packages/sdk-types":
   version: 0.0.0-use.local
@@ -5779,7 +5947,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/with-modal@workspace:examples/with-modal"
   dependencies:
-    "@phantom/react-sdk": "workspace:^"
+    "@phantom/react-sdk": "npm:0.3.9"
     "@types/react": "npm:^19.1.2"
     "@types/react-dom": "npm:^19.1.2"
     "@vitejs/plugin-react": "npm:^4.4.1"
