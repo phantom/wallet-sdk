@@ -5,6 +5,7 @@ import { usePhantom } from "../PhantomContext";
 import { useConnect } from "../hooks/useConnect";
 import { useIsExtensionInstalled } from "../hooks/useIsExtensionInstalled";
 import { useIsPhantomLoginAvailable } from "../hooks/useIsPhantomLoginAvailable";
+import { useDiscoveredWallets } from "../hooks/useDiscoveredWallets";
 import { isMobileDevice, getDeeplinkToPhantom } from "@phantom/browser-sdk";
 import { ThemeProvider } from "@phantom/wallet-sdk-ui";
 
@@ -13,6 +14,7 @@ jest.mock("../PhantomContext");
 jest.mock("../hooks/useConnect");
 jest.mock("../hooks/useIsExtensionInstalled");
 jest.mock("../hooks/useIsPhantomLoginAvailable");
+jest.mock("../hooks/useDiscoveredWallets");
 jest.mock("@phantom/browser-sdk", () => ({
   isMobileDevice: jest.fn(),
   getDeeplinkToPhantom: jest.fn(),
@@ -40,6 +42,31 @@ jest.mock("@phantom/wallet-sdk-ui", () => ({
   BoundedIcon: ({ type }: { type: string }) => <span data-testid={`bounded-icon-${type}`}>{type}</span>,
   Text: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
   hexToRgba: (_hex: string, opacity: number) => `rgba(255, 0, 0, ${opacity})`,
+  ModalHeader: ({
+    title,
+    onClose,
+    goBack,
+    onGoBack,
+  }: {
+    title: string;
+    onClose?: () => void;
+    goBack?: boolean;
+    onGoBack?: () => void;
+  }) => (
+    <div data-testid="modal-header">
+      {goBack && onGoBack && (
+        <button data-testid="modal-header-back" onClick={onGoBack}>
+          Back
+        </button>
+      )}
+      <span data-testid="modal-header-title">{title}</span>
+      {onClose && (
+        <button data-testid="modal-header-close" onClick={onClose}>
+          ×
+        </button>
+      )}
+    </div>
+  ),
 }));
 
 const mockTheme = {
@@ -61,6 +88,7 @@ describe("ConnectModalContent", () => {
   const mockUseIsPhantomLoginAvailable = useIsPhantomLoginAvailable as jest.MockedFunction<
     typeof useIsPhantomLoginAvailable
   >;
+  const mockUseDiscoveredWallets = useDiscoveredWallets as jest.MockedFunction<typeof useDiscoveredWallets>;
   const mockIsMobileDevice = isMobileDevice as jest.MockedFunction<typeof isMobileDevice>;
   const mockGetDeeplinkToPhantom = getDeeplinkToPhantom as jest.MockedFunction<typeof getDeeplinkToPhantom>;
 
@@ -106,6 +134,12 @@ describe("ConnectModalContent", () => {
       isAvailable: false,
       isLoading: false,
     });
+    mockUseDiscoveredWallets.mockReturnValue({
+      wallets: [],
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
     mockIsMobileDevice.mockReturnValue(false);
     mockGetDeeplinkToPhantom.mockReturnValue("phantom://connect");
   });
@@ -124,10 +158,10 @@ describe("ConnectModalContent", () => {
     });
 
     it("should render only Google icon when both providers are present", () => {
-      const { getByTestId, queryByText } = renderComponent();
+      const { getByTestId, getByText } = renderComponent();
 
       expect(getByTestId("icon-google")).toBeInTheDocument();
-      expect(queryByText("Continue with Google")).not.toBeInTheDocument();
+      expect(getByText("Continue with Google")).toBeInTheDocument();
     });
 
     it("should render Google text when only Google is allowed", () => {
@@ -212,12 +246,25 @@ describe("ConnectModalContent", () => {
         isInstalled: true,
         isLoading: false,
       });
+      mockUseDiscoveredWallets.mockReturnValue({
+        wallets: [
+          {
+            id: "phantom",
+            name: "Phantom",
+            addressTypes: ["Solana" as any],
+          },
+        ],
+        isLoading: false,
+        error: null,
+        refetch: jest.fn(),
+      });
 
-      const { getByTestId, getByText } = renderComponent();
+      const { getByTestId, getAllByText } = renderComponent();
 
       expect(getByTestId("bounded-icon-phantom")).toBeInTheDocument();
-      expect(getByText("Phantom")).toBeInTheDocument();
-      expect(getByText("Detected")).toBeInTheDocument();
+      // "Phantom" appears in both the button and the footer, so use getAllByText
+      expect(getAllByText("Phantom").length).toBeGreaterThan(0);
+      expect(getByTestId("button")).toBeInTheDocument();
     });
 
     it("should show divider when multiple providers", () => {

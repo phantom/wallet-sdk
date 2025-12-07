@@ -1,6 +1,11 @@
 {
   "name": "@phantom/wallet-sdk-ui",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.5",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phantom/phantom-connect-sdk",
+    "directory": "packages/ui"
+  },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",

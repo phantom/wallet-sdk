@@ -1,5 +1,51 @@
 # @phantom/indexed-db-stamper
 
+## 1.0.0-beta.7
+
+### Patch Changes
+
+- 574e5aa: Fix prepare error response parsing
+- Updated dependencies [574e5aa]
+  - @phantom/base64url@1.0.0-beta.14
+  - @phantom/crypto@1.0.0-beta.14
+  - @phantom/embedded-provider-core@1.0.0-beta.26
+  - @phantom/sdk-types@1.0.0-beta.14
+
+## 1.0.0-beta.6
+
+### Patch Changes
+
+- b470bcf: Sec patch
+- Updated dependencies [b470bcf]
+  - @phantom/base64url@1.0.0-beta.13
+  - @phantom/crypto@1.0.0-beta.13
+  - @phantom/embedded-provider-core@1.0.0-beta.25
+  - @phantom/sdk-types@1.0.0-beta.13
+
+## 1.0.0-beta.5
+
+### Patch Changes
+
+- d4e0097: Modal with release fixed
+- fcebdff: adding new provenance info
+- Updated dependencies [d4e0097]
+- Updated dependencies [fcebdff]
+  - @phantom/base64url@1.0.0-beta.12
+  - @phantom/crypto@1.0.0-beta.12
+  - @phantom/embedded-provider-core@1.0.0-beta.24
+  - @phantom/sdk-types@1.0.0-beta.12
+
+## 1.0.0-beta.4
+
+### Patch Changes
+
+- 16319b0: Modal released, included first version of wallet discovery.
+- Updated dependencies [16319b0]
+  - @phantom/base64url@1.0.0-beta.11
+  - @phantom/crypto@1.0.0-beta.11
+  - @phantom/embedded-provider-core@1.0.0-beta.23
+  - @phantom/sdk-types@1.0.0-beta.11
+
 ## 1.0.0-beta.3
 
 ### Patch Changes

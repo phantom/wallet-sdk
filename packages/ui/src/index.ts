@@ -24,3 +24,6 @@ export type { SkeletonProps } from "./components/Skeleton";
 
 export { Modal } from "./components/Modal";
 export type { ModalProps } from "./components/Modal";
+
+export { ModalHeader } from "./components/ModalHeader";
+export type { ModalHeaderProps } from "./components/ModalHeader";

@@ -1,7 +1,12 @@
 {
   "name": "@phantom/indexed-db-stamper",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.7",
   "description": "IndexedDB stamper for Phantom Wallet SDK with non-extractable key storage",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phantom/phantom-connect-sdk",
+    "directory": "packages/indexed-db-stamper"
+  },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",

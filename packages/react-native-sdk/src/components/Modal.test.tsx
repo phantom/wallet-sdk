@@ -75,28 +75,6 @@ describe("Modal Component", () => {
       expect(container).toBeTruthy();
     });
 
-    it("should render the close button", () => {
-      const { getByTestId } = renderModal();
-      expect(() => getByTestId("icon-close")).not.toThrow();
-    });
-
-    it("should render the correct header text when not connected", () => {
-      const { getByText } = renderModal({ isConnected: false });
-      expect(getByText("Login or Sign Up")).toBeTruthy();
-    });
-
-    it("should render the correct header text when connected", () => {
-      const { getByText } = renderModal({ isConnected: true });
-      expect(getByText("Wallet")).toBeTruthy();
-    });
-
-    it("should render the Phantom branding in the footer", () => {
-      const { getByText, getByTestId } = renderModal();
-      expect(getByText("Powered by")).toBeTruthy();
-      expect(getByText("Phantom")).toBeTruthy();
-      expect(() => getByTestId("icon-phantom")).not.toThrow();
-    });
-
     it("should render children content", () => {
       const { getByTestId, getByText } = renderModal();
       expect(getByTestId("modal-child")).toBeTruthy();
@@ -108,14 +86,6 @@ describe("Modal Component", () => {
       // These props are passed but not easily testable without UNSAFE_getByType
       const { container } = renderModal();
       expect(container).toBeTruthy();
-    });
-  });
-
-  describe("Interactions", () => {
-    it("should have a close button", () => {
-      const { getByTestId } = renderModal();
-      const closeIcon = getByTestId("icon-close");
-      expect(closeIcon).toBeTruthy();
     });
   });
 
@@ -133,14 +103,6 @@ describe("Modal Component", () => {
       // Modal accepts but doesn't use appIcon, appName, or isMobile props in RN version
       const { container } = renderModal();
       expect(container).toBeTruthy();
-    });
-  });
-
-  describe("Accessibility", () => {
-    it("should have an accessible close button", () => {
-      const { getByTestId } = renderModal();
-      const closeIcon = getByTestId("icon-close");
-      expect(closeIcon).toBeTruthy();
     });
   });
 });

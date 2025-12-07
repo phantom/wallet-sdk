@@ -221,6 +221,165 @@ function Header() {
 - Uses theme styling for consistent appearance
 - Fully clickable in both states
 
+### ConnectBox Component
+
+An inline embedded component that displays the connection UI directly in your page layout (without a modal backdrop). Perfect for auth callback pages or when you want a more integrated connection experience. The component automatically handles all connection states including loading, error, and success during the auth callback flow.
+
+```tsx
+import { ConnectBox } from "@phantom/react-sdk";
+
+function AuthCallbackPage() {
+  return (
+    <div>
+      <h1>Connecting to Phantom...</h1>
+      <ConnectBox />
+    </div>
+  );
+}
+```
+
+**Props:**
+
+- `maxWidth?: string | number` - Maximum width of the box. Can be a string (e.g., `"500px"`) or number (e.g., `500`). Default: `"350px"`
+- `transparent?: boolean` - When `true`, removes background, border, and shadow for a transparent appearance. Default: `false`
+- `appIcon?: string` - URL to your app icon (optional, can also be set via `PhantomProvider`)
+- `appName?: string` - Your app name (optional, can also be set via `PhantomProvider`)
+
+**Usage Examples:**
+
+```tsx
+import { ConnectBox } from "@phantom/react-sdk";
+
+// Default usage
+<ConnectBox />
+
+// Custom width
+<ConnectBox maxWidth="500px" />
+
+// Transparent (no background/border)
+<ConnectBox transparent />
+
+// Custom width with transparent
+<ConnectBox maxWidth={600} transparent />
+```
+
+**Features:**
+
+- **Inline embedded**: Renders directly in page flow (not as a floating modal)
+- **Auto state management**: Automatically shows connection/login UI when disconnected, wallet info when connected
+- **Auth callback support**: Handles loading and error states during OAuth callback flows
+- **No close button**: Designed for embedded use cases where users shouldn't dismiss the UI
+- **Theme-aware**: Uses your configured theme for consistent styling
+- **Responsive**: Adapts to mobile and desktop layouts
+
+**Use Cases:**
+
+- Auth callback pages (e.g., `/auth/callback`) where users return from OAuth providers
+- Embedded wallet connection flows in your app's layout
+- Custom connection pages where you want full control over the page design
+
+### Handling Auth Callback Pages
+
+When using embedded authentication providers (Google, Apple, Phantom Login, etc.), users are redirected to your app's callback URL after authentication. The SDK automatically handles the callback and completes the connection. Here's how to build a callback page if you're not using `ConnectBox`:
+
+**Basic Auth Callback Page:**
+
+```tsx
+import { usePhantom, useConnect, useAccounts } from "@phantom/react-sdk";
+import { useNavigate } from "react-router-dom"; // or your router
+
+function AuthCallbackPage() {
+  const navigate = useNavigate();
+  const { isConnected } = usePhantom();
+  const { isConnecting, error: connectError } = useConnect();
+  const addresses = useAccounts();
+
+  const handleGoHome = () => {
+    navigate("/");
+  };
+
+  // Loading state - SDK is processing the callback
+  if (isConnecting) {
+    return (
+      <div>
+        <h1>Connecting to wallet...</h1>
+        <p>Please wait while we complete your authentication.</p>
+      </div>
+    );
+  }
+
+  // Success state - connection completed
+  if (isConnected && addresses && addresses.length > 0) {
+    return (
+      <div>
+        <h1>Authentication Successful</h1>
+        <p>You are now connected to your wallet.</p>
+        <div>
+          <h2>Addresses:</h2>
+          {addresses.map((addr, index) => (
+            <div key={index}>
+              <strong>{addr.addressType}:</strong> {addr.address}
+            </div>
+          ))}
+        </div>
+        <button onClick={handleGoHome}>Go to Main App</button>
+      </div>
+    );
+  }
+
+  // Error state - connection failed
+  if (connectError) {
+    return (
+      <div>
+        <h1>Authentication Failed</h1>
+        <p>{connectError.message || "An unknown error occurred during authentication."}</p>
+        <div>
+          <button onClick={handleGoHome}>Go to Main App</button>
+        </div>
+      </div>
+    );
+  }
+
+  // Default state (shouldn't normally reach here)
+  return (
+    <div>
+      <h1>Processing authentication...</h1>
+    </div>
+  );
+}
+```
+
+**Key Points:**
+
+- The SDK's `autoConnect()` automatically processes the callback URL parameters when the page loads
+- Use `useConnect()` to access `isConnecting` and `error` states during the callback flow
+- Use `usePhantom()` to check `isConnected` status
+- Use `useAccounts()` to get connected wallet addresses
+- The connection state will automatically update as the SDK processes the callback
+- You can monitor `connectError` to handle authentication failures
+
+**Router Setup:**
+
+Make sure your callback route is configured in your router:
+
+```tsx
+import { Routes, Route } from "react-router-dom";
+import { PhantomProvider } from "@phantom/react-sdk";
+
+function App() {
+  return (
+    <PhantomProvider config={config} theme={darkTheme}>
+      <Routes>
+        <Route path="/auth/callback" element={<AuthCallbackPage />} />
+        <Route path="/" element={<MainApp />} />
+      </Routes>
+    </PhantomProvider>
+  );
+}
+```
+
+**Note:** For a simpler implementation, consider using the `ConnectBox` component which handles all these states automatically.
+
 ## Theming
 
 Customize the modal appearance by passing a theme object to the `PhantomProvider`. The SDK includes two built-in themes: `darkTheme` (default) and `lightTheme`.
@@ -601,7 +760,12 @@ import { useSolana } from "@phantom/react-sdk";
 import { VersionedTransaction, TransactionMessage, SystemProgram, PublicKey, Connection } from "@solana/web3.js";
 
 function SolanaOperations() {
-  const { solana } = useSolana();
+  const { solana, isAvailable } = useSolana();
+
+  // Check if Solana is available before using it
+  if (!isAvailable) {
+    return <div>Solana is not available for the current wallet</div>;
+  }
 
   const signMessage = async () => {
     const signature = await solana.signMessage("Hello Solana!");
@@ -656,7 +820,19 @@ function SolanaOperations() {
 - `switchNetwork(network)` - Switch between mainnet/devnet
 - `getPublicKey()` - Get current public key
 - `isConnected` - Connection status
-- `isAvailable` - Provider availability
+- `isAvailable` - Provider availability (see note below)
+
+**Note on `isAvailable`:**
+
+The `isAvailable` property indicates whether the Solana chain is available for the currently connected wallet:
+
+- **For embedded wallets** (Google, Apple, Phantom Login, etc.): `isAvailable` will be `true` for all networks configured in your `addressTypes` array, as embedded wallets support all configured networks.
+
+- **For Phantom injected wallet**: `isAvailable` will be `true` for all networks configured in your `addressTypes` array, as Phantom supports multiple networks.
+
+- **For other injected wallets** (discovered via Wallet Standard or EIP-6963): `isAvailable` depends on which networks the specific wallet supports. For example, if you connect to a wallet that only supports Ethereum, `isAvailable` will be `false` for Solana even if Solana is in your `addressTypes` configuration.
+
+Always check `isAvailable` before attempting to use chain-specific methods when working with injected wallets that may not support all networks.
 
 #### useEthereum
 
@@ -666,7 +842,12 @@ Hook for Ethereum chain operations:
 import { useEthereum } from "@phantom/react-sdk";
 
 function EthereumOperations() {
-  const { ethereum } = useEthereum();
+  const { ethereum, isAvailable } = useEthereum();
+
+  // Check if Ethereum is available before using it
+  if (!isAvailable) {
+    return <div>Ethereum is not available for the current wallet</div>;
+  }
 
   const signPersonalMessage = async () => {
     const accounts = await ethereum.getAccounts();
@@ -755,7 +936,19 @@ function EthereumOperations() {
 - `getChainId()` - Get current chain ID
 - `getAccounts()` - Get connected accounts
 - `isConnected` - Connection status
-- `isAvailable` - Provider availability
+- `isAvailable` - Provider availability (see note below)
+
+**Note on `isAvailable`:**
+
+The `isAvailable` property indicates whether the Ethereum chain is available for the currently connected wallet:
+
+- **For embedded wallets** (Google, Apple, Phantom Login, etc.): `isAvailable` will be `true` for all networks configured in your `addressTypes` array, as embedded wallets support all configured networks.
+
+- **For Phantom injected wallet**: `isAvailable` will be `true` for all networks configured in your `addressTypes` array, as Phantom supports multiple networks.
+
+- **For other injected wallets** (discovered via Wallet Standard or EIP-6963): `isAvailable` depends on which networks the specific wallet supports. For example, if you connect to a wallet that only supports Solana, `isAvailable` will be `false` for Ethereum even if Ethereum is in your `addressTypes` configuration.
+
+Always check `isAvailable` before attempting to use chain-specific methods when working with injected wallets that may not support all networks.
 
 **Supported EVM Networks:**
 
@@ -771,6 +964,39 @@ function EthereumOperations() {
 | Arbitrum Sepolia | `421614`   | `ethereum.switchChain(421614)`   |
 | Monad Mainnet    | `143`      | `ethereum.switchChain(143)`      |
 | Monad Testnet    | `10143`    | `ethereum.switchChain(10143)`    |
+
+### Wallet Discovery Hook
+
+#### useDiscoveredWallets
+
+Hook to get discovered injected wallets with automatic loading and error states. Discovers wallets using Wallet Standard (Solana) and EIP-6963 (Ethereum) standards.
+
+```tsx
+import { useDiscoveredWallets } from "@phantom/react-sdk";
+
+function WalletSelector() {
+  const { wallets, isLoading, error, refetch } = useDiscoveredWallets();
+
+  // wallets: InjectedWalletInfo[] - Array of discovered wallets
+  // isLoading: boolean - Loading state during discovery
+  // error: Error | null - Error state if discovery fails
+  // refetch: () => Promise<void> - Function to manually trigger discovery
+}
+```
+
+**Returns:**
+
+- `wallets: InjectedWalletInfo[]` - Array of discovered wallet information
+- `isLoading: boolean` - `true` while discovery is in progress
+- `error: Error | null` - Error object if discovery fails, `null` otherwise
+- `refetch: () => Promise<void>` - Async function to manually refresh the wallet list
+
+**Behavior:**
+
+- Automatically fetches discovered wallets when the SDK becomes available
+- If no wallets are found in the registry, triggers async `discoverWallets()` to discover them
+- Wallets are filtered based on the `addressTypes` configured in `PhantomProvider`
+- Phantom wallet is automatically included if available
 
 ### Auto-Confirm Hook (Injected Provider Only)
 
@@ -1042,6 +1268,7 @@ Quick reference of all available hooks:
 | `useIsPhantomLoginAvailable` | Check Phantom Login availability        | `{ isLoading, isAvailable }`                        |
 | `useDisconnect`              | Disconnect from wallet                  | `{ disconnect, isDisconnecting }`                   |
 | `useAutoConfirm`             | Auto-confirm management (injected only) | `{ enable, disable, status, supportedChains, ... }` |
+| `useDiscoveredWallets`       | Get discovered injected wallets         | `{ wallets, isLoading, error, refetch }`            |
 | `useSolana`                  | Solana chain operations                 | `{ signMessage, signAndSendTransaction, ... }`      |
 | `useEthereum`                | Ethereum chain operations               | `{ signPersonalMessage, sendTransaction, ... }`     |
 | `useTheme`                   | Access current theme                    | `PhantomTheme`                                      |

@@ -2,8 +2,6 @@ import { EventEmitter } from "eventemitter3";
 import type { IEthereumChain, EthTransactionRequest } from "@phantom/chain-interfaces";
 import type { Ethereum } from "@phantom/browser-injected-sdk/ethereum";
 import type { Extension } from "@phantom/browser-injected-sdk";
-import { AddressType } from "@phantom/client";
-import type { ChainCallbacks } from "./ChainCallbacks";
 
 interface PhantomExtended {
   extension: Extension;
@@ -11,26 +9,23 @@ interface PhantomExtended {
 }
 
 /**
- * Injected Ethereum chain implementation that is EIP-1193 compliant
+ * Phantom Ethereum chain implementation that is EIP-1193 compliant
+ * This wraps Phantom's Ethereum provider with event listeners and state management
  */
-export class InjectedEthereumChain implements IEthereumChain {
+export class PhantomEthereumChain implements IEthereumChain {
   private phantom: PhantomExtended;
-  private callbacks: ChainCallbacks;
-  private _connected: boolean = false;
   private _chainId: string = "0x1";
   private _accounts: string[] = [];
   private eventEmitter: EventEmitter = new EventEmitter();
 
-  constructor(phantom: PhantomExtended, callbacks: ChainCallbacks) {
+  constructor(phantom: PhantomExtended) {
     this.phantom = phantom;
-    this.callbacks = callbacks;
     this.setupEventListeners();
-    this.syncInitialState();
   }
 
   // EIP-1193 compliant properties
   get connected(): boolean {
-    return this._connected;
+    return this._accounts.length > 0;
   }
 
   get chainId(): string {
@@ -50,26 +45,21 @@ export class InjectedEthereumChain implements IEthereumChain {
       return result as T;
     }
 
-    // Delegate all other requests to the underlying provider
-    const provider = await this.phantom.ethereum.getProvider();
-    return await provider.request(args);
+    // Delegate to Phantom provider
+    const phantomProvider = await this.phantom.ethereum.getProvider();
+    return await phantomProvider.request(args);
   }
 
-  // Connection methods - delegate to provider
-  connect(): Promise<string[]> {
-    if (!this.callbacks.isConnected()) {
-      return Promise.reject(new Error("Provider not connected. Call provider connect first."));
-    }
-
-    const addresses = this.callbacks.getAddresses();
-    const ethAddresses = addresses.filter(addr => addr.addressType === AddressType.ethereum).map(addr => addr.address);
-
-    this.updateConnectionState(true, ethAddresses);
-    return Promise.resolve(ethAddresses);
+  // Connection methods
+  async connect(): Promise<string[]> {
+    const accounts = await this.phantom.ethereum.getAccounts();
+    this._accounts = accounts;
+    return accounts;
   }
 
   async disconnect(): Promise<void> {
-    await this.callbacks.disconnect();
+    await this.phantom.ethereum.disconnect();
+    this._accounts = [];
   }
 
   // Standard compliant methods (return raw values, not wrapped objects)
@@ -113,19 +103,19 @@ export class InjectedEthereumChain implements IEthereumChain {
   }
 
   isConnected(): boolean {
-    return this._connected && this.callbacks.isConnected();
+    return this.connected;
   }
 
   private setupEventListeners(): void {
     // Bridge phantom events to EIP-1193 standard events
     this.phantom.ethereum.addEventListener("connect", (accounts: string[]) => {
-      this.updateConnectionState(true, accounts);
+      this._accounts = accounts;
       this.eventEmitter.emit("connect", { chainId: this._chainId });
       this.eventEmitter.emit("accountsChanged", accounts);
     });
 
     this.phantom.ethereum.addEventListener("disconnect", () => {
-      this.updateConnectionState(false, []);
+      this._accounts = [];
       this.eventEmitter.emit("disconnect", { code: 4900, message: "Provider disconnected" });
       this.eventEmitter.emit("accountsChanged", []);
     });
@@ -139,41 +129,6 @@ export class InjectedEthereumChain implements IEthereumChain {
       this._chainId = chainId;
       this.eventEmitter.emit("chainChanged", chainId);
     });
-
-    // Listen to SDK events via callbacks (no circular reference)
-    this.callbacks.on("connect", data => {
-      const ethAddresses =
-        data.addresses
-          ?.filter((addr: any) => addr.addressType === AddressType.ethereum)
-          ?.map((addr: any) => addr.address) || [];
-
-      if (ethAddresses.length > 0) {
-        this.updateConnectionState(true, ethAddresses);
-      }
-    });
-
-    this.callbacks.on("disconnect", () => {
-      this.updateConnectionState(false, []);
-    });
-  }
-
-  private syncInitialState(): void {
-    // Sync initial state using callbacks
-    if (this.callbacks.isConnected()) {
-      const ethAddresses = this.callbacks
-        .getAddresses()
-        .filter(addr => addr.addressType === AddressType.ethereum)
-        .map(addr => addr.address);
-
-      if (ethAddresses.length > 0) {
-        this.updateConnectionState(true, ethAddresses);
-      }
-    }
-  }
-
-  private updateConnectionState(connected: boolean, accounts: string[]): void {
-    this._connected = connected;
-    this._accounts = accounts;
   }
 
   // Event methods for interface compliance

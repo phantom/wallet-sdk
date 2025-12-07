@@ -1,12 +1,9 @@
-import { useState } from "react";
 import { ConnectButton, useAccounts, usePhantom, isMobileDevice, AddressType, useTheme } from "@phantom/react-sdk";
 
 export default function ConnectExample() {
   const accounts = useAccounts();
   const { isConnected } = usePhantom();
   const theme = useTheme();
-
-  const [showDeviceInfo, setShowDeviceInfo] = useState(false);
   const isMobile = isMobileDevice();
 
   return (
@@ -22,65 +19,6 @@ export default function ConnectExample() {
         transition: "all 0.3s ease",
       }}
     >
-      <h2
-        style={{
-          fontSize: "1.5rem",
-          fontWeight: "600",
-          color: theme.text,
-          marginBottom: "1.5rem",
-          textAlign: "center",
-          transition: "color 0.3s ease",
-        }}
-      >
-        Connection Test
-      </h2>
-
-      {/* Device Info Toggle */}
-      <div style={{ marginBottom: "1.5rem", textAlign: "center" }}>
-        <button
-          onClick={() => setShowDeviceInfo(!showDeviceInfo)}
-          style={{
-            background: "transparent",
-            border: `1px solid ${theme.secondary}`,
-            color: theme.secondary,
-            padding: "0.5rem 1rem",
-            borderRadius: "6px",
-            fontSize: "0.875rem",
-            cursor: "pointer",
-            transition: "all 0.3s ease",
-          }}
-        >
-          {showDeviceInfo ? "Hide" : "Show"} Device Info
-        </button>
-
-        {showDeviceInfo && (
-          <div
-            style={{
-              marginTop: "1rem",
-              padding: "1rem",
-              background: theme.aux,
-              borderRadius: "8px",
-              fontSize: "0.875rem",
-              color: theme.secondary,
-              transition: "all 0.3s ease",
-            }}
-          >
-            <p>
-              <strong>Device Type:</strong> {isMobile ? "Mobile" : "Desktop"}
-            </p>
-            <p>
-              <strong>User Agent:</strong> {navigator.userAgent}
-            </p>
-            <p>
-              <strong>Screen Size:</strong> {window.screen.width} x {window.screen.height}
-            </p>
-            <p>
-              <strong>Touch Support:</strong> {"ontouchstart" in window ? "Yes" : "No"}
-            </p>
-          </div>
-        )}
-      </div>
-
       {/* Connection Status */}
       <div
         style={{

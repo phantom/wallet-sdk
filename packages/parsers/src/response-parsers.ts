@@ -169,23 +169,30 @@ export function parseSolanaSignedTransaction(base64RawTransaction: string): Tran
   try {
     // Use @phantom/base64url utility for proper browser compatibility
     const transactionBytes = base64urlDecode(base64RawTransaction);
-
-    // First try to parse as a legacy Transaction
-    try {
-      const transaction = Transaction.from(transactionBytes);
-      return transaction;
-    } catch (legacyError) {
-      // If legacy parsing fails, try as VersionedTransaction
-      // Legacy parsing fails with specific error for versioned messages
-      if (legacyError instanceof Error && legacyError.message.includes("Versioned messages")) {
-        const versionedTransaction = VersionedTransaction.deserialize(transactionBytes);
-        return versionedTransaction;
-      }
-      // Re-throw if it's a different error
-      throw legacyError;
-    }
+    return deserializeSolanaTransaction(transactionBytes);
   } catch (error) {
     // Fallback: return null if both parsing methods fail
     return null;
+  }
+}
+
+/**
+ * Deserialize Solana transaction from Uint8Array bytes
+ * Supports both legacy Transaction and VersionedTransaction formats
+ */
+export function deserializeSolanaTransaction(transactionBytes: Uint8Array): Transaction | VersionedTransaction {
+  // First try to parse as a legacy Transaction
+  try {
+    const transaction = Transaction.from(transactionBytes);
+    return transaction;
+  } catch (legacyError) {
+    // If legacy parsing fails, try as VersionedTransaction
+    // Legacy parsing fails with specific error for versioned messages
+    if (legacyError instanceof Error && legacyError.message.includes("Versioned messages")) {
+      const versionedTransaction = VersionedTransaction.deserialize(transactionBytes);
+      return versionedTransaction;
+    }
+    // Re-throw if it's a different error
+    throw legacyError;
   }
 }

@@ -30,7 +30,6 @@ const useBaseButtonStyle = ({ fullWidth, disabled, fontSize, fontWeight }: BaseB
     cursor: disabled ? "not-allowed" : "pointer",
     transition: "background-color 0.2s",
     gap: "8px",
-    opacity: disabled ? 0.6 : 1,
   };
 };
 
@@ -114,7 +113,7 @@ export interface LoginWithPhantomButtonProps {
 }
 
 export function LoginWithPhantomButton({
-  children = "Login with Phantom",
+  children = "Continue with Phantom",
   onClick,
   disabled = false,
   fullWidth = true,
@@ -157,6 +156,26 @@ export function LoginWithPhantomButton({
     setIsHovering(false);
   };
 
+  const buttonContentStyle: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "8px",
+    width: "100%",
+  };
+
+  const buttonLeftStyle: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+  };
+
+  const buttonRightStyle: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+  };
+
   return (
     <button
       style={buttonStyle}
@@ -165,11 +184,16 @@ export function LoginWithPhantomButton({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        <Icon type="phantom" size={20} />
-        <Text variant="captionBold" color="#FFFFFF">
-          {isLoading ? "Connecting..." : children}
-        </Text>
+      <span style={buttonContentStyle}>
+        <span style={buttonLeftStyle}>
+          <Icon type="phantom" size={20} />
+          <Text variant="captionBold" color="#FFFFFF">
+            {isLoading ? "Connecting..." : children}
+          </Text>
+        </span>
+        <span style={buttonRightStyle}>
+          <Icon type="chevron-right" size={16} color="#FFFFFF" />
+        </span>
       </span>
     </button>
   );

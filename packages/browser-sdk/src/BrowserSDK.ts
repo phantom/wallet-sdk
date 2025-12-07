@@ -1,12 +1,20 @@
-import type { BrowserSDKConfig, ConnectResult, WalletAddress, AuthOptions, AuthProviderType } from "./types";
+import type {
+  BrowserSDKConfig,
+  ConnectResult,
+  WalletAddress,
+  AuthOptions,
+  AuthProviderType,
+  AddressType,
+} from "./types";
 import { ProviderManager, type ProviderPreference } from "./ProviderManager";
 import { debug, DebugCategory, type DebugLevel, type DebugCallback } from "./debug";
-import { waitForPhantomExtension } from "./waitForPhantomExtension";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
 import type { EmbeddedProviderEvent, EventCallback } from "@phantom/embedded-provider-core";
 import { EMBEDDED_PROVIDER_AUTH_TYPES } from "@phantom/embedded-provider-core";
 import type { InjectedProvider } from "./providers/injected";
 import { DEFAULT_EMBEDDED_WALLET_TYPE } from "@phantom/constants";
+import type { InjectedWalletInfo } from "./wallets/registry";
+import { getWalletRegistry } from "./wallets/registry";
 import type {
   AutoConfirmEnableParams,
   AutoConfirmResult,
@@ -17,6 +25,9 @@ const BROWSER_SDK_PROVIDER_TYPES: readonly AuthProviderType[] = [...EMBEDDED_PRO
 
 export class BrowserSDK {
   private providerManager: ProviderManager;
+  private walletRegistry = getWalletRegistry();
+  private config: BrowserSDKConfig;
+  public isLoading = true;
 
   constructor(config: BrowserSDKConfig) {
     debug.info(DebugCategory.BROWSER_SDK, "Initializing BrowserSDK", {
@@ -66,7 +77,18 @@ export class BrowserSDK {
       );
     }
 
+    this.config = config;
     this.providerManager = new ProviderManager(config);
+
+    // Start wallet discovery (non-blocking)
+
+    void this.discoverWallets();
+  }
+
+  discoverWallets(): Promise<void> {
+    return this.walletRegistry.discover(this.config.addressTypes).finally(() => {
+      this.isLoading = false;
+    });
   }
 
   // ===== CHAIN API =====
@@ -154,14 +176,22 @@ export class BrowserSDK {
     return this.providerManager.getCurrentProviderInfo();
   }
 
-  // ===== UTILITY METHODS =====
-
   /**
-   * Check if Phantom extension is installed
+   * Get enabled address types for the current provider
+   * - For embedded provider: returns config.addressTypes
+   * - For Phantom injected: returns config.addressTypes
+   * - For discovered wallets: returns the wallet's addressTypes from registry
    */
-  static async isPhantomInstalled(timeoutMs?: number): Promise<boolean> {
-    return waitForPhantomExtension(timeoutMs);
+  getEnabledAddressTypes(): AddressType[] {
+    const currentProvider = this.providerManager.getCurrentProvider();
+    if (!currentProvider) {
+      return [];
+    }
+
+    return currentProvider.getEnabledAddressTypes();
   }
+
+  // ===== UTILITY METHODS =====
 
   /**
    * Add event listener for provider events (connect, connect_start, connect_error, disconnect, error)
@@ -200,45 +230,25 @@ export class BrowserSDK {
     }
   }
 
-  /**
-   * Debug configuration methods
-   * These allow dynamic debug configuration without SDK reinstantiation
-   */
-
-  /**
-   * Enable debug logging
-   */
   enableDebug(): void {
     debug.enable();
     debug.info(DebugCategory.BROWSER_SDK, "Debug logging enabled");
   }
 
-  /**
-   * Disable debug logging
-   */
   disableDebug(): void {
     debug.disable();
   }
 
-  /**
-   * Set debug level
-   */
   setDebugLevel(level: DebugLevel): void {
     debug.setLevel(level);
     debug.info(DebugCategory.BROWSER_SDK, "Debug level updated", { level });
   }
 
-  /**
-   * Set debug callback function
-   */
   setDebugCallback(callback: DebugCallback): void {
     debug.setCallback(callback);
     debug.info(DebugCategory.BROWSER_SDK, "Debug callback updated");
   }
 
-  /**
-   * Configure debug settings all at once
-   */
   configureDebug(config: { enabled?: boolean; level?: DebugLevel; callback?: DebugCallback }): void {
     if (config.enabled !== undefined) {
       if (config.enabled) {
@@ -361,6 +371,24 @@ export class BrowserSDK {
         error: (error as Error).message,
       });
       throw error;
+    }
+  }
+
+  getDiscoveredWallets(): InjectedWalletInfo[] {
+    debug.log(DebugCategory.BROWSER_SDK, "Getting discovered wallets");
+
+    try {
+      const allWallets = this.walletRegistry.getByAddressTypes(this.config.addressTypes);
+      debug.log(DebugCategory.BROWSER_SDK, "Retrieved discovered wallets", {
+        count: allWallets.length,
+        walletIds: allWallets.map(w => w.id),
+      });
+      return allWallets;
+    } catch (error) {
+      debug.error(DebugCategory.BROWSER_SDK, "Failed to get discovered wallets", {
+        error: (error as Error).message,
+      });
+      return [];
     }
   }
 }

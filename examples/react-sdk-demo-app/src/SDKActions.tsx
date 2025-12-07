@@ -9,6 +9,7 @@ import {
   useAutoConfirm,
   NetworkId,
   ConnectButton,
+  ConnectBox,
 } from "@phantom/react-sdk";
 import {
   SystemProgram,
@@ -32,8 +33,8 @@ import { useBalance } from "./hooks/useBalance";
 export function SDKActions() {
   const { connect, isConnecting, isLoading, error: connectError } = useConnect();
   const { disconnect, isDisconnecting } = useDisconnect();
-  const { solana } = useSolana();
-  const { ethereum } = useEthereum();
+  const { solana, isAvailable: isSolanaAvailable } = useSolana();
+  const { ethereum, isAvailable: isEthereumAvailable } = useEthereum();
   const { isConnected, user } = usePhantom();
   const autoConfirm = useAutoConfirm();
   const addresses = useAccounts();
@@ -51,6 +52,7 @@ export function SDKActions() {
   const [customSolDestination, setCustomSolDestination] = useState("8dvUxPRHyHGw9W68yP73GkXCjBCjRJuLrANj9n1SXRGb");
   const [isSendingEthMainnet, setIsSendingEthMainnet] = useState(false);
   const [isSendingPolygon, setIsSendingPolygon] = useState(false);
+  const [isSwitchingNetwork, setIsSwitchingNetwork] = useState(false);
 
   const solanaAddress = addresses?.find(addr => addr.addressType === "Solana")?.address || null;
   const ethereumAddress = addresses?.find(addr => addr.addressType === "Ethereum")?.address || null;
@@ -89,8 +91,8 @@ export function SDKActions() {
 
   // Attempt to sign a Solana transaction with a program ID that is NOT in the allowlist
   const onSignDeniedProgramTransaction = async () => {
-    if (!isConnected || !solanaAddress) {
-      alert("Please connect your wallet first.");
+    if (!isConnected || !solanaAddress || !isSolanaAvailable) {
+      alert("Please connect your wallet first and ensure Solana is available.");
       return;
     }
     try {
@@ -159,6 +161,10 @@ export function SDKActions() {
     try {
       setIsSigningMessageType(type);
       if (type === "solana") {
+        if (!isSolanaAvailable) {
+          alert("Solana chain not available. The selected wallet does not support Solana.");
+          return;
+        }
         const result = await solana.signMessage("Hello from Phantom SDK!");
         if (!result) {
           alert("Solana chain not available");
@@ -166,6 +172,10 @@ export function SDKActions() {
         }
         alert(`Message Signed! Signature: ${bs58.encode(result.signature)}`);
       } else {
+        if (!isEthereumAvailable) {
+          alert("Ethereum chain not available. The selected wallet does not support Ethereum.");
+          return;
+        }
         const ethAddress = addresses.find(addr => addr.addressType === "Ethereum");
         if (!ethAddress) {
           alert("No Ethereum address found");
@@ -173,7 +183,7 @@ export function SDKActions() {
         }
         const message = "Hello from Phantom SDK!";
         const prefixedMessage = "0x" + Buffer.from(message, "utf8").toString("hex");
-        const result = await ethereum?.signPersonalMessage(prefixedMessage, ethAddress.address);
+        const result = await ethereum.signPersonalMessage(prefixedMessage, ethAddress.address);
         if (!result) {
           alert("Ethereum chain not available");
           return;
@@ -191,6 +201,11 @@ export function SDKActions() {
   const onSignTypedData = async () => {
     if (!isConnected || !addresses || addresses.length === 0) {
       alert("Please connect your wallet first.");
+      return;
+    }
+
+    if (!isEthereumAvailable) {
+      alert("Ethereum chain not available. The selected wallet does not support Ethereum.");
       return;
     }
 
@@ -242,7 +257,7 @@ export function SDKActions() {
         },
       };
 
-      const result = await ethereum?.signTypedData(typedData, ethAddress.address);
+      const result = await ethereum.signTypedData(typedData, ethAddress.address);
       if (!result) {
         alert("Ethereum chain not available");
         return;
@@ -264,6 +279,10 @@ export function SDKActions() {
     try {
       setIsSigningOnlyTransaction(type);
       if (type === "solana") {
+        if (!isSolanaAvailable) {
+          alert("Solana chain not available. The selected wallet does not support Solana.");
+          return;
+        }
         if (!solanaAddress) {
           alert("No Solana address found");
           return;
@@ -298,6 +317,10 @@ export function SDKActions() {
         alert(`Transaction signed! Signature: ${JSON.stringify(result)}`);
       } else {
         // Ethereum
+        if (!isEthereumAvailable) {
+          alert("Ethereum chain not available. The selected wallet does not support Ethereum.");
+          return;
+        }
         const ethAddress = addresses.find(addr => addr.addressType === "Ethereum");
         if (!ethAddress) {
           alert("No Ethereum address found");
@@ -314,7 +337,7 @@ export function SDKActions() {
           chainId: numberToHex(11155111), // Sepolia testnet
         };
 
-        const result = await ethereum?.signTransaction(transactionParams);
+        const result = await ethereum.signTransaction(transactionParams);
         if (!result) {
           alert("Ethereum chain not available");
           return;
@@ -330,8 +353,8 @@ export function SDKActions() {
   };
 
   const onSignAndSendTransaction = async () => {
-    if (!isConnected || !solanaAddress) {
-      alert("Please connect your wallet first.");
+    if (!isConnected || !solanaAddress || !isSolanaAvailable) {
+      alert("Please connect your wallet first and ensure Solana is available.");
       return;
     }
     try {
@@ -379,6 +402,11 @@ export function SDKActions() {
       return;
     }
 
+    if (!isEthereumAvailable) {
+      alert("Ethereum chain not available. The selected wallet does not support Ethereum.");
+      return;
+    }
+
     const ethAddress = addresses.find(addr => addr.addressType === "Ethereum");
     if (!ethAddress) {
       alert("No Ethereum address found");
@@ -398,7 +426,7 @@ export function SDKActions() {
         chainId: numberToHex(11155111), // Sepolia testnet
       };
 
-      const result = await ethereum?.sendTransaction(transactionParams);
+      const result = await ethereum.sendTransaction(transactionParams);
       if (!result) {
         alert("Ethereum chain not available");
         return;
@@ -413,8 +441,8 @@ export function SDKActions() {
   };
 
   const onSignAllTransactions = async () => {
-    if (!isConnected || !solanaAddress) {
-      alert("Please connect your wallet first.");
+    if (!isConnected || !solanaAddress || !isSolanaAvailable) {
+      alert("Please connect your wallet first and ensure Solana is available.");
       return;
     }
     try {
@@ -449,7 +477,9 @@ export function SDKActions() {
         alert("Solana chain not available");
         return;
       }
-      alert(`All transactions signed! Results: ${JSON.stringify(results)}`);
+      // Note: Results may show as {} in JSON.stringify because they only have serialize() methods
+      // But the transactions are valid and can be used
+      alert(`All transactions signed! ${results.length} transaction(s) ready.`);
     } catch (error) {
       console.error("Error signing all transactions:", error);
       alert(`Error signing all transactions: ${(error as Error).message || error}`);
@@ -459,8 +489,8 @@ export function SDKActions() {
   };
 
   const onSendTokens = async () => {
-    if (!isConnected || !solanaAddress) {
-      alert("Please connect your wallet first.");
+    if (!isConnected || !solanaAddress || !isSolanaAvailable) {
+      alert("Please connect your wallet first and ensure Solana is available.");
       return;
     }
     try {
@@ -555,8 +585,8 @@ export function SDKActions() {
   };
 
   const onStakeSol = async () => {
-    if (!isConnected || !solanaAddress) {
-      alert("Please connect your wallet first.");
+    if (!isConnected || !solanaAddress || !isSolanaAvailable) {
+      alert("Please connect your wallet first and ensure Solana is available.");
       return;
     }
     try {
@@ -659,8 +689,8 @@ export function SDKActions() {
   };
 
   const onSendCustomSol = async () => {
-    if (!isConnected || !solanaAddress) {
-      alert("Please connect your wallet first.");
+    if (!isConnected || !solanaAddress || !isSolanaAvailable) {
+      alert("Please connect your wallet first and ensure Solana is available.");
       return;
     }
 
@@ -681,11 +711,22 @@ export function SDKActions() {
       // Get recent blockhash
       const { blockhash } = await connection.getLatestBlockhash();
 
+      // Validate recipient address
+      if (!customSolDestination || customSolDestination.trim() === "") {
+        alert("Please enter a destination Solana address.");
+        return;
+      }
+
+      let targetAddress: PublicKey;
+      try {
+        targetAddress = new PublicKey(customSolDestination.trim());
+      } catch (error) {
+        alert("Invalid Solana address. Please enter a valid address.");
+        return;
+      }
+
       // Convert SOL to lamports
       const lamports = Math.floor(amount * LAMPORTS_PER_SOL);
-
-      // Target address
-      const targetAddress = new PublicKey("8dvUxPRHyHGw9W68yP73GkXCjBCjRJuLrANj9n1SXRGb");
 
       // Create transfer instruction
       const transferInstruction = SystemProgram.transfer({
@@ -702,6 +743,14 @@ export function SDKActions() {
       }).compileToV0Message();
 
       const transaction = new VersionedTransaction(messageV0);
+
+      // Try to switch to mainnet first (for wallets like Solflare that need explicit chain switching)
+      try {
+        await solana.switchNetwork("mainnet");
+      } catch (error) {
+        // Ignore switch network errors - some wallets don't support it or are already on mainnet
+        console.error("Note: Could not switch network (may already be on mainnet):", error);
+      }
 
       // Sign and send transaction
       const result = await solana.signAndSendTransaction(transaction);
@@ -723,8 +772,8 @@ export function SDKActions() {
   };
 
   const onSendEthMainnet = async () => {
-    if (!isConnected || !ethereumAddress) {
-      alert("Please connect your wallet first.");
+    if (!isConnected || !ethereumAddress || !isEthereumAvailable) {
+      alert("Please connect your wallet first and ensure Ethereum is available.");
       return;
     }
 
@@ -739,7 +788,7 @@ export function SDKActions() {
         chainId: numberToHex(1), // Ethereum mainnet
       };
 
-      const result = await ethereum?.sendTransaction(transactionParams);
+      const result = await ethereum.sendTransaction(transactionParams);
       if (!result) {
         alert("Ethereum chain not available");
         return;
@@ -754,8 +803,8 @@ export function SDKActions() {
   };
 
   const onSendPolygon = async () => {
-    if (!isConnected || !ethereumAddress) {
-      alert("Please connect your wallet first.");
+    if (!isConnected || !ethereumAddress || !isEthereumAvailable) {
+      alert("Please connect your wallet first and ensure Ethereum is available.");
       return;
     }
 
@@ -770,7 +819,7 @@ export function SDKActions() {
         chainId: numberToHex(137), // Polygon mainnet
       };
 
-      const result = await ethereum?.sendTransaction(transactionParams);
+      const result = await ethereum.sendTransaction(transactionParams);
       if (!result) {
         alert("Ethereum chain not available");
         return;
@@ -804,6 +853,23 @@ export function SDKActions() {
     } catch (error) {
       console.error("Error disabling auto-confirm:", error);
       alert(`Error disabling auto-confirm: ${(error as Error).message || error}`);
+    }
+  };
+
+  const onSwitchToSolanaMainnet = async () => {
+    if (!isConnected || !isSolanaAvailable) {
+      alert("Please connect your wallet first and ensure Solana is available.");
+      return;
+    }
+    try {
+      setIsSwitchingNetwork(true);
+      await solana.switchNetwork("mainnet");
+      alert("Switched to Solana mainnet!");
+    } catch (error) {
+      console.error("Error switching network:", error);
+      alert(`Error switching network: ${(error as Error).message || error}`);
+    } finally {
+      setIsSwitchingNetwork(false);
     }
   };
 
@@ -886,6 +952,13 @@ export function SDKActions() {
               Or use the ConnectButton component:
             </h4>
             <ConnectButton fullWidth />
+          </div>
+
+          <div style={{ marginTop: "1.5rem" }}>
+            <h4 style={{ marginBottom: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
+              Or use the ConnectBox component:
+            </h4>
+            <ConnectBox maxWidth="500px" />
           </div>
         </div>
       )}
@@ -1009,6 +1082,12 @@ export function SDKActions() {
                 : !hasSolanaBalance
                   ? "Insufficient SOL Balance (need > 0)"
                   : "Sign & Send Transaction (Solana)"}
+            </button>
+            <button
+              onClick={onSwitchToSolanaMainnet}
+              disabled={!isConnected || isSwitchingNetwork || !isSolanaAvailable}
+            >
+              {isSwitchingNetwork ? "Switching..." : "Switch to Solana Mainnet"}
             </button>
             <button onClick={onSendEthTransaction} disabled={!isConnected || isSendingEthTransaction}>
               {isSendingEthTransaction ? "Sending..." : "Sign & Send Transaction (Ethereum)"}

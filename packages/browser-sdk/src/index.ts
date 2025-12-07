@@ -48,3 +48,5 @@ export type {
   EmbeddedProviderEventMap,
   EventCallback,
 } from "@phantom/embedded-provider-core";
+
+export type { InjectedWalletInfo, InjectedWalletId } from "./wallets/registry";

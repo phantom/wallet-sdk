@@ -1,7 +1,12 @@
 {
   "name": "@phantom/server-sdk",
-  "version": "1.0.0-beta.22",
+  "version": "1.0.0-beta.26",
   "description": "Server SDK for Phantom Wallet",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phantom/phantom-connect-sdk",
+    "directory": "packages/server-sdk"
+  },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",

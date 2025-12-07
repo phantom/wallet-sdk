@@ -1,5 +1,51 @@
 # @phantom/react-sdk
 
+## 1.0.0-beta.26
+
+### Patch Changes
+
+- 574e5aa: Fix prepare error response parsing
+- Updated dependencies [574e5aa]
+  - @phantom/browser-sdk@1.0.0-beta.26
+  - @phantom/chain-interfaces@1.0.0-beta.14
+  - @phantom/constants@1.0.0-beta.14
+  - @phantom/wallet-sdk-ui@1.0.0-beta.5
+
+## 1.0.0-beta.25
+
+### Patch Changes
+
+- b470bcf: Sec patch
+- Updated dependencies [b470bcf]
+  - @phantom/browser-sdk@1.0.0-beta.25
+  - @phantom/chain-interfaces@1.0.0-beta.13
+  - @phantom/constants@1.0.0-beta.13
+  - @phantom/wallet-sdk-ui@1.0.0-beta.4
+
+## 1.0.0-beta.24
+
+### Patch Changes
+
+- d4e0097: Modal with release fixed
+- fcebdff: adding new provenance info
+- Updated dependencies [d4e0097]
+- Updated dependencies [fcebdff]
+  - @phantom/browser-sdk@1.0.0-beta.24
+  - @phantom/chain-interfaces@1.0.0-beta.12
+  - @phantom/constants@1.0.0-beta.12
+  - @phantom/wallet-sdk-ui@1.0.0-beta.3
+
+## 1.0.0-beta.23
+
+### Patch Changes
+
+- 16319b0: Modal released, included first version of wallet discovery.
+- Updated dependencies [16319b0]
+  - @phantom/browser-sdk@1.0.0-beta.23
+  - @phantom/chain-interfaces@1.0.0-beta.11
+  - @phantom/constants@1.0.0-beta.11
+  - @phantom/wallet-sdk-ui@1.0.0-beta.2
+
 ## 1.0.0-beta.22
 
 ### Patch Changes
