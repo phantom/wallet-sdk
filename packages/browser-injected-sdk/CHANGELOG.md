@@ -1,5 +1,14 @@
 # @phantom/browser-sdk
 
+## 1.0.0-beta.12
+
+### Patch Changes
+
+- bef0677: Render discovered wallets even if phantom is not present
+- Updated dependencies [bef0677]
+  - @phantom/constants@1.0.0-beta.15
+  - @phantom/sdk-types@1.0.0-beta.15
+
 ## 1.0.0-beta.11
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @phantom/utils
 
+## 1.0.0-beta.27
+
+### Patch Changes
+
+- bef0677: Render discovered wallets even if phantom is not present
+
 ## 1.0.0-beta.26
 
 ### Patch Changes

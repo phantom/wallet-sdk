@@ -1,5 +1,16 @@
 # @phantom/indexed-db-stamper
 
+## 1.0.0-beta.8
+
+### Patch Changes
+
+- bef0677: Render discovered wallets even if phantom is not present
+- Updated dependencies [bef0677]
+  - @phantom/base64url@1.0.0-beta.15
+  - @phantom/crypto@1.0.0-beta.15
+  - @phantom/embedded-provider-core@1.0.0-beta.27
+  - @phantom/sdk-types@1.0.0-beta.15
+
 ## 1.0.0-beta.7
 
 ### Patch Changes

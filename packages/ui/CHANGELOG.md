@@ -1,5 +1,11 @@
 # @phantom/wallet-sdk-ui
 
+## 1.0.0-beta.6
+
+### Patch Changes
+
+- bef0677: Render discovered wallets even if phantom is not present
+
 ## 1.0.0-beta.5
 
 ### Patch Changes

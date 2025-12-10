@@ -1,5 +1,16 @@
 # @phantom/parsers
 
+## 1.0.0-beta.15
+
+### Patch Changes
+
+- bef0677: Render discovered wallets even if phantom is not present
+- Updated dependencies [bef0677]
+  - @phantom/base64url@1.0.0-beta.15
+  - @phantom/constants@1.0.0-beta.15
+  - @phantom/sdk-types@1.0.0-beta.15
+  - @phantom/utils@1.0.0-beta.27
+
 ## 1.0.0-beta.14
 
 ### Patch Changes
