@@ -82,11 +82,12 @@ describe("ModalProvider", () => {
       sdk: null,
       isConnecting: false,
       isLoading: false,
-      connectError: null,
+      errors: {},
       isClient: true,
       user: null,
       theme: {} as any,
       allowedProviders: ["google", "apple"],
+      clearError: jest.fn(),
     });
     mockIsMobileDevice.mockReturnValue(false);
   });

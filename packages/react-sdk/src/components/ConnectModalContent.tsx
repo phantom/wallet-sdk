@@ -1,10 +1,5 @@
 import { useState, useCallback, useMemo, type CSSProperties } from "react";
-import {
-  isMobileDevice,
-  getDeeplinkToPhantom,
-  type AuthProviderType,
-  type InjectedWalletInfo,
-} from "@phantom/browser-sdk";
+import { isMobileDevice, type AuthProviderType, type InjectedWalletInfo } from "@phantom/browser-sdk";
 import {
   Button,
   LoginWithPhantomButton,
@@ -90,23 +85,23 @@ export function ConnectModalContent({
     [connectWithAuthProvider],
   );
 
-  const connectWithDeeplink = useCallback(() => {
+  const connectWithDeeplink = useCallback(async () => {
     try {
       setIsConnecting(true);
       setError(null);
       setProviderType("deeplink");
 
-      const deeplinkUrl = getDeeplinkToPhantom();
-      window.location.href = deeplinkUrl;
+      await baseConnect.connect({ provider: "deeplink" });
 
       onClose();
-    } catch {
-      setError("Failed to open deeplink");
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to open deeplink";
+      setError(errorMessage);
     } finally {
       setIsConnecting(false);
       setProviderType(null);
     }
-  }, [onClose]);
+  }, [baseConnect, onClose]);
 
   const appIconStyle: CSSProperties = {
     width: "56px",
@@ -328,20 +323,22 @@ export function ConnectModalContent({
             {errorState && <div style={errorStyle}>{errorState}</div>}
 
             {/* Mobile device with no Phantom extension - show deeplink button */}
-            {isMobile && !isExtensionInstalled.isInstalled && (
-              <Button
+            {isMobile && !isExtensionInstalled.isInstalled && allowedProviders.includes("deeplink") && (
+              <LoginWithPhantomButton
+                testId="deeplink-button"
                 onClick={connectWithDeeplink}
                 disabled={isConnectingState}
                 isLoading={isConnectingState && providerType === "deeplink"}
                 fullWidth={true}
               >
                 {isConnecting && providerType === "deeplink" ? "Opening Phantom..." : "Open in Phantom App"}
-              </Button>
+              </LoginWithPhantomButton>
             )}
 
             {/* Desktop Phantom Login button */}
             {!isMobile && allowedProviders.includes("phantom") && isPhantomLoginAvailable.isAvailable && (
               <LoginWithPhantomButton
+                testId="login-with-phantom-button"
                 onClick={() => connectWithAuthProvider("phantom")}
                 disabled={isConnectingState}
                 isLoading={isConnectingState && providerType === "phantom"}
@@ -349,7 +346,8 @@ export function ConnectModalContent({
             )}
 
             {/* Google and Apple buttons */}
-            {allowedProviders.includes("google") && (
+            {/* Hide Google login on mobile when extension is detected (webview doesn't support it) */}
+            {allowedProviders.includes("google") && !(isMobile && isExtensionInstalled.isInstalled) && (
               <Button
                 onClick={() => connectWithAuthProvider("google")}
                 disabled={isConnectingState}
@@ -388,9 +386,10 @@ export function ConnectModalContent({
             )}
 
             {/* Injected provider section */}
-            {!isMobile &&
-              allowedProviders.includes("injected") &&
-              (isExtensionInstalled.isInstalled || discoveredWallets.length > 0) && (
+            {/* Show on desktop OR on mobile when extension is detected (Phantom app webview) */}
+            {allowedProviders.includes("injected") &&
+              (isExtensionInstalled.isInstalled || discoveredWallets.length > 0) &&
+              (!isMobile || isExtensionInstalled.isInstalled) && (
                 <>
                   {showDivider && (
                     <div style={dividerStyle}>

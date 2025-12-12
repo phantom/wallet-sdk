@@ -1,5 +1,25 @@
 # @phantom/constants
 
+## 1.0.0
+
+### Major Changes
+
+- 22e46cd: New SDKs chain specific interface, prepare for initial beta release
+- 43c84e4: First release, check https://docs.phantom.com/introduction to get started
+
+### Patch Changes
+
+- f54d77f: New version
+- 8cd9ac7: Release with new interfaces, appId
+- d35daaa: Bump all dependencies
+- b470bcf: Sec patch
+- a290d0e: Change sdk optional parameters
+- bef0677: Render discovered wallets even if phantom is not present
+- d4e0097: Modal with release fixed
+- fcebdff: adding new provenance info
+- 16319b0: Modal released, included first version of wallet discovery.
+- 574e5aa: Fix prepare error response parsing
+
 ## 1.0.0-beta.15
 
 ### Patch Changes

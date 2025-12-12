@@ -138,30 +138,6 @@ describe("ConnectModalContent", () => {
       expect(getByText("Continue with Apple")).toBeTruthy();
     });
 
-    it("should render X button when x is in allowedProviders", () => {
-      mockUsePhantom.mockReturnValue({
-        ...mockUsePhantom(),
-        allowedProviders: ["x"],
-      } as any);
-
-      const { getByTestId, getByText } = renderComponent();
-
-      expect(() => getByTestId("icon-x")).not.toThrow();
-      expect(getByText("Continue with X")).toBeTruthy();
-    });
-
-    it("should render TikTok button when tiktok is in allowedProviders", () => {
-      mockUsePhantom.mockReturnValue({
-        ...mockUsePhantom(),
-        allowedProviders: ["tiktok"],
-      } as any);
-
-      const { getByTestId, getByText } = renderComponent();
-
-      expect(() => getByTestId("icon-tiktok")).not.toThrow();
-      expect(getByText("Continue with TikTok")).toBeTruthy();
-    });
-
     it("should not render buttons for providers not in allowedProviders", () => {
       mockUsePhantom.mockReturnValue({
         ...mockUsePhantom(),
@@ -172,23 +148,19 @@ describe("ConnectModalContent", () => {
 
       expect(() => getByTestId("icon-google")).not.toThrow();
       expect(queryByTestId("icon-apple")).toBeNull();
-      expect(queryByTestId("icon-x")).toBeNull();
-      expect(queryByTestId("icon-tiktok")).toBeNull();
       expect(queryByText("Continue with Apple")).toBeNull();
     });
 
     it("should render multiple provider buttons when multiple providers allowed", () => {
       mockUsePhantom.mockReturnValue({
         ...mockUsePhantom(),
-        allowedProviders: ["google", "apple", "x", "tiktok"],
+        allowedProviders: ["google", "apple"],
       } as any);
 
       const { getByTestId } = renderComponent();
 
       expect(() => getByTestId("icon-google")).not.toThrow();
       expect(() => getByTestId("icon-apple")).not.toThrow();
-      expect(() => getByTestId("icon-x")).not.toThrow();
-      expect(() => getByTestId("icon-tiktok")).not.toThrow();
     });
   });
 
@@ -342,8 +314,6 @@ describe("ConnectModalContent", () => {
 
       expect(queryByTestId("icon-google")).toBeNull();
       expect(queryByTestId("icon-apple")).toBeNull();
-      expect(queryByTestId("icon-x")).toBeNull();
-      expect(queryByTestId("icon-tiktok")).toBeNull();
     });
 
     it("should handle non-Error objects in catch block", async () => {

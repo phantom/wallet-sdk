@@ -124,6 +124,10 @@ describe("InjectedProvider", () => {
         address: mockPublicKey,
       });
       expect(result.authUserId).toBe("test-auth-user-id");
+      expect(result.wallet).toBeDefined();
+      expect(result.wallet?.name).toBe("Phantom");
+      expect(result.wallet?.discovery).toBe("phantom");
+      expect(result.wallet?.addressTypes).toEqual([AddressType.solana]);
       expect(provider.isConnected()).toBe(true);
     });
 
@@ -172,6 +176,7 @@ describe("InjectedProvider", () => {
         providers: {
           solana: mockSolanaChain,
         },
+        discovery: "standard",
       });
 
       const result = await provider.connect({ provider: "injected", walletId: "other-wallet" });
@@ -180,6 +185,11 @@ describe("InjectedProvider", () => {
       expect(mockSolanaChain.connect).toHaveBeenCalled();
       expect(result.addresses).toHaveLength(1);
       expect(result.addresses[0].address).toBe("GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH");
+      expect(result.wallet).toBeDefined();
+      expect(result.wallet?.name).toBe("Other Wallet");
+      expect(result.wallet?.icon).toBe("https://example.com/icon.png");
+      expect(result.wallet?.discovery).toBe("standard");
+      expect(result.wallet?.addressTypes).toEqual([AddressType.solana]);
     });
 
     it("should reject when an unknown injected wallet id is requested", async () => {
@@ -568,6 +578,134 @@ describe("InjectedProvider", () => {
         const solanaAddress = addresses.find(addr => addr.addressType === AddressType.solana);
         expect(solanaAddress?.address).toBe(newPublicKey);
       });
+    });
+  });
+
+  describe("wallet info in ConnectResult", () => {
+    it("should include wallet info with discovery 'phantom' for Phantom wallet", async () => {
+      const provider = new InjectedProvider({
+        addressTypes: [AddressType.solana],
+      });
+
+      const registry = getWalletRegistry();
+      registry.registerPhantom(mockPhantomObject, [AddressType.solana]);
+
+      const result = await provider.connect({ provider: "injected" });
+
+      expect(result.wallet).toBeDefined();
+      expect(result.wallet?.id).toBe("phantom");
+      expect(result.wallet?.name).toBe("Phantom");
+      expect(result.wallet?.discovery).toBe("phantom");
+      expect(result.wallet?.addressTypes).toEqual([AddressType.solana]);
+      expect(result.walletId).toBe("phantom");
+    });
+
+    it("should include wallet info with discovery 'standard' for Wallet Standard wallet", async () => {
+      const provider = new InjectedProvider({
+        addressTypes: [AddressType.solana],
+      });
+
+      // Create a proper Wallet Standard wallet mock with features
+      const mockPublicKey = "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH";
+      const mockAccount = {
+        address: mockPublicKey,
+        publicKey: new Uint8Array(32), // Mock public key bytes
+        chains: ["solana:mainnet"],
+        features: ["standard:connect"],
+      };
+
+      const mockWalletStandardWallet = {
+        name: "Standard Wallet",
+        icon: "https://example.com/standard.png",
+        version: "1.0.0",
+        chains: ["solana:mainnet"],
+        features: {
+          "standard:connect": {
+            version: "1.0.0",
+            connect: jest.fn().mockResolvedValue(undefined), // Wallet Standard may return void
+          },
+          "standard:signTransaction": {
+            version: "1.0.0",
+            signTransaction: jest.fn(),
+          },
+        },
+        accounts: [mockAccount],
+      };
+
+      const internal = provider as any;
+      internal.walletRegistry.register({
+        id: "standard-wallet",
+        name: "Standard Wallet",
+        icon: "https://example.com/standard.png",
+        addressTypes: [AddressType.solana],
+        providers: {
+          solana: mockWalletStandardWallet as any,
+        },
+        discovery: "standard",
+      });
+
+      const result = await provider.connect({ provider: "injected", walletId: "standard-wallet" });
+
+      expect(result.wallet).toBeDefined();
+      expect(result.wallet?.id).toBe("standard-wallet");
+      expect(result.wallet?.name).toBe("Standard Wallet");
+      expect(result.wallet?.icon).toBe("https://example.com/standard.png");
+      expect(result.wallet?.discovery).toBe("standard");
+      expect(result.wallet?.addressTypes).toEqual([AddressType.solana]);
+      expect(result.walletId).toBe("standard-wallet");
+    });
+
+    it("should include wallet info with discovery 'eip6963' for EIP-6963 wallet", async () => {
+      const provider = new InjectedProvider({
+        addressTypes: [AddressType.ethereum],
+      });
+
+      const mockEthereumChain = {
+        connect: jest.fn().mockResolvedValue(["0x1234567890123456789012345678901234567890"]),
+        disconnect: jest.fn(),
+        getAccounts: jest.fn().mockResolvedValue(["0x1234567890123456789012345678901234567890"]),
+        signMessage: jest.fn(),
+        signPersonalMessage: jest.fn(),
+        signTypedData: jest.fn(),
+        signIn: jest.fn(),
+        sendTransaction: jest.fn(),
+        signTransaction: jest.fn(),
+        getChainId: jest.fn().mockResolvedValue("0x1"),
+        switchChain: jest.fn(),
+        request: jest.fn().mockImplementation((args: any) => {
+          if (args.method === "eth_requestAccounts" || args.method === "eth_accounts") {
+            return Promise.resolve(["0x1234567890123456789012345678901234567890"]);
+          }
+          return Promise.resolve(null);
+        }),
+        getProvider: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      };
+
+      const internal = provider as any;
+      internal.walletRegistry.register({
+        id: "eip6963-wallet",
+        name: "EIP-6963 Wallet",
+        icon: "https://example.com/eip6963.png",
+        addressTypes: [AddressType.ethereum],
+        providers: {
+          ethereum: mockEthereumChain,
+        },
+        rdns: "io.metamask",
+        discovery: "eip6963",
+      });
+
+      const result = await provider.connect({ provider: "injected", walletId: "eip6963-wallet" });
+
+      expect(result.wallet).toBeDefined();
+      expect(result.wallet?.id).toBe("eip6963-wallet");
+      expect(result.wallet?.name).toBe("EIP-6963 Wallet");
+      expect(result.wallet?.icon).toBe("https://example.com/eip6963.png");
+      expect(result.wallet?.discovery).toBe("eip6963");
+      expect(result.wallet?.rdns).toBe("io.metamask");
+      expect(result.wallet?.addressTypes).toEqual([AddressType.ethereum]);
+      expect(result.walletId).toBe("eip6963-wallet");
     });
   });
 });

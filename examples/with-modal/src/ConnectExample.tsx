@@ -1,13 +1,5 @@
 import { useState } from "react";
-import {
-  ConnectButton,
-  useAccounts,
-  usePhantom,
-  isMobileDevice,
-  AddressType,
-  useTheme,
-  ConnectBox,
-} from "@phantom/react-sdk";
+import { ConnectButton, usePhantom, isMobileDevice, AddressType, useTheme, ConnectBox } from "@phantom/react-sdk";
 
 interface ConnectExampleProps {
   appIcon?: string;
@@ -15,12 +7,17 @@ interface ConnectExampleProps {
 }
 
 export default function ConnectExample({ appIcon, appName }: ConnectExampleProps) {
-  const accounts = useAccounts();
   const { isConnected } = usePhantom();
   const theme = useTheme();
   const isMobile = isMobileDevice();
   const [activeTab, setActiveTab] = useState<"connectbox" | "buttons">("connectbox");
 
+  // On mobile, don't render anything here - button is fixed at bottom in App
+  if (isMobile) {
+    return null;
+  }
+
+  // Desktop view - show full content
   return (
     <div
       style={{
@@ -29,6 +26,8 @@ export default function ConnectExample({ appIcon, appName }: ConnectExampleProps
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
+        padding: "0",
+        boxSizing: "border-box",
       }}
     >
       {/* Top Bar: Status and Tabs */}
@@ -39,6 +38,8 @@ export default function ConnectExample({ appIcon, appName }: ConnectExampleProps
           justifyContent: "space-between",
           alignItems: "center",
           marginBottom: "100px",
+          flexWrap: "wrap",
+          gap: "1rem",
         }}
       >
         {/* Tabs */}
@@ -46,6 +47,7 @@ export default function ConnectExample({ appIcon, appName }: ConnectExampleProps
           style={{
             display: "flex",
             gap: "0.5rem",
+            flexWrap: "wrap",
           }}
         >
           <button
@@ -154,102 +156,12 @@ export default function ConnectExample({ appIcon, appName }: ConnectExampleProps
             >
               These buttons show specific address types when connected.
             </p>
-            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", width: "100%" }}>
               <ConnectButton fullWidth={false} />
               <ConnectButton addressType={AddressType.solana} fullWidth={false} />
               <ConnectButton addressType={AddressType.ethereum} fullWidth={false} />
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Connected Accounts */}
-      {isConnected && accounts && accounts.length > 0 && (
-        <div>
-          <h3
-            style={{
-              fontSize: "1.125rem",
-              fontWeight: "500",
-              color: theme.text,
-              marginBottom: "1rem",
-              transition: "color 0.3s ease",
-            }}
-          >
-            Connected Accounts:
-          </h3>
-
-          {accounts.map((account, index) => (
-            <div
-              key={index}
-              style={{
-                padding: "1rem",
-                background: theme.aux,
-                border: `1px solid ${theme.secondary}`,
-                borderRadius: "8px",
-                marginBottom: "0.5rem",
-                transition: "all 0.3s ease",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                <span
-                  style={{
-                    background: account.addressType === "solana" ? "#8b5cf6" : "#3b82f6",
-                    color: "white",
-                    padding: "0.25rem 0.75rem",
-                    borderRadius: "4px",
-                    fontSize: "0.75rem",
-                    fontWeight: "500",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {account.addressType}
-                </span>
-              </div>
-
-              <div
-                style={{
-                  fontFamily: "monospace",
-                  fontSize: "0.875rem",
-                  color: theme.secondary,
-                  wordBreak: "break-all",
-                  background: theme.background,
-                  padding: "0.5rem",
-                  borderRadius: "4px",
-                  border: `1px solid ${theme.secondary}`,
-                  transition: "all 0.3s ease",
-                }}
-              >
-                {account.address}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Mobile Notice */}
-      {isMobile && (
-        <div
-          style={{
-            marginTop: "1rem",
-            padding: "1rem",
-            background: theme.aux,
-            border: `1px solid ${theme.secondary}`,
-            borderRadius: "8px",
-            fontSize: "0.875rem",
-            color: theme.text,
-          }}
-        >
-          <strong>📱 Mobile Device Detected:</strong>
-          <br />
-          When you click "Connect Wallet", you'll see an additional "Open in Phantom App" button that will redirect to
-          the Phantom mobile app.
         </div>
       )}
     </div>

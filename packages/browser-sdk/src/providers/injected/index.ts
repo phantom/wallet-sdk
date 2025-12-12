@@ -375,12 +375,27 @@ export class InjectedProvider implements Provider {
       debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to persist injected provider state", { error });
     }
 
-    const result = {
+    // Get wallet info if available (already includes discovery field from registry)
+    // Omit providers field from wallet info in ConnectResult
+    const walletInfo = walletId ? this.walletRegistry.getById(walletId) : undefined;
+    const wallet = walletInfo
+      ? {
+          id: walletInfo.id,
+          name: walletInfo.name,
+          icon: walletInfo.icon,
+          addressTypes: walletInfo.addressTypes,
+          rdns: walletInfo.rdns,
+          discovery: walletInfo.discovery,
+        }
+      : undefined;
+
+    const result: ConnectResult = {
       addresses: connectedAddresses,
       status: "completed" as const,
       authUserId,
       authProvider,
       walletId,
+      wallet,
     };
 
     this.emit("connect", {

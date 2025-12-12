@@ -166,40 +166,6 @@ export function ConnectModalContent({ appIcon, onClose }: ConnectModalContentPro
               </View>
             </Button>
           )}
-
-          {allowedProviders.includes("x") && (
-            <Button
-              onClick={() => connectWithAuthProvider("x")}
-              disabled={isConnecting}
-              isLoading={isConnecting && providerType === "x"}
-              fullWidth={true}
-            >
-              <View style={styles.buttonContent}>
-                <View style={styles.buttonContentLeft}>
-                  <Icon type="x" size={20} color={theme.text} />
-                  <Text variant="captionBold">Continue with X</Text>
-                </View>
-                <Icon type="chevron-right" size={16} color={theme.secondary} />
-              </View>
-            </Button>
-          )}
-
-          {allowedProviders.includes("tiktok") && (
-            <Button
-              onClick={() => connectWithAuthProvider("tiktok")}
-              disabled={isConnecting}
-              isLoading={isConnecting && providerType === "tiktok"}
-              fullWidth={true}
-            >
-              <View style={styles.buttonContent}>
-                <View style={styles.buttonContentLeft}>
-                  <Icon type="tiktok" size={20} color={theme.text} />
-                  <Text variant="captionBold">Continue with TikTok</Text>
-                </View>
-                <Icon type="chevron-right" size={16} color={theme.secondary} />
-              </View>
-            </Button>
-          )}
         </View>
       )}
 

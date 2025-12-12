@@ -330,7 +330,7 @@ describe("EmbeddedProvider Core", () => {
       };
 
       await expect(provider.connect(invalidAuthOptions)).rejects.toThrow(
-        'Invalid auth provider: invalid-provider. Must be "google", "apple", "phantom", "tiktok", or "x"',
+        "Invalid auth provider: invalid-provider. Must be google, apple, phantom",
       );
     });
   });
@@ -357,42 +357,6 @@ describe("EmbeddedProvider Core", () => {
       expect(mockPlatform.authProvider.authenticate).toHaveBeenCalledWith(
         expect.objectContaining({
           provider: "apple",
-          publicKey: "11111111111111111111111111111111",
-          appId: "test-app-id",
-        }),
-      );
-    });
-
-    it("should call platform auth provider for X (Twitter) authentication", async () => {
-      const authOptions = { provider: "x" as const };
-
-      try {
-        await provider.connect(authOptions);
-      } catch (error) {
-        // Connection will fail due to redirect, but authenticate should be called
-      }
-
-      expect(mockPlatform.authProvider.authenticate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          provider: "x",
-          publicKey: "11111111111111111111111111111111",
-          appId: "test-app-id",
-        }),
-      );
-    });
-
-    it("should call platform auth provider for TikTok authentication", async () => {
-      const authOptions = { provider: "tiktok" as const };
-
-      try {
-        await provider.connect(authOptions);
-      } catch (error) {
-        // Connection will fail due to redirect, but authenticate should be called
-      }
-
-      expect(mockPlatform.authProvider.authenticate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          provider: "tiktok",
           publicKey: "11111111111111111111111111111111",
           appId: "test-app-id",
         }),

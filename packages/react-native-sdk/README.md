@@ -109,7 +109,7 @@ export default function App() {
 
 ### 3. Use the connection modal (Recommended)
 
-The SDK includes a built-in bottom sheet modal that provides a user-friendly interface for connecting to Phantom. The modal supports multiple authentication methods (Google, Apple, X, TikTok) and handles all connection logic automatically.
+The SDK includes a built-in bottom sheet modal that provides a user-friendly interface for connecting to Phantom. The modal supports multiple authentication methods (Google, Apple) and handles all connection logic automatically.
 
 ```tsx
 // WalletScreen.tsx
@@ -145,7 +145,7 @@ export function WalletScreen() {
 
 **Modal Features:**
 
-- **Multiple Auth Providers**: Google, Apple, X (Twitter), TikTok
+- **Multiple Auth Providers**: Google, Apple
 - **Bottom Sheet UI**: Native bottom sheet design for mobile
 - **Automatic State Management**: Shows connect screen when disconnected, wallet management when connected
 - **Error Handling**: Clear error messages displayed in the modal
@@ -298,7 +298,7 @@ const isOpen = modal.isOpened;
 
 **Modal Behavior:**
 
-- **When disconnected**: Shows authentication provider options (Google, Apple, X, TikTok)
+- **When disconnected**: Shows authentication provider options (Google, Apple)
 - **When connected**: Shows connected wallet addresses and disconnect button
 
 #### useConnect
@@ -311,8 +311,6 @@ const { connect, isConnecting, error } = useConnect();
 // Connect with specific provider (React Native supported providers)
 await connect({ provider: "google" }); // Google OAuth
 await connect({ provider: "apple" }); // Apple ID
-await connect({ provider: "x" }); // X/Twitter
-await connect({ provider: "tiktok" }); // TikTok
 ```
 
 #### useAccounts
@@ -463,8 +461,6 @@ The SDK supports multiple authentication providers that you specify when calling
 
 - **Google** (`provider: "google"`) - Google OAuth authentication
 - **Apple** (`provider: "apple"`) - Apple ID authentication
-- **X** (`provider: "x"`) - X/Twitter authentication
-- **TikTok** (`provider: "tiktok"`) - TikTok authentication
 
 > **Note**: React Native SDK does not support Phantom Login or injected provider (browser extension) authentication. These are only available in the Browser SDK and React SDK for web applications.
 
@@ -476,12 +472,6 @@ await connect({ provider: "google" });
 
 // Apple ID
 await connect({ provider: "apple" });
-
-// X/Twitter
-await connect({ provider: "x" });
-
-// TikTok
-await connect({ provider: "tiktok" });
 ```
 
 ### Authentication Process

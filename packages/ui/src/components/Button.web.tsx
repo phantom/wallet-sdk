@@ -110,6 +110,7 @@ export interface LoginWithPhantomButtonProps {
   disabled?: boolean;
   fullWidth?: boolean;
   isLoading?: boolean;
+  testId?: string;
 }
 
 export function LoginWithPhantomButton({
@@ -118,6 +119,7 @@ export function LoginWithPhantomButton({
   disabled = false,
   fullWidth = true,
   isLoading = false,
+  testId = "login-with-phantom-button",
 }: LoginWithPhantomButtonProps) {
   const theme = useTheme();
   const [isHovering, setIsHovering] = useState(false);
@@ -183,6 +185,7 @@ export function LoginWithPhantomButton({
       disabled={disabled || isLoading}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      data-testid={testId}
     >
       <span style={buttonContentStyle}>
         <span style={buttonLeftStyle}>

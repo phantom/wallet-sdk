@@ -381,13 +381,18 @@ export function SDKActions() {
 
       const transaction = new VersionedTransaction(messageV0);
 
-      const result = await solana.signAndSendTransaction(transaction);
-      if (!result) {
-        alert("Solana chain not available");
-        return;
-      }
+      try {
+        const result = await solana.signAndSendTransaction(transaction);
+        if (!result) {
+          alert("Solana chain not available");
+          return;
+        }
 
-      alert(`Transaction sent! Signature: ${result.signature}`);
+        alert(`Transaction sent! Signature: ${result.signature}`);
+      } catch (error) {
+        console.error("Error signing and sending transaction:", error);
+        alert(`Error signing and sending transaction: ${(error as Error).message || error}`);
+      }
     } catch (error) {
       console.error("Error signing and sending transaction:", error);
       alert(`Error signing and sending transaction: ${(error as Error).message || error}`);

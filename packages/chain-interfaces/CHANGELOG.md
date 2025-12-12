@@ -1,5 +1,50 @@
 # @phantom/chain-interfaces
 
+## 1.0.0
+
+### Major Changes
+
+- 22e46cd: New SDKs chain specific interface, prepare for initial beta release
+- 43c84e4: First release, check https://docs.phantom.com/introduction to get started
+
+### Patch Changes
+
+- f54d77f: New version
+- 8cd9ac7: Release with new interfaces, appId
+- d35daaa: Bump all dependencies
+- b470bcf: Sec patch
+- 6622863: Fixed exported types
+- 4675314: New sdk hooks fix for race condition
+- bef0677: Render discovered wallets even if phantom is not present
+- d4e0097: Modal with release fixed
+- a6c3981: Fix chains dependency
+- fcebdff: adding new provenance info
+- 16319b0: Modal released, included first version of wallet discovery.
+- 574e5aa: Fix prepare error response parsing
+- 1935986: Fix hooks interfaces and add signAllTransactions
+- b6aff60: Release new version
+- Updated dependencies [f54d77f]
+- Updated dependencies [8cd9ac7]
+- Updated dependencies [d35daaa]
+- Updated dependencies [b470bcf]
+- Updated dependencies [a290d0e]
+- Updated dependencies [98e54ff]
+- Updated dependencies [213052a]
+- Updated dependencies [4675314]
+- Updated dependencies [bef0677]
+- Updated dependencies [d4e0097]
+- Updated dependencies [22e46cd]
+- Updated dependencies [68492cf]
+- Updated dependencies [fcebdff]
+- Updated dependencies [16319b0]
+- Updated dependencies [574e5aa]
+- Updated dependencies [f246861]
+- Updated dependencies [b6aff60]
+- Updated dependencies [43c84e4]
+  - @phantom/constants@1.0.0
+  - @phantom/parsers@1.0.0
+  - @phantom/sdk-types@1.0.0
+
 ## 1.0.0-beta.15
 
 ### Patch Changes

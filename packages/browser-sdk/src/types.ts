@@ -13,6 +13,7 @@ import { AddressType } from "@phantom/client";
 
 import type { DebugCallback, DebugLevel } from "./debug";
 import type { InjectedProviderConfig } from "./providers/injected";
+import type { InjectedWalletInfo } from "./wallets/registry";
 
 // Debug configuration - separate from SDK config to avoid unnecessary reinstantiation
 export interface DebugConfig {
@@ -44,17 +45,12 @@ type Prettify<T> = {
   // eslint-disable-next-line @typescript-eslint/ban-types
 } & {};
 
-type AuthProviderType = EmbeddedProviderAuthType | "injected";
+type AuthProviderType = EmbeddedProviderAuthType | "injected" | "deeplink";
 
 type AuthOptions = {
   provider: AuthProviderType;
   walletId?: string;
   customAuthData?: Record<string, any>;
-};
-
-type ConnectResult = Omit<EmbeddedConnectResult, "authProvider"> & {
-  authProvider?: AuthProviderType | undefined;
-  walletId?: string | undefined;
 };
 
 // Re-export types from core for convenience
@@ -73,6 +69,14 @@ export type {
 
 // Re-export enums from client for convenience
 export { AddressType };
+
+type ConnectResultWalletInfo = Omit<InjectedWalletInfo, "providers">;
+
+type ConnectResult = Omit<EmbeddedConnectResult, "authProvider"> & {
+  authProvider?: AuthProviderType | undefined;
+  walletId?: string | undefined;
+  wallet?: ConnectResultWalletInfo | undefined; // Wallet info (only for injected provider, without providers)
+};
 
 export interface Provider {
   connect(authOptions: AuthOptions): Promise<ConnectResult>;

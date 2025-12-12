@@ -77,6 +77,8 @@ describe("ModalProvider", () => {
       config: {} as any,
       currentProviderType: null,
       allowedProviders: ["google", "apple"],
+      errors: {},
+      clearError: jest.fn(),
     });
   });
 

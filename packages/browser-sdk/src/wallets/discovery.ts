@@ -94,6 +94,7 @@ function processEIP6963Providers(providers: Map<string, EIP6963ProviderDetail>):
         ethereum: provider as unknown as IEthereumChain,
       },
       rdns: info.rdns, // Store rdns for potential future matching
+      discovery: "eip6963",
     });
   }
 
@@ -399,6 +400,7 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
           // The InjectedWalletSolanaChain wrapper will handle the actual method calls
           solana: wallet as any as ISolanaChain,
         },
+        discovery: "standard",
       });
     }
   } catch (error) {
@@ -462,6 +464,7 @@ export function discoverPhantomWallet(addressTypes: ClientAddressType[]): Inject
     },
     isPhantom: true,
     phantomInstance,
+    discovery: "phantom",
   } as InjectedWalletInfo & { isPhantom: true; phantomInstance: PhantomExtended };
 }
 

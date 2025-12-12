@@ -1,5 +1,47 @@
 # @phantom/browser-sdk
 
+## 1.0.0
+
+### Major Changes
+
+- 22e46cd: New SDKs chain specific interface, prepare for initial beta release
+- 43c84e4: First release, check https://docs.phantom.com/introduction to get started
+
+### Patch Changes
+
+- d8c7017: Updates on react sdk instantiation and autoconnect for injected
+- f54d77f: New version
+- fb3160f: Add autoconnect for injected provider, fix issues with server side rendering instantiation in react-sdk
+- 8cd9ac7: Release with new interfaces, appId
+- d35daaa: Bump all dependencies
+- b470bcf: Sec patch
+- 4675314: New sdk hooks fix for race condition
+- bef0677: Render discovered wallets even if phantom is not present
+- d4e0097: Modal with release fixed
+- 74885d4: Fix, injected provider change accounts
+- fcebdff: adding new provenance info
+- 16319b0: Modal released, included first version of wallet discovery.
+- 574e5aa: Fix prepare error response parsing
+- 1935986: Fix hooks interfaces and add signAllTransactions
+- b6aff60: Release new version
+- Updated dependencies [f54d77f]
+- Updated dependencies [8cd9ac7]
+- Updated dependencies [d35daaa]
+- Updated dependencies [b470bcf]
+- Updated dependencies [a290d0e]
+- Updated dependencies [213052a]
+- Updated dependencies [bef0677]
+- Updated dependencies [d4e0097]
+- Updated dependencies [22e46cd]
+- Updated dependencies [68492cf]
+- Updated dependencies [fcebdff]
+- Updated dependencies [16319b0]
+- Updated dependencies [574e5aa]
+- Updated dependencies [b6aff60]
+- Updated dependencies [43c84e4]
+  - @phantom/constants@1.0.0
+  - @phantom/sdk-types@1.0.0
+
 ## 1.0.0-beta.12
 
 ### Patch Changes

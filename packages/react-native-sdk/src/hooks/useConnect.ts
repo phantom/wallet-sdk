@@ -3,7 +3,7 @@ import { usePhantom } from "../PhantomContext";
 import type { ConnectOptions, ConnectResult } from "../types";
 
 export function useConnect() {
-  const { sdk, isConnecting, connectError, setWalletId } = usePhantom();
+  const { sdk, isConnecting, errors, setWalletId } = usePhantom();
 
   const connect = useCallback(
     async (options: ConnectOptions): Promise<ConnectResult> => {
@@ -34,6 +34,6 @@ export function useConnect() {
   return {
     connect,
     isConnecting,
-    error: connectError,
+    error: errors.connect,
   };
 }

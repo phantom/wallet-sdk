@@ -1,6 +1,7 @@
 import type { PhantomTheme } from "@phantom/react-sdk";
 
-type AuthProviderType = "google" | "apple" | "phantom" | "x" | "tiktok" | "injected";
+// AuthProviderType includes all SDK providers plus deeplink for UI purposes
+type AuthProviderType = "google" | "apple" | "phantom" | "injected" | "deeplink";
 
 interface SidebarProps {
   enabledProviders: AuthProviderType[];
@@ -12,13 +13,12 @@ interface SidebarProps {
   currentTheme: PhantomTheme;
 }
 
-const providerOptions: Array<{ id: AuthProviderType | "email" | "phone"; label: string }> = [
+const providerOptions: Array<{ id: AuthProviderType; label: string }> = [
   { id: "phantom", label: "Phantom" },
-  //{ id: "email", label: "Email" },
-  //{ id: "phone", label: "Phone" },
   { id: "google", label: "Google" },
   { id: "apple", label: "Apple" },
   { id: "injected", label: "External Wallets" },
+  { id: "deeplink", label: "Deeplink" },
 ];
 
 export default function Sidebar({
@@ -30,17 +30,11 @@ export default function Sidebar({
   onCustomThemeChange,
   currentTheme,
 }: SidebarProps) {
-  const toggleProvider = (providerId: string) => {
-    const provider = providerId as AuthProviderType;
-    if (providerId === "email" || providerId === "phone") {
-      // Email and phone are not yet supported, skip for now
-      return;
-    }
-
-    if (enabledProviders.includes(provider)) {
-      onProvidersChange(enabledProviders.filter(p => p !== provider));
+  const toggleProvider = (providerId: AuthProviderType) => {
+    if (enabledProviders.includes(providerId)) {
+      onProvidersChange(enabledProviders.filter(p => p !== providerId));
     } else {
-      onProvidersChange([...enabledProviders, provider]);
+      onProvidersChange([...enabledProviders, providerId]);
     }
   };
 
@@ -61,6 +55,7 @@ export default function Sidebar({
         gap: "32px",
         overflowY: "auto",
         borderRight: "1px solid rgba(152, 151, 156, 0.2)",
+        boxSizing: "border-box",
       }}
     >
       {/* Header */}
@@ -92,8 +87,7 @@ export default function Sidebar({
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
           {providerOptions.map(option => {
-            const isEnabled = enabledProviders.includes(option.id as AuthProviderType);
-            const isDisabled = option.id === "email" || option.id === "phone";
+            const isEnabled = enabledProviders.includes(option.id);
 
             return (
               <div
@@ -106,7 +100,7 @@ export default function Sidebar({
                   backgroundColor: isEnabled ? "rgba(124, 99, 231, 0.1)" : "transparent",
                   borderRadius: "8px",
                   border: `1px solid ${isEnabled ? "rgba(124, 99, 231, 0.3)" : "rgba(152, 151, 156, 0.2)"}`,
-                  opacity: isDisabled ? 0.5 : 1,
+                  opacity: 1,
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -118,14 +112,13 @@ export default function Sidebar({
                     display: "inline-block",
                     width: "44px",
                     height: "24px",
-                    cursor: isDisabled ? "not-allowed" : "pointer",
+                    cursor: "pointer",
                   }}
                 >
                   <input
                     type="checkbox"
                     checked={isEnabled}
                     onChange={() => toggleProvider(option.id)}
-                    disabled={isDisabled}
                     style={{ opacity: 0, width: 0, height: 0 }}
                   />
                   <span
@@ -193,7 +186,9 @@ export default function Sidebar({
 
         {/* Custom Theme Color Pickers */}
         {themeMode === "custom" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "16px", width: "100%", boxSizing: "border-box" }}
+          >
             {(
               [
                 { key: "background" as const, label: "Background" },
@@ -253,7 +248,7 @@ export default function Sidebar({
             })}
 
             {/* Border Radius */}
-            <div>
+            <div style={{ width: "100%", boxSizing: "border-box" }}>
               <label style={{ display: "block", marginBottom: "8px", fontSize: "12px", color: "#98979C" }}>
                 Border Radius
               </label>
@@ -264,18 +259,21 @@ export default function Sidebar({
                 placeholder="16px"
                 style={{
                   width: "100%",
-                  padding: "10px 12px",
+                  maxWidth: "100%",
+                  padding: "8px 10px",
                   backgroundColor: "#2a2a2a",
                   border: "1px solid rgba(152, 151, 156, 0.2)",
                   borderRadius: "8px",
                   color: "#FFFFFF",
-                  fontSize: "14px",
+                  fontSize: "13px",
+                  lineHeight: "1.4",
+                  boxSizing: "border-box",
                 }}
               />
             </div>
 
             {/* Overlay (rgba) */}
-            <div>
+            <div style={{ width: "100%", boxSizing: "border-box" }}>
               <label style={{ display: "block", marginBottom: "8px", fontSize: "12px", color: "#98979C" }}>
                 Overlay
               </label>
@@ -286,13 +284,16 @@ export default function Sidebar({
                 placeholder="rgba(0, 0, 0, 0.7)"
                 style={{
                   width: "100%",
-                  padding: "10px 12px",
+                  maxWidth: "100%",
+                  padding: "8px 10px",
                   backgroundColor: "#2a2a2a",
                   border: "1px solid rgba(152, 151, 156, 0.2)",
                   borderRadius: "8px",
                   color: "#FFFFFF",
-                  fontSize: "14px",
+                  fontSize: "13px",
                   fontFamily: "monospace",
+                  lineHeight: "1.4",
+                  boxSizing: "border-box",
                 }}
               />
             </div>

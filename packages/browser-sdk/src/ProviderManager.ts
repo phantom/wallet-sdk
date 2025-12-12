@@ -12,10 +12,12 @@ import { debug, DebugCategory } from "./debug";
 import {
   type EmbeddedProviderEvent,
   type EventCallback,
+  type EmbeddedProviderAuthType,
   EMBEDDED_PROVIDER_AUTH_TYPES,
 } from "@phantom/embedded-provider-core";
 import { DEFAULT_WALLET_API_URL, DEFAULT_EMBEDDED_WALLET_TYPE, DEFAULT_AUTH_URL } from "@phantom/constants";
 import { isAuthFailureCallback, isAuthCallbackUrl } from "./utils/auth-callback";
+import { getDeeplinkToPhantom } from "./utils/deeplink";
 export interface ProviderPreference {
   type: "injected" | "embedded";
   embeddedWalletType?: "app-wallet" | "user-wallet";
@@ -143,7 +145,26 @@ export class ProviderManager implements EventEmitter {
 
     if (requestedProvider === "injected") {
       targetProviderType = "injected";
-    } else if (EMBEDDED_PROVIDER_AUTH_TYPES.includes(requestedProvider)) {
+    } else if (requestedProvider === "deeplink") {
+      // Handle deeplink - navigate to Phantom app
+      try {
+        const deeplinkUrl = getDeeplinkToPhantom();
+        if (typeof window !== "undefined") {
+          window.location.href = deeplinkUrl;
+        }
+        // Return a mock result since we're redirecting
+        // The actual connection will happen when the user returns from the app
+        return {
+          addresses: [],
+          walletId: undefined,
+          authUserId: undefined,
+        } as ConnectResult;
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to open deeplink";
+        debug.error(DebugCategory.PROVIDER_MANAGER, "Deeplink error", { error: errorMessage });
+        throw new Error(`Failed to open deeplink: ${errorMessage}`);
+      }
+    } else if (EMBEDDED_PROVIDER_AUTH_TYPES.includes(requestedProvider as EmbeddedProviderAuthType)) {
       targetProviderType = "embedded";
     }
 
@@ -395,6 +416,7 @@ export class ProviderManager implements EventEmitter {
       "connect_error",
       "disconnect",
       "error",
+      "spending_limit_reached",
     ];
 
     for (const event of eventsToForward) {
@@ -420,7 +442,7 @@ export class ProviderManager implements EventEmitter {
     const defaultEmbeddedType = (this.config.embeddedWalletType || "user-wallet") as "app-wallet" | "user-wallet";
 
     const hasInjected = this.config.providers.includes("injected");
-    const hasEmbedded = this.config.providers.some(p => p !== "injected");
+    const hasEmbedded = this.config.providers.some(p => p !== "injected" && p !== "deeplink");
 
     // Create injected provider if allowed
     if (hasInjected) {

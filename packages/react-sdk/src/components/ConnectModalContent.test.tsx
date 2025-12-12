@@ -33,11 +33,6 @@ jest.mock("@phantom/wallet-sdk-ui", () => ({
       {children}
     </button>
   ),
-  LoginWithPhantomButton: ({ onClick, disabled, isLoading }: any) => (
-    <button data-testid="login-with-phantom-button" onClick={onClick} disabled={disabled} data-loading={isLoading}>
-      Login with Phantom
-    </button>
-  ),
   Icon: ({ type }: { type: string }) => <span data-testid={`icon-${type}`}>{type}</span>,
   BoundedIcon: ({ type }: { type: string }) => <span data-testid={`bounded-icon-${type}`}>{type}</span>,
   Text: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
@@ -110,21 +105,22 @@ describe("ConnectModalContent", () => {
     jest.clearAllMocks();
     mockUsePhantom.mockReturnValue({
       isLoading: false,
-      allowedProviders: ["google", "apple"],
+      allowedProviders: ["google", "apple", "deeplink"],
       isConnected: false,
       addresses: [],
       sdk: null,
       isConnecting: false,
-      connectError: null,
+      errors: {},
       isClient: true,
       user: null,
       theme: {} as any,
+      clearError: jest.fn(),
     });
     mockUseConnect.mockReturnValue({
       connect: mockConnect,
       isConnecting: false,
       isLoading: false,
-      error: null,
+      error: undefined,
     });
     mockUseIsExtensionInstalled.mockReturnValue({
       isInstalled: false,
@@ -251,7 +247,7 @@ describe("ConnectModalContent", () => {
           {
             id: "phantom",
             name: "Phantom",
-            addressTypes: ["Solana" as any],
+            addressTypes: ["Solana"] as any,
           },
         ],
         isLoading: false,
@@ -297,7 +293,7 @@ describe("ConnectModalContent", () => {
       expect(queryByText("OR")).not.toBeInTheDocument();
     });
 
-    it("should not render on mobile", () => {
+    it("should render on mobile when extension is detected", () => {
       mockIsMobileDevice.mockReturnValue(true);
       mockUsePhantom.mockReturnValue({
         ...mockUsePhantom(),
@@ -307,10 +303,107 @@ describe("ConnectModalContent", () => {
         isInstalled: true,
         isLoading: false,
       });
+      mockUseDiscoveredWallets.mockReturnValue({
+        wallets: [
+          {
+            id: "phantom",
+            name: "Phantom",
+            icon: undefined,
+            addressTypes: ["Solana"] as any,
+          },
+        ],
+        isLoading: false,
+        error: null,
+        refetch: jest.fn(),
+      });
+
+      const { getByTestId } = renderComponent();
+
+      expect(getByTestId("bounded-icon-phantom")).toBeInTheDocument();
+    });
+
+    it("should not render on mobile when extension is not detected", () => {
+      mockIsMobileDevice.mockReturnValue(true);
+      mockUsePhantom.mockReturnValue({
+        ...mockUsePhantom(),
+        allowedProviders: ["injected"],
+      } as any);
+      mockUseIsExtensionInstalled.mockReturnValue({
+        isInstalled: false,
+        isLoading: false,
+      });
+      mockUseDiscoveredWallets.mockReturnValue({
+        wallets: [],
+        isLoading: false,
+        error: null,
+        refetch: jest.fn(),
+      });
 
       const { queryByTestId } = renderComponent();
 
       expect(queryByTestId("bounded-icon-phantom")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Mobile with Extension Detected (Phantom App Webview)", () => {
+    beforeEach(() => {
+      mockIsMobileDevice.mockReturnValue(true);
+      mockUseIsExtensionInstalled.mockReturnValue({
+        isInstalled: true,
+        isLoading: false,
+      });
+      mockUsePhantom.mockReturnValue({
+        ...mockUsePhantom(),
+        allowedProviders: ["google", "apple", "injected"],
+      } as any);
+      mockUseDiscoveredWallets.mockReturnValue({
+        wallets: [
+          {
+            id: "phantom",
+            name: "Phantom",
+            icon: undefined,
+            addressTypes: ["Solana"] as any,
+          },
+        ],
+        isLoading: false,
+        error: null,
+        refetch: jest.fn(),
+      });
+    });
+
+    it("should show injected Phantom wallet when mobile and extension is detected", () => {
+      const { getByTestId } = renderComponent();
+
+      expect(getByTestId("bounded-icon-phantom")).toBeInTheDocument();
+    });
+
+    it("should hide Google login button when mobile and extension is detected", () => {
+      const { queryByText } = renderComponent();
+
+      expect(queryByText("Continue with Google")).not.toBeInTheDocument();
+    });
+
+    it("should still show Apple button when mobile and extension is detected", () => {
+      const { getByText } = renderComponent();
+
+      expect(getByText("Continue with Apple")).toBeInTheDocument();
+    });
+
+    it("should allow connecting to Phantom wallet when mobile and extension is detected", async () => {
+      mockConnect.mockResolvedValue({} as any);
+      const onClose = jest.fn();
+
+      const { getByTestId } = renderComponent({ onClose });
+      const phantomIcon = getByTestId("bounded-icon-phantom");
+      fireEvent.click(phantomIcon.closest("button")!);
+
+      await waitFor(() => {
+        expect(mockConnect).toHaveBeenCalledWith({
+          provider: "injected",
+          walletId: "phantom",
+        });
+        expect(onClose).toHaveBeenCalled();
+      });
     });
   });
 
@@ -335,20 +428,27 @@ describe("ConnectModalContent", () => {
       expect(queryByText("Open in Phantom App")).not.toBeInTheDocument();
     });
 
-    it("should navigate to deeplink URL when clicked", () => {
-      const originalLocation = window.location;
-      delete (window as any).location;
-      window.location = { ...originalLocation, href: "" } as any;
-
+    it("should navigate to deeplink URL when clicked", async () => {
       mockIsMobileDevice.mockReturnValue(true);
-      mockGetDeeplinkToPhantom.mockReturnValue("phantom://connect?app=test");
+      mockUseIsExtensionInstalled.mockReturnValue({
+        isInstalled: false,
+        isLoading: false,
+      });
+
+      // Mock connect to resolve successfully (deeplink logic is now in ProviderManager)
+      mockConnect.mockResolvedValue({
+        addresses: [],
+        walletId: undefined,
+        authUserId: undefined,
+      });
 
       const { getByText } = renderComponent();
       fireEvent.click(getByText("Open in Phantom App"));
 
-      expect(window.location.href).toBe("phantom://connect?app=test");
-
-      window.location = originalLocation as any;
+      // Verify that connect was called with deeplink provider
+      await waitFor(() => {
+        expect(mockConnect).toHaveBeenCalledWith({ provider: "deeplink" });
+      });
     });
   });
 

@@ -29,6 +29,7 @@ export interface InjectedWalletInfo {
   providers?: WalletProviders;
   /** Reverse DNS identifier from EIP-6963 (for potential future matching with Wallet Standard) */
   rdns?: string;
+  discovery?: "standard" | "eip6963" | "phantom";
 }
 
 /**
@@ -136,6 +137,7 @@ export class InjectedWalletRegistry {
       providers: wrappedProviders,
       isPhantom: true,
       phantomInstance,
+      discovery: "phantom",
     };
 
     this.wallets.set("phantom", phantomWallet);

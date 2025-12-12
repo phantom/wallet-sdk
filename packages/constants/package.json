@@ -1,6 +1,6 @@
 {
   "name": "@phantom/constants",
-  "version": "1.0.0-beta.15",
+  "version": "1.0.0",
   "description": "Shared constants for Phantom Wallet SDK",
   "repository": {
     "type": "git",

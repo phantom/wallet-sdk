@@ -1,5 +1,5 @@
 import { base64urlEncode, stringToBase64url } from "@phantom/base64url";
-import { AddressType, PhantomClient } from "@phantom/client";
+import { AddressType, PhantomClient, SpendingLimitError } from "@phantom/client";
 import type { NetworkId } from "@phantom/constants";
 import {
   parseSignMessageResponse,
@@ -40,7 +40,13 @@ import type {
 import { retryWithBackoff } from "./utils/retry";
 import { generateSessionId } from "./utils/session";
 
-export type EmbeddedProviderEvent = "connect" | "connect_start" | "connect_error" | "disconnect" | "error";
+export type EmbeddedProviderEvent =
+  | "connect"
+  | "connect_start"
+  | "connect_error"
+  | "disconnect"
+  | "error"
+  | "spending_limit_reached";
 
 // Event payload types for type-safe event handling
 export interface ConnectEventData extends ConnectResult {
@@ -68,6 +74,7 @@ export interface EmbeddedProviderEventMap {
   connect_error: ConnectErrorEventData;
   disconnect: DisconnectEventData;
   error: any;
+  spending_limit_reached: { error: SpendingLimitError };
 }
 
 export type EventCallback<T = any> = (data: T) => void;
@@ -379,7 +386,7 @@ export class EmbeddedProvider {
   private validateAuthOptions(authOptions: AuthOptions): void {
     if (!EMBEDDED_PROVIDER_AUTH_TYPES.includes(authOptions.provider)) {
       throw new Error(
-        `Invalid auth provider: ${authOptions.provider}. Must be "google", "apple", "phantom", "tiktok", or "x"`,
+        `Invalid auth provider: ${authOptions.provider}. Must be ${EMBEDDED_PROVIDER_AUTH_TYPES.join(", ")}`,
       );
     }
   }
@@ -472,6 +479,8 @@ export class EmbeddedProvider {
         error: error instanceof Error ? error.message : "Auto-connect failed",
         source: "auto-connect",
       });
+      // If auto-connect fails, set the flag to clear previous session on next login
+      await this.storage.setShouldClearPreviousSession(true);
     }
   }
 
@@ -919,13 +928,22 @@ export class EmbeddedProvider {
 
     // Get raw response from client
     // PhantomClient will handle EVM transaction formatting internally
-    const rawResponse = await this.client.signAndSendTransaction({
-      walletId: this.walletId,
-      transaction: transactionPayload,
-      networkId: params.networkId,
-      derivationIndex: derivationIndex,
-      account,
-    });
+    let rawResponse;
+    try {
+      rawResponse = await this.client.signAndSendTransaction({
+        walletId: this.walletId,
+        transaction: transactionPayload,
+        networkId: params.networkId,
+        derivationIndex: derivationIndex,
+        account,
+      });
+    } catch (error: any) {
+      // Normalize spending limit errors into a dedicated event while preserving the rejection
+      if (error instanceof SpendingLimitError) {
+        this.emit("spending_limit_reached", { error });
+      }
+      throw error;
+    }
 
     this.logger.info("EMBEDDED_PROVIDER", "Transaction signed and sent successfully", {
       walletId: this.walletId,

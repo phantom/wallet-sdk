@@ -21,7 +21,11 @@ import type {
   AutoConfirmSupportedChainsResult,
 } from "@phantom/browser-injected-sdk/auto-confirm";
 
-const BROWSER_SDK_PROVIDER_TYPES: readonly AuthProviderType[] = [...EMBEDDED_PROVIDER_AUTH_TYPES, "injected"] as const;
+const BROWSER_SDK_PROVIDER_TYPES: readonly AuthProviderType[] = [
+  ...EMBEDDED_PROVIDER_AUTH_TYPES,
+  "injected",
+  "deeplink",
+] as const;
 
 export class BrowserSDK {
   private providerManager: ProviderManager;

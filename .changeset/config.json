@@ -19,7 +19,8 @@
       "@phantom/react-sdk",
       "@phantom/react-native-sdk",
       "@phantom/server-sdk",
-      "@phantom/utils"
+      "@phantom/utils",
+      "@phantom/wallet-sdk-ui"
     ]
   ],
   "linked": [],
@@ -33,6 +34,7 @@
     "@phantom/browser-embedded-sdk-demo-app",
     "client-demo-app",
     "@phantom/server-sdk-examples",
-    "@phantom/react-native-sdk-example"
+    "@phantom/react-native-sdk-example",
+    "@phantom/with-modal"
   ]
 }

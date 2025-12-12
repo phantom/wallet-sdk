@@ -44,6 +44,7 @@ import { deriveSubmissionConfig } from "./caip2-mappings";
 import { DerivationPath, getNetworkConfig } from "./constants";
 import {
   type PrepareResponse,
+  type PrepareErrorResponse,
   type AuthenticatorConfig,
   type CreateAuthenticatorParams,
   type CreateWalletResult,
@@ -59,6 +60,7 @@ import {
   type SignTypedDataParams,
   type UserConfig,
 } from "./types";
+import { WalletServiceError, parseWalletServiceError, getAxiosErrorData, getErrorMessage } from "./errors";
 
 import type { Stamper } from "@phantom/sdk-types";
 import { getSecureTimestamp, randomUUID, isEthereumChain, isSolanaChain } from "@phantom/utils";
@@ -220,13 +222,18 @@ export class PhantomClient {
         },
       });
       return response.data;
-    } catch (error: any) {
-      // If it's a transaction-blocked error, throw just the detail message
-      const errorData = error.response?.data;
-      if (errorData?.type === "transaction-blocked" && errorData?.detail) {
-        throw new Error(errorData.detail);
+    } catch (error: unknown) {
+      const errorData = getAxiosErrorData<PrepareErrorResponse>(error);
+
+      // Check for wallet service errors (like SpendingLimitError or transaction-blocked)
+      const walletServiceError = parseWalletServiceError(errorData);
+      if (walletServiceError) {
+        throw walletServiceError;
       }
-      throw new Error(`Failed to prepare transaction: ${errorData?.message || error.message}`);
+
+      // Fall back to generic error message
+      const message = errorData?.detail || getErrorMessage(error, "Failed to submit transaction");
+      throw new Error(message);
     }
   }
 
@@ -262,8 +269,13 @@ export class PhantomClient {
 
         return prepareResponse.transaction;
       } catch (e: unknown) {
+        // If it's a WalletServiceError, re-throw it as-is (it will be handled in performTransactionSigning)
+        if (e instanceof WalletServiceError) {
+          throw e;
+        }
+
         const errorMessage = e instanceof Error ? e.message : String(e);
-        throw new Error(`Failed to submit transaction: ${errorMessage}`);
+        throw new Error(errorMessage);
       }
     }
 
@@ -351,10 +363,15 @@ export class PhantomClient {
         signedTransaction: result.transaction as unknown as string, // Base64 encoded signed transaction
         hash,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       const actionType = includeSubmissionConfig ? "sign and send" : "sign";
-      console.error(`Failed to ${actionType} transaction:`, error.response?.data || error.message);
-      throw new Error(`Failed to ${actionType} transaction: ${error.response?.data?.message || error.message}`);
+
+      // Preserve wallet service errors so callers can distinguish them
+      if (error instanceof WalletServiceError) {
+        throw error;
+      }
+
+      throw new Error(getErrorMessage(error, `Failed to ${actionType} transaction`));
     }
   }
 

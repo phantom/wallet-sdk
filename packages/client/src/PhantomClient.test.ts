@@ -1,10 +1,26 @@
 import { PhantomClient } from "./PhantomClient";
 import type { UserConfig, CreateAuthenticatorParams, AuthenticatorConfig } from "./types";
 import { NetworkId } from "@phantom/constants";
-import axios from "axios";
+import { SpendingLimitError, TransactionBlockedError } from "./errors";
+import axios, { type AxiosError } from "axios";
 
 // Mock axios to prevent actual HTTP requests
-jest.mock("axios");
+jest.mock("axios", () => {
+  const actualAxios = jest.requireActual("axios");
+  const mockCreate = jest.fn();
+  return {
+    ...actualAxios,
+    default: {
+      ...actualAxios.default,
+      create: mockCreate,
+    },
+    create: mockCreate,
+    isAxiosError: jest.fn((error: unknown) => {
+      // Check if error has response property (AxiosError-like)
+      return error !== null && typeof error === "object" && "response" in error;
+    }),
+  };
+});
 
 describe("PhantomClient Name Length Validation", () => {
   let client: PhantomClient;
@@ -376,19 +392,66 @@ describe("PhantomClient Spending Limits Integration", () => {
     });
 
     it("should throw error when prepare endpoint fails", async () => {
-      mockAxiosPost.mockRejectedValueOnce({
-        response: {
-          data: {
-            message: "Invalid transaction format",
-          },
+      const axiosError = new Error("Request failed") as AxiosError;
+      (axiosError as any).isAxiosError = true;
+      axiosError.response = {
+        data: {
+          type: "invalid-transaction",
+          title: "Invalid Transaction",
+          detail: "Invalid transaction format",
+          requestId: "test-request-id",
         },
-      });
+        status: 400,
+        statusText: "Bad Request",
+        headers: {},
+        config: {} as any,
+      };
+      mockAxiosPost.mockRejectedValueOnce(axiosError);
 
       const prepareMethod = client["prepare"].bind(client);
 
       await expect(prepareMethod("bad-tx", "org-123", solanaSubmissionConfig, "UserAccount123")).rejects.toThrow(
-        "Failed to prepare transaction",
+        "Invalid transaction format",
       );
+    });
+
+    it("should throw SpendingLimitError when spending limit is reached", async () => {
+      const axiosError = new Error("Request failed") as AxiosError;
+      (axiosError as any).isAxiosError = true;
+      axiosError.response = {
+        data: {
+          type: "spending-limit-exceeded",
+          title: "This transaction would surpass your configured spending limit",
+          detail:
+            "Transaction would exceed daily spending limit. Previous: $0.62, Transaction: $0.41, Total: $1.03, Limit: $1.00",
+          requestId: "2d8da771-896b-9568-a9b5-22bf89e8d882",
+          previousSpendCents: 62,
+          transactionSpendCents: 41,
+          totalSpendCents: 103,
+          limitCents: 100,
+        },
+        status: 400,
+        statusText: "Bad Request",
+        headers: {},
+        config: {} as any,
+      };
+      mockAxiosPost.mockRejectedValueOnce(axiosError);
+
+      const prepareMethod = client["prepare"].bind(client);
+
+      const error = await prepareMethod("tx", "org-123", solanaSubmissionConfig, "UserAccount123").catch(e => e);
+
+      expect(error).toBeInstanceOf(SpendingLimitError);
+      expect(error).toMatchObject({
+        name: "SpendingLimitError",
+        type: "spending-limit-exceeded",
+        title: "This transaction would surpass your configured spending limit",
+        requestId: "2d8da771-896b-9568-a9b5-22bf89e8d882",
+        previousSpendCents: 62,
+        transactionSpendCents: 41,
+        totalSpendCents: 103,
+        limitCents: 100,
+      });
     });
   });
 
@@ -503,6 +566,7 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       const performSigning = client["performTransactionSigning"].bind(client);
 
+      // The error from getTransactionForSigning is re-thrown as-is, then wrapped in performTransactionSigning
       await expect(
         performSigning(
           {
@@ -513,19 +577,25 @@ describe("PhantomClient Spending Limits Integration", () => {
           },
           true,
         ),
-      ).rejects.toThrow("Failed to submit transaction");
+      ).rejects.toThrow("Prepare service unavailable");
     });
 
     it("should throw detail message when prepare endpoint returns transaction-blocked error", async () => {
-      mockAxiosPost.mockRejectedValueOnce({
-        response: {
-          data: {
-            type: "transaction-blocked",
-            title: "This transaction has been blocked",
-            detail: "account does not have enough SOL to perform the operation",
-          },
+      // Create a proper AxiosError that will be recognized by isAxiosError
+      const axiosError = new Error("Request failed") as AxiosError;
+      (axiosError as any).isAxiosError = true;
+      axiosError.response = {
+        data: {
+          type: "transaction-blocked",
+          title: "This transaction has been blocked",
+          detail: "account does not have enough SOL to perform the operation",
         },
-      });
+        status: 400,
+        statusText: "Bad Request",
+        headers: {},
+        config: {} as any,
+      };
+      mockAxiosPost.mockRejectedValueOnce(axiosError);
 
       const performSigning = client["performTransactionSigning"].bind(client);
 
@@ -540,6 +610,48 @@ describe("PhantomClient Spending Limits Integration", () => {
           true,
         ),
       ).rejects.toThrow("account does not have enough SOL to perform the operation");
+    });
+
+    it("should propagate transaction-blocked error with detail message from prepare to signTransaction", async () => {
+      const axiosError = new Error("Request failed") as AxiosError;
+      axiosError.response = {
+        data: {
+          type: "transaction-blocked",
+          title: "This transaction has been blocked",
+          detail: "account does not have enough SOL to perform the operation",
+          requestId: "test-request-id",
+        },
+        status: 400,
+        statusText: "Bad Request",
+        headers: {},
+        config: {} as any,
+      };
+      // isAxiosError is already mocked to check for response property
+      mockAxiosPost.mockRejectedValueOnce(axiosError);
+
+      // Call signTransaction (which calls performTransactionSigning with includeSubmissionConfig=false)
+      // This should trigger prepare, which will fail with transaction-blocked error
+      const error = await client
+        .signTransaction({
+          walletId: "wallet-123",
+          transaction: "tx",
+          networkId: NetworkId.SOLANA_MAINNET,
+          account: "UserAccount123",
+        })
+        .catch(e => e);
+
+      // Verify the error is a TransactionBlockedError
+      expect(error).toBeInstanceOf(TransactionBlockedError);
+      expect(error).toMatchObject({
+        name: "TransactionBlockedError",
+        type: "transaction-blocked",
+        title: "This transaction has been blocked",
+        detail: "account does not have enough SOL to perform the operation",
+        requestId: "test-request-id",
+      });
+
+      // Verify the error message (which should be the detail) is displayed correctly
+      expect(error.message).toBe("account does not have enough SOL to perform the operation");
     });
 
     it("should continue signing when prepare endpoint returns pass-through with no limits", async () => {

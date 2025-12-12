@@ -881,6 +881,34 @@ describe("EmbeddedProvider Auth Flows", () => {
       expect(provider.isConnected()).toBe(false);
     });
 
+    it("should set shouldClearPreviousSession flag when auto-connect fails with an error", async () => {
+      const completedSession = createCompletedSession();
+      mockStorage.getSession.mockResolvedValue(completedSession);
+      mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
+
+      // Make getWalletAddresses throw an error to trigger the catch block
+      const testError = new Error("Failed to get wallet addresses");
+      mockClient.getWalletAddresses.mockRejectedValue(testError);
+
+      // Set up event listener to capture the error event
+      const connectErrorSpy = jest.fn();
+      provider.on("connect_error", connectErrorSpy);
+
+      await provider.autoConnect();
+
+      // Verify that setShouldClearPreviousSession was called with true
+      expect(mockStorage.setShouldClearPreviousSession).toHaveBeenCalledWith(true);
+
+      // Verify that the error event was emitted
+      expect(connectErrorSpy).toHaveBeenCalledWith({
+        error: "Failed to get wallet addresses",
+        source: "auto-connect",
+      });
+
+      // Verify that the provider is not connected
+      expect(provider.isConnected()).toBe(false);
+    });
+
     it("should handle session ID mismatch during autoConnect", async () => {
       mockAuthProvider.resumeAuthFromRedirect.mockReturnValue(null);
       mockURLParamsAccessor.getParam.mockReturnValue("different-session-id");

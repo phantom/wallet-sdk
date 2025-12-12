@@ -41,7 +41,7 @@ export interface SignAndSendTransactionParams {
 // Use the parsed transaction result instead of raw transaction
 export interface SignedTransaction extends ParsedTransactionResult {}
 
-export type EmbeddedProviderAuthType = "google" | "apple" | "phantom" | "tiktok" | "x" | "device";
+export type EmbeddedProviderAuthType = "google" | "apple" | "phantom" | "device";
 
 export interface AuthOptions {
   provider: EmbeddedProviderAuthType;

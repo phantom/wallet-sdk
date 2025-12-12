@@ -7,9 +7,13 @@ import {
   lightTheme,
   mergeTheme,
   type PhantomTheme,
+  useModal,
+  usePhantom,
+  useTheme,
+  isMobileDevice,
 } from "@phantom/react-sdk";
 
-type AuthProviderType = "google" | "apple" | "phantom" | "x" | "tiktok" | "injected";
+type AuthProviderType = "google" | "apple" | "phantom" | "injected" | "deeplink";
 import ConnectExample from "./ConnectExample";
 import Sidebar from "./Sidebar";
 
@@ -21,6 +25,66 @@ const initialConfig: PhantomSDKConfig = {
 
 const APP_ICON = "https://picsum.photos/seed/picsum/200";
 const APP_NAME = "React SDK Demo";
+
+function MobileFixedButton() {
+  const { open } = useModal();
+  const { isConnected } = usePhantom();
+  const theme = useTheme();
+  const isMobile = isMobileDevice();
+
+  if (!isMobile) return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        bottom: "16px",
+        left: "16px",
+        right: "16px",
+        zIndex: 1000,
+        boxSizing: "border-box",
+      }}
+    >
+      <button
+        onClick={open}
+        style={{
+          width: "100%",
+          padding: "16px 24px",
+          background: theme.brand || "#7C63E7",
+          color: "#FFFFFF",
+          border: "none",
+          borderRadius: theme.borderRadius,
+          fontSize: "16px",
+          fontWeight: "600",
+          cursor: "pointer",
+          transition: "all 0.2s ease",
+          boxShadow: "0 4px 12px rgba(124, 99, 231, 0.3)",
+        }}
+        onTouchStart={e => {
+          e.currentTarget.style.opacity = "0.9";
+        }}
+        onTouchEnd={e => {
+          e.currentTarget.style.opacity = "1";
+        }}
+      >
+        Open Phantom
+      </button>
+      {isConnected && (
+        <div
+          style={{
+            marginTop: "8px",
+            textAlign: "center",
+            fontSize: "0.75rem",
+            color: "#16a34a",
+            fontWeight: "500",
+          }}
+        >
+          Connected
+        </div>
+      )}
+    </div>
+  );
+}
 
 function App() {
   const [enabledProviders, setEnabledProviders] = useState<AuthProviderType[]>([
@@ -62,11 +126,14 @@ function App() {
     }
   }, [themeMode, customTheme, systemPrefersDark]);
 
-  // Create config with current providers
+  // Create config with current providers (filter out deeplink as it's UI-only)
   const config: PhantomSDKConfig = useMemo(
     () => ({
       ...initialConfig,
-      providers: enabledProviders.length > 0 ? enabledProviders : ["injected"],
+      providers:
+        enabledProviders.filter(p => p !== "deeplink").length > 0
+          ? enabledProviders.filter(p => p !== "deeplink")
+          : ["injected"],
     }),
     [enabledProviders],
   );
@@ -78,6 +145,7 @@ function App() {
           @media (max-width: 768px) {
             .app-container {
               flex-direction: column !important;
+              padding-bottom: 90px !important;
             }
             .sidebar-container {
               width: 100% !important;
@@ -85,10 +153,23 @@ function App() {
               min-height: auto !important;
               border-right: none !important;
               border-bottom: 1px solid rgba(152, 151, 156, 0.2) !important;
+              padding: 1rem !important;
+              max-height: none !important;
+              overflow-y: visible !important;
             }
             .content-container {
               justify-content: flex-start !important;
-              padding: 1rem !important;
+              align-items: center !important;
+              padding: 0 !important;
+              min-height: auto !important;
+            }
+          }
+          @media (max-width: 480px) {
+            .content-container {
+              padding: 0.5rem !important;
+            }
+            .sidebar-container {
+              padding: 0.75rem !important;
             }
           }
         `}
@@ -131,6 +212,7 @@ function App() {
         >
           <ConnectExample appIcon={APP_ICON} appName={APP_NAME} />
         </div>
+        <MobileFixedButton />
       </div>
     </PhantomProvider>
   );

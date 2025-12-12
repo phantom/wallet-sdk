@@ -558,12 +558,11 @@ The SDK supports multiple authentication providers that you configure via the `p
 
 ### Available Providers
 
-- **`"injected"`** - Phantom browser extension (no `appId` required)
-- **`"google"`** - Google OAuth (requires `appId`)
-- **`"apple"`** - Apple ID (requires `appId`)
-- **`"phantom"`** - Phantom Login (requires `appId`)
-- **`"x"`** - X/Twitter (requires `appId`)
-- **`"tiktok"`** - TikTok (requires `appId`)
+- **`"injected"`** - Phantom browser extension
+- **`"google"`** - Google OAuth
+- **`"apple"`** - Apple ID
+- **`"phantom"`** - Phantom Login
+- **`"deeplink"`** - Deeplink to Phantom mobile app (only renders on mobile devices)
 
 ### Configuration Examples
 
@@ -585,8 +584,24 @@ The SDK supports multiple authentication providers that you configure via the `p
 ```tsx
 <PhantomProvider
   config={{
-    providers: ["google", "apple", "phantom", "injected"], // Allow all methods
+    providers: ["google", "apple", "phantom", "injected", "deeplink"], // Allow all methods
     appId: "your-app-id", // Required for embedded providers
+    addressTypes: [AddressType.solana, AddressType.ethereum],
+  }}
+>
+  <YourApp />
+</PhantomProvider>
+```
+
+**Mobile Deeplink Support**
+
+The `"deeplink"` provider enables a button that opens the Phantom mobile app on mobile devices. This button only appears on mobile devices when the Phantom browser extension is not installed. When clicked, it redirects users to the Phantom mobile app to complete authentication.
+
+```tsx
+<PhantomProvider
+  config={{
+    providers: ["google", "apple", "phantom", "deeplink"], // Include deeplink for mobile support
+    appId: "your-app-id", // Required for deeplink
     addressTypes: [AddressType.solana, AddressType.ethereum],
   }}
 >
@@ -1283,7 +1298,7 @@ interface PhantomSDKConfig {
 
   addressTypes?: [AddressType, ...AddressType[]]; // Networks to enable (e.g., [AddressType.solana])
 
-  // Required when using embedded providers (google, apple, phantom, x, tiktok)
+  // Required when using embedded providers (google, apple, phantom)
   appId?: string; // Your app ID from phantom.com/portal
 
   // Optional configuration
@@ -1297,7 +1312,7 @@ interface PhantomSDKConfig {
 }
 
 // Valid provider types
-type AuthProviderType = "google" | "apple" | "phantom" | "x" | "tiktok" | "injected";
+type AuthProviderType = "google" | "apple" | "phantom" | "injected";
 ```
 
 ## Debug Configuration

@@ -189,12 +189,11 @@ The SDK supports multiple authentication providers that you configure via the `p
 
 ### Available Providers
 
-- **`"injected"`** - Phantom browser extension (no `appId` required)
-- **`"google"`** - Google OAuth (requires `appId`)
-- **`"apple"`** - Apple ID (requires `appId`)
-- **`"phantom"`** - Phantom Login (requires `appId`)
-- **`"x"`** - X/Twitter (requires `appId`)
-- **`"tiktok"`** - TikTok (requires `appId`)
+- **`"injected"`** - Phantom browser extension
+- **`"google"`** - Google OAuth
+- **`"apple"`** - Apple ID
+- **`"phantom"`** - Phantom Login
+- **`"deeplink"`** - Deeplink to Phantom mobile app (only renders on mobile devices)
 
 ### Configuration Examples
 
@@ -211,14 +210,30 @@ const sdk = new BrowserSDK({
 
 ```typescript
 const sdk = new BrowserSDK({
-  providers: ["google", "apple", "phantom", "injected"], // Allow all methods
+  providers: ["google", "apple", "phantom", "injected", "deeplink"], // Allow all methods
   addressTypes: [AddressType.solana, AddressType.ethereum],
-  appId: "your-app-id", // Required for embedded providers (google, apple, phantom, x, tiktok)
+  appId: "your-app-id", // Required for embedded providers (google, apple, phantom, deeplink)
   authOptions: {
     authUrl: "https://connect.phantom.app/login", // optional
     redirectUrl: "https://yourapp.com/callback", // optional, defaults to current page
   },
   autoConnect: true, // optional, auto-connect to existing session (default: true when embedded providers are used)
+});
+```
+
+**Mobile Deeplink Support**
+
+The `"deeplink"` provider enables a button that opens the Phantom mobile app on mobile devices. This button only appears on mobile devices when the Phantom browser extension is not installed. When clicked, it redirects users to the Phantom mobile app to complete authentication.
+
+```typescript
+const sdk = new BrowserSDK({
+  providers: ["google", "apple", "phantom", "deeplink"], // Include deeplink for mobile support
+  addressTypes: [AddressType.solana, AddressType.ethereum],
+  appId: "your-app-id", // Required for deeplink
+  authOptions: {
+    authUrl: "https://connect.phantom.app/login",
+    redirectUrl: "https://yourapp.com/callback",
+  },
 });
 ```
 
@@ -301,11 +316,11 @@ new BrowserSDK(config: BrowserSDKConfig)
 ```typescript
 interface BrowserSDKConfig {
   // List of allowed authentication providers (REQUIRED)
-  providers: AuthProviderType[]; // e.g., ["google", "apple", "phantom", "injected"]
+  providers: AuthProviderType[]; // e.g., ["google", "apple", "phantom", "injected", "deeplink"]
 
   addressTypes?: [AddressType, ...AddressType[]]; // Networks to enable (e.g., [AddressType.solana])
 
-  // Required when using embedded providers (google, apple, phantom, x, tiktok)
+  // Required when using embedded providers (google, apple, phantom)
   appId?: string; // Your app ID from phantom.com/portal
 
   // Optional configuration
@@ -319,7 +334,7 @@ interface BrowserSDKConfig {
 }
 
 // Valid provider types
-type AuthProviderType = "google" | "apple" | "phantom" | "x" | "tiktok" | "injected";
+type AuthProviderType = "google" | "apple" | "phantom" | "injected" | "deeplink";
 ```
 
 ### Extension Detection

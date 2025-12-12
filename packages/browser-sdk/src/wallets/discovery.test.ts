@@ -90,6 +90,8 @@ describe("discoverEthereumWallets", () => {
       name: "MetaMask",
       icon: "https://metamask.io/icon.png",
       addressTypes: [AddressType.ethereum],
+      discovery: "eip6963",
+      rdns: "io.metamask",
     });
     expect(result[0].providers?.ethereum).toBeDefined();
     expect(result[1]).toMatchObject({
@@ -97,6 +99,8 @@ describe("discoverEthereumWallets", () => {
       name: "Coinbase Wallet",
       icon: "https://coinbase.com/icon.png",
       addressTypes: [AddressType.ethereum],
+      discovery: "eip6963",
+      rdns: "com.coinbase.wallet",
     });
     expect(result[1].providers?.ethereum).toBeDefined();
 
@@ -264,6 +268,7 @@ describe("discoverSolanaWallets", () => {
       name: "Backpack",
       icon: "https://backpack.app/icon.png",
       addressTypes: [AddressType.solana],
+      discovery: "standard",
     });
     expect(wallets[0].providers?.solana).toBeDefined();
     expect(wallets[1]).toMatchObject({
@@ -271,6 +276,7 @@ describe("discoverSolanaWallets", () => {
       name: "Solflare",
       icon: "https://solflare.com/icon.png",
       addressTypes: [AddressType.solana],
+      discovery: "standard",
     });
     expect(wallets[1].providers?.solana).toBeDefined();
   });

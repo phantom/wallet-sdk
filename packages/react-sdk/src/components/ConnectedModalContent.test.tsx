@@ -61,11 +61,12 @@ describe("ConnectedModalContent", () => {
       sdk: null,
       isConnecting: false,
       isLoading: false,
-      connectError: null,
+      errors: {},
       isClient: true,
       user: null,
       theme: mockTheme,
       allowedProviders: [],
+      clearError: jest.fn(),
     });
     mockUseDisconnect.mockReturnValue({
       disconnect: mockDisconnect,
@@ -96,11 +97,12 @@ describe("ConnectedModalContent", () => {
         sdk: null,
         isConnecting: false,
         isLoading: false,
-        connectError: null,
+        errors: {},
         isClient: true,
         user: null,
         theme: mockTheme,
         allowedProviders: [],
+        clearError: jest.fn(),
       });
 
       const { queryByText } = renderComponent();
@@ -118,11 +120,12 @@ describe("ConnectedModalContent", () => {
         sdk: null,
         isConnecting: false,
         isLoading: false,
-        connectError: null,
+        errors: {},
         isClient: true,
         user: null,
         theme: mockTheme,
         allowedProviders: [],
+        clearError: jest.fn(),
       });
 
       const { getByText } = renderComponent();
@@ -274,11 +277,12 @@ describe("ConnectedModalContent", () => {
         sdk: null,
         isConnecting: false,
         isLoading: false,
-        connectError: null,
+        errors: {},
         isClient: true,
         user: null,
         theme: mockTheme,
         allowedProviders: [],
+        clearError: jest.fn(),
       });
 
       const { getByText } = renderComponent();

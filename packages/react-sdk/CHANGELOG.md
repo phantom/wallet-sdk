@@ -1,5 +1,89 @@
 # @phantom/react-sdk
 
+## 1.0.0
+
+### Major Changes
+
+- 22e46cd: New SDKs chain specific interface, prepare for initial beta release
+- 43c84e4: First release, check https://docs.phantom.com/introduction to get started
+
+### Patch Changes
+
+- f1f401d: Support authuser id from wallet
+- c3f5969: Do not reconnect automatically on injected provider if user disconnected
+- d8c7017: Updates on react sdk instantiation and autoconnect for injected
+- f54d77f: New version
+- fb3160f: Add autoconnect for injected provider, fix issues with server side rendering instantiation in react-sdk
+- bd2219e: Fixed features access
+- 8cd9ac7: Release with new interfaces, appId
+- d35daaa: Bump all dependencies
+- b470bcf: Sec patch
+- 6622863: Fixed exported types
+- a290d0e: Change sdk optional parameters
+- 98e54ff: Fix race condition sdks
+- 213052a: Updated types for chains
+- 4675314: New sdk hooks fix for race condition
+- 92fe48f: Avoid cleanup on redirect
+- bef0677: Render discovered wallets even if phantom is not present
+- d4e0097: Modal with release fixed
+- e335e72: Fix: expires in ms parameter
+- 74885d4: Fix, injected provider change accounts
+- a6c3981: Fix chains dependency
+- 68492cf: Fix dependency to correct number and add policy
+- fcebdff: adding new provenance info
+- 3f4c617: Fix utils version
+- 16319b0: Modal released, included first version of wallet discovery.
+- 80f44ae: Use expirable users
+- bb3483b: Fix double connect issues , change provider bug
+- 574e5aa: Fix prepare error response parsing
+- 1935986: Fix hooks interfaces and add signAllTransactions
+- b6aff60: Release new version
+- 53f1db0: Support auth user id
+- 462c2b5: Get authUserId from injected provider
+- aa40fa6: Fixed autoconnect
+- c424eff: Update auth provider definitions and remove jwt
+- 0ee572a: EVM SDKs
+- Updated dependencies [f1f401d]
+- Updated dependencies [c3f5969]
+- Updated dependencies [d8c7017]
+- Updated dependencies [f54d77f]
+- Updated dependencies [fb3160f]
+- Updated dependencies [bd2219e]
+- Updated dependencies [8cd9ac7]
+- Updated dependencies [d35daaa]
+- Updated dependencies [b470bcf]
+- Updated dependencies [6622863]
+- Updated dependencies [a290d0e]
+- Updated dependencies [98e54ff]
+- Updated dependencies [213052a]
+- Updated dependencies [4675314]
+- Updated dependencies [92fe48f]
+- Updated dependencies [bef0677]
+- Updated dependencies [d4e0097]
+- Updated dependencies [e335e72]
+- Updated dependencies [22e46cd]
+- Updated dependencies [74885d4]
+- Updated dependencies [a6c3981]
+- Updated dependencies [68492cf]
+- Updated dependencies [fcebdff]
+- Updated dependencies [3f4c617]
+- Updated dependencies [16319b0]
+- Updated dependencies [80f44ae]
+- Updated dependencies [bb3483b]
+- Updated dependencies [574e5aa]
+- Updated dependencies [1935986]
+- Updated dependencies [b6aff60]
+- Updated dependencies [53f1db0]
+- Updated dependencies [462c2b5]
+- Updated dependencies [aa40fa6]
+- Updated dependencies [c424eff]
+- Updated dependencies [0ee572a]
+- Updated dependencies [43c84e4]
+  - @phantom/browser-sdk@1.0.0
+  - @phantom/chain-interfaces@1.0.0
+  - @phantom/constants@1.0.0
+  - @phantom/wallet-sdk-ui@1.0.0
+
 ## 1.0.0-beta.27
 
 ### Patch Changes
