@@ -6,6 +6,7 @@ describe("SDK Types", () => {
     // This is a type-only test - if it compiles, the types are working
     const stamper: Stamper = {
       algorithm: Algorithm.ed25519,
+      type: "PKI",
       stamp: async (_params: any) => {
         await Promise.resolve(); // Add await to satisfy linter
         return "mock-stamp";
@@ -19,6 +20,7 @@ describe("SDK Types", () => {
     // This is a type-only test - if it compiles, the types are working
     const stamperWithKeyManagement: StamperWithKeyManagement = {
       algorithm: Algorithm.ed25519,
+      type: "PKI",
       stamp: async (_params: any) => {
         await Promise.resolve(); // Add await to satisfy linter
         return "mock-stamp";
@@ -29,6 +31,23 @@ describe("SDK Types", () => {
       },
       getKeyInfo: () => {
         return { keyId: "test", publicKey: "test" };
+      },
+      resetKeyPair: async () => {
+        await Promise.resolve();
+        return { keyId: "test", publicKey: "test" };
+      },
+      clear: async () => {
+        await Promise.resolve();
+      },
+      rotateKeyPair: async () => {
+        await Promise.resolve();
+        return { keyId: "test", publicKey: "test" };
+      },
+      commitRotation: async () => {
+        await Promise.resolve();
+      },
+      rollbackRotation: async () => {
+        await Promise.resolve();
       },
     };
 

@@ -23,6 +23,7 @@ module.exports = {
     "^@/(.*)$": "<rootDir>/src/$1",
     "^@phantom/crypto$": "<rootDir>/src/test/mocks/@phantom/crypto.js",
     "^@phantom/base64url$": "<rootDir>/src/test/mocks/@phantom/base64url.js",
+    "^@phantom/wallet-sdk-ui$": "<rootDir>/../ui/src/index.ts",
     "^expo-secure-store$": "<rootDir>/src/test/mocks/expo-secure-store.js",
     "^expo-web-browser$": "<rootDir>/src/test/mocks/expo-web-browser.js",
     "^expo-auth-session$": "<rootDir>/src/test/mocks/expo-auth-session.js",

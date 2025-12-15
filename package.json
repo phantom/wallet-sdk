@@ -3,15 +3,18 @@
   "private": true,
   "packageManager": "yarn@4.2.2",
   "scripts": {
-    "build": "yarn workspaces foreach --all --topological-dev run build",
+    "clean": "rimraf .turbo node_modules/.cache packages/*/dist examples/*/dist examples/*/.next",
+    "build:packages": "turbo run build --filter='./packages/*'",
+    "build:packages:clean": "turbo run build --filter='./packages/*' --force",
+    "build": "turbo run build",
+    "build:clean": "turbo run build --force",
+    "watch:packages": "turbo watch build --filter='./packages/*'",
     "pack-release": "yarn workspaces foreach --all --topological-dev run pack-release",
     "prettier": "prettier . --write",
-    "lint": "yarn workspaces foreach -Avpi run lint",
-    "check-types": "yarn workspaces foreach -Avpi run check-types",
+    "lint": "turbo run lint",
+    "check-types": "turbo run check-types",
     "release": "yarn build && yarn pack-release && yarn changeset publish",
-    "test": "jest",
-    "watch": "node scripts/develop.mjs",
-    "postinstall": "yarn build"
+    "test": "turbo run test"
   },
   "workspaces": [
     "packages/*",
@@ -28,7 +31,6 @@
     "@types/node": "^22.15.21",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
-    "chokidar": "^4.0.3",
     "eslint": "8.53.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-define-config": "^1.24.1",
@@ -42,6 +44,7 @@
     "prettier": "^3.5.2",
     "rimraf": "^6.0.1",
     "ts-jest": "^29",
+    "turbo": "^2.6.3",
     "typescript": "^5.8.3"
   }
 }

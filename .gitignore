@@ -27,3 +27,6 @@ _release
 
 # Ignore coverage directory
 coverage
+
+# Turborepo
+.turbo

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "concurrency": "100%",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.md", "!**/*.test.{ts,tsx}", "!**/__tests__/**", "!**/coverage/**"],
+      "outputs": ["dist/**", "build/**", ".next/**", "!.next/cache/**"]
+    },
+    "lint": {
+      "dependsOn": [],
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.md", "!**/coverage/**"],
+      "outputs": []
+    },
+    "check-types": {
+      "dependsOn": [],
+      "inputs": ["$TURBO_DEFAULT$"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": [],
+      "inputs": ["$TURBO_DEFAULT$", "jest.config.*"],
+      "outputs": []
+    },
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    }
+  },
+  "globalDependencies": ["package.json", "yarn.lock", ".yarnrc.yml", "tsconfig.json"]
+}
