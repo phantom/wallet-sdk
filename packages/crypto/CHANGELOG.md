@@ -1,5 +1,17 @@
 # @phantom/crypto
 
+## 1.0.2
+
+### Patch Changes
+
+- 0c135c8: update to version 1.0.2 with x-auth-user-id
+
+## 1.0.1
+
+### Patch Changes
+
+- 440984d: Send method name in the requests to wallet service
+
 ## 1.0.0
 
 ### Major Changes

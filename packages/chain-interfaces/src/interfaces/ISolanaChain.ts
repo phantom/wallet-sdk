@@ -19,7 +19,7 @@ export interface ISolanaChain {
   ): Promise<(Transaction | VersionedTransaction)[]>;
   signAndSendAllTransactions(transactions: (Transaction | VersionedTransaction)[]): Promise<{ signatures: string[] }>;
 
-  // Network switching
+  // Network switching (NOOP In most wallets except embedded providers)
   switchNetwork(network: "mainnet" | "devnet"): Promise<void>;
 
   // Legacy compatibility methods

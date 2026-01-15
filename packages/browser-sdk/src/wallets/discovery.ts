@@ -338,9 +338,7 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
 
     for (const wallet of registeredWallets) {
       // Check if wallet supports Solana - Wallet Standard uses CAIP-2 format
-      // Examples: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp" (mainnet), "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1" (devnet)
-      // Some wallets might also use just "solana" as a chain identifier
-      // Features is an object, not an array - check if it has Solana-related feature keys
+
       const supportsSolana =
         wallet.chains.some(chain => {
           const chainLower = chain.toLowerCase();
@@ -350,11 +348,8 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
           typeof wallet.features === "object" &&
           Object.keys(wallet.features).some(featureKey => {
             const featureLower = featureKey.toLowerCase();
-            return (
-              featureLower.includes("solana") ||
-              featureLower.includes("standard:connect") ||
-              featureLower.includes("standard:signTransaction")
-            );
+            // Only check for Solana-specific features (e.g., "solana:connect", "solana:signTransaction")
+            return featureLower.startsWith("solana:");
           }));
 
       if (!supportsSolana) {

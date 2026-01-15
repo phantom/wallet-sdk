@@ -12,7 +12,8 @@ export class InjectedWalletSolanaChain implements ISolanaChain {
   private provider: ISolanaChain;
   private walletId: string;
   private walletName: string;
-  private eventEmitter: EventEmitter = new EventEmitter();
+  // Expose eventEmitter for testing - allows tests to trigger events directly
+  public readonly eventEmitter: EventEmitter = new EventEmitter();
   private _connected: boolean = false;
   private _publicKey: string | null = null;
 
@@ -279,6 +280,7 @@ export class InjectedWalletSolanaChain implements ISolanaChain {
 
       this.provider.on("accountChanged", (publicKey: string) => {
         this._publicKey = publicKey;
+        this._connected = publicKey != null && publicKey.length > 0;
         this.eventEmitter.emit("accountChanged", publicKey);
       });
     }

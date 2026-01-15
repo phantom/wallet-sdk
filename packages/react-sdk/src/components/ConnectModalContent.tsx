@@ -51,7 +51,8 @@ export function ConnectModalContent({
 
   const showDivider = !(allowedProviders.length === 1 && allowedProviders.includes("injected"));
 
-  const shouldShowOtherWalletsButton = discoveredWallets.length > 2;
+  const isInjectedOnly = allowedProviders.length === 1 && allowedProviders.includes("injected");
+  const shouldShowOtherWalletsButton = !isInjectedOnly && discoveredWallets.length > 2;
   const walletsToShowInline = shouldShowOtherWalletsButton ? [] : discoveredWallets;
 
   const connectWithAuthProvider = useCallback(
@@ -386,10 +387,9 @@ export function ConnectModalContent({
             )}
 
             {/* Injected provider section */}
-            {/* Show on desktop OR on mobile when extension is detected (Phantom app webview) */}
+            {/* Show on desktop OR on mobile when extension is detected (Phantom app webview) OR when wallets are discovered */}
             {allowedProviders.includes("injected") &&
-              (isExtensionInstalled.isInstalled || discoveredWallets.length > 0) &&
-              (!isMobile || isExtensionInstalled.isInstalled) && (
+              (isExtensionInstalled.isInstalled || discoveredWallets.length > 0) && (
                 <>
                   {showDivider && (
                     <div style={dividerStyle}>

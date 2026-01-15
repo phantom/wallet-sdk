@@ -45,7 +45,6 @@ import {
   type InjectedWalletRegistry,
   type InjectedWalletInfo,
   isPhantomWallet,
-  type PhantomExtended,
 } from "../../wallets/registry";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
 
@@ -72,9 +71,9 @@ export class InjectedProvider implements Provider {
 
   // Event management
   private eventListeners: Map<EmbeddedProviderEvent, Set<EventCallback>> = new Map();
-  private browserInjectedCleanupFunctions: (() => void)[] = [];
   private eventsInitialized: boolean = false;
-  private externalWalletEventListenersSetup: Set<string> = new Set(); // Track which wallets have event listeners set up
+  private eventListenersSetup: Set<string> = new Set(); // Track walletId that have listeners set up
+  private eventListenerCleanups: Map<string, (() => void)[]> = new Map(); // Store cleanups per walletId
 
   constructor(config: InjectedProviderConfig) {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Initializing InjectedProvider", { config });
@@ -118,9 +117,16 @@ export class InjectedProvider implements Provider {
     }
   }
 
-  get solana(): ISolanaChain {
-    if (!this.addressTypes.includes(AddressType.solana)) {
-      throw new Error("Solana not enabled for this provider");
+  /**
+   * Helper method to get a chain provider with consistent error handling
+   */
+  private getChainProvider<T extends ISolanaChain | IEthereumChain>(
+    addressType: AddressType,
+    providerKey: "solana" | "ethereum",
+    chainName: string,
+  ): T {
+    if (!this.addressTypes.includes(addressType)) {
+      throw new Error(`${chainName} not enabled for this provider`);
     }
 
     const walletId = this.selectedWalletId || "phantom";
@@ -128,7 +134,6 @@ export class InjectedProvider implements Provider {
 
     if (!walletInfo) {
       // If wallet not found, it might still be discovering
-      // Check if discovery is in progress by checking if the registry has a discovery promise
       const registry = this.walletRegistry;
       if (registry.discoveryPromise) {
         throw new Error(
@@ -142,50 +147,27 @@ export class InjectedProvider implements Provider {
       );
     }
 
-    if (!walletInfo.providers?.solana) {
+    const provider = walletInfo.providers?.[providerKey];
+    if (!provider) {
       throw new Error(
-        `Selected wallet "${walletInfo.name}" does not support Solana. ` +
+        `Selected wallet "${walletInfo.name}" does not support ${chainName}. ` +
           `This wallet only supports: ${walletInfo.addressTypes.join(", ")}. ` +
-          `Make sure your SDK config includes Solana in addressTypes.`,
+          `Make sure your SDK config includes ${chainName} in addressTypes.`,
       );
     }
-    return walletInfo.providers.solana;
+
+    return provider as T;
+  }
+
+  get solana(): ISolanaChain {
+    return this.getChainProvider<ISolanaChain>(AddressType.solana, "solana", "Solana");
   }
 
   /**
    * Access to Ethereum chain operations
    */
   get ethereum(): IEthereumChain {
-    if (!this.addressTypes.includes(AddressType.ethereum)) {
-      throw new Error("Ethereum not enabled for this provider");
-    }
-
-    const walletId = this.selectedWalletId || "phantom";
-    const walletInfo = this.walletRegistry.getById(walletId);
-
-    if (!walletInfo) {
-      // If wallet not found, it might still be discovering
-      const registry = this.walletRegistry as any;
-      if (registry.discoveryPromise) {
-        throw new Error(
-          `Wallet "${walletId}" not found. Wallet discovery is still in progress. ` +
-            `Please wait for sdk.discoverWallets() to complete before accessing chain properties.`,
-        );
-      }
-      throw new Error(
-        `Wallet "${walletId}" not found. Please ensure wallet discovery has completed. ` +
-          `Make sure you call sdk.discoverWallets() and await it before accessing chain properties.`,
-      );
-    }
-
-    if (!walletInfo.providers?.ethereum) {
-      throw new Error(
-        `Selected wallet "${walletInfo.name}" does not support Ethereum. ` +
-          `This wallet only supports: ${walletInfo.addressTypes.join(", ")}. ` +
-          `Make sure your SDK config includes Ethereum in addressTypes.`,
-      );
-    }
-    return walletInfo.providers.ethereum;
+    return this.getChainProvider<IEthereumChain>(AddressType.ethereum, "ethereum", "Ethereum");
   }
 
   private validateAndSelectWallet(requestedWalletId: string): InjectedWalletInfo {
@@ -232,19 +214,7 @@ export class InjectedProvider implements Provider {
 
     // Set up event listeners only if not skipped (for autoConnect, we set them up after successful connection)
     if (!options?.skipEventListeners) {
-      // Set up event listeners for wallet account changes (works for both Phantom and external wallets)
-      this.setupExternalWalletEvents(walletInfo);
-
-      // For Phantom, also set up browser-injected-sdk events
-      // This needs to happen after selectedWalletId is set, so we do it here
-      if (this.selectedWalletId === "phantom" && isPhantomWallet(walletInfo)) {
-        // Clear any existing browser-injected-sdk cleanup functions before setting up new ones
-        this.browserInjectedCleanupFunctions.forEach(cleanup => cleanup());
-        this.browserInjectedCleanupFunctions = [];
-
-        this.setupBrowserInjectedEvents();
-        this.eventsInitialized = true;
-      }
+      this.setupEventListeners(walletInfo);
     }
 
     const connectedAddresses: WalletAddress[] = [];
@@ -463,15 +433,18 @@ export class InjectedProvider implements Provider {
       }
     }
 
-    // Clean up browser-injected-sdk event listeners only
+    // Clean up event listeners
     // Do NOT clear this.eventListeners as it contains ProviderManager forwarding callbacks
-    this.browserInjectedCleanupFunctions.forEach(cleanup => cleanup());
-    this.browserInjectedCleanupFunctions = [];
+    const walletId = this.selectedWalletId || "phantom";
+    const cleanups = this.eventListenerCleanups.get(walletId);
+    if (cleanups) {
+      cleanups.forEach(cleanup => cleanup());
+      this.eventListenerCleanups.delete(walletId);
+    }
+    this.eventListenersSetup.delete(walletId);
 
-    // Clear external wallet event listeners tracking
+    // Update wallet state
     if (this.selectedWalletId) {
-      this.externalWalletEventListenersSetup.delete(this.selectedWalletId);
-      // Update wallet state
       this.setWalletState(this.selectedWalletId, {
         connected: false,
         addresses: [],
@@ -558,17 +531,7 @@ export class InjectedProvider implements Provider {
       }
 
       // Set up event listeners after successful connection
-      this.setupExternalWalletEvents(walletInfo);
-
-      // For Phantom, also set up browser-injected-sdk events
-      if (this.selectedWalletId === "phantom" && isPhantomWallet(walletInfo)) {
-        // Clear any existing browser-injected-sdk cleanup functions before setting up new ones
-        this.browserInjectedCleanupFunctions.forEach(cleanup => cleanup());
-        this.browserInjectedCleanupFunctions = [];
-
-        this.setupBrowserInjectedEvents();
-        this.eventsInitialized = true;
-      }
+      this.setupEventListeners(walletInfo);
 
       // Update wallet state
       if (this.selectedWalletId) {
@@ -616,6 +579,202 @@ export class InjectedProvider implements Provider {
 
   private setWalletState(walletId: string, state: { connected: boolean; addresses: WalletAddress[] }): void {
     this.walletStates.set(walletId, state);
+  }
+
+  /**
+   * Update wallet state with new addresses for a specific address type
+   * Replaces all existing addresses of the given type with the new addresses
+   * @param walletId - The wallet ID to update
+   * @param newAddresses - Array of new addresses (strings) for the address type
+   * @param addressType - The type of addresses being updated
+   * @returns The updated addresses array
+   */
+  private updateWalletAddresses(walletId: string, newAddresses: string[], addressType: AddressType): WalletAddress[] {
+    const state = this.getWalletState(walletId);
+    const otherAddresses = state.addresses.filter(addr => addr.addressType !== addressType);
+    const addressesOfType = newAddresses.map(address => ({ addressType, address }));
+    const updatedAddresses = [...otherAddresses, ...addressesOfType];
+
+    this.setWalletState(walletId, {
+      connected: updatedAddresses.length > 0,
+      addresses: updatedAddresses,
+    });
+
+    return updatedAddresses;
+  }
+
+  /**
+   * Helper to construct account change source string
+   */
+  private getAccountChangeSource(source: string): string {
+    return `${source}-account-change`;
+  }
+
+  /**
+   * Create a handler for Solana connect events
+   */
+  private createSolanaConnectHandler(walletId: string, source: string) {
+    return async (publicKey: string) => {
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Solana connect event received", { publicKey, walletId });
+
+      const newAddresses = this.updateWalletAddresses(walletId, [publicKey], AddressType.solana);
+
+      const authUserId = await this.getAuthUserId("Solana connect event");
+
+      this.emit("connect", {
+        addresses: newAddresses,
+        source,
+        authUserId,
+      });
+    };
+  }
+
+  /**
+   * Create a handler for Solana disconnect events
+   */
+  private createSolanaDisconnectHandler(walletId: string, source: string) {
+    return () => {
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Solana disconnect event received", { walletId });
+
+      const state = this.getWalletState(walletId);
+      const filteredAddresses = state.addresses.filter(addr => addr.addressType !== AddressType.solana);
+
+      this.setWalletState(walletId, {
+        connected: filteredAddresses.length > 0,
+        addresses: filteredAddresses,
+      });
+
+      this.emit("disconnect", {
+        source,
+      });
+    };
+  }
+
+  /**
+   * Create a handler for Solana account change events
+   * Can receive string | null per Wallet Standard
+   */
+  private createSolanaAccountChangeHandler(walletId: string, source: string) {
+    return async (publicKey: string | null) => {
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Solana account changed event received", { publicKey, walletId });
+
+      if (publicKey) {
+        const newAddresses = this.updateWalletAddresses(walletId, [publicKey], AddressType.solana);
+
+        const authUserId = await this.getAuthUserId("Solana account changed event");
+
+        this.emit("connect", {
+          addresses: newAddresses,
+          source: this.getAccountChangeSource(source),
+          authUserId,
+        });
+      } else {
+        // Account disconnected
+        const state = this.getWalletState(walletId);
+        const otherAddresses = state.addresses.filter(addr => addr.addressType !== AddressType.solana);
+        this.setWalletState(walletId, {
+          connected: otherAddresses.length > 0,
+          addresses: otherAddresses,
+        });
+
+        this.emit("disconnect", {
+          source: this.getAccountChangeSource(source),
+        });
+      }
+    };
+  }
+
+  /**
+   * Create a handler for Ethereum connect events
+   * EIP-1193 connect event receives { chainId: string }, but we need to get accounts separately
+   */
+  private createEthereumConnectHandler(walletId: string, source: string) {
+    return async (connectInfo?: { chainId: string } | string[]) => {
+      // Handle both EIP-1193 format ({ chainId }) and browser-injected-sdk format (accounts array)
+      let accounts: string[] = [];
+      if (Array.isArray(connectInfo)) {
+        accounts = connectInfo;
+      } else {
+        // EIP-1193 format - need to get accounts from provider
+        try {
+          const walletInfo = this.walletRegistry.getById(walletId);
+          if (walletInfo?.providers?.ethereum) {
+            accounts = await walletInfo.providers.ethereum.getAccounts();
+          }
+        } catch (error) {
+          debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to get accounts on connect", { error });
+        }
+      }
+
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum connect event received", { accounts, walletId });
+
+      if (accounts.length > 0) {
+        const newAddresses = this.updateWalletAddresses(walletId, accounts, AddressType.ethereum);
+
+        const authUserId = await this.getAuthUserId("Ethereum connect event");
+
+        this.emit("connect", {
+          addresses: newAddresses,
+          source,
+          authUserId,
+        });
+      }
+    };
+  }
+
+  /**
+   * Create a handler for Ethereum disconnect events
+   */
+  private createEthereumDisconnectHandler(walletId: string, source: string) {
+    return () => {
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum disconnect event received", { walletId });
+
+      const state = this.getWalletState(walletId);
+      const filteredAddresses = state.addresses.filter(addr => addr.addressType !== AddressType.ethereum);
+
+      this.setWalletState(walletId, {
+        connected: filteredAddresses.length > 0,
+        addresses: filteredAddresses,
+      });
+
+      this.emit("disconnect", {
+        source,
+      });
+    };
+  }
+
+  /**
+   * Create a handler for Ethereum account change events
+   */
+  private createEthereumAccountChangeHandler(walletId: string, source: string) {
+    return async (accounts: string[]) => {
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum accounts changed event received", { accounts, walletId });
+
+      if (accounts && accounts.length > 0) {
+        // User switched to a connected account - add new addresses
+        const newAddresses = this.updateWalletAddresses(walletId, accounts, AddressType.ethereum);
+
+        const authUserId = await this.getAuthUserId("Ethereum accounts changed event");
+
+        this.emit("connect", {
+          addresses: newAddresses,
+          source: this.getAccountChangeSource(source),
+          authUserId,
+        });
+      } else {
+        // User switched to unconnected account - treat as disconnect
+        const state = this.getWalletState(walletId);
+        const otherAddresses = state.addresses.filter(addr => addr.addressType !== AddressType.ethereum);
+        this.setWalletState(walletId, {
+          connected: otherAddresses.length > 0,
+          addresses: otherAddresses,
+        });
+
+        this.emit("disconnect", {
+          source: this.getAccountChangeSource(source),
+        });
+      }
+    };
   }
 
   getAddresses(): WalletAddress[] {
@@ -725,24 +884,27 @@ export class InjectedProvider implements Provider {
   on(event: EmbeddedProviderEvent, callback: EventCallback): void {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Adding event listener", { event });
 
-    // Lazy-initialize browser-injected-sdk events when first listener is added
+    // Lazy-initialize events when first listener is added
     if (!this.eventsInitialized) {
-      this.setupBrowserInjectedEvents();
-      this.eventsInitialized = true;
+      const walletId = this.selectedWalletId || "phantom";
+      const walletInfo = this.walletRegistry.getById(walletId);
+      if (walletInfo) {
+        this.setupEventListeners(walletInfo);
+      }
     }
 
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, new Set());
     }
-    this.eventListeners.get(event)!.add(callback);
+    this.eventListeners.get(event)?.add(callback);
   }
 
   off(event: EmbeddedProviderEvent, callback: EventCallback): void {
     debug.log(DebugCategory.INJECTED_PROVIDER, "Removing event listener", { event });
 
     if (this.eventListeners.has(event)) {
-      this.eventListeners.get(event)!.delete(callback);
-      if (this.eventListeners.get(event)!.size === 0) {
+      this.eventListeners.get(event)?.delete(callback);
+      if (this.eventListeners.get(event)?.size === 0) {
         this.eventListeners.delete(event);
       }
     }
@@ -767,324 +929,95 @@ export class InjectedProvider implements Provider {
     }
   }
 
-  private setupBrowserInjectedEvents(): void {
-    // Only set up browser-injected-sdk events when Phantom is selected
-    const walletInfo = this.walletRegistry.getById(this.selectedWalletId || "phantom");
-    if (!isPhantomWallet(walletInfo)) {
-      debug.log(DebugCategory.INJECTED_PROVIDER, "Skipping browser-injected-sdk event setup - not Phantom wallet");
+  /**
+   * Set up Solana event listeners for any provider (Phantom or external)
+   */
+  private setupSolanaEventListeners(provider: ISolanaChain, walletId: string, source: string): void {
+    if (typeof provider.on !== "function") return;
+
+    debug.log(DebugCategory.INJECTED_PROVIDER, "Setting up Solana event listeners", { walletId, source });
+
+    const handlers = {
+      connect: this.createSolanaConnectHandler(walletId, source),
+      disconnect: this.createSolanaDisconnectHandler(walletId, source),
+      accountChanged: this.createSolanaAccountChangeHandler(walletId, source),
+    };
+
+    // Register listeners
+    provider.on("connect", handlers.connect);
+    provider.on("disconnect", handlers.disconnect);
+    provider.on("accountChanged", handlers.accountChanged);
+
+    // Store cleanups
+    const cleanups: (() => void)[] = [];
+    if (typeof provider.off === "function") {
+      cleanups.push(
+        () => provider.off("connect", handlers.connect),
+        () => provider.off("disconnect", handlers.disconnect),
+        () => provider.off("accountChanged", handlers.accountChanged),
+      );
+    }
+    const existingCleanups = this.eventListenerCleanups.get(walletId) || [];
+    this.eventListenerCleanups.set(walletId, [...existingCleanups, ...cleanups]);
+  }
+
+  /**
+   * Set up Ethereum event listeners for any provider (Phantom or external)
+   */
+  private setupEthereumEventListeners(provider: IEthereumChain, walletId: string, source: string): void {
+    if (typeof provider.on !== "function") return;
+
+    debug.log(DebugCategory.INJECTED_PROVIDER, "Setting up Ethereum event listeners", { walletId, source });
+
+    const handlers = {
+      connect: this.createEthereumConnectHandler(walletId, source),
+      disconnect: this.createEthereumDisconnectHandler(walletId, source),
+      accountsChanged: this.createEthereumAccountChangeHandler(walletId, source),
+    };
+
+    // Register listeners
+    provider.on("connect", handlers.connect);
+    provider.on("disconnect", handlers.disconnect);
+    provider.on("accountsChanged", handlers.accountsChanged);
+
+    // Store cleanups
+    const cleanups: (() => void)[] = [];
+    if (typeof provider.off === "function") {
+      cleanups.push(
+        () => provider.off("connect", handlers.connect),
+        () => provider.off("disconnect", handlers.disconnect),
+        () => provider.off("accountsChanged", handlers.accountsChanged),
+      );
+    }
+    const existingCleanups = this.eventListenerCleanups.get(walletId) || [];
+    this.eventListenerCleanups.set(walletId, [...existingCleanups, ...cleanups]);
+  }
+
+  /**
+   * Unified event listener setup for all wallet types (Phantom and external)
+   */
+  private setupEventListeners(walletInfo: InjectedWalletInfo): void {
+    const walletId = this.selectedWalletId || "phantom";
+
+    // Check if already set up (works for both Phantom and external)
+    if (this.eventListenersSetup.has(walletId)) {
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Event listeners already set up for wallet", { walletId });
       return;
     }
 
-    debug.log(DebugCategory.INJECTED_PROVIDER, "Setting up browser-injected-sdk event listeners");
+    debug.log(DebugCategory.INJECTED_PROVIDER, "Setting up event listeners", { walletId });
 
-    // For Phantom, set up event listeners directly on the Phantom instance
-    if (this.selectedWalletId === "phantom" && isPhantomWallet(walletInfo)) {
-      if (this.addressTypes.includes(AddressType.solana)) {
-        this.setupSolanaEvents(walletInfo.phantomInstance);
-      }
-
-      if (this.addressTypes.includes(AddressType.ethereum)) {
-        this.setupEthereumEvents(walletInfo.phantomInstance);
-      }
-    }
-  }
-
-  private setupSolanaEvents(phantom: PhantomExtended): void {
-    debug.log(DebugCategory.INJECTED_PROVIDER, "Setting up Solana event listeners");
-
-    // Map Solana connect event to unified connect event
-    const handleSolanaConnect = async (publicKey: string) => {
-      debug.log(DebugCategory.INJECTED_PROVIDER, "Solana connect event received", { publicKey });
-
-      const walletId = this.selectedWalletId || "phantom";
-      const state = this.getWalletState(walletId);
-      const solanaAddress = { addressType: AddressType.solana, address: publicKey };
-      const hasSolana = state.addresses.some(addr => addr.addressType === AddressType.solana);
-      const newAddresses = hasSolana
-        ? state.addresses.map(addr => (addr.addressType === AddressType.solana ? solanaAddress : addr))
-        : [...state.addresses, solanaAddress];
-
-      this.setWalletState(walletId, {
-        connected: true,
-        addresses: newAddresses,
-      });
-
-      const authUserId = await this.getAuthUserId("Solana connect event");
-
-      this.emit("connect", {
-        addresses: newAddresses,
-        source: "injected-extension",
-        authUserId,
-      });
-    };
-
-    // Map Solana disconnect event to unified disconnect event
-    const handleSolanaDisconnect = () => {
-      debug.log(DebugCategory.INJECTED_PROVIDER, "Solana disconnect event received");
-
-      const walletId = this.selectedWalletId || "phantom";
-      const state = this.getWalletState(walletId);
-      const filteredAddresses = state.addresses.filter(addr => addr.addressType !== AddressType.solana);
-
-      this.setWalletState(walletId, {
-        connected: filteredAddresses.length > 0,
-        addresses: filteredAddresses,
-      });
-
-      this.emit("disconnect", {
-        source: "injected-extension",
-      });
-    };
-
-    // Map Solana account changed to reconnect event
-    const handleSolanaAccountChanged = async (publicKey: string) => {
-      debug.log(DebugCategory.INJECTED_PROVIDER, "Solana account changed event received", { publicKey });
-
-      const walletId = this.selectedWalletId || "phantom";
-      const state = this.getWalletState(walletId);
-      const solanaIndex = state.addresses.findIndex(addr => addr.addressType === AddressType.solana);
-      const newAddresses =
-        solanaIndex >= 0
-          ? state.addresses.map((addr, idx) =>
-              idx === solanaIndex ? { addressType: AddressType.solana, address: publicKey } : addr,
-            )
-          : [...state.addresses, { addressType: AddressType.solana, address: publicKey }];
-
-      this.setWalletState(walletId, {
-        connected: true,
-        addresses: newAddresses,
-      });
-
-      const authUserId = await this.getAuthUserId("Solana account changed event");
-
-      this.emit("connect", {
-        addresses: newAddresses,
-        source: "injected-extension-account-change",
-        authUserId,
-      });
-    };
-
-    const cleanupConnect = phantom.solana.addEventListener("connect", handleSolanaConnect);
-    const cleanupDisconnect = phantom.solana.addEventListener("disconnect", handleSolanaDisconnect);
-    const cleanupAccountChanged = phantom.solana.addEventListener("accountChanged", handleSolanaAccountChanged);
-
-    this.browserInjectedCleanupFunctions.push(cleanupConnect, cleanupDisconnect, cleanupAccountChanged);
-  }
-
-  private setupEthereumEvents(phantom: PhantomExtended): void {
-    debug.log(DebugCategory.INJECTED_PROVIDER, "Setting up Ethereum event listeners");
-
-    const handleEthereumConnect = async (accounts: string[]) => {
-      debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum connect event received", { accounts });
-
-      const walletId = this.selectedWalletId || "phantom";
-      const state = this.getWalletState(walletId);
-      const ethAddresses = accounts.map(address => ({ addressType: AddressType.ethereum, address }));
-      const otherAddresses = state.addresses.filter(addr => addr.addressType !== AddressType.ethereum);
-      const newAddresses = [...otherAddresses, ...ethAddresses];
-
-      this.setWalletState(walletId, {
-        connected: true,
-        addresses: newAddresses,
-      });
-
-      const authUserId = await this.getAuthUserId("Ethereum connect event");
-
-      this.emit("connect", {
-        addresses: newAddresses,
-        source: "injected-extension",
-        authUserId,
-      });
-    };
-
-    const handleEthereumDisconnect = () => {
-      debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum disconnect event received");
-
-      const walletId = this.selectedWalletId || "phantom";
-      const state = this.getWalletState(walletId);
-      const filteredAddresses = state.addresses.filter(addr => addr.addressType !== AddressType.ethereum);
-
-      this.setWalletState(walletId, {
-        connected: filteredAddresses.length > 0,
-        addresses: filteredAddresses,
-      });
-
-      this.emit("disconnect", {
-        source: "injected-extension",
-      });
-    };
-
-    const handleEthereumAccountsChanged = async (accounts: string[]) => {
-      debug.log(DebugCategory.INJECTED_PROVIDER, "Ethereum accounts changed event received", { accounts });
-
-      const walletId = this.selectedWalletId || "phantom";
-      const state = this.getWalletState(walletId);
-      const otherAddresses = state.addresses.filter(addr => addr.addressType !== AddressType.ethereum);
-
-      if (accounts && accounts.length > 0) {
-        // User switched to a connected account - add new addresses
-        const ethAddresses = accounts.map(address => ({ addressType: AddressType.ethereum, address }));
-        const newAddresses = [...otherAddresses, ...ethAddresses];
-        this.setWalletState(walletId, {
-          connected: true,
-          addresses: newAddresses,
-        });
-
-        const authUserId = await this.getAuthUserId("Ethereum accounts changed event");
-
-        this.emit("connect", {
-          addresses: newAddresses,
-          source: "injected-extension-account-change",
-          authUserId,
-        });
-      } else {
-        // User switched to unconnected account - treat as disconnect
-        this.setWalletState(walletId, {
-          connected: otherAddresses.length > 0,
-          addresses: otherAddresses,
-        });
-
-        this.emit("disconnect", {
-          source: "injected-extension-account-change",
-        });
-      }
-    };
-
-    const cleanupConnect = phantom.ethereum.addEventListener("connect", handleEthereumConnect);
-    const cleanupDisconnect = phantom.ethereum.addEventListener("disconnect", handleEthereumDisconnect);
-    const cleanupAccountsChanged = phantom.ethereum.addEventListener("accountsChanged", handleEthereumAccountsChanged);
-
-    this.browserInjectedCleanupFunctions.push(cleanupConnect, cleanupDisconnect, cleanupAccountsChanged);
-  }
-
-  private setupExternalWalletEvents(walletInfo: InjectedWalletInfo): void {
-    // Skip Phantom - it uses setupBrowserInjectedEvents instead
-    if (isPhantomWallet(walletInfo)) {
-      return;
+    // Set up Solana events
+    if (this.addressTypes.includes(AddressType.solana) && walletInfo.providers?.solana) {
+      this.setupSolanaEventListeners(walletInfo.providers.solana, walletId, "wallet");
     }
 
-    // Only set up listeners once per wallet
-    if (!this.selectedWalletId || this.externalWalletEventListenersSetup.has(this.selectedWalletId)) {
-      return;
+    // Set up Ethereum events
+    if (this.addressTypes.includes(AddressType.ethereum) && walletInfo.providers?.ethereum) {
+      this.setupEthereumEventListeners(walletInfo.providers.ethereum, walletId, "wallet");
     }
 
-    debug.log(DebugCategory.INJECTED_PROVIDER, "Setting up external wallet event listeners", {
-      walletId: this.selectedWalletId,
-    });
-
-    // Set up event listeners for external wallet account changes
-    if (walletInfo.providers?.ethereum) {
-      const handleExternalEthereumAccountsChanged = async (accounts: string[]) => {
-        debug.log(DebugCategory.INJECTED_PROVIDER, "External wallet Ethereum accounts changed event received", {
-          walletId: this.selectedWalletId,
-          accounts,
-        });
-
-        const walletId = this.selectedWalletId!;
-        const state = this.getWalletState(walletId);
-        const otherAddresses = state.addresses.filter(addr => addr.addressType !== AddressType.ethereum);
-
-        if (accounts && accounts.length > 0) {
-          // Add only the current accounts (should typically be 1, but handle multiple)
-          const ethAddresses = accounts.map(address => ({ addressType: AddressType.ethereum, address }));
-          const newAddresses = [...otherAddresses, ...ethAddresses];
-          this.setWalletState(walletId, {
-            connected: true,
-            addresses: newAddresses,
-          });
-
-          debug.log(DebugCategory.INJECTED_PROVIDER, "Updated Ethereum addresses after account change", {
-            walletId,
-            oldCount: 0, // We filtered them out
-            newCount: accounts.length,
-            addresses: newAddresses.filter(addr => addr.addressType === AddressType.ethereum),
-          });
-
-          const authUserId = await this.getAuthUserId("External wallet Ethereum accounts changed event");
-
-          this.emit("connect", {
-            addresses: newAddresses,
-            source: "external-wallet-account-change",
-            authUserId,
-          });
-        } else {
-          // User switched to unconnected account - treat as disconnect
-          this.setWalletState(walletId, {
-            connected: otherAddresses.length > 0,
-            addresses: otherAddresses,
-          });
-
-          this.emit("disconnect", {
-            source: "external-wallet-account-change",
-          });
-        }
-      };
-
-      // Listen to accountsChanged events from the external wallet's ethereum provider
-      if (typeof walletInfo.providers.ethereum.on === "function") {
-        walletInfo.providers.ethereum.on("accountsChanged", handleExternalEthereumAccountsChanged);
-        // Store cleanup function
-        this.browserInjectedCleanupFunctions.push(() => {
-          if (typeof walletInfo.providers?.ethereum?.off === "function") {
-            walletInfo.providers.ethereum.off("accountsChanged", handleExternalEthereumAccountsChanged);
-          }
-        });
-      }
-    }
-
-    if (walletInfo.providers?.solana) {
-      const handleExternalSolanaAccountChanged = async (publicKey: string) => {
-        debug.log(DebugCategory.INJECTED_PROVIDER, "External wallet Solana account changed event received", {
-          walletId: this.selectedWalletId,
-          publicKey,
-        });
-
-        const walletId = this.selectedWalletId!;
-        const state = this.getWalletState(walletId);
-        const otherAddresses = state.addresses.filter(addr => addr.addressType !== AddressType.solana);
-
-        if (publicKey) {
-          const newAddresses = [...otherAddresses, { addressType: AddressType.solana, address: publicKey }];
-          this.setWalletState(walletId, {
-            connected: true,
-            addresses: newAddresses,
-          });
-
-          const authUserId = await this.getAuthUserId("External wallet Solana account changed event");
-
-          this.emit("connect", {
-            addresses: newAddresses,
-            source: "external-wallet-account-change",
-            authUserId,
-          });
-        } else {
-          // Account disconnected
-          this.setWalletState(walletId, {
-            connected: otherAddresses.length > 0,
-            addresses: otherAddresses,
-          });
-
-          this.emit("disconnect", {
-            source: "external-wallet-account-change",
-          });
-        }
-      };
-
-      // Listen to accountChanged events from the external wallet's solana provider
-      if (typeof walletInfo.providers.solana.on === "function") {
-        walletInfo.providers.solana.on("accountChanged", handleExternalSolanaAccountChanged);
-        // Store cleanup function
-        this.browserInjectedCleanupFunctions.push(() => {
-          if (typeof walletInfo.providers?.solana?.off === "function") {
-            walletInfo.providers.solana.off("accountChanged", handleExternalSolanaAccountChanged);
-          }
-        });
-      }
-    }
-
-    // Mark this wallet as having event listeners set up
-    if (this.selectedWalletId) {
-      this.externalWalletEventListenersSetup.add(this.selectedWalletId);
-    }
+    this.eventListenersSetup.add(walletId);
+    this.eventsInitialized = true;
   }
 }

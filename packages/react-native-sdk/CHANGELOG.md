@@ -1,5 +1,37 @@
 # @phantom/react-native-sdk
 
+## 1.0.2
+
+### Patch Changes
+
+- 0c135c8: update to version 1.0.2 with x-auth-user-id
+- Updated dependencies [0c135c8]
+  - @phantom/api-key-stamper@1.0.2
+  - @phantom/base64url@1.0.2
+  - @phantom/chain-interfaces@1.0.2
+  - @phantom/client@1.0.2
+  - @phantom/constants@1.0.2
+  - @phantom/crypto@1.0.2
+  - @phantom/embedded-provider-core@1.0.2
+  - @phantom/sdk-types@1.0.2
+  - @phantom/wallet-sdk-ui@1.0.2
+
+## 1.0.1
+
+### Patch Changes
+
+- 440984d: Send method name in the requests to wallet service
+- Updated dependencies [440984d]
+  - @phantom/client@1.0.1
+  - @phantom/api-key-stamper@1.0.1
+  - @phantom/base64url@1.0.1
+  - @phantom/chain-interfaces@1.0.1
+  - @phantom/constants@1.0.1
+  - @phantom/crypto@1.0.1
+  - @phantom/embedded-provider-core@1.0.1
+  - @phantom/sdk-types@1.0.1
+  - @phantom/wallet-sdk-ui@1.0.1
+
 ## 1.0.0
 
 ### Major Changes

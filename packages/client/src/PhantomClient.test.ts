@@ -376,7 +376,13 @@ describe("PhantomClient Spending Limits Integration", () => {
       });
 
       const prepareMethod = client["prepare"].bind(client);
-      const result = await prepareMethod("original-tx-base64", "org-123", solanaSubmissionConfig, "UserAccount123");
+      const result = await prepareMethod(
+        "original-tx-base64",
+        "org-123",
+        solanaSubmissionConfig,
+        "UserAccount123",
+        "signAndSendTransaction",
+      );
 
       expect(result.transaction).toBe("augmented-tx");
       expect(mockAxiosPost).toHaveBeenCalledWith(
@@ -387,7 +393,7 @@ describe("PhantomClient Spending Limits Integration", () => {
           submissionConfig: solanaSubmissionConfig,
           simulationConfig: { account: "UserAccount123" },
         },
-        { headers: { "Content-Type": "application/json" } },
+        { headers: { "Content-Type": "application/json", "X-Rpc-Method": "signAndSendTransaction" } },
       );
     });
 
@@ -410,9 +416,9 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       const prepareMethod = client["prepare"].bind(client);
 
-      await expect(prepareMethod("bad-tx", "org-123", solanaSubmissionConfig, "UserAccount123")).rejects.toThrow(
-        "Invalid transaction format",
-      );
+      await expect(
+        prepareMethod("bad-tx", "org-123", solanaSubmissionConfig, "UserAccount123", "signAndSendTransaction"),
+      ).rejects.toThrow("Invalid transaction format");
     });
 
     it("should throw SpendingLimitError when spending limit is reached", async () => {
@@ -439,7 +445,13 @@ describe("PhantomClient Spending Limits Integration", () => {
 
       const prepareMethod = client["prepare"].bind(client);
 
-      const error = await prepareMethod("tx", "org-123", solanaSubmissionConfig, "UserAccount123").catch(e => e);
+      const error = await prepareMethod(
+        "tx",
+        "org-123",
+        solanaSubmissionConfig,
+        "UserAccount123",
+        "signAndSendTransaction",
+      ).catch(e => e);
 
       expect(error).toBeInstanceOf(SpendingLimitError);
       expect(error).toMatchObject({
@@ -745,7 +757,13 @@ describe("PhantomClient Spending Limits Integration", () => {
       });
 
       const prepareMethod = client["prepare"].bind(client);
-      const result = await prepareMethod("original-tx", "org-123", submissionConfig, "UserAccount123");
+      const result = await prepareMethod(
+        "original-tx",
+        "org-123",
+        submissionConfig,
+        "UserAccount123",
+        "signAndSendTransaction",
+      );
 
       expect(result.transaction).toBe("augmented-tx-with-lighthouse-instructions");
     });
@@ -763,7 +781,13 @@ describe("PhantomClient Spending Limits Integration", () => {
       });
 
       const prepareMethod = client["prepare"].bind(client);
-      const result = await prepareMethod("solana-tx-base64", "org-123", submissionConfig, "UserAccount123");
+      const result = await prepareMethod(
+        "solana-tx-base64",
+        "org-123",
+        submissionConfig,
+        "UserAccount123",
+        "signAndSendTransaction",
+      );
 
       expect(result.transaction).toBe("augmented-tx");
       expect(mockAxiosPost).toHaveBeenCalledWith(
@@ -774,7 +798,12 @@ describe("PhantomClient Spending Limits Integration", () => {
           submissionConfig: submissionConfig,
           simulationConfig: { account: "UserAccount123" },
         }),
-        expect.any(Object),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            "Content-Type": "application/json",
+            "X-Rpc-Method": "signAndSendTransaction",
+          }),
+        }),
       );
     });
 
@@ -793,7 +822,7 @@ describe("PhantomClient Spending Limits Integration", () => {
       };
 
       const prepareMethod = client["prepare"].bind(client);
-      await prepareMethod("tx-base64", "org-123", submissionConfig, "UserAccount123");
+      await prepareMethod("tx-base64", "org-123", submissionConfig, "UserAccount123", "signAndSendTransaction");
 
       expect(mockAxiosPost).toHaveBeenCalledWith(
         "https://api.phantom.app/prepare",
@@ -803,8 +832,59 @@ describe("PhantomClient Spending Limits Integration", () => {
           submissionConfig: submissionConfig,
           simulationConfig: { account: "UserAccount123" },
         },
-        { headers: { "Content-Type": "application/json" } },
+        { headers: { "Content-Type": "application/json", "X-Rpc-Method": "signAndSendTransaction" } },
       );
+    });
+  });
+
+  describe("getRpcMethodName", () => {
+    let client: PhantomClient;
+
+    beforeEach(() => {
+      client = new PhantomClient({
+        apiBaseUrl: "https://api.phantom.app",
+        organizationId: "test-org-id",
+      });
+    });
+
+    it("should return 'signTransaction' for Solana signTransaction", () => {
+      const methodName = (client as any).getRpcMethodName(NetworkId.SOLANA_MAINNET, false);
+      expect(methodName).toBe("signTransaction");
+    });
+
+    it("should return 'signAndSendTransaction' for Solana signAndSendTransaction", () => {
+      const methodName = (client as any).getRpcMethodName(NetworkId.SOLANA_MAINNET, true);
+      expect(methodName).toBe("signAndSendTransaction");
+    });
+
+    it("should return 'eth_signTransaction' for EVM signTransaction", () => {
+      const methodName = (client as any).getRpcMethodName(NetworkId.ETHEREUM_MAINNET, false);
+      expect(methodName).toBe("eth_signTransaction");
+    });
+
+    it("should return 'eth_sendTransaction' for EVM signAndSendTransaction", () => {
+      const methodName = (client as any).getRpcMethodName(NetworkId.ETHEREUM_MAINNET, true);
+      expect(methodName).toBe("eth_sendTransaction");
+    });
+
+    it("should return 'eth_signTransaction' for Polygon signTransaction", () => {
+      const methodName = (client as any).getRpcMethodName(NetworkId.POLYGON_MAINNET, false);
+      expect(methodName).toBe("eth_signTransaction");
+    });
+
+    it("should return 'eth_sendTransaction' for Polygon signAndSendTransaction", () => {
+      const methodName = (client as any).getRpcMethodName(NetworkId.POLYGON_MAINNET, true);
+      expect(methodName).toBe("eth_sendTransaction");
+    });
+
+    it("should return 'signTransaction' for Bitcoin signTransaction", () => {
+      const methodName = (client as any).getRpcMethodName(NetworkId.BITCOIN_MAINNET, false);
+      expect(methodName).toBe("signTransaction");
+    });
+
+    it("should return 'signAndSendTransaction' for Bitcoin signAndSendTransaction", () => {
+      const methodName = (client as any).getRpcMethodName(NetworkId.BITCOIN_MAINNET, true);
+      expect(methodName).toBe("signAndSendTransaction");
     });
   });
 });

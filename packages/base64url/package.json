@@ -1,6 +1,6 @@
 {
   "name": "@phantom/base64url",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Isomorphic base64url encoding/decoding utilities",
   "repository": {
     "type": "git",

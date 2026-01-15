@@ -314,6 +314,50 @@ describe("discoverSolanaWallets", () => {
     expect(wallets[0].name).toBe("Solana Wallet");
   });
 
+  it("should not identify non-Solana wallets as Solana based on generic Wallet Standard features", async () => {
+    // This test verifies the fix for the bug where wallets like Sui Backpack
+    // were incorrectly identified as Solana wallets because they implement
+    // generic Wallet Standard features (standard:connect, standard:signTransaction)
+    const mockWallets = [
+      {
+        name: "Backpack",
+        icon: "https://backpack.app/icon.png",
+        version: "1.0.0",
+        chains: ["sui:mainnet"], // Sui chain, not Solana
+        features: {
+          "standard:connect": {},
+          "standard:signTransaction": {},
+        }, // Generic Wallet Standard features that ALL wallets implement
+        accounts: [],
+      },
+      {
+        name: "Solana Wallet",
+        icon: "https://example.com/icon.png",
+        version: "1.0.0",
+        chains: ["solana:mainnet"], // Actual Solana chain
+        features: {
+          "standard:connect": {},
+          "solana:signTransaction": {},
+        },
+        accounts: [],
+      },
+    ];
+
+    // @ts-ignore
+    navigator.wallets = {
+      getWallets: jest.fn().mockReturnValue({
+        get: () => mockWallets,
+      }),
+    };
+
+    const wallets = await discoverSolanaWallets();
+
+    // Should only discover the actual Solana wallet, not the Sui wallet
+    expect(wallets).toHaveLength(1);
+    expect(wallets[0].name).toBe("Solana Wallet");
+    expect(wallets[0].id).toBe("solana-wallet");
+  });
+
   it("should skip Phantom wallets", async () => {
     const mockWallets = [
       {

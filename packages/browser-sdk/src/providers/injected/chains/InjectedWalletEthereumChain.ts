@@ -11,7 +11,8 @@ export class InjectedWalletEthereumChain implements IEthereumChain {
   private provider: IEthereumChain;
   private walletId: string;
   private walletName: string;
-  private eventEmitter: EventEmitter = new EventEmitter();
+  // Expose eventEmitter for testing - allows tests to trigger events directly
+  public readonly eventEmitter: EventEmitter = new EventEmitter();
   private _connected: boolean = false;
   private _chainId: string = "0x1";
   private _accounts: string[] = [];
@@ -448,6 +449,7 @@ export class InjectedWalletEthereumChain implements IEthereumChain {
 
       this.provider.on("accountsChanged", (accounts: string[]) => {
         this._accounts = accounts;
+        this._connected = accounts.length > 0;
         this.eventEmitter.emit("accountsChanged", accounts);
       });
 

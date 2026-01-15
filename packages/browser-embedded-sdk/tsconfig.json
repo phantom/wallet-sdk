@@ -1,9 +1,0 @@
-{
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "outDir": "dist/esm",
-    "moduleResolution": "bundler",
-    "isolatedModules": true
-  },
-  "exclude": ["_release", "dist", "node_modules", "**/*.test.ts"]
-}

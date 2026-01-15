@@ -455,13 +455,6 @@ describe("WalletStandardSolanaAdapter", () => {
     });
   });
 
-  describe("switchNetwork", () => {
-    it("should resolve without error", async () => {
-      await expect(adapter.switchNetwork("mainnet")).resolves.toBeUndefined();
-      await expect(adapter.switchNetwork("devnet")).resolves.toBeUndefined();
-    });
-  });
-
   describe("getPublicKey", () => {
     it("should return null when not connected", async () => {
       const result = await adapter.getPublicKey();
@@ -487,25 +480,224 @@ describe("WalletStandardSolanaAdapter", () => {
   });
 
   describe("event handling", () => {
-    it("should delegate on() to standard:events feature", () => {
-      const listener = jest.fn();
-      adapter.on("connect", listener);
+    let changeEventHandler: ((properties: { accounts?: any[] }) => void) | undefined;
 
-      expect(mockWallet.features["standard:events"].on).toHaveBeenCalledWith("connect", listener);
+    beforeEach(() => {
+      // Capture the change event handler registered in setupEventListeners
+      const onCalls = mockWallet.features["standard:events"].on.mock.calls;
+      for (const [event, handler] of onCalls) {
+        if (event === "change") {
+          changeEventHandler = handler;
+        }
+      }
     });
 
-    it("should delegate off() to standard:events feature", () => {
-      const listener = jest.fn();
-      adapter.off("connect", listener);
+    it("should set up only change event listener in constructor (Wallet Standard only has change event)", () => {
+      expect(mockWallet.features["standard:events"].on).toHaveBeenCalledWith("change", expect.any(Function));
+      expect(mockWallet.features["standard:events"].on).toHaveBeenCalledTimes(1);
+    });
 
-      expect(mockWallet.features["standard:events"].off).toHaveBeenCalledWith("connect", listener);
+    it("should use internal eventEmitter for on()", () => {
+      const listener = jest.fn();
+      adapter.on("accountChanged", listener);
+
+      // Verify listener is registered on internal eventEmitter
+      expect(listener).not.toHaveBeenCalled();
+
+      // Manually trigger the event to verify it works
+      if (changeEventHandler) {
+        changeEventHandler({
+          accounts: [
+            {
+              address: testPublicKey,
+            },
+          ],
+        });
+      }
+
+      expect(listener).toHaveBeenCalledWith(testPublicKey);
+    });
+
+    it("should use internal eventEmitter for off()", () => {
+      const listener = jest.fn();
+      adapter.on("accountChanged", listener);
+      adapter.off("accountChanged", listener);
+
+      // Verify listener is removed
+      if (changeEventHandler) {
+        changeEventHandler({
+          accounts: [
+            {
+              address: testPublicKey,
+            },
+          ],
+        });
+      }
+
+      expect(listener).not.toHaveBeenCalled();
+    });
+
+    it("should map Wallet Standard 'change' event to 'accountChanged'", () => {
+      const listener = jest.fn();
+      adapter.on("accountChanged", listener);
+
+      // Simulate Wallet Standard change event
+      if (changeEventHandler) {
+        changeEventHandler({
+          accounts: [
+            {
+              address: testPublicKey,
+            },
+          ],
+        });
+      }
+
+      expect(listener).toHaveBeenCalledWith(testPublicKey);
+      expect(adapter.publicKey).toBe(testPublicKey);
+      expect(adapter.connected).toBe(true);
+    });
+
+    it("should extract address from WalletStandardAccount object", () => {
+      const listener = jest.fn();
+      adapter.on("accountChanged", listener);
+
+      if (changeEventHandler) {
+        changeEventHandler({
+          accounts: [
+            {
+              address: testPublicKey,
+              publicKey: new Uint8Array(32).fill(1),
+              chains: ["solana:mainnet"],
+              features: [],
+            },
+          ],
+        });
+      }
+
+      expect(listener).toHaveBeenCalledWith(testPublicKey);
+      expect(adapter.publicKey).toBe(testPublicKey);
+    });
+
+    it("should handle account change with empty accounts array", () => {
+      const accountChangedListener = jest.fn();
+      const disconnectListener = jest.fn();
+      adapter.on("accountChanged", accountChangedListener);
+      adapter.on("disconnect", disconnectListener);
+
+      if (changeEventHandler) {
+        changeEventHandler({
+          accounts: [],
+        });
+      }
+
+      expect(accountChangedListener).toHaveBeenCalledWith(null);
+      expect(disconnectListener).toHaveBeenCalled();
+      expect(adapter.publicKey).toBeNull();
+      expect(adapter.connected).toBe(false);
+    });
+
+    it("should handle change event without accounts property (accounts didn't change)", () => {
+      const listener = jest.fn();
+      adapter.on("accountChanged", listener);
+
+      // Set initial state
+      (adapter as any)._publicKey = testPublicKey;
+
+      if (changeEventHandler) {
+        // Change event without accounts property means accounts didn't change
+        changeEventHandler({
+          chains: ["solana:mainnet", "solana:devnet"],
+        });
+      }
+
+      // Should not emit accountChanged if accounts didn't change
+      expect(listener).not.toHaveBeenCalled();
+      expect(adapter.publicKey).toBe(testPublicKey);
+      expect(adapter.connected).toBe(true);
+    });
+
+    it("should emit connect event when accounts are present in change event", () => {
+      const accountChangedListener = jest.fn();
+      const connectListener = jest.fn();
+      adapter.on("accountChanged", accountChangedListener);
+      adapter.on("connect", connectListener);
+
+      if (changeEventHandler) {
+        changeEventHandler({
+          accounts: [
+            {
+              address: testPublicKey,
+              publicKey: new Uint8Array(32).fill(1),
+              chains: ["solana:mainnet"],
+              features: [],
+            },
+          ],
+        });
+      }
+
+      expect(accountChangedListener).toHaveBeenCalledWith(testPublicKey);
+      expect(connectListener).toHaveBeenCalledWith(testPublicKey);
+      expect(adapter.publicKey).toBe(testPublicKey);
+      expect(adapter.connected).toBe(true);
+    });
+
+    it("should emit disconnect event when accounts array is empty", () => {
+      // First set up connected state
+      (adapter as any)._publicKey = testPublicKey;
+
+      const accountChangedListener = jest.fn();
+      const disconnectListener = jest.fn();
+      adapter.on("accountChanged", accountChangedListener);
+      adapter.on("disconnect", disconnectListener);
+
+      if (changeEventHandler) {
+        changeEventHandler({
+          accounts: [],
+        });
+      }
+
+      expect(accountChangedListener).toHaveBeenCalledWith(null);
+      expect(disconnectListener).toHaveBeenCalled();
+      expect(adapter.publicKey).toBeNull();
+      expect(adapter.connected).toBe(false);
+    });
+
+    it("should handle invalid account structure gracefully", () => {
+      const listener = jest.fn();
+      adapter.on("accountChanged", listener);
+
+      if (changeEventHandler) {
+        // Account without address property (invalid per Wallet Standard spec)
+        changeEventHandler({
+          accounts: [
+            {
+              publicKey: new Uint8Array(32).fill(1),
+              chains: ["solana:mainnet"],
+              features: [],
+            } as any,
+          ],
+        });
+      }
+
+      expect(listener).toHaveBeenCalledWith(null);
+      expect(adapter.publicKey).toBeNull();
+      expect(adapter.connected).toBe(false);
     });
 
     it("should handle missing events feature gracefully", () => {
-      delete mockWallet.features["standard:events"];
+      // Create a new adapter without events feature
+      const walletWithoutEvents = {
+        ...mockWallet,
+        features: {
+          ...mockWallet.features,
+        },
+      };
+      delete walletWithoutEvents.features["standard:events"];
 
-      expect(() => adapter.on("connect", jest.fn())).not.toThrow();
-      expect(() => adapter.off("connect", jest.fn())).not.toThrow();
+      const adapterWithoutEvents = new WalletStandardSolanaAdapter(walletWithoutEvents, walletId, walletName);
+
+      expect(() => adapterWithoutEvents.on("connect", jest.fn())).not.toThrow();
+      expect(() => adapterWithoutEvents.off("connect", jest.fn())).not.toThrow();
     });
   });
 });

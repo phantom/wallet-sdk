@@ -126,7 +126,6 @@ class CustomStamper {
   async stamp(config: AxiosRequestConfig): Promise<AxiosRequestConfig> {
     // Add your custom authentication logic here
     config.headers = config.headers || {};
-    config.headers["Authorization"] = "Bearer your-token";
     return config;
   }
 }

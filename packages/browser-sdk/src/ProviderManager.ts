@@ -344,7 +344,7 @@ export class ProviderManager implements EventEmitter {
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, new Set());
     }
-    this.eventListeners.get(event)!.add(callback);
+    this.eventListeners.get(event)?.add(callback);
 
     // Ensure current provider is set up to forward events to us
     this.ensureProviderEventForwarding();
@@ -357,8 +357,8 @@ export class ProviderManager implements EventEmitter {
     debug.log(DebugCategory.PROVIDER_MANAGER, "Removing event listener", { event });
 
     if (this.eventListeners.has(event)) {
-      this.eventListeners.get(event)!.delete(callback);
-      if (this.eventListeners.get(event)!.size === 0) {
+      this.eventListeners.get(event)?.delete(callback);
+      if (this.eventListeners.get(event)?.size === 0) {
         this.eventListeners.delete(event);
       }
     }

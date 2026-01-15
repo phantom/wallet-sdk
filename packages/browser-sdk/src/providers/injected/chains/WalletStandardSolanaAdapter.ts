@@ -1,28 +1,36 @@
+import { EventEmitter } from "eventemitter3";
 import type { ISolanaChain } from "@phantom/chain-interfaces";
 import type { Transaction, VersionedTransaction } from "@phantom/sdk-types";
 import { debug, DebugCategory } from "../../../debug";
 import { deserializeSolanaTransaction } from "@phantom/parsers";
+import { Buffer } from "buffer";
 import bs58 from "bs58";
+import type {
+  StandardEventsChangeProperties,
+  WalletStandardAccount,
+  WalletStandardWallet,
+} from "./walletStandardTypes";
 
 /**
  * Adapter to wrap Wallet Standard wallets and implement ISolanaChain
  * Wallet Standard wallets use a features-based API instead of direct methods
  */
 export class WalletStandardSolanaAdapter implements ISolanaChain {
-  private wallet: any; // Wallet Standard wallet object
+  private wallet: WalletStandardWallet;
   private walletId: string;
   private walletName: string;
-  private _connected: boolean = false;
+  private eventEmitter: EventEmitter = new EventEmitter();
   private _publicKey: string | null = null;
 
-  constructor(wallet: any, walletId: string, walletName: string) {
+  constructor(wallet: WalletStandardWallet, walletId: string, walletName: string) {
     this.wallet = wallet;
     this.walletId = walletId;
     this.walletName = walletName;
+    this.setupEventListeners();
   }
 
   get connected(): boolean {
-    return this._connected;
+    return this._publicKey !== null;
   }
 
   get publicKey(): string | null {
@@ -32,8 +40,8 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
   async connect(_options?: { onlyIfTrusted?: boolean }): Promise<{ publicKey: string }> {
     try {
       // Wallet Standard uses standard:connect feature
-      const connectFeature = this.wallet.features?.["standard:connect"];
-      if (!connectFeature || typeof connectFeature.connect !== "function") {
+      const connectFeature = this.wallet.features["standard:connect"];
+      if (!connectFeature) {
         throw new Error("Wallet Standard connect feature not available");
       }
 
@@ -84,7 +92,6 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
         );
       }
 
-      this._connected = true;
       this._publicKey = address;
 
       return { publicKey: address };
@@ -100,12 +107,11 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
 
   async disconnect(): Promise<void> {
     try {
-      const disconnectFeature = this.wallet.features?.["standard:disconnect"];
-      if (disconnectFeature && typeof disconnectFeature.disconnect === "function") {
+      const disconnectFeature = this.wallet.features["standard:disconnect"];
+      if (disconnectFeature) {
         await disconnectFeature.disconnect();
       }
 
-      this._connected = false;
       this._publicKey = null;
     } catch (error) {
       debug.error(DebugCategory.INJECTED_PROVIDER, "Wallet Standard Solana disconnect failed", {
@@ -119,15 +125,15 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
 
   async signMessage(message: string | Uint8Array): Promise<{ signature: Uint8Array; publicKey: string }> {
     try {
-      const signMessageFeature = this.wallet.features?.["solana:signMessage"];
-      if (!signMessageFeature || typeof signMessageFeature.signMessage !== "function") {
+      const signMessageFeature = this.wallet.features["solana:signMessage"];
+      if (!signMessageFeature) {
         throw new Error("Wallet Standard signMessage feature not available");
       }
 
       const messageBytes = typeof message === "string" ? new TextEncoder().encode(message) : message;
       const result = await signMessageFeature.signMessage({
         message: messageBytes,
-        account: this.wallet.accounts?.[0],
+        account: this.wallet.accounts[0],
       });
 
       // Wallet Standard signMessage returns an array with signed message objects
@@ -149,7 +155,7 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
       }
 
       const publicKey =
-        signedMessageResult.account?.address || this.wallet.accounts?.[0]?.address || this._publicKey || "";
+        signedMessageResult.account?.address || this.wallet.accounts[0]?.address || this._publicKey || "";
 
       return { signature, publicKey };
     } catch (error) {
@@ -164,8 +170,8 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
 
   async signTransaction(transaction: Transaction | VersionedTransaction): Promise<Transaction | VersionedTransaction> {
     try {
-      const signTransactionFeature = this.wallet.features?.["solana:signTransaction"];
-      if (!signTransactionFeature || typeof signTransactionFeature.signTransaction !== "function") {
+      const signTransactionFeature = this.wallet.features["solana:signTransaction"];
+      if (!signTransactionFeature) {
         throw new Error("Wallet Standard signTransaction feature not available");
       }
 
@@ -191,11 +197,12 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
         // Standard format: array with signedTransaction
         const firstItem = results[0];
         if (firstItem && typeof firstItem === "object") {
-          transactionData = firstItem.signedTransaction || firstItem.transaction;
+          transactionData = firstItem.signedTransaction || (firstItem as any).transaction;
         }
       } else if (results && typeof results === "object" && !Array.isArray(results)) {
-        // Fallback: single object format
-        transactionData = results.transaction || results.signedTransaction;
+        // Fallback: single object format (some wallets may return this instead of array)
+        const resultObj = results as any;
+        transactionData = resultObj.transaction || resultObj.signedTransaction;
       }
 
       if (!transactionData) {
@@ -224,11 +231,8 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
 
   async signAndSendTransaction(transaction: Transaction | VersionedTransaction): Promise<{ signature: string }> {
     try {
-      const signAndSendTransactionFeature = this.wallet.features?.["solana:signAndSendTransaction"];
-      if (
-        !signAndSendTransactionFeature ||
-        typeof signAndSendTransactionFeature.signAndSendTransaction !== "function"
-      ) {
+      const signAndSendTransactionFeature = this.wallet.features["solana:signAndSendTransaction"];
+      if (!signAndSendTransactionFeature) {
         throw new Error("Wallet Standard signAndSendTransaction feature not available");
       }
 
@@ -318,24 +322,9 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
     }
   }
 
-  async switchNetwork(network: "mainnet" | "devnet"): Promise<void> {
-    try {
-      // Wallet Standard uses standard:switchNetwork feature
-      const switchNetworkFeature = this.wallet.features?.["standard:switchNetwork"];
-      if (switchNetworkFeature && typeof switchNetworkFeature.switchNetwork === "function") {
-        // Map network to Wallet Standard chain ID format
-        const chainId = network === "mainnet" ? "solana:mainnet" : "solana:devnet";
-        await switchNetworkFeature.switchNetwork({ chain: chainId });
-      }
-    } catch (error) {
-      debug.error(DebugCategory.INJECTED_PROVIDER, "Wallet Standard Solana switchNetwork failed", {
-        walletId: this.walletId,
-        walletName: this.walletName,
-        network,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+  async switchNetwork(_network: "mainnet" | "devnet"): Promise<void> {
+    // NOOP - Wallet Standard does not support network switchings
+    return Promise.resolve();
   }
 
   getPublicKey(): Promise<string | null> {
@@ -343,22 +332,106 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
   }
 
   isConnected(): boolean {
-    return this._connected;
+    return this._publicKey !== null;
   }
 
-  on(_event: string, _listener: (...args: any[]) => void): void {
-    // Wallet Standard uses events feature
-    const eventsFeature = this.wallet.features?.["standard:events"];
-    if (eventsFeature && typeof eventsFeature.on === "function") {
-      eventsFeature.on(_event, _listener);
+  /**
+   * Set up event listeners for Wallet Standard events
+   * Maps Wallet Standard "change" events to "accountChanged" events
+   *
+   * Note: Wallet Standard only has a "change" event. There are no "connect" or "disconnect" events.
+   * Connection/disconnection is indicated by the presence or absence of accounts in the change event.
+   */
+  private setupEventListeners(): void {
+    const eventsFeature = this.wallet.features["standard:events"];
+    if (!eventsFeature) {
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Wallet Standard events feature not available", {
+        walletId: this.walletId,
+        walletName: this.walletName,
+      });
+      return;
     }
+
+    debug.log(DebugCategory.INJECTED_PROVIDER, "Setting up Wallet Standard event listeners", {
+      walletId: this.walletId,
+      walletName: this.walletName,
+    });
+
+    // Listen to Wallet Standard "change" event and map to "accountChanged"
+    // This is the only event in the Wallet Standard spec
+    eventsFeature.on("change", (properties: StandardEventsChangeProperties) => {
+      debug.log(DebugCategory.INJECTED_PROVIDER, "Wallet Standard change event received", {
+        walletId: this.walletId,
+        walletName: this.walletName,
+        hasAccounts: !!properties.accounts,
+        accountCount: properties.accounts?.length || 0,
+      });
+
+      // Handle account changes
+      if (properties.accounts !== undefined) {
+        if (properties.accounts.length > 0) {
+          // Accounts present - extract address from first account
+          const firstAccount = properties.accounts[0];
+          const address = this.extractAccountAddress(firstAccount);
+
+          // Check if address is valid (handle invalid account structures)
+          if (address) {
+            this._publicKey = address;
+            // Emit accountChanged event with the address (matching ISolanaChain interface)
+            this.eventEmitter.emit("accountChanged", address);
+            // Also emit connect event when accounts are present
+            this.eventEmitter.emit("connect", address);
+            debug.log(DebugCategory.INJECTED_PROVIDER, "Emitted accountChanged and connect events", {
+              walletId: this.walletId,
+              walletName: this.walletName,
+              address,
+            });
+          } else {
+            // Invalid account structure (missing address) - treat as disconnected
+            this._publicKey = null;
+            this.eventEmitter.emit("accountChanged", null);
+            debug.log(DebugCategory.INJECTED_PROVIDER, "Emitted accountChanged event (null - invalid account)", {
+              walletId: this.walletId,
+              walletName: this.walletName,
+            });
+          }
+        } else {
+          // Empty accounts array - disconnected
+          this._publicKey = null;
+          this.eventEmitter.emit("accountChanged", null);
+          this.eventEmitter.emit("disconnect");
+          debug.log(DebugCategory.INJECTED_PROVIDER, "Emitted accountChanged and disconnect events", {
+            walletId: this.walletId,
+            walletName: this.walletName,
+          });
+        }
+      }
+      // If accounts property is not present, it means accounts didn't change, so we don't need to do anything
+    });
   }
 
-  off(_event: string, _listener: (...args: any[]) => void): void {
-    const eventsFeature = this.wallet.features?.["standard:events"];
-    if (eventsFeature && typeof eventsFeature.off === "function") {
-      eventsFeature.off(_event, _listener);
-    }
+  private extractAccountAddress(account: WalletStandardAccount): string | undefined {
+    return account.address;
+  }
+
+  on(event: string, listener: (...args: any[]) => void): void {
+    // Use internal eventEmitter instead of direct forwarding
+    this.eventEmitter.on(event, listener);
+    debug.log(DebugCategory.INJECTED_PROVIDER, "Added event listener", {
+      walletId: this.walletId,
+      walletName: this.walletName,
+      event,
+    });
+  }
+
+  off(event: string, listener: (...args: any[]) => void): void {
+    // Use internal eventEmitter instead of direct forwarding
+    this.eventEmitter.off(event, listener);
+    debug.log(DebugCategory.INJECTED_PROVIDER, "Removed event listener", {
+      walletId: this.walletId,
+      walletName: this.walletName,
+      event,
+    });
   }
 
   /**

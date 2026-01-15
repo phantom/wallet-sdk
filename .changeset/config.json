@@ -31,7 +31,6 @@
   "ignore": [
     "@phantom/browser-sdk-demo-app",
     "@phantom/react-sdk-demo-app",
-    "@phantom/browser-embedded-sdk-demo-app",
     "client-demo-app",
     "@phantom/server-sdk-examples",
     "@phantom/react-native-sdk-example",

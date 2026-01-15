@@ -1,5 +1,27 @@
 # @phantom/parsers
 
+## 1.0.2
+
+### Patch Changes
+
+- 0c135c8: update to version 1.0.2 with x-auth-user-id
+- Updated dependencies [0c135c8]
+  - @phantom/base64url@1.0.2
+  - @phantom/constants@1.0.2
+  - @phantom/sdk-types@1.0.2
+  - @phantom/utils@1.0.2
+
+## 1.0.1
+
+### Patch Changes
+
+- 440984d: Send method name in the requests to wallet service
+- Updated dependencies [440984d]
+  - @phantom/base64url@1.0.1
+  - @phantom/constants@1.0.1
+  - @phantom/sdk-types@1.0.1
+  - @phantom/utils@1.0.1
+
 ## 1.0.0
 
 ### Major Changes

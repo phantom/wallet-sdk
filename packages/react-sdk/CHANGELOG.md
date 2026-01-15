@@ -1,5 +1,29 @@
 # @phantom/react-sdk
 
+## 1.0.2
+
+### Patch Changes
+
+- 0c135c8: update to version 1.0.2 with x-auth-user-id
+- Updated dependencies [0c135c8]
+  - @phantom/browser-sdk@1.0.2
+  - @phantom/chain-interfaces@1.0.2
+  - @phantom/constants@1.0.2
+  - @phantom/wallet-sdk-ui@1.0.2
+
+## 1.0.1
+
+### Patch Changes
+
+- 376b747: Fix: Discover solana wallets and not collide with other walletstandard networks, render injected providers directly if its the only selected
+- 440984d: Send method name in the requests to wallet service
+- Updated dependencies [376b747]
+- Updated dependencies [440984d]
+  - @phantom/browser-sdk@1.0.1
+  - @phantom/chain-interfaces@1.0.1
+  - @phantom/constants@1.0.1
+  - @phantom/wallet-sdk-ui@1.0.1
+
 ## 1.0.0
 
 ### Major Changes

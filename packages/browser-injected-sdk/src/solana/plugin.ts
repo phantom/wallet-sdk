@@ -1,5 +1,5 @@
 import type { Plugin } from "../index";
-import { connect } from "./connect";
+import { connect as connectOriginal } from "./connect";
 import { disconnect } from "./disconnect";
 import { addEventListener, removeEventListener, triggerEvent, type PhantomEventCallback } from "./eventListeners";
 import { getAccount } from "./getAccount";
@@ -7,65 +7,150 @@ import { signAndSendTransaction } from "./signAndSendTransaction";
 import { signAndSendAllTransactions } from "./signAndSendAllTransactions";
 import { signTransaction } from "./signTransaction";
 import { signAllTransactions } from "./signAllTransactions";
-import { signIn } from "./signIn";
 import { signMessage } from "./signMessage";
 import { getProvider } from "./getProvider";
 import type { PhantomEventType } from "./types";
+import type { ISolanaChain } from "@phantom/chain-interfaces";
+import type { Transaction, VersionedTransaction } from "@phantom/sdk-types";
 
-export type Solana = {
-  connect: typeof connect;
-  disconnect: typeof disconnect;
-  getAccount: typeof getAccount;
-  signMessage: typeof signMessage;
-  signIn: typeof signIn;
-  signTransaction: typeof signTransaction;
-  signAllTransactions: typeof signAllTransactions;
-  signAndSendTransaction: typeof signAndSendTransaction;
-  signAndSendAllTransactions: typeof signAndSendAllTransactions;
-  addEventListener: (event: PhantomEventType, callback: PhantomEventCallback) => () => void;
-  removeEventListener: (event: PhantomEventType, callback: PhantomEventCallback) => void;
-};
+/**
+ * Phantom Solana chain implementation that implements ISolanaChain
+ * This wraps Phantom's Solana provider with event listeners and state management
+ */
+export class Solana implements ISolanaChain {
+  private _publicKey: string | null = null;
 
-const solana: Solana = {
-  connect,
-  disconnect,
-  getAccount,
-  signMessage,
-  signIn,
-  signTransaction,
-  signAllTransactions,
-  signAndSendTransaction,
-  signAndSendAllTransactions,
-  addEventListener,
-  removeEventListener,
-};
+  constructor() {
+    // Bind events asynchronously without waiting for completion
+    this.bindProviderEvents();
+  }
 
-async function bindProviderEvents(): Promise<void> {
-  try {
-    const strategy = await getProvider();
-    const provider = strategy.getProvider();
+  get publicKey(): string | null {
+    return this._publicKey;
+  }
 
-    if (provider) {
-      provider.on("connect", (publicKey?: { toString: () => string }) => {
-        if (publicKey) triggerEvent("connect", publicKey.toString());
-      });
-      provider.on("disconnect", () => triggerEvent("disconnect"));
-      provider.on("accountChanged", (publicKey?: { toString: () => string }) => {
-        if (publicKey) triggerEvent("accountChanged", publicKey.toString());
-      });
+  get connected(): boolean {
+    return this._publicKey !== null;
+  }
+
+  async connect(options?: { onlyIfTrusted?: boolean }): Promise<{ publicKey: string }> {
+    const address = await connectOriginal(options);
+    if (!address) {
+      throw new Error("Failed to connect to Solana wallet");
     }
-  } catch (error) {
-    // Silently ignore if native provider unavailable
+    this._publicKey = address;
+    return { publicKey: address };
+  }
+
+  async disconnect(): Promise<void> {
+    await disconnect();
+    this._publicKey = null;
+  }
+
+  async signMessage(message: string | Uint8Array): Promise<{ signature: Uint8Array; publicKey: string }> {
+    const messageBytes = typeof message === "string" ? new TextEncoder().encode(message) : message;
+    const result = await signMessage(messageBytes);
+    return {
+      signature: result.signature instanceof Uint8Array ? result.signature : new Uint8Array(result.signature),
+      publicKey: result.address || this._publicKey || "",
+    };
+  }
+
+  signTransaction(transaction: Transaction | VersionedTransaction): Promise<Transaction | VersionedTransaction> {
+    return signTransaction(transaction);
+  }
+
+  async signAndSendTransaction(transaction: Transaction | VersionedTransaction): Promise<{ signature: string }> {
+    const result = await signAndSendTransaction(transaction);
+    return { signature: result.signature };
+  }
+
+  signAllTransactions(
+    transactions: (Transaction | VersionedTransaction)[],
+  ): Promise<(Transaction | VersionedTransaction)[]> {
+    return signAllTransactions(transactions);
+  }
+
+  async signAndSendAllTransactions(
+    transactions: (Transaction | VersionedTransaction)[],
+  ): Promise<{ signatures: string[] }> {
+    const result = await signAndSendAllTransactions(transactions);
+    return { signatures: result.signatures };
+  }
+
+  async switchNetwork(_network: "mainnet" | "devnet"): Promise<void> {
+    // Solana network switching is typically handled by the provider
+    // This is a no-op for browser-injected-sdk
+    return Promise.resolve();
+  }
+
+  async getPublicKey(): Promise<string | null> {
+    if (this._publicKey) {
+      return this._publicKey;
+    }
+    try {
+      const account = await getAccount();
+      this._publicKey = account || null;
+      return this._publicKey;
+    } catch {
+      return null;
+    }
+  }
+
+  isConnected(): boolean {
+    return this._publicKey !== null;
+  }
+
+  on(event: PhantomEventType, listener: PhantomEventCallback): void {
+    addEventListener(event, listener);
+  }
+
+  off(event: PhantomEventType, listener: PhantomEventCallback): void {
+    removeEventListener(event, listener);
+  }
+
+  private async bindProviderEvents(): Promise<void> {
+    try {
+      const strategy = await getProvider();
+      const provider = strategy.getProvider();
+
+      if (provider) {
+        provider.on("connect", (publicKey?: { toString: () => string }) => {
+          if (publicKey) {
+            const pubKey = publicKey.toString();
+            this._publicKey = pubKey;
+            triggerEvent("connect", pubKey);
+          }
+        });
+        provider.on("disconnect", () => {
+          this._publicKey = null;
+          triggerEvent("disconnect");
+        });
+        provider.on("accountChanged", (publicKey?: { toString: () => string }) => {
+          if (publicKey) {
+            const pubKey = publicKey.toString();
+            this._publicKey = pubKey;
+            triggerEvent("accountChanged", pubKey);
+            // Also trigger connect event when account changes
+            // This ensures the provider is considered connected to the new account
+            triggerEvent("connect", pubKey);
+          } else {
+            this._publicKey = null;
+            triggerEvent("accountChanged", null as any);
+          }
+        });
+      }
+    } catch (error) {
+      // Silently ignore if native provider unavailable
+    }
   }
 }
 
-export function createSolanaPlugin(): Plugin<Solana> {
+export function createSolanaPlugin(): Plugin<ISolanaChain> {
   return {
     name: "solana",
     create: () => {
-      // Bind events asynchronously without waiting for completion
-      bindProviderEvents();
-      return solana;
+      return new Solana();
     },
   };
 }

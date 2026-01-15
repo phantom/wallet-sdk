@@ -1,6 +1,7 @@
 import type { EthereumStrategy } from "./types";
 import type { PhantomEthereumProvider, EthereumTransaction, EthereumSignInData } from "../types";
 import { ProviderStrategy } from "../../types";
+import { createSiweMessage } from "../siwe";
 
 const MAX_RETRIES = 4;
 const BASE_DELAY = 100;
@@ -152,9 +153,7 @@ export class InjectedEthereumStrategy implements EthereumStrategy {
       throw new Error("Provider not found.");
     }
 
-    // For Ethereum, signIn typically involves signing a message
-    // This is a simplified implementation - in practice you'd construct a proper SIWE message
-    const message = `Sign in to ${signInData.domain || "this application"}`;
+    const message = createSiweMessage(signInData);
     const address = provider.selectedAddress;
     if (!address) {
       throw new Error("No address available.");

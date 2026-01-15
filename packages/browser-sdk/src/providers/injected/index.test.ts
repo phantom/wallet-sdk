@@ -39,6 +39,10 @@ describe("InjectedProvider", () => {
       },
     });
 
+    // Create listener storage for mocks
+    const solanaListeners = new Map<string, Set<(...args: any[]) => void>>();
+    const ethereumListeners = new Map<string, Set<(...args: any[]) => void>>();
+
     // Create the default mock phantom object
     mockPhantomObject = {
       extension: {
@@ -51,8 +55,29 @@ describe("InjectedProvider", () => {
         signMessage: jest.fn().mockResolvedValue({ signature: "mock-signature" }),
         signIn: jest.fn(),
         signAndSendTransaction: jest.fn().mockResolvedValue({ signature: "mock-transaction-signature" }),
-        addEventListener: jest.fn().mockReturnValue(() => {}),
-        removeEventListener: jest.fn(),
+        // Support both old addEventListener (for browser-injected-sdk) and new .on()/.off() (for chain wrappers)
+        addEventListener: jest.fn((event: string, callback: (...args: any[]) => void) => {
+          if (!solanaListeners.has(event)) {
+            solanaListeners.set(event, new Set());
+          }
+          solanaListeners.get(event)?.add(callback);
+          return () => {
+            solanaListeners.get(event)?.delete(callback);
+          };
+        }),
+        removeEventListener: jest.fn((event: string, callback: (...args: any[]) => void) => {
+          solanaListeners.get(event)?.delete(callback);
+        }),
+        on: jest.fn((event: string, callback: (...args: any[]) => void) => {
+          if (!solanaListeners.has(event)) {
+            solanaListeners.set(event, new Set());
+          }
+          solanaListeners.get(event)?.add(callback);
+        }),
+        off: jest.fn((event: string, callback: (...args: any[]) => void) => {
+          solanaListeners.get(event)?.delete(callback);
+        }),
+        _listeners: solanaListeners, // Expose for test access
       },
       ethereum: {
         connect: jest.fn().mockResolvedValue(["0x1234567890123456789012345678901234567890"]),
@@ -75,8 +100,29 @@ describe("InjectedProvider", () => {
         getProvider: jest.fn().mockResolvedValue({
           request: mockEthereumProvider.request,
         }),
-        addEventListener: jest.fn().mockReturnValue(() => {}),
-        removeEventListener: jest.fn(),
+        // Support both old addEventListener (for browser-injected-sdk) and new .on()/.off() (for chain wrappers)
+        addEventListener: jest.fn((event: string, callback: (...args: any[]) => void) => {
+          if (!ethereumListeners.has(event)) {
+            ethereumListeners.set(event, new Set());
+          }
+          ethereumListeners.get(event)?.add(callback);
+          return () => {
+            ethereumListeners.get(event)?.delete(callback);
+          };
+        }),
+        removeEventListener: jest.fn((event: string, callback: (...args: any[]) => void) => {
+          ethereumListeners.get(event)?.delete(callback);
+        }),
+        on: jest.fn((event: string, callback: (...args: any[]) => void) => {
+          if (!ethereumListeners.has(event)) {
+            ethereumListeners.set(event, new Set());
+          }
+          ethereumListeners.get(event)?.add(callback);
+        }),
+        off: jest.fn((event: string, callback: (...args: any[]) => void) => {
+          ethereumListeners.get(event)?.delete(callback);
+        }),
+        _listeners: ethereumListeners, // Expose for test access
       },
       autoConfirm: {
         autoConfirmEnable: jest.fn(),
@@ -205,11 +251,15 @@ describe("InjectedProvider", () => {
     it("should connect to Ethereum wallet when only Ethereum is enabled", async () => {
       const mockAddresses = ["0x742d35Cc6634C0532925a3b844Bc9e7595f6cE65"];
 
-      // Update the mock to return the expected address
       mockPhantomObject.ethereum.getAccounts.mockResolvedValue(mockAddresses);
       mockPhantomObject.ethereum.connect.mockResolvedValue(mockAddresses);
+      mockPhantomObject.ethereum.request.mockImplementation((args: any) => {
+        if (args.method === "eth_requestAccounts" || args.method === "eth_accounts") {
+          return Promise.resolve(mockAddresses);
+        }
+        return Promise.resolve(null);
+      });
 
-      // Register Phantom with only Ethereum for this test
       const registry = getWalletRegistry();
       registry.registerPhantom(mockPhantomObject, [AddressType.ethereum]);
 
@@ -457,54 +507,41 @@ describe("InjectedProvider", () => {
 
     describe("Ethereum account changes", () => {
       it("should emit connect event when switching to a connected account", async () => {
-        // Simulate Ethereum accountsChanged event with new addresses
         const newAccounts = ["0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E"];
 
-        // Find and call the Ethereum accountsChanged handler that was set up
-        // There might be multiple handlers (one from PhantomEthereumChain, one from InjectedProvider)
-        // We want the last one which is from InjectedProvider.setupEthereumEvents
-        const addEventListenerCalls = mockPhantomObject.ethereum.addEventListener.mock.calls;
-        const accountsChangedCalls = addEventListenerCalls.filter((call: any[]) => call[0] === "accountsChanged");
-        expect(accountsChangedCalls.length).toBeGreaterThan(0);
+        const registry = getWalletRegistry();
+        const walletInfo = registry.getById("phantom");
+        const ethereumChain = walletInfo!.providers!.ethereum as any;
 
-        // Get the last handler (from InjectedProvider)
-        const accountsChangedCall = accountsChangedCalls[accountsChangedCalls.length - 1];
-        const accountsChangedHandler = accountsChangedCall[1];
-        await accountsChangedHandler(newAccounts);
+        ethereumChain.eventEmitter.emit("accountsChanged", newAccounts);
+        await new Promise(resolve => setTimeout(resolve, 10));
 
-        // Should emit connect event with new addresses
         expect(connectCallback).toHaveBeenCalledWith({
           addresses: [
             { addressType: AddressType.solana, address: "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH" },
             { addressType: AddressType.ethereum, address: newAccounts[0] },
           ],
-          source: "injected-extension-account-change",
+          source: "wallet-account-change",
           authUserId: "test-auth-user-id",
         });
         expect(disconnectCallback).not.toHaveBeenCalled();
       });
 
       it("should emit disconnect event when switching to unconnected account", () => {
-        // Reset mock calls from initial connection
         connectCallback.mockClear();
         disconnectCallback.mockClear();
 
-        // Simulate Ethereum accountsChanged event with empty accounts array
         const emptyAccounts: string[] = [];
+        const ethereumListeners = (mockPhantomObject.ethereum as any)._listeners;
+        const accountsChangedListeners = ethereumListeners.get("accountsChanged");
 
-        // Find and call the Ethereum accountsChanged handler
-        // Get the last one (from InjectedProvider)
-        const addEventListenerCalls = mockPhantomObject.ethereum.addEventListener.mock.calls;
-        const accountsChangedCalls = addEventListenerCalls.filter((call: any[]) => call[0] === "accountsChanged");
-        expect(accountsChangedCalls.length).toBeGreaterThan(0);
-
-        const accountsChangedCall = accountsChangedCalls[accountsChangedCalls.length - 1];
-        const accountsChangedHandler = accountsChangedCall[1];
-        accountsChangedHandler(emptyAccounts);
+        for (const handler of accountsChangedListeners) {
+          handler(emptyAccounts);
+        }
 
         // Should emit disconnect event (not connect with empty addresses)
         expect(disconnectCallback).toHaveBeenCalledWith({
-          source: "injected-extension-account-change",
+          source: "wallet-account-change",
         });
         expect(connectCallback).not.toHaveBeenCalled();
       });
@@ -517,13 +554,15 @@ describe("InjectedProvider", () => {
         // Simulate Ethereum accountsChanged event with empty accounts
         const emptyAccounts: string[] = [];
 
-        const addEventListenerCalls = mockPhantomObject.ethereum.addEventListener.mock.calls;
-        const accountsChangedCalls = addEventListenerCalls.filter((call: any[]) => call[0] === "accountsChanged");
-        expect(accountsChangedCalls.length).toBeGreaterThan(0);
-        // Get the last handler (from InjectedProvider)
-        const accountsChangedCall = accountsChangedCalls[accountsChangedCalls.length - 1];
-        const accountsChangedHandler = accountsChangedCall[1];
-        accountsChangedHandler(emptyAccounts);
+        // Get the accountsChanged handler from the chain provider's .on() listeners
+        const ethereumListeners = (mockPhantomObject.ethereum as any)._listeners;
+        const accountsChangedListeners = ethereumListeners.get("accountsChanged");
+        expect(accountsChangedListeners).toBeDefined();
+
+        // Call all accountsChanged listeners
+        for (const handler of accountsChangedListeners) {
+          handler(emptyAccounts);
+        }
 
         // Provider should still be connected (because Solana is still connected)
         expect(provider.isConnected()).toBe(true);
@@ -538,42 +577,24 @@ describe("InjectedProvider", () => {
 
     describe("Solana account changes", () => {
       it("should emit connect event when switching to different Solana account", async () => {
-        // Reset mock calls from initial connection
         connectCallback.mockClear();
         disconnectCallback.mockClear();
 
-        // Simulate Solana accountChanged event with new public key
         const newPublicKey = "DifferentSolanaPublicKeyHere123456789ABCDEF";
+        const registry = getWalletRegistry();
+        const walletInfo = registry.getById("phantom");
+        const solanaChain = walletInfo!.providers!.solana as any;
 
-        // Find and call the Solana accountChanged handler that was registered with browser-injected-SDK
-        // There might be multiple accountChanged listeners:
-        // 1. One from PhantomSolanaChain.setupEventListeners (first)
-        // 2. One from InjectedProvider.setupSolanaEvents (last - this is what we want)
-        const addEventListenerCalls = mockPhantomObject.solana.addEventListener.mock.calls;
-        const accountChangedCalls = addEventListenerCalls.filter((call: any[]) => call[0] === "accountChanged");
-        expect(accountChangedCalls.length).toBeGreaterThan(0);
+        solanaChain.eventEmitter.emit("accountChanged", newPublicKey);
+        await new Promise(resolve => setTimeout(resolve, 10));
 
-        // Use the last one which is from InjectedProvider.setupSolanaEvents
-        const accountChangedCall = accountChangedCalls[accountChangedCalls.length - 1];
-        const accountChangedHandler = accountChangedCall[1];
-
-        // Make sure the handler is async-aware
-        if (accountChangedHandler) {
-          await accountChangedHandler(newPublicKey);
-        } else {
-          throw new Error("accountChanged handler not found");
-        }
-
-        // Should emit connect event with updated Solana address
-        // Note: The event may include Ethereum addresses if they were connected during initial connect
         expect(connectCallback).toHaveBeenCalled();
         const callArgs = connectCallback.mock.calls[0][0];
         expect(callArgs.addresses).toContainEqual({ addressType: AddressType.solana, address: newPublicKey });
-        expect(callArgs.source).toBe("injected-extension-account-change");
+        expect(callArgs.source).toBe("wallet-account-change");
         expect(callArgs.authUserId).toBe("test-auth-user-id");
         expect(disconnectCallback).not.toHaveBeenCalled();
 
-        // Verify the provider state was updated
         const addresses = provider.getAddresses();
         const solanaAddress = addresses.find(addr => addr.addressType === AddressType.solana);
         expect(solanaAddress?.address).toBe(newPublicKey);

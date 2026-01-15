@@ -5,11 +5,8 @@ import { debug, DebugCategory } from "../debug";
 import { InjectedWalletSolanaChain } from "../providers/injected/chains/InjectedWalletSolanaChain";
 import { WalletStandardSolanaAdapter } from "../providers/injected/chains/WalletStandardSolanaAdapter";
 import { InjectedWalletEthereumChain } from "../providers/injected/chains/InjectedWalletEthereumChain";
-import { PhantomSolanaChain } from "../providers/injected/chains/SolanaChain";
-import { PhantomEthereumChain } from "../providers/injected/chains/EthereumChain";
+import type { WalletStandardWallet } from "../providers/injected/chains/walletStandardTypes";
 import type { Extension } from "@phantom/browser-injected-sdk";
-import type { Solana } from "@phantom/browser-injected-sdk/solana";
-import type { Ethereum } from "@phantom/browser-injected-sdk/ethereum";
 import type { AutoConfirmPlugin } from "@phantom/browser-injected-sdk/auto-confirm";
 
 export type InjectedWalletId = string;
@@ -46,8 +43,8 @@ export interface PhantomInjectedWalletInfo extends InjectedWalletInfo {
  */
 export interface PhantomExtended {
   extension: Extension;
-  solana: Solana;
-  ethereum: Ethereum;
+  solana: ISolanaChain;
+  ethereum: IEthereumChain;
   autoConfirm: AutoConfirmPlugin;
 }
 
@@ -56,6 +53,18 @@ export interface PhantomExtended {
  */
 export function isPhantomWallet(wallet: InjectedWalletInfo | undefined): wallet is PhantomInjectedWalletInfo {
   return wallet !== undefined && wallet.id === "phantom" && "isPhantom" in wallet && wallet.isPhantom === true;
+}
+
+/**
+ * Type guard to check if a provider is a Wallet Standard wallet
+ */
+function isWalletStandardWallet(provider: unknown): provider is WalletStandardWallet {
+  return (
+    provider !== null &&
+    typeof provider === "object" &&
+    "features" in provider &&
+    typeof (provider as any).features === "object"
+  );
 }
 
 export class InjectedWalletRegistry {
@@ -67,16 +76,9 @@ export class InjectedWalletRegistry {
     const wrappedProviders: WalletProviders = {};
 
     if (info.providers?.solana) {
-      // Check if this is a Wallet Standard wallet (has features object)
-      const isWalletStandard =
-        info.providers.solana &&
-        typeof info.providers.solana === "object" &&
-        "features" in info.providers.solana &&
-        typeof (info.providers.solana as any).features === "object";
-
-      if (isWalletStandard) {
+      if (isWalletStandardWallet(info.providers.solana)) {
         // Use Wallet Standard adapter directly (it already implements ISolanaChain with debug logging)
-        wrappedProviders.solana = new WalletStandardSolanaAdapter(info.providers.solana as any, info.id, info.name);
+        wrappedProviders.solana = new WalletStandardSolanaAdapter(info.providers.solana, info.id, info.name);
         debug.log(DebugCategory.BROWSER_SDK, "Wrapped Wallet Standard Solana wallet with adapter", {
           walletId: info.id,
           walletName: info.name,
@@ -110,21 +112,21 @@ export class InjectedWalletRegistry {
   /**
    * Register Phantom wallet with its instance
    * This creates wrapped providers and stores the Phantom instance for auto-confirm access
+   * Uses unified InjectedWallet chains for both Phantom and external wallets
    */
   registerPhantom(phantomInstance: PhantomExtended, addressTypes: AddressType[]): void {
     const wrappedProviders: WalletProviders = {};
 
-    // Create Phantom chain wrappers
     if (addressTypes.includes(AddressType.solana) && phantomInstance.solana) {
-      wrappedProviders.solana = new PhantomSolanaChain(phantomInstance);
-      debug.log(DebugCategory.BROWSER_SDK, "Created PhantomSolanaChain wrapper", {
+      wrappedProviders.solana = new InjectedWalletSolanaChain(phantomInstance.solana, "phantom", "Phantom");
+      debug.log(DebugCategory.BROWSER_SDK, "Created InjectedWalletSolanaChain wrapper for Phantom", {
         walletId: "phantom",
       });
     }
 
     if (addressTypes.includes(AddressType.ethereum) && phantomInstance.ethereum) {
-      wrappedProviders.ethereum = new PhantomEthereumChain(phantomInstance);
-      debug.log(DebugCategory.BROWSER_SDK, "Created PhantomEthereumChain wrapper", {
+      wrappedProviders.ethereum = new InjectedWalletEthereumChain(phantomInstance.ethereum, "phantom", "Phantom");
+      debug.log(DebugCategory.BROWSER_SDK, "Created InjectedWalletEthereumChain wrapper for Phantom", {
         walletId: "phantom",
       });
     }

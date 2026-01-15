@@ -28,6 +28,6 @@ export function createPhantom({ plugins = [] }: CreatePhantomConfig): Phantom {
 export { createExtensionPlugin, type Extension } from "./extension";
 
 // Export Ethereum functionality
-export { createEthereumPlugin } from "./ethereum";
+export { createEthereumPlugin, createSiweMessage } from "./ethereum";
 
 export { isInstalled as isPhantomExtensionInstalled } from "./extension/isInstalled";

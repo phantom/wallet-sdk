@@ -1,6 +1,6 @@
 {
   "name": "@phantom/browser-injected-sdk",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/phantom/phantom-connect-sdk",
@@ -47,13 +47,16 @@
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
   },
   "dependencies": {
+    "@phantom/chain-interfaces": "workspace:^",
     "@phantom/constants": "workspace:^",
     "@phantom/sdk-types": "workspace:^"
   },
   "devDependencies": {
+    "@jest/fake-timers": "^29.7.0",
     "@types/jest": "^29.5.14",
     "eslint": "8.53.0",
     "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "prettier": "^3.5.2",
     "rimraf": "^6.0.1",
     "tsup": "^6.7.0",

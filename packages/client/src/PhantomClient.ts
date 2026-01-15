@@ -208,6 +208,7 @@ export class PhantomClient {
     organizationId: string,
     submissionConfig: SubmissionConfig,
     account: string,
+    methodName: string,
   ): Promise<PrepareResponse> {
     try {
       const request = {
@@ -219,6 +220,7 @@ export class PhantomClient {
       const response = await this.axiosInstance.post(`${this.config.apiBaseUrl}/prepare`, request, {
         headers: {
           "Content-Type": "application/json",
+          "X-Rpc-Method": methodName,
         },
       });
       return response.data;
@@ -242,6 +244,7 @@ export class PhantomClient {
     networkId: SignTransactionParams["networkId"];
     submissionConfig: SubmissionConfig;
     account?: string;
+    methodName: string;
   }): Promise<string | { kind: "RLP_ENCODED"; bytes: string }> {
     const { encodedTransaction, networkId, submissionConfig, account } = params;
 
@@ -265,6 +268,7 @@ export class PhantomClient {
           this.config.organizationId as string,
           submissionConfig,
           account,
+          params.methodName,
         );
 
         return prepareResponse.transaction;
@@ -283,6 +287,14 @@ export class PhantomClient {
     return encodedTransaction;
   }
 
+  private getRpcMethodName(networkId: string, includeSubmissionConfig: boolean): string {
+    const isEvm = isEthereumChain(networkId);
+    if (isEvm) {
+      return includeSubmissionConfig ? "eth_sendTransaction" : "eth_signTransaction";
+    }
+    return includeSubmissionConfig ? "signAndSendTransaction" : "signTransaction";
+  }
+
   /**
    * Private method for shared signing logic
    */
@@ -294,6 +306,7 @@ export class PhantomClient {
     const encodedTransaction = params.transaction;
     const networkIdParam = params.networkId;
     const derivationIndex = params.derivationIndex ?? 0;
+    const methodName = this.getRpcMethodName(networkIdParam, includeSubmissionConfig);
 
     try {
       if (!this.config.organizationId) {
@@ -324,6 +337,7 @@ export class PhantomClient {
         networkId: networkIdParam,
         submissionConfig,
         account: params.account,
+        methodName,
       });
 
       const signRequest: SignTransactionRequest & {
@@ -354,7 +368,11 @@ export class PhantomClient {
         timestampMs: await getSecureTimestamp(),
       } as any;
 
-      const response = await this.kmsApi.postKmsRpc(request);
+      const response = await this.kmsApi.postKmsRpc(request, {
+        headers: {
+          "X-Rpc-Method": methodName,
+        },
+      });
       const result = (response.data as any).result as SignedTransactionWithPublicKey;
       const rpcSubmissionResult = (response.data as any)["rpc_submission_result"];
       const hash = includeSubmissionConfig && rpcSubmissionResult ? rpcSubmissionResult.result : null;

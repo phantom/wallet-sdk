@@ -322,7 +322,7 @@ describe("ConnectModalContent", () => {
       expect(getByTestId("bounded-icon-phantom")).toBeInTheDocument();
     });
 
-    it("should not render on mobile when extension is not detected", () => {
+    it("should not render on mobile when extension is not detected and no wallets discovered", () => {
       mockIsMobileDevice.mockReturnValue(true);
       mockUsePhantom.mockReturnValue({
         ...mockUsePhantom(),
@@ -342,6 +342,148 @@ describe("ConnectModalContent", () => {
       const { queryByTestId } = renderComponent();
 
       expect(queryByTestId("bounded-icon-phantom")).not.toBeInTheDocument();
+    });
+
+    it("should render discovered wallets on mobile even when extension is not detected", () => {
+      mockIsMobileDevice.mockReturnValue(true);
+      mockUsePhantom.mockReturnValue({
+        ...mockUsePhantom(),
+        allowedProviders: ["injected"],
+      } as any);
+      mockUseIsExtensionInstalled.mockReturnValue({
+        isInstalled: false,
+        isLoading: false,
+      });
+      mockUseDiscoveredWallets.mockReturnValue({
+        wallets: [
+          {
+            id: "solflare",
+            name: "Solflare",
+            icon: "data:image/svg+xml;base64,...",
+            addressTypes: ["Solana"] as any,
+          },
+        ],
+        isLoading: false,
+        error: null,
+        refetch: jest.fn(),
+      });
+
+      const { getByText } = renderComponent();
+
+      // Solflare wallet should be visible even without Phantom extension
+      expect(getByText("Solflare")).toBeInTheDocument();
+    });
+
+    it("should render multiple discovered wallets on mobile without extension", () => {
+      mockIsMobileDevice.mockReturnValue(true);
+      mockUsePhantom.mockReturnValue({
+        ...mockUsePhantom(),
+        allowedProviders: ["injected"],
+      } as any);
+      mockUseIsExtensionInstalled.mockReturnValue({
+        isInstalled: false,
+        isLoading: false,
+      });
+      mockUseDiscoveredWallets.mockReturnValue({
+        wallets: [
+          {
+            id: "solflare",
+            name: "Solflare",
+            icon: "data:image/svg+xml;base64,...",
+            addressTypes: ["Solana"] as any,
+          },
+          {
+            id: "backpack",
+            name: "Backpack",
+            icon: undefined,
+            addressTypes: ["Solana"] as any,
+          },
+        ],
+        isLoading: false,
+        error: null,
+        refetch: jest.fn(),
+      });
+
+      const { getByText } = renderComponent();
+
+      expect(getByText("Solflare")).toBeInTheDocument();
+      expect(getByText("Backpack")).toBeInTheDocument();
+    });
+
+    it("should allow connecting to discovered wallet on mobile without extension", async () => {
+      mockIsMobileDevice.mockReturnValue(true);
+      mockUsePhantom.mockReturnValue({
+        ...mockUsePhantom(),
+        allowedProviders: ["injected"],
+      } as any);
+      mockUseIsExtensionInstalled.mockReturnValue({
+        isInstalled: false,
+        isLoading: false,
+      });
+      mockUseDiscoveredWallets.mockReturnValue({
+        wallets: [
+          {
+            id: "solflare",
+            name: "Solflare",
+            icon: "data:image/svg+xml;base64,...",
+            addressTypes: ["Solana"] as any,
+          },
+        ],
+        isLoading: false,
+        error: null,
+        refetch: jest.fn(),
+      });
+      mockConnect.mockResolvedValue({} as any);
+      const onClose = jest.fn();
+
+      const { getByText } = renderComponent({ onClose });
+      const solflareButton = getByText("Solflare").closest("button");
+      fireEvent.click(solflareButton!);
+
+      await waitFor(() => {
+        expect(mockConnect).toHaveBeenCalledWith({
+          provider: "injected",
+          walletId: "solflare",
+        });
+        expect(onClose).toHaveBeenCalled();
+      });
+    });
+
+    it("should show discovered wallets on mobile when both extension and wallets are available", () => {
+      mockIsMobileDevice.mockReturnValue(true);
+      mockUsePhantom.mockReturnValue({
+        ...mockUsePhantom(),
+        allowedProviders: ["injected"],
+      } as any);
+      mockUseIsExtensionInstalled.mockReturnValue({
+        isInstalled: true,
+        isLoading: false,
+      });
+      mockUseDiscoveredWallets.mockReturnValue({
+        wallets: [
+          {
+            id: "phantom",
+            name: "Phantom",
+            icon: undefined,
+            addressTypes: ["Solana"] as any,
+          },
+          {
+            id: "solflare",
+            name: "Solflare",
+            icon: "data:image/svg+xml;base64,...",
+            addressTypes: ["Solana"] as any,
+          },
+        ],
+        isLoading: false,
+        error: null,
+        refetch: jest.fn(),
+      });
+
+      const { getAllByText, getByText } = renderComponent();
+
+      // Both wallets should be visible
+      expect(getAllByText("Phantom").length).toBeGreaterThan(0);
+      expect(getByText("Solflare")).toBeInTheDocument();
     });
   });
 
@@ -552,6 +694,165 @@ describe("ConnectModalContent", () => {
 
       const img = getByAltText("App Icon") as HTMLImageElement;
       expect(img.src).toBe("https://example.com/icon.png");
+    });
+  });
+
+  describe("Mobile Wallet Discovery Without Extension", () => {
+    beforeEach(() => {
+      mockIsMobileDevice.mockReturnValue(true);
+      mockUseIsExtensionInstalled.mockReturnValue({
+        isInstalled: false,
+        isLoading: false,
+      });
+      mockUsePhantom.mockReturnValue({
+        ...mockUsePhantom(),
+        allowedProviders: ["injected"],
+      });
+    });
+
+    it("should show Wallet Standard discovered wallets on mobile without Phantom extension", () => {
+      mockUseDiscoveredWallets.mockReturnValue({
+        wallets: [
+          {
+            id: "solflare",
+            name: "Solflare",
+            icon: "data:image/svg+xml;base64,...",
+            addressTypes: ["Solana"] as any,
+            discovery: "standard",
+          },
+        ],
+        isLoading: false,
+        error: null,
+        refetch: jest.fn(),
+      });
+
+      const { getByText } = renderComponent();
+
+      // Solflare should be visible - this is the key fix
+      expect(getByText("Solflare")).toBeInTheDocument();
+    });
+  });
+
+  describe("Injected Only Provider - Wallet List Display", () => {
+    beforeEach(() => {
+      mockUseIsExtensionInstalled.mockReturnValue({
+        isInstalled: true,
+        isLoading: false,
+      });
+      mockIsMobileDevice.mockReturnValue(false);
+    });
+
+    it("should show all wallets inline when only injected provider and 3+ wallets", () => {
+      mockUsePhantom.mockReturnValue({
+        ...mockUsePhantom(),
+        allowedProviders: ["injected"],
+      } as any);
+      mockUseDiscoveredWallets.mockReturnValue({
+        wallets: [
+          { id: "phantom", name: "Phantom", addressTypes: ["Solana"] as any },
+          { id: "backpack", name: "Backpack", addressTypes: ["Solana"] as any },
+          { id: "solflare", name: "Solflare", addressTypes: ["Solana"] as any },
+        ],
+        isLoading: false,
+        error: null,
+        refetch: jest.fn(),
+      });
+
+      const { getAllByText, getByText, queryByText } = renderComponent();
+
+      // All wallets should be visible inline (Phantom appears in both button and footer, so use getAllByText)
+      expect(getAllByText("Phantom").length).toBeGreaterThan(0);
+      expect(getByText("Backpack")).toBeInTheDocument();
+      expect(getByText("Solflare")).toBeInTheDocument();
+
+      // "Other Wallets" button should not be present
+      expect(queryByText("Other Wallets")).not.toBeInTheDocument();
+
+      // Should be on main screen, not "Other Wallets" screen
+      expect(getByText("Login or Sign Up")).toBeInTheDocument();
+    });
+
+    it("should show 'Other Wallets' button when multiple providers and 3+ wallets", () => {
+      mockUsePhantom.mockReturnValue({
+        ...mockUsePhantom(),
+        allowedProviders: ["injected", "google"],
+      } as any);
+      mockUseDiscoveredWallets.mockReturnValue({
+        wallets: [
+          { id: "phantom", name: "Phantom", addressTypes: ["Solana"] as any },
+          { id: "backpack", name: "Backpack", addressTypes: ["Solana"] as any },
+          { id: "solflare", name: "Solflare", addressTypes: ["Solana"] as any },
+        ],
+        isLoading: false,
+        error: null,
+        refetch: jest.fn(),
+      });
+
+      const { getByText, queryByText } = renderComponent();
+
+      // "Other Wallets" button should be present
+      expect(getByText("Other Wallets")).toBeInTheDocument();
+
+      // Should be on main screen
+      expect(getByText("Login or Sign Up")).toBeInTheDocument();
+
+      // Clicking "Other Wallets" should navigate to wallet list screen
+      const otherWalletsButton = getByText("Other Wallets").closest("button");
+      fireEvent.click(otherWalletsButton!);
+
+      // Should now show "Other Wallets" screen
+      expect(getByText("Other Wallets")).toBeInTheDocument();
+      expect(queryByText("Login or Sign Up")).not.toBeInTheDocument();
+    });
+
+    it("should show wallets inline when only injected provider and 2 or fewer wallets", () => {
+      mockUsePhantom.mockReturnValue({
+        ...mockUsePhantom(),
+        allowedProviders: ["injected"],
+      } as any);
+      mockUseDiscoveredWallets.mockReturnValue({
+        wallets: [
+          { id: "phantom", name: "Phantom", addressTypes: ["Solana"] as any },
+          { id: "backpack", name: "Backpack", addressTypes: ["Solana"] as any },
+        ],
+        isLoading: false,
+        error: null,
+        refetch: jest.fn(),
+      });
+
+      const { getAllByText, getByText, queryByText } = renderComponent();
+
+      // All wallets should be visible inline (Phantom appears in both button and footer, so use getAllByText)
+      expect(getAllByText("Phantom").length).toBeGreaterThan(0);
+      expect(getByText("Backpack")).toBeInTheDocument();
+
+      // "Other Wallets" button should not be present
+      expect(queryByText("Other Wallets")).not.toBeInTheDocument();
+
+      // Should be on main screen
+      expect(getByText("Login or Sign Up")).toBeInTheDocument();
+    });
+
+    it("should show wallets inline when only injected provider and no wallets", () => {
+      mockUsePhantom.mockReturnValue({
+        ...mockUsePhantom(),
+        allowedProviders: ["injected"],
+      } as any);
+      mockUseDiscoveredWallets.mockReturnValue({
+        wallets: [],
+        isLoading: false,
+        error: null,
+        refetch: jest.fn(),
+      });
+
+      const { queryByTestId, queryByText } = renderComponent();
+
+      // No wallet buttons should be rendered (check for wallet icons, not text since "Phantom" appears in footer)
+      expect(queryByTestId("bounded-icon-phantom")).not.toBeInTheDocument();
+      expect(queryByTestId("bounded-icon-wallet")).not.toBeInTheDocument();
+
+      // "Other Wallets" button should not be present
+      expect(queryByText("Other Wallets")).not.toBeInTheDocument();
     });
   });
 });

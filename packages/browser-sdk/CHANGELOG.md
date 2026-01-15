@@ -1,5 +1,38 @@
 # @phantom/browser-sdk
 
+## 1.0.2
+
+### Patch Changes
+
+- 0c135c8: update to version 1.0.2 with x-auth-user-id
+- Updated dependencies [0c135c8]
+  - @phantom/base64url@1.0.2
+  - @phantom/browser-injected-sdk@1.0.2
+  - @phantom/chain-interfaces@1.0.2
+  - @phantom/client@1.0.2
+  - @phantom/constants@1.0.2
+  - @phantom/embedded-provider-core@1.0.2
+  - @phantom/indexed-db-stamper@1.0.2
+  - @phantom/parsers@1.0.2
+  - @phantom/sdk-types@1.0.2
+
+## 1.0.1
+
+### Patch Changes
+
+- 376b747: Fix: Discover solana wallets and not collide with other walletstandard networks, render injected providers directly if its the only selected
+- 440984d: Send method name in the requests to wallet service
+- Updated dependencies [440984d]
+  - @phantom/client@1.0.1
+  - @phantom/base64url@1.0.1
+  - @phantom/browser-injected-sdk@1.0.1
+  - @phantom/chain-interfaces@1.0.1
+  - @phantom/constants@1.0.1
+  - @phantom/embedded-provider-core@1.0.1
+  - @phantom/indexed-db-stamper@1.0.1
+  - @phantom/parsers@1.0.1
+  - @phantom/sdk-types@1.0.1
+
 ## 1.0.0
 
 ### Major Changes

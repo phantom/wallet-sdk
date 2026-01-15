@@ -1,6 +1,6 @@
 {
   "name": "@phantom/indexed-db-stamper",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "IndexedDB stamper for Phantom Wallet SDK with non-extractable key storage",
   "repository": {
     "type": "git",

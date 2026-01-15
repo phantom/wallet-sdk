@@ -1,5 +1,5 @@
 import { InjectedEthereumStrategy } from "./injected";
-import type { PhantomEthereumProvider } from "../types";
+import type { EthereumSignInData, PhantomEthereumProvider } from "../types";
 
 const createMockProvider = (): PhantomEthereumProvider => ({
   isPhantom: true,
@@ -205,27 +205,65 @@ describe("InjectedEthereumStrategy", () => {
     });
 
     it("should sign in", async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date(Date.UTC(2023, 1, 1)));
       const mockSignature = "0x1234567890abcdef";
       (mockProvider.request as jest.Mock).mockResolvedValue(mockSignature);
 
-      const signInData = { domain: "example.com" };
+      const signInData: EthereumSignInData = {
+        address: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
+        chainId: 1,
+        domain: "example.com",
+        nonce: "1234567890",
+        uri: "https://example.com",
+        version: "1",
+      };
       const result = await strategy.signIn(signInData);
 
       expect(mockProvider.request).toHaveBeenCalledWith({
         method: "personal_sign",
-        params: ["Sign in to example.com", "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E"],
+        params: [
+          `example.com wants you to sign in with your Ethereum account:
+0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E
+
+
+URI: https://example.com
+Version: 1
+Chain ID: 1
+Nonce: 1234567890
+Issued At: 2023-02-01T00:00:00.000Z`,
+          "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
+        ],
       });
       expect(result).toEqual({
         address: "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E",
         signature: mockSignature,
-        signedMessage: "Sign in to example.com",
+        signedMessage: `example.com wants you to sign in with your Ethereum account:
+0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E
+
+
+URI: https://example.com
+Version: 1
+Chain ID: 1
+Nonce: 1234567890
+Issued At: 2023-02-01T00:00:00.000Z`,
       });
+      jest.useRealTimers();
     });
 
     it("should throw error when no address available", async () => {
       mockProvider.selectedAddress = null;
 
-      await expect(strategy.signIn({ domain: "example.com" })).rejects.toThrow("No address available.");
+      await expect(
+        // @ts-expect-error - address is missing
+        strategy.signIn({
+          chainId: 1,
+          domain: "example.com",
+          nonce: "1234567890",
+          uri: "https://example.com",
+          version: "1",
+        }),
+      ).rejects.toThrow("address must be a hex value of 20 bytes (40 hex characters).");
     });
   });
 

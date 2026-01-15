@@ -11,12 +11,12 @@
   },
   "dependencies": {
     "@phantom/react-sdk": "workspace:^",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^19.0.1",
+    "react-dom": "^19.0.1",
     "vite": "^6.3.6"
   },
   "devDependencies": {
-    "@types/react": "^19.1.2",
+    "@types/react": "^19.0.1",
     "@types/react-dom": "^19.1.2",
     "@vitejs/plugin-react": "^4.4.1",
     "globals": "^16.0.0",

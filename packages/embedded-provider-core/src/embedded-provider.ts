@@ -137,7 +137,7 @@ export class EmbeddedProvider {
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, new Set());
     }
-    this.eventListeners.get(event)!.add(callback as EventCallback);
+    this.eventListeners.get(event)?.add(callback as EventCallback);
     this.logger.log("EMBEDDED_PROVIDER", "Event listener added", { event });
   }
 
@@ -1330,6 +1330,7 @@ export class EmbeddedProvider {
         organizationId: session.organizationId,
         headers: {
           ...(this.platform.analyticsHeaders || {}),
+          ...(session.authUserId ? { "x-auth-user-id": session.authUserId } : {}),
         },
       },
       this.stamper,

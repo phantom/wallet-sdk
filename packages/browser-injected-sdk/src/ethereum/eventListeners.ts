@@ -16,8 +16,8 @@ export function addEventListener(event: EthereumEventType, callback: PhantomEthe
     eventListeners.set(event, new Set());
   }
 
-  const listeners = eventListeners.get(event)!;
-  listeners.add(callback);
+  const listeners = eventListeners.get(event);
+  listeners?.add(callback);
 
   // Return a function to remove the listener
   return () => removeEventListener(event, callback);
