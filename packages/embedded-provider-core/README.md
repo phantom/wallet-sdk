@@ -243,6 +243,13 @@ const result = await provider.signAndSendTransaction({
 // Disconnect
 await provider.disconnect();
 ```
+**Security Note**
+
+Sessions contain sensitive cryptographic material. Ensure your storage adapter implements proper security measures:
+- Use secure storage mechanisms (Keychain on iOS, Keystore on Android)
+- Implement proper access controls
+- Never log or expose session data
+- Clear sessions on logout or security events
 
 ## Error Handling
 
