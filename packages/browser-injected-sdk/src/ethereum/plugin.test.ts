@@ -83,8 +83,8 @@ describe("Ethereum Plugin", () => {
   });
 
   describe("constructor", () => {
-    it("should initialize with connected=false, chainId=0x1, and empty accounts", () => {
-      expect(ethereum.connected).toBe(false);
+    it("should initialize with isConnected()=false, chainId=0x1, and empty accounts", () => {
+      expect(ethereum.isConnected()).toBe(false);
       expect(ethereum.chainId).toBe("0x1");
       expect(ethereum.accounts).toEqual([]);
     });
@@ -260,7 +260,7 @@ describe("Ethereum Plugin", () => {
       expect(mockConnect).toHaveBeenCalled();
       expect(result).toEqual(accounts);
       expect(ethereum.accounts).toEqual(accounts);
-      expect(ethereum.connected).toBe(true);
+      expect(ethereum.isConnected()).toBe(true);
     });
   });
 
@@ -277,7 +277,7 @@ describe("Ethereum Plugin", () => {
 
       expect(mockDisconnect).toHaveBeenCalled();
       expect(ethereum.accounts).toEqual([]);
-      expect(ethereum.connected).toBe(false);
+      expect(ethereum.isConnected()).toBe(false);
     });
   });
 
@@ -291,7 +291,7 @@ describe("Ethereum Plugin", () => {
       expect(mockGetAccounts).toHaveBeenCalled();
       expect(result).toEqual(accounts);
       expect(ethereum.accounts).toEqual(accounts);
-      expect(ethereum.connected).toBe(true);
+      expect(ethereum.isConnected()).toBe(true);
     });
   });
 
@@ -314,7 +314,7 @@ describe("Ethereum Plugin", () => {
       }
 
       expect(ethereum.accounts).toEqual(newAccounts);
-      expect(ethereum.connected).toBe(true);
+      expect(ethereum.isConnected()).toBe(true);
       expect(mockTriggerEvent).toHaveBeenCalledWith("accountsChanged", newAccounts);
       expect(mockTriggerEvent).toHaveBeenCalledWith("connect", newAccounts);
     });
@@ -329,7 +329,7 @@ describe("Ethereum Plugin", () => {
       }
 
       expect(ethereum.accounts).toEqual([]);
-      expect(ethereum.connected).toBe(false);
+      expect(ethereum.isConnected()).toBe(false);
     });
   });
 
@@ -354,7 +354,7 @@ describe("Ethereum Plugin", () => {
       }
 
       expect(ethereum.accounts).toEqual(accounts);
-      expect(ethereum.connected).toBe(true);
+      expect(ethereum.isConnected()).toBe(true);
       expect(mockTriggerEvent).toHaveBeenCalledWith("connect", accounts);
     });
   });
@@ -379,7 +379,7 @@ describe("Ethereum Plugin", () => {
       }
 
       expect(ethereum.accounts).toEqual([]);
-      expect(ethereum.connected).toBe(false);
+      expect(ethereum.isConnected()).toBe(false);
       const expectedError: ProviderRpcError = {
         code: 4900,
         message: "Provider disconnected",

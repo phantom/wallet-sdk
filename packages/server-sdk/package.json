@@ -47,6 +47,7 @@
     "@phantom/client": "workspace:^",
     "@phantom/constants": "workspace:^",
     "@phantom/parsers": "workspace:^",
+    "@phantom/sdk-types": "workspace:^",
     "@phantom/utils": "workspace:^",
     "bs58": "^6.0.0"
   },

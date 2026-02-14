@@ -1,185 +1,361 @@
 import { InjectedWalletSolanaChain } from "./InjectedWalletSolanaChain";
 import type { ISolanaChain } from "@phantom/chain-interfaces";
+import type { Transaction } from "@phantom/sdk-types";
 
 describe("InjectedWalletSolanaChain", () => {
-  let mockProvider: ISolanaChain;
-  let solanaChain: InjectedWalletSolanaChain;
-  let eventListeners: Map<string, any[]>;
+  let mockProvider: any;
+  let chain: InjectedWalletSolanaChain;
+  const walletId = "test-wallet";
+  const walletName = "Test Wallet";
+  const testPublicKey = "Exb31jgzHxCJokKdeCkbCNEX6buTZxEFLXCaUWXe4VSM";
 
   beforeEach(() => {
-    eventListeners = new Map<string, any[]>();
-
-    // Create mock provider
     mockProvider = {
-      connect: jest.fn().mockResolvedValue({ publicKey: "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH" }),
-      disconnect: jest.fn().mockResolvedValue(undefined),
+      connect: jest.fn(),
+      disconnect: jest.fn(),
       signMessage: jest.fn(),
       signTransaction: jest.fn(),
-      signAllTransactions: jest.fn(),
       signAndSendTransaction: jest.fn(),
+      signAllTransactions: jest.fn(),
       signAndSendAllTransactions: jest.fn(),
       switchNetwork: jest.fn(),
-      getPublicKey: jest.fn().mockResolvedValue("GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH"),
-      isConnected: jest.fn().mockReturnValue(false),
-      connected: false,
+      isConnected: false,
       publicKey: null,
-      on: jest.fn((event: string, listener: any) => {
-        if (!eventListeners.has(event)) {
-          eventListeners.set(event, []);
-        }
-        eventListeners.get(event)?.push(listener);
-      }),
+      on: jest.fn(),
       off: jest.fn(),
     };
 
-    solanaChain = new InjectedWalletSolanaChain(mockProvider, "test-wallet", "Test Wallet");
+    chain = new InjectedWalletSolanaChain(mockProvider as ISolanaChain, walletId, walletName);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
-    eventListeners.clear();
   });
 
   describe("constructor", () => {
     it("should initialize with provider, walletId, and walletName", () => {
-      expect(solanaChain).toBeDefined();
-      expect((solanaChain as any).provider).toBe(mockProvider);
-      expect((solanaChain as any).walletId).toBe("test-wallet");
-      expect((solanaChain as any).walletName).toBe("Test Wallet");
+      expect(chain).toBeDefined();
+      expect((chain as any).provider).toBe(mockProvider);
+      expect((chain as any).walletId).toBe(walletId);
+      expect((chain as any).walletName).toBe(walletName);
     });
 
-    it("should set up event listeners", () => {
+    it("should initialize with isConnected=false and publicKey=null", () => {
+      expect(chain.isConnected).toBe(false);
+      expect(chain.publicKey).toBeNull();
+    });
+
+    it("should set up event listeners if provider supports them", () => {
       expect(mockProvider.on).toHaveBeenCalledWith("connect", expect.any(Function));
       expect(mockProvider.on).toHaveBeenCalledWith("disconnect", expect.any(Function));
       expect(mockProvider.on).toHaveBeenCalledWith("accountChanged", expect.any(Function));
     });
+  });
 
-    it("should have initial disconnected state", () => {
-      expect(solanaChain.connected).toBe(false);
-      expect(solanaChain.publicKey).toBeNull();
+  describe("connect", () => {
+    describe("standard provider state extraction", () => {
+      it("should extract publicKey from provider state (string)", async () => {
+        (mockProvider.connect as jest.Mock).mockResolvedValue(undefined);
+        mockProvider.isConnected = true;
+        mockProvider.publicKey = testPublicKey;
+
+        const result = await chain.connect();
+
+        expect(result).toEqual({ publicKey: testPublicKey });
+        expect(chain.publicKey).toBe(testPublicKey);
+        expect(chain.isConnected).toBe(true);
+      });
+
+      it("should extract publicKey from provider state (PublicKey object with toString)", async () => {
+        const mockPublicKey = {
+          toString: jest.fn().mockReturnValue(testPublicKey),
+        };
+        (mockProvider.connect as jest.Mock).mockResolvedValue(undefined);
+        mockProvider.isConnected = true;
+        mockProvider.publicKey = mockPublicKey;
+
+        const result = await chain.connect();
+
+        expect(result).toEqual({ publicKey: testPublicKey });
+        expect(chain.publicKey).toBe(testPublicKey);
+        expect(chain.isConnected).toBe(true);
+        expect(mockPublicKey.toString).toHaveBeenCalled();
+      });
+    });
+
+    describe("error handling", () => {
+      it("should throw error if provider is not connected after connect()", async () => {
+        (mockProvider.connect as jest.Mock).mockResolvedValue(undefined);
+        mockProvider.isConnected = false;
+        mockProvider.publicKey = testPublicKey;
+
+        await expect(chain.connect()).rejects.toThrow("Provider not connected after connect() call");
+      });
+
+      it("should throw error if provider publicKey is null", async () => {
+        (mockProvider.connect as jest.Mock).mockResolvedValue(undefined);
+        mockProvider.isConnected = true;
+        mockProvider.publicKey = null;
+
+        await expect(chain.connect()).rejects.toThrow("Provider not connected after connect() call");
+      });
+
+      it("should throw error if publicKey toString returns empty string", async () => {
+        const mockPublicKey = {
+          toString: jest.fn().mockReturnValue(""),
+        };
+        (mockProvider.connect as jest.Mock).mockResolvedValue(undefined);
+        mockProvider.isConnected = true;
+        mockProvider.publicKey = mockPublicKey;
+
+        await expect(chain.connect()).rejects.toThrow("Empty publicKey from provider");
+      });
+
+      it("should propagate provider errors", async () => {
+        const error = new Error("Provider connection failed");
+        (mockProvider.connect as jest.Mock).mockRejectedValue(error);
+
+        await expect(chain.connect()).rejects.toThrow("Provider connection failed");
+      });
+    });
+
+    describe("options", () => {
+      it("should pass onlyIfTrusted option to provider", async () => {
+        (mockProvider.connect as jest.Mock).mockResolvedValue(undefined);
+        mockProvider.isConnected = true;
+        mockProvider.publicKey = testPublicKey;
+
+        await chain.connect({ onlyIfTrusted: true });
+
+        expect(mockProvider.connect).toHaveBeenCalledWith({ onlyIfTrusted: true });
+      });
+
+      it("should pass undefined options if not provided", async () => {
+        (mockProvider.connect as jest.Mock).mockResolvedValue(undefined);
+        mockProvider.isConnected = true;
+        mockProvider.publicKey = testPublicKey;
+
+        await chain.connect();
+
+        expect(mockProvider.connect).toHaveBeenCalledWith(undefined);
+      });
     });
   });
 
-  describe("accountChanged event handling", () => {
-    it("should update publicKey and set connected to true when valid publicKey is provided", () => {
-      const newPublicKey = "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH";
-      const accountChangedListener = eventListeners.get("accountChanged")?.[0];
+  describe("disconnect", () => {
+    it("should call provider disconnect and update state", async () => {
+      (chain as any)._publicKey = testPublicKey;
+      (mockProvider.disconnect as jest.Mock).mockResolvedValue(undefined);
 
-      expect(accountChangedListener).toBeDefined();
+      await chain.disconnect();
 
-      // Call the accountChanged listener
-      accountChangedListener(newPublicKey);
-
-      expect(solanaChain.publicKey).toBe(newPublicKey);
-      expect(solanaChain.connected).toBe(true);
-      expect((solanaChain as any)._connected).toBe(true);
-      expect((solanaChain as any)._publicKey).toBe(newPublicKey);
+      expect(mockProvider.disconnect).toHaveBeenCalled();
+      expect(chain.isConnected).toBe(false);
+      expect(chain.publicKey).toBeNull();
     });
 
-    it("should set connected to false when publicKey is null", () => {
-      // First set a publicKey
-      const initialPublicKey = "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH";
-      const accountChangedListener = eventListeners.get("accountChanged")?.[0];
-      accountChangedListener(initialPublicKey);
-      expect(solanaChain.connected).toBe(true);
+    it("should propagate provider errors", async () => {
+      const error = new Error("Disconnect failed");
+      (mockProvider.disconnect as jest.Mock).mockRejectedValue(error);
 
-      // Then set to null
-      accountChangedListener(null as any);
+      await expect(chain.disconnect()).rejects.toThrow("Disconnect failed");
+    });
+  });
 
-      expect(solanaChain.publicKey).toBeNull();
-      expect(solanaChain.connected).toBe(false);
-      expect((solanaChain as any)._connected).toBe(false);
+  describe("signMessage", () => {
+    it("should call provider signMessage and return signature", async () => {
+      const message = "Hello, World!";
+      const signature = new Uint8Array(64).fill(1);
+      (mockProvider.signMessage as jest.Mock).mockResolvedValue({
+        signature,
+        publicKey: testPublicKey,
+      });
+
+      const result = await chain.signMessage(message);
+
+      expect(mockProvider.signMessage).toHaveBeenCalledWith(message);
+      expect(result.signature).toEqual(signature);
+      expect(result.publicKey).toBe(testPublicKey);
     });
 
-    it("should set connected to false when publicKey is empty string", () => {
-      // First set a publicKey
-      const initialPublicKey = "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH";
-      const accountChangedListener = eventListeners.get("accountChanged")?.[0];
-      accountChangedListener(initialPublicKey);
-      expect(solanaChain.connected).toBe(true);
+    it("should handle base64 signature", async () => {
+      const message = "Hello, World!";
+      const signatureBase64 = Buffer.from(new Uint8Array(64).fill(1)).toString("base64");
+      (mockProvider.signMessage as jest.Mock).mockResolvedValue({
+        signature: signatureBase64,
+        publicKey: testPublicKey,
+      });
+
+      const result = await chain.signMessage(message);
+
+      expect(result.signature).toBeInstanceOf(Uint8Array);
+      expect(result.signature.length).toBe(64);
+    });
+
+    it("should use stored publicKey if not returned", async () => {
+      (chain as any)._publicKey = testPublicKey;
+      const message = "Hello, World!";
+      const signature = new Uint8Array(64).fill(1);
+      (mockProvider.signMessage as jest.Mock).mockResolvedValue({
+        signature,
+      });
+
+      const result = await chain.signMessage(message);
+
+      expect(result.publicKey).toBe(testPublicKey);
+    });
+  });
+
+  describe("signTransaction", () => {
+    it("should call provider signTransaction and return signed transaction", async () => {
+      const transaction = {} as Transaction;
+      const signedTransaction = {} as Transaction;
+      (mockProvider.signTransaction as jest.Mock).mockResolvedValue(signedTransaction);
+
+      const result = await chain.signTransaction(transaction);
+
+      expect(mockProvider.signTransaction).toHaveBeenCalledWith(transaction);
+      expect(result).toBe(signedTransaction);
+    });
+  });
+
+  describe("signAndSendTransaction", () => {
+    it("should call provider signAndSendTransaction and return signature", async () => {
+      const transaction = {} as Transaction;
+      const signature = "test-signature";
+      (mockProvider.signAndSendTransaction as jest.Mock).mockResolvedValue({ signature });
+
+      const result = await chain.signAndSendTransaction(transaction);
+
+      expect(mockProvider.signAndSendTransaction).toHaveBeenCalledWith(transaction);
+      expect(result).toEqual({ signature });
+    });
+  });
+
+  describe("event listeners", () => {
+    it("should update state when provider emits connect event", () => {
+      const connectHandler = (mockProvider.on as jest.Mock).mock.calls.find(call => call[0] === "connect")?.[1];
+
+      expect(connectHandler).toBeDefined();
+      connectHandler(testPublicKey);
+
+      expect(chain.isConnected).toBe(true);
+      expect(chain.publicKey).toBe(testPublicKey);
+    });
+
+    it("should update state when provider emits disconnect event", () => {
+      (chain as any)._publicKey = testPublicKey;
+
+      const disconnectHandler = (mockProvider.on as jest.Mock).mock.calls.find(call => call[0] === "disconnect")?.[1];
+
+      expect(disconnectHandler).toBeDefined();
+      disconnectHandler();
+
+      expect(chain.isConnected).toBe(false);
+      expect(chain.publicKey).toBeNull();
+    });
+
+    it("should update publicKey when provider emits accountChanged event", () => {
+      const newPublicKey = "NewPublicKey123";
+      const accountChangedHandler = (mockProvider.on as jest.Mock).mock.calls.find(
+        call => call[0] === "accountChanged",
+      )?.[1];
+
+      expect(accountChangedHandler).toBeDefined();
+      accountChangedHandler(newPublicKey);
+
+      expect(chain.publicKey).toBe(newPublicKey);
+      expect(chain.isConnected).toBe(true);
+    });
+
+    it("should set isConnected=false when provider emits accountChanged with null", () => {
+      const accountChangedHandler = (mockProvider.on as jest.Mock).mock.calls.find(
+        call => call[0] === "accountChanged",
+      )?.[1];
+
+      expect(accountChangedHandler).toBeDefined();
+
+      // First set a valid key
+      accountChangedHandler(testPublicKey);
+      expect(chain.isConnected).toBe(true);
+
+      // Then clear it
+      accountChangedHandler(null as any);
+      expect(chain.publicKey).toBeNull();
+      expect(chain.isConnected).toBe(false);
+    });
+
+    it("should set isConnected=false when provider emits accountChanged with empty string", () => {
+      const accountChangedHandler = (mockProvider.on as jest.Mock).mock.calls.find(
+        call => call[0] === "accountChanged",
+      )?.[1];
+
+      expect(accountChangedHandler).toBeDefined();
+
+      // First set a valid key
+      accountChangedHandler(testPublicKey);
+      expect(chain.isConnected).toBe(true);
 
       // Then set to empty string
-      accountChangedListener("");
-
-      expect(solanaChain.publicKey).toBe("");
-      expect(solanaChain.connected).toBe(false);
-      expect((solanaChain as any)._connected).toBe(false);
+      accountChangedHandler("");
+      expect(chain.publicKey).toBeNull();
+      expect(chain.isConnected).toBe(false);
     });
 
     it("should emit accountChanged event when provider emits accountChanged", () => {
       const listener = jest.fn();
-      solanaChain.on("accountChanged", listener);
+      chain.on("accountChanged", listener);
 
-      const newPublicKey = "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH";
-      const accountChangedListener = eventListeners.get("accountChanged")?.[0];
-      accountChangedListener(newPublicKey);
+      const accountChangedHandler = (mockProvider.on as jest.Mock).mock.calls.find(
+        call => call[0] === "accountChanged",
+      )?.[1];
 
-      expect(listener).toHaveBeenCalledWith(newPublicKey);
-    });
+      expect(accountChangedHandler).toBeDefined();
+      accountChangedHandler(testPublicKey);
 
-    it("should update connection state when switching from no account to account", () => {
-      const accountChangedListener = eventListeners.get("accountChanged")?.[0];
-
-      // Start with no account
-      expect(solanaChain.connected).toBe(false);
-      expect(solanaChain.publicKey).toBeNull();
-
-      // Switch to connected account
-      const newPublicKey = "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH";
-      accountChangedListener(newPublicKey);
-
-      expect(solanaChain.connected).toBe(true);
-      expect(solanaChain.publicKey).toBe(newPublicKey);
+      expect(listener).toHaveBeenCalledWith(testPublicKey);
     });
 
     it("should handle switching between different accounts", () => {
-      const accountChangedListener = eventListeners.get("accountChanged")?.[0];
+      const accountChangedHandler = (mockProvider.on as jest.Mock).mock.calls.find(
+        call => call[0] === "accountChanged",
+      )?.[1];
 
-      // First account
-      const firstPublicKey = "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH";
-      accountChangedListener(firstPublicKey);
-      expect(solanaChain.publicKey).toBe(firstPublicKey);
-      expect(solanaChain.connected).toBe(true);
+      expect(accountChangedHandler).toBeDefined();
 
-      // Switch to different account
+      const firstPublicKey = testPublicKey;
       const secondPublicKey = "DifferentSolanaPublicKeyHere123456789ABCDEF";
-      accountChangedListener(secondPublicKey);
 
-      expect(solanaChain.publicKey).toBe(secondPublicKey);
-      expect(solanaChain.connected).toBe(true);
-      expect((solanaChain as any)._publicKey).toBe(secondPublicKey);
+      accountChangedHandler(firstPublicKey);
+      expect(chain.publicKey).toBe(firstPublicKey);
+      expect(chain.isConnected).toBe(true);
+
+      accountChangedHandler(secondPublicKey);
+      expect(chain.publicKey).toBe(secondPublicKey);
+      expect(chain.isConnected).toBe(true);
     });
   });
 
-  describe("connect event handling", () => {
-    it("should update connected state and publicKey when connect event is received", () => {
-      const connectListener = eventListeners.get("connect")?.[0];
-      const publicKey = "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH";
+  describe("on/off", () => {
+    it("should allow subscribing to events", () => {
+      const listener = jest.fn();
+      chain.on("connect", listener);
 
-      connectListener(publicKey);
+      // Trigger event through internal emitter
+      (chain as any).eventEmitter.emit("connect", testPublicKey);
 
-      expect(solanaChain.connected).toBe(true);
-      expect(solanaChain.publicKey).toBe(publicKey);
-      expect((solanaChain as any)._connected).toBe(true);
-      expect((solanaChain as any)._publicKey).toBe(publicKey);
+      expect(listener).toHaveBeenCalledWith(testPublicKey);
     });
-  });
 
-  describe("disconnect event handling", () => {
-    it("should update connected state and clear publicKey when disconnect event is received", () => {
-      // First connect
-      const accountChangedListener = eventListeners.get("accountChanged")?.[0];
-      accountChangedListener("GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH");
-      expect(solanaChain.connected).toBe(true);
+    it("should allow unsubscribing from events", () => {
+      const listener = jest.fn();
+      chain.on("connect", listener);
+      chain.off("connect", listener);
 
-      // Then disconnect
-      const disconnectListener = eventListeners.get("disconnect")?.[0];
-      disconnectListener();
+      // Trigger event through internal emitter
+      (chain as any).eventEmitter.emit("connect", testPublicKey);
 
-      expect(solanaChain.connected).toBe(false);
-      expect(solanaChain.publicKey).toBeNull();
-      expect((solanaChain as any)._connected).toBe(false);
-      expect((solanaChain as any)._publicKey).toBeNull();
+      expect(listener).not.toHaveBeenCalled();
     });
   });
 });

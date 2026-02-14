@@ -149,8 +149,8 @@ const result = await sdk.solana.signAndSendTransaction(transaction);
 await sdk.solana.switchNetwork("devnet");
 
 // Utilities
-const publicKey = await sdk.solana.getPublicKey();
-const isConnected = sdk.solana.isConnected();
+const publicKey = sdk.solana.publicKey;
+const isConnected = sdk.solana.isConnected;
 ```
 
 ### Ethereum Chain (`sdk.ethereum`)
@@ -462,21 +462,12 @@ await sdk.solana.switchNetwork("mainnet");
 await sdk.solana.switchNetwork("devnet");
 ```
 
-#### getPublicKey()
-
-Get the current Solana public key.
-
-```typescript
-const publicKey = await sdk.solana.getPublicKey();
-// Returns: string | null
-```
-
-#### isConnected()
+#### isConnected
 
 Check if connected to Solana wallet.
 
 ```typescript
-const connected = sdk.solana.isConnected();
+const connected = sdk.solana.isConnected;
 // Returns: boolean
 ```
 
@@ -738,6 +729,7 @@ const sdk = new BrowserSDK({
 sdk.on("connect_start", (data: ConnectStartEventData) => {
   console.log("Connection starting:", data.source); // "auto-connect" | "manual-connect"
   console.log("Auth options:", data.authOptions?.provider); // "google" | "apple" | etc.
+  console.log("Wallet ID:", data.walletId); // only for embedded providers
 });
 
 // 2. connect - Fired when connection succeeds (includes full ConnectResult)
@@ -1030,7 +1022,8 @@ const connection = new Connection("https://api.mainnet-beta.solana.com");
 const { blockhash } = await connection.getLatestBlockhash();
 
 // Create transfer instruction
-const fromAddress = await sdk.solana.getPublicKey();
+const fromAddress = sdk.solana.publicKey;
+if (!fromAddress) throw new Error("Not connected");
 const transferInstruction = SystemProgram.transfer({
   fromPubkey: new PublicKey(fromAddress),
   toPubkey: new PublicKey(toAddress),
@@ -1082,7 +1075,8 @@ await sdk.connect({ provider: "injected" });
 const rpc = createSolanaRpc("https://api.mainnet-beta.solana.com");
 const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
 
-const userPublicKey = await sdk.solana.getPublicKey();
+const userPublicKey = sdk.solana.publicKey;
+if (!userPublicKey) throw new Error("Not connected");
 const transactionMessage = pipe(
   createTransactionMessage({ version: 0 }),
   tx => setTransactionMessageFeePayer(address(userPublicKey), tx),

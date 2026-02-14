@@ -1,4 +1,5 @@
 import type { InjectedWalletInfo, PhantomExtended } from "./registry";
+import { PHANTOM_ICON } from "@phantom/constants";
 import { AddressType as ClientAddressType } from "@phantom/client";
 import type { ISolanaChain, IEthereumChain } from "@phantom/chain-interfaces";
 import { isPhantomExtensionInstalled } from "@phantom/browser-injected-sdk";
@@ -7,6 +8,7 @@ import { createSolanaPlugin } from "@phantom/browser-injected-sdk/solana";
 import { createEthereumPlugin } from "@phantom/browser-injected-sdk/ethereum";
 import { createAutoConfirmPlugin } from "@phantom/browser-injected-sdk/auto-confirm";
 import { debug, DebugCategory } from "../debug";
+import { CUSTOM_WALLET_CONFIGS } from "./custom-wallets";
 
 /**
  * EIP-6963 Provider Info interface
@@ -415,6 +417,62 @@ export async function discoverSolanaWallets(): Promise<InjectedWalletInfo[]> {
 
   debug.log(DebugCategory.BROWSER_SDK, "Wallet Standard Solana discovery completed", finalLogData);
 
+  const customWallets = discoverCustomSolanaWallets();
+  wallets.push(...customWallets);
+
+  return wallets;
+}
+
+export function discoverCustomSolanaWallets(): InjectedWalletInfo[] {
+  const wallets: InjectedWalletInfo[] = [];
+
+  if (typeof window === "undefined") {
+    debug.log(DebugCategory.BROWSER_SDK, "Custom wallet discovery skipped (not in browser environment)");
+    return wallets;
+  }
+
+  debug.log(DebugCategory.BROWSER_SDK, "Starting custom Solana wallet discovery", {
+    configCount: CUSTOM_WALLET_CONFIGS.length,
+  });
+
+  for (const config of CUSTOM_WALLET_CONFIGS) {
+    // Only process Solana wallets
+    if (!config.addressTypes.includes(ClientAddressType.solana)) {
+      continue;
+    }
+
+    const provider = (window as any)[config.windowProperty];
+    if (!provider) {
+      debug.log(DebugCategory.BROWSER_SDK, "Custom wallet not found", {
+        walletId: config.id,
+        windowProperty: config.windowProperty,
+      });
+      continue;
+    }
+
+    debug.log(DebugCategory.BROWSER_SDK, "Discovered custom Solana wallet", {
+      walletId: config.id,
+      walletName: config.name,
+      windowProperty: config.windowProperty,
+    });
+
+    wallets.push({
+      id: config.id,
+      name: config.name,
+      icon: config.icon,
+      addressTypes: config.addressTypes,
+      providers: {
+        solana: provider as ISolanaChain,
+      },
+      discovery: "custom",
+    });
+  }
+
+  debug.log(DebugCategory.BROWSER_SDK, "Custom Solana wallet discovery completed", {
+    discoveredCount: wallets.length,
+    walletIds: wallets.map(w => w.id),
+  });
+
   return wallets;
 }
 
@@ -451,7 +509,7 @@ export function discoverPhantomWallet(addressTypes: ClientAddressType[]): Inject
   return {
     id: "phantom",
     name: "Phantom",
-    icon: undefined, // Icon will be rendered from icons package in UI components
+    icon: PHANTOM_ICON,
     addressTypes,
     providers: {
       solana: addressTypes.includes(ClientAddressType.solana) ? (phantomInstance.solana as any) : undefined,

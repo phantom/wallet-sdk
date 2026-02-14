@@ -29,12 +29,12 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
     this.setupEventListeners();
   }
 
-  get connected(): boolean {
-    return this._publicKey !== null;
-  }
-
   get publicKey(): string | null {
     return this._publicKey;
+  }
+
+  get isConnected(): boolean {
+    return this._publicKey !== null;
   }
 
   async connect(_options?: { onlyIfTrusted?: boolean }): Promise<{ publicKey: string }> {
@@ -325,14 +325,6 @@ export class WalletStandardSolanaAdapter implements ISolanaChain {
   async switchNetwork(_network: "mainnet" | "devnet"): Promise<void> {
     // NOOP - Wallet Standard does not support network switchings
     return Promise.resolve();
-  }
-
-  getPublicKey(): Promise<string | null> {
-    return Promise.resolve(this._publicKey);
-  }
-
-  isConnected(): boolean {
-    return this._publicKey !== null;
   }
 
   /**

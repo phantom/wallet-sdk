@@ -1,6 +1,7 @@
 import type { IEthereumChain, ISolanaChain } from "@phantom/chain-interfaces";
 import { AddressType } from "../types";
 import { discoverWallets } from "./discovery";
+import { PHANTOM_ICON } from "@phantom/constants";
 import { debug, DebugCategory } from "../debug";
 import { InjectedWalletSolanaChain } from "../providers/injected/chains/InjectedWalletSolanaChain";
 import { WalletStandardSolanaAdapter } from "../providers/injected/chains/WalletStandardSolanaAdapter";
@@ -26,7 +27,7 @@ export interface InjectedWalletInfo {
   providers?: WalletProviders;
   /** Reverse DNS identifier from EIP-6963 (for potential future matching with Wallet Standard) */
   rdns?: string;
-  discovery?: "standard" | "eip6963" | "phantom";
+  discovery?: "standard" | "eip6963" | "phantom" | "custom";
 }
 
 /**
@@ -134,7 +135,7 @@ export class InjectedWalletRegistry {
     const phantomWallet: PhantomInjectedWalletInfo = {
       id: "phantom",
       name: "Phantom",
-      icon: "", // Icon will be rendered from icons package in UI components
+      icon: PHANTOM_ICON,
       addressTypes,
       providers: wrappedProviders,
       isPhantom: true,

@@ -136,6 +136,21 @@ export class PhantomClient {
     this.config.organizationId = organizationId;
   }
 
+  /**
+   * Gets the authenticator public key from the stamper if available.
+   * Returns undefined if the stamper doesn't support key info retrieval.
+   */
+  private getAuthenticatorPublicKey(): string | undefined {
+    if (!this.stamper) {
+      return undefined;
+    }
+    if ("getKeyInfo" in this.stamper && typeof this.stamper.getKeyInfo === "function") {
+      const keyInfo = this.stamper.getKeyInfo();
+      return keyInfo?.publicKey;
+    }
+    return undefined;
+  }
+
   async createWallet(walletName?: string): Promise<CreateWalletResult> {
     try {
       if (!this.config.organizationId) {
@@ -208,6 +223,7 @@ export class PhantomClient {
     organizationId: string,
     submissionConfig: SubmissionConfig,
     account: string,
+    authenticatorPublicKey: string | undefined,
     methodName: string,
   ): Promise<PrepareResponse> {
     try {
@@ -216,6 +232,7 @@ export class PhantomClient {
         organizationId,
         submissionConfig,
         simulationConfig: { account },
+        authenticatorPublicKey,
       };
       const response = await this.axiosInstance.post(`${this.config.apiBaseUrl}/prepare`, request, {
         headers: {
@@ -243,10 +260,11 @@ export class PhantomClient {
     encodedTransaction: string;
     networkId: SignTransactionParams["networkId"];
     submissionConfig: SubmissionConfig;
+    authenticatorPublicKey: string | undefined;
     account?: string;
     methodName: string;
   }): Promise<string | { kind: "RLP_ENCODED"; bytes: string }> {
-    const { encodedTransaction, networkId, submissionConfig, account } = params;
+    const { encodedTransaction, networkId, submissionConfig, account, authenticatorPublicKey } = params;
 
     const isEvmTransaction = isEthereumChain(networkId);
     const isSolanaTransaction = isSolanaChain(networkId);
@@ -268,6 +286,7 @@ export class PhantomClient {
           this.config.organizationId as string,
           submissionConfig,
           account,
+          authenticatorPublicKey,
           params.methodName,
         );
 
@@ -332,10 +351,13 @@ export class PhantomClient {
         addressFormat: networkConfig.addressFormat,
       };
 
+      const authenticatorPublicKey = this.getAuthenticatorPublicKey();
+
       const transactionForSigning = await this.getTransactionForSigning({
         encodedTransaction,
         networkId: networkIdParam,
         submissionConfig,
+        authenticatorPublicKey,
         account: params.account,
         methodName,
       });

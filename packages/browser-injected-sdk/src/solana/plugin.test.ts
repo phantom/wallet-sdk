@@ -7,7 +7,6 @@ import * as signTransactionModule from "./signTransaction";
 import * as signAndSendTransactionModule from "./signAndSendTransaction";
 import * as signAllTransactionsModule from "./signAllTransactions";
 import * as signAndSendAllTransactionsModule from "./signAndSendAllTransactions";
-import * as getAccountModule from "./getAccount";
 import type { Transaction } from "@phantom/sdk-types";
 import { TextEncoder } from "util";
 import { clearAllEventListeners } from "./eventListeners";
@@ -25,7 +24,6 @@ jest.mock("./signTransaction");
 jest.mock("./signAndSendTransaction");
 jest.mock("./signAllTransactions");
 jest.mock("./signAndSendAllTransactions");
-jest.mock("./getAccount");
 
 // We will spy on triggerEvent rather than fully mocking it
 // to ensure the actual callback logic is tested.
@@ -49,7 +47,6 @@ const mockSignAndSendAllTransactions =
   signAndSendAllTransactionsModule.signAndSendAllTransactions as jest.MockedFunction<
     typeof signAndSendAllTransactionsModule.signAndSendAllTransactions
   >;
-const mockGetAccount = getAccountModule.getAccount as jest.MockedFunction<typeof getAccountModule.getAccount>;
 
 describe("Solana Plugin", () => {
   const testPublicKey = "Exb31jgzHxCJokKdeCkbCNEX6buTZxEFLXCaUWXe4VSM";
@@ -82,8 +79,8 @@ describe("Solana Plugin", () => {
   });
 
   describe("constructor", () => {
-    it("should initialize with connected=false and publicKey=null", () => {
-      expect(solana.connected).toBe(false);
+    it("should initialize with isConnected=false and publicKey=null", () => {
+      expect(solana.isConnected).toBe(false);
       expect(solana.publicKey).toBeNull();
     });
 
@@ -98,15 +95,15 @@ describe("Solana Plugin", () => {
     });
   });
 
-  describe("connected property", () => {
+  describe("isConnected property", () => {
     it("should return false when not connected", () => {
-      expect(solana.connected).toBe(false);
+      expect(solana.isConnected).toBe(false);
     });
 
     it("should return true when connected", async () => {
       mockConnect.mockResolvedValue(testPublicKey);
       await solana.connect();
-      expect(solana.connected).toBe(true);
+      expect(solana.isConnected).toBe(true);
     });
   });
 
@@ -131,7 +128,7 @@ describe("Solana Plugin", () => {
       expect(mockConnect).toHaveBeenCalled();
       expect(result.publicKey).toBe(testPublicKey);
       expect(solana.publicKey).toBe(testPublicKey);
-      expect(solana.connected).toBe(true);
+      expect(solana.isConnected).toBe(true);
     });
 
     it("should handle connect with onlyIfTrusted option", async () => {
@@ -170,7 +167,7 @@ describe("Solana Plugin", () => {
 
       expect(mockDisconnect).toHaveBeenCalled();
       expect(solana.publicKey).toBeNull();
-      expect(solana.connected).toBe(false);
+      expect(solana.isConnected).toBe(false);
     });
   });
 
@@ -327,51 +324,6 @@ describe("Solana Plugin", () => {
     });
   });
 
-  describe("getPublicKey", () => {
-    it("should return null when not connected", async () => {
-      const result = await solana.getPublicKey();
-      expect(result).toBeNull();
-    });
-
-    it("should return publicKey when connected", async () => {
-      mockConnect.mockResolvedValue(testPublicKey);
-      await solana.connect();
-      const result = await solana.getPublicKey();
-      expect(result).toBe(testPublicKey);
-    });
-
-    it("should fetch account if publicKey is not set", async () => {
-      mockGetAccount.mockResolvedValue(testPublicKey);
-
-      const result = await solana.getPublicKey();
-
-      expect(mockGetAccount).toHaveBeenCalled();
-      expect(result).toBe(testPublicKey);
-      expect(solana.publicKey).toBe(testPublicKey);
-      expect(solana.connected).toBe(true);
-    });
-
-    it("should return null if getAccount fails", async () => {
-      mockGetAccount.mockRejectedValue(new Error("Failed"));
-
-      const result = await solana.getPublicKey();
-
-      expect(result).toBeNull();
-    });
-  });
-
-  describe("isConnected", () => {
-    it("should return false when not connected", () => {
-      expect(solana.isConnected()).toBe(false);
-    });
-
-    it("should return true when connected", async () => {
-      mockConnect.mockResolvedValue(testPublicKey);
-      await solana.connect();
-      expect(solana.isConnected()).toBe(true);
-    });
-  });
-
   describe("event handling", () => {
     beforeEach(async () => {
       // Wait for async event binding to complete
@@ -394,7 +346,7 @@ describe("Solana Plugin", () => {
 
       expect(listener).toHaveBeenCalledWith(testPublicKey);
       expect(solana.publicKey).toBe(testPublicKey);
-      expect(solana.connected).toBe(true);
+      expect(solana.isConnected).toBe(true);
       expect(triggerEventSpy).toHaveBeenCalledWith("connect", testPublicKey);
     });
 
@@ -415,7 +367,7 @@ describe("Solana Plugin", () => {
 
       expect(listener).toHaveBeenCalled();
       expect(solana.publicKey).toBeNull();
-      expect(solana.connected).toBe(false);
+      expect(solana.isConnected).toBe(false);
       expect(triggerEventSpy).toHaveBeenCalledWith("disconnect");
     });
 
@@ -434,7 +386,7 @@ describe("Solana Plugin", () => {
 
       expect(listener).toHaveBeenCalledWith(newPublicKey);
       expect(solana.publicKey).toBe(newPublicKey);
-      expect(solana.connected).toBe(true);
+      expect(solana.isConnected).toBe(true);
       expect(triggerEventSpy).toHaveBeenCalledWith("accountChanged", newPublicKey);
       expect(triggerEventSpy).toHaveBeenCalledWith("connect", newPublicKey);
     });
@@ -453,7 +405,7 @@ describe("Solana Plugin", () => {
 
       expect(listener).toHaveBeenCalledWith(null);
       expect(solana.publicKey).toBeNull();
-      expect(solana.connected).toBe(false);
+      expect(solana.isConnected).toBe(false);
     });
 
     it("should allow removing event listeners", () => {

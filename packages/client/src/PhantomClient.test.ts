@@ -381,6 +381,7 @@ describe("PhantomClient Spending Limits Integration", () => {
         "org-123",
         solanaSubmissionConfig,
         "UserAccount123",
+        "test-public-key",
         "signAndSendTransaction",
       );
 
@@ -392,6 +393,7 @@ describe("PhantomClient Spending Limits Integration", () => {
           organizationId: "org-123",
           submissionConfig: solanaSubmissionConfig,
           simulationConfig: { account: "UserAccount123" },
+          authenticatorPublicKey: "test-public-key",
         },
         { headers: { "Content-Type": "application/json", "X-Rpc-Method": "signAndSendTransaction" } },
       );
@@ -417,7 +419,14 @@ describe("PhantomClient Spending Limits Integration", () => {
       const prepareMethod = client["prepare"].bind(client);
 
       await expect(
-        prepareMethod("bad-tx", "org-123", solanaSubmissionConfig, "UserAccount123", "signAndSendTransaction"),
+        prepareMethod(
+          "bad-tx",
+          "org-123",
+          solanaSubmissionConfig,
+          "UserAccount123",
+          "test-public-key",
+          "signAndSendTransaction",
+        ),
       ).rejects.toThrow("Invalid transaction format");
     });
 
@@ -450,6 +459,7 @@ describe("PhantomClient Spending Limits Integration", () => {
         "org-123",
         solanaSubmissionConfig,
         "UserAccount123",
+        "test-public-key",
         "signAndSendTransaction",
       ).catch(e => e);
 
@@ -762,6 +772,7 @@ describe("PhantomClient Spending Limits Integration", () => {
         "org-123",
         submissionConfig,
         "UserAccount123",
+        "test-public-key",
         "signAndSendTransaction",
       );
 
@@ -786,6 +797,7 @@ describe("PhantomClient Spending Limits Integration", () => {
         "org-123",
         submissionConfig,
         "UserAccount123",
+        "test-public-key",
         "signAndSendTransaction",
       );
 
@@ -797,6 +809,7 @@ describe("PhantomClient Spending Limits Integration", () => {
           organizationId: "org-123",
           submissionConfig: submissionConfig,
           simulationConfig: { account: "UserAccount123" },
+          authenticatorPublicKey: "test-public-key",
         }),
         expect.objectContaining({
           headers: expect.objectContaining({
@@ -822,7 +835,14 @@ describe("PhantomClient Spending Limits Integration", () => {
       };
 
       const prepareMethod = client["prepare"].bind(client);
-      await prepareMethod("tx-base64", "org-123", submissionConfig, "UserAccount123", "signAndSendTransaction");
+      await prepareMethod(
+        "tx-base64",
+        "org-123",
+        submissionConfig,
+        "UserAccount123",
+        "test-public-key",
+        "signAndSendTransaction",
+      );
 
       expect(mockAxiosPost).toHaveBeenCalledWith(
         "https://api.phantom.app/prepare",
@@ -831,6 +851,7 @@ describe("PhantomClient Spending Limits Integration", () => {
           organizationId: "org-123",
           submissionConfig: submissionConfig,
           simulationConfig: { account: "UserAccount123" },
+          authenticatorPublicKey: "test-public-key",
         },
         { headers: { "Content-Type": "application/json", "X-Rpc-Method": "signAndSendTransaction" } },
       );

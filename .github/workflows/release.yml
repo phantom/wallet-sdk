@@ -8,17 +8,18 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  # OIDC
+  # OIDC for npm provenance
   id-token: write
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   release:
-    name: Release
+    name: Publish to npm
     runs-on: ubuntu-latest
+    # Only run on the public mirror — never on the internal repo
+    if: github.repository == 'phantom/phantom-connect-sdk'
     env:
-      # Force npm to emit provenance (SLSA) when publishing via OIDC.
       NPM_CONFIG_PROVENANCE: true
     steps:
       - name: Checkout Repo
@@ -55,13 +56,11 @@ jobs:
           WALLET_API: ${{ secrets.WALLET_API }}
           SOLANA_RPC_URL: ${{ secrets.SOLANA_RPC_URL }}
 
-      - name: Create Release Pull Request or Publish to npm
+      - name: Publish to npm
         id: changesets
         uses: changesets/action@e0145edc7d9d8679003495b11f87bd8ef63c0cba
         with:
-          # This expects you to have a script called release which does a build for your packages and calls changeset publish
-          version: yarn changeset version
           publish: yarn release
-          commitMode: github-api
+          commitMode: git-cli
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

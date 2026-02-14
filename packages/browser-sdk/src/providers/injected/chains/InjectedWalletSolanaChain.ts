@@ -14,7 +14,6 @@ export class InjectedWalletSolanaChain implements ISolanaChain {
   private walletName: string;
   // Expose eventEmitter for testing - allows tests to trigger events directly
   public readonly eventEmitter: EventEmitter = new EventEmitter();
-  private _connected: boolean = false;
   private _publicKey: string | null = null;
 
   constructor(provider: ISolanaChain, walletId: string, walletName: string) {
@@ -24,64 +23,62 @@ export class InjectedWalletSolanaChain implements ISolanaChain {
     this.setupEventListeners();
   }
 
-  get connected(): boolean {
-    return this._connected;
-  }
-
   get publicKey(): string | null {
     return this._publicKey;
   }
 
+  get isConnected(): boolean {
+    // Prefer the wrapped provider's state when available, fallback to our cached key.
+    return this.provider.isConnected || !!this._publicKey;
+  }
+
   async connect(options?: { onlyIfTrusted?: boolean }): Promise<{ publicKey: string }> {
-    debug.log(DebugCategory.INJECTED_PROVIDER, "External wallet Solana connect", {
-      walletId: this.walletId,
-      walletName: this.walletName,
-      onlyIfTrusted: options?.onlyIfTrusted,
-    });
-
     try {
-      const result: any = await this.provider.connect(options);
+      await this.provider.connect(options);
+      const isConnected = this.provider.isConnected;
 
-      // Handle string result (Phantom returns publicKey as string)
-      if (typeof result === "string") {
-        this._connected = true;
-        this._publicKey = result;
-        debug.info(DebugCategory.INJECTED_PROVIDER, "External wallet Solana connected", {
+      if (!isConnected || this.provider.publicKey === null) {
+        debug.error(DebugCategory.INJECTED_PROVIDER, "Provider not connected after connect() call", {
           walletId: this.walletId,
           walletName: this.walletName,
-          publicKey: result,
+          providerConnected: isConnected,
+          providerPublicKey: this.provider.publicKey,
         });
-        return { publicKey: result };
+        throw new Error("Provider not connected after connect() call");
       }
 
-      // Handle object with publicKey property
-      if (typeof result === "object" && result !== null && "publicKey" in result) {
-        this._connected = true;
-        this._publicKey = result.publicKey;
-        debug.info(DebugCategory.INJECTED_PROVIDER, "External wallet Solana connected", {
+      // Provider publicKey should be string per ISolanaChain interface, but handle PublicKey object as fallback
+      let publicKey: string;
+      const providerPublicKey = this.provider.publicKey;
+      if (typeof providerPublicKey === "string") {
+        publicKey = providerPublicKey;
+      } else if (
+        providerPublicKey !== null &&
+        providerPublicKey !== undefined &&
+        typeof (providerPublicKey as any).toString === "function"
+      ) {
+        // Handle PublicKey object (has toString method) - some providers may not strictly follow interface
+        publicKey = (providerPublicKey as any).toString();
+      } else {
+        debug.error(DebugCategory.INJECTED_PROVIDER, "Invalid publicKey format in provider state", {
           walletId: this.walletId,
           walletName: this.walletName,
-          publicKey: result.publicKey,
+          publicKeyType: typeof providerPublicKey,
         });
-        return result;
+        throw new Error("Invalid publicKey format in provider state");
       }
 
-      // Handle array of accounts
-      if (Array.isArray(result) && result.length > 0) {
-        const firstAccount = result[0] as any;
-        if (typeof firstAccount === "object" && firstAccount !== null && "address" in firstAccount) {
-          this._connected = true;
-          this._publicKey = firstAccount.address;
-          debug.info(DebugCategory.INJECTED_PROVIDER, "External wallet Solana connected", {
-            walletId: this.walletId,
-            walletName: this.walletName,
-            publicKey: firstAccount.address,
-          });
-          return { publicKey: firstAccount.address };
-        }
+      if (!publicKey || publicKey.length === 0) {
+        throw new Error("Empty publicKey from provider");
       }
 
-      throw new Error("Unexpected connect result format");
+      this._publicKey = publicKey;
+      debug.info(DebugCategory.INJECTED_PROVIDER, "External wallet Solana connected", {
+        walletId: this.walletId,
+        walletName: this.walletName,
+        publicKey,
+      });
+      return { publicKey };
     } catch (error) {
       debug.error(DebugCategory.INJECTED_PROVIDER, "External wallet Solana connect failed", {
         walletId: this.walletId,
@@ -100,7 +97,6 @@ export class InjectedWalletSolanaChain implements ISolanaChain {
 
     try {
       await this.provider.disconnect();
-      this._connected = false;
       this._publicKey = null;
       debug.info(DebugCategory.INJECTED_PROVIDER, "External wallet Solana disconnected", {
         walletId: this.walletId,
@@ -256,32 +252,21 @@ export class InjectedWalletSolanaChain implements ISolanaChain {
     return Promise.resolve();
   }
 
-  getPublicKey(): Promise<string | null> {
-    return Promise.resolve(this._publicKey);
-  }
-
-  isConnected(): boolean {
-    return this._connected;
-  }
-
   private setupEventListeners(): void {
     if (typeof this.provider.on === "function") {
       this.provider.on("connect", (publicKey: string) => {
-        this._connected = true;
         this._publicKey = publicKey;
         this.eventEmitter.emit("connect", publicKey);
       });
 
       this.provider.on("disconnect", () => {
-        this._connected = false;
         this._publicKey = null;
         this.eventEmitter.emit("disconnect");
       });
 
       this.provider.on("accountChanged", (publicKey: string) => {
-        this._publicKey = publicKey;
-        this._connected = publicKey != null && publicKey.length > 0;
-        this.eventEmitter.emit("accountChanged", publicKey);
+        this._publicKey = publicKey ? publicKey : null;
+        this.eventEmitter.emit("accountChanged", this._publicKey);
       });
     }
   }

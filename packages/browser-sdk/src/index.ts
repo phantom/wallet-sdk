@@ -49,4 +49,5 @@ export type {
   EventCallback,
 } from "@phantom/embedded-provider-core";
 
+export { PHANTOM_ICON } from "@phantom/constants";
 export type { InjectedWalletInfo, InjectedWalletId } from "./wallets/registry";

@@ -223,6 +223,11 @@ export class BrowserSDK {
   async autoConnect(): Promise<void> {
     debug.log(DebugCategory.BROWSER_SDK, "Attempting auto-connect with fallback strategy");
 
+    // Ensure wallet discovery has fully resolved before attempting auto-connect.
+    // discoverWallets() reuses the existing promise started in the constructor,
+    // so this just awaits its completion rather than triggering a second discovery.
+    await this.discoverWallets();
+
     const result = await this.providerManager.autoConnect();
 
     if (result) {

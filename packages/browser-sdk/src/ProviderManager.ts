@@ -149,8 +149,14 @@ export class ProviderManager implements EventEmitter {
       // Handle deeplink - navigate to Phantom app
       try {
         const deeplinkUrl = getDeeplinkToPhantom();
-        if (typeof window !== "undefined") {
-          window.location.href = deeplinkUrl;
+        if (typeof window !== "undefined" && window.location) {
+          try {
+            window.location.href = deeplinkUrl;
+          } catch (error) {
+            debug.warn(DebugCategory.PROVIDER_MANAGER, "Failed to set deeplink location", {
+              error: error instanceof Error ? error.message : String(error),
+            });
+          }
         }
         // Return a mock result since we're redirecting
         // The actual connection will happen when the user returns from the app

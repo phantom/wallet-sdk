@@ -6,7 +6,7 @@ import type {
   URLParamsAccessor,
 } from "@phantom/embedded-provider-core";
 import { debug, DebugCategory } from "../../../debug";
-import { DEFAULT_AUTH_URL } from "@phantom/constants";
+import { DEFAULT_AUTH_URL, DEFAULT_AUTHENTICATOR_ALGORITHM } from "@phantom/constants";
 import { detectBrowser } from "../../../utils/browser-detection";
 
 declare const __SDK_VERSION__: string;
@@ -57,6 +57,7 @@ export class BrowserAuthProvider implements AuthProvider {
         sdk_version: __SDK_VERSION__,
         sdk_type: "browser",
         platform: detectBrowser().name,
+        algorithm: phantomOptions.algorithm || DEFAULT_AUTHENTICATOR_ALGORITHM,
       });
 
       // Add provider if specified (will skip provider selection)

@@ -11,7 +11,6 @@ import { parseSolanaSignedTransaction } from "@phantom/parsers";
  */
 export class EmbeddedSolanaChain implements ISolanaChain {
   private currentNetworkId: NetworkId = NetworkId.SOLANA_MAINNET;
-  private _connected: boolean = false;
   private _publicKey: string | null = null;
   private eventEmitter: EventEmitter = new EventEmitter();
 
@@ -20,17 +19,16 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     this.syncInitialState();
   }
 
-  // Wallet adapter compliant properties
-  get connected(): boolean {
-    return this._connected;
-  }
-
   get publicKey(): string | null {
     return this._publicKey;
   }
 
+  get isConnected(): boolean {
+    return this._publicKey !== null;
+  }
+
   private ensureConnected(): void {
-    if (!this.provider.isConnected()) {
+    if (!this.isConnected) {
       throw new Error("Solana chain not available. Ensure SDK is connected.");
     }
   }
@@ -104,7 +102,7 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     const solanaAddr = addresses.find((a: any) => a.addressType === "Solana");
     if (!solanaAddr) throw new Error("No Solana address found");
 
-    this.updateConnectionState(true, solanaAddr.address);
+    this._publicKey = solanaAddr.address;
     return Promise.resolve({ publicKey: solanaAddr.address });
   }
 
@@ -118,49 +116,28 @@ export class EmbeddedSolanaChain implements ISolanaChain {
     return Promise.resolve();
   }
 
-  getPublicKey(): Promise<string | null> {
-    if (!this.provider.isConnected()) return Promise.resolve(null);
-
-    const addresses = this.provider.getAddresses();
-    const solanaAddr = addresses.find((a: any) => a.addressType === "Solana");
-    return Promise.resolve(solanaAddr?.address || null);
-  }
-
-  isConnected(): boolean {
-    return this._connected && this.provider.isConnected();
-  }
-
   private setupEventListeners(): void {
     // Listen to provider events and bridge to wallet adapter events
     this.provider.on("connect", (data: any) => {
       const solanaAddress = data.addresses?.find((addr: any) => addr.addressType === "Solana");
 
       if (solanaAddress) {
-        this.updateConnectionState(true, solanaAddress.address);
+        this._publicKey = solanaAddress.address;
         this.eventEmitter.emit("connect", solanaAddress.address);
       }
     });
 
     this.provider.on("disconnect", () => {
-      this.updateConnectionState(false, null);
+      this._publicKey = null;
       this.eventEmitter.emit("disconnect");
     });
   }
 
   private syncInitialState(): void {
-    if (this.provider.isConnected()) {
-      const addresses = this.provider.getAddresses();
-      const solanaAddress = addresses.find((a: any) => a.addressType === "Solana");
-
-      if (solanaAddress) {
-        this.updateConnectionState(true, solanaAddress.address);
-      }
-    }
-  }
-
-  private updateConnectionState(connected: boolean, publicKey: string | null): void {
-    this._connected = connected;
-    this._publicKey = publicKey;
+    if (!this.provider.isConnected()) return;
+    const addresses = this.provider.getAddresses();
+    const solanaAddr = addresses.find((a: any) => a.addressType === "Solana");
+    this._publicKey = solanaAddr?.address || null;
   }
 
   // Event methods for interface compliance

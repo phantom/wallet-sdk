@@ -53,5 +53,8 @@
   "license": "MIT",
   "publishConfig": {
     "directory": "_release/package"
+  },
+  "dependencies": {
+    "@phantom/sdk-types": "workspace:^"
   }
 }

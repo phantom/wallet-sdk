@@ -91,8 +91,8 @@ describe("WalletStandardSolanaAdapter", () => {
       expect((adapter as any).walletName).toBe(walletName);
     });
 
-    it("should initialize with connected=false and publicKey=null", () => {
-      expect(adapter.connected).toBe(false);
+    it("should initialize with isConnected=false and publicKey=null", () => {
+      expect(adapter.isConnected).toBe(false);
       expect(adapter.publicKey).toBeNull();
     });
   });
@@ -103,7 +103,7 @@ describe("WalletStandardSolanaAdapter", () => {
 
       expect(mockWallet.features["standard:connect"].connect).toHaveBeenCalled();
       expect(result.publicKey).toBe(testPublicKey);
-      expect(adapter.connected).toBe(true);
+      expect(adapter.isConnected).toBe(true);
       expect(adapter.publicKey).toBe(testPublicKey);
     });
 
@@ -111,7 +111,7 @@ describe("WalletStandardSolanaAdapter", () => {
       await adapter.connect({ onlyIfTrusted: true });
 
       expect(mockWallet.features["standard:connect"].connect).toHaveBeenCalled();
-      expect(adapter.connected).toBe(true);
+      expect(adapter.isConnected).toBe(true);
     });
 
     it("should use wallet.accounts if connect returns void", async () => {
@@ -126,7 +126,7 @@ describe("WalletStandardSolanaAdapter", () => {
       const result = await adapter.connect();
 
       expect(result.publicKey).toBe(testPublicKey);
-      expect(adapter.connected).toBe(true);
+      expect(adapter.isConnected).toBe(true);
     });
 
     it("should throw error if connect feature is not available", async () => {
@@ -186,7 +186,7 @@ describe("WalletStandardSolanaAdapter", () => {
       await adapter.disconnect();
 
       expect(mockWallet.features["standard:disconnect"].disconnect).toHaveBeenCalled();
-      expect(adapter.connected).toBe(false);
+      expect(adapter.isConnected).toBe(false);
       expect(adapter.publicKey).toBeNull();
     });
 
@@ -195,7 +195,7 @@ describe("WalletStandardSolanaAdapter", () => {
 
       await adapter.disconnect();
 
-      expect(adapter.connected).toBe(false);
+      expect(adapter.isConnected).toBe(false);
       expect(adapter.publicKey).toBeNull();
     });
   });
@@ -455,32 +455,19 @@ describe("WalletStandardSolanaAdapter", () => {
     });
   });
 
-  describe("getPublicKey", () => {
-    it("should return null when not connected", async () => {
-      const result = await adapter.getPublicKey();
-      expect(result).toBeNull();
-    });
-
-    it("should return publicKey when connected", async () => {
-      await adapter.connect();
-      const result = await adapter.getPublicKey();
-      expect(result).toBe(testPublicKey);
-    });
-  });
-
   describe("isConnected", () => {
     it("should return false when not connected", () => {
-      expect(adapter.isConnected()).toBe(false);
+      expect(adapter.isConnected).toBe(false);
     });
 
     it("should return true when connected", async () => {
       await adapter.connect();
-      expect(adapter.isConnected()).toBe(true);
+      expect(adapter.isConnected).toBe(true);
     });
   });
 
   describe("event handling", () => {
-    let changeEventHandler: ((properties: { accounts?: any[] }) => void) | undefined;
+    let changeEventHandler: ((properties: { accounts?: any[]; chains?: string[] }) => void) | undefined;
 
     beforeEach(() => {
       // Capture the change event handler registered in setupEventListeners
@@ -554,7 +541,7 @@ describe("WalletStandardSolanaAdapter", () => {
 
       expect(listener).toHaveBeenCalledWith(testPublicKey);
       expect(adapter.publicKey).toBe(testPublicKey);
-      expect(adapter.connected).toBe(true);
+      expect(adapter.isConnected).toBe(true);
     });
 
     it("should extract address from WalletStandardAccount object", () => {
@@ -593,7 +580,7 @@ describe("WalletStandardSolanaAdapter", () => {
       expect(accountChangedListener).toHaveBeenCalledWith(null);
       expect(disconnectListener).toHaveBeenCalled();
       expect(adapter.publicKey).toBeNull();
-      expect(adapter.connected).toBe(false);
+      expect(adapter.isConnected).toBe(false);
     });
 
     it("should handle change event without accounts property (accounts didn't change)", () => {
@@ -613,7 +600,7 @@ describe("WalletStandardSolanaAdapter", () => {
       // Should not emit accountChanged if accounts didn't change
       expect(listener).not.toHaveBeenCalled();
       expect(adapter.publicKey).toBe(testPublicKey);
-      expect(adapter.connected).toBe(true);
+      expect(adapter.isConnected).toBe(true);
     });
 
     it("should emit connect event when accounts are present in change event", () => {
@@ -638,7 +625,7 @@ describe("WalletStandardSolanaAdapter", () => {
       expect(accountChangedListener).toHaveBeenCalledWith(testPublicKey);
       expect(connectListener).toHaveBeenCalledWith(testPublicKey);
       expect(adapter.publicKey).toBe(testPublicKey);
-      expect(adapter.connected).toBe(true);
+      expect(adapter.isConnected).toBe(true);
     });
 
     it("should emit disconnect event when accounts array is empty", () => {
@@ -659,7 +646,7 @@ describe("WalletStandardSolanaAdapter", () => {
       expect(accountChangedListener).toHaveBeenCalledWith(null);
       expect(disconnectListener).toHaveBeenCalled();
       expect(adapter.publicKey).toBeNull();
-      expect(adapter.connected).toBe(false);
+      expect(adapter.isConnected).toBe(false);
     });
 
     it("should handle invalid account structure gracefully", () => {
@@ -681,7 +668,7 @@ describe("WalletStandardSolanaAdapter", () => {
 
       expect(listener).toHaveBeenCalledWith(null);
       expect(adapter.publicKey).toBeNull();
-      expect(adapter.connected).toBe(false);
+      expect(adapter.isConnected).toBe(false);
     });
 
     it("should handle missing events feature gracefully", () => {

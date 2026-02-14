@@ -28,10 +28,6 @@ export class Ethereum implements IEthereumChain {
     this.bindProviderEvents();
   }
 
-  get connected(): boolean {
-    return this._accounts.length > 0;
-  }
-
   get chainId(): string {
     return this._chainId;
   }

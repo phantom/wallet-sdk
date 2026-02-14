@@ -1,0 +1,5 @@
+{
+  "id": "phantom-openclaw-plugin",
+  "name": "Phantom Wallet Plugin",
+  "description": "Direct integration with Phantom wallet for blockchain operations - get addresses, sign messages, and sign transactions."
+}

@@ -792,7 +792,8 @@ function SolanaOperations() {
     const connection = new Connection("https://api.mainnet-beta.solana.com");
     const { blockhash } = await connection.getLatestBlockhash();
 
-    const fromAddress = await solana.getPublicKey();
+    const fromAddress = solana.publicKey;
+    if (!fromAddress) throw new Error("Not connected");
     const transferInstruction = SystemProgram.transfer({
       fromPubkey: new PublicKey(fromAddress),
       toPubkey: new PublicKey(toAddress),
@@ -833,7 +834,7 @@ function SolanaOperations() {
 - `signTransaction(transaction)` - Sign without sending
 - `signAndSendTransaction(transaction)` - Sign and send
 - `switchNetwork(network)` - Switch between mainnet/devnet
-- `getPublicKey()` - Get current public key
+- `publicKey` - Current public key (or `null` if disconnected)
 - `isConnected` - Connection status
 - `isAvailable` - Provider availability (see note below)
 
@@ -1163,7 +1164,8 @@ function SolanaExample() {
     const { blockhash } = await connection.getLatestBlockhash();
 
     // Create transfer instruction
-    const fromAddress = await solana.getPublicKey();
+    const fromAddress = solana.publicKey;
+    if (!fromAddress) throw new Error("Not connected");
     const transferInstruction = SystemProgram.transfer({
       fromPubkey: new PublicKey(fromAddress),
       toPubkey: new PublicKey(toAddress),
@@ -1209,7 +1211,8 @@ function SolanaKitExample() {
     const rpc = createSolanaRpc("https://api.mainnet-beta.solana.com");
     const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
 
-    const userPublicKey = await solana.getPublicKey();
+    const userPublicKey = solana.publicKey;
+    if (!userPublicKey) throw new Error("Not connected");
     const transactionMessage = pipe(
       createTransactionMessage({ version: 0 }),
       tx => setTransactionMessageFeePayer(address(userPublicKey), tx),

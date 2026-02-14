@@ -1,4 +1,4 @@
-import { isPhantomExtensionInstalled } from "@phantom/browser-injected-sdk";
+import { waitForPhantomExtension } from "./waitForPhantomExtension";
 
 /**
  * Check if Phantom Login is available
@@ -17,7 +17,7 @@ import { isPhantomExtensionInstalled } from "@phantom/browser-injected-sdk";
  */
 export async function isPhantomLoginAvailable(timeoutMs: number = 3000): Promise<boolean> {
   // First, wait for the extension to be installed
-  const extensionInstalled = await waitForExtension(timeoutMs);
+  const extensionInstalled = await waitForPhantomExtension(timeoutMs);
   if (!extensionInstalled) {
     return false;
   }
@@ -40,35 +40,4 @@ export async function isPhantomLoginAvailable(timeoutMs: number = 3000): Promise
     // If the features call fails, phantom_login is not available
     return false;
   }
-}
-
-/**
- * Internal helper to wait for Phantom extension with retry logic
- */
-async function waitForExtension(timeoutMs: number): Promise<boolean> {
-  return new Promise(resolve => {
-    const startTime = Date.now();
-    const checkInterval = 100; // Check every 100ms
-
-    const checkForExtension = () => {
-      try {
-        if (isPhantomExtensionInstalled()) {
-          resolve(true);
-          return;
-        }
-      } catch (error) {
-        // Extension check failed, continue trying
-      }
-
-      const elapsed = Date.now() - startTime;
-      if (elapsed >= timeoutMs) {
-        resolve(false);
-        return;
-      }
-
-      setTimeout(checkForExtension, checkInterval);
-    };
-
-    checkForExtension();
-  });
 }

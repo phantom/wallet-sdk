@@ -372,6 +372,7 @@ export class InjectedProvider implements Provider {
       addresses: connectedAddresses,
       source: "manual-connect",
       authUserId,
+      walletId,
     });
 
     return result;
@@ -387,13 +388,15 @@ export class InjectedProvider implements Provider {
       throw new Error(`Invalid provider for injected connection: ${authOptions.provider}. Must be "injected"`);
     }
 
+    const requestedWalletId = authOptions.walletId || "phantom";
+
     this.emit("connect_start", {
       source: "manual-connect",
       providerType: "injected",
+      walletId: requestedWalletId,
     });
 
     try {
-      const requestedWalletId = authOptions.walletId || "phantom";
       const walletInfo = this.validateAndSelectWallet(requestedWalletId);
       const connectedAddresses = await this.connectToWallet(walletInfo);
       return await this.finalizeConnection(connectedAddresses, "injected", this.selectedWalletId || undefined);
@@ -547,6 +550,7 @@ export class InjectedProvider implements Provider {
         addresses: connectedAddresses,
         source: "auto-connect",
         authUserId,
+        walletId: this.selectedWalletId,
       });
 
       debug.info(DebugCategory.INJECTED_PROVIDER, "Auto-connect successful", {
@@ -625,6 +629,7 @@ export class InjectedProvider implements Provider {
         addresses: newAddresses,
         source,
         authUserId,
+        walletId: this.selectedWalletId,
       });
     };
   }
@@ -667,6 +672,7 @@ export class InjectedProvider implements Provider {
           addresses: newAddresses,
           source: this.getAccountChangeSource(source),
           authUserId,
+          walletId: this.selectedWalletId,
         });
       } else {
         // Account disconnected
@@ -717,6 +723,7 @@ export class InjectedProvider implements Provider {
           addresses: newAddresses,
           source,
           authUserId,
+          walletId: this.selectedWalletId,
         });
       }
     };
@@ -760,6 +767,7 @@ export class InjectedProvider implements Provider {
           addresses: newAddresses,
           source: this.getAccountChangeSource(source),
           authUserId,
+          walletId: this.selectedWalletId,
         });
       } else {
         // User switched to unconnected account - treat as disconnect
@@ -994,7 +1002,9 @@ export class InjectedProvider implements Provider {
   }
 
   /**
-   * Unified event listener setup for all wallet types (Phantom and external)
+   * Unified event listener setup for all wallet types (Phantom and external).
+   * Cleans up listeners for previously selected wallets to prevent stale events
+   * from causing walletId flicker during connections.
    */
   private setupEventListeners(walletInfo: InjectedWalletInfo): void {
     const walletId = this.selectedWalletId || "phantom";
@@ -1003,6 +1013,24 @@ export class InjectedProvider implements Provider {
     if (this.eventListenersSetup.has(walletId)) {
       debug.log(DebugCategory.INJECTED_PROVIDER, "Event listeners already set up for wallet", { walletId });
       return;
+    }
+
+    // Clean up event listeners from other wallets to prevent stale events.
+    // For example, if Phantom listeners were set up via lazy init and we're now
+    // connecting to Backpack, clean up the Phantom listeners so they don't fire
+    // and cause walletId flicker.
+    for (const existingWalletId of this.eventListenersSetup) {
+      if (existingWalletId === walletId) {
+        continue;
+      }
+
+      const cleanups = this.eventListenerCleanups.get(existingWalletId);
+      if (cleanups) {
+        debug.log(DebugCategory.INJECTED_PROVIDER, "Cleaning up event listeners for wallet", { existingWalletId });
+        cleanups.forEach(cleanup => cleanup());
+      }
+
+      this.eventListenersSetup.delete(existingWalletId);
     }
 
     debug.log(DebugCategory.INJECTED_PROVIDER, "Setting up event listeners", { walletId });

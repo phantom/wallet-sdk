@@ -43,6 +43,7 @@
   },
   "dependencies": {
     "@phantom/base64url": "workspace:^",
+    "@phantom/constants": "workspace:^",
     "@phantom/crypto": "workspace:^",
     "@phantom/sdk-types": "workspace:^",
     "axios": "^1.10.0",

@@ -36,6 +36,7 @@ jest.mock("./utils/auth-callback", () => ({
 const MockInjectedProvider = InjectedProvider as jest.MockedClass<typeof InjectedProvider>;
 const MockEmbeddedProvider = EmbeddedProvider as jest.MockedClass<typeof EmbeddedProvider>;
 const mockGetDeeplinkToPhantom = getDeeplinkToPhantom as jest.MockedFunction<typeof getDeeplinkToPhantom>;
+const win = window as Window & { location: Location };
 
 // Helper to create mock provider instances
 function createMockProviderInstance() {
@@ -632,6 +633,46 @@ describe("ProviderManager", () => {
   });
 
   describe("deeplink provider", () => {
+    let consoleErrorSpy: jest.SpyInstance;
+    const locationProto = Object.getPrototypeOf(win.location);
+    const originalHrefDescriptor = Object.getOwnPropertyDescriptor(locationProto, "href");
+    const stubHrefSetter = () => {
+      if (!originalHrefDescriptor?.configurable) {
+        return;
+      }
+      Object.defineProperty(locationProto, "href", {
+        configurable: true,
+        get: originalHrefDescriptor.get?.bind(win.location) ?? (() => win.location.href),
+        set: jest.fn(),
+      });
+    };
+    const setHrefSetter = (setter: (value: string) => void) => {
+      if (!originalHrefDescriptor?.configurable) {
+        return;
+      }
+      Object.defineProperty(locationProto, "href", {
+        configurable: true,
+        get: originalHrefDescriptor.get?.bind(win.location) ?? (() => win.location.href),
+        set: setter,
+      });
+    };
+    const restoreHrefSetter = () => {
+      if (!originalHrefDescriptor?.configurable) {
+        return;
+      }
+      Object.defineProperty(locationProto, "href", originalHrefDescriptor);
+    };
+
+    beforeEach(() => {
+      consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+      stubHrefSetter();
+    });
+
+    afterEach(() => {
+      consoleErrorSpy.mockRestore();
+      restoreHrefSetter();
+    });
+
     it("should handle deeplink provider and navigate to deeplink URL", async () => {
       manager = new ProviderManager({
         providers: ["deeplink", "injected"],
@@ -664,10 +705,10 @@ describe("ProviderManager", () => {
       );
     });
 
-    it("should handle deeplink gracefully when window.location is not available", async () => {
-      // Temporarily make window.location undefined
-      const originalLocation = window.location;
-      delete (window as any).location;
+    it("should handle deeplink gracefully when setting location fails", async () => {
+      setHrefSetter(() => {
+        throw new Error("navigation blocked");
+      });
 
       mockGetDeeplinkToPhantom.mockReturnValue("https://phantom.app/ul/browse/test-url");
 
@@ -684,9 +725,6 @@ describe("ProviderManager", () => {
         walletId: undefined,
         authUserId: undefined,
       });
-
-      // Restore window.location
-      (window as any).location = originalLocation;
     });
 
     it("should not call provider connect methods for deeplink", async () => {

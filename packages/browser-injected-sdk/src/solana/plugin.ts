@@ -2,7 +2,6 @@ import type { Plugin } from "../index";
 import { connect as connectOriginal } from "./connect";
 import { disconnect } from "./disconnect";
 import { addEventListener, removeEventListener, triggerEvent, type PhantomEventCallback } from "./eventListeners";
-import { getAccount } from "./getAccount";
 import { signAndSendTransaction } from "./signAndSendTransaction";
 import { signAndSendAllTransactions } from "./signAndSendAllTransactions";
 import { signTransaction } from "./signTransaction";
@@ -29,7 +28,7 @@ export class Solana implements ISolanaChain {
     return this._publicKey;
   }
 
-  get connected(): boolean {
+  get isConnected(): boolean {
     return this._publicKey !== null;
   }
 
@@ -82,23 +81,6 @@ export class Solana implements ISolanaChain {
     // Solana network switching is typically handled by the provider
     // This is a no-op for browser-injected-sdk
     return Promise.resolve();
-  }
-
-  async getPublicKey(): Promise<string | null> {
-    if (this._publicKey) {
-      return this._publicKey;
-    }
-    try {
-      const account = await getAccount();
-      this._publicKey = account || null;
-      return this._publicKey;
-    } catch {
-      return null;
-    }
-  }
-
-  isConnected(): boolean {
-    return this._publicKey !== null;
   }
 
   on(event: PhantomEventType, listener: PhantomEventCallback): void {

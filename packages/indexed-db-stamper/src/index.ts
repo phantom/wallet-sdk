@@ -1,7 +1,20 @@
 import { base64urlEncode } from "@phantom/base64url";
+import { DEFAULT_AUTHENTICATOR_ALGORITHM } from "@phantom/constants";
 import type { Buffer } from "buffer";
 import bs58 from "bs58";
 import { type StamperWithKeyManagement, type StamperKeyInfo, Algorithm } from "@phantom/sdk-types";
+
+// Note: the order of the algorithms is important, the first algorithm that is supported will be used
+const WEB_CRYPTO_ALGORITHM_CONFIGS = {
+  [DEFAULT_AUTHENTICATOR_ALGORITHM]: {
+    generateParams: { name: "Ed25519" },
+    signParams: { name: "Ed25519" },
+  },
+  [Algorithm.secp256r1]: {
+    generateParams: { name: "ECDSA", namedCurve: "P-256" },
+    signParams: { name: "ECDSA", hash: "SHA-256" },
+  },
+} as const;
 
 interface KeyPairRecord {
   keyPair: CryptoKeyPair;
@@ -25,8 +38,13 @@ export type IndexedDbStamperConfig = {
  * IndexedDB-based key manager that stores cryptographic keys securely in IndexedDB
  * and performs signing operations without ever exposing private key material.
  *
+ * Algorithm selection:
+ * - Prefers Ed25519 for maximum security and performance
+ * - Automatically falls back to ECDSA P-256 (secp256r1) on browsers that don't support Ed25519
+ *   (e.g., older Android WebViews before Chrome 113)
+ *
  * Security model:
- * - Generates non-extractable Ed25519 keypairs using Web Crypto API
+ * - Generates non-extractable keypairs using Web Crypto API
  * - Stores keys entirely within Web Crypto API secure context
  * - Private keys NEVER exist in JavaScript memory
  * - Provides signing methods without exposing private keys
@@ -39,7 +57,7 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
   private db: IDBDatabase | null = null;
   private activeKeyPairRecord: KeyPairRecord | null = null;
   private pendingKeyPairRecord: KeyPairRecord | null = null;
-  algorithm = Algorithm.ed25519; // Use Ed25519 for maximum security and performance
+  algorithm = DEFAULT_AUTHENTICATOR_ALGORITHM;
 
   // The type of stamper, can be changed at any time
   public type: "PKI" | "OIDC" = "PKI"; // Default to PKI, can be set to OIDC if needed
@@ -60,7 +78,8 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
   }
 
   /**
-   * Initialize the stamper by opening IndexedDB and retrieving or generating keys
+   * Initialize the stamper by opening IndexedDB and retrieving or generating keys.
+   * Automatically selects the best supported algorithm.
    */
   async init(): Promise<StamperKeyInfo> {
     await this.openDB();
@@ -68,7 +87,15 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
     // Try to load existing active keypair
     this.activeKeyPairRecord = await this.loadActiveKeyPairRecord();
 
-    if (!this.activeKeyPairRecord) {
+    if (this.activeKeyPairRecord) {
+      // Set algorithm based on the loaded key's algorithm
+      this.algorithm =
+        this.activeKeyPairRecord.keyPair.privateKey.algorithm.name === "Ed25519"
+          ? Algorithm.ed25519
+          : Algorithm.secp256r1;
+    } else {
+      // Important: must be called before generating a new key pair
+      this.algorithm = await this.getSupportedAlgorithm();
       // No existing keypair, generate new one
       this.activeKeyPairRecord = await this.generateAndStoreNewKeyPair("active");
     }
@@ -77,6 +104,20 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
     this.pendingKeyPairRecord = await this.loadPendingKeyPairRecord();
 
     return this.activeKeyPairRecord.keyInfo;
+  }
+
+  private async getSupportedAlgorithm(): Promise<Algorithm> {
+    for (const [algorithm, params] of Object.entries(WEB_CRYPTO_ALGORITHM_CONFIGS)) {
+      try {
+        await crypto.subtle.generateKey(params.generateParams, false, ["sign", "verify"]);
+        return algorithm as Algorithm;
+      } catch {
+        continue;
+      }
+    }
+    throw new Error(
+      "Your browser does not support the encryption needed for secure authentication. Please use a different browser or upgrade to a supported browser.",
+    );
   }
 
   /**
@@ -116,10 +157,7 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
 
     // Sign using Web Crypto API with non-extractable private key
     const signature = await crypto.subtle.sign(
-      {
-        name: this.algorithm,
-        hash: "SHA-256",
-      },
+      WEB_CRYPTO_ALGORITHM_CONFIGS[this.algorithm].signParams,
       this.activeKeyPairRecord.keyPair.privateKey,
       dataBytes as BufferSource,
     );
@@ -268,14 +306,12 @@ export class IndexedDbStamper implements StamperWithKeyManagement {
   }
 
   private async generateAndStoreNewKeyPair(type: "active" | "pending"): Promise<KeyPairRecord> {
-    // Generate non-extractable Ed25519 key pair using Web Crypto API
-    const keyPair = await crypto.subtle.generateKey(
-      {
-        name: "Ed25519",
-      },
+    // Generate non-extractable key pair using Web Crypto API based on the selected algorithm
+    const keyPair = (await crypto.subtle.generateKey(
+      WEB_CRYPTO_ALGORITHM_CONFIGS[this.algorithm].generateParams,
       false, // non-extractable - private key can never be exported
       ["sign", "verify"],
-    );
+    )) as CryptoKeyPair;
 
     // Export public key in raw format (no ASN.1/DER wrapper)
     const rawPublicKeyBuffer = await crypto.subtle.exportKey("raw", keyPair.publicKey);

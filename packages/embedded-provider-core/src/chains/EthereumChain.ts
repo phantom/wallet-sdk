@@ -8,18 +8,12 @@ import type { EmbeddedProvider } from "../embedded-provider";
  */
 export class EmbeddedEthereumChain implements IEthereumChain {
   private currentNetworkId: NetworkId = NetworkId.ETHEREUM_MAINNET;
-  private _connected: boolean = false;
   private _accounts: string[] = [];
   private eventEmitter: EventEmitter = new EventEmitter();
 
   constructor(private provider: EmbeddedProvider) {
     this.setupEventListeners();
     this.syncInitialState();
-  }
-
-  // EIP-1193 compliant properties
-  get connected(): boolean {
-    return this._connected;
   }
 
   get chainId(): string {
@@ -50,7 +44,7 @@ export class EmbeddedEthereumChain implements IEthereumChain {
     const addresses = this.provider.getAddresses();
     const ethAddresses = addresses.filter((a: any) => a.addressType === "Ethereum").map((a: any) => a.address);
 
-    this.updateConnectionState(true, ethAddresses);
+    this.updateConnectionState(ethAddresses);
     return Promise.resolve(ethAddresses);
   }
 
@@ -140,7 +134,7 @@ export class EmbeddedEthereumChain implements IEthereumChain {
   }
 
   isConnected(): boolean {
-    return this._connected && this.provider.isConnected();
+    return this.provider.isConnected() && this._accounts.length > 0;
   }
 
   private setupEventListeners(): void {
@@ -150,14 +144,14 @@ export class EmbeddedEthereumChain implements IEthereumChain {
         data.addresses?.filter((addr: any) => addr.addressType === "Ethereum")?.map((addr: any) => addr.address) || [];
 
       if (ethAddresses.length > 0) {
-        this.updateConnectionState(true, ethAddresses);
+        this.updateConnectionState(ethAddresses);
         this.eventEmitter.emit("connect", { chainId: this.chainId });
         this.eventEmitter.emit("accountsChanged", ethAddresses);
       }
     });
 
     this.provider.on("disconnect", () => {
-      this.updateConnectionState(false, []);
+      this.updateConnectionState([]);
       this.eventEmitter.emit("disconnect", { code: 4900, message: "Provider disconnected" });
       this.eventEmitter.emit("accountsChanged", []);
     });
@@ -169,13 +163,12 @@ export class EmbeddedEthereumChain implements IEthereumChain {
       const ethAddresses = addresses.filter((a: any) => a.addressType === "Ethereum").map((a: any) => a.address);
 
       if (ethAddresses.length > 0) {
-        this.updateConnectionState(true, ethAddresses);
+        this.updateConnectionState(ethAddresses);
       }
     }
   }
 
-  private updateConnectionState(connected: boolean, accounts: string[]): void {
-    this._connected = connected;
+  private updateConnectionState(accounts: string[]): void {
     this._accounts = accounts;
   }
 

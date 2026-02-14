@@ -1,5 +1,4 @@
 import { IndexedDbStamper } from "./index";
-import type { StamperKeyInfo } from "@phantom/sdk-types";
 
 // Mock crypto.subtle methods
 const mockGenerateKey = jest.fn();
@@ -87,7 +86,7 @@ describe("IndexedDbStamper", () => {
     beforeEach(() => {
       // Mock crypto.subtle methods for successful key generation
       const mockKeyPair = {
-        privateKey: {} as CryptoKey,
+        privateKey: { algorithm: { name: "Ed25519" } } as CryptoKey,
         publicKey: {} as CryptoKey,
       };
 
@@ -99,7 +98,7 @@ describe("IndexedDbStamper", () => {
       mockDigest.mockResolvedValue(mockKeyIdBuffer);
     });
 
-    it("should initialize and generate new key pair", async () => {
+    it("should initialize and generate new key pair with Ed25519", async () => {
       const keyInfo = await stamper.init();
 
       expect(keyInfo).toHaveProperty("keyId");
@@ -109,6 +108,26 @@ describe("IndexedDbStamper", () => {
       expect(keyInfo.keyId.length).toBe(16);
 
       expect(mockGenerateKey).toHaveBeenCalledWith({ name: "Ed25519" }, false, ["sign", "verify"]);
+    });
+
+    it("should fallback to secp256r1 when Ed25519 is not supported", async () => {
+      mockGenerateKey.mockRejectedValueOnce(new Error("Ed25519 not supported")).mockResolvedValue({
+        privateKey: { algorithm: { name: "ECDSA" } } as CryptoKey,
+        publicKey: {} as CryptoKey,
+      });
+
+      await stamper.init();
+
+      expect(mockGenerateKey).toHaveBeenCalledWith({ name: "Ed25519" }, false, ["sign", "verify"]);
+      expect(mockGenerateKey).toHaveBeenCalledWith({ name: "ECDSA", namedCurve: "P-256" }, false, ["sign", "verify"]);
+    });
+
+    it("should throw error when no algorithm is supported", async () => {
+      mockGenerateKey.mockRejectedValue(new Error("Algorithm not supported"));
+
+      await expect(stamper.init()).rejects.toThrow(
+        "Your browser does not support the encryption needed for secure authentication",
+      );
     });
 
     it("should return existing key info if already initialized", async () => {
@@ -122,20 +141,42 @@ describe("IndexedDbStamper", () => {
       expect(stamper.getKeyInfo()).toEqual(keyInfo1);
     });
 
+    it("should detect existing key algorithm on load", async () => {
+      mockGenerateKey.mockRejectedValueOnce(new Error("Ed25519 not supported")).mockResolvedValue({
+        privateKey: { algorithm: { name: "ECDSA" } } as CryptoKey,
+        publicKey: {} as CryptoKey,
+      });
+
+      await stamper.init();
+      expect(stamper.algorithm).toBe("Secp256r1");
+
+      const stamper2 = new IndexedDbStamper({
+        dbName: "test-phantom-stamper",
+        storeName: "test-crypto-keys",
+        keyName: "test-signing-key",
+      });
+
+      await stamper2.init();
+      expect(stamper2.algorithm).toBe("Secp256r1");
+    });
+
     it("should handle initialization errors", async () => {
-      mockGenerateKey.mockRejectedValue(new Error("Key generation failed"));
+      mockGenerateKey
+        .mockResolvedValueOnce({
+          privateKey: { algorithm: { name: "Ed25519" } } as CryptoKey,
+          publicKey: {} as CryptoKey,
+        })
+        .mockRejectedValueOnce(new Error("Key generation failed"));
 
       await expect(stamper.init()).rejects.toThrow("Key generation failed");
     });
   });
 
   describe("signing operations", () => {
-    let _keyInfo: StamperKeyInfo;
-
     beforeEach(async () => {
       // Setup successful initialization
       const mockKeyPair = {
-        privateKey: {} as CryptoKey,
+        privateKey: { algorithm: { name: "Ed25519" } } as CryptoKey,
         publicKey: {} as CryptoKey,
       };
 
@@ -148,7 +189,7 @@ describe("IndexedDbStamper", () => {
       mockDigest.mockResolvedValue(mockKeyIdBuffer);
       mockSign.mockResolvedValue(mockSignature);
 
-      _keyInfo = await stamper.init();
+      await stamper.init();
     });
 
     it("should create stamp from Buffer data", async () => {
@@ -203,7 +244,7 @@ describe("IndexedDbStamper", () => {
   describe("key management", () => {
     beforeEach(async () => {
       const mockKeyPair = {
-        privateKey: {} as CryptoKey,
+        privateKey: { algorithm: { name: "Ed25519" } } as CryptoKey,
         publicKey: {} as CryptoKey,
       };
 
@@ -228,7 +269,7 @@ describe("IndexedDbStamper", () => {
       }
 
       const newMockKeyPair = {
-        privateKey: {} as CryptoKey,
+        privateKey: { algorithm: { name: "Ed25519" } } as CryptoKey,
         publicKey: {} as CryptoKey,
       };
       const newMockPublicKeyBuffer = new ArrayBuffer(91);
@@ -262,7 +303,7 @@ describe("IndexedDbStamper", () => {
     it("should handle Ed25519 signatures", async () => {
       // Setup stamper
       const mockKeyPair = {
-        privateKey: {} as CryptoKey,
+        privateKey: { algorithm: { name: "Ed25519" } } as CryptoKey,
         publicKey: {} as CryptoKey,
       };
 

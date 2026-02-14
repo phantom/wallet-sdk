@@ -367,6 +367,85 @@ describe("BrowserSDK", () => {
     });
   });
 
+  describe("autoConnect", () => {
+    let mockProvider: any;
+
+    beforeEach(() => {
+      mockProvider = {
+        connect: jest.fn(),
+        disconnect: jest.fn(),
+        getAddresses: jest.fn().mockReturnValue([]),
+        isConnected: jest.fn().mockReturnValue(false),
+        autoConnect: jest.fn().mockResolvedValue(undefined),
+        getEnabledAddressTypes: jest.fn().mockReturnValue([]),
+        on: jest.fn(),
+        off: jest.fn(),
+        solana: {},
+        ethereum: {},
+      };
+
+      MockInjectedProvider.mockImplementation(() => mockProvider);
+    });
+
+    it("should await discoverWallets before calling providerManager.autoConnect", async () => {
+      const callOrder: string[] = [];
+
+      sdk = new BrowserSDK({
+        providers: ["injected"],
+        addressTypes: [AddressType.solana],
+      });
+
+      let resolveDiscovery!: () => void;
+      const discoveryPromise = new Promise<void>(resolve => {
+        resolveDiscovery = resolve;
+      });
+
+      jest.spyOn(sdk, "discoverWallets").mockImplementation(() => {
+        return discoveryPromise.then(() => {
+          callOrder.push("discovery_complete");
+        });
+      });
+
+      mockProvider.autoConnect.mockImplementation(() => {
+        callOrder.push("provider_autoConnect");
+      });
+
+      const autoConnectPromise = sdk.autoConnect();
+
+      await new Promise(resolve => setTimeout(resolve, 10));
+      expect(callOrder).toEqual([]);
+
+      resolveDiscovery();
+      await autoConnectPromise;
+
+      expect(callOrder[0]).toBe("discovery_complete");
+    });
+
+    it("should propagate discoverWallets rejection", async () => {
+      sdk = new BrowserSDK({
+        providers: ["injected"],
+        addressTypes: [AddressType.solana],
+      });
+
+      jest.spyOn(sdk, "discoverWallets").mockRejectedValue(new Error("discovery failed"));
+
+      await expect(sdk.autoConnect()).rejects.toThrow("discovery failed");
+    });
+
+    it("should set isLoading to false after autoConnect completes", async () => {
+      sdk = new BrowserSDK({
+        providers: ["injected"],
+        addressTypes: [AddressType.solana],
+      });
+
+      expect(sdk.isLoading).toBe(true);
+
+      await sdk.autoConnect();
+
+      expect(sdk.isLoading).toBe(false);
+    });
+  });
+
   describe("error handling", () => {
     let mockProvider: any;
 

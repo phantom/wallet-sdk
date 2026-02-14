@@ -11,6 +11,8 @@ export interface MockSolanaProvider {
   signAllTransactions?: jest.Mock;
   on?: jest.Mock;
   off?: jest.Mock;
+  _listeners?: Map<string, Set<(...args: any[]) => void>>;
+  emit(event: string, ...args: any[]): void;
 }
 
 export interface MockEthereumProvider {
@@ -19,6 +21,8 @@ export interface MockEthereumProvider {
   request: jest.Mock;
   on?: jest.Mock;
   off?: jest.Mock;
+  _listeners?: Map<string, Set<(...args: any[]) => void>>;
+  emit(event: string, ...args: any[]): void;
 }
 
 export function createMockSolanaProvider(overrides?: Partial<MockSolanaProvider>): MockSolanaProvider {
@@ -34,6 +38,8 @@ export function createMockSolanaProvider(overrides?: Partial<MockSolanaProvider>
     signAllTransactions: jest.fn(),
     on: jest.fn(),
     off: jest.fn(),
+    _listeners: new Map(),
+    emit: jest.fn(),
     ...overrides,
   };
 }
@@ -45,6 +51,8 @@ export function createMockEthereumProvider(overrides?: Partial<MockEthereumProvi
     request: jest.fn(),
     on: jest.fn(),
     off: jest.fn(),
+    _listeners: new Map(),
+    emit: jest.fn(),
     ...overrides,
   };
 }

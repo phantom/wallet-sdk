@@ -194,6 +194,80 @@ describe("useDiscoveredWallets", () => {
     expect(mockSDK.discoverWallets).toHaveBeenCalled();
   });
 
+  it("should always await discoverWallets before reading wallets", async () => {
+    const mockWallets: InjectedWalletInfo[] = [
+      {
+        id: "backpack",
+        name: "Backpack",
+        addressTypes: [AddressType.solana],
+      },
+    ];
+
+    mockSDK.getDiscoveredWallets.mockReturnValue([]);
+    mockSDK.discoverWallets.mockImplementation(
+      () =>
+        new Promise<void>(resolve => {
+          setTimeout(() => {
+            mockSDK.getDiscoveredWallets.mockReturnValue(mockWallets);
+            resolve();
+          }, 50);
+        }),
+    );
+
+    const { result } = renderHook(() => useDiscoveredWallets(), {
+      wrapper: createWrapper(),
+    });
+
+    expect(result.current.isLoading).toBe(true);
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.wallets).toEqual(mockWallets);
+    expect(mockSDK.discoverWallets).toHaveBeenCalled();
+  });
+
+  it("should call discoverWallets even when getDiscoveredWallets already has wallets", async () => {
+    const mockWallets: InjectedWalletInfo[] = [
+      {
+        id: "solflare",
+        name: "Solflare",
+        addressTypes: [AddressType.solana],
+      },
+    ];
+
+    mockSDK.getDiscoveredWallets.mockReturnValue(mockWallets);
+    mockSDK.discoverWallets.mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useDiscoveredWallets(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.wallets).toEqual(mockWallets);
+    expect(mockSDK.discoverWallets).toHaveBeenCalled();
+  });
+
+  it("should handle discoverWallets rejection gracefully", async () => {
+    mockSDK.discoverWallets.mockRejectedValue(new Error("Network error during discovery"));
+
+    const { result } = renderHook(() => useDiscoveredWallets(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.wallets).toEqual([]);
+    expect(result.current.error).toBeInstanceOf(Error);
+    expect(result.current.error?.message).toBe("Network error during discovery");
+  });
+
   it("should clear wallets and error when SDK becomes unavailable", async () => {
     const mockWallets: InjectedWalletInfo[] = [
       {

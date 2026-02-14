@@ -7,7 +7,12 @@ import {
   type Organization,
 } from "@phantom/client";
 import { randomUUID, getSecureTimestampSync, isEthereumChain } from "@phantom/utils";
-import { ANALYTICS_HEADERS, DEFAULT_WALLET_API_URL, type ServerSdkHeaders } from "@phantom/constants";
+import {
+  ANALYTICS_HEADERS,
+  DEFAULT_WALLET_API_URL,
+  DEFAULT_AUTHENTICATOR_ALGORITHM,
+  type ServerSdkHeaders,
+} from "@phantom/constants";
 import { ApiKeyStamper } from "@phantom/api-key-stamper";
 import { base64urlEncode, stringToBase64url } from "@phantom/base64url";
 import bs58 from "bs58";
@@ -213,7 +218,7 @@ export class ServerSDK {
             authenticatorName: `auth-${getSecureTimestampSync()}`,
             authenticatorKind: "keypair",
             publicKey: base64urlPublicKey,
-            algorithm: "Ed25519",
+            algorithm: this.client.stamper?.algorithm ?? DEFAULT_AUTHENTICATOR_ALGORITHM,
           },
         ],
       },

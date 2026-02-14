@@ -24,10 +24,6 @@ export class InjectedWalletEthereumChain implements IEthereumChain {
     this.setupEventListeners();
   }
 
-  get connected(): boolean {
-    return this._connected;
-  }
-
   get chainId(): string {
     return this._chainId;
   }
@@ -176,7 +172,10 @@ export class InjectedWalletEthereumChain implements IEthereumChain {
     try {
       // Ensure we're connected before signing
       // Check both our internal state and the underlying provider's state
-      const providerConnected = (this.provider as any).isConnected?.() || (this.provider as any).connected || false;
+      const providerAny = this.provider as any;
+      const providerConnected =
+        (typeof providerAny.isConnected === "function" ? providerAny.isConnected() : false) ||
+        (typeof providerAny.connected === "boolean" ? providerAny.connected : false);
       if (!this._connected || this._accounts.length === 0 || !providerConnected) {
         debug.log(DebugCategory.INJECTED_PROVIDER, "Not connected, attempting to connect before signing", {
           walletId: this.walletId,

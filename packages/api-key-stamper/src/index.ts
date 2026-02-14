@@ -3,7 +3,7 @@ import { base64urlEncode } from "@phantom/base64url";
 import { createKeyPairFromSecret, signWithSecret } from "@phantom/crypto";
 import bs58 from "bs58";
 import type { Stamper } from "@phantom/sdk-types";
-import { Algorithm } from "@phantom/sdk-types";
+import { DEFAULT_AUTHENTICATOR_ALGORITHM } from "@phantom/constants";
 export interface ApiKeyStamperConfig {
   apiSecretKey: string;
 }
@@ -13,7 +13,7 @@ export interface ApiKeyStamperConfig {
  * Does not manage keys - just signs with the provided secret key
  */
 export class ApiKeyStamper implements Stamper {
-  algorithm = Algorithm.ed25519; // Use the same algorithm as the keypair
+  readonly algorithm = DEFAULT_AUTHENTICATOR_ALGORITHM; // Use the same algorithm as the keypair
   type: "PKI" | "OIDC" = "PKI"; // This stamper only supports PKI type
   idToken?: string; // Optional for PKI, required for OIDC
   salt?: string; // Optional for PKI, required for OIDC

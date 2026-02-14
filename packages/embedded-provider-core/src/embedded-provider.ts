@@ -56,6 +56,7 @@ export interface ConnectEventData extends ConnectResult {
 export interface ConnectStartEventData {
   source: "auto-connect" | "manual-connect";
   authOptions?: { provider?: string };
+  walletId?: string;
 }
 
 export interface ConnectErrorEventData {
@@ -547,7 +548,7 @@ export class EmbeddedProvider {
             authenticatorName: `auth-${shortPubKey}`,
             authenticatorKind: "keypair",
             publicKey: base64urlPublicKey,
-            algorithm: "Ed25519",
+            algorithm: this.stamper.algorithm,
             expiresInMs: expiresInMs,
           } as any,
         ],
@@ -1176,6 +1177,7 @@ export class EmbeddedProvider {
       // OAuth session management - defaults to allowing refresh unless user explicitly logged out
       clearPreviousSession: shouldClearPreviousSession, // true only after logout
       allowRefresh: !shouldClearPreviousSession, // false only after logout
+      algorithm: this.stamper.algorithm,
     });
 
     if (authResult && "walletId" in authResult) {

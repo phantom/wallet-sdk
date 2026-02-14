@@ -22,7 +22,6 @@ describe("InjectedWalletEthereumChain", () => {
       getChainId: jest.fn().mockResolvedValue(1),
       getAccounts: jest.fn().mockResolvedValue(["0x1234567890abcdef1234567890abcdef12345678"]),
       isConnected: jest.fn().mockReturnValue(false),
-      connected: false,
       chainId: "0x1",
       accounts: [],
       on: jest.fn((event: string, listener: any) => {
@@ -58,7 +57,7 @@ describe("InjectedWalletEthereumChain", () => {
     });
 
     it("should have initial disconnected state", () => {
-      expect(ethereumChain.connected).toBe(false);
+      expect(ethereumChain.isConnected()).toBe(false);
       expect(ethereumChain.accounts).toEqual([]);
     });
   });
@@ -74,7 +73,7 @@ describe("InjectedWalletEthereumChain", () => {
       accountsChangedListener(newAccounts);
 
       expect(ethereumChain.accounts).toEqual(newAccounts);
-      expect(ethereumChain.connected).toBe(true);
+      expect(ethereumChain.isConnected()).toBe(true);
       expect((ethereumChain as any)._connected).toBe(true);
     });
 
@@ -83,13 +82,13 @@ describe("InjectedWalletEthereumChain", () => {
       const initialAccounts = ["0x1234567890abcdef1234567890abcdef12345678"];
       const accountsChangedListener = eventListeners.get("accountsChanged")?.[0];
       accountsChangedListener(initialAccounts);
-      expect(ethereumChain.connected).toBe(true);
+      expect(ethereumChain.isConnected()).toBe(true);
 
       // Then clear accounts
       accountsChangedListener([]);
 
       expect(ethereumChain.accounts).toEqual([]);
-      expect(ethereumChain.connected).toBe(false);
+      expect(ethereumChain.isConnected()).toBe(false);
       expect((ethereumChain as any)._connected).toBe(false);
     });
 
@@ -114,20 +113,20 @@ describe("InjectedWalletEthereumChain", () => {
       accountsChangedListener(multipleAccounts);
 
       expect(ethereumChain.accounts).toEqual(multipleAccounts);
-      expect(ethereumChain.connected).toBe(true);
+      expect(ethereumChain.isConnected()).toBe(true);
     });
 
     it("should update connection state when switching from no accounts to accounts", () => {
       const accountsChangedListener = eventListeners.get("accountsChanged")?.[0];
 
       // Start with no accounts
-      expect(ethereumChain.connected).toBe(false);
+      expect(ethereumChain.isConnected()).toBe(false);
 
       // Switch to connected account
       const newAccounts = ["0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E"];
       accountsChangedListener(newAccounts);
 
-      expect(ethereumChain.connected).toBe(true);
+      expect(ethereumChain.isConnected()).toBe(true);
       expect(ethereumChain.accounts).toEqual(newAccounts);
     });
   });
@@ -139,7 +138,7 @@ describe("InjectedWalletEthereumChain", () => {
 
       connectListener(connectInfo);
 
-      expect(ethereumChain.connected).toBe(true);
+      expect(ethereumChain.isConnected()).toBe(true);
       expect(ethereumChain.chainId).toBe("0x89");
       expect((ethereumChain as any)._connected).toBe(true);
       expect((ethereumChain as any)._chainId).toBe("0x89");
@@ -151,13 +150,13 @@ describe("InjectedWalletEthereumChain", () => {
       // First connect
       const accountsChangedListener = eventListeners.get("accountsChanged")?.[0];
       accountsChangedListener(["0x1234567890abcdef1234567890abcdef12345678"]);
-      expect(ethereumChain.connected).toBe(true);
+      expect(ethereumChain.isConnected()).toBe(true);
 
       // Then disconnect
       const disconnectListener = eventListeners.get("disconnect")?.[0];
       disconnectListener({ code: 4900, message: "Provider disconnected" });
 
-      expect(ethereumChain.connected).toBe(false);
+      expect(ethereumChain.isConnected()).toBe(false);
       expect(ethereumChain.accounts).toEqual([]);
       expect((ethereumChain as any)._connected).toBe(false);
     });

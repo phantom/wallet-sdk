@@ -1,9 +1,9 @@
 import * as SecureStore from "expo-secure-store";
 import { ApiKeyStamper } from "@phantom/api-key-stamper";
+import { DEFAULT_AUTHENTICATOR_ALGORITHM } from "@phantom/constants";
 import { generateKeyPair } from "@phantom/crypto";
 import { base64urlEncode } from "@phantom/base64url";
 import type { StamperWithKeyManagement, StamperKeyInfo } from "@phantom/sdk-types";
-import { Algorithm } from "@phantom/sdk-types";
 import type { Buffer } from "buffer";
 
 export interface ReactNativeStamperConfig {
@@ -32,7 +32,7 @@ export class ReactNativeStamper implements StamperWithKeyManagement {
   private appId: string;
   private activeKeyRecord: StoredKeyRecord | null = null;
   private pendingKeyRecord: StoredKeyRecord | null = null;
-  algorithm = Algorithm.ed25519;
+  readonly algorithm = DEFAULT_AUTHENTICATOR_ALGORITHM;
   type: "PKI" | "OIDC" = "PKI"; // Default to PKI, can be set to OIDC if needed
   idToken?: string; // Optional for PKI, required for OIDC
   salt?: string; // Optional for PKI, required for OIDC

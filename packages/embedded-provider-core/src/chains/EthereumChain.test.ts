@@ -34,6 +34,24 @@ describe("EmbeddedEthereumChain", () => {
     ethereumChain = new EmbeddedEthereumChain(mockProvider);
   });
 
+  describe("isConnected", () => {
+    it("is true only when provider isConnected and accounts are present", () => {
+      expect(ethereumChain.accounts.length).toBeGreaterThan(0);
+      expect(ethereumChain.isConnected()).toBe(true);
+
+      mockProvider.isConnected.mockReturnValue(false);
+      expect(ethereumChain.isConnected()).toBe(false);
+    });
+
+    it("is false when connected but no Ethereum accounts are available", () => {
+      mockProvider.isConnected.mockReturnValue(true);
+      mockProvider.getAddresses.mockReturnValue([]);
+      const chain = new EmbeddedEthereumChain(mockProvider);
+      expect(chain.accounts).toEqual([]);
+      expect(chain.isConnected()).toBe(false);
+    });
+  });
+
   describe("sendTransaction with chainId", () => {
     it("should switch chain when chainId is provided as hex string", async () => {
       const transaction = {

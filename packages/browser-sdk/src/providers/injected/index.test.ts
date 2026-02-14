@@ -44,17 +44,30 @@ describe("InjectedProvider", () => {
     const ethereumListeners = new Map<string, Set<(...args: any[]) => void>>();
 
     // Create the default mock phantom object
+    const mockPublicKey = "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH";
     mockPhantomObject = {
       extension: {
         isInstalled: () => true,
       },
       solana: {
-        connect: jest.fn().mockResolvedValue("GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH"),
-        disconnect: jest.fn(),
+        connect: jest.fn().mockImplementation(() => {
+          // Simulate provider updating state after connect
+          mockPhantomObject.solana.isConnected = true;
+          mockPhantomObject.solana.publicKey = mockPublicKey;
+          return Promise.resolve(undefined);
+        }),
+        disconnect: jest.fn().mockImplementation(() => {
+          // Simulate provider updating state after disconnect
+          mockPhantomObject.solana.isConnected = false;
+          mockPhantomObject.solana.publicKey = null;
+          return Promise.resolve(undefined);
+        }),
         getAccount: jest.fn(),
         signMessage: jest.fn().mockResolvedValue({ signature: "mock-signature" }),
         signIn: jest.fn(),
         signAndSendTransaction: jest.fn().mockResolvedValue({ signature: "mock-transaction-signature" }),
+        isConnected: false as boolean,
+        publicKey: null,
         // Support both old addEventListener (for browser-injected-sdk) and new .on()/.off() (for chain wrappers)
         addEventListener: jest.fn((event: string, callback: (...args: any[]) => void) => {
           if (!solanaListeners.has(event)) {
@@ -193,10 +206,14 @@ describe("InjectedProvider", () => {
         addressTypes: [AddressType.solana],
       });
 
-      // Mock ISolanaChain adapter - connect() returns { publicKey: string }
+      // Mock ISolanaChain adapter - connect() updates provider state
+      const testPublicKey = "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH";
       const mockSolanaChain = {
-        connect: jest.fn().mockResolvedValue({
-          publicKey: "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH",
+        connect: jest.fn().mockImplementation(() => {
+          // Simulate provider updating state after connect
+          mockSolanaChain.isConnected = true;
+          mockSolanaChain.publicKey = testPublicKey;
+          return Promise.resolve(undefined);
         }),
         disconnect: jest.fn(),
         signMessage: jest.fn(),
@@ -206,11 +223,10 @@ describe("InjectedProvider", () => {
         signAndSendAllTransactions: jest.fn(),
         switchNetwork: jest.fn(),
         getPublicKey: jest.fn(),
-        isConnected: jest.fn().mockReturnValue(false),
+        isConnected: false as boolean,
         on: jest.fn(),
         off: jest.fn(),
         publicKey: null,
-        connected: false,
       };
 
       const internal = provider as any;
@@ -516,14 +532,17 @@ describe("InjectedProvider", () => {
         ethereumChain.eventEmitter.emit("accountsChanged", newAccounts);
         await new Promise(resolve => setTimeout(resolve, 10));
 
-        expect(connectCallback).toHaveBeenCalledWith({
-          addresses: [
-            { addressType: AddressType.solana, address: "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH" },
-            { addressType: AddressType.ethereum, address: newAccounts[0] },
-          ],
-          source: "wallet-account-change",
-          authUserId: "test-auth-user-id",
-        });
+        expect(connectCallback).toHaveBeenCalledWith(
+          expect.objectContaining({
+            addresses: [
+              { addressType: AddressType.solana, address: "GfJ4JhQXbUMwh7x8e7YFHC3yLz5FJGvjurQrNxFWkeYH" },
+              { addressType: AddressType.ethereum, address: newAccounts[0] },
+            ],
+            source: "wallet-account-change",
+            authUserId: "test-auth-user-id",
+            walletId: "phantom",
+          }),
+        );
         expect(disconnectCallback).not.toHaveBeenCalled();
       });
 
@@ -599,6 +618,145 @@ describe("InjectedProvider", () => {
         const solanaAddress = addresses.find(addr => addr.addressType === AddressType.solana);
         expect(solanaAddress?.address).toBe(newPublicKey);
       });
+    });
+  });
+
+  describe("setupEventListeners cleanup", () => {
+    function registerExternalWallet(provider: InjectedProvider, walletId: string) {
+      const solanaListeners = new Map<string, Set<(...args: any[]) => void>>();
+      const mockSolana = createMockSolanaProvider({
+        isPhantom: false,
+        connect: jest.fn().mockImplementation(() => {
+          mockSolana.isConnected = true;
+          mockSolana.publicKey = "mockPublicKey";
+          return Promise.resolve(undefined);
+        }),
+        on: jest.fn((event: string, cb: (...args: any[]) => void) => {
+          if (!solanaListeners.has(event)) solanaListeners.set(event, new Set());
+          solanaListeners.get(event)!.add(cb);
+        }),
+        off: jest.fn((event: string, cb: (...args: any[]) => void) => {
+          solanaListeners.get(event)?.delete(cb);
+        }),
+        _listeners: solanaListeners,
+        emit(event: string, ...args: any[]) {
+          solanaListeners.get(event)?.forEach(cb => cb(...args));
+        },
+      });
+
+      const ethereumListeners = new Map<string, Set<(...args: any[]) => void>>();
+      const mockEthereum = createMockEthereumProvider({
+        isPhantom: false,
+        request: jest.fn().mockImplementation((args: any) => {
+          if (["eth_requestAccounts", "eth_accounts"].includes(args.method)) {
+            return Promise.resolve(["0x69420"]);
+          }
+          return Promise.resolve(null);
+        }),
+        on: jest.fn((event: string, cb: (...args: any[]) => void) => {
+          if (!ethereumListeners.has(event)) ethereumListeners.set(event, new Set());
+          ethereumListeners.get(event)!.add(cb);
+        }),
+        off: jest.fn((event: string, cb: (...args: any[]) => void) => {
+          ethereumListeners.get(event)?.delete(cb);
+        }),
+        _listeners: new Map<string, Set<(...args: any[]) => void>>(),
+        emit(event: string, ...args: any[]) {
+          ethereumListeners.get(event)?.forEach(cb => cb(...args));
+        },
+      });
+
+      // @ts-expect-error - walletRegistry is private
+      provider.walletRegistry.register({
+        id: walletId,
+        name: walletId,
+        icon: `https://example.com/${walletId}.png`,
+        addressTypes: [AddressType.solana, AddressType.ethereum],
+        providers: { solana: mockSolana, ethereum: mockEthereum },
+        discovery: "standard",
+      });
+
+      return { mockSolana, mockEthereum };
+    }
+
+    it("should clean up previous wallet listeners when connecting to a new wallet", async () => {
+      const provider = new InjectedProvider({
+        addressTypes: [AddressType.solana, AddressType.ethereum],
+      });
+
+      await provider.connect({ provider: "injected" });
+
+      const registry = getWalletRegistry();
+      const phantomInfo = registry.getById("phantom")!;
+      const phantomSolanaEmitter = (phantomInfo.providers!.solana as any).eventEmitter;
+      const phantomEthereumEmitter = (phantomInfo.providers!.ethereum as any).eventEmitter;
+
+      expect(phantomSolanaEmitter.listenerCount("connect")).toBeGreaterThan(0);
+      expect(phantomSolanaEmitter.listenerCount("disconnect")).toBeGreaterThan(0);
+      expect(phantomSolanaEmitter.listenerCount("accountChanged")).toBeGreaterThan(0);
+
+      expect(phantomEthereumEmitter.listenerCount("connect")).toBeGreaterThan(0);
+      expect(phantomEthereumEmitter.listenerCount("disconnect")).toBeGreaterThan(0);
+      expect(phantomEthereumEmitter.listenerCount("accountsChanged")).toBeGreaterThan(0);
+
+      registerExternalWallet(provider, "backpack");
+      await provider.connect({ provider: "injected", walletId: "backpack" });
+
+      expect(phantomSolanaEmitter.listenerCount("connect")).toBe(0);
+      expect(phantomSolanaEmitter.listenerCount("disconnect")).toBe(0);
+      expect(phantomSolanaEmitter.listenerCount("accountChanged")).toBe(0);
+
+      expect(phantomEthereumEmitter.listenerCount("connect")).toBe(0);
+      expect(phantomEthereumEmitter.listenerCount("disconnect")).toBe(0);
+      expect(phantomEthereumEmitter.listenerCount("accountsChanged")).toBe(0);
+    });
+
+    it("should not setup new listeners if already set up for current wallet", async () => {
+      const provider = new InjectedProvider({
+        addressTypes: [AddressType.solana],
+      });
+
+      const registry = getWalletRegistry();
+      registry.registerPhantom(mockPhantomObject, [AddressType.solana]);
+
+      await provider.connect({ provider: "injected" });
+
+      const phantomSolanaEmitter = (registry.getById("phantom")!.providers!.solana as any).eventEmitter;
+      const countAfterFirst = phantomSolanaEmitter.listenerCount("connect");
+      expect(countAfterFirst).toBe(1);
+
+      await provider.connect({ provider: "injected" });
+
+      const countAfterSecond = phantomSolanaEmitter.listenerCount("connect");
+      expect(countAfterSecond).toBe(1);
+    });
+
+    it("should stop stale wallet events from reaching InjectedProvider after cleanup", async () => {
+      const provider = new InjectedProvider({
+        addressTypes: [AddressType.solana],
+      });
+
+      const connectCallback = jest.fn();
+      provider.on("connect", connectCallback);
+
+      await provider.connect({ provider: "injected" });
+      connectCallback.mockClear();
+
+      const registry = getWalletRegistry();
+      const phantomInfo = registry.getById("phantom")!;
+      const phantomSolana = phantomInfo.providers!.solana as any;
+
+      const { mockSolana: backpackSolana } = registerExternalWallet(provider, "backpack");
+      await provider.connect({ provider: "injected", walletId: "backpack" });
+      connectCallback.mockClear();
+
+      phantomSolana.eventEmitter.emit("connect", "PhantomPublicKey123");
+      await new Promise(resolve => setTimeout(resolve, 10));
+      expect(connectCallback).not.toHaveBeenCalled();
+
+      backpackSolana.emit("connect", "BackpackPublicKey456");
+      await new Promise(resolve => setTimeout(resolve, 10));
+      expect(connectCallback).toHaveBeenCalledTimes(1);
     });
   });
 

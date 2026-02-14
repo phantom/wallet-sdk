@@ -1,0 +1,55 @@
+{
+  "name": "@phantom/openclaw-plugin",
+  "version": "0.1.2",
+  "description": "OpenClaw plugin that bridges tool calls to Phantom's MCP server for wallet operations.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phantom/phantom-connect-sdk",
+    "directory": "packages/phantom-openclaw-plugin"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "openclaw": {
+    "extensions": [
+      "./dist/index.js"
+    ]
+  },
+  "scripts": {
+    "?pack-release": "When https://github.com/changesets/changesets/issues/432 has a solution we can remove this trick",
+    "pack-release": "rimraf ./_release && yarn pack && mkdir ./_release && tar zxvf ./package.tgz --directory ./_release && rm ./package.tgz",
+    "build": "rimraf ./dist && tsup",
+    "dev": "tsup --watch",
+    "clean": "rimraf dist",
+    "lint": "tsc --noEmit && eslint --cache . --ext .ts,.tsx",
+    "check-types": "tsc --noEmit",
+    "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "eslint": "8.53.0",
+    "prettier": "^3.5.2",
+    "rimraf": "^6.0.1",
+    "tsup": "^6.7.0",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "@phantom/mcp-server": "workspace:^",
+    "@sinclair/typebox": "^0.32.0"
+  },
+  "files": [
+    "dist",
+    "openclaw.plugin.json",
+    "README.md"
+  ],
+  "publishConfig": {
+    "directory": "_release/package"
+  }
+}

@@ -1,4 +1,5 @@
 import { type NetworkId, type SdkAnalyticsHeaders } from "@phantom/constants";
+import type { Algorithm } from "@phantom/sdk-types";
 
 export interface PhantomClientConfig {
   apiBaseUrl: string;
@@ -102,14 +103,14 @@ export type AuthenticatorConfig =
       authenticatorKind: "keypair";
       authenticatorName: string;
       publicKey: string; // base64url encoded public key (required for keypair)
-      algorithm: "Ed25519";
+      algorithm: Algorithm;
       expiresInMs?: number; // Optional expiration timestamp in milliseconds
     }
   | {
       authenticatorKind: "passkey";
       authenticatorName: string;
       publicKey: string; // base64url encoded public key (required for passkey)
-      algorithm: "Ed25519" | "ECDSA";
+      algorithm: Algorithm;
       expiresInMs?: number; // Optional expiration timestamp in milliseconds
     }
   | {
