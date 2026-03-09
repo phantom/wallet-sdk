@@ -116,7 +116,7 @@ The demo app uses environment variables for configuration. Copy `.env.example` t
 The app is configured in `app/_layout.tsx` using environment variables:
 
 ```typescript
-const config = {
+const config: PhantomSDKConfig = {
   appId: process.env.EXPO_PUBLIC_APP_ID || "your-app-id",
   scheme: process.env.EXPO_PUBLIC_APP_SCHEME || "phantom-rn-demo",
   embeddedWalletType: (process.env.EXPO_PUBLIC_EMBEDDED_WALLET_TYPE || "user-wallet") as const,
@@ -126,8 +126,13 @@ const config = {
     redirectUrl: process.env.EXPO_PUBLIC_REDIRECT_URL || "phantom-rn-demo://phantom-auth-callback",
   },
   apiBaseUrl: process.env.EXPO_PUBLIC_WALLET_API || "https://api.phantom.app/v1/wallets",
-  debug: process.env.EXPO_PUBLIC_DEBUG === "true",
 };
+
+const debugConfig: PhantomDebugConfig = {
+  enabled: process.env.EXPO_PUBLIC_DEBUG === "true",
+};
+
+<PhantomProvider config={config} debugConfig={debugConfig} ...>
 ```
 
 ## App Structure
