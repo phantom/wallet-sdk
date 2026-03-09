@@ -1,6 +1,7 @@
 import { sendTransaction, signTransaction } from "./sendTransaction";
 import * as getProviderModule from "./getProvider";
 import type { ProviderStrategy } from "../types";
+import { ETHEREUM_PROVIDER_NOT_FOUND } from "../errors";
 
 // Mock the getProvider function
 const mockProvider = {
@@ -63,10 +64,10 @@ describe("transaction functions", () => {
       expect(result).toBe(mockTxHash);
     });
 
-    it("should throw error when provider is not found", async () => {
-      mockGetProvider.mockResolvedValue(null as any);
+    it("should throw error when Ethereum provider is not found", async () => {
+      mockGetProvider.mockRejectedValue(new Error(ETHEREUM_PROVIDER_NOT_FOUND));
 
-      await expect(sendTransaction(mockTransaction)).rejects.toThrow("Provider not found.");
+      await expect(sendTransaction(mockTransaction)).rejects.toThrow(ETHEREUM_PROVIDER_NOT_FOUND);
     });
 
     it("should handle send transaction errors", async () => {
@@ -102,10 +103,10 @@ describe("transaction functions", () => {
       expect(result).toBe(mockSignedTx);
     });
 
-    it("should throw error when provider is not found", async () => {
-      mockGetProvider.mockResolvedValue(null as any);
+    it("should throw error when Ethereum provider is not found", async () => {
+      mockGetProvider.mockRejectedValue(new Error(ETHEREUM_PROVIDER_NOT_FOUND));
 
-      await expect(signTransaction(mockTransaction)).rejects.toThrow("Provider not found.");
+      await expect(signTransaction(mockTransaction)).rejects.toThrow(ETHEREUM_PROVIDER_NOT_FOUND);
     });
 
     it("should handle sign transaction errors", async () => {

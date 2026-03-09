@@ -3,11 +3,7 @@ import type { AutoConfirmEnableParams, AutoConfirmResult } from "./types";
 import { networkIdToInternalCaip, internalCaipToNetworkId } from "@phantom/constants";
 
 export async function autoConfirmEnable(params?: AutoConfirmEnableParams): Promise<AutoConfirmResult> {
-  const provider = await getProvider();
-
-  if (!provider) {
-    throw new Error("Provider not found.");
-  }
+  const provider = getProvider();
 
   // Transform NetworkId to InternalNetworkCaip for extension communication
   const transformedParams = params?.chains ? { chains: params.chains.map(networkIdToInternalCaip) } : {};

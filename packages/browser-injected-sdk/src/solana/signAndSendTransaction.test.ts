@@ -3,6 +3,7 @@ import type { SolanaStrategy } from "./strategies/types";
 import { getProvider } from "./getProvider";
 import { signAndSendTransaction } from "./signAndSendTransaction";
 import type { PhantomSolanaProvider } from "./types";
+import { SOLANA_PROVIDER_NOT_FOUND } from "../errors";
 
 jest.mock("./getProvider", () => ({
   getProvider: jest.fn(),
@@ -39,9 +40,10 @@ describe("signAndSendTransaction", () => {
     expect(result).toEqual(expectedResult);
   });
 
-  it("should throw error if provider not found", async () => {
-    (getProvider as jest.Mock).mockReturnValue(null);
-    await expect(signAndSendTransaction(mockTransaction)).rejects.toThrow("Provider not found.");
+  it("should throw error when Solana provider is not found", async () => {
+    (getProvider as jest.Mock).mockRejectedValue(new Error(SOLANA_PROVIDER_NOT_FOUND));
+
+    await expect(signAndSendTransaction(mockTransaction)).rejects.toThrow(SOLANA_PROVIDER_NOT_FOUND);
   });
 
   it("should call connect if provider is not initially connected, then proceed", async () => {

@@ -5264,6 +5264,30 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@phantom/auth2@workspace:^, @phantom/auth2@workspace:packages/auth2":
+  version: 0.0.0-use.local
+  resolution: "@phantom/auth2@workspace:packages/auth2"
+  dependencies:
+    "@phantom/base64url": "workspace:^"
+    "@phantom/crypto": "workspace:^"
+    "@phantom/openapi-wallet-service": "npm:0.1.11"
+    "@phantom/sdk-types": "workspace:^"
+    "@types/bs58": "npm:^5.0.0"
+    "@types/jest": "npm:^29.5.12"
+    "@types/node": "npm:^20.11.0"
+    axios: "npm:^1.10.0"
+    bs58: "npm:^6.0.0"
+    buffer: "npm:^6.0.3"
+    eslint: "npm:8.53.0"
+    jest: "npm:^29.7.0"
+    prettier: "npm:^3.5.2"
+    rimraf: "npm:^6.0.1"
+    ts-jest: "npm:^29.1.2"
+    tsup: "npm:^6.7.0"
+    typescript: "npm:^5.0.4"
+  languageName: unknown
+  linkType: soft
+
 "@phantom/base64url@workspace:^, @phantom/base64url@workspace:packages/base64url":
   version: 0.0.0-use.local
   resolution: "@phantom/base64url@workspace:packages/base64url"
@@ -5325,6 +5349,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@phantom/browser-sdk@workspace:packages/browser-sdk"
   dependencies:
+    "@phantom/auth2": "workspace:^"
     "@phantom/base64url": "workspace:^"
     "@phantom/browser-injected-sdk": "workspace:^"
     "@phantom/chain-interfaces": "workspace:^"
@@ -5442,6 +5467,7 @@ __metadata:
   resolution: "@phantom/embedded-provider-core@workspace:packages/embedded-provider-core"
   dependencies:
     "@phantom/api-key-stamper": "workspace:^"
+    "@phantom/auth2": "workspace:^"
     "@phantom/base64url": "workspace:^"
     "@phantom/chain-interfaces": "workspace:^"
     "@phantom/client": "workspace:^"
@@ -5619,6 +5645,7 @@ __metadata:
   resolution: "@phantom/react-native-sdk@workspace:packages/react-native-sdk"
   dependencies:
     "@phantom/api-key-stamper": "workspace:^"
+    "@phantom/auth2": "workspace:^"
     "@phantom/base64url": "workspace:^"
     "@phantom/chain-interfaces": "workspace:^"
     "@phantom/client": "workspace:^"

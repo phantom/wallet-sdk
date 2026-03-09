@@ -1,6 +1,6 @@
 {
   "name": "@phantom/browser-sdk",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "Browser SDK for Phantom Wallet",
   "repository": {
     "type": "git",
@@ -33,6 +33,7 @@
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\""
   },
   "dependencies": {
+    "@phantom/auth2": "workspace:^",
     "@phantom/base64url": "workspace:^",
     "@phantom/browser-injected-sdk": "workspace:^",
     "@phantom/chain-interfaces": "workspace:^",

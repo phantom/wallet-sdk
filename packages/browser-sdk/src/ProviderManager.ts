@@ -509,6 +509,7 @@ export class ProviderManager implements EventEmitter {
           authUrl,
           redirectUrl: this.config.authOptions?.redirectUrl || this.getValidatedCurrentUrl(),
         },
+        unstable__auth2Options: this.config.unstable__auth2Options,
         embeddedWalletType: embeddedWalletType || DEFAULT_EMBEDDED_WALLET_TYPE,
         addressTypes: this.config.addressTypes || [AddressType.solana],
       });

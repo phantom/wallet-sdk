@@ -241,16 +241,11 @@ export class InjectedProvider implements Provider {
           walletName: walletInfo.name,
         });
       } catch (err) {
-        debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to connect Solana, stopping", {
+        debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to connect Solana, continuing with other chains", {
           error: err,
           walletId: this.selectedWalletId,
           walletName: walletInfo.name,
         });
-        this.emit("connect_error", {
-          error: err instanceof Error ? err.message : "Failed to connect",
-          source: options?.skipEventListeners ? "auto-connect" : "manual-connect",
-        });
-        throw err;
       }
     }
 
@@ -283,16 +278,11 @@ export class InjectedProvider implements Provider {
           });
         }
       } catch (err) {
-        debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to connect Ethereum, stopping", {
+        debug.warn(DebugCategory.INJECTED_PROVIDER, "Failed to connect Ethereum, continuing with other chains", {
           error: err,
           walletId: this.selectedWalletId,
           walletName: walletInfo.name,
         });
-        this.emit("connect_error", {
-          error: err instanceof Error ? err.message : "Failed to connect",
-          source: options?.skipEventListeners ? "auto-connect" : "manual-connect",
-        });
-        throw err;
       }
     }
 

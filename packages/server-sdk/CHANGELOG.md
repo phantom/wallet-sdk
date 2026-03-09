@@ -1,5 +1,33 @@
 # @phantom/server-sdk
 
+## 1.0.5
+
+### Patch Changes
+
+- a8287d6: Fix release for auth 2
+- Updated dependencies [a8287d6]
+  - @phantom/api-key-stamper@1.0.5
+  - @phantom/base64url@1.0.5
+  - @phantom/client@1.0.5
+  - @phantom/constants@1.0.5
+  - @phantom/parsers@1.0.5
+  - @phantom/sdk-types@1.0.5
+  - @phantom/utils@1.0.5
+
+## 1.0.4
+
+### Patch Changes
+
+- 2d00fb0: Do not throw error if one of the chains is not available on connection
+- Updated dependencies [2d00fb0]
+  - @phantom/api-key-stamper@1.0.4
+  - @phantom/base64url@1.0.4
+  - @phantom/client@1.0.4
+  - @phantom/constants@1.0.4
+  - @phantom/parsers@1.0.4
+  - @phantom/sdk-types@1.0.4
+  - @phantom/utils@1.0.4
+
 ## 1.0.3
 
 ### Patch Changes

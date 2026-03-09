@@ -10,10 +10,6 @@ import type { EthereumTransaction } from "./types";
 export async function sendTransaction(transaction: EthereumTransaction): Promise<string> {
   const provider = await getProvider();
 
-  if (!provider) {
-    throw new Error("Provider not found.");
-  }
-
   if (!provider.isConnected) {
     await provider.connect({ onlyIfTrusted: false });
   }
@@ -29,10 +25,6 @@ export async function sendTransaction(transaction: EthereumTransaction): Promise
  */
 export async function signTransaction(transaction: EthereumTransaction): Promise<string> {
   const provider = await getProvider();
-
-  if (!provider) {
-    throw new Error("Provider not found.");
-  }
 
   if (!provider.isConnected) {
     await provider.connect({ onlyIfTrusted: false });

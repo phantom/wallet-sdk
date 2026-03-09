@@ -1,6 +1,7 @@
 import { signMessage, signPersonalMessage, signTypedData } from "./signMessage";
 import * as getProviderModule from "./getProvider";
 import type { ProviderStrategy } from "../types";
+import { ETHEREUM_PROVIDER_NOT_FOUND } from "../errors";
 
 // Mock the getProvider function
 const mockProvider = {
@@ -63,11 +64,11 @@ describe("signMessage", () => {
       expect(result).toBe(mockSignature);
     });
 
-    it("should throw error when provider is not found", async () => {
-      mockGetProvider.mockResolvedValue(null as any);
+    it("should throw error when Ethereum provider is not found", async () => {
+      mockGetProvider.mockRejectedValue(new Error(ETHEREUM_PROVIDER_NOT_FOUND));
 
       await expect(signMessage("Hello World", "0x742d35Cc6634C0532925a3b8D4C8db86fB5C4A7E")).rejects.toThrow(
-        "Provider not found.",
+        ETHEREUM_PROVIDER_NOT_FOUND,
       );
     });
   });

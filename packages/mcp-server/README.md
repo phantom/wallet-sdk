@@ -371,7 +371,7 @@ Fetches a Solana swap quote from the Phantom quotes API. Optionally signs and se
 - `execute` (optional, boolean): If true, sign and send the first quote transaction after fetching
 - `taker` (optional, string): Taker address (defaults to wallet's Solana address)
 - `rpcUrl` (optional, string): Solana RPC URL (for mint decimals lookup when `amountUnit` is `ui`)
-- `quoteApiUrl` (optional, string): Quotes API URL override
+- `quoteApiUrl` (optional, string): Quotes API URL override for debugging only. Leave unset for normal usage. Must be Phantom-compatible; do not use Jupiter endpoints such as `https://lite-api.jup.ag/swap/v1/quote`.
 - `derivationIndex` (optional, number): Derivation index for the taker address (default: 0)
 
 **Example:**

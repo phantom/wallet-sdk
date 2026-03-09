@@ -7,6 +7,7 @@ import { stringToBase64url } from "@phantom/base64url";
 import type { NetworkId } from "@phantom/client";
 import type { ToolHandler, ToolContext } from "./types.js";
 import { normalizeNetworkId } from "../utils/network.js";
+import { parseOptionalNonNegativeInteger } from "../utils/params.js";
 
 export const signMessageTool: ToolHandler = {
   name: "sign_message",
@@ -59,17 +60,9 @@ export const signMessageTool: ToolHandler = {
       throw new Error("walletId is required (missing from session and not provided)");
     }
 
-    // Validate derivationIndex if provided
-    if (params.derivationIndex !== undefined && params.derivationIndex !== null) {
-      const derivIdx = params.derivationIndex as number;
-      if (!Number.isInteger(derivIdx) || derivIdx < 0) {
-        throw new Error("derivationIndex must be a non-negative integer");
-      }
-    }
-
     const message = params.message;
     const networkId = normalizeNetworkId(params.networkId) as NetworkId;
-    const derivationIndex = typeof params.derivationIndex === "number" ? params.derivationIndex : undefined;
+    const derivationIndex = parseOptionalNonNegativeInteger(params.derivationIndex, "derivationIndex");
 
     logger.info(`Signing message for wallet ${walletId} on network ${networkId}`);
 

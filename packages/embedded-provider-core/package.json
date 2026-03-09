@@ -1,6 +1,6 @@
 {
   "name": "@phantom/embedded-provider-core",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "Platform-agnostic embedded provider core logic for Phantom Wallet SDK",
   "repository": {
     "type": "git",
@@ -45,6 +45,7 @@
   "license": "MIT",
   "dependencies": {
     "@phantom/api-key-stamper": "workspace:^",
+    "@phantom/auth2": "workspace:^",
     "@phantom/base64url": "workspace:^",
     "@phantom/chain-interfaces": "workspace:^",
     "@phantom/client": "workspace:^",

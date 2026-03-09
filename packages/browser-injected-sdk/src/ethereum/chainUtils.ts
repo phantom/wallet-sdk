@@ -8,10 +8,6 @@ import { getProvider } from "./getProvider";
 export async function getChainId(): Promise<string> {
   const provider = await getProvider();
 
-  if (!provider) {
-    throw new Error("Provider not found.");
-  }
-
   return provider.getChainId();
 }
 
@@ -23,10 +19,6 @@ export async function getChainId(): Promise<string> {
  */
 export async function switchChain(chainId: string): Promise<void> {
   const provider = await getProvider();
-
-  if (!provider) {
-    throw new Error("Provider not found.");
-  }
 
   return provider.switchChain(chainId);
 }

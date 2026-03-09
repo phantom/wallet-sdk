@@ -156,6 +156,10 @@ Fetch an optimized Solana token swap quote from Phantom's quotes API. Use for bo
   - `false` - Returns quote only (safe, default)
   - `true` - Immediately executes the swap (irreversible)
 - `derivationIndex`: Account derivation index (default: 0)
+- `quoteApiUrl`: Optional Phantom-compatible quote endpoint override.
+  - Leave this unset by default.
+  - Only set it for explicit debugging/troubleshooting when the user asks.
+  - Do not use Jupiter endpoints such as `https://lite-api.jup.ag/swap/v1/quote` (different request/response schema).
 
 **Quote Response Structure (when `execute: false`):**
 
@@ -189,6 +193,7 @@ The quote contains:
   - **Swap-intent** (`exactOut: false`) when user specifies how much to spend
   - **Buy-intent** (`exactOut: true`) when user specifies how much they want to receive
 - Phantom quote responses include route selection and execution parameters intended to improve transaction landing reliability
+- Do not override `quoteApiUrl` in normal usage; rely on the default Phantom quotes endpoint
 - **Always review quotes before executing swaps**
 - Display expected output amount, fees, and price impact to user
 - Get explicit user confirmation before setting `execute: true`

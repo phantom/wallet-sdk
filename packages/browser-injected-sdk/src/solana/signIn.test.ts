@@ -2,6 +2,7 @@ import type { SolanaStrategy } from "./strategies/types";
 import { getProvider } from "./getProvider";
 import { signIn } from "./signIn";
 import type { PhantomSolanaProvider, SolanaSignInData } from "./types";
+import { SOLANA_PROVIDER_NOT_FOUND } from "../errors";
 
 jest.mock("./getProvider", () => ({
   getProvider: jest.fn(),
@@ -35,8 +36,9 @@ describe("signIn", () => {
     expect(result).toEqual(expectedResult);
   });
 
-  it("should throw an error if provider is not found", async () => {
-    (getProvider as jest.Mock).mockReturnValue(null);
-    await expect(signIn(mockSignInData)).rejects.toThrow("Provider not found.");
+  it("should throw error when Solana provider is not found", async () => {
+    (getProvider as jest.Mock).mockRejectedValue(new Error(SOLANA_PROVIDER_NOT_FOUND));
+
+    await expect(signIn(mockSignInData)).rejects.toThrow(SOLANA_PROVIDER_NOT_FOUND);
   });
 });

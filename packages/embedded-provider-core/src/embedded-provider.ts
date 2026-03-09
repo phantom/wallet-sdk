@@ -1,5 +1,5 @@
 import { base64urlEncode, stringToBase64url } from "@phantom/base64url";
-import { AddressType, PhantomClient, SpendingLimitError } from "@phantom/client";
+import { AddressType, PhantomClient, SpendingLimitError, isAuthenticationError } from "@phantom/client";
 import type { NetworkId } from "@phantom/constants";
 import {
   parseSignMessageResponse,
@@ -247,8 +247,11 @@ export class EmbeddedProvider {
     if (session.status !== "completed") {
       const urlSessionId = this.urlParamsAccessor.getParam("session_id");
 
+      // Auth2 callback arrives with "code" param instead of "session_id" — allow those through
+      const urlCode = this.urlParamsAccessor.getParam("code");
+
       // If we have a pending session but no sessionId in URL, this is a mismatch
-      if (session.status === "pending" && !urlSessionId) {
+      if (session.status === "pending" && !urlSessionId && !urlCode) {
         this.logger.warn("EMBEDDED_PROVIDER", "Session mismatch detected - pending session without redirect context", {
           sessionId: session.sessionId,
           status: session.status,
@@ -344,7 +347,7 @@ export class EmbeddedProvider {
     // Only attempt redirect resume if there's no valid completed session
     this.logger.log("EMBEDDED_PROVIDER", "No completed session found, checking for redirect resume");
     if (this.authProvider.resumeAuthFromRedirect) {
-      const authResult = this.authProvider.resumeAuthFromRedirect(session.authProvider);
+      const authResult = await this.authProvider.resumeAuthFromRedirect(session.authProvider);
       if (authResult) {
         this.logger.info("EMBEDDED_PROVIDER", "Resuming from redirect", {
           walletId: authResult.walletId,
@@ -720,6 +723,22 @@ export class EmbeddedProvider {
     }
   }
 
+  /**
+   * Handles errors from signing operations.
+   * Disconnects the user if the server returns a 401/403 (revoked or expired authenticator).
+   */
+  private async handleSigningError(error: unknown): Promise<never> {
+    if (isAuthenticationError(error)) {
+      this.logger.warn("EMBEDDED_PROVIDER", "Authenticator rejected by server (401/403), disconnecting", { error });
+      await this.disconnect(false);
+      throw new Error("Authenticator revoked");
+    }
+    if (error instanceof SpendingLimitError) {
+      this.emit("spending_limit_reached", { error });
+    }
+    throw error;
+  }
+
   async signMessage(params: SignMessageParams): Promise<ParsedSignatureResult> {
     if (!this.client || !this.walletId) {
       throw new Error("Not connected");
@@ -738,12 +757,14 @@ export class EmbeddedProvider {
     const derivationIndex = session?.accountDerivationIndex ?? 0;
 
     // Get raw response from client - use the appropriate method based on chain
-    const rawResponse = await this.client.signUtf8Message({
-      walletId: this.walletId,
-      message: params.message,
-      networkId: params.networkId,
-      derivationIndex: derivationIndex,
-    });
+    const rawResponse = await this.client
+      .signUtf8Message({
+        walletId: this.walletId,
+        message: params.message,
+        networkId: params.networkId,
+        derivationIndex: derivationIndex,
+      })
+      .catch(error => this.handleSigningError(error));
 
     this.logger.info("EMBEDDED_PROVIDER", "Message signed successfully", {
       walletId: this.walletId,
@@ -786,12 +807,14 @@ export class EmbeddedProvider {
     const derivationIndex = session?.accountDerivationIndex ?? 0;
 
     // Get raw response from client - use the appropriate method based on chain
-    const rawResponse = await this.client.ethereumSignMessage({
-      walletId: this.walletId,
-      message: base64UrlMessage,
-      networkId: params.networkId,
-      derivationIndex: derivationIndex,
-    });
+    const rawResponse = await this.client
+      .ethereumSignMessage({
+        walletId: this.walletId,
+        message: base64UrlMessage,
+        networkId: params.networkId,
+        derivationIndex: derivationIndex,
+      })
+      .catch(error => this.handleSigningError(error));
 
     this.logger.info("EMBEDDED_PROVIDER", "Message signed successfully", {
       walletId: this.walletId,
@@ -820,12 +843,14 @@ export class EmbeddedProvider {
     const derivationIndex = session?.accountDerivationIndex ?? 0;
 
     // Call the client's ethereumSignTypedData method
-    const rawResponse = await this.client.ethereumSignTypedData({
-      walletId: this.walletId,
-      typedData: params.typedData,
-      networkId: params.networkId,
-      derivationIndex: derivationIndex,
-    });
+    const rawResponse = await this.client
+      .ethereumSignTypedData({
+        walletId: this.walletId,
+        typedData: params.typedData,
+        networkId: params.networkId,
+        derivationIndex: derivationIndex,
+      })
+      .catch(error => this.handleSigningError(error));
 
     this.logger.info("EMBEDDED_PROVIDER", "Typed data signed successfully", {
       walletId: this.walletId,
@@ -873,13 +898,15 @@ export class EmbeddedProvider {
 
     // Get raw response from client
     // PhantomClient will handle EVM transaction formatting internally
-    const rawResponse = await this.client.signTransaction({
-      walletId: this.walletId,
-      transaction: transactionPayload,
-      networkId: params.networkId,
-      derivationIndex: derivationIndex,
-      account,
-    });
+    const rawResponse = await this.client
+      .signTransaction({
+        walletId: this.walletId,
+        transaction: transactionPayload,
+        networkId: params.networkId,
+        derivationIndex: derivationIndex,
+        account,
+      })
+      .catch(error => this.handleSigningError(error));
 
     this.logger.info("EMBEDDED_PROVIDER", "Transaction signed successfully", {
       walletId: this.walletId,
@@ -929,22 +956,15 @@ export class EmbeddedProvider {
 
     // Get raw response from client
     // PhantomClient will handle EVM transaction formatting internally
-    let rawResponse;
-    try {
-      rawResponse = await this.client.signAndSendTransaction({
+    const rawResponse = await this.client
+      .signAndSendTransaction({
         walletId: this.walletId,
         transaction: transactionPayload,
         networkId: params.networkId,
         derivationIndex: derivationIndex,
         account,
-      });
-    } catch (error: any) {
-      // Normalize spending limit errors into a dedicated event while preserving the rejection
-      if (error instanceof SpendingLimitError) {
-        this.emit("spending_limit_reached", { error });
-      }
-      throw error;
-    }
+      })
+      .catch(error => this.handleSigningError(error));
 
     this.logger.info("EMBEDDED_PROVIDER", "Transaction signed and sent successfully", {
       walletId: this.walletId,
@@ -1194,6 +1214,7 @@ export class EmbeddedProvider {
       tempSession.authProvider = authResult.provider || tempSession.authProvider;
       tempSession.accountDerivationIndex = authResult.accountDerivationIndex;
       tempSession.authUserId = authResult.authUserId;
+      tempSession.bearerToken = authResult.bearerToken;
       tempSession.status = "completed";
       tempSession.lastUsed = Date.now();
 
@@ -1236,6 +1257,7 @@ export class EmbeddedProvider {
     session.organizationId = authResult.organizationId;
     session.accountDerivationIndex = authResult.accountDerivationIndex;
     session.authUserId = authResult.authUserId;
+    session.bearerToken = authResult.bearerToken;
     session.status = "completed";
     session.lastUsed = Date.now();
 
@@ -1333,6 +1355,7 @@ export class EmbeddedProvider {
         headers: {
           ...(this.platform.analyticsHeaders || {}),
           ...(session.authUserId ? { "x-auth-user-id": session.authUserId } : {}),
+          ...(session.bearerToken ? { Authorization: session.bearerToken } : {}),
         },
       },
       this.stamper,

@@ -79,8 +79,9 @@ function createServerSdkHeaders(appId: string): ServerSdkHeaders {
   return {
     [ANALYTICS_HEADERS.SDK_TYPE]: "server",
     [ANALYTICS_HEADERS.SDK_VERSION]: getSdkVersion(),
-    [ANALYTICS_HEADERS.PLATFORM]: `node`,
+    [ANALYTICS_HEADERS.PLATFORM]: "ext-sdk",
     [ANALYTICS_HEADERS.PLATFORM_VERSION]: `${getNodeVersion()}`,
+    [ANALYTICS_HEADERS.CLIENT]: "node",
     [ANALYTICS_HEADERS.APP_ID]: appId,
   };
 }

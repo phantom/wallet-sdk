@@ -13,6 +13,7 @@ import {
   DEFAULT_WALLET_API_URL,
   DEFAULT_EMBEDDED_WALLET_TYPE,
   DEFAULT_AUTH_URL,
+  type SdkWalletType,
 } from "@phantom/constants";
 import { ThemeProvider, darkTheme, type PhantomTheme } from "@phantom/wallet-sdk-ui";
 import { ModalProvider } from "./ModalProvider";
@@ -20,6 +21,8 @@ import { PhantomContext, type PhantomContextValue, type PhantomErrors } from "./
 // Platform adapters for React Native/Expo
 import { ExpoSecureStorage } from "./providers/embedded/storage";
 import { ExpoAuthProvider } from "./providers/embedded/auth";
+import { ExpoAuth2AuthProvider } from "./providers/embedded/ExpoAuth2AuthProvider";
+import { ExpoAuth2Stamper } from "./providers/embedded/ExpoAuth2Stamper";
 import { ExpoURLParamsAccessor } from "./providers/embedded/url-params";
 import { ReactNativeStamper } from "./providers/embedded/stamper";
 import { ExpoLogger } from "./providers/embedded/logger";
@@ -65,13 +68,36 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
   const sdk = useMemo(() => {
     // Create platform adapters
     const storage = new ExpoSecureStorage();
-    const authProvider = new ExpoAuthProvider();
     const urlParamsAccessor = new ExpoURLParamsAccessor();
     const logger = new ExpoLogger(debugConfig?.enabled || false);
-    const stamper = new ReactNativeStamper({
-      keyPrefix: `phantom-rn-${memoizedConfig.appId}`,
-      appId: memoizedConfig.appId,
-    });
+
+    const stamper = config.unstable__auth2Options
+      ? new ExpoAuth2Stamper(`phantom-auth2-${memoizedConfig.appId}`)
+      : new ReactNativeStamper({
+          keyPrefix: `phantom-rn-${memoizedConfig.appId}`,
+          appId: memoizedConfig.appId,
+        });
+
+    const authProvider =
+      config.unstable__auth2Options &&
+      config.authOptions?.authUrl &&
+      config.authOptions?.redirectUrl &&
+      config.apiBaseUrl &&
+      stamper instanceof ExpoAuth2Stamper
+        ? new ExpoAuth2AuthProvider(
+            stamper,
+            {
+              redirectUri: config.authOptions.redirectUrl,
+              connectLoginUrl: config.authOptions.authUrl,
+              clientId: config.unstable__auth2Options.clientId,
+              authApiBaseUrl: config.unstable__auth2Options.authApiBaseUrl,
+            },
+            {
+              apiBaseUrl: config.apiBaseUrl,
+              appId: config.appId,
+            },
+          )
+        : new ExpoAuthProvider();
 
     const platformName = `${Platform.OS}-${Platform.Version}`;
 
@@ -84,16 +110,17 @@ export function PhantomProvider({ children, config, debugConfig, theme, appIcon,
       name: platformName,
       analyticsHeaders: {
         [ANALYTICS_HEADERS.SDK_TYPE]: "react-native",
-        [ANALYTICS_HEADERS.PLATFORM]: Platform.OS,
+        [ANALYTICS_HEADERS.PLATFORM]: "ext-sdk",
         [ANALYTICS_HEADERS.PLATFORM_VERSION]: `${Platform.Version}`,
+        [ANALYTICS_HEADERS.CLIENT]: Platform.OS,
         [ANALYTICS_HEADERS.APP_ID]: config.appId,
-        [ANALYTICS_HEADERS.WALLET_TYPE]: config.embeddedWalletType as "app-wallet" | "user-wallet",
+        [ANALYTICS_HEADERS.WALLET_TYPE]: config.embeddedWalletType as SdkWalletType,
         [ANALYTICS_HEADERS.SDK_VERSION]: __SDK_VERSION__, // Replaced at build time
       },
     };
 
     return new EmbeddedProvider(memoizedConfig, platform, logger);
-  }, [memoizedConfig, debugConfig, config.appId, config.embeddedWalletType]);
+  }, [memoizedConfig, debugConfig, config]);
 
   // Event listener management - SDK already exists
   useEffect(() => {

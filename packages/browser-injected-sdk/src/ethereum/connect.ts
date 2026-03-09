@@ -4,10 +4,6 @@ import { triggerEvent } from "./eventListeners";
 export async function connect({ onlyIfTrusted = false } = {}): Promise<string[]> {
   const provider = await getProvider();
 
-  if (!provider) {
-    throw new Error("Provider not found.");
-  }
-
   if (provider.isConnected) {
     const accounts = await provider.getAccounts();
     return accounts;

@@ -63,7 +63,8 @@ export class SessionManager {
     return {
       [ANALYTICS_HEADERS.SDK_TYPE]: "server",
       [ANALYTICS_HEADERS.SDK_VERSION]: process.env.PHANTOM_VERSION ?? packageJson.version ?? "unknown",
-      [ANALYTICS_HEADERS.PLATFORM]: "mcp",
+      [ANALYTICS_HEADERS.PLATFORM]: "ext-sdk",
+      [ANALYTICS_HEADERS.CLIENT]: "mcp",
       [ANALYTICS_HEADERS.APP_ID]: appId,
     };
   }

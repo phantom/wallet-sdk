@@ -2,6 +2,7 @@ import type { SolanaStrategy } from "./strategies/types";
 import { getProvider } from "./getProvider";
 import { signMessage } from "./signMessage";
 import type { DisplayEncoding, PhantomSolanaProvider } from "./types";
+import { SOLANA_PROVIDER_NOT_FOUND } from "../errors";
 
 jest.mock("./getProvider", () => ({
   getProvider: jest.fn(),
@@ -37,10 +38,11 @@ describe("signMessage", () => {
     expect(result).toEqual(expectedResult);
   });
 
-  it("should throw an error if provider is not found", async () => {
-    (getProvider as jest.Mock).mockReturnValue(null);
+  it("should throw error when Solana provider is not found", async () => {
+    (getProvider as jest.Mock).mockRejectedValue(new Error(SOLANA_PROVIDER_NOT_FOUND));
     const message = new Uint8Array([1, 2, 3]);
-    await expect(signMessage(message)).rejects.toThrow("Provider not found.");
+
+    await expect(signMessage(message)).rejects.toThrow(SOLANA_PROVIDER_NOT_FOUND);
   });
 
   it("should call connect if provider is not initially connected, then proceed with signMessage", async () => {

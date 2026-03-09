@@ -1,6 +1,7 @@
 import type { ProviderStrategy } from "../types";
 import { getChainId, switchChain } from "./chainUtils";
 import * as getProviderModule from "./getProvider";
+import { ETHEREUM_PROVIDER_NOT_FOUND } from "../errors";
 
 // Mock the getProvider function
 const mockProvider = {
@@ -42,10 +43,10 @@ describe("chain utility functions", () => {
       expect(result).toBe(mockChainId);
     });
 
-    it("should throw error when provider is not found", async () => {
-      mockGetProvider.mockResolvedValue(null as any);
+    it("should throw error when Ethereum provider is not found", async () => {
+      mockGetProvider.mockRejectedValue(new Error(ETHEREUM_PROVIDER_NOT_FOUND));
 
-      await expect(getChainId()).rejects.toThrow("Provider not found.");
+      await expect(getChainId()).rejects.toThrow(ETHEREUM_PROVIDER_NOT_FOUND);
     });
 
     it("should handle getChainId errors", async () => {
@@ -64,10 +65,10 @@ describe("chain utility functions", () => {
       expect(mockProvider.switchChain).toHaveBeenCalledWith("0x89");
     });
 
-    it("should throw error when provider is not found", async () => {
-      mockGetProvider.mockResolvedValue(null as any);
+    it("should throw error when Ethereum provider is not found", async () => {
+      mockGetProvider.mockRejectedValue(new Error(ETHEREUM_PROVIDER_NOT_FOUND));
 
-      await expect(switchChain("0x89")).rejects.toThrow("Provider not found.");
+      await expect(switchChain("0x89")).rejects.toThrow(ETHEREUM_PROVIDER_NOT_FOUND);
     });
 
     it("should handle switchChain errors", async () => {

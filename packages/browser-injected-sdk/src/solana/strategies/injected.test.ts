@@ -80,7 +80,9 @@ describe("InjectedSolanaStrategy", () => {
     it("should throw an error if the provider is not connected", async () => {
       (window as any).phantom = undefined;
       const strategy = new InjectedSolanaStrategy();
-      await expect(strategy.connect({ onlyIfTrusted: true })).rejects.toThrow("Provider not found.");
+      await expect(strategy.connect({ onlyIfTrusted: true })).rejects.toThrow(
+        "Solana provider not found on window.phantom.",
+      );
     });
   });
 
@@ -102,7 +104,7 @@ describe("InjectedSolanaStrategy", () => {
     it("should throw an error if the provider is not connected", async () => {
       (window as any).phantom = undefined;
       const strategy = new InjectedSolanaStrategy();
-      await expect(strategy.disconnect()).rejects.toThrow("Provider not found.");
+      await expect(strategy.disconnect()).rejects.toThrow("Solana provider not found on window.phantom.");
     });
   });
 
@@ -225,7 +227,7 @@ describe("InjectedSolanaStrategy", () => {
       (window as any).phantom = undefined;
       const strategy = new InjectedSolanaStrategy();
       const message = new Uint8Array([1, 2, 3]);
-      await expect(strategy.signMessage(message)).rejects.toThrow("Provider not found.");
+      await expect(strategy.signMessage(message)).rejects.toThrow("Solana provider not found on window.phantom.");
     });
   });
 
@@ -278,7 +280,7 @@ describe("InjectedSolanaStrategy", () => {
         nonce: "12345",
         issuedAt: "2023-01-01T00:00:00.000Z",
       };
-      await expect(strategy.signIn(signInData)).rejects.toThrow("Provider not found.");
+      await expect(strategy.signIn(signInData)).rejects.toThrow("Solana provider not found on window.phantom.");
     });
   });
 
@@ -324,7 +326,9 @@ describe("InjectedSolanaStrategy", () => {
       const strategy = new InjectedSolanaStrategy();
       const mockTransaction = {} as Transaction;
 
-      await expect(strategy.signAndSendTransaction(mockTransaction)).rejects.toThrow("Provider not found.");
+      await expect(strategy.signAndSendTransaction(mockTransaction)).rejects.toThrow(
+        "Solana provider not found on window.phantom.",
+      );
     });
   });
 
@@ -364,7 +368,9 @@ describe("InjectedSolanaStrategy", () => {
       const strategy = new InjectedSolanaStrategy();
       const mockTransaction = {} as Transaction;
 
-      await expect(strategy.signTransaction(mockTransaction)).rejects.toThrow("Provider not found.");
+      await expect(strategy.signTransaction(mockTransaction)).rejects.toThrow(
+        "Solana provider not found on window.phantom.",
+      );
     });
   });
 
@@ -417,7 +423,9 @@ describe("InjectedSolanaStrategy", () => {
       const strategy = new InjectedSolanaStrategy();
       const mockTransactions = [{} as Transaction];
 
-      await expect(strategy.signAllTransactions(mockTransactions)).rejects.toThrow("Provider not found.");
+      await expect(strategy.signAllTransactions(mockTransactions)).rejects.toThrow(
+        "Solana provider not found on window.phantom.",
+      );
     });
   });
 });

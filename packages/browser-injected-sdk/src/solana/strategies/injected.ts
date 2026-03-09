@@ -2,8 +2,10 @@ import type { SolanaStrategy } from "./types";
 import type { DisplayEncoding, PhantomSolanaProvider, SolanaSignInData } from "../types";
 import type { Transaction, VersionedTransaction } from "@phantom/sdk-types";
 import { ProviderStrategy } from "../../types";
+import { PHANTOM_NOT_DETECTED, SOLANA_PROVIDER_NOT_FOUND } from "../../errors";
+import { isInstalled } from "../../extension/isInstalled";
 
-const MAX_RETRIES = 4;
+const MAX_RETRIES = 6;
 const BASE_DELAY = 100;
 
 export class InjectedSolanaStrategy implements SolanaStrategy {
@@ -12,7 +14,7 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
   load() {
     // We add a backoff retry to see if window.phantom.solana is available
     let retryCount = 0;
-    const scheduleRetry = (resolve: () => void, reject: () => void) => {
+    const scheduleRetry = (resolve: () => void, reject: (reason: Error) => void) => {
       const delay = BASE_DELAY * Math.pow(2, Math.min(retryCount, 5));
 
       setTimeout(() => {
@@ -23,7 +25,11 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
 
         retryCount++;
         if (retryCount >= MAX_RETRIES) {
-          reject();
+          if (!isInstalled()) {
+            reject(new Error(PHANTOM_NOT_DETECTED));
+          } else {
+            reject(new Error(SOLANA_PROVIDER_NOT_FOUND));
+          }
         } else {
           scheduleRetry(resolve, reject);
         }
@@ -36,10 +42,10 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
   }
 
   #getProvider(): PhantomSolanaProvider | undefined {
-    if (typeof window === "undefined") {
+    if (!isInstalled()) {
       return undefined;
     }
-    return (window as any)?.phantom?.solana as PhantomSolanaProvider;
+    return (window as any).phantom.solana as PhantomSolanaProvider;
   }
 
   public getProvider(): PhantomSolanaProvider | null {
@@ -54,7 +60,7 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
   public async connect({ onlyIfTrusted }: { onlyIfTrusted: boolean }): Promise<string | undefined> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Provider not found.");
+      throw new Error(SOLANA_PROVIDER_NOT_FOUND);
     }
     if (provider.isConnected && provider.publicKey) {
       return this.getAccount() ?? undefined;
@@ -70,7 +76,7 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
   public async disconnect(): Promise<void> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Provider not found.");
+      throw new Error(SOLANA_PROVIDER_NOT_FOUND);
     }
     await provider.disconnect();
   }
@@ -89,7 +95,7 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
   ): Promise<{ signature: Uint8Array; address: string }> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Provider not found.");
+      throw new Error(SOLANA_PROVIDER_NOT_FOUND);
     }
 
     if (!provider.isConnected) {
@@ -108,7 +114,7 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
   ): Promise<{ address: string; signature: Uint8Array; signedMessage: Uint8Array }> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Provider not found.");
+      throw new Error(SOLANA_PROVIDER_NOT_FOUND);
     }
 
     const result = await provider.signIn(signInData);
@@ -124,7 +130,7 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
   ): Promise<{ signature: string; address?: string }> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Provider not found.");
+      throw new Error(SOLANA_PROVIDER_NOT_FOUND);
     }
 
     if (!provider.isConnected) {
@@ -143,7 +149,7 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
   ): Promise<{ signatures: string[]; address?: string }> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Provider not found.");
+      throw new Error(SOLANA_PROVIDER_NOT_FOUND);
     }
 
     if (!provider.isConnected) {
@@ -166,7 +172,7 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
   ): Promise<Transaction | VersionedTransaction> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Provider not found.");
+      throw new Error(SOLANA_PROVIDER_NOT_FOUND);
     }
 
     if (!provider.isConnected) {
@@ -182,7 +188,7 @@ export class InjectedSolanaStrategy implements SolanaStrategy {
   ): Promise<(Transaction | VersionedTransaction)[]> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Provider not found.");
+      throw new Error(SOLANA_PROVIDER_NOT_FOUND);
     }
 
     if (!provider.isConnected) {

@@ -11,9 +11,6 @@ export async function signAllTransactions(
   transactions: (VersionedTransaction | Transaction)[],
 ): Promise<(VersionedTransaction | Transaction)[]> {
   const provider = await getProvider();
-  if (!provider) {
-    throw new Error("Provider not found.");
-  }
 
   if (!provider.isConnected) {
     await provider.connect({ onlyIfTrusted: false });

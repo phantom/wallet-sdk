@@ -1,5 +1,18 @@
 # @phantom/openclaw-plugin
 
+## 0.1.8
+
+### Patch Changes
+
+- 9007383: Fix derivation index handling in MCP tools by accepting numeric strings (for example, `"0"`) and coercing them to numbers before validation.
+
+  Improve `buy_token` 405 errors with explicit guidance when `quoteApiUrl` points to a non-Phantom-compatible endpoint.
+
+  Add guardrails in OpenClaw wallet docs/skill to keep `quoteApiUrl` unset by default and only override for explicit debugging.
+
+- Updated dependencies [9007383]
+  - @phantom/mcp-server@0.1.8
+
 ## 0.1.7
 
 ### Patch Changes
