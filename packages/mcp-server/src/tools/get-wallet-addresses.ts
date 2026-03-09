@@ -3,6 +3,7 @@
  */
 
 import type { ToolHandler, ToolContext } from "./types.js";
+import { parseOptionalNonNegativeInteger } from "../utils/params.js";
 
 export const getWalletAddressesTool: ToolHandler = {
   name: "get_wallet_addresses",
@@ -24,8 +25,7 @@ export const getWalletAddressesTool: ToolHandler = {
   handler: async (params: Record<string, unknown>, context: ToolContext) => {
     const { client, session, logger } = context;
 
-    // Parse parameters
-    const derivationIndex = typeof params.derivationIndex === "number" ? params.derivationIndex : undefined;
+    const derivationIndex = parseOptionalNonNegativeInteger(params.derivationIndex, "derivationIndex");
 
     logger.info("Getting addresses for wallet");
 

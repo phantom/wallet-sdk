@@ -400,9 +400,11 @@ describe("Ethereum Plugin", () => {
     });
 
     it("should throw error if provider not found", async () => {
-      mockGetProvider.mockRejectedValue(new Error("Provider not found."));
+      mockGetProvider.mockRejectedValue(new Error("Ethereum provider not found on window.phantom."));
 
-      await expect(ethereum.request({ method: "eth_blockNumber" })).rejects.toThrow("Provider not found.");
+      await expect(ethereum.request({ method: "eth_blockNumber" })).rejects.toThrow(
+        "Ethereum provider not found on window.phantom.",
+      );
     });
   });
 

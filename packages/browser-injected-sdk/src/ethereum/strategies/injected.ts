@@ -2,8 +2,10 @@ import type { EthereumStrategy } from "./types";
 import type { PhantomEthereumProvider, EthereumTransaction, EthereumSignInData } from "../types";
 import { ProviderStrategy } from "../../types";
 import { createSiweMessage } from "../siwe";
+import { PHANTOM_NOT_DETECTED, ETHEREUM_PROVIDER_NOT_FOUND } from "../../errors";
+import { isInstalled } from "../../extension/isInstalled";
 
-const MAX_RETRIES = 4;
+const MAX_RETRIES = 6;
 const BASE_DELAY = 100;
 
 export class InjectedEthereumStrategy implements EthereumStrategy {
@@ -12,7 +14,7 @@ export class InjectedEthereumStrategy implements EthereumStrategy {
   load() {
     // We add a backoff retry to see if window.phantom.ethereum is available
     let retryCount = 0;
-    const scheduleRetry = (resolve: () => void, reject: () => void) => {
+    const scheduleRetry = (resolve: () => void, reject: (reason: Error) => void) => {
       const delay = BASE_DELAY * Math.pow(2, Math.min(retryCount, 5));
 
       setTimeout(() => {
@@ -23,7 +25,11 @@ export class InjectedEthereumStrategy implements EthereumStrategy {
 
         retryCount++;
         if (retryCount >= MAX_RETRIES) {
-          reject();
+          if (!isInstalled()) {
+            reject(new Error(PHANTOM_NOT_DETECTED));
+          } else {
+            reject(new Error(ETHEREUM_PROVIDER_NOT_FOUND));
+          }
         } else {
           scheduleRetry(resolve, reject);
         }
@@ -36,10 +42,10 @@ export class InjectedEthereumStrategy implements EthereumStrategy {
   }
 
   #getProvider(): PhantomEthereumProvider | undefined {
-    if (typeof window === "undefined") {
+    if (!isInstalled()) {
       return undefined;
     }
-    return (window as any)?.phantom?.ethereum as PhantomEthereumProvider;
+    return (window as any).phantom.ethereum as PhantomEthereumProvider;
   }
 
   public getProvider(): PhantomEthereumProvider | null {
@@ -54,7 +60,7 @@ export class InjectedEthereumStrategy implements EthereumStrategy {
   public async connect({ onlyIfTrusted }: { onlyIfTrusted: boolean }): Promise<string[] | undefined> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Provider not found.");
+      throw new Error(ETHEREUM_PROVIDER_NOT_FOUND);
     }
 
     if (provider.isConnected && provider.selectedAddress) {
@@ -94,7 +100,7 @@ export class InjectedEthereumStrategy implements EthereumStrategy {
   public async signMessage(message: string, address: string): Promise<string> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Provider not found.");
+      throw new Error(ETHEREUM_PROVIDER_NOT_FOUND);
     }
 
     if (!provider.isConnected) {
@@ -112,7 +118,7 @@ export class InjectedEthereumStrategy implements EthereumStrategy {
   public async signPersonalMessage(message: string, address: string): Promise<string> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Provider not found.");
+      throw new Error(ETHEREUM_PROVIDER_NOT_FOUND);
     }
 
     if (!provider.isConnected) {
@@ -130,7 +136,7 @@ export class InjectedEthereumStrategy implements EthereumStrategy {
   public async signTypedData(typedData: any, address: string): Promise<string> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Provider not found.");
+      throw new Error(ETHEREUM_PROVIDER_NOT_FOUND);
     }
 
     if (!provider.isConnected) {
@@ -150,7 +156,7 @@ export class InjectedEthereumStrategy implements EthereumStrategy {
   ): Promise<{ address: string; signature: string; signedMessage: string }> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Provider not found.");
+      throw new Error(ETHEREUM_PROVIDER_NOT_FOUND);
     }
 
     const message = createSiweMessage(signInData);
@@ -171,7 +177,7 @@ export class InjectedEthereumStrategy implements EthereumStrategy {
   public async sendTransaction(transaction: EthereumTransaction): Promise<string> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Provider not found.");
+      throw new Error(ETHEREUM_PROVIDER_NOT_FOUND);
     }
 
     if (!provider.isConnected) {
@@ -189,7 +195,7 @@ export class InjectedEthereumStrategy implements EthereumStrategy {
   public async signTransaction(transaction: EthereumTransaction): Promise<string> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Provider not found.");
+      throw new Error(ETHEREUM_PROVIDER_NOT_FOUND);
     }
 
     if (!provider.isConnected) {
@@ -207,7 +213,7 @@ export class InjectedEthereumStrategy implements EthereumStrategy {
   public async getChainId(): Promise<string> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Provider not found.");
+      throw new Error(ETHEREUM_PROVIDER_NOT_FOUND);
     }
 
     const chainId = await provider.request({ method: "eth_chainId" });
@@ -217,7 +223,7 @@ export class InjectedEthereumStrategy implements EthereumStrategy {
   public async switchChain(chainId: string): Promise<void> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Provider not found.");
+      throw new Error(ETHEREUM_PROVIDER_NOT_FOUND);
     }
 
     await provider.request({
@@ -229,7 +235,7 @@ export class InjectedEthereumStrategy implements EthereumStrategy {
   public async request<T = any>(args: { method: string; params?: unknown[] }): Promise<T> {
     const provider = this.#getProvider();
     if (!provider) {
-      throw new Error("Provider not found.");
+      throw new Error(ETHEREUM_PROVIDER_NOT_FOUND);
     }
 
     return await provider.request(args);

@@ -1,6 +1,7 @@
 import type { ProviderStrategy } from "../types";
 import { getAccounts } from "./getAccounts";
 import * as getProviderModule from "./getProvider";
+import { ETHEREUM_PROVIDER_NOT_FOUND } from "../errors";
 
 // Mock the getProvider function
 const mockProvider = {
@@ -50,10 +51,10 @@ describe("getAccounts", () => {
     expect(result).toEqual([]);
   });
 
-  it("should throw error when provider is not found", async () => {
-    mockGetProvider.mockResolvedValue(null as any);
+  it("should throw error when Ethereum provider is not found", async () => {
+    mockGetProvider.mockRejectedValue(new Error(ETHEREUM_PROVIDER_NOT_FOUND));
 
-    await expect(getAccounts()).rejects.toThrow("Provider not found.");
+    await expect(getAccounts()).rejects.toThrow(ETHEREUM_PROVIDER_NOT_FOUND);
   });
 
   it("should handle provider getAccounts errors", async () => {

@@ -1,33 +1,27 @@
 import { autoConfirmSupportedChains } from "./autoConfirmSupportedChains";
-import { getProvider } from "./getProvider";
-import type { PhantomProvider } from "./types";
-
-jest.mock("./getProvider", () => ({
-  getProvider: jest.fn(),
-}));
-
-const mockGetProvider = getProvider as jest.MockedFunction<() => PhantomProvider | null>;
+import { PHANTOM_NOT_DETECTED, APP_PROVIDER_NOT_FOUND } from "../errors";
 
 describe("autoConfirmSupportedChains", () => {
-  let mockProvider: Partial<PhantomProvider>;
+  const originalPhantom = (window as any).phantom;
+  let mockRequest: jest.Mock;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    mockProvider = {
-      request: jest.fn(),
-    };
-    mockGetProvider.mockReturnValue(mockProvider as PhantomProvider);
+    mockRequest = jest.fn();
+    (window as any).phantom = { app: { request: mockRequest } };
+  });
+
+  afterEach(() => {
+    (window as any).phantom = originalPhantom;
   });
 
   it("should get supported chains", async () => {
     // Mock raw provider response with internal CAIP format
     const mockProviderResponse = { chains: ["solana:101", "eip155:1", "sui:mainnet"] };
-    (mockProvider.request as jest.Mock).mockResolvedValue(mockProviderResponse);
+    mockRequest.mockResolvedValue(mockProviderResponse);
 
     const result = await autoConfirmSupportedChains();
 
-    expect(mockGetProvider).toHaveBeenCalledTimes(1);
-    expect(mockProvider.request).toHaveBeenCalledWith({
+    expect(mockRequest).toHaveBeenCalledWith({
       method: "phantom_auto_confirm_supported_chains",
       params: {},
     });
@@ -35,18 +29,22 @@ describe("autoConfirmSupportedChains", () => {
     expect(result).toEqual({ chains: ["solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp", "eip155:1", "sui:35834a8a"] });
   });
 
-  it("should throw error when provider is not found", async () => {
-    mockGetProvider.mockReturnValue(null);
+  it("should throw when Phantom is not installed", async () => {
+    (window as any).phantom = undefined;
 
-    await expect(autoConfirmSupportedChains()).rejects.toThrow("Provider not found.");
-    expect(mockGetProvider).toHaveBeenCalledTimes(1);
+    await expect(autoConfirmSupportedChains()).rejects.toThrow(PHANTOM_NOT_DETECTED);
+  });
+
+  it("should throw when app provider is missing", async () => {
+    (window as any).phantom = { solana: {} };
+
+    await expect(autoConfirmSupportedChains()).rejects.toThrow(APP_PROVIDER_NOT_FOUND);
   });
 
   it("should handle provider request error", async () => {
-    (mockProvider.request as jest.Mock).mockRejectedValue(new Error("Request failed"));
+    mockRequest.mockRejectedValue(new Error("Request failed"));
 
     await expect(autoConfirmSupportedChains()).rejects.toThrow("Request failed");
-    expect(mockGetProvider).toHaveBeenCalledTimes(1);
-    expect(mockProvider.request).toHaveBeenCalledTimes(1);
+    expect(mockRequest).toHaveBeenCalledTimes(1);
   });
 });

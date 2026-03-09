@@ -7,7 +7,7 @@ describe("getProvider", () => {
     // @ts-expect-error - window.phantom is not typed
     delete window.phantom;
     await expect(getProvider(ProviderStrategy.INJECTED)).rejects.toThrow();
-  });
+  }, 10000);
   it("should return injected provider", async () => {
     // @ts-expect-error - window.phantom is not typed
     window.phantom = {

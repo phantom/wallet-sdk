@@ -8,6 +8,7 @@ export interface AuthResult {
   accountDerivationIndex: number; // Account derivation index from auth response
   expiresInMs: number; // Authenticator expiration time from auth response (for user-wallets)
   authUserId?: string; // User ID returned from auth flow (optional, for user-wallets)
+  bearerToken?: string; // "${tokenType} ${accessToken}" for Authorization header
 }
 
 export interface PhantomConnectOptions {
@@ -25,7 +26,7 @@ export interface PhantomConnectOptions {
 
 export interface AuthProvider {
   authenticate(options: PhantomConnectOptions): Promise<void | AuthResult>;
-  resumeAuthFromRedirect?(provider: EmbeddedProviderAuthType): AuthResult | null;
+  resumeAuthFromRedirect?(provider: EmbeddedProviderAuthType): Promise<AuthResult | null>;
 }
 
 export interface PhantomAppAuthOptions {

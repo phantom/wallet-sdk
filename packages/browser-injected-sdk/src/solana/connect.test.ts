@@ -2,6 +2,7 @@ import type { SolanaStrategy } from "./strategies/types";
 import { connect } from "./connect";
 import { addEventListener, clearAllEventListeners } from "./eventListeners";
 import { getProvider } from "./getProvider";
+import { SOLANA_PROVIDER_NOT_FOUND } from "../errors";
 
 jest.mock("./getProvider", () => ({
   getProvider: jest.fn(),
@@ -81,10 +82,11 @@ describe("connect", () => {
     expect(mockDefaultGetProvider).toHaveBeenCalledTimes(1);
     expect(triggerEventSpy).not.toHaveBeenCalled();
   });
-  it("should throw error when provider is not properly injected", async () => {
-    mockDefaultGetProvider.mockReturnValue(Promise.resolve(null));
-    await expect(connect()).rejects.toThrow("Provider not found.");
+
+  it("should throw error when Solana provider is not found", async () => {
+    mockDefaultGetProvider.mockRejectedValue(new Error(SOLANA_PROVIDER_NOT_FOUND));
+
+    await expect(connect()).rejects.toThrow(SOLANA_PROVIDER_NOT_FOUND);
     expect(triggerEventSpy).not.toHaveBeenCalled();
-    expect(mockDefaultGetProvider).toHaveBeenCalledTimes(1);
   });
 });

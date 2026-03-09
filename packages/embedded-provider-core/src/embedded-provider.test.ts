@@ -15,6 +15,7 @@ jest.mock("@phantom/parsers", () => ({
 // Mock PhantomClient with proper implementation
 const mockCreateOrganization = jest.fn().mockResolvedValue({ organizationId: "org-123" });
 jest.mock("@phantom/client", () => ({
+  ...jest.requireActual("@phantom/client"),
   generateKeyPair: jest.fn(),
   PhantomClient: jest.fn().mockImplementation(() => ({
     createOrganization: mockCreateOrganization,
@@ -320,6 +321,151 @@ describe("EmbeddedProvider Core", () => {
       await mockPlatform.stamper.resetKeyPair();
 
       expect(mockPlatform.stamper.resetKeyPair).toHaveBeenCalled();
+    });
+  });
+
+  describe("Authenticator revocation (401/403 disconnect)", () => {
+    const mockSession = {
+      sessionId: "test-session-id",
+      walletId: "test-wallet-id",
+      organizationId: "org-123",
+      appId: "app-123",
+      stamperInfo: { keyId: "test-key-id", publicKey: "11111111111111111111111111111111" },
+      authProvider: "google",
+      userInfo: {},
+      status: "completed" as const,
+      createdAt: Date.now(),
+      lastUsed: Date.now(),
+      authenticatorCreatedAt: Date.now(),
+      authenticatorExpiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+      lastRenewalAttempt: undefined,
+      username: "test-user",
+    };
+
+    const make403Error = () => {
+      const err: any = new Error("Forbidden");
+      err.isAxiosError = true;
+      err.response = { status: 403 };
+      return err;
+    };
+
+    const make401Error = () => {
+      const err: any = new Error("Unauthorized");
+      err.isAxiosError = true;
+      err.response = { status: 401 };
+      return err;
+    };
+
+    beforeEach(() => {
+      mockPlatform.storage.getSession.mockResolvedValue(mockSession);
+      provider["walletId"] = "test-wallet-id";
+      // Provide a parsed transaction so signTransaction/signAndSendTransaction reach the client call
+      const { parseToKmsTransaction } = jest.requireMock("@phantom/parsers");
+      parseToKmsTransaction.mockResolvedValue({ parsed: "mock-base64url" });
+      // Provide addresses so getAddressForNetwork returns a value
+      provider["addresses"] = [{ addressType: "solana", address: "mockAddress" }];
+    });
+
+    const signingMethods: Array<{ name: string; setup: (client: any) => void; call: () => Promise<any> }> = [
+      {
+        name: "signMessage",
+        setup: client => {
+          client.signUtf8Message = jest.fn().mockRejectedValue(make403Error());
+        },
+        call: () => provider.signMessage({ message: "hello", networkId: "solana:101" }),
+      },
+      {
+        name: "signEthereumMessage",
+        setup: client => {
+          client.ethereumSignMessage = jest.fn().mockRejectedValue(make403Error());
+        },
+        call: () => provider.signEthereumMessage({ message: "0x68656c6c6f", networkId: "eip155:1" }),
+      },
+      {
+        name: "signTypedDataV4",
+        setup: client => {
+          client.ethereumSignTypedData = jest.fn().mockRejectedValue(make403Error());
+        },
+        call: () => provider.signTypedDataV4({ typedData: {}, networkId: "eip155:1" }),
+      },
+      {
+        name: "signTransaction",
+        setup: client => {
+          client.signTransaction = jest.fn().mockRejectedValue(make403Error());
+        },
+        call: () => provider.signTransaction({ transaction: "mock-tx", networkId: "solana:101" }),
+      },
+      {
+        name: "signAndSendTransaction",
+        setup: client => {
+          client.signAndSendTransaction = jest.fn().mockRejectedValue(make403Error());
+        },
+        call: () => provider.signAndSendTransaction({ transaction: "mock-tx", networkId: "solana:101" }),
+      },
+    ];
+
+    for (const method of signingMethods) {
+      it(`should disconnect and throw "Authenticator revoked" when ${method.name} gets a 403`, async () => {
+        const mockClient: any = {};
+        method.setup(mockClient);
+        provider["client"] = mockClient;
+
+        await expect(method.call()).rejects.toThrow("Authenticator revoked");
+
+        expect(mockPlatform.storage.clearSession).toHaveBeenCalled();
+        expect(provider.isConnected()).toBe(false);
+      });
+
+      it(`should disconnect and throw "Authenticator revoked" when ${method.name} gets a 401`, async () => {
+        const mockClient: any = {};
+        // Override the setup to use 401
+        const err401 = make401Error();
+        Object.values(mockClient); // ensure object exists
+        if (method.name === "signMessage") mockClient.signUtf8Message = jest.fn().mockRejectedValue(err401);
+        else if (method.name === "signEthereumMessage")
+          mockClient.ethereumSignMessage = jest.fn().mockRejectedValue(err401);
+        else if (method.name === "signTypedDataV4")
+          mockClient.ethereumSignTypedData = jest.fn().mockRejectedValue(err401);
+        else if (method.name === "signTransaction") mockClient.signTransaction = jest.fn().mockRejectedValue(err401);
+        else if (method.name === "signAndSendTransaction")
+          mockClient.signAndSendTransaction = jest.fn().mockRejectedValue(err401);
+        provider["client"] = mockClient;
+
+        await expect(method.call()).rejects.toThrow("Authenticator revoked");
+
+        expect(mockPlatform.storage.clearSession).toHaveBeenCalled();
+        expect(provider.isConnected()).toBe(false);
+      });
+    }
+
+    it("should emit a disconnect event when disconnecting due to 403", async () => {
+      const mockClient: any = {
+        signUtf8Message: jest.fn().mockRejectedValue(make403Error()),
+      };
+      provider["client"] = mockClient;
+
+      const disconnectListener = jest.fn();
+      provider.on("disconnect", disconnectListener);
+
+      await expect(provider.signMessage({ message: "hello", networkId: "solana:101" })).rejects.toThrow(
+        "Authenticator revoked",
+      );
+
+      expect(disconnectListener).toHaveBeenCalledWith({ source: "manual" });
+    });
+
+    it("should NOT disconnect on non-auth errors (e.g. network error)", async () => {
+      const mockClient: any = {
+        signUtf8Message: jest.fn().mockRejectedValue(new Error("Network error")),
+      };
+      provider["client"] = mockClient;
+
+      await expect(provider.signMessage({ message: "hello", networkId: "solana:101" })).rejects.toThrow(
+        "Network error",
+      );
+
+      expect(mockPlatform.storage.clearSession).not.toHaveBeenCalled();
+      expect(provider.isConnected()).toBe(true);
     });
   });
 

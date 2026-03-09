@@ -2,6 +2,11 @@ import nacl from "tweetnacl";
 import bs58 from "bs58";
 import { Buffer } from "buffer";
 
+export async function sha256(input: Uint8Array): Promise<Uint8Array> {
+  const digest = await crypto.subtle.digest("SHA-256", input as BufferSource);
+  return new Uint8Array(digest);
+}
+
 export interface Keypair {
   publicKey: string;
   secretKey: string;

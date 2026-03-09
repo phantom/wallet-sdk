@@ -17,6 +17,7 @@ import type { ToolHandler, ToolContext } from "./types.js";
 import { normalizeNetworkId } from "../utils/network.js";
 import { getSolanaAddress } from "../utils/solana.js";
 import { parseBaseUnitAmount, parseUiAmount, requirePositiveAmount } from "../utils/amount.js";
+import { parseOptionalNonNegativeInteger } from "../utils/params.js";
 
 const DEFAULT_SOLANA_RPC_URLS: Record<string, string> = {
   [NetworkId.SOLANA_MAINNET]: "https://api.mainnet-beta.solana.com",
@@ -181,10 +182,7 @@ export const transferTokensTool: ToolHandler = {
       throw new Error("walletId is required (missing from session and not provided)");
     }
 
-    const derivationIndex = typeof params.derivationIndex === "number" ? params.derivationIndex : undefined;
-    if (derivationIndex !== undefined && (!Number.isInteger(derivationIndex) || derivationIndex < 0)) {
-      throw new Error("derivationIndex must be a non-negative integer");
-    }
+    const derivationIndex = parseOptionalNonNegativeInteger(params.derivationIndex, "derivationIndex");
 
     const amountUnit = typeof params.amountUnit === "string" ? params.amountUnit : "ui";
     if (amountUnit !== "ui" && amountUnit !== "base") {

@@ -1,15 +1,19 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ConnectBox, usePhantom } from "@phantom/react-sdk";
+import { usePhantom } from "@phantom/react-sdk";
 import { DebugConsole } from "./components/DebugConsole";
 import "./AuthCallback.css";
 
 export function AuthCallback() {
   const navigate = useNavigate();
-  const { isConnected } = usePhantom();
+  const { isConnected, isConnecting, errors } = usePhantom();
+  const connectError = errors.connect;
 
-  const handleGoHome = () => {
-    navigate("/");
-  };
+  useEffect(() => {
+    if (isConnected) {
+      navigate("/");
+    }
+  }, [isConnected, navigate]);
 
   return (
     <div id="app">
@@ -18,11 +22,25 @@ export function AuthCallback() {
       <div className="main-layout">
         <div className="left-panel">
           <div className="section">
-            <ConnectBox />
+            <h3>Auth2 Flow</h3>
+
+            {!connectError && !isConnected && (
+              <div className="status-card">
+                <p>{isConnecting ? "Processing authentication…" : "Waiting for authentication…"}</p>
+              </div>
+            )}
+
             {isConnected && (
-              <div style={{ marginTop: "16px", display: "flex", justifyContent: "center" }}>
-                <button onClick={handleGoHome} className="primary">
-                  Go to Main App
+              <div className="status-card">
+                <p>Connected! Redirecting…</p>
+              </div>
+            )}
+
+            {connectError && (
+              <div className="status-card">
+                <p className="error-text">Authentication error: {connectError.message}</p>
+                <button onClick={() => navigate("/")} className="primary" style={{ marginTop: "12px" }}>
+                  Back to Main App
                 </button>
               </div>
             )}

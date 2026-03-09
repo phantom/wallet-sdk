@@ -10,10 +10,6 @@ import { getProvider } from "./getProvider";
 export async function signMessage(message: string, address: string): Promise<string> {
   const provider = await getProvider();
 
-  if (!provider) {
-    throw new Error("Provider not found.");
-  }
-
   if (!provider.isConnected) {
     await provider.connect({ onlyIfTrusted: false });
   }
@@ -31,10 +27,6 @@ export async function signMessage(message: string, address: string): Promise<str
 export async function signPersonalMessage(message: string, address: string): Promise<string> {
   const provider = await getProvider();
 
-  if (!provider) {
-    throw new Error("Provider not found.");
-  }
-
   if (!provider.isConnected) {
     await provider.connect({ onlyIfTrusted: false });
   }
@@ -51,10 +43,6 @@ export async function signPersonalMessage(message: string, address: string): Pro
  */
 export async function signTypedData(typedData: any, address: string): Promise<string> {
   const provider = await getProvider();
-
-  if (!provider) {
-    throw new Error("Provider not found.");
-  }
 
   if (!provider.isConnected) {
     await provider.connect({ onlyIfTrusted: false });

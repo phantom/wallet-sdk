@@ -31,6 +31,9 @@ export interface Session {
   accountDerivationIndex?: number; // Account derivation index from auth flow
   // Phantom user ID from auth flow (for user-wallets)
   authUserId?: string; // User ID returned from Phantom auth service
+  pkceCodeVerifier?: string; // PKCE code verifier for Auth2 redirect flow
+  salt?: string; // Per-session salt for OIDC nonce binding
+  bearerToken?: string; // "${tokenType} ${accessToken}" for Authorization header
 }
 
 export interface EmbeddedStorage {

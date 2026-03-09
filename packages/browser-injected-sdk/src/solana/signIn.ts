@@ -13,10 +13,6 @@ export async function signIn(
 ): Promise<{ address: string; signature: Uint8Array; signedMessage: Uint8Array }> {
   const provider = await getProvider();
 
-  if (!provider) {
-    throw new Error("Provider not found.");
-  }
-
   const result = await provider.signIn(signInData);
 
   if (result.address) {

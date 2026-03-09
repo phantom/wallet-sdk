@@ -52,8 +52,13 @@ export interface EmbeddedProviderConfig {
   apiBaseUrl: string;
   appId: string;
   authOptions: {
-    authUrl: string;
-    redirectUrl: string;
+    authUrl?: string;
+    redirectUrl?: string;
+  };
+  /** When also provided, the Auth2 PKCE flow is used instead of the legacy Phantom Connect flow. */
+  unstable__auth2Options?: {
+    authApiBaseUrl: string;
+    clientId: string;
   };
   embeddedWalletType: "app-wallet" | "user-wallet" | (string & Record<never, never>); // Allow any string for avoiding type conflicts
   addressTypes: AddressType[];

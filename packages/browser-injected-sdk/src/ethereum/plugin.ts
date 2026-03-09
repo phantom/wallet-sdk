@@ -38,9 +38,6 @@ export class Ethereum implements IEthereumChain {
 
   async request<T = any>(args: { method: string; params?: unknown[] }): Promise<T> {
     const provider = await getProvider();
-    if (!provider) {
-      throw new Error("Provider not found.");
-    }
     const providerInstance = provider.getProvider();
     if (!providerInstance) {
       throw new Error("Provider instance not found.");

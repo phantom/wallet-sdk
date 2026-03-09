@@ -1,27 +1,23 @@
 import { autoConfirmDisable } from "./autoConfirmDisable";
-import { getProvider } from "./getProvider";
-import type { AutoConfirmResult, PhantomProvider } from "./types";
-
-jest.mock("./getProvider", () => ({
-  getProvider: jest.fn(),
-}));
-
-const mockGetProvider = getProvider as jest.MockedFunction<() => PhantomProvider | null>;
+import type { AutoConfirmResult } from "./types";
+import { PHANTOM_NOT_DETECTED, APP_PROVIDER_NOT_FOUND } from "../errors";
 
 describe("autoConfirmDisable", () => {
-  let mockProvider: Partial<PhantomProvider>;
+  const originalPhantom = (window as any).phantom;
+  let mockRequest: jest.Mock;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    mockProvider = {
-      request: jest.fn(),
-    };
-    mockGetProvider.mockReturnValue(mockProvider as PhantomProvider);
+    mockRequest = jest.fn();
+    (window as any).phantom = { app: { request: mockRequest } };
+  });
+
+  afterEach(() => {
+    (window as any).phantom = originalPhantom;
   });
 
   it("should disable auto-confirm", async () => {
     const mockResult: AutoConfirmResult = { enabled: false, chains: [] };
-    (mockProvider.request as jest.Mock).mockImplementation(({ method }) => {
+    mockRequest.mockImplementation(({ method }) => {
       if (method === "phantom_auto_confirm_disable") {
         return Promise.resolve(mockResult);
       }
@@ -30,26 +26,29 @@ describe("autoConfirmDisable", () => {
 
     const result = await autoConfirmDisable();
 
-    expect(mockGetProvider).toHaveBeenCalledTimes(1);
-    expect(mockProvider.request).toHaveBeenCalledWith({
+    expect(mockRequest).toHaveBeenCalledWith({
       method: "phantom_auto_confirm_disable",
       params: {},
     });
     expect(result).toEqual(mockResult);
   });
 
-  it("should throw error when provider is not found", async () => {
-    mockGetProvider.mockReturnValue(null);
+  it("should throw when Phantom is not installed", async () => {
+    (window as any).phantom = undefined;
 
-    await expect(autoConfirmDisable()).rejects.toThrow("Provider not found.");
-    expect(mockGetProvider).toHaveBeenCalledTimes(1);
+    await expect(autoConfirmDisable()).rejects.toThrow(PHANTOM_NOT_DETECTED);
+  });
+
+  it("should throw when app provider is missing", async () => {
+    (window as any).phantom = { solana: {} };
+
+    await expect(autoConfirmDisable()).rejects.toThrow(APP_PROVIDER_NOT_FOUND);
   });
 
   it("should handle provider request error", async () => {
-    (mockProvider.request as jest.Mock).mockRejectedValue(new Error("Request failed"));
+    mockRequest.mockRejectedValue(new Error("Request failed"));
 
     await expect(autoConfirmDisable()).rejects.toThrow("Request failed");
-    expect(mockGetProvider).toHaveBeenCalledTimes(1);
-    expect(mockProvider.request).toHaveBeenCalledTimes(1);
+    expect(mockRequest).toHaveBeenCalledTimes(1);
   });
 });

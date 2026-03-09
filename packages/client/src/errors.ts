@@ -40,6 +40,13 @@ export function getErrorMessage(error: unknown, fallbackMessage = "An error occu
   return fallbackMessage;
 }
 
+export function isAuthenticationError(error: unknown): boolean {
+  if (isAxiosError(error)) {
+    return error.response?.status === 401 || error.response?.status === 403;
+  }
+  return false;
+}
+
 export function parseWalletServiceError(data: PrepareErrorResponse | undefined): WalletServiceError | null {
   if (!data || !data.type) {
     return null;

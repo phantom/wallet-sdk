@@ -7,6 +7,7 @@ import { isSolanaChain } from "@phantom/utils";
 import type { ToolHandler, ToolContext } from "./types.js";
 import { normalizeNetworkId } from "../utils/network.js";
 import { getSolanaAddress } from "../utils/solana.js";
+import { parseOptionalNonNegativeInteger } from "../utils/params.js";
 
 export const signTransactionTool: ToolHandler = {
   name: "sign_transaction",
@@ -64,14 +65,6 @@ export const signTransactionTool: ToolHandler = {
       throw new Error("walletId is required (missing from session and not provided)");
     }
 
-    // Validate derivationIndex if provided
-    if (params.derivationIndex !== undefined && params.derivationIndex !== null) {
-      const derivIdx = params.derivationIndex as number;
-      if (!Number.isInteger(derivIdx) || derivIdx < 0) {
-        throw new Error("derivationIndex must be a non-negative integer");
-      }
-    }
-
     // Validate account if provided
     if (params.account !== undefined && typeof params.account !== "string") {
       throw new Error("account must be a string");
@@ -79,7 +72,7 @@ export const signTransactionTool: ToolHandler = {
 
     const transaction = params.transaction;
     const networkId = normalizeNetworkId(params.networkId) as NetworkId;
-    const derivationIndex = typeof params.derivationIndex === "number" ? params.derivationIndex : undefined;
+    const derivationIndex = parseOptionalNonNegativeInteger(params.derivationIndex, "derivationIndex");
 
     let account = typeof params.account === "string" ? params.account : undefined;
     if (!account && isSolanaChain(networkId)) {

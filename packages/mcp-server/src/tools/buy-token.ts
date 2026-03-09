@@ -12,6 +12,7 @@ import type { ToolHandler, ToolContext } from "./types.js";
 import { normalizeNetworkId, normalizeSwapperChainId } from "../utils/network.js";
 import { getSolanaAddress } from "../utils/solana.js";
 import { parseBaseUnitAmount, parseUiAmount, requirePositiveAmount } from "../utils/amount.js";
+import { parseOptionalNonNegativeInteger } from "../utils/params.js";
 
 const DEFAULT_QUOTES_API_URL = "https://api.phantom.app/swap/v2/quotes";
 const DEFAULT_PHANTOM_VERSION = "mcp-server";
@@ -305,10 +306,7 @@ export const buyTokenTool: ToolHandler = {
       throw new Error("walletId is required (missing from session and not provided)");
     }
 
-    const derivationIndex = typeof params.derivationIndex === "number" ? params.derivationIndex : undefined;
-    if (derivationIndex !== undefined && (!Number.isInteger(derivationIndex) || derivationIndex < 0)) {
-      throw new Error("derivationIndex must be a non-negative integer");
-    }
+    const derivationIndex = parseOptionalNonNegativeInteger(params.derivationIndex, "derivationIndex");
 
     const amountUnit = typeof params.amountUnit === "string" ? params.amountUnit : "base";
     if (amountUnit !== "ui" && amountUnit !== "base") {
@@ -469,7 +467,8 @@ export const buyTokenTool: ToolHandler = {
 
     const quoteHeaders: Record<string, string> = {
       "Content-Type": "application/json",
-      "x-phantom-platform": "mcp",
+      "x-phantom-platform": "ext-sdk",
+      "x-phantom-client": "mcp",
       "X-Phantom-Version": process.env.PHANTOM_VERSION ?? DEFAULT_PHANTOM_VERSION,
     };
     if (appId) {
@@ -510,6 +509,11 @@ export const buyTokenTool: ToolHandler = {
 
     if (!response.ok) {
       const message = typeof responseJson === "string" ? responseJson : JSON.stringify(responseJson);
+      if (response.status === 405) {
+        throw new Error(
+          `Quote API error (405): ${message}. Endpoint must accept POST with Phantom quote schema. If using quoteApiUrl override, use a Phantom-compatible endpoint (for example, https://api.phantom.app/swap/v2/quotes) instead of Jupiter's /swap/v1/quote endpoint.`,
+        );
+      }
       throw new Error(`Quote API error (${response.status}): ${message}`);
     }
 

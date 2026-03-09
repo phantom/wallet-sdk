@@ -101,7 +101,7 @@ export class BrowserAuthProvider implements AuthProvider {
     });
   }
 
-  resumeAuthFromRedirect(provider: EmbeddedProviderAuthType): AuthResult | null {
+  async resumeAuthFromRedirect(provider: EmbeddedProviderAuthType): Promise<AuthResult | null> {
     try {
       const walletId = this.urlParamsAccessor.getParam("wallet_id");
       const sessionId = this.urlParamsAccessor.getParam("session_id");
@@ -193,14 +193,14 @@ export class BrowserAuthProvider implements AuthProvider {
         // Continue anyway - the temp ID might be valid for this session
       }
 
-      return {
+      return Promise.resolve({
         walletId,
         organizationId,
         accountDerivationIndex: accountDerivationIndex ? parseInt(accountDerivationIndex) : 0,
         expiresInMs: expiresInMs ? parseInt(expiresInMs) : 0,
         authUserId: authUserId || undefined,
         provider,
-      };
+      });
     } catch (error) {
       // Clean up session storage on any error
       sessionStorage.removeItem("phantom-auth-context");

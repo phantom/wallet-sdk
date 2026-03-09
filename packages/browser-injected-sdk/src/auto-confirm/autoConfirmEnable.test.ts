@@ -1,34 +1,28 @@
 import { autoConfirmEnable } from "./autoConfirmEnable";
-import { getProvider } from "./getProvider";
-import type { PhantomProvider } from "./types";
 import { NetworkId } from "@phantom/constants";
-
-jest.mock("./getProvider", () => ({
-  getProvider: jest.fn(),
-}));
-
-const mockGetProvider = getProvider as jest.MockedFunction<() => PhantomProvider | null>;
+import { PHANTOM_NOT_DETECTED, APP_PROVIDER_NOT_FOUND } from "../errors";
 
 describe("autoConfirmEnable", () => {
-  let mockProvider: Partial<PhantomProvider>;
+  const originalPhantom = (window as any).phantom;
+  let mockRequest: jest.Mock;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    mockProvider = {
-      request: jest.fn(),
-    };
-    mockGetProvider.mockReturnValue(mockProvider as PhantomProvider);
+    mockRequest = jest.fn();
+    (window as any).phantom = { app: { request: mockRequest } };
+  });
+
+  afterEach(() => {
+    (window as any).phantom = originalPhantom;
   });
 
   it("should enable auto-confirm with chains parameter", async () => {
     const mockProviderResponse = { enabled: true, chains: ["solana:103", "eip155:1"] };
     const expectedResult = { enabled: true, chains: [NetworkId.SOLANA_DEVNET, NetworkId.ETHEREUM_MAINNET] };
-    (mockProvider.request as jest.Mock).mockResolvedValue(mockProviderResponse);
+    mockRequest.mockResolvedValue(mockProviderResponse);
 
     const result = await autoConfirmEnable({ chains: [NetworkId.SOLANA_DEVNET, NetworkId.ETHEREUM_MAINNET] });
 
-    expect(mockGetProvider).toHaveBeenCalledTimes(1);
-    expect(mockProvider.request).toHaveBeenCalledWith({
+    expect(mockRequest).toHaveBeenCalledWith({
       method: "phantom_auto_confirm_enable",
       params: { chains: ["solana:103", "eip155:1"] },
     });
@@ -37,30 +31,33 @@ describe("autoConfirmEnable", () => {
 
   it("should enable auto-confirm without chains parameter", async () => {
     const mockResult = { enabled: true, chains: [] };
-    (mockProvider.request as jest.Mock).mockResolvedValue(mockResult);
+    mockRequest.mockResolvedValue(mockResult);
 
     const result = await autoConfirmEnable();
 
-    expect(mockGetProvider).toHaveBeenCalledTimes(1);
-    expect(mockProvider.request).toHaveBeenCalledWith({
+    expect(mockRequest).toHaveBeenCalledWith({
       method: "phantom_auto_confirm_enable",
       params: {},
     });
     expect(result).toEqual(mockResult);
   });
 
-  it("should throw error when provider is not found", async () => {
-    mockGetProvider.mockReturnValue(null);
+  it("should throw when Phantom is not installed", async () => {
+    (window as any).phantom = undefined;
 
-    await expect(autoConfirmEnable()).rejects.toThrow("Provider not found.");
-    expect(mockGetProvider).toHaveBeenCalledTimes(1);
+    await expect(autoConfirmEnable()).rejects.toThrow(PHANTOM_NOT_DETECTED);
+  });
+
+  it("should throw when app provider is missing", async () => {
+    (window as any).phantom = { solana: {} };
+
+    await expect(autoConfirmEnable()).rejects.toThrow(APP_PROVIDER_NOT_FOUND);
   });
 
   it("should handle provider request error", async () => {
-    (mockProvider.request as jest.Mock).mockRejectedValue(new Error("Request failed"));
+    mockRequest.mockRejectedValue(new Error("Request failed"));
 
     await expect(autoConfirmEnable()).rejects.toThrow("Request failed");
-    expect(mockGetProvider).toHaveBeenCalledTimes(1);
-    expect(mockProvider.request).toHaveBeenCalledTimes(1);
+    expect(mockRequest).toHaveBeenCalledTimes(1);
   });
 });

@@ -8,4 +8,5 @@ module.exports = {
     publicKey: "derived-public-key",
     secretKey: secretKey,
   })),
+  sha256: jest.fn(() => Promise.resolve(new Uint8Array(32).fill(0xab))),
 };

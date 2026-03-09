@@ -1,6 +1,6 @@
 {
   "name": "@phantom/openclaw-plugin",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "OpenClaw plugin that bridges tool calls to Phantom's MCP server for wallet operations.",
   "repository": {
     "type": "git",

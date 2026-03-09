@@ -249,6 +249,12 @@ Fetch a Solana swap quote from Phantom's quotes API. Optionally execute the swap
 - `slippageTolerance` (number, optional): Slippage tolerance in percent (0-100)
 - `execute` (boolean, optional): If true, signs and sends the transaction immediately. Default: false
 - `derivationIndex` (number, optional): Derivation index for the wallet (default: 0)
+- `quoteApiUrl` (string, optional): Phantom-compatible quotes API override for debugging only. Leave unset for normal use. Do not point this to Jupiter endpoints like `https://lite-api.jup.ag/swap/v1/quote`.
+
+**Quote API Guardrail:**
+
+- Keep `quoteApiUrl` unset unless the user explicitly asks to debug quote endpoint behavior.
+- The tool expects Phantom quote API request/response schema. Third-party quote endpoints are not compatible.
 
 **Example:**
 

@@ -138,8 +138,9 @@ describe("SessionManager", () => {
           organizationId: validSession.organizationId,
           walletType: "user-wallet",
           headers: expect.objectContaining({
-            "x-phantom-platform": "mcp",
+            "x-phantom-platform": "ext-sdk",
             "x-phantom-sdk-type": "server",
+            "x-phantom-client": "mcp",
             "x-phantom-sdk-version": expect.any(String),
             "x-app-id": "phantom-mcp",
           }),
@@ -335,8 +336,9 @@ describe("SessionManager", () => {
           organizationId: validSession.organizationId,
           walletType: "user-wallet",
           headers: expect.objectContaining({
-            "x-phantom-platform": "mcp",
+            "x-phantom-platform": "ext-sdk",
             "x-phantom-sdk-type": "server",
+            "x-phantom-client": "mcp",
             "x-phantom-sdk-version": expect.any(String),
             "x-app-id": "phantom-mcp",
           }),
