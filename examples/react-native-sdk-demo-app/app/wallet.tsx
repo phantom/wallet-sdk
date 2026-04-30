@@ -140,7 +140,7 @@ export default function WalletScreen() {
 
       // Set success state
       setTransactionResult(`Transaction sent successfully!\n\nSignature: ${result.signature}`);
-      setTransactionExplorer(null);
+      setTransactionExplorer(`https://solscan.io/tx/${result.signature}`);
       setTransactionError(null);
       setIsSigningTx(false);
 
