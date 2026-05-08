@@ -61,7 +61,7 @@ function ThemeContextProvider({ children }: { children: ReactNode }) {
 
 // SDK configuration
 const config: PhantomSDKConfig = {
-  appId: process.env.EXPO_PUBLIC_APP_ID || "57b8172b-8583-4c13-a800-49f8553eb259",
+  appId: process.env.EXPO_PUBLIC_APP_ID || "your-app-id",
   scheme: process.env.EXPO_PUBLIC_APP_SCHEME || "phantom-rn-demo",
   providers: ["google", "apple"],
   embeddedWalletType: isEmbeddedWalletType(process.env.EXPO_PUBLIC_EMBEDDED_WALLET_TYPE)
